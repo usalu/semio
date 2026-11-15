@@ -203,6 +203,28 @@ fn one_address_past_its_allowance_is_told_to_wait_and_no_other_is_slowed() {
 }
 
 #[test]
+fn a_preflight_spends_its_addresses_read_allowance_and_a_refused_one_is_granted_and_told_to_wait() {
+    let data = scratch("edge-preflight");
+    let running = boot(&data.0, proxied(Limits { reads: Rate::per_second(1, 3), ..Limits::default() }));
+    let preflight = |client: &str, origin: &str| raw(running.address, &format!("OPTIONS /commands HTTP/1.1\r\nHost: proctor\r\nX-Forwarded-Proto: https\r\nX-Forwarded-For: {client}\r\nOrigin: {origin}\r\nAccess-Control-Request-Method: POST\r\nAccess-Control-Request-Headers: content-type\r\nConnection: close\r\n\r\n")).to_ascii_lowercase();
+    let first = preflight("203.0.113.66", EDGE_SITE);
+    assert!(first.starts_with("http/1.1 204") && first.contains("access-control-max-age: 7200") && first.contains(&format!("access-control-allow-origin: {EDGE_SITE}")), "{first}");
+    let spent = (0..50).map(|_| preflight("203.0.113.66", EDGE_SITE)).find(|answer| answer.starts_with("http/1.1 429"));
+    let spent = spent.expect("a flood of preflights from one address is throttled like any read");
+    for expected in ["retry-after: 1", &format!("access-control-allow-origin: {EDGE_SITE}"), "access-control-expose-headers: retry-after", "vary: origin"] {
+        assert!(spent.contains(expected), "a page of the site reads why its preflight failed, lacking {expected}: {spent}");
+    }
+    assert!(!spent.contains("access-control-max-age"), "a refusal is never cached: {spent}");
+    let foreign = preflight("203.0.113.66", "https://evil.example");
+    assert!(foreign.starts_with("http/1.1 429") && !foreign.contains("access-control-allow-origin"), "a foreign origin gets the throttle's answer and no grant: {foreign}");
+    let other = preflight("203.0.113.7", EDGE_SITE);
+    assert!(other.starts_with("http/1.1 204") && other.contains("access-control-max-age: 7200"), "another address is served and its preflight is cacheable: {other}");
+    let (status, _, result) = post_with(&running.base, "/queries", &query_envelope(&json!({ "type": "learner", "learner": id(0x1) })), &forwarded("203.0.113.7"));
+    assert_eq!(status, 404, "the same address reads on with what its preflight left: {result}");
+    running.shut_down();
+}
+
+#[test]
 fn sign_ups_are_counted_per_address_by_what_they_register_and_a_spent_allowance_is_named() {
     let data = scratch("edge-sign-ups");
     let running = boot(&data.0, proxied(Limits { allowances: vec![Allowance { name: SIGN_UP, rate: Rate::per_hour(60, 3) }], ..Limits::default() }));

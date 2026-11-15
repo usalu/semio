@@ -1,5 +1,5 @@
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readScriptProcessJsonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
 const admission=structuredClone(schema),policy=Object.freeze({...admission.definitions.Policy.const});
 export const VITE_RUNTIME_CHANNELS_ENV_V1=policy.environment;

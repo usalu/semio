@@ -27,6 +27,11 @@ fn rounded_ring(cx: f64, cy: f64, hw: f64, hd: f64, k: f64) -> Vec<(f64, f64)> {
         .collect()
 }
 
+/// ✂️ The ring without the vertices that lie in the shadow wedge of an opening seen from the column centre.
+fn cut_ring(ring: &[(f64, f64)], centre: (f64, f64), wedges: &[checks::punching_and_struts::Wedge]) -> Vec<(f64, f64)> {
+    ring.iter().copied().filter(|q| !wedges.iter().any(|w| w.contains((q.0 - centre.0, q.1 - centre.1)))).collect()
+}
+
 fn clip(ring: &[(f64, f64)], inside: impl Fn((f64, f64)) -> f64) -> Vec<(f64, f64)> {
     let mut out = Vec::new();
     for i in 0..ring.len() {
@@ -69,7 +74,7 @@ pub(crate) fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
         let path = format!("members[id={}].punching", m.id);
         let (cx, cy) = column_centre(m, p.column_width, p.column_depth);
         let (hw, hd) = (p.column_width / 2.0, p.column_depth / 2.0);
-        let binding = binding(input.report, &m.id, &["en1992.6.4.", "en1992.p-01."]);
+        let member_binding = binding(input.report, &m.id, &["en1992.6.4.", "en1992.p-01."]);
         let field_check = input.report.checks.iter().find(|c| c.id == format!("en1992.6.4.punching.{}", m.id) && c.station_field == PERIMETER_FIELD && !c.stations.is_empty());
         let label = |en: &str, de: &str| loc(&format!("{} {en}", m.label_en), &format!("{} {de}", m.label_de));
         let base_centre = at(f, cx, cy, -m.height / 2.0 - COLUMN_UNDER_SLAB);
@@ -100,7 +105,7 @@ pub(crate) fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
         out.push(Spec::new(EntityKind::Solid, format!("{}:column", m.id), path.clone(), column, MaterialRole::Concrete, LAYER_CONCRETE, label("column", "Stütze"), label(&format!("column {} x {} mm, {}", mm(p.column_width), mm(p.column_depth), format!("{:?}", p.column_position).to_lowercase()), &format!("Stütze {} x {} mm, {}", mm(p.column_width), mm(p.column_depth), format!("{:?}", p.column_position).to_lowercase()))).translucent(0.5).with_handles(ids), &[base_centre]);
         for (key, value, axis, name) in moment_glyphs {
             let glyph = LoadGlyph::Moment { at: at(f, cx, cy, moment_top), axis, magnitude: Quantity::new(QuantityKind::Moment, value), case: LoadCaseRef { id: format!("{}-{key}", m.id), kind: LoadKind::Other, psi: None } };
-            let spec = Spec::new(EntityKind::Load, format!("{}:punching-{key}", m.id), path.clone(), Geometry::Load(glyph), MaterialRole::Load { kind: LoadKind::Other }, LAYER_LOADS, label(&format!("unbalanced column moment {name}"), &format!("Stützenmoment {name}")), label(&format!("unbalanced column moment {name} = {:.1} kNm", value / 1e3), &format!("Stützenmoment {name} = {:.1} kNm", value / 1e3))).bound(binding.clone());
+            let spec = Spec::new(EntityKind::Load, format!("{}:punching-{key}", m.id), path.clone(), Geometry::Load(glyph), MaterialRole::Load { kind: LoadKind::Other }, LAYER_LOADS, label(&format!("unbalanced column moment {name}"), &format!("Stützenmoment {name}")), label(&format!("unbalanced column moment {name} = {:.1} kNm", value / 1e3), &format!("Stützenmoment {name} = {:.1} kNm", value / 1e3))).bound(member_binding.clone());
             out.push(spec, &[at(f, cx, cy, moment_top)]);
         }
         let d = m.effective_depth.max(1e-3);
@@ -134,7 +139,7 @@ pub(crate) fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
             }
             let points: Vec<Vec3> = ring.iter().map(|&(x, y)| at(f, x, y, LIFT)).collect();
             let u = if cut { let (total, lost) = checks::punching_and_struts::perimeter_lengths(column_position, p.column_width, p.column_depth, k, &wedges); total - lost } else { length(&ring) };
-            let mut ent = Spec::new(EntityKind::Surface, format!("{}:punching-{key}", m.id), path.clone(), Geometry::Surface(SurfaceGeometry { shape: SurfaceShape::Polygon { polygon: ring3(points.clone()) } }), MaterialRole::Neutral, LAYER_PUNCHING, label(en, de), label(&format!("{en}, length {:.2} m", u), &format!("{de}, Länge {:.2} m", u))).bound(binding.clone()).translucent(0.45).ghosted();
+            let mut ent = Spec::new(EntityKind::Surface, format!("{}:punching-{key}", m.id), path.clone(), Geometry::Surface(SurfaceGeometry { shape: SurfaceShape::Polygon { polygon: ring3(points.clone()) } }), MaterialRole::Neutral, LAYER_PUNCHING, label(en, de), label(&format!("{en}, length {:.2} m", u), &format!("{de}, Länge {:.2} m", u))).bound(member_binding.clone()).translucent(0.45).ghosted();
             if key == "u1" {
                 if let Some(check) = field_check {
                     let local: Vec<[f64; 3]> = ring.iter().map(|&(x, y)| [x, y, 0.0]).collect();

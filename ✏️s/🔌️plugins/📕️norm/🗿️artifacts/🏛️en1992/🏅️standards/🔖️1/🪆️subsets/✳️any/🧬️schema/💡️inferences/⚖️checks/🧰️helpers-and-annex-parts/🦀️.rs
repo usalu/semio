@@ -378,7 +378,8 @@ pub mod part_1_2_fire {
 
 /// 🌉 EN 1992-2/// 🌉 EN 1992-2 bridges.
 pub mod part_2 {
-    #[cfg(test)] use crate::*;
+    use crate::ndp;
+    use semio_s_plugin_norm_compliance::AnnexChoice;
 
     pub fn concrete_stress_limit_pa(f_ck_pa: f64) -> f64 {
         0.6 * f_ck_pa

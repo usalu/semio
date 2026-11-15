@@ -7,7 +7,7 @@ import {repositoryLeaseDirectoryV1} from "../../../⚡️caching/💾️storage/
 import {repositoryCheckoutRootV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧭️root/🟦️.ts";
 import {createNativeBuildCallerCapabilitiesV1} from "../../../🏗️build/📥️caller/🟦️.ts";
 import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProcessEnvelope,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🧭️ The directory this test process started in (its bunfig and preloads live there): a toolchain directory for spawned children, never a store root. */
+/** 🧭️ The directory this test process started in (its runtime configuration and preloads live there): a toolchain directory for spawned children, never a store root. */
 export const privateRepositoryStartDirectoryV1=process.cwd();
 export const testToolchainDirectoryV1=()=>privateRepositoryStartDirectoryV1;
 /** 🏠️ The checkout holding the code under test: read its sources, never its store. */

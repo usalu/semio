@@ -1,6 +1,6 @@
 #[path="../../../../../../📸️snapshot/🧳️state/🧪️tests/🧰️helpers/🦀️.rs"]mod helpers;
 use helpers::{corpus,receive,source,grant,observe,drain,central_fragment,project_record,denied_axes};
-use semio_s_artifact_energy_model_native_mutations_singletons::single::{OriginalSingleTransform,TransformedSinglePreparation};use semio_s_artifact_energy_model_native_mutations::leaf::RowFieldPreparation;
+use semio_s_artifact_energy_model_native_mutations_single::single::{OriginalSingleTransform,TransformedSinglePreparation};use semio_s_artifact_energy_model_native_mutations::leaf::RowFieldPreparation;
 use semio_framework_value::ToValue;
 use crate::snapshot::original::EnergyModelSnapshot;
 pub(super)fn run<S:OriginalSingleTransform>(fixture:&str)where S::Payload:semio_framework_value_native_owned::native_decoding::NativeReceive<semio_framework_value::DslValue>+semio_framework_value::retirement::RetireOwned,S::Inverse:ToValue{

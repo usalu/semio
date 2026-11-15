@@ -1,0 +1,14 @@
+## Consequences for tests and pinned fixtures (for the final verification; nothing regenerated)
+
+Found by searching `S/🧪️tests` and `S/🧫️fixtures` for the slugs of every asset whose area changed after the decisions (list `🗑️generated/areareview/changed-slugs.txt`, hits in `slug-hits.txt`).
+
+**Tests that solve thermal results of changed assets (re-run; the checks are inequalities, expected to hold, but the operating-region flux changes above can move them):**
+- `🧊️thermal-scenarios` (city-car: exhaust-system q 5111 -> 3407 W/m2, bonnet, roof, glazing, tailgate; sliding-door frame areas) - exhaust rise above 80 K and below 600 C.
+- `🎨️thermal-legend` (city-car legend ranges; area-weighted merge of regions).
+- `🚰️hydronic-coupling` (electric-kettle: shell 0.11 -> 0.095 and water 0.012 -> 0.0145 change the coupling draw; cooking-pot unchanged value, base marked exchange) - wall within `wetGapK` of 100 C.
+- `🫕️phase-change` (electric-kettle water area scales the converted mass `kg = joules * area / latent`; any pinned kg changes by 0.0145/0.012; fixture `🧫️fixtures/🫕️phase-change`).
+- `🌐️thermal-multiview` (diesel-generator silencer/stack/hood, excavator exhaust-stack emitter; tower-crane deferred) and `💨️transport-assets` (excavator exhaust plume scales with the stack surface temperature, stack area 0.22 -> 0.188).
+- `🌤️reference-environment` (solar-thermal-collector: absorber back to 1.8, housing 2.6, stand 0.96), `🎭️cast-export` (toaster top-plate, electric-kettle clips), `⏳️thermal-transient` / `🎞️frame-timing` / `📐️dxf-reopen` / `📕️pdf-reopen` / `🗜️zip-reopen` / `🚀️export-performance` / `🧊️cast-lod` (walking-commuter bag-leather 0.28 -> 0.193: weights of the merged colour only), `🪢️tied-canopy` (canopy-steel 3.5 -> 2.97, rod-steel 0.93 -> 1.09; also the fixture `🧫️fixtures/🪢️tied-canopy`).
+- `🌡️catalog-physics` and `🌡️thermal-span`: whole-catalog bounds on passive regions (independent of area) and finiteness; not expected to change.
+
+**Whole-catalog or geometry fixtures that embed the catalog assets (regenerate pins only after the model authors finish; the area change itself alters `areaM2` in them):** `🧫️fixtures/🧊️model-catalog`, `🧫️fixtures/🧊️volumes-rules`, `🧫️fixtures/🧊️catalog-silhouette`, `🧫️fixtures/🧊️three-views`, `🧫️fixtures/🔭️multiview-coverage`, `🧫️fixtures/✂️section-views`, `🧫️fixtures/🎭️cast-export`, `🧫️fixtures/🏷️cast-provenance`, `🧫️fixtures/📐️model-scene`, `🧫️fixtures/📕️pdf-reopen`, `🧫️fixtures/🔺️polygon-union`, `🧫️fixtures/🧍️front-projection`, `🧫️fixtures/🧍️plan-projection`; and the geometry-only tests `🧊️volumes-rules-next`, `🏗️structure-projection`, `✂️section-views`, `🔭️multiview-coverage`, `🧊️model-frame`, `🧊️model-silhouette`, `🧊️chain-state`, `📑️multiview-sheet`, `🧍️plan-projection`, `🔺️polygon-union`, `🧊️axonometric-exports`, `📐️` dimension tests, `🔤️caption-fit`, `🏷️cast-provenance`, which mention the assets but depend on their volumes, not on `areaM2`.

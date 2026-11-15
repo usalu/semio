@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
+use crate::Vdi3805Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -20,7 +20,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Vdi3805Mutation, protocol::ProtocolErro
 }
 
 mod native_codec {
-use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
+use crate::Vdi3805Mutation;
 use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry_connection::AddGeometryConnection;
 use semio_s_artifact_norm_vdi3805_mut_file::change_correction_as_of::ChangeCorrectionAsOf;
 use semio_s_artifact_norm_vdi3805_mut_file::change_edition_profile::ChangeEditionProfile;
@@ -272,3 +272,5 @@ pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     out.extend_from_slice(s.as_bytes());
 }
 }
+
+dsl::original_pack_value_operation_receiving!(crate::Vdi3805Mutation);

@@ -1,0 +1,139 @@
+service log: /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-c5f530f58f3a.log
+closure entries before: 40475
+2026-11-15T04:05:40Z no slice worker
+2026-11-15T04:05:45Z no slice worker
+2026-11-15T04:05:50Z no slice worker
+2026-11-15T04:05:55Z no slice worker
+2026-11-15T04:06:00Z no slice worker
+2026-11-15T04:06:06Z no slice worker
+2026-11-15T04:06:11Z no slice worker
+2026-11-15T04:06:16Z no slice worker
+2026-11-15T04:06:21Z no slice worker
+2026-11-15T04:06:26Z no slice worker
+2026-11-15T04:06:31Z no slice worker
+2026-11-15T04:06:36Z no slice worker
+2026-11-15T04:06:41Z no slice worker
+2026-11-15T04:06:46Z no slice worker
+2026-11-15T04:06:51Z no slice worker
+2026-11-15T04:06:56Z no slice worker
+2026-11-15T04:07:01Z no slice worker
+2026-11-15T04:07:06Z no slice worker
+2026-11-15T04:07:11Z no slice worker
+2026-11-15T04:07:16Z no slice worker
+2026-11-15T04:07:21Z no slice worker
+2026-11-15T04:07:26Z no slice worker
+2026-11-15T04:07:31Z no slice worker
+2026-11-15T04:07:36Z no slice worker
+2026-11-15T04:07:42Z no slice worker
+2026-11-15T04:07:47Z no slice worker
+2026-11-15T04:07:52Z no slice worker
+2026-11-15T04:07:57Z no slice worker
+2026-11-15T04:08:02Z no slice worker
+2026-11-15T04:08:07Z no slice worker
+2026-11-15T04:08:12Z no slice worker
+2026-11-15T04:08:17Z no slice worker
+2026-11-15T04:08:22Z no slice worker
+2026-11-15T04:08:27Z no slice worker
+2026-11-15T04:08:32Z no slice worker
+2026-11-15T04:08:37Z no slice worker
+2026-11-15T04:08:42Z no slice worker
+2026-11-15T04:08:47Z no slice worker
+2026-11-15T04:08:52Z no slice worker
+2026-11-15T04:08:58Z no slice worker
+2026-11-15T04:09:03Z no slice worker
+2026-11-15T04:09:08Z no slice worker
+2026-11-15T04:09:13Z no slice worker
+2026-11-15T04:09:18Z no slice worker
+2026-11-15T04:09:23Z no slice worker
+2026-11-15T04:09:28Z no slice worker
+2026-11-15T04:09:33Z no slice worker
+2026-11-15T04:09:38Z no slice worker
+2026-11-15T04:09:43Z no slice worker
+2026-11-15T04:09:48Z pid=37416 rss=285MB footprint=[bun [37416]: 64-bit    Footprint: 90 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:09:53Z pid=37416 rss=1068MB footprint=[bun [37416]: 64-bit    Footprint: 416 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:09:58Z pid=37416 rss=1406MB footprint=[bun [37416]: 64-bit    Footprint: 126 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:03Z pid=37416 rss=1414MB footprint=[bun [37416]: 64-bit    Footprint: 131 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:09Z pid=37416 rss=1518MB footprint=[bun [37416]: 64-bit    Footprint: 153 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:14Z pid=37416 rss=1534MB footprint=[bun [37416]: 64-bit    Footprint: 136 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:19Z pid=37416 rss=1556MB footprint=[bun [37416]: 64-bit    Footprint: 140 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:24Z pid=37416 rss=1559MB footprint=[bun [37416]: 64-bit    Footprint: 133 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:29Z pid=37416 rss=1631MB footprint=[bun [37416]: 64-bit    Footprint: 161 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:34Z pid=37416 rss=2070MB footprint=[bun [37416]: 64-bit    Footprint: 188 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:39Z pid=37416 rss=2257MB footprint=[bun [37416]: 64-bit    Footprint: 230 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:44Z pid=37416 rss=2257MB footprint=[bun [37416]: 64-bit    Footprint: 230 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:49Z pid=37416 rss=2257MB footprint=[bun [37416]: 64-bit    Footprint: 219 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:54Z pid=37416 rss=2280MB footprint=[bun [37416]: 64-bit    Footprint: 218 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:10:59Z pid=37416 rss=2281MB footprint=[bun [37416]: 64-bit    Footprint: 218 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:04Z pid=37416 rss=2338MB footprint=[bun [37416]: 64-bit    Footprint: 233 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:09Z pid=37416 rss=2361MB footprint=[bun [37416]: 64-bit    Footprint: 237 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:14Z pid=37416 rss=2522MB footprint=[bun [37416]: 64-bit    Footprint: 254 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:19Z pid=37416 rss=2532MB footprint=[bun [37416]: 64-bit    Footprint: 253 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:25Z pid=37416 rss=2540MB footprint=[bun [37416]: 64-bit    Footprint: 231 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:30Z pid=37416 rss=2541MB footprint=[bun [37416]: 64-bit    Footprint: 231 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:35Z pid=37416 rss=1920MB footprint=[bun [37416]: 64-bit    Footprint: 1006 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:40Z pid=37416 rss=1554MB footprint=[bun [37416]: 64-bit    Footprint: 1649 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:45Z pid=37416 rss=1610MB footprint=[bun [37416]: 64-bit    Footprint: 1617 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:50Z pid=37416 rss=1787MB footprint=[bun [37416]: 64-bit    Footprint: 1630 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:11:55Z pid=37416 rss=1788MB footprint=[bun [37416]: 64-bit    Footprint: 1641 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:00Z pid=37416 rss=1887MB footprint=[bun [37416]: 64-bit    Footprint: 1689 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:05Z pid=37416 rss=2111MB footprint=[bun [37416]: 64-bit    Footprint: 1901 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:10Z pid=37416 rss=2121MB footprint=[bun [37416]: 64-bit    Footprint: 1749 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:15Z pid=37416 rss=2152MB footprint=[bun [37416]: 64-bit    Footprint: 1686 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:20Z pid=37416 rss=2162MB footprint=[bun [37416]: 64-bit    Footprint: 1702 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:25Z pid=37416 rss=2187MB footprint=[bun [37416]: 64-bit    Footprint: 1694 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:31Z pid=37416 rss=2443MB footprint=[bun [37416]: 64-bit    Footprint: 1798 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:36Z pid=37416 rss=2679MB footprint=[bun [37416]: 64-bit    Footprint: 1711 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:41Z pid=37416 rss=2603MB footprint=[bun [37416]: 64-bit    Footprint: 1736 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:46Z pid=37416 rss=2640MB footprint=[bun [37416]: 64-bit    Footprint: 1725 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:51Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1559 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:12:56Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1557 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:01Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1552 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:06Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1552 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:12Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1551 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:17Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1551 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:22Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1551 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:27Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1551 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:32Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1534 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:37Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1534 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:42Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1533 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:47Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1533 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:52Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1533 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:13:57Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1532 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:02Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1532 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:07Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1532 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:12Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1532 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:18Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1531 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:23Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1531 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:28Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1530 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:33Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1530 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:38Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1530 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:43Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1529 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:48Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1529 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:53Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1529 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:14:59Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1528 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:04Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1528 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:09Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1528 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:14Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1528 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:19Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1528 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:24Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1528 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:29Z pid=37416 rss=2641MB footprint=[bun [37416]: 64-bit    Footprint: 1528 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:34Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1528 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:39Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:44Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:50Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:15:55Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:00Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:05Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:10Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:15Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:20Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:25Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:30Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:35Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:40Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:45Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:50Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:16:55Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:17:01Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:17:06Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]
+2026-11-15T04:17:11Z pid=37416 rss=2642MB footprint=[bun [37416]: 64-bit    Footprint: 1527 MB (16384 bytes per page)] last=[graph: a worker process was lost (exited); its project is inferred again]

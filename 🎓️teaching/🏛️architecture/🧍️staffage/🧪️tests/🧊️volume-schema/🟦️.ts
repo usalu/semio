@@ -1,4 +1,4 @@
-/** 🧊️ The declarative 3D volume: conformance of the sample figure's `volume` and of broken variants to `🧬️schema/🔣️.json` (ajv) and the semantic rules of the owned validator, one invalid vector per rule.
+/** 🧊️ The declarative 3D volume: conformance of the sample figure's `volumes` and of broken variants to `🧬️schema/🔣️.json` (ajv) and the semantic rules of the owned validator, one invalid vector per rule.
  *
  * THE REFERENCES are ajv (JSON Schema), shapely (profile validity, 🐍️.py) and the exact predicates of `robust-predicates` (segment intersection), plus the hand-computed bounding box of the sample figure from its rig.
  *
@@ -12,7 +12,7 @@ import Ajv from "ajv";
 import { orient2d } from "robust-predicates";
 import { beforeAll, describe, expect, it } from "vitest";
 import * as twin from "../../🧬️schema/🟦️.ts";
-import type { Asset, Vector2, VolumeSolid } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredVolume, Vector2, VolumeSolid } from "../../🧬️schema/🟦️.ts";
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 import { defaultDepictionOptions, depict, loadAxonometric } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { parseArguments } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
@@ -63,7 +63,8 @@ function patch(document: any, operations: readonly Operation[]): any {
 }
 
 const codes = (asset: Asset): string[] => volumeIssues(asset).map((issue) => issue.code);
-const solidOf = (id: string): VolumeSolid => sample.volume!.solids.find((solid) => solid.id === id)!;
+const body50 = (asset: Asset): readonly VolumeSolid[] => (asset.volumes["50"] as AuthoredVolume).body;
+const solidOf = (id: string): VolumeSolid => body50(sample).find((solid) => solid.id === id)!;
 
 type Box = { min: [number, number, number]; max: [number, number, number] };
 
@@ -120,7 +121,7 @@ function worldBox(asset: Asset): Box {
   const frames = restFrames(asset.rig);
   const min: [number, number, number] = [Infinity, Infinity, Infinity];
   const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
-  for (const solid of asset.volume!.solids) {
+  for (const solid of body50(asset)) {
     const { frame } = frames[solid.bone]!;
     const box = localBox(solid);
     for (const corner of [0, 1, 2, 3, 4, 5, 6, 7]) {
@@ -155,16 +156,26 @@ describe("🧊️ volume schema and rules", () => {
     expect(schema.$defs.ExportFormat.enum).toEqual([...twin.EXPORT_FORMATS]);
     expect(schema.$defs.ExportFormat.enum).toEqual(expect.arrayContaining(["glb", "fbx", "model"]));
     expect(twin.PLANAR_VIEWPOINTS).toEqual(["elevation", "front", "plan"]);
-    expect(schema.$defs.Asset.properties.volume).toEqual(expect.objectContaining({ $ref: "#/$defs/Volume" }));
-    expect(schema.$defs.Volume.properties.status.const).toBe("authored");
-    expect(schema.$defs.Volume.required).toEqual(["status", "solids", "decisions"]);
+    expect(schema.$defs.Asset.properties.volume).toBeUndefined();
+    expect(schema.$defs.Asset.properties.volumes).toEqual(expect.objectContaining({ $ref: "#/$defs/Volumes" }));
+    expect(schema.$defs.Asset.required).toContain("volumes");
+    expect(schema.$defs.Volumes.required).toEqual(["50", "100", "200", "500"]);
+    expect(schema.$defs.AuthoredVolume.properties.status.const).toBe("authored");
+    expect(schema.$defs.AuthoredVolume.required).toEqual(["status", "denominator", "body", "thermal", "structure", "decisions"]);
+    expect(schema.$defs.UnavailableVolume.required).toEqual(["status", "denominator"]);
+    for (const list of ["body", "thermal", "structure"]) expect(schema.$defs.AuthoredVolume.properties[list].minItems, list).toBe(1);
+    expect(schema.$defs.AuthoredVolume.properties.decisions.minItems).toBe(1);
+    expect(schema.$defs.ThermalSolid.oneOf).toHaveLength(twin.VOLUME_SOLID_KINDS.length + 1);
+    expect(schema.$defs.StructuralSolid.oneOf).toHaveLength(twin.VOLUME_SOLID_KINDS.length + 1);
+    expect(schema.$defs.StructuralSolid.oneOf[0].properties.part.enum).toEqual([...twin.STRUCTURAL_PARTS]);
   });
 
   it("gives every solid kind the common fields as required", () => {
     for (const branch of schema.$defs.VolumeSolid.oneOf) {
       expect(branch.additionalProperties).toBe(false);
       for (const field of ["id", "kind", "bone", "material", "role", "tone"]) expect(branch.required, branch.properties.kind.const).toContain(field);
-      for (const field of ["region", "regions", "maxDenominator", "weights", "transform", "repeat"]) expect(branch.properties[field], field).toBeDefined();
+      for (const field of ["weights", "transform", "repeat"]) expect(branch.properties[field], field).toBeDefined();
+      for (const field of ["region", "regions", "maxDenominator"]) expect(branch.properties[field], field).toBeUndefined();
     }
   });
 
@@ -172,9 +183,9 @@ describe("🧊️ volume schema and rules", () => {
     expect(assetSchema(sample), JSON.stringify(assetSchema.errors?.slice(0, 3))).toBe(true);
     expect(volumeIssues(sample)).toEqual([]);
     expect(validateAsset(sample).filter((issue) => issue.code.startsWith("volume-"))).toEqual([]);
-    expect(new Set(sample.volume!.solids.map((solid) => solid.kind))).toEqual(new Set(twin.VOLUME_SOLID_KINDS));
-    expect(sample.volume!.solids.some((solid) => solid.weights !== undefined && solid.repeat === undefined)).toBe(true);
-    expect(sample.volume!.solids.some((solid) => solid.repeat !== undefined && solid.maxDenominator === 50)).toBe(true);
+    expect(new Set(body50(sample).map((solid) => solid.kind))).toEqual(new Set(twin.VOLUME_SOLID_KINDS));
+    expect(body50(sample).some((solid) => solid.weights !== undefined && solid.repeat === undefined)).toBe(true);
+    expect(body50(sample).some((solid) => solid.repeat !== undefined)).toBe(true);
   });
 
   it("agrees with the dimensions of the sample figure within the extent tolerance", () => {
@@ -188,10 +199,9 @@ describe("🧊️ volume schema and rules", () => {
 
   it("binds every solid of the sample figure to its bone, material and thermal region", () => {
     const bones = new Set(sample.rig.bones.map((bone) => bone.id));
-    for (const solid of sample.volume!.solids) {
+    for (const solid of body50(sample)) {
       expect(bones.has(solid.bone), solid.id).toBe(true);
       expect(sample.materials.some((material) => material.id === solid.material), solid.id).toBe(true);
-      expect(sample.thermal.regions.some((region) => region.id === solid.region), solid.id).toBe(true);
     }
     expect(solidOf("arm-l").kind).toBe("capsule");
   });
@@ -228,14 +238,14 @@ describe("🧊️ volume schema and rules", () => {
   });
 
   it("names a coordinate that is not finite", () => {
-    const broken = patch(sample, [{ op: "replace", path: "/volume/solids/id=arm-l/p1", value: [Infinity, 0, 0.225] }]) as Asset;
+    const broken = patch(sample, [{ op: "replace", path: "/volumes/50/body/id=arm-l/p1", value: [Infinity, 0, 0.225] }]) as Asset;
     expect(codes(broken)).toContain("volume-non-finite");
   });
 
   it("raises the volume rules through validateAsset with their path", () => {
-    const broken = patch(sample, [{ op: "replace", path: "/volume/solids/id=head/bone", value: "no-such-bone" }]) as Asset;
+    const broken = patch(sample, [{ op: "replace", path: "/volumes/50/body/id=head/bone", value: "no-such-bone" }]) as Asset;
     const issue = validateAsset(broken).find((found) => found.code === "volume-bone");
-    expect(issue?.path).toBe(`volume.solids[${sample.volume!.solids.findIndex((solid) => solid.id === "head")}].bone`);
+    expect(issue?.path).toBe(`volumes.50.body[${body50(sample).findIndex((solid) => solid.id === "head")}].bone`);
   });
 
   for (const c of vectors.polygons)

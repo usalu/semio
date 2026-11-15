@@ -39,9 +39,9 @@ test("the fixture is closed, the policy and the texts equal their declaration",(
  expect(JSON.parse(JSON.stringify(memory.GRAPH_MEMORY_MESSAGES_V1))).toEqual(moduleSchema.definitions.Messages.const);
  for(const key of Object.keys(moduleSchema.definitions.Messages.const.en))expect(Object.keys(moduleSchema.definitions.Messages.const.de)).toContain(key);
  const holders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]!).sort();
- for(const key of Object.keys(moduleSchema.definitions.Messages.const.en) as ("waiting"|"serial"|"resumed"|"learning")[]){
+ for(const key of Object.keys(moduleSchema.definitions.Messages.const.en) as ("waiting"|"serial"|"resumed"|"learning"|"stopped"|"admittedAlone"|"refused"|"fleet")[]){
   const english=holders(moduleSchema.definitions.Messages.const.en[key]),german=holders(moduleSchema.definitions.Messages.const.de[key]);
-  expect(german,key).toEqual(english);for(const name of english)expect(["budget","used","running","kind"],key).toContain(name);
+  expect(german,key).toEqual(english);for(const name of english)expect(["budget","used","running","kind","key","need","seconds","limit","available","count"],key).toContain(name);
  }
 });
 
@@ -80,13 +80,15 @@ class FakeTime{
  }
 }
 
-test("the graph child heap is the declared size and equals the independent model",()=>{
+test("the graph child heap is the declared size and equals the independent model",async()=>{
  const directory=scratchDirectory("memory-child-heap-");
  try{
   const expected=oracle(["expect",written(directory,"fixture.json",fixture)]),bytes=memory.graphChildHeapBytesV1();
   expect(expected.childHeap).toEqual({bytes,grantIndependent:true});
   expect(bytes).toBe(moduleSchema.definitions.Policy.const.childHeapMegabytes*MEGABYTE);
   expect(memory.graphChildHeapBytesV1({...memory.GRAPH_MEMORY_POLICY_V1,childHeapMegabytes:1024})).toBe(1024*MEGABYTE);
+  const{graphChildEnvironmentV1}=await import("../🐏️child-environment/🟨️.mjs");
+  expect(graphChildEnvironmentV1()).toEqual({[memory.GRAPH_MEMORY_POLICY_V1.heapEnvironment]:String(bytes),MIMALLOC_PURGE_DELAY:"0"});
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
 
@@ -282,4 +284,106 @@ test("the learned peak of a kind is the largest of its last samples: an outlier 
 test("a malformed learned entry reads as nothing learned for that kind and keeps the valid ones",()=>{
  const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>1000*MEGABYTE,peaks:{read:()=>({rust:4492472320,ts:[100*MEGABYTE]}) as never,write:()=>undefined}});
  expect(governor.stats().kinds).toEqual({ts:100});governor.dispose();
+});
+
+test("the cost of an owner is the growth measured for that owner: memory that peers take from the host while it runs is never billed to it",async()=>{
+ const time=new FakeTime(),peaks:Record<string,number[]>={};let hostTaken=0,own=0,done=0;
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>8192*MEGABYTE-hostTaken,attributable:()=>own,estimateBytes:256*MEGABYTE,peaks:{read:()=>({}),write:value=>{Object.assign(peaks,value);}},now:time.now,sleep:time.sleep});
+ const task=async()=>{own+=100*MEGABYTE;hostTaken+=6000*MEGABYTE;await time.sleep(5000);own-=100*MEGABYTE;hostTaken-=6000*MEGABYTE;done++;},all=[governor.run(task,{kind:"language:cargo"}),governor.run(task,{kind:"language:cargo"})];
+ await time.drive(()=>done===2);await Promise.all(all);governor.dispose();
+ expect(Math.round(Math.max(...peaks["language:cargo"]!)/MEGABYTE)).toBe(100);
+});
+
+test("the process tree reader sums the resident memory of the process and all its descendants and nothing else",()=>{
+ const text=["  10     1   1000","  11    10   2000","  12    11   3000","  20     1   9000","junk"].join("\n"),rows=memory.psProcessRowsV1(text);
+ expect(rows).toHaveLength(4);
+ expect(memory.processTreeBytesV1(rows,10)).toBe(6000*1024);
+ expect(memory.processTreeBytesV1(rows,12)).toBe(3000*1024);
+ expect(memory.processTreeBytesV1(rows,99)).toBe(0);
+ let calls=0,time=0;
+ const reader=memory.createProcessTreeMemoryV1({pid:10,platform:"linux",run:()=>{calls++;return text;},now:()=>time,maximumAgeMilliseconds:1000});
+ expect(reader()).toBe(6000*1024);expect(reader()).toBe(6000*1024);expect(calls).toBe(1);time=1500;reader();expect(calls).toBe(2);
+ expect(memory.createProcessTreeMemoryV1({platform:"win32",own:()=>77,run:()=>{throw Error("no ps on windows");}})()).toBe(77);
+ expect(memory.createProcessTreeMemoryV1({pid:10,platform:"linux",own:()=>55,run:()=>{throw Error("ps failed");}})()).toBe(55);
+ expect(memory.createProcessTreeMemoryV1()()).toBeGreaterThan(0);
+});
+
+/** 🧪️ Runs one owner that holds its slot for `holdMilliseconds` of modeled time and answers when it started. */
+const holdOwner=(governor:ReturnType<typeof memory.createMemoryGovernorV1>,time:FakeTime,key:string,holdMilliseconds:number,started:Record<string,number>,kind="rust")=>governor.run(async()=>{started[key]=time.now();await time.sleep(holdMilliseconds);},{kind,key});
+const learnedPeaks=(megabytes:number)=>({read:()=>({rust:[megabytes*MEGABYTE]}),write:()=>undefined});
+
+test("with one project running and a headroom below its estimate the smallest pending project runs one bound after the last progress when it fits the grant, and every wait line names project, need and seconds",async()=>{
+ const time=new FakeTime(),lines:string[]=[],started:Record<string,number>={},bound=memory.GRAPH_MEMORY_POLICY_V1.waitBoundMilliseconds;
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>413*MEGABYTE,peaks:learnedPeaks(465),now:time.now,sleep:time.sleep,report:line=>lines.push(`${time.now()} ${line}`),environment:{SEMIO_LANGUAGE:"en"}});
+ const first=holdOwner(governor,time,"first",600000,started),second=holdOwner(governor,time,"second",1000,started);let firstDone=false;void first.then(()=>{firstDone=true;});
+ await time.drive(()=>started.second!==undefined);
+ expect(started.first).toBe(0);
+ expect(started.second!,"never before the bound, and within one poll after it").toBeGreaterThanOrEqual(bound);expect(started.second!).toBeLessThan(bound+1000);
+ const waiting=lines.filter(line=>line.includes("waiting for memory headroom"));
+ expect(waiting.length).toBeGreaterThan(0);
+ for(const line of waiting){expect(line).toContain("second needs 465 MB");expect(line).toMatch(/has waited \d+ s/u);expect(line).toContain("after 60 s");expect(line).toMatch(/\(\d+ of \d+ MB reserved/u);}
+ expect(lines.some(line=>line.includes("second waited 60 s for 465 MB")&&line.includes("fits the 2048 MB"))).toBe(true);
+ await time.drive(()=>firstDone);
+ governor.dispose();
+});
+
+test("a headroom below the estimate with nothing running starts the project at once, and with one running the wait never exceeds the bound after the last progress",async()=>{
+ const time=new FakeTime(),started:Record<string,number>={};
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>-81*MEGABYTE,peaks:learnedPeaks(486),now:time.now,sleep:time.sleep});
+ const a=holdOwner(governor,time,"a",600000,started),b=holdOwner(governor,time,"b",5000,started),c=holdOwner(governor,time,"c",5000,started);
+ const bound=memory.GRAPH_MEMORY_POLICY_V1.waitBoundMilliseconds;
+ let finished=0;void b.then(()=>{finished++;});void c.then(()=>{finished++;});
+ await time.drive(()=>finished===2);
+ expect(started.a).toBe(0);expect(started.b!).toBeGreaterThanOrEqual(bound);expect(started.b!).toBeLessThan(bound+1000);
+ expect(started.c!,"every admission and completion is progress and restarts the bound, so c runs one bound after b is done").toBeGreaterThanOrEqual(started.b!+5000);expect(started.c!).toBeLessThan(started.b!+5000+bound+1000);
+ void a;
+ governor.dispose();
+});
+
+test("a project that needs more than one project is granted is refused with the typed error naming need and available, exit code 75, within the bound",async()=>{
+ const time=new FakeTime(),started:Record<string,number>={},lines:string[]=[];
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>300*MEGABYTE,ownerLimitBytes:400*MEGABYTE,peaks:learnedPeaks(900),now:time.now,sleep:time.sleep,report:line=>lines.push(line),environment:{SEMIO_LANGUAGE:"en"}});
+ holdOwner(governor,time,"first",600000,started).catch(()=>undefined);
+ const second=holdOwner(governor,time,"second",1000,started).then(()=>undefined,error=>error as Error&{code:string;exitCode:number;detail:{needBytes:number;availableBytes:number}});
+ let outcome:unknown;void second.then(value=>{outcome=value;});
+ await time.drive(()=>outcome!==undefined);
+ expect(outcome).toBeInstanceOf(memory.GraphMemoryRefusedErrorV1);
+ expect(outcome).toMatchObject({code:"BUILD_GRAPH_MEMORY_REFUSED",exitCode:75,detail:{needBytes:900*MEGABYTE,availableBytes:400*MEGABYTE}});
+ expect((outcome as Error).message).toContain("second needs 900 MB but one project is granted 400 MB");expect((outcome as Error).message).toContain("exit 75");
+ expect(time.now()).toBeLessThanOrEqual(memory.GRAPH_MEMORY_POLICY_V1.waitBoundMilliseconds+1000);
+ expect(started.second).toBeUndefined();
+ governor.dispose();
+});
+
+test("an owner of an unlearned kind waits for the running owner only up to the bound and its line says for how long",async()=>{
+ const time=new FakeTime(),started:Record<string,number>={},lines:string[]=[];
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>10*1024*MEGABYTE,now:time.now,sleep:time.sleep,report:line=>lines.push(line),environment:{SEMIO_LANGUAGE:"en"}});
+ const first=holdOwner(governor,time,"first",600000,started,"cold"),second=holdOwner(governor,time,"second",1000,started,"cold");
+ await time.drive(()=>started.second!==undefined);
+ expect(started.second!).toBeGreaterThanOrEqual(memory.GRAPH_MEMORY_POLICY_V1.waitBoundMilliseconds);
+ expect(lines.some(line=>line.includes("no memory peak learned for cold projects")&&/second has waited \d+ s for the running project, at most 60 s/u.test(line))).toBe(true);
+ governor.dispose();void first;
+});
+
+test("with two projects running the fleet is asked for the pending projects after the fleet bound, the owners it takes fail typed, once, and without a port the governor keeps waiting",async()=>{
+ const time=new FakeTime(),started:Record<string,number>={},asked:{keys:readonly string[];seconds:number}[]=[],lines:string[]=[];
+ const governor=memory.createMemoryGovernorV1({workers:3,headroom:()=>100*MEGABYTE,peaks:learnedPeaks(465),now:time.now,sleep:time.sleep,report:line=>lines.push(line),environment:{SEMIO_LANGUAGE:"en"},fleet:async ask=>{asked.push(ask);return ask.keys.filter(key=>key!=="keep");}});
+ const hold=(key:string)=>holdOwner(governor,time,key,1_000_000,started).catch(error=>error as Error&{code:string});
+ hold("one");hold("two");
+ const taken=hold("third"),kept=hold("keep");let outcome:unknown,done=false;void taken.then(value=>{outcome=value;done=true;});
+ await time.drive(()=>done);
+ expect(asked.length).toBe(1);expect(asked[0]!.keys).toEqual(["third","keep"]);expect(asked[0]!.seconds).toBeGreaterThanOrEqual(memory.GRAPH_MEMORY_POLICY_V1.fleetFallbackMilliseconds/1000);
+ expect(outcome).toBeInstanceOf(memory.GraphOwnerFleetErrorV1);expect(outcome).toMatchObject({code:"BUILD_GRAPH_OWNER_FLEET",detail:{key:"third"}});
+ expect(lines.some(line=>line.includes("asking the fleet to infer the remaining 2 project(s)"))).toBe(true);
+ expect(started.keep).toBeUndefined();
+ governor.dispose();void kept;
+});
+
+test("the command entry finds the typed refusal behind wrappers and ends the command with exit code 75",async()=>{
+ const refused=new memory.GraphMemoryRefusedErrorV1({key:"k",needBytes:2*MEGABYTE,availableBytes:MEGABYTE,freeBytes:0,seconds:61,message:"refused"});
+ expect(memory.graphMemoryRefusalOfV1(Object.assign(Error("wrapped"),{cause:Object.assign(Error("again"),{cause:refused})}))).toBe(refused);
+ expect(memory.graphMemoryRefusalOfV1(Error("other"))).toBeUndefined();expect(memory.graphMemoryRefusalOfV1(undefined)).toBeUndefined();
+ const source=await Bun.file(new URL("../../⌨️command/📥️entry/🟦️.ts",import.meta.url)).text();
+ expect(source).toContain("graphMemoryRefusalOfV1");expect(source).toContain("process.exitCode=refused.exitCode");
+ const probe=Bun.spawnSync([process.execPath,"-e",`process.exitCode=75;`]);expect(probe.exitCode).toBe(refused.exitCode);
 });

@@ -10,7 +10,7 @@
 import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { open } from "node:fs/promises";
-import { chmodSync, closeSync, copyFileSync, existsSync, lstatSync, mkdirSync, openSync, readdirSync, renameSync, rmSync } from "node:fs";
+import { chmodSync, closeSync, copyFileSync, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { constants } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -385,12 +385,56 @@ export function proctorSourceRoots(metadata: CargoMetadata): string[] {
   return roots.filter((root, index) => !roots.slice(0, index).some((outer) => root.startsWith(`${outer}${sep}`) || root === outer));
 }
 
-/** 🗂️ Reads the proctor's local dependency owners from the prepared manifests with cancellation and progress.
+const MODULE_PATH_ATTRIBUTE = /(#\[cfg\(test\)\]\s*)?#\[path\s*=\s*"([^"]+)"\s*\]/gu;
+
+function outermost(roots: readonly string[]): string[] {
+  const sorted = [...new Set(roots)].sort();
+  return sorted.filter((root, index) => !sorted.slice(0, index).some((outer) => root.startsWith(`${outer}${sep}`)));
+}
+
+/** 🚪️ The crate root files of a manifest: the `path` of its `[lib]` and `[[bin]]` tables, else Cargo's defaults. */
+function crateEntries(manifest: string): string[] {
+  const entries: string[] = [], base = dirname(manifest);
+  let table = "", declared = false;
+  for (const line of readFileSync(manifest, "utf8").split(/\r?\n/u)) {
+    const header = /^\s*(\[\[?[^\]]+\]\]?)\s*$/u.exec(line);
+    if (header) table = header[1]!;
+    else if (table === "[lib]" || table === "[[bin]]") {
+      const path = /^\s*path\s*=\s*"([^"]+)"/u.exec(line);
+      if (path) {
+        entries.push(resolve(base, path[1]!));
+        declared = true;
+      }
+    }
+  }
+  return declared ? entries : [join(base, "src", "lib.rs"), join(base, "src", "main.rs")].filter((file) => existsSync(file));
+}
+
+/** 🧲️ The owner directories that the built modules of the crates reach through `#[path]` attributes beyond `roots` (a crate may
+ * build a sibling owner's file): followed from each crate root file, transitively, skipping `#[cfg(test)]` modules, inside `repoRoot`. */
+export function proctorReachedRoots(repoRoot: string, roots: readonly string[], manifests: readonly string[], signal?: AbortSignal): string[] {
+  const base = resolve(repoRoot), all = new Set(roots), seen = new Set<string>(), pending = manifests.flatMap(crateEntries);
+  for (let file = pending.pop(); file !== undefined; file = pending.pop()) {
+    if (seen.has(file) || !existsSync(file)) continue;
+    seen.add(file);
+    signal?.throwIfAborted();
+    for (const [, test, target] of readFileSync(file, "utf8").matchAll(MODULE_PATH_ATTRIBUTE)) {
+      if (test) continue;
+      const module = resolve(dirname(file), target!);
+      pending.push(module);
+      const owner = dirname(module);
+      if (owner.startsWith(`${base}${sep}`) && ![...all].some((known) => owner === known || owner.startsWith(`${known}${sep}`))) all.add(owner);
+    }
+  }
+  return outermost([...all]);
+}
+
+/** 🗂️ Reads the proctor's local dependency owners from the prepared manifests with cancellation and progress, and the sibling
+ * owners their built modules reach through `#[path]`.
  * @see ./🕸️manifest-closure/🟦️.ts */
 export async function proctorSourceDirectories(repoRoot: string, options: ManifestClosureOptions = {}): Promise<string[]> {
   const crates = await cargoPackageClosure(join(repoRoot, TEACHING_WORKSPACE, "Cargo.toml"), PROCTOR_PACKAGE, options);
-  const roots = crates.map((crate) => packageRoot(crate.manifest)).sort();
-  return roots.filter((root, index) => !roots.slice(0, index).some((outer) => root.startsWith(`${outer}${sep}`) || root === outer));
+  return proctorReachedRoots(repoRoot, outermost(crates.map((crate) => packageRoot(crate.manifest))), crates.map((crate) => crate.manifest), options.signal);
 }
 
 /** 👀️ Whether a changed file — `file` relative to a watched source directory — is one a build of the proctor reads: Rust

@@ -82,7 +82,7 @@ class VentilationTransitions(unittest.TestCase):
             with self.subTest(clip=clip.name):
                 self.assertEqual(SPEC.validate(doc), [])
                 self.assertEqual(len(doc.transitions), CASES["counts"][clip.name])
-                self.assertTrue(all(t.recipe == "replace" and t.timing.duration > 0 for t in doc.transitions))
+                self.assertTrue(all(t.recipe in ("replace", "fade") and t.timing.duration > 0 for t in doc.transitions))
 
     def test_every_call_resolves_and_every_transition_is_played(self):
         for clip in clip_dirs():

@@ -289,7 +289,7 @@ fn plateau_chart(d: &En1998Snapshot) -> Diagram2d {
     let current = d.site.s_ap_r;
     let mut binding = FieldBinding::new("site.sApR", Affine::IDENTITY, "m/s2");
     binding.quantise = Some(Quantise::Round { step: 0.05 });
-    let marker = Marker { id: "reference:site-s-ap-r".into(), at: Vec2::new(current, plateau(current)), shape: MarkerShape::Diamond, tone: Tone::Info, label: loc(&format!("Site: S_aP,R = {current:.2} m/s\u{b2}, plateau {:.2} m/s\u{b2}", plateau(current)), &format!("Standort: S_aP,R = {current:.2} m/s\u{b2}, Plateau {:.2} m/s\u{b2}", plateau(current))), utilisation: None, bound_check: None, binding: (!d.annex == semio_s_plugin_norm_compliance::AnnexChoice::En).then_some(binding) };
+    let marker = Marker { id: "reference:site-s-ap-r".into(), at: Vec2::new(current, plateau(current)), shape: MarkerShape::Diamond, tone: Tone::Info, label: loc(&format!("Site: S_aP,R = {current:.2} m/s\u{b2}, plateau {:.2} m/s\u{b2}", plateau(current)), &format!("Standort: S_aP,R = {current:.2} m/s\u{b2}, Plateau {:.2} m/s\u{b2}", plateau(current))), utilisation: None, bound_check: None, binding: (d.annex != semio_s_plugin_norm_compliance::AnnexChoice::En).then_some(binding) };
     Diagram2d {
         id: "plateau-de:document".into(),
         title: loc("NA-DE plateau acceleration", "NA-DE-Plateau-Beschleunigung"),

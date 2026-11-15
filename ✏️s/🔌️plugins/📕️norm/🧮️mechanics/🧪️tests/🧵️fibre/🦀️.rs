@@ -1,4 +1,4 @@
-use crate::section::fibre::*;
+use semio_s_plugin_norm_mechanics::section::fibre::*;
 use semio_s_plugin_norm_compliance::python_oracle;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
@@ -29,7 +29,10 @@ fn rectangle_fibres_integrate_a_linear_law_to_the_closed_form() {
     let section = FibreSection { concrete: rectangle_fibres(b, h, 50), concrete_law: Box::new(move |e: f64| modulus * e / 1000.0), reinforcement: Vec::new(), top: 0.5 * h, cache: Default::default() };
     let (n, m) = section.integrate(eps_m, kappa);
     close(n, modulus * eps_m / 1000.0 * b * h, 1e-12, "N = E eps_m A");
-    close(m, modulus * kappa / 1000.0 * b * h.powi(3) / 12.0, 1e-9, "M = E kappa I");
+    let slices = 50.0_f64;
+    let inertia = b * h.powi(3) / 12.0;
+    close(m, modulus * kappa / 1000.0 * inertia * (1.0 - 1.0 / (slices * slices)), 1e-12, "M = E kappa sum(z^2 dA) of the midpoint strips");
+    close(m, modulus * kappa / 1000.0 * inertia, 1.0 / (slices * slices), "M = E kappa I within the strip discretisation");
 }
 
 #[test]
@@ -144,9 +147,15 @@ fn the_bracketed_root_finder_matches_the_reference_bisection_on_random_sections(
             let (fast, slow) = (section.balance(kappa, n_ed, 3.5), reference_bisection(&section, kappa, n_ed, 3.5));
             assert_eq!(fast.is_some(), slow.is_some(), "bracket agreement at kappa {kappa}, N {n_ed}");
             if let (Some(fast), Some(slow)) = (fast, slow) {
-                let (a, b) = (section.integrate(fast, kappa).1, section.integrate(slow, kappa).1);
-                close(a, b, 1e-9, "moment at the balanced strain");
-                assert!((fast - slow).abs() <= 1e-9 * (1.0 + slow.abs()), "{fast} vs {slow}");
+                let residual = |e: f64| (section.integrate(e, kappa).0 - n_ed).abs();
+                let scale = 1.0 + n_ed.abs() + section.integrate(3.5 - kappa * section.top, kappa).0.abs();
+                assert!(residual(fast) <= 1e-9 * scale && residual(slow) <= 1e-9 * scale, "both are roots: residuals {} {} at kappa {kappa}, N {n_ed}", residual(fast), residual(slow));
+                if (fast - slow).abs() <= 1e-9 * (1.0 + slow.abs()) {
+                    close(section.integrate(fast, kappa).1, section.integrate(slow, kappa).1, 1e-9, "moment at the balanced strain");
+                } else {
+                    let (n_fast, n_slow) = (section.integrate(fast, kappa).0, section.integrate(slow, kappa).0);
+                    assert!((n_fast - n_slow).abs() <= 1e-9 * scale, "distinct roots {fast} vs {slow} must lie on one plateau of N");
+                }
             }
         }
     }

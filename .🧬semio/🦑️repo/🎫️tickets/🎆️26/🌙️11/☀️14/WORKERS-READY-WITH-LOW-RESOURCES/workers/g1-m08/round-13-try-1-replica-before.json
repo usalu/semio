@@ -1,0 +1,6 @@
+{
+  "at": "after try recovery 2026-11-15T01:48:30.833790+00:00",
+  "digest": "d399114215f574cd93e191090e959fc4f901cfe0f2cd44963ab8d2b8d4046284",
+  "pid": 97876,
+  "timing": "before-try digest was not saved due observer failure; health observed now"
+}

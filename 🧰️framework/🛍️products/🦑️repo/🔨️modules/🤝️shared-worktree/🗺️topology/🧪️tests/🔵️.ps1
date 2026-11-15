@@ -19,6 +19,7 @@ $env:SystemRoot = "$root/Windows"
 $env:TEMP = "$root/tmp"
 $env:HARNESS_ROOT = $root
 $env:LOCALAPPDATA = 'C:\Users\op\AppData\Local'
+$env:USERPROFILE = 'C:\Users\op'
 
 Add-Type -TypeDefinition @'
 using System.Collections.Generic;
@@ -58,8 +59,9 @@ function global:powershell.exe {
 }
 $repoBlock = {
     $operation = $args[1]
-    Rec 'repo' (@("[$((Get-Location).Path -replace [regex]::Escape($global:Case.root), '<root>')]") + $args[1..($args.Count - 1)])
+    Rec 'repo' (@("[<module>/$(($args[0] -split '[\\/]')[-2])]") + $args[1..($args.Count - 1)])
     $global:LASTEXITCODE = [int]($global:Case.exit["repo:$operation"])
+    if ($operation -eq 'install') { New-Item -ItemType Directory -Force -Path $env:SEMIO_FLEET_ENTRY_DIR | Out-Null; Set-Content -LiteralPath (Join-Path $env:SEMIO_FLEET_ENTRY_DIR 'entry.json') -Value '{}'; '{"action":"installed","version":1}'; return }
     $key = $args[1..($args.Count - 1)] -join ' '
     if ($global:Case.plans.ContainsKey($key)) { $global:Case.plans[$key] -split "\r?\n" } elseif ($operation -in 'facts', 'env', 'worker-service', 'server-plan') { throw "unexpected topology call: $key" }
 }
@@ -71,6 +73,12 @@ function global:Enable-WindowsOptionalFeature { [CmdletBinding()]param([switch]$
 function global:Test-Path { $key = @($args | Where-Object { "$_" -like 'HKLM:*' }); if ($key.Count -gt 0) { $key[0] -in $global:State.Keys } else { Microsoft.PowerShell.Management\Test-Path @args } }
 function global:New-Item { $key = @($args | Where-Object { "$_" -like 'HKLM:*' }); if ($key.Count -gt 0) { Rec 'New-Item' @('-Path', $key[0]); $global:State.Keys += $key[0] } else { Microsoft.PowerShell.Management\New-Item @args } }
 function global:nfsadmin { Native 'nfsadmin' $args }
+function global:reg.exe {
+    $global:LASTEXITCODE = 0
+    if ($args[0] -eq 'query') { $path = [MockEnvironment]::User['Path']; if ($path) { "    Path    REG_EXPAND_SZ    $path" } else { $global:LASTEXITCODE = 1 }; return }
+    if ($args[0] -eq 'add') { [MockEnvironment]::User['Path'] = $args[($args.IndexOf('/d') + 1)] }
+}
+
 function global:Get-ItemProperty { [CmdletBinding()]param([string]$Path, [string]$Name) if ($global:State.Registry.ContainsKey($Name)) { [pscustomobject]@{ $Name = $global:State.Registry[$Name] } } else { Write-Error 'missing' } }
 function global:New-ItemProperty { [CmdletBinding()]param([string]$Path, [string]$Name, $Value, [string]$PropertyType, [switch]$Force) Rec 'New-ItemProperty' (Bound $PSBoundParameters); $global:State.Registry[$Name] = $Value }
 function global:Get-LocalUser { [CmdletBinding()]param([string]$Name) if ($Name -in $global:State.Users) { [pscustomobject]@{ Name = $Name } } else { Write-Error 'missing' } }
@@ -114,11 +122,14 @@ function global:Set-Service { [CmdletBinding()]param([string]$Name, [string]$Sta
 function global:Start-Service { [CmdletBinding()]param([string]$Name) Rec 'Start-Service' (Bound $PSBoundParameters); $global:State.TimeStatus = 'Running' }
 function global:w32tm.exe { 'time.windows.com' }
 if (-not $case.noWinget) { function global:winget { Native 'winget' $args } }
+function global:Get-CimInstance { [CmdletBinding()]param([Parameter(Position = 0)][string]$ClassName) }
 function global:Start-Sleep { [CmdletBinding()]param([int]$Seconds) Rec 'Start-Sleep' $Seconds }
 
 $text = [IO.File]::ReadAllText($case.script)
 $patches = [ordered]@{
     '[Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()' = '$global:Principal'
+    '[Security.Principal.WindowsIdentity]::GetCurrent().Name' = '"$env:USERDOMAIN\$env:USERNAME"'
+    '[Environment]::Is64BitProcess' = '$true'
     '[Environment]::GetEnvironmentVariable' = '[MockEnvironment]::GetEnvironmentVariable'
     '[Environment]::SetEnvironmentVariable' = '[MockEnvironment]::SetEnvironmentVariable'
 }

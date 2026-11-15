@@ -268,9 +268,14 @@ enum MechanicsErrorKind {
   NO_CONVERGENCE
 }
 
+type MechanicsText {
+  en: String!
+  de: String!
+}
+
 type MechanicsError {
   kind: MechanicsErrorKind!
-  message: String!
+  message: MechanicsText!
   node: String!
   dof: Int!
 }

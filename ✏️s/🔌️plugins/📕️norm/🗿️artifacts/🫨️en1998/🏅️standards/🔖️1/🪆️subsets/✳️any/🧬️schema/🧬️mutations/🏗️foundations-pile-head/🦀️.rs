@@ -11,6 +11,8 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 🪢️Mounts
 #[path = "../✏️change-foundation-pile-head-shear-n/🦀️.rs"]
 pub mod change_foundation_pile_head_shear_n;
+#[path = "../✏️change-foundation-pile-axial-load-n/🦀️.rs"]
+pub mod change_foundation_pile_axial_load_n;
 #[path = "../✏️change-foundation-pile-head-fixed/🦀️.rs"]
 pub mod change_foundation_pile_head_fixed;
 #[path = "../✏️change-foundation-pile-up-vs-ms/🦀️.rs"]

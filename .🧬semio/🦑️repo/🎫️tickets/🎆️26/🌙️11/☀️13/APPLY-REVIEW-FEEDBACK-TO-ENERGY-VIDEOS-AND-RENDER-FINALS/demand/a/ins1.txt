@@ -1,0 +1,4 @@
+        env_tag = math_label(tr(r"\text{Ambient heat}\;", r"\text{Umweltwärme}\;") + rf"{round(WP_UMWELT)}{KWH}", np.array([5.4, gen["anchors"][0][1], 0.0]),
+                             size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN, edge="right")
+        el_tag = math_label(tr(r"\text{Electricity, final energy}\;", r"\text{Strom, Endenergie}\;") + rf"{round(WP_STROM)}{KWH}", np.array([5.4, gen["anchors"][1][1], 0.0]),
+                            size=LABEL_FONT_SIZE - 2, color=P_YELLOW, edge="right")

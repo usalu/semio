@@ -73,7 +73,7 @@ impl Layout {
             cursor += size.x + GAP;
         }
         cursor = 0.0;
-        for (key, geometry) in &document.geometry {
+        for (key, geometry) in document.geometry.iter() {
             let size = geometry_size(geometry);
             layout.poses.insert(key.clone(), Pose { min: v3(cursor, GEOMETRY_ROW, 0.0), size: size.clone() });
             cursor += size.x + GAP;

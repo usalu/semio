@@ -1,0 +1,25 @@
+{
+  "at": "2026-11-14T16:06:39Z",
+  "health": {
+    "version": 1,
+    "wallMs": 1794672395688,
+    "pid": 75485,
+    "code": "39e3688eb315d48831772ca305d78bcb6f35975794444da47750bc5fa7459759",
+    "available_keys": [
+      "version",
+      "wallMs",
+      "pid",
+      "code",
+      "store",
+      "storeSinceMs",
+      "pending",
+      "failures",
+      "trust",
+      "sidecars"
+    ]
+  },
+  "graph_services": [],
+  "old_graph_service_exists": false,
+  "sidecar_tail": "2026-11-14T15:49:38.803Z worker registered: 055c7530-d460-45bc-b264-50a3e2a29421 cache http://192.168.178.70:6094\n2026-11-14T15:50:10.202Z worker stopped: ueli-workstation-mac-mini-m4-16gb-256gb-05-wlan.fritz.box-75290\n2026-11-14T15:50:46.077Z joining http://192.168.178.70:8981 offering rustc for 3 target(s)\n2026-11-14T15:50:46.130Z worker sandbox: darwin-sandbox confined network denied\n2026-11-14T15:50:46.151Z worker registered: 56f28eba-ace2-4efd-a724-5fb9acd7acee cache http://192.168.178.70:6094",
+  "sidecar_redacted": false
+}

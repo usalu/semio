@@ -7,7 +7,7 @@ const frontierReplayProtocol = Object.freeze({ ...require("./🧬️schema/🔣�
 const slash = (path) => path.replaceAll("\\", "/");
 const churn = Object.freeze(require("../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🔣️.json").definitions.Protocol.const);
 /** 🧨️ A peer edit of an owner manifest, the ownership policy or the membership while this custody was open: the plain error carries the code, reason, path and layer rank the churn policy declares, so the step that owns the snapshot takes a new one. */
-const edited = (message) => { const split = message.indexOf(": "); return Object.assign(Error(message), { code: churn.concurrentEditCode, reason: /membership|manifests changed/u.test(message) ? "roster" : "bytes", path: split < 0 ? "bun workspace ownership" : message.slice(split + 2).split(";")[0], rank: churn.profiles.snapshot.rank - 1 }); };
+const edited = (message, reason) => { const split = message.indexOf(": "); return Object.assign(Error(message), { code: churn.concurrentEditCode, reason: reason ?? (/membership|manifests changed/u.test(message) ? "roster" : "bytes"), path: split < 0 ? "bun workspace ownership" : message.slice(split + 2).split(";")[0], rank: churn.profiles.snapshot.rank - 1 }); };
 const policySourceFields = Object.freeze([...require("./🧬️schema/🔣️.json").$defs.PhysicalPolicySource.required].sort());
 const {workspaceTestingCollectionRoot: collectionRoot} = require("../🟨️.cjs");
 const opaque = new Set(require("./🧬️schema/🔣️.json").$defs.OutputDirectories.const);
@@ -155,8 +155,9 @@ function* scopesPlan(owner, selection) {
     if (pattern !== "*/package.json") throw Error("Unsupported physical owner recipe: " + pattern);
     const entries = yield { operation: "list", path: owner.root };
     for (const entry of entries) if (!entry.name.startsWith(".") && !outputName(entry.name) && !collectionRoot(owner.root, join(owner.root, entry.name))) {
+      if (entry.kind !== "directory" && entry.kind !== "symlink" || (yield { operation: "state", path: join(owner.root, entry.name, "package.json") }) === "missing") continue;
       if (entry.kind === "symlink") throw Error("Bun installation owner is a symlink: " + entry.name);
-      if (entry.kind === "directory" && (yield { operation: "state", path: join(owner.root, entry.name, "package.json") }) !== "missing") paths.add(entry.name + "/package.json");
+      paths.add(entry.name + "/package.json");
     }
   }
   const scopes = [];
@@ -250,7 +251,7 @@ function nativeOperations(observations, root, budget = physicalBudget()) {
     try {
       const entry = fs.lstatSync(path, { bigint: true }), kind = kindOf(entry);
       retain("state", path, ownershipStateV1(entry)); return { kind, entry };
-    } catch (error) { if (error.code === "ENOENT") { retain("state", path, ["missing"]); return { kind: "missing" }; } throw error; }
+    } catch (error) { if (error.code === "ENOENT" || error.code === "ENOTDIR") { retain("state", path, ["missing"]); return { kind: "missing" }; } throw error; }
   };
   const operations = {
     state(path) {
@@ -313,89 +314,104 @@ function observedOwnership(owner) {
   const paths = [...owner.observations.paths.values()].map(record => Object.freeze({ path: record.path, state: record.state, ...(record.list ? { list: record.list } : {}) })), texts = [...owner.texts].map(([path, text]) => Object.freeze({ path, sha256: createHash("sha256").update(text).digest("hex") }));
   return Object.freeze({ root: owner.root, paths: Object.freeze(paths), texts: Object.freeze(texts) });
 }
+/** 🧭️ Remembers the first path a replay saw move and the fact that moved there (existence, identity, listing or content digest), so a refusal can name it; always answers false. */
+function ownershipMoved(owner, path, fact, reason) { owner.moved ??= { path, fact, reason }; return false; }
+/** 🪪️ Names the fact of a state record that no longer holds: the path appeared or vanished, or its kind, device, inode or mode changed. */
+function ownershipStateMoved(owner, record, facts) { return ownershipMoved(owner, record.path, facts === undefined || record.state[0] === "missing" ? "existence" : "identity", facts === undefined ? "vanished" : record.state[0] === "missing" ? "appeared" : "identity"); }
 /** ⚡️ Replays the complete original decision frontier and fences the final awaited continuation without rediscovering packages. */
 async function replayCurrentMembershipV1(owner, control, progress) {
   let continuationFailed = false, visited = 0;
   const observations = owner.observations, proof = new Map(), operations = nativeOperations(undefined, owner.root, owner.physical), read = path => {
-    try { return fs.lstatSync(path, { bigint: true }); } catch (error) { if (error.code === "ENOENT") return undefined; throw error; }
+    try { return fs.lstatSync(path, { bigint: true }); } catch (error) { if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined; throw error; }
   };
   try {
     if (!observations?.paths.size || !observations.frontier) return false;
     for (const record of observations.paths.values()) {
       control.signal.throwIfAborted();
       const facts = read(record.path);
-      if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return false;
+      if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return ownershipStateMoved(owner, record, facts);
       if (record.list) {
         const before = observations.frontier.get(record.path), stamp = facts?.isDirectory() ? directoryStamp(facts) : null;
         const decision = ownershipFrontierDecisionV1(before?.stamp, stamp, before?.settled && facts && settledDirectory(facts, Date.now()));
-        if (decision === "derive") return false;
-        if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return false;
+        if (decision === "derive") return ownershipMoved(owner, record.path, "identity", "identity");
+        if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return ownershipMoved(owner, record.path, "listing", "roster");
         proof.set(record.path, { stamp, exact: decision === "relist" });
       }
       const completedOperations = ++progress.completedOperations;
       if (++visited === observations.paths.size || completedOperations % (control.frontierBatchPaths ?? 1) === 0) try { await control.advance({ operation: "frontier", path: record.path, completedOperations }); } catch (error) { continuationFailed = true; throw error; }
       control.signal.throwIfAborted();
     }
-    if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return false;
+    if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return ownershipMoved(owner, owner.ownership.ownershipPath, "content digest", "bytes");
     for (const [path, text] of owner.texts) {
       control.signal.throwIfAborted();
-      if (readManifestText(bounded(owner.root, path), owner.physical) !== text) return false;
+      if (readManifestText(bounded(owner.root, path), owner.physical) !== text) return ownershipMoved(owner, path, "content digest", "bytes");
     }
     for (const record of observations.paths.values()) {
       control.signal.throwIfAborted(); const facts = read(record.path);
-      if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return false;
+      if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return ownershipStateMoved(owner, record, facts);
       if (record.list) {
-        const before = proof.get(record.path); if (!facts?.isDirectory() || !before) return false;
+        const before = proof.get(record.path); if (!facts?.isDirectory() || !before) return ownershipMoved(owner, record.path, "identity", "identity");
         const stamp = directoryStamp(facts);
-        if ((before.exact || before.stamp !== stamp) && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return false;
+        if ((before.exact || before.stamp !== stamp) && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return ownershipMoved(owner, record.path, "listing", "roster");
         proof.set(record.path, { stamp, settled: settledDirectory(facts, Date.now()) });
       }
     }
-    if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return false;
+    if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return ownershipMoved(owner, owner.ownership.ownershipPath, "content digest", "bytes");
     for (const [path, observation] of proof) observations.frontier.set(path, { stamp: observation.stamp, settled: observation.settled });
     return true;
-  } catch (error) { control.signal.throwIfAborted(); if (continuationFailed) throw error; return false; }
+  } catch (error) { control.signal.throwIfAborted(); if (continuationFailed) throw error; return ownershipMoved(owner, typeof error?.path === "string" ? error.path : owner.root, "content digest", "bytes"); }
 }
 /** 🧷️ Authenticates the complete candidate after the caller continuation without another await. */
 function authenticateCurrentMembershipV1(owner, control) {
   const observations = owner.observations, operations = nativeOperations(undefined, owner.root, owner.physical), proof = new Map(), read = path => {
-    try { return fs.lstatSync(path, { bigint: true }); } catch (error) { if (error.code === "ENOENT") return undefined; throw error; }
+    try { return fs.lstatSync(path, { bigint: true }); } catch (error) { if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined; throw error; }
   };
   if (!observations?.paths.size || !observations.frontier) return false;
-  if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return false;
+  if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return ownershipMoved(owner, owner.ownership.ownershipPath, "content digest", "bytes");
   for (const record of observations.paths.values()) {
     control.signal.throwIfAborted();
     const facts = read(record.path);
-    if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return false;
+    if (JSON.stringify(ownershipStateV1(facts)) !== JSON.stringify(record.state)) return ownershipStateMoved(owner, record, facts);
     if (record.list) {
-      if (!facts?.isDirectory()) return false;
+      if (!facts?.isDirectory()) return ownershipMoved(owner, record.path, "identity", "identity");
       const before = observations.frontier.get(record.path), stamp = directoryStamp(facts), decision = ownershipFrontierDecisionV1(before?.stamp, stamp, before?.settled && settledDirectory(facts, Date.now()));
-      if (decision === "derive") return false;
-      if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return false;
+      if (decision === "derive") return ownershipMoved(owner, record.path, "identity", "identity");
+      if (decision === "relist" && (JSON.stringify(projectListing(owner.root, record.path, operations.list(record.path))) !== JSON.stringify(record.list) || directoryStamp(read(record.path)) !== stamp)) return ownershipMoved(owner, record.path, "listing", "roster");
       proof.set(record.path, { stamp, settled: settledDirectory(facts, Date.now()) });
     }
   }
   for (const [path, text] of owner.texts) {
     control.signal.throwIfAborted();
-    if (readManifestText(bounded(owner.root, path), owner.physical) !== text) return false;
+    if (readManifestText(bounded(owner.root, path), owner.physical) !== text) return ownershipMoved(owner, path, "content digest", "bytes");
   }
   control.signal.throwIfAborted();
-  if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return false;
+  if (readManifestText(owner.ownership.ownershipPath, undefined, limits.maximumPolicyBytes) !== owner.ownership.ownershipSource) return ownershipMoved(owner, owner.ownership.ownershipPath, "content digest", "bytes");
   for (const [path, observation] of proof) observations.frontier.set(path, observation);
   return true;
 }
-/** 🧮️ Rederives the selected membership and refuses only when scopes, packages or manifests drift, so unrelated concurrent Source edits stay admissible. */
+/** 🔎️ Names the first scope manifest, package manifest or authored pattern row on which two ownership reports differ, and whether it appeared, vanished or changed in content. */
+function firstOwnershipDifference(left, right) {
+  const rows = value => new Map(Array.isArray(value) ? value.map(scope => ["scope:" + scope.manifest, scope.manifest]) : [...value.scopes.map(scope => ["scope:" + scope.manifest, JSON.stringify([scope.patterns, scope.packages])]), ...value.packages.map(path => ["package:" + path, path])]), before = rows(left), after = rows(right);
+  const key = [...new Set([...before.keys(), ...after.keys()])].sort().find(name => before.get(name) !== after.get(name));
+  return key === undefined ? ["package.json", "content digest"] : [key.replace(/^scope:/u, "").replace(/^package:(.*)$/u, "$1/package.json"), before.has(key) && after.has(key) ? "content digest" : "existence"];
+}
+/** 🧮️ Rederives the selected membership, at most `maximumRederivations` times while the replayed frontier keeps moving, and refuses at once when the scopes, packages or any consumed manifest differ from the verified ones (naming the first path and fact), so unrelated concurrent Source edits stay admissible and a refusal after the bound names the first path that moved in the last replay. */
 async function requireCurrentMembershipV1(owner, control, progress) {
+  owner.moved = undefined;
   if (await replayCurrentMembershipV1(owner, control, progress)) return;
-  const fresh = Object.assign(context(owner.root), { ownership: owner.ownership, physical: owner.physical }), report = await drainControlledPlanV1(owner.computation(fresh, owner.selection, owner.verifyPublished), nativeOperations(fresh.observations, fresh.root, fresh.physical), control, progress);
-  const shape = value => JSON.stringify(Array.isArray(value) ? value.map(scope => scope.manifest) : { scopes: value.scopes.map(({ manifest, patterns, packages }) => ({ manifest, patterns, packages })), packages: value.packages });
-  if (shape(report) !== shape(owner.report)) throw edited("Bun current workspace membership changed during verification");
-  for (const [path, text] of fresh.texts) if (owner.texts.has(path) && owner.texts.get(path) !== text) throw edited("Bun current manifest changed during verification: " + path);
-  if ([...owner.texts.keys()].some(path => !fresh.texts.has(path) && path !== "package.json")) throw edited("Bun current workspace manifests changed during verification");
-  fresh.texts = new Map([...owner.texts, ...fresh.texts]);
-  if (!await replayCurrentMembershipV1(fresh, control, progress) || !authenticateCurrentMembershipV1(fresh, control)) throw edited("Bun current ownership changed after refreshed continuation");
-  Object.assign(owner.observations, fresh.observations);
-  owner.texts = fresh.texts;
+  const shape = value => JSON.stringify(Array.isArray(value) ? value.map(scope => scope.manifest) : { scopes: value.scopes.map(({ manifest, patterns, packages }) => ({ manifest, patterns, packages })), packages: value.packages }), baseline = new Map(owner.texts);
+  for (let attempt = 1; ; attempt++) {
+    const fresh = Object.assign(context(owner.root), { ownership: owner.ownership, physical: owner.physical }), report = await drainControlledPlanV1(owner.computation(fresh, owner.selection, owner.verifyPublished), nativeOperations(fresh.observations, fresh.root, fresh.physical), control, progress);
+    if (shape(report) !== shape(owner.report)) { const [path, fact] = firstOwnershipDifference(report, owner.report); throw edited("Bun current workspace membership changed during verification: " + path + "; " + fact, "roster"); }
+    for (const [path, text] of fresh.texts) if (baseline.has(path) && baseline.get(path) !== text) throw edited("Bun current manifest changed during verification: " + path + "; content digest");
+    const missing = [...owner.texts.keys()].find(path => !fresh.texts.has(path) && path !== "package.json");
+    if (missing !== undefined) throw edited("Bun current workspace manifests changed during verification: " + missing + "; existence");
+    for (const [path, text] of fresh.texts) if (!baseline.has(path)) baseline.set(path, text);
+    fresh.texts = new Map(baseline);
+    if (await replayCurrentMembershipV1(fresh, control, progress) && authenticateCurrentMembershipV1(fresh, control)) { Object.assign(owner.observations, fresh.observations); owner.texts = fresh.texts; return; }
+    const moved = fresh.moved ?? { path: owner.root, fact: "identity", reason: "identity" };
+    if (attempt >= frontierReplayProtocol.maximumRederivations) throw edited("Bun current ownership changed after refreshed continuation: " + moved.path + "; " + moved.fact, moved.reason);
+  }
 }
 /** 🛡️ Fences the last caller continuation before native publication or a completed report. */
 async function currentFence(owner, operations, control, progress) {

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "nothing-moved", "changes": [], "action": "keep" },
+    { "name": "plugin-code-only", "changes": ["🟨️.mjs"], "action": "adopt" },
+    { "name": "two-code-files", "changes": ["a/🟨️.mjs", "b/🟦️.ts"], "action": "adopt" },
+    { "name": "contract-schema", "changes": ["a/🧬️schema/📥️pin.json"], "action": "restart" },
+    { "name": "code-and-contract", "changes": ["a/🟨️.mjs", "a/🧬️schema/📥️engine.json"], "action": "restart" },
+    { "name": "json-looking-code", "changes": ["a/json.mjs", "a/notes.jsonl"], "action": "adopt" }
+  ]
+}

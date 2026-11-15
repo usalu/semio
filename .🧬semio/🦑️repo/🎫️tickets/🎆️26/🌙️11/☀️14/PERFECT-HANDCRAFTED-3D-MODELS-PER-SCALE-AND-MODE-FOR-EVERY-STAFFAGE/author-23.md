@@ -1,0 +1,23 @@
+# Author 23 report (machinery re-work of author 04)
+
+## Status
+| asset | state |
+|---|---|
+| machinery/scroll-compressor | DONE, spliced (1:50/1:100/1:200 authored, 1:500 unavailable), `volumes-check --product` PASS at every scale |
+| machinery/tower-crane | NOT spliced, not passing: cheap rules fixed at 1:50-1:200, silhouette/cross-scale not re-measured at 1:50-1:200, 1:500 has 3 failing rules (see below) |
+
+## scroll-compressor
+- Solids body/thermal/structure: 1:50 16/14/10, 1:100 8/9/8, 1:200 6/9/8. Support solid `base-contact-pad` carries `anchor: "base-contact"` at every scale.
+- Exposed areas (C1) measured with the product `measureVolumes` (`author-23-area.ts`, areaM2 set to 1e-9 so the deviation yields the area). Finding: the product test is per triangle centroid, so a 280 mm box slab whose top face is partly under the shell is judged fully buried (0.038 m2 instead of 0.081). Fix in the model, not the rule: the foot plate is an extrude with a hole (rounded 280 mm square, hole of r 96 mm), the shell is revolved from y=0 and stands in the hole; the top of the plate is then a true annulus. Dome revolve closed to the axis.
+- Thermal now carries every surface of a region (flange, collar, crimp, lid, gland as thermal references), 1:100 a thermal-only discharge flange ring, 1:200 a 90 mm x 30 mm scroll window disc (scroll was buried at 0 m2).
+- `areaM2` corrected at the root (old, new): shell 0.252 -> 0.205, dome 0.0886 -> 0.063 (dome plus plume ring), discharge 0.004 -> 0.0072, suction 0.0057 -> 0.0062, feet 0.182 -> 0.084; terminal 0.0138 and scroll 0.0158 unchanged. Measured 1:50/1:100/1:200: shell .203/.213/.213, dome .057/.068/.080, discharge .0065/.0079/.0082, suction .0068/.0051/.0065, terminal .0119/.0178/.0170, feet .083/.083/.094, scroll .014/.0138/.018.
+- Renders of all three scales looked at: overlays green except 1-px rim, blue only for the suction stub end and gland (3D, not drawn), shells and member/support/joint colours as intended, support pad green under the plate.
+- Left imperfect: per-bone 2D disagreement (dome plan rx 0.092 vs 0.1 elsewhere, terminal front 50 mm vs plan 60 mm) not reworked (C11 info only). The default `volumes-check` (no `--product`) mixes in the owned engine [o] which measures feet exposure differently (0.132); `--product` is clean.
+
+## tower-crane (not spliced)
+Generator `author-04-tower-crane.py` (edited by me), tools `author-23-area.ts` (exposed area per region and scale, 2 s), `author-23-dbg.ts` (mesh dump).
+Fixed, verified with `--product --rules ...` (seconds): volumes-feature, -copied, -solids, -monotonic, -bones, -structure-coverage at all 4 scales; thermal-coverage at 1:50/100/200 (all 13 regions within 15/30 %); 1:500 only lattice (+0.5 on prism area), ballast 0.475 and house 0.21 (the 1:500 mast prism buries part of them), trolley 0.27.
+What changed: (1) structure at 1:50 lists one member solid per 2D member shape (292 bars; the rule counts list entries, repeat families do not count); (2) winch house is a hollow box (6 walls) so the hoist motor inside is exposed; mass-winch a smaller ellipsoid; (3) jib/counter-jib root joints sized to the chords (were 72-143 mm outside the body), joints/masses differ per scale (volumes-copied); (4) ropes and pendants are `slender: true` at true size; (5) cab front window layers were reversed on the side pane; (6) slew ring is an extrude with thermal `sectionFaces ["-v","+v"]` (bearing faces); (7) found kernel semantics `taperTo = [scale at from, scale at to]`: tower head, mast foot and skip were collapsed to boxes (all three fixed: tower head now a real pyramid, elevation IoU 0.853 -> 0.877); (8) 1:500 prisms carry `envelope: true`; winch grille dropped at 1:500, tower head apex 90 mm.
+`areaM2` corrected at the root (old -> new): lattice 180 -> 340, counterweight 25 -> 30, house 25 -> 32.2, slew-drive 1 -> 3.8, cab-glazing 4 -> 2.9, winch-house 38 -> 53.2 (hollow, both sides), hoist-motor 3 -> 5.1, trolley 4 -> 9, skip 8 -> 12.4, pendants 3 -> 8.2, rope 1 -> 2.8; ballast 40, cab 12 unchanged.
+Still failing / not done: 1:50 elevation/front/plan silhouette last measured IoU 0.74/0.80/0.68 (before the taper fix, one run = 10 min under load; not repeated); 1:100/1:200 silhouette not measured; 1:500 silhouette elevation IoU 0.877 (<0.90: pendants drawn at pen width, slew platform strip, tower head), cross-scale 1:500 union-volume band excess 0.27 even with `envelope`, lattice thermal area at 1:500 (request appended to author-requests.md), decisions text not yet updated for the changes above, no render of 1:50-1:200 looked at after the changes (1:500 sheet looked at: lattice prisms, pyramid, hollow house and wires read right).
+Not started: nothing else assigned beyond these two.

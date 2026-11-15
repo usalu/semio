@@ -1,3 +1,5 @@
+import{createHash}from"node:crypto";
+import{lstat,readdir,readFile,readlink}from"node:fs/promises";
 import{dirname,isAbsolute,resolve}from"node:path";
 
 const PATH_ROWS=new Set(["file","exists","stat","lstat","fileExists","directoryExists","readdir","readdirNames","typescriptText","analysis","realpath","realpathNative","typescriptRealpath"]);
@@ -48,4 +50,40 @@ export function dirtySummaryV1(dirty){
   if(path.includes("node_modules/"))modules=true;
  }
  return{paths,directories,configs,modules,...dirty.excluded?{excluded:dirty.excluded}:{}};
+}
+
+/** 🧮️ The dirty summary of a read that has no change journal: the fact rows that were just verified against the disk and no longer hold are exactly what moved since the generation, so their reach (files, probed directories, bare ancestors, configuration) is the set the closure parts are tested against; a row about a path above the checkout is checked once per pass by the settler itself, a row nothing is known about marks its parts volatile, which are always asked again. A part that holds no stale row can reach none of them, so it is never skipped wrongly.
+ * @param {Iterable<{kind:string;path:string;fact?:unknown}>} rows @param {(path:string)=>string} relative @param {string} volatileMarker */
+export function staleSummaryV1(rows,relative,volatileMarker){
+ const paths=new Set(),directories=new Set();let configs=false,modules=false;
+ for(const row of rows){
+  const one=rowPathsV1(row,relative,volatileMarker);
+  for(const path of one.paths)paths.add(path);
+  for(const dir of one.dirs)directories.add(dir);
+  for(const dir of one.bare)directories.add(dir);
+  if(one.config)configs=true;
+  if(one.bare.length)modules=true;
+ }
+ const summary=dirtySummaryV1({paths:[...paths],directories:[...directories]});
+ return{...summary,configs:summary.configs||configs,modules:summary.modules||modules};
+}
+
+const stampMemo=new Map();
+/** 🧾️ The stamp of one path as it is on the disk now: the sha256 of the bytes of a file (remembered by its size, times and inode, so an untouched file is read once per process), the sorted names and kinds of a directory, the target of a link, `-` for an absent path; undefined when the path cannot be read, which no vouch may rest on.
+ * @param {string} absolute @param {number} [memoEntries] */
+export async function stampOfV1(absolute,memoEntries=65536){
+ let info;try{info=await lstat(absolute,{bigint:true});}catch{return"-";}
+ if(info.isDirectory()){
+  const entries=await readdir(absolute,{withFileTypes:true}).catch(()=>undefined);if(entries===undefined)return undefined;
+  const hash=createHash("sha256");for(const name of entries.map(entry=>entry.name+(entry.isDirectory()?"/":entry.isSymbolicLink()?"@":"")).sort())hash.update(name).update("\0");
+  return"d:"+hash.digest("hex");
+ }
+ if(info.isSymbolicLink()){const target=await readlink(absolute).catch(()=>undefined);return target===undefined?undefined:"l:"+target;}
+ if(!info.isFile())return"o:"+info.mode;
+ const key=absolute+"\0"+info.size+"\0"+info.mtimeNs+"\0"+info.ctimeNs+"\0"+info.ino,known=stampMemo.get(key);
+ if(known!==undefined)return known;
+ let bytes;try{bytes=await readFile(absolute);}catch{return undefined;}
+ const value="f:"+createHash("sha256").update(bytes).digest("hex");
+ stampMemo.set(key,value);if(stampMemo.size>memoEntries)stampMemo.delete(stampMemo.keys().next().value);
+ return value;
 }

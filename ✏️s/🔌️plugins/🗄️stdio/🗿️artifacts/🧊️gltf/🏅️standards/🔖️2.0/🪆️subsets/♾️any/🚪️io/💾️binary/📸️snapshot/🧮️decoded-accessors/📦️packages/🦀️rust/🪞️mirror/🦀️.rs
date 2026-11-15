@@ -34,7 +34,7 @@ pub mod standards {
                         #[path = "."]
                         pub mod area_volume {
                             pub use semio_s_artifact_stdio_gltf_inferences_adjacency::standards::v2_0::subsets::any::schema::inferences::area_volume::*;
-                            pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::area_volume::contact_area;
+                            pub use semio_s_artifact_stdio_gltf_inferences_connected::standards::v2_0::subsets::any::schema::inferences::area_volume::contact_area;
                         }
                         #[path = "."]
                         pub mod clearance {

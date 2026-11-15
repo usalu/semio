@@ -1,3 +1,4 @@
+import {statSync} from "node:fs";
 import {chmod,lstat,mkdir,readdir,readFile,rename,rmdir,stat,unlink,utimes,writeFile} from "node:fs/promises";
 import {nativeDirectoryProtocolV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🟦️.ts";
 import {nativePartitionOfV1,nativeStatfsV1,nativeStorageBackendOfDirectoryV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
@@ -246,9 +247,12 @@ export async function removeCacheTreeV1(path:string,ports:CacheRunnerPortsV1,sta
 /** 💽️ The bytes the host volume of a workspace still has free; unreadable is null. */
 export function machineHostFreeBytesV1(workspace:string):number|null{return nativeFreeSpaceSyncV1(workspace)?.availableBytes??null;}
 
+/** 💽️ The bytes the host really holds for the fixed image of a partition directory (blocks, not size), null without an image file: raw images keep blocks freed inside them, so this is what the machine budget must count. */
+export function hostAllocationV1(directory:string):number|null{try{return statSync(join(directory,"fixed.dmg")).blocks*512;}catch{return null;}}
+
 /** 🏬️ The machine budget uses read from a status report: the used bytes and fixed image allocation of every partition store, plus the loose caches (`evictableBytes` null means unknown, everything counts). */
 export function machineUsesV1(report:CacheReportV1,looseBytes:number,looseEvictableBytes:number|null):readonly MachineUseV1[]{
- const uses:MachineUseV1[]=report.partitions.filter(row=>row.kind==="partition").map(row=>({id:row.id,usedBytes:row.usedBytes??0,envelopeBytes:row.envelopeBytes??row.capacityBytes,evictableBytes:null}));
+ const uses:MachineUseV1[]=report.partitions.filter(row=>row.kind==="partition").map(row=>({id:row.id,usedBytes:row.usedBytes??0,envelopeBytes:row.envelopeBytes??row.capacityBytes,allocatedBytes:hostAllocationV1(row.directory),evictableBytes:null}));
  uses.push({id:"loose",usedBytes:looseBytes,envelopeBytes:null,evictableBytes:looseEvictableBytes});
  return uses;
 }

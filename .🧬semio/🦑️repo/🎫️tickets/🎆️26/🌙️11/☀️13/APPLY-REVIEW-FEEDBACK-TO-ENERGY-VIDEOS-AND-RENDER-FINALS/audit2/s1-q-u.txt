@@ -1,0 +1,4 @@
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:923: h_old = house_section(np.array([-3.8, -0.24, 0.0]), scale=0.55)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:924: h_new = house_section(np.array([3.8, -0.24, 0.0]), scale=0.55)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1254: section_material(Rectangle(width=0.24, height=0.05)).move_to(np.array([flue_start[0], flue_top + 0.025, 0.0])),
+TOTAL 3

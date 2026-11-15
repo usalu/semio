@@ -7,6 +7,7 @@ import { retireFolderCanonicalBootstrapMirror } from "../../🌉️wire-bridge/�
 import { folderBinding, setStatus } from "../../🎭️actor-lifecycle/🟦️.ts";
 import { equalByteArrays, releaseDocumentBackboneOwnership } from "../../📮️hub-outbox/🟦️.ts";
 import type { MutationEnvelope } from "@semio-tech/framework-replication";
+import type { BinaryFetchTimeoutResponse } from "../🟦️.ts";
 
 /** ✍️ Folder envelope writes: the envelope URL, the retirement of the held canonical bootstrap mirror and the archive write that every folder lane (watch, config facet, lifecycle) shares. */
 export function folderEnvelopeUrl(binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, documentId: string): string {
@@ -92,7 +93,7 @@ async function drainArchiveWrites(state: ArtifactState, binding: Extract<Persist
 
 /** 🔎️ Whether the folder holds an archive other than the one this document last read or wrote: its content changed under unsaved edits, so the write is refused instead of overwriting it. */
 async function folderDivergedFromHeld(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>): Promise<boolean> {
-  const response = await fetchWithTimeout(folderEnvelopeUrl(binding, state.config.documentId), undefined, { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal });
+  const response = (await fetchWithTimeout(folderEnvelopeUrl(binding, state.config.documentId), undefined, { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal })) as BinaryFetchTimeoutResponse;
   if (response.status === 204 || response.status === 404) return false;
   if (!response.ok) throw new Error(`folder backbone read failed (${response.status})`);
   const bytes = new Uint8Array(await response.arrayBuffer());

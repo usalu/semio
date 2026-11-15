@@ -464,3 +464,9 @@ impl protocol::ColdDiffAlgebra<En1992Snapshot> for En1992Diff {
 /// 🍃️ The five handcrafted leaves of the `diff` schema facet.
 pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: semio_s_artifact_norm_en1992_diff_typescript::LEAF, graphql: semio_s_artifact_norm_en1992_diff_graphql::LEAF, json_schema: semio_s_artifact_norm_en1992_diff_json_schema::LEAF, proto: semio_s_artifact_norm_en1992_diff_proto::LEAF };
 //#endregion 🍃️FacetLeaves
+
+#[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+pub mod binary;

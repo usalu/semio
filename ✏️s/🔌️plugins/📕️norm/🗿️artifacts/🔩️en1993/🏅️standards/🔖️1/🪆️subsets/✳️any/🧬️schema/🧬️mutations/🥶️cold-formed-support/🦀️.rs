@@ -19,4 +19,4 @@ pub mod change_cf_crippling_category;
 pub mod change_cf_stiffened_support;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_en1993_mut_cold_formed_support_more::{change_cf_bending_moment, change_cf_moment_resistance, change_cf_sheeting_stiffness, change_cf_required_restraint_stiff};
+pub use semio_s_artifact_norm_en1993_mut_cold_support_more::{change_cf_bending_moment, change_cf_moment_resistance, change_cf_sheeting_stiffness, change_cf_required_restraint_stiff};

@@ -21,6 +21,7 @@ mod set_defaults;
 pub use set_defaults::SetDefaults;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = ShootingConfig, diff = ShootingConfigDiff, schema = "shooting.config", reference = ShootingConfig, reference_diff = ShootingConfigDiff)]
 pub enum ShootingConfigMutation {
@@ -37,6 +38,7 @@ pub enum ShootingConfigMutation {
     #[dsl(key = "set-defaults")]
     SetDefaults(SetDefaults),
 }
+dsl::original_ordinal_operation_receiving!(ShootingConfigMutation);
 
 impl store::snapshot_clone_preparation::ConfigApplyMutation<ShootingConfig> for ShootingConfigMutation {
     fn exchange(self, post: &mut ShootingConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {

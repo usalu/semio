@@ -4,7 +4,7 @@
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp",
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/*.rs",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️generated\"" }, "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/*.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🎚️config/🧱️binary-gate.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧫️fixtures/🔣️first-party-codecs.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/**/🧬️schema/🔣️.json",

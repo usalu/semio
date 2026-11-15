@@ -1,0 +1,200 @@
+Reading the project graph slice (945 s): flush 1 of 1.
+Reading the project graph slice (947 s): flush 1 of 1.
+[repo] still working after 950 s; last phase started: door.script
+Reading the project graph slice (949 s): flush 1 of 1.
+Reading the project graph slice (951 s): flush 1 of 1.
+Reading the project graph slice (953 s): flush 1 of 1.
+Reading the project graph slice (955 s): flush 1 of 1.
+Reading the project graph slice (957 s): flush 1 of 1.
+Reading the project graph slice (959 s): flush 1 of 1.
+Reading the project graph slice (961 s): flush 1 of 1.
+Reading the project graph slice (963 s): flush 1 of 1.
+Reading the project graph slice (965 s): flush 1 of 1.
+Reading the project graph slice (967 s): flush 1 of 1.
+Reading the project graph slice (969 s): flush 1 of 1.
+Reading the project graph slice (971 s): flush 1 of 1.
+Reading the project graph slice (973 s): flush 1 of 1.
+Reading the project graph slice (975 s): flush 1 of 1.
+Reading the project graph slice (977 s): flush 1 of 1.
+[repo] still working after 980 s; last phase started: door.script
+Reading the project graph slice (979 s): flush 1 of 1.
+Reading the project graph slice (981 s): flush 1 of 1.
+Reading the project graph slice (983 s): flush 1 of 1.
+Reading the project graph slice (985 s): flush 1 of 1.
+Reading the project graph slice (987 s): flush 1 of 1.
+Reading the project graph slice (989 s): flush 1 of 1.
+Reading the project graph slice (991 s): flush 1 of 1.
+Reading the project graph slice (993 s): flush 1 of 1.
+Reading the project graph slice (995 s): flush 1 of 1.
+Reading the project graph slice (997 s): flush 1 of 1.
+Reading the project graph slice (999 s): flush 1 of 1.
+Reading the project graph slice (1001 s): flush 1 of 1.
+Reading the project graph slice (1003 s): flush 1 of 1.
+Reading the project graph slice (1005 s): flush 1 of 1.
+Reading the project graph slice (1007 s): flush 1 of 1.
+[repo] still working after 1010 s; last phase started: door.script
+Reading the project graph slice (1009 s): flush 1 of 1.
+Reading the project graph slice (1011 s): flush 1 of 1.
+Reading the project graph slice (1013 s): flush 1 of 1.
+Reading the project graph slice (1015 s): flush 1 of 1.
+Reading the project graph slice (1017 s): flush 1 of 1.
+Reading the project graph slice (1019 s): flush 1 of 1.
+Reading the project graph slice (1021 s): flush 1 of 1.
+Reading the project graph slice (1023 s): flush 1 of 1.
+Reading the project graph slice (1025 s): flush 1 of 1.
+Reading the project graph slice (1027 s): flush 1 of 1.
+Reading the project graph slice (1029 s): flush 1 of 1.
+Reading the project graph slice (1031 s): flush 1 of 1.
+Reading the project graph slice (1033 s): flush 1 of 1.
+Reading the project graph slice (1035 s): flush 1 of 1.
+Reading the project graph slice (1037 s): flush 1 of 1.
+[repo] still working after 1040 s; last phase started: door.script
+Reading the project graph slice (1039 s): flush 1 of 1.
+Reading the project graph slice (1041 s): flush 1 of 1.
+Reading the project graph slice (1043 s): flush 1 of 1.
+Reading the project graph slice (1045 s): flush 1 of 1.
+Reading the project graph slice (1047 s): flush 1 of 1.
+Reading the project graph slice (1049 s): flush 1 of 1.
+Reading the project graph slice (1051 s): flush 1 of 1.
+Reading the project graph slice (1053 s): flush 1 of 1.
+Reading the project graph slice (1055 s): flush 1 of 1.
+Reading the project graph slice (1057 s): flush 1 of 1.
+Reading the project graph slice (1059 s): flush 1 of 1.
+Reading the project graph slice (1061 s): flush 1 of 1.
+Reading the project graph slice (1063 s): flush 1 of 1.
+Reading the project graph slice (1065 s): flush 1 of 1.
+Reading the project graph slice (1067 s): flush 1 of 1.
+[repo] still working after 1070 s; last phase started: door.script
+Reading the project graph slice (1069 s): flush 1 of 1.
+Reading the project graph slice (1071 s): flush 1 of 1.
+Reading the project graph slice (1073 s): flush 1 of 1.
+Reading the project graph slice (1075 s): flush 1 of 1.
+Reading the project graph slice (1077 s): flush 1 of 1.
+Reading the project graph slice (1079 s): flush 1 of 1.
+Reading the project graph slice (1081 s): flush 1 of 1.
+Reading the project graph slice (1083 s): flush 1 of 1.
+Reading the project graph slice (1085 s): flush 1 of 1.
+Reading the project graph slice (1087 s): flush 1 of 1.
+Reading the project graph slice (1089 s): flush 1 of 1.
+Reading the project graph slice (1091 s): flush 1 of 1.
+Reading the project graph slice (1093 s): flush 1 of 1.
+Reading the project graph slice (1095 s): flush 1 of 1.
+Reading the project graph slice (1097 s): flush 1 of 1.
+[repo] still working after 1100 s; last phase started: door.script
+Reading the project graph slice (1099 s): flush 1 of 1.
+Reading the project graph slice (1101 s): flush 1 of 1.
+Reading the project graph slice (1103 s): flush 1 of 1.
+Reading the project graph slice (1105 s): flush 1 of 1.
+Reading the project graph slice (1107 s): flush 1 of 1.
+Reading the project graph slice (1109 s): flush 1 of 1.
+Reading the project graph slice (1111 s): flush 1 of 1.
+Reading the project graph slice (1113 s): flush 1 of 1.
+Reading the project graph slice (1115 s): flush 1 of 1.
+Reading the project graph slice (1117 s): flush 1 of 1.
+Reading the project graph slice (1119 s): flush 1 of 1.
+Reading the project graph slice (1121 s): flush 1 of 1.
+Reading the project graph slice (1123 s): flush 1 of 1.
+Reading the project graph slice (1125 s): flush 1 of 1.
+Reading the project graph slice (1127 s): flush 1 of 1.
+[repo] still working after 1130 s; last phase started: door.script
+Reading the project graph slice (1129 s): flush 1 of 1.
+Reading the project graph slice (1131 s): flush 1 of 1.
+Reading the project graph slice (1133 s): flush 1 of 1.
+Reading the project graph slice (1135 s): flush 1 of 1.
+Reading the project graph slice (1137 s): flush 1 of 1.
+Reading the project graph slice (1139 s): flush 1 of 1.
+Reading the project graph slice (1141 s): flush 1 of 1.
+Reading the project graph slice (1143 s): flush 1 of 1.
+Reading the project graph slice (1145 s): flush 1 of 1.
+Reading the project graph slice (1147 s): flush 1 of 1.
+Reading the project graph slice (1149 s): flush 1 of 1.
+Reading the project graph slice (1151 s): flush 1 of 1.
+Reading the project graph slice (1153 s): flush 1 of 1.
+Reading the project graph slice (1155 s): flush 1 of 1.
+Reading the project graph slice (1157 s): flush 1 of 1.
+[repo] still working after 1160 s; last phase started: door.script
+Reading the project graph slice (1159 s): flush 1 of 1.
+Reading the project graph slice (1161 s): flush 1 of 1.
+Reading the project graph slice (1163 s): flush 1 of 1.
+Reading the project graph slice (1165 s): flush 1 of 1.
+Reading the project graph slice (1167 s): files 0 of 0.
+Reading the project graph slice (1169 s): doubt 451632 of 451632.
+Reading the project graph slice (1171 s): facts 139264 of 209491.
+Reading the project graph slice (1173 s): facts 209491 of 209491.
+Reading the project graph slice (1175 s): verification 2 of 2274.
+Reading the project graph slice (1177 s): verification 2 of 2274.
+Reading the project graph slice (1179 s): verification 94 of 2274.
+Reading the project graph slice (1181 s): flush 1 of 1.
+Reading the project graph slice (1183 s): flush 1 of 1.
+Reading the project graph slice (1185 s): flush 1 of 1.
+Reading the project graph slice (1187 s): flush 1 of 1.
+[repo] still working after 1190 s; last phase started: door.script
+Reading the project graph slice (1189 s): flush 1 of 1.
+Reading the project graph slice (1191 s): flush 1 of 1.
+Reading the project graph slice (1193 s): flush 1 of 1.
+Reading the project graph slice (1195 s): flush 1 of 1.
+Reading the project graph slice (1197 s): flush 1 of 1.
+Reading the project graph slice (1199 s): flush 1 of 1.
+Reading the project graph slice (1201 s): flush 1 of 1.
+Reading the project graph slice (1203 s): flush 1 of 1.
+Reading the project graph slice (1205 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 1, 0), @semio-tech/async-timer-rs (language:rust, 1, 0), @semio-tech/async-macros-rs (language:cargo, 1, 0).
+Reading the project graph slice (1207 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 1, 0), @semio-tech/async-timer-rs (language:rust, 1, 0), @semio-tech/async-macros-rs (language:cargo, 1, 0).
+Reading the project graph slice (1209 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 5, 0), @semio-tech/async-timer-rs (language:rust, 5, 0), @semio-tech/async-macros-rs (language:cargo, 4, 0).
+Reading the project graph slice (1211 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 5, 0), @semio-tech/async-timer-rs (language:rust, 5, 0), @semio-tech/async-macros-rs (language:cargo, 4, 0).
+Reading the project graph slice (1213 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 5, 0), @semio-tech/async-timer-rs (language:rust, 5, 0), @semio-tech/async-macros-rs (language:cargo, 4, 0).
+Reading the project graph slice (1215 s): owners 7 of 703; running (name, kind, seconds, rows): @semio-tech/async-macros-rs (language:cargo, 10, 0), @semio-tech/2d-trace-rs (language:rust, 1, 0), @semio-tech/2d-path-flatten-rs (language:rust, 0, 0).
+Reading the project graph slice (1217 s): owners 7 of 703; running (name, kind, seconds, rows): @semio-tech/async-macros-rs (language:cargo, 10, 0), @semio-tech/2d-trace-rs (language:rust, 1, 0), @semio-tech/2d-path-flatten-rs (language:rust, 0, 0).
+[repo] still working after 1220 s; last phase started: door.script
+Reading the project graph slice (1219 s): owners 12 of 703; running (name, kind, seconds, rows): @semio-tech/2d-compute-rs (language:rust, 4, 0), @semio-tech/compute-ownership-runner (project, 4, 0), @semio-tech/2d-regions-rs (language:rust, 4, 0).
+Reading the project graph slice (1221 s): owners 12 of 703; running (name, kind, seconds, rows): @semio-tech/2d-compute-rs (language:rust, 4, 0), @semio-tech/compute-ownership-runner (project, 4, 0), @semio-tech/2d-regions-rs (language:rust, 4, 0).
+Reading the project graph slice (1223 s): owners 14 of 703.
+Reading the project graph slice (1225 s): owners 16 of 703; running (name, kind, seconds, rows): @semio-tech/2d-compute-rs (language:rust, 9, 0), @semio-tech/action-bus-rs (language:rust, 9, 0), @semio-tech/filesystem-observation (project, 9, 0).
+Reading the project graph slice (1227 s): owners 17 of 703.
+Reading the project graph slice (1229 s): owners 22 of 703.
+Reading the project graph slice (1231 s): owners 24 of 703.
+Reading the project graph slice (1233 s): owners 26 of 703.
+Reading the project graph slice (1235 s): owners 28 of 703.
+Reading the project graph slice (1237 s): owners 30 of 703.
+Reading the project graph slice (1239 s): owners 31 of 703.
+Reading the project graph slice (1241 s): owners 31 of 703.
+Reading the project graph slice (1243 s): owners 33 of 703.
+Reading the project graph slice (1245 s): owners 33 of 703; running (name, kind, seconds, rows): @semio-tech/canvas-react-renderer (project, 1, 0).
+Reading the project graph slice (1247 s): owners 33 of 703; running (name, kind, seconds, rows): @semio-tech/canvas-react-renderer (project, 1, 0).
+[repo] still working after 1250 s; last phase started: door.script
+Reading the project graph slice (1249 s): owners 33 of 703; running (name, kind, seconds, rows): @semio-tech/canvas-react-renderer (project, 1, 0).
+Reading the project graph slice (1251 s): owners 34 of 703.
+Reading the project graph slice (1253 s): owners 34 of 703.
+Reading the project graph slice (1255 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 4, 0).
+Reading the project graph slice (1257 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 4, 0).
+Reading the project graph slice (1259 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 4, 0).
+Reading the project graph slice (1261 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 9, 0); waiting for memory headroom (13 of -60 MB reserved).
+Reading the project graph slice (1263 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 9, 0); waiting for memory headroom (13 of -60 MB reserved).
+Reading the project graph slice (1265 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 9, 0); waiting for memory headroom (13 of -60 MB reserved).
+Reading the project graph slice (1267 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 9, 0); waiting for memory headroom (13 of -60 MB reserved).
+Reading the project graph slice (1269 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 9, 0); waiting for memory headroom (13 of -60 MB reserved).
+Reading the project graph slice (1271 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 9, 0); waiting for memory headroom (13 of -60 MB reserved).
+Reading the project graph slice (1273 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 9, 0); waiting for memory headroom (13 of -60 MB reserved).
+Reading the project graph slice (1275 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+Reading the project graph slice (1277 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+[repo] still working after 1280 s; last phase started: door.script
+Reading the project graph slice (1279 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+Reading the project graph slice (1281 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+Reading the project graph slice (1283 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+Reading the project graph slice (1285 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+Reading the project graph slice (1287 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+Reading the project graph slice (1289 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+Reading the project graph slice (1291 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+Reading the project graph slice (1293 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 23, 0); waiting for memory headroom (168 of -603 MB reserved).
+Reading the project graph slice (1295 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 44, 0); waiting for memory headroom (207 of -603 MB reserved).
+Reading the project graph slice (1297 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 44, 0); waiting for memory headroom (207 of -603 MB reserved).
+Reading the project graph slice (1299 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 44, 0); waiting for memory headroom (207 of -603 MB reserved).
+Reading the project graph slice (1301 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 44, 0); waiting for memory headroom (207 of -603 MB reserved).
+Reading the project graph slice (1303 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 44, 0); waiting for memory headroom (207 of -603 MB reserved).
+Reading the project graph slice (1305 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 44, 0); waiting for memory headroom (207 of -603 MB reserved).
+Reading the project graph slice (1307 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 44, 0); waiting for memory headroom (207 of -603 MB reserved).
+[repo] still working after 1310 s; last phase started: door.script
+Reading the project graph slice (1309 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 44, 0); waiting for memory headroom (207 of -603 MB reserved).
+Reading the project graph slice (1311 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 60, 0); waiting for memory headroom (207 of -587 MB reserved).
+Reading the project graph slice (1313 s): owners 34 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-syntax-rs (language:rust, 60, 0); waiting for memory headroom (207 of -587 MB reserved).
+end 2026-11-14T17:43:38Z
+native_rc=7

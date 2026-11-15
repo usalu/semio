@@ -10,8 +10,8 @@ async fn definition_declares_this_windows_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_surface_for_the_default_document() {
-    assert!(render(&Din16798Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), Locale::En).is_ok());
-    assert!(render(&Din16798Snapshot::noncompliant_multi_fail(), Locale::De).is_ok());
+    assert!(render(&Din16798Snapshot::default(), Locale::En).is_ok());
+    assert!(render(&Din16798Snapshot::noncompliant_office(), Locale::De).is_ok());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -19,5 +19,5 @@ async fn renders_the_toolbar_and_a_frame_at_a_fixed_mode() {
     use semio_s_plugin_norm_app_surface::viewport3d::playback::PlaybackState;
     use semio_s_plugin_norm_app_surface::viewport3d::toolbar::ViewportView;
     let view = ViewportView { playback: PlaybackState { track: Some("mode".into()), value: 2.0, ..Default::default() }, ..Default::default() };
-    assert!(render_with(&Din16798Snapshot::noncompliant_multi_fail(), &view, Locale::En).is_ok());
+    assert!(render_with(&Din16798Snapshot::noncompliant_office(), &view, Locale::En).is_ok());
 }

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:platform-class:v1",
+  "title": "Which platforms share the inferred project records and the requests of the graph exchange",
+  "description": "A project's inferred record is a function of the project's files plus one platform parameter that only a few projects read: `process.platform` in project assembly, only for a target that declares `metadata.semio.hostPlatformOutputsV1` (one project of the repository, the plugin descriptor emitter). Measured on the production cache (2870 records, 2026-11-14): of 498 projects recorded on darwin-arm64 and on linux-x64, 496 have byte-identical records once the closure handles (hashes of the producer's absolute root) are mapped to the hash of their recipe; the other 2 differ by one entry of a shared source list (a tree difference, not the platform); of 256 projects recorded on darwin-arm64 and win32-x64, 252 differ (root spelling and quoted commands). So the POSIX hosts form one class, Windows stays alone, and a record whose key text names a host-bound declaration is keyed by the exact platform. A request of the graph exchange is served by every machine of the requester's class.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "classes", "hostBound"],
+      "properties": {
+        "version": {"const": 1},
+        "classes": {"type": "object", "additionalProperties": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z0-9]+-[a-z0-9_]+$"}}},
+        "hostBound": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      },
+      "const": {
+        "version": 1,
+        "classes": {"posix-shared": ["darwin-arm64", "darwin-x64", "linux-x64", "linux-arm64"]},
+        "hostBound": ["hostPlatformOutputsV1"]
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "platform", "keyText", "record", "class"],
+      "properties": {
+        "name": {"type": "string"},
+        "platform": {"type": "string"},
+        "keyText": {"type": "string"},
+        "record": {"type": "string", "description": "the platform tag the record of this project is stored under"},
+        "class": {"type": "string", "description": "the class of the platform"}
+      }
+    },
+    "Serves": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["server", "requester", "serves"],
+      "properties": {"server": {"type": "string"}, "requester": {"type": "string"}, "serves": {"type": "boolean"}}
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cases", "serves"],
+      "properties": {"cases": {"type": "array", "items": {"$ref": "#/definitions/Case"}}, "serves": {"type": "array", "items": {"$ref": "#/definitions/Serves"}}}
+    }
+  }
+}

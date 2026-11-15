@@ -7,7 +7,7 @@
     "role:artifact",
     "family:reasoning"
   ],
-  "namedInputs": {
+  "namedInputs": { "default": ["{projectRoot}/**/*", "sharedGlobals", { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🤖️generated\"" }],
     "nativeSources": [
       "{workspaceRoot}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*"

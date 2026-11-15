@@ -105,5 +105,8 @@
         "xorg-x11-server-Xvfb"
       ]
     }
-  ]
+  ],
+  "chromium": {
+    "downloads": []
+  }
 }

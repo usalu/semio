@@ -1,0 +1,276 @@
+{
+  "title": "Finish Worker Setup and Merge Pre-Fleet Folder on Mac Mini 02",
+  "emoji": "🤝",
+  "status": "closed",
+  "description": "Finish setting up this machine as worker. Make sure there is only one canonical semio folder etc, same state as the others and all local changes of the old semio are merged into the canonical folder.",
+  "summary": "Found why repo tools setup all stops standalone: the selected dependency plan lists the root of the dependencies partition against maximumRoles 16 and a closed role list (bun roles, tmp, bootstrap, dependencies.json, storage-events.jsonl, .fseventsd), while the partition holds 17 entries including generation and pointer from the dependency sync and dotnet, nuget and python from the dependency tasks that pass since this ticket's fixes. Raising the bound alone would meet the closed role check next, so the plan protocol and the writers of the partition disagree; not changed. Inside workspace:setup the tools setup is refused earlier by the build caller authority. The toolchain is therefore not provisioned and the native build on g1-m07 stays pending. Details in worker-setup-and-merge-report.md.",
+  "goal": "🎯runningrepo",
+  "sessions": [
+    "65938f30-96ae-4685-8ebc-258657c68710",
+    "b3c3bfae-5ff8-4f50-8c30-d745ffc76297",
+    "2fee17d5-0788-4292-8263-4b2ebaea21b4",
+    "53f8086a-88c8-40b5-80e1-6c43d6e5646e",
+    "bdf89408-c5b0-4d5d-83b1-0c4f6c66f45d",
+    "bbb21131-0d02-4cce-aa11-eb96c572e94f",
+    "32040398-dc49-47b1-a487-692eb4914bd9",
+    "2fb01fd9-3dd3-4ee3-b62c-aeaa7291d3ca",
+    "6dc3075b-1fbd-4b22-b98d-fed72fa2f728",
+    "f5e459e2-8a3e-40c8-a6ca-527daf8fa4b5"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-13 20:51:16",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Finish setting up this machine as worker. Make sure there is only one canonical semio folder etc, same state as the others and all local changes of the old semio are merged into the canonical folder.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-13 22:53:17",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "This Mac (mac-mini-m4-02) joined group g1 as origin g1-m07 at ~/Documents/semio through the provision script (adopt path, exit 3). 29 NFD names left by macOS tar were renamed to NFC, after which verify drifts only on undefined.stale (another ticket's debug probe that g1-m02 rewrites every few seconds); preflight exits 0 with the two expected warnings and the fleet verdict of g1-m07 is ok. Both old trees were audited byte by byte against the canonical tree and the store blobs: semio.pre-fleet held nothing outside commit 5ececaa78b9, /Users/Shared/semio held one local file (g1-m05-collision-mac-mini-m4-02.md), which was merged and published. Both old trees and the 8.9 GB scratch archive were removed; ~/Documents/semio is the only semio tree. The native build is not complete: four runs got past the lock error (NFD), a one-off preservation capsule error and a graph service timeout; the fourth is still reading the cold project graph slice in the background and writes the marker itself on success. Reports: worker-setup-and-merge-report.md in this ticket and g1-m07-join.md in 26/11/09/SHARED-WORKTREE-FLEET-OVER-NFS."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-13 23:25:59",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Native bootstrap run 4 failed in workspace:setup with a stale build closure; retry until the native build completes.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-13 23:45:56",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "This Mac is fleet worker g1-m07 at ~/Documents/semio, the only semio tree; it syncs, preflight exits 0 with the two expected warnings and its fleet verdict is ok. The old trees were audited byte by byte, the one local file (g1-m05 collision note) was merged, and both trees were removed. The native build is still not complete after five runs: lock error from NFD names (fixed by renaming 29 names to NFC), a one-off preservation capsule error, a graph service timeout, a stale build closure after an hour-long graph read (a build source changed on another machine mid-run), and the fifth run is waiting in the background for 6627 MB of memory headroom that this 16 GB host has not offered while other sessions run. It writes .cache/f/native-bootstrap.done itself on success; otherwise rerun native-bootstrap.sh from this ticket on a quiet host. Reports: worker-setup-and-merge-report.md here and g1-m07-join.md in 26/11/09/SHARED-WORKTREE-FLEET-OVER-NFS."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 02:08:50",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "GitKraken shows nothing when opening the canonical semio folder on g1-m07: git cannot read the HEAD commit object. Find the cause and repair the shared git state.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 02:48:39",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "GitKraken showed nothing for ~/Documents/semio because git could not read HEAD: at 02:03:59 g1-server published a repack of the shared .git/objects (index of a new pack plus deletes of 20 packs) without the new 4 GB pack file ever reaching the store, so every worker lost its objects. Restored the deleted packs that hold HEAD (17 packs below 400 MB and pack-58516ce4) from the store blobs on g1-m07, sha256 checked; the daemon published them to the fleet. git log, status, write-tree (fleet stage tree) and all 4337 commits read again, git state is shared since 02:47. Native build still incomplete: run seven was stopped after 92 minutes without its graph memory reservation being granted. Details in worker-setup-and-merge-report.md and g1-m07-join.md."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 02:48:55",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Complete the native build on g1-m07: find why the project graph slice memory reservation of 6627 MB is never granted, and re-verify the fleet state.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 03:30:49",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "g1-m07 is verified as a fleet worker: verify exits 0 with no drift on 273200 shared paths, fleet verdict ok with the same code and view as g1-server and g1-m06, git state shared (repaired after the half-published repack of g1-server by restoring the deleted packs from the store). The native build is still pending, as on g1-m01, g1-m04 and g1-m06. Runs 5 to 7 stalled because the slice pool books the learned slice peak (6627 MB in $TMPDIR/semio-slice-peak-501.json) in the capacity gate beside the grant of its own run, which a 16 GB host can never give; deleting the file let run 8 read the graph in 22 minutes. Run 8 then failed 8 of 30 workspace:setup tasks on refusals of the repository's own build code (Original JavaScript repository required, Single-link regular artifact source required, Closed TypeScript artifact layout required, uv python-downloads never, Original Repo build caller required, ambiguous Cargo package), none of them a machine setting. Tables in worker-setup-and-merge-report.md, findings in g1-m07-join.md."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 03:31:11",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Native bootstrap run 8 failed 8 of 30 workspace:setup tasks on build-code refusals; find each cause and get the native build to complete on g1-m07.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 05:15:56",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Native build on g1-m07 still pending after run 9 (9 of 30 workspace:setup tasks failed). Causes traced and changed: deps-js-all and deps-build-tools declared as orchestration targets in the root project.json like their sibling dependency targets (they were wrapped in cargo native owner-command, whose child lacks the caller authority both need); Cargo package name of the os-mcp producer corrected from semio-framework-os-mcp to semio-os-mcp in the staging schema and its test; version:1 added to the artifact scratch request of the Python styling builder; the .NET support restore now runs in the package directory that holds the project file. cpp-setup follows the build tools setup; the uv python-downloads never/manual conflict is open. Open blocker: the graph does not re-infer the root project after the change (service restart, atomic replace, generations 34 and 35; repo reset fails with an unknown closure reference publication), so the first two fixes are unverified and the others were not rerun. Details in worker-setup-and-merge-report.md.",
+      "files": [
+        {
+          "path": "⚙️📋️project"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️📡️stdio🗃️🏗️staging🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🎨️styling🗃️🏗️builder🗃️🐍️python💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🧪️test🗃️🧪️tests🗃️🔬️dotnetpackagecommands💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️📡️stdio🗃️🏗️staging🗃️🧪️tests💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 05:16:16",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Find why the build graph does not re-infer the root project after the change of the root project.json, verify the fixes and complete the native build on g1-m07.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 06:00:42",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Verified through repo run on g1-m07: workspace:deps-js-all, repo-test-dotnet:deps and ui-styling-py:deps pass after the fixes (orchestration declaration of deps-js-all and deps-build-tools in the root project.json, .NET restore directory, version:1 in the Python styling artifact request); the os-mcp Cargo package name is corrected. The graph ignored the changed root project.json because the membership frontier records path and mode only and the root fragment was carried over; a mode change of the file made generation 36 refresh the root owner. Native build still pending, marker absent: framework-os-mcp-rs:build is refused by the 256 character Cargo path envelope (crate semio-framework-replication-retained-field-preparation, 262 characters below /Users/ueli/Documents/semio, the location of every Mac worker) and workspace:deps-build-tools nests repo tools setup all, which the build caller authority admits from no parent. Both are defects of the shared code, not of this machine. Details in worker-setup-and-merge-report.md and g1-m07-join.md.",
+      "files": [
+        {
+          "path": "⚙️📋️project"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️📡️stdio🗃️🏗️staging🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️💻️os🗃️🔨️modules🗃️🌉️mcp🗃️📡️stdio🗃️🏗️staging🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🎨️styling🗃️🏗️builder🗃️🐍️python💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🧪️test🗃️🧪️tests🗃️🔬️dotnetpackagecommands💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 06:01:07",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Fix the two remaining shared-code blockers of workspace:setup (over-long crate path, nested tools setup in deps-build-tools) and complete the native build on g1-m07; recheck the server repack.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 06:49:37",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Renamed the crate semio-framework-replication-retained-field-preparation to semio-framework-replication-retained-field-prep in 115 manifests, locks and sources so its compiler output path (262 characters below /Users/ueli/Documents/semio) fits the 256 character envelope; not verified by a build, because three further runs of framework-os-mcp-rs:build stopped earlier on other refusals (captured authorizer byte capacity exceeded, a resident service fstatat EPERM, authorizer compiler cannot find the replica command module) in code other machines were changing. workspace:deps-build-tools still fails on the build caller authority for its nested repo tools setup all, which the README documents as intended. Native build on g1-m07 still pending, marker absent. The new pack of the g1-server repack had not arrived at 06:48. Details in worker-setup-and-merge-report.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️📡️replication🗃️🎮️mutation🗃️🧳️retained🗃️🪡️field🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️📡️replication🗃️🎮️mutation🗃️🧳️retained🗃️🪡️field🗃️🧳️preparation🗃️📦️packages🛅🦀️rust⚙️cargo"
+        },
+        {
+          "path": "⚙️cargo"
+        },
+        {
+          "path": "⚙️📋️buildowners"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 06:51:08",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Capture the invocation envelope the deps-build-tools task receives, fix the target so the tools setup runs, and retry the native build on g1-m07.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 06:57:02",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "GitKraken opens ~/Documents/semio without an error according to its log (window not seen, no screen recording permission). Since 06:30 every repo run on g1-m07 stops before any task: the staged nx authorizer compiler runs replica supervisor code and cannot find the replica command module below the staging directory, while other machines are writing build files of the library. The envelope of the deps-build-tools task could therefore not be captured and the native build stays pending; the marker is absent. Earlier results (worker join, single canonical folder, merged old trees, no drift, git repaired, three setup tasks passing after fixes, crate rename unverified) stand as recorded in worker-setup-and-merge-report.md.",
+      "files": [
+        {
+          "path": "⚙️📋️project"
+        },
+        {
+          "path": "⚙️📋️buildowners"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 07:03:08",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Stop the build's authorizer program from bundling the replica daemon: give the path book, compact table and local paths of the replica a module of their own that graph-state can import without the daemon.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 07:45:33",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Fixed the fleet-wide authorizer breakage: the path book, compact table and local paths of the replica moved into shared-worktree/replica/book, re-exported by the replica module, and the graph-state reader imports that module, so the nx authorizer bundle no longer contains the replica daemon. Replica self-check passes, 94 replica tests pass, repo run executes tasks again. Captured the envelope of the build-tools task: an nx caller (arguments nx run workspace:deps-build-tools), which the nested repo tools setup all cannot use because readOwnedBuildInvocationV1 requires a repo caller that is projected only for declared child targets. Standalone repo tools setup all also fails, after 28 minutes, with Bounded complete dependency directory required. The tools setup therefore completes by neither route and the native build on g1-m07 stays pending; the marker is absent. Details in worker-setup-and-merge-report.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🪪️graphstate🗃️📥️replica💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 07:45:53",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Find which dependency directory exceeds the bound in the standalone tools setup on g1-m07 and get the tools setup to complete.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 07:46:51",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Found why repo tools setup all stops standalone: the selected dependency plan lists the root of the dependencies partition against maximumRoles 16 and a closed role list (bun roles, tmp, bootstrap, dependencies.json, storage-events.jsonl, .fseventsd), while the partition holds 17 entries including generation and pointer from the dependency sync and dotnet, nuget and python from the dependency tasks that pass since this ticket's fixes. Raising the bound alone would meet the closed role check next, so the plan protocol and the writers of the partition disagree; not changed. Inside workspace:setup the tools setup is refused earlier by the build caller authority. The toolchain is therefore not provisioned and the native build on g1-m07 stays pending. Details in worker-setup-and-merge-report.md."
+    }
+  ]
+}

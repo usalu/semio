@@ -1302,7 +1302,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "brass",
-          "areaM2": 0.012,
+          "areaM2": 0.02,
           "characteristicLengthM": 0.06,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -1339,7 +1339,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "brass",
-          "areaM2": 0.004,
+          "areaM2": 0.007,
           "characteristicLengthM": 0.05,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -1376,7 +1376,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "copper",
-          "areaM2": 0.004,
+          "areaM2": 0.0032,
           "characteristicLengthM": 0.046,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -1413,7 +1413,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "copper",
-          "areaM2": 0.004,
+          "areaM2": 0.0032,
           "characteristicLengthM": 0.046,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -1450,7 +1450,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "copper",
-          "areaM2": 0.002,
+          "areaM2": 0.0026,
           "characteristicLengthM": 0.035,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -1487,7 +1487,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "copper",
-          "areaM2": 0.0004,
+          "areaM2": 0.0006,
           "characteristicLengthM": 0.1,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -1534,151 +1534,543 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "body",
-          "kind": "box",
-          "bone": "body",
-          "material": "brass",
-          "role": "body",
-          "tone": 0.5,
-          "region": "body",
-          "size": [0.064, 0.05, 0.06],
-          "cornerRadius": 0.006,
-          "transform": {
-            "translation": [0.0, 0.025, 0.0]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "body",
+            "kind": "box",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.064, 0.05, 0.06],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.0, 0.025, 0.0]
+            }
+          },
+          {
+            "id": "inlet",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "copper",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.009], [0.048, 0.009]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [-0.078, 0.029, 0.0]
+          },
+          {
+            "id": "outlet",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "copper",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.009], [0.048, 0.009]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.03, 0.019, 0.0]
+          },
+          {
+            "id": "head",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [
+              [0.0, 0.025],
+              [0.00637, 0.0245],
+              [0.01197, 0.02306],
+              [0.01677, 0.02078],
+              [0.02075, 0.01775],
+              [0.02389, 0.01406],
+              [0.02616, 0.00981],
+              [0.02754, 0.00509],
+              [0.028, 0.0]
+            ],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "stem",
+            "kind": "revolve",
+            "bone": "stem",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [[0.0, 0.01], [0.012, 0.01]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "bulb",
+            "kind": "revolve",
+            "bone": "bulb",
+            "material": "copper",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.006], [0.0012, 0.0088], [0.004, 0.01], [0.031, 0.01], [0.0338, 0.0088], [0.035, 0.006], [0.035, 0.0]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.015, 0.018]
+          },
+          {
+            "id": "capillary-1",
+            "kind": "capsule",
+            "bone": "head",
+            "material": "copper",
+            "role": "detail",
+            "tone": 0.1,
+            "slender": true,
+            "p0": [0.018, 0.022, 0.0],
+            "p1": [0.05, 0.038, 0.012],
+            "r0": 0.0008,
+            "r1": 0.0008
+          },
+          {
+            "id": "capillary-2",
+            "kind": "capsule",
+            "bone": "head",
+            "material": "copper",
+            "role": "detail",
+            "tone": 0.1,
+            "slender": true,
+            "p0": [0.05, 0.038, 0.012],
+            "p1": [0.09, 0.032, 0.02],
+            "r0": 0.0008,
+            "r1": 0.0008
+          },
+          {
+            "id": "capillary-3",
+            "kind": "capsule",
+            "bone": "head",
+            "material": "copper",
+            "role": "detail",
+            "tone": 0.1,
+            "slender": true,
+            "p0": [0.09, 0.032, 0.02],
+            "p1": [0.108, 0.0, 0.018],
+            "r0": 0.0008,
+            "r1": 0.0008
           }
-        },
-        {
-          "id": "inlet",
-          "kind": "revolve",
-          "bone": "body",
-          "material": "copper",
-          "role": "body",
-          "tone": 0.4,
-          "region": "inlet",
-          "profile": [[0.0, 0.009], [0.048, 0.009]],
-          "axis": [1.0, 0.0, 0.0],
-          "origin": [-0.078, 0.029, 0.0]
-        },
-        {
-          "id": "outlet",
-          "kind": "revolve",
-          "bone": "body",
-          "material": "copper",
-          "role": "body",
-          "tone": 0.4,
-          "region": "outlet",
-          "profile": [[0.0, 0.009], [0.048, 0.009]],
-          "axis": [1.0, 0.0, 0.0],
-          "origin": [0.03, 0.019, 0.0]
-        },
-        {
-          "id": "head",
-          "kind": "revolve",
-          "bone": "head",
-          "material": "brass",
-          "role": "body",
-          "tone": 0.55,
-          "region": "head",
-          "profile": [
-            [0.0, 0.025],
-            [0.00637, 0.0245],
-            [0.01197, 0.02306],
-            [0.01677, 0.02078],
-            [0.02075, 0.01775],
-            [0.02389, 0.01406],
-            [0.02616, 0.00981],
-            [0.02754, 0.00509],
-            [0.028, 0.0]
-          ],
-          "axis": [0.0, 1.0, 0.0],
-          "origin": [0.0, 0.0, 0.0]
-        },
-        {
-          "id": "stem",
-          "kind": "revolve",
-          "bone": "stem",
-          "material": "brass",
-          "role": "body",
-          "tone": 0.3,
-          "region": "head",
-          "profile": [[0.0, 0.01], [0.012, 0.01]],
-          "axis": [0.0, 1.0, 0.0],
-          "origin": [0.0, 0.0, 0.0]
-        },
-        {
-          "id": "bulb",
-          "kind": "capsule",
-          "bone": "bulb",
-          "material": "copper",
-          "role": "body",
-          "tone": 0.5,
-          "region": "bulb",
-          "p0": [0.0, -0.005, 0.018],
-          "p1": [0.0, 0.01, 0.018],
-          "r0": 0.01,
-          "r1": 0.01
-        },
-        {
-          "id": "capillary-1",
-          "kind": "capsule",
-          "bone": "head",
-          "material": "copper",
-          "role": "detail",
-          "tone": 0.1,
-          "region": "capillary",
-          "maxDenominator": 50,
-          "p0": [0.018, 0.022, 0.0],
-          "p1": [0.05, 0.038, 0.012],
-          "r0": 0.0012,
-          "r1": 0.0012
-        },
-        {
-          "id": "capillary-2",
-          "kind": "capsule",
-          "bone": "head",
-          "material": "copper",
-          "role": "detail",
-          "tone": 0.1,
-          "region": "capillary",
-          "maxDenominator": 50,
-          "p0": [0.05, 0.038, 0.012],
-          "p1": [0.09, 0.032, 0.02],
-          "r0": 0.0012,
-          "r1": 0.0012
-        },
-        {
-          "id": "capillary-3",
-          "kind": "capsule",
-          "bone": "head",
-          "material": "copper",
-          "role": "detail",
-          "tone": 0.1,
-          "region": "capillary",
-          "maxDenominator": 50,
-          "p0": [0.09, 0.032, 0.02],
-          "p1": [0.108, 0.0, 0.018],
-          "r0": 0.0012,
-          "r1": 0.0012
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The capillary is three round bars through the 3D points read from all three drawings (elevation gives x and y, plan z, front confirms the rise to 88 mm); it sits on the head bone, which is fixed, so it stays attached at every stem position.",
-          "de": "Die Kapillare besteht aus drei Rundstaeben durch die 3D-Punkte aus allen drei Zeichnungen (Ansicht liefert x und y, Grundriss z, Vorderansicht bestaetigt den Anstieg auf 88 mm); sie sitzt auf dem festen Kopfknochen und bleibt in jeder Stellung der Spindel verbunden."
-        },
-        {
-          "en": "The diaphragm head is a revolved dome about the vertical axis (elevation outline), the spindle a cylinder on its own prismatic bone that sinks into the dome when it moves down; pipe stubs are flat-ended cylinders, the sensing bulb a vertical capsule.",
-          "de": "Der Membrankopf ist eine um die senkrechte Achse gedrehte Kuppel (Umriss der Ansicht), die Spindel ein Zylinder auf eigenem Schubknochen, der beim Absenken in die Kuppel taucht; Rohrstutzen sind Zylinder mit ebenen Enden, der Fuehler eine senkrechte Kapsel."
-        },
-        {
-          "en": "The drawn parts reach x -0.078 to 0.118 m (0.196 m) while dimensions.widthM is 0.19 m, a 3 % overshoot taken from the drawings.",
-          "de": "Die gezeichneten Teile reichen von x -0,078 bis 0,118 m (0,196 m), dimensions.widthM ist 0,19 m, 3 % Ueberstand aus den Zeichnungen."
-        }
-      ]
+        ],
+        "thermal": [
+          {
+            "id": "th-body",
+            "of": "body",
+            "region": "body"
+          },
+          {
+            "id": "th-inlet",
+            "of": "inlet",
+            "region": "inlet"
+          },
+          {
+            "id": "th-outlet",
+            "of": "outlet",
+            "region": "outlet"
+          },
+          {
+            "id": "th-head",
+            "of": "head",
+            "region": "head"
+          },
+          {
+            "id": "th-stem",
+            "of": "stem",
+            "region": "head"
+          },
+          {
+            "id": "th-bulb",
+            "of": "bulb",
+            "region": "bulb"
+          },
+          {
+            "id": "th-capillary-1",
+            "of": "capillary-1",
+            "region": "capillary"
+          },
+          {
+            "id": "th-capillary-2",
+            "of": "capillary-2",
+            "region": "capillary"
+          },
+          {
+            "id": "th-capillary-3",
+            "of": "capillary-3",
+            "region": "capillary"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-body",
+            "of": "body",
+            "member": "body",
+            "part": "member"
+          },
+          {
+            "id": "member-head",
+            "of": "head",
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "member-stem",
+            "of": "stem",
+            "member": "stem",
+            "part": "member"
+          },
+          {
+            "id": "member-bulb",
+            "of": "bulb",
+            "member": "bulb",
+            "part": "member"
+          },
+          {
+            "id": "joint-head-body",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.55,
+            "member": "head",
+            "part": "joint",
+            "profile": [[0.0, 0.0235], [0.008, 0.0235]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.004, 0.0]
+          },
+          {
+            "id": "joint-stem-head",
+            "kind": "revolve",
+            "bone": "stem",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.3,
+            "member": "stem",
+            "part": "joint",
+            "profile": [[0.0, 0.0085], [0.008, 0.0085]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.004, 0.0]
+          },
+          {
+            "id": "joint-bulb-body",
+            "kind": "ellipsoid",
+            "bone": "bulb",
+            "material": "copper",
+            "role": "body",
+            "tone": 0.5,
+            "member": "bulb",
+            "part": "joint",
+            "radii": [0.0075, 0.0075, 0.0075],
+            "transform": {
+              "translation": [0.0, 0.0, 0.018]
+            }
+          },
+          {
+            "id": "support-base-contact",
+            "kind": "box",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.3,
+            "member": "body",
+            "part": "support",
+            "anchor": "base-contact",
+            "size": [0.05, 0.0075, 0.05],
+            "transform": {
+              "translation": [0.0, 0.00375, 0.0]
+            }
+          },
+          {
+            "id": "mass-body",
+            "kind": "ellipsoid",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.2,
+            "member": "body",
+            "part": "mass",
+            "radii": [0.012, 0.012, 0.012],
+            "transform": {
+              "translation": [0.0, 0.025, 0.0]
+            }
+          },
+          {
+            "id": "mass-head",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.2,
+            "member": "head",
+            "part": "mass",
+            "radii": [0.01, 0.008, 0.01],
+            "transform": {
+              "translation": [0.0, 0.015, 0.0]
+            }
+          },
+          {
+            "id": "mass-bulb",
+            "kind": "ellipsoid",
+            "bone": "bulb",
+            "material": "copper",
+            "role": "body",
+            "tone": 0.2,
+            "member": "bulb",
+            "part": "mass",
+            "radii": [0.0075, 0.0075, 0.0075],
+            "transform": {
+              "translation": [0.0, 0.002, 0.018]
+            }
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Every solid stands for one drawn part: a forged brass body block with broken edges, two copper connection stubs, a revolved diaphragm head with its adjusting stem, the sensing bulb as an upright rounded cylinder and the capillary as three round bars through the 3D points read from all three drawings; the capillary keeps its real 1.6 mm bore, which is below the 7.5 mm printing limit and is kept because it is the only link of the bulb.",
+            "de": "Jeder Körper steht für ein gezeichnetes Teil: ein geschmiedeter Messingblock mit gebrochenen Kanten, zwei Kupferanschlussstutzen, ein gedrehter Membrankopf mit Einstellspindel, der Fühler als stehender Zylinder mit gerundeten Kanten und die Kapillare als drei Rundstäbe durch die 3D-Punkte aus allen drei Zeichnungen; die Kapillare behält ihren echten Durchmesser von 1,6 mm, der unter der Druckgrenze von 7,5 mm liegt, weil sie die einzige Verbindung des Fühlers ist."
+          },
+          {
+            "en": "Thermal: every region is a single metal skin, so each thermal solid is a reference to the body solid that carries that skin (body block, stubs, head with stem, bulb, capillary bars); no hidden regions or emitters exist.",
+            "de": "Thermik: Jede Region ist eine einzelne Metallhaut, daher verweist jeder Thermikkörper auf den Körper, der diese Haut trägt (Block, Stutzen, Kopf mit Spindel, Fühler, Kapillarstäbe); es gibt weder verdeckte Regionen noch Emitter."
+          },
+          {
+            "en": "Structure: the four fixed bones carry the weight as the solid body block, head, stem and bulb; joints are short collars at the head seat, the stem sleeve and the bulb clamp; the base is a 50 mm by 50 mm contact pad inside the underside of the block; point masses sit at the centres of mass of body, head and bulb.",
+            "de": "Tragwerk: Die vier festen Knochen tragen das Gewicht als Block, Kopf, Spindel und Fühler; Gelenke sind kurze Bunde am Kopfsitz, an der Spindelhülse und an der Fühlerschelle; der Fuß ist eine Kontaktfläche von 50 mm mal 50 mm in der Blockunterseite; Punktmassen liegen in den Schwerpunkten von Körper, Kopf und Fühler."
+          }
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "body",
+            "kind": "box",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.064, 0.05, 0.06],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.0, 0.025, 0.0]
+            }
+          },
+          {
+            "id": "inlet",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "copper",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.011], [0.048, 0.011]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [-0.078, 0.029, 0.0]
+          },
+          {
+            "id": "outlet",
+            "kind": "revolve",
+            "bone": "body",
+            "material": "copper",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.011], [0.048, 0.011]],
+            "axis": [1.0, 0.0, 0.0],
+            "origin": [0.03, 0.019, 0.0]
+          },
+          {
+            "id": "head",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [[0.0, 0.025], [0.00832, 0.02412], [0.01526, 0.02163], [0.02075, 0.01775], [0.02474, 0.0127], [0.02718, 0.00671], [0.028, 0.0]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "bulb",
+            "kind": "revolve",
+            "bone": "bulb",
+            "material": "copper",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.006], [0.0018, 0.0102], [0.006, 0.012], [0.029, 0.012], [0.0332, 0.0102], [0.035, 0.006], [0.035, 0.0]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.015, 0.018]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-body",
+            "of": "body",
+            "region": "body"
+          },
+          {
+            "id": "th-inlet",
+            "of": "inlet",
+            "region": "inlet"
+          },
+          {
+            "id": "th-outlet",
+            "of": "outlet",
+            "region": "outlet"
+          },
+          {
+            "id": "th-head",
+            "of": "head",
+            "region": "head"
+          },
+          {
+            "id": "th-bulb",
+            "of": "bulb",
+            "region": "bulb"
+          },
+          {
+            "id": "th-capillary-1",
+            "kind": "capsule",
+            "bone": "head",
+            "material": "copper",
+            "role": "detail",
+            "tone": 0.1,
+            "region": "capillary",
+            "slender": true,
+            "p0": [0.018, 0.022, 0.0],
+            "p1": [0.05, 0.038, 0.012],
+            "r0": 0.0008,
+            "r1": 0.0008
+          },
+          {
+            "id": "th-capillary-2",
+            "kind": "capsule",
+            "bone": "head",
+            "material": "copper",
+            "role": "detail",
+            "tone": 0.1,
+            "region": "capillary",
+            "slender": true,
+            "p0": [0.05, 0.038, 0.012],
+            "p1": [0.09, 0.032, 0.02],
+            "r0": 0.0008,
+            "r1": 0.0008
+          },
+          {
+            "id": "th-capillary-3",
+            "kind": "capsule",
+            "bone": "head",
+            "material": "copper",
+            "role": "detail",
+            "tone": 0.1,
+            "region": "capillary",
+            "slender": true,
+            "p0": [0.09, 0.032, 0.02],
+            "p1": [0.108, 0.0, 0.018],
+            "r0": 0.0008,
+            "r1": 0.0008
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-body",
+            "of": "body",
+            "member": "body",
+            "part": "member"
+          },
+          {
+            "id": "member-head",
+            "of": "head",
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "member-bulb",
+            "of": "bulb",
+            "member": "bulb",
+            "part": "member"
+          },
+          {
+            "id": "member-stem",
+            "kind": "revolve",
+            "bone": "stem",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.3,
+            "member": "stem",
+            "part": "member",
+            "profile": [[0.0, 0.0075], [0.015, 0.0075]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.016, 0.0]
+          },
+          {
+            "id": "joint-head-body",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.55,
+            "member": "head",
+            "part": "joint",
+            "profile": [[0.0, 0.0235], [0.016, 0.0235]],
+            "axis": [0.0, 1.0, 0.0],
+            "origin": [0.0, -0.006, 0.0]
+          },
+          {
+            "id": "support-base-contact",
+            "kind": "box",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.3,
+            "member": "body",
+            "part": "support",
+            "anchor": "base-contact",
+            "size": [0.05, 0.015, 0.05],
+            "transform": {
+              "translation": [0.0, 0.0075, 0.0]
+            }
+          },
+          {
+            "id": "mass-body",
+            "kind": "ellipsoid",
+            "bone": "body",
+            "material": "brass",
+            "role": "body",
+            "tone": 0.2,
+            "member": "body",
+            "part": "mass",
+            "radii": [0.015, 0.015, 0.015],
+            "transform": {
+              "translation": [0.0, 0.025, 0.0]
+            }
+          }
+        ],
+        "decisions": [
+          {
+            "en": "At 1:100 the valve is five solids: the body block, both stubs (widened to the 22 mm of the plan), the head dome and the bulb; the 12 mm adjusting stem is merged into the dome (the 1:100 drawing has no stem; 78 mm height against 90 mm stays within the 15 mm limit), while the edge softening drops below the 15 mm limit and vanishes; the 1.6 mm capillary is dropped from the body as in the 1:100 drawing.",
+            "de": "Bei 1:100 besteht das Ventil aus fünf Körpern: Block, beide Stutzen (auf die 22 mm des Grundrisses verbreitert), Kopfkuppel und Fühler; die 12 mm hohe Spindel ist in der Kuppel aufgegangen (die 1:100-Zeichnung hat keine Spindel; 78 mm Höhe gegen 90 mm bleiben innerhalb der Grenze von 15 mm), die Kantenbrechungen liegen unter der Grenze von 15 mm und entfallen; die 1,6 mm dicke Kapillare entfällt im Körper wie in der 1:100-Zeichnung."
+          },
+          {
+            "en": "Thermal: all regions except the capillary reference their body solid; the capillary exists only in the thermal list, as the same three true-size bars as at 1:50, because its region needs a surface although the 1:100 body (like the 1:100 drawing) no longer shows it.",
+            "de": "Thermik: Alle Regionen außer der Kapillare verweisen auf ihren Körper; die Kapillare gibt es nur in der Thermikliste, als dieselben drei maßgetreuen Stäbe wie bei 1:50, weil ihre Region eine Oberfläche braucht, obwohl der 1:100-Körper (wie die 1:100-Zeichnung) sie nicht mehr zeigt."
+          },
+          {
+            "en": "Structure: body block, head dome, a stem column inside the dome and bulb as members; one head collar as joint; the base contact pad (50 mm by 15 mm by 50 mm) inside the underside; one mass at the block centre which carries 0.38 kg of the 0.45 kg together with the head.",
+            "de": "Tragwerk: Block, Kopfkuppel, eine Spindelsäule in der Kuppel und Fühler als Stäbe; ein Kopfbund als Gelenk; die Kontaktfläche (50 mm mal 15 mm mal 50 mm) in der Unterseite; eine Masse im Blockschwerpunkt, die zusammen mit dem Kopf 0,38 kg der 0,45 kg trägt."
+          }
+        ]
+      },
+      "200": {
+        "status": "unavailable",
+        "denominator": 200
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500
+      }
     },
     "presentation": {
       "defaultPose": "open",

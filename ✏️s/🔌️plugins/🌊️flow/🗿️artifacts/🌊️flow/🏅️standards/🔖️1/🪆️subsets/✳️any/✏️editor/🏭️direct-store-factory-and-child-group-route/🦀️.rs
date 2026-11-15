@@ -193,52 +193,45 @@ impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowChildGrou
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{let result=(||{
-            use semio_framework_job::InteractiveJobCloseStep;
-            use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-            if !self.closing {
-                return Ok(InteractiveJobCloseStep::Blocked);
-            }
+        use semio_framework_job::InteractiveJobCloseStep as Close;
+        use semio_plugin::PluginLifecycleStep as Step;
+        use semio_framework_value::{RetainedCloneProgress,RetirementDemand};
+        if !self.closing {
+            return Ok(Close::Blocked);
+        }
+        let grant = cx.retained_grant();
+        let fixed = RetirementDemand { depth: 1, ..Default::default() };
+        let demand = if let Some(owner) = self.output_retirement.as_ref() { owner.next_demand(grant.maximum_copy_bytes)? } else if let Some(emit) = self.output.as_ref() { emit.child_close_demands(grant.maximum_copy_bytes)?.unwrap_or(fixed) } else { fixed };
+        let step = semio_plugin::app::original_lifecycle_effect_step(cx, grant, demand, |_, effect| {
+            let body = effect.grant().maximum_copy_bytes;
             if let Some(owner) = self.output_retirement.as_mut() {
-                let step = owner.step(grant);
+                let step = semio_plugin::app::plugin_settle_poll(owner.step(body, effect))?;
                 if owner.terminal_is_empty() {
                     self.output_retirement = None;
                 }
-                return Ok(match step {
-                    Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
-                    Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
-                    Err(error) => return Err(error),
-                });
+                return Ok((Step::Progress(step.progress()), false));
             }
             if let Some(emit) = self.output.as_mut() {
-                match emit.close_child_one(grant) {
-                    Ok(Some(step)) => return Ok(InteractiveJobCloseStep::Pending { progress: step.progress().unwrap_or_default() }),
-                    Err(_) => return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "interactive job close refused")),
-                    Ok(None) => {}
+                if let Some(step) = emit.close_child_original(effect)? {
+                    return Ok((match step { Step::Complete(progress) => Step::Progress(progress), step => step }, false));
                 }
-                if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
-                }
+                semio_plugin::app::plugin_pay_unit(effect)?;
                 let emit = self.output.take().expect("observed original child group output");
-                return Ok(match semio_framework_value::retirement::controlled::ControlledRetirement::new(emit) {
-                    Ok(owner) => {
-                        self.output_retirement = Some(owner);
-                        InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
-                    }
-                    Err((error, emit)) => {
-                        self.output = Some(emit);
-                        return Err(error)
-                    }
-                });
+                self.output_retirement = Some(semio_framework_value::retirement::controlled::ControlledRetirement::retain(emit));
+                return Ok((Step::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }), false));
             }
-            if grant.maximum_items == 0 {
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+            if self.instance_owner.is_some() {
+                semio_plugin::app::plugin_pay_unit(effect)?;
+                self.instance_owner = None;
+                return Ok((Step::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }), false));
             }
-            if self.instance_owner.take().is_some() {
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
-            }
-            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
-        })();let work=u64::from(matches!(&result,Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}) if *progress!=Default::default()));semio_framework_value::RetainedWorkOutcome{result,work}})
+            Ok((Step::Complete(Default::default()), self.terminal_is_empty()))
+        })?;
+        Ok(match step {
+            Step::Progress(progress) => Close::Pending { progress },
+            Step::Complete(progress) => Close::Complete { progress },
+            _ => Close::Blocked,
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -340,4 +333,3 @@ pub(super) fn flow_build_retained_job(request:&mut Option<semio_plugin::Artifact
  Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original Flow retained request has no declared factory").into())
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(FlowChildGroupWork);

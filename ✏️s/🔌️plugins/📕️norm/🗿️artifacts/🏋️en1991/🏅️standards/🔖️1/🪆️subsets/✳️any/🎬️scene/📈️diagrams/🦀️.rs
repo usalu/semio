@@ -445,7 +445,7 @@ fn bridge_wind_force(d: &En1991Snapshot, report: &CheckReport) -> Option<Diagram
         let Some(qp) = qp_at(d, row.height_above_ground) else { continue };
         let required = part_1_4::bridge_force_x_n_m(qp, part_1_4::bridge_c_fx0(row.deck_width, *depth_tot), *depth_tot) / 1000.0;
         let check = format!("en1991.1-4.bridge-wind.{}", row.id);
-        markers.push(marker(report, &format!("required-{}", row.id), [row.height_above_ground, required], Some(check), loc(&format!("{}: F_W,x = {required:.2} kN/m", row.id), &format!("{}: F_W,x = {required:.2} kN/m", row.id)), None));
+        markers.push(marker(report, &format!("required-{}", row.id), [row.height_above_ground, required], Some(check.clone()), loc(&format!("{}: F_W,x = {required:.2} kN/m", row.id), &format!("{}: F_W,x = {required:.2} kN/m", row.id)), None));
         markers.push(marker(report, &format!("assumed-{}", row.id), [row.height_above_ground, row.assumed_force / 1000.0], Some(check), loc(&format!("{}: assumed {:.2} kN/m", row.id, row.assumed_force / 1000.0), &format!("{}: angenommen {:.2} kN/m", row.id, row.assumed_force / 1000.0)), Some(bound(format!("windBridges[id={}].assumedForce", row.id), "N", 1000.0, 100.0))));
     }
     Some(Diagram2d { id: "bridge:wind-force".into(),
@@ -532,7 +532,7 @@ fn impact_force(d: &En1991Snapshot, report: &CheckReport) -> Option<Diagram2d> {
     for row in &rows {
         let required = part_1_7::dynamic_impact_force_n(row.mass, row.speed, part_1_7::impact_stiffness_n_m(row.stiffness)) / 1000.0;
         let check = format!("en1991.1-7.impact-force.{}", row.id);
-        markers.push(marker(report, &format!("required-{}", row.id), [row.speed, required], Some(check), loc(&format!("{}: F_d,x = {required:.0} kN", row.id), &format!("{}: F_d,x = {required:.0} kN", row.id)), None));
+        markers.push(marker(report, &format!("required-{}", row.id), [row.speed, required], Some(check.clone()), loc(&format!("{}: F_d,x = {required:.0} kN", row.id), &format!("{}: F_d,x = {required:.0} kN", row.id)), None));
         markers.push(marker(report, &format!("assumed-{}", row.id), [row.speed, row.assumed_force / 1000.0], Some(check), loc(&format!("{}: assumed {:.0} kN", row.id, row.assumed_force / 1000.0), &format!("{}: angenommen {:.0} kN", row.id, row.assumed_force / 1000.0)), Some(bound(format!("impactActions[id={}].assumedForce", row.id), "N", 1000.0, 10.0))));
     }
     Some(Diagram2d { id: "impact:force".into(),

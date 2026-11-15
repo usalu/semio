@@ -1,0 +1,200 @@
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6048","mode":"shared","elapsedMs":11812.720042}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6080","mode":"shared","elapsedMs":11813.809000000001}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6112","mode":"shared","elapsedMs":11815.654208}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6144","mode":"shared","elapsedMs":11819.887417000002}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6176","mode":"shared","elapsedMs":11821.541375}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6208","mode":"shared","elapsedMs":11823.893917000001}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6240","mode":"shared","elapsedMs":11825.247958}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6272","mode":"shared","elapsedMs":11828.238207999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6304","mode":"shared","elapsedMs":11829.264208}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6336","mode":"shared","elapsedMs":11831.243374999998}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6368","mode":"shared","elapsedMs":11833.297542}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6400","mode":"shared","elapsedMs":11834.583542}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6432","mode":"shared","elapsedMs":11836.103917}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6464","mode":"shared","elapsedMs":11838.909542000001}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6496","mode":"shared","elapsedMs":11840.837958}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6528","mode":"shared","elapsedMs":11843.441958}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6560","mode":"shared","elapsedMs":11844.539}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6592","mode":"shared","elapsedMs":11845.294666999998}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6624","mode":"shared","elapsedMs":11846.025875}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6656","mode":"shared","elapsedMs":11846.559083}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6688","mode":"shared","elapsedMs":11847.250082999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6720","mode":"shared","elapsedMs":11847.774291999998}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6752","mode":"shared","elapsedMs":11851.780041999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6784","mode":"shared","elapsedMs":11853.790625000001}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6816","mode":"shared","elapsedMs":11857.631083}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6848","mode":"shared","elapsedMs":11858.894832999998}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6880","mode":"shared","elapsedMs":11859.503042}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6912","mode":"shared","elapsedMs":11860.042958000002}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6944","mode":"shared","elapsedMs":11861.269499999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:6976","mode":"shared","elapsedMs":11861.94025}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7008","mode":"shared","elapsedMs":11862.562042000001}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7040","mode":"shared","elapsedMs":11863.097125}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7072","mode":"shared","elapsedMs":11865.853792000002}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7104","mode":"shared","elapsedMs":11868.056583000001}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7136","mode":"shared","elapsedMs":11870.730333}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7168","mode":"shared","elapsedMs":11871.388083000002}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7200","mode":"shared","elapsedMs":11873.661375}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7232","mode":"shared","elapsedMs":11874.602374999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7264","mode":"shared","elapsedMs":11875.301416999999}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7296","mode":"shared","elapsedMs":11876.118125}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7328","mode":"shared","elapsedMs":11876.715292}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7360","mode":"shared","elapsedMs":11877.386792000001}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:sync-gate:7392","mode":"shared","elapsedMs":11877.972042000001}}
+[DATA] Store dependency sync current {"version":1,"purpose":"current-store-dependency-sync-current","scopes":6}
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+[semio] workspace:setup…
+[capacity] run: sized at 95% of the default from 3 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 2048 MB reserved (6043 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+Loading the project graph of 440cffa5563d.
+Planning 1 targets.
+Reading the project graph slice (2 s).
+[repo] still working after 5 s; last phase started: door.script
+Reading the project graph slice (4 s).
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s).
+[repo] still working after 10 s; last phase started: door.script
+Reading the project graph slice (10 s): files 1 of 1.
+Reading the project graph slice (12 s): files 80 of 80.
+Reading the project graph slice (14 s): files 1081 of 1081.
+Reading the project graph slice (16 s): facts 24576 of 238213.
+Reading the project graph slice (18 s): facts 73728 of 238213.
+[repo] still working after 20 s; last phase started: door.script
+Reading the project graph slice (20 s): facts 98304 of 238213.
+Reading the project graph slice (22 s): facts 118784 of 238213.
+Reading the project graph slice (24 s): facts 172032 of 238213.
+Reading the project graph slice (26 s): facts 184320 of 238213.
+Reading the project graph slice (28 s): facts 221184 of 238213.
+Reading the project graph slice (30 s): facts 238213 of 238213.
+Reading the project graph slice (32 s): facts 238213 of 238213.
+Reading the project graph slice (34 s): verification 2 of 1081.
+Reading the project graph slice (36 s): verification 59 of 1081.
+Reading the project graph slice (38 s): verification 148 of 1081.
+Reading the project graph slice (40 s): parts 3898 of 14344.
+Reading the project graph slice (42 s): parts 7952 of 14344.
+Reading the project graph slice (44 s): flush 1 of 1.
+Reading the project graph slice (46 s): flush 1 of 1.
+Reading the project graph slice (48 s): flush 1 of 1.
+[repo] still working after 50 s; last phase started: door.script
+Reading the project graph slice (50 s): flush 1 of 1.
+Reading the project graph slice (52 s): verification 554 of 1081.
+Reading the project graph slice (54 s): verification 887 of 1081.
+Reading the project graph slice (56 s): flush 1 of 1.
+Reading the project graph slice (58 s): flush 1 of 1.
+Reading the project graph slice (60 s): flush 1 of 1.
+Reading the project graph slice (62 s): flush 1 of 1.
+Reading the project graph slice (64 s): flush 1 of 1.
+Reading the project graph slice (66 s): flush 1 of 1.
+Reading the project graph slice (68 s): flush 1 of 1.
+Reading the project graph slice (70 s): flush 1 of 1.
+Reading the project graph slice (72 s): flush 1 of 1.
+Reading the project graph slice (74 s): flush 1 of 1.
+Reading the project graph slice (76 s): flush 1 of 1.
+Reading the project graph slice (78 s): flush 1 of 1.
+[repo] still working after 80 s; last phase started: door.script
+Reading the project graph slice (80 s): flush 1 of 1.
+Reading the project graph slice (82 s): flush 1 of 1.
+Reading the project graph slice (84 s): flush 1 of 1.
+Reading the project graph slice (86 s): flush 1 of 1.
+Reading the project graph slice (88 s): flush 1 of 1.
+Reading the project graph slice (90 s): flush 1 of 1.
+Reading the project graph slice (92 s): flush 1 of 1.
+Reading the project graph slice (94 s): flush 1 of 1.
+Reading the project graph slice (96 s): flush 1 of 1.
+Reading the project graph slice (98 s): flush 1 of 1.
+Reading the project graph slice (100 s): flush 1 of 1.
+Reading the project graph slice (102 s): flush 1 of 1.
+Reading the project graph slice (104 s): flush 1 of 1.
+Reading the project graph slice (106 s): flush 1 of 1.
+Reading the project graph slice (108 s): flush 1 of 1.
+[repo] still working after 110 s; last phase started: door.script
+Reading the project graph slice (110 s): flush 1 of 1.
+Reading the project graph slice (112 s): flush 1 of 1.
+Reading the project graph slice (114 s): flush 1 of 1.
+Reading the project graph slice (116 s): flush 1 of 1.
+Reading the project graph slice (118 s): flush 1 of 1.
+Reading the project graph slice (120 s): flush 1 of 1.
+Reading the project graph slice (122 s): flush 1 of 1.
+Reading the project graph slice (124 s): flush 1 of 1.
+Reading the project graph slice (126 s): flush 1 of 1.
+Reading the project graph slice (128 s): flush 1 of 1.
+Reading the project graph slice (130 s): flush 1 of 1.
+Reading the project graph slice (132 s): flush 1 of 1.
+Reading the project graph slice (134 s): flush 1 of 1.
+Reading the project graph slice (136 s): flush 1 of 1.
+Reading the project graph slice (138 s): flush 1 of 1.
+[repo] still working after 140 s; last phase started: door.script
+Reading the project graph slice (140 s): flush 1 of 1.
+Reading the project graph slice (142 s): flush 1 of 1.
+Reading the project graph slice (144 s): flush 1 of 1.
+Reading the project graph slice (146 s): flush 1 of 1.
+Reading the project graph slice (148 s): flush 1 of 1.
+Reading the project graph slice (150 s): flush 1 of 1.
+Reading the project graph slice (152 s): flush 1 of 1.
+Reading the project graph slice (154 s): flush 1 of 1.
+Reading the project graph slice (156 s): flush 1 of 1.
+Reading the project graph slice (158 s): flush 1 of 1.
+Reading the project graph slice (160 s): flush 1 of 1.
+Reading the project graph slice (162 s): flush 1 of 1.
+Reading the project graph slice (164 s): flush 1 of 1.
+Reading the project graph slice (166 s): flush 1 of 1.
+Reading the project graph slice (168 s): flush 1 of 1.
+[repo] still working after 170 s; last phase started: door.script
+Reading the project graph slice (170 s): flush 1 of 1.
+Reading the project graph slice (172 s): flush 1 of 1.
+Reading the project graph slice (174 s): flush 1 of 1.
+Reading the project graph slice (176 s): flush 1 of 1.
+Reading the project graph slice (178 s): flush 1 of 1.
+Reading the project graph slice (180 s): flush 1 of 1.
+Reading the project graph slice (182 s): flush 1 of 1.
+Reading the project graph slice (184 s): flush 1 of 1.
+Reading the project graph slice (186 s): flush 1 of 1.
+Reading the project graph slice (188 s): flush 1 of 1.
+Reading the project graph slice (190 s): flush 1 of 1.
+Reading the project graph slice (192 s): flush 1 of 1.
+Reading the project graph slice (194 s): flush 1 of 1.
+Reading the project graph slice (196 s): flush 1 of 1.
+Reading the project graph slice (198 s): flush 1 of 1.
+[repo] still working after 200 s; last phase started: door.script
+Reading the project graph slice (200 s): flush 1 of 1.
+Reading the project graph slice (202 s): flush 1 of 1.
+Reading the project graph slice (204 s): flush 1 of 1.
+Reading the project graph slice (206 s): flush 1 of 1.
+Reading the project graph slice (208 s): flush 1 of 1.
+Reading the project graph slice (210 s): flush 1 of 1.
+Reading the project graph slice (212 s): flush 1 of 1.
+Reading the project graph slice (214 s): flush 1 of 1.
+Reading the project graph slice (216 s): flush 1 of 1.
+Reading the project graph slice (218 s): flush 1 of 1.
+Reading the project graph slice (220 s): flush 1 of 1.
+Reading the project graph slice (222 s): flush 1 of 1.
+Reading the project graph slice (224 s): flush 1 of 1.
+Reading the project graph slice (226 s): flush 1 of 1.
+Reading the project graph slice (228 s): flush 1 of 1.
+[repo] still working after 230 s; last phase started: door.script
+Reading the project graph slice (230 s): flush 1 of 1.
+Reading the project graph slice (232 s): flush 1 of 1.
+Reading the project graph slice (234 s): flush 1 of 1.
+Reading the project graph slice (236 s): flush 1 of 1.
+Reading the project graph slice (238 s): flush 1 of 1.
+Reading the project graph slice (240 s): flush 1 of 1.
+Reading the project graph slice (242 s): flush 1 of 1.
+Reading the project graph slice (244 s): flush 1 of 1.
+Reading the project graph slice (246 s): flush 1 of 1.
+Reading the project graph slice (248 s): flush 1 of 1.
+Reading the project graph slice (250 s): flush 1 of 1.
+Reading the project graph slice (252 s): flush 1 of 1.
+Reading the project graph slice (254 s): flush 1 of 1.
+Reading the project graph slice (256 s): flush 1 of 1.
+Reading the project graph slice (258 s): flush 1 of 1.
+[repo] still working after 260 s; last phase started: door.script
+Reading the project graph slice (260 s): flush 1 of 1.
+Reading the project graph slice (262 s): flush 1 of 1.
+Reading the project graph slice (264 s): flush 1 of 1.
+Reading the project graph slice (266 s): flush 1 of 1.
+Reading the project graph slice (268 s): flush 1 of 1.
+Reading the project graph slice (270 s): flush 1 of 1.
+end 2026-11-14T23:52:49Z
+native_rc=7

@@ -43,11 +43,11 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,v)in n::list(n::field(root,106)?)?.iter().enumerate(){n::entity(out,"en1991_rotating_machine",1,index,&n::cells(n::record(v)?,[Text(0),Real(1),Real(2),Real(3)])?,ROTATING_MACHINE_FLOATS)?;}
 for(index,v)in n::list(n::field(root,107)?)?.iter().enumerate(){n::entity(out,"en1991_fatigue_model",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Unsigned(2,u8::MAX as u64),Real(3),Real(4)])?,FATIGUE_MODEL_FLOATS)?;}
 for(index,v)in n::list(n::field(root,108)?)?.iter().enumerate(){n::entity(out,"en1991_support_collision",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Real(2),Real(3),Real(4),Real(5)])?,SUPPORT_COLLISION_FLOATS)?;}
-for(index,v)in n::list(n::field(root,109)?)?.iter().enumerate(){n::entity(out,"en1991_local_fire",1,index,&n::cells(n::record(v)?,[Text(0),Real(1),Real(2),Real(3),Real(4),Real(5)])?,LOCAL_FIRE_FLOATS)?;}
-for(index,v)in n::list(n::field(root,110)?)?.iter().enumerate(){n::entity(out,"en1991_snow_guard",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Real(2),Real(3)])?,SNOW_GUARD_FLOATS)?;}
-for(index,v)in n::list(n::field(root,111)?)?.iter().enumerate(){n::entity(out,"en1991_rail_derailment",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Real(2),Real(3),Real(4)])?,RAIL_DERAILMENT_FLOATS)?;}
-for(index,v)in n::list(n::field(root,112)?)?.iter().enumerate(){n::entity(out,"en1991_rail_load_group",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Real(2),Real(3),Real(4),Real(5),Real(6),Real(7),Real(8)])?,RAIL_LOAD_GROUP_FLOATS)?;}
-for(index,v)in n::list(n::field(root,113)?)?.iter().enumerate(){n::entity(out,"en1991_dust_explosion",1,index,&n::cells(n::record(v)?,[Text(0),Real(1),Real(2),Real(3),Real(4),Real(5),Real(6)])?,DUST_EXPLOSION_FLOATS)?;}
+for(index,v)in n::list(n::field(root,109)?)?.iter().enumerate(){n::entity(out,"en1991_local_fire",1,index,&n::cells(n::record(v)?,[Text(0),Real(1),Real(2),Real(3),Real(4),Real(5)])?,LOCAL_FIRE)?;}
+for(index,v)in n::list(n::field(root,110)?)?.iter().enumerate(){n::entity(out,"en1991_snow_guard",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Real(2),Real(3)])?,SNOW_GUARD)?;}
+for(index,v)in n::list(n::field(root,111)?)?.iter().enumerate(){n::entity(out,"en1991_rail_derailment",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Real(2),Real(3),Real(4)])?,RAIL_DERAILMENT)?;}
+for(index,v)in n::list(n::field(root,112)?)?.iter().enumerate(){n::entity(out,"en1991_rail_load_group",1,index,&n::cells(n::record(v)?,[Text(0),Text(1),Real(2),Real(3),Real(4),Real(5),Real(6),Real(7),Real(8)])?,RAIL_LOAD_GROUP)?;}
+for(index,v)in n::list(n::field(root,113)?)?.iter().enumerate(){n::entity(out,"en1991_dust_explosion",1,index,&n::cells(n::record(v)?,[Text(0),Real(1),Real(2),Real(3),Real(4),Real(5),Real(6)])?,DUST_EXPLOSION)?;}
  Ok(())
 }
 /// 🛂️ 33 authored SQL tables including the full 192-column document extent.

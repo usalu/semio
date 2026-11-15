@@ -1,0 +1,1 @@
+^(?=.*["'$]).*(\\Phi_\{?V|Φ_V|Φ_\{?V|\\Phi_\{?\\mathrm\{V|\\dot\{Q\}_\{?L|Q̇_L|\\dot\{Q\}_\{?K|Q̇_K|F_\{?sh|F_sh|F_\{?V\b|F_V\b|F_\{?f\b|F_f\b|R_\{?ges|R_ges|\\vartheta|ϑ|\\Delta T\b|ΔT\b|\\mathrm\{ges\}|\\mathrm\{sh\}|\bΔT\b)

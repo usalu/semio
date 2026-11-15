@@ -73,6 +73,18 @@
       "en": "inotify limits",
       "de": "inotify-Grenzen"
     },
+    "preflight.name.watcher": {
+      "en": "file watcher",
+      "de": "Dateiwächter"
+    },
+    "preflight.name.visibility": {
+      "en": "event visibility",
+      "de": "Sichtbarkeit der Ereignisse"
+    },
+    "preflight.name.logon": {
+      "en": "start without logon",
+      "de": "Start ohne Anmeldung"
+    },
     "preflight.name.longpaths": {
       "en": "long paths",
       "de": "Lange Pfade"
@@ -109,9 +121,49 @@
       "en": "native build",
       "de": "Native Build"
     },
+    "preflight.name.git": {
+      "en": "git",
+      "de": "git"
+    },
+    "preflight.name.access": {
+      "en": "worktree access",
+      "de": "Zugriff auf das Arbeitsverzeichnis"
+    },
     "preflight.name.replica": {
       "en": "replica status",
       "de": "Replica-Status"
+    },
+    "preflight.access.ok": {
+      "en": "the replica can read {worktree}",
+      "de": "die Replica kann {worktree} lesen"
+    },
+    "preflight.access.skip": {
+      "en": "no origin yet, so there is no replica to ask",
+      "de": "noch kein Ursprung, also keine Replica, die gefragt werden könnte"
+    },
+    "preflight.access.denied.macos": {
+      "en": "worktree-access-denied: the replica cannot read {worktree}. macOS asks once for the launcher: accept the prompt \"repo would like to access files in your Documents folder\" in the logged-in session, or switch it on in System Settings > Privacy & Security > Files & Folders (or Full Disk Access) for repo",
+      "de": "worktree-access-denied: die Replica kann {worktree} nicht lesen. macOS fragt einmal für den Launcher: bestätige die Abfrage \"repo möchte auf Dateien in deinem Ordner Dokumente zugreifen\" in der angemeldeten Sitzung oder schalte es in Systemeinstellungen > Datenschutz & Sicherheit > Dateien & Ordner (oder Voller Festplattenzugriff) für repo ein"
+    },
+    "preflight.access.waiting.macos": {
+      "en": "worktree-access-denied (waiting): reading {worktree} does not return, a consent prompt waits in the logged-in session: accept \"repo would like to access files in your Documents folder\"",
+      "de": "worktree-access-denied (wartet): das Lesen von {worktree} kehrt nicht zurück, in der angemeldeten Sitzung wartet eine Abfrage: bestätige \"repo möchte auf Dateien in deinem Ordner Dokumente zugreifen\""
+    },
+    "preflight.access.role.denied": {
+      "en": "worktree-access-denied: these macOS roles cannot read {worktree}: {roles}. macOS gives the consent to one identity, the launcher `repo` ({identity}): open System Settings > Privacy & Security > Files & Folders, switch on {folder} Folder for `repo` (or Full Disk Access) or accept the prompt \"repo would like to access files in your {folder} folder\" in the logged-in session, then run the command again; the role stops itself and starts anew",
+      "de": "worktree-access-denied: diese macOS-Rollen können {worktree} nicht lesen: {roles}. macOS gibt die Erlaubnis einer einzigen Identität, dem Launcher `repo` ({identity}): öffne Systemeinstellungen > Datenschutz & Sicherheit > Dateien & Ordner, schalte den Ordner {folder} für `repo` ein (oder Voller Festplattenzugriff) oder bestätige die Abfrage „repo möchte auf Dateien in deinem Ordner {folder} zugreifen“ in der angemeldeten Sitzung und führe den Befehl dann erneut aus; die Rolle beendet sich selbst und startet neu"
+    },
+    "preflight.access.role.waiting": {
+      "en": "worktree-access-denied (waiting): a consent prompt for {roles} waits in the logged-in session of the user: accept \"repo would like to access files in your {folder} folder\" ({identity}); {worktree} cannot be read before that",
+      "de": "worktree-access-denied (wartet): eine Abfrage für {roles} wartet in der angemeldeten Sitzung des Benutzers: bestätige „repo möchte auf Dateien in deinem Ordner {folder} zugreifen“ ({identity}); {worktree} kann davor nicht gelesen werden"
+    },
+    "preflight.access.denied.other": {
+      "en": "worktree-access-denied: the replica cannot read {worktree}: give the account that runs the replica read and write permission on it",
+      "de": "worktree-access-denied: die Replica kann {worktree} nicht lesen: gib dem Konto, das die Replica ausführt, Lese- und Schreibrechte darauf"
+    },
+    "preflight.access.waiting.other": {
+      "en": "worktree-access-denied (waiting): reading {worktree} does not return: check the permissions and the disk of the worktree",
+      "de": "worktree-access-denied (wartet): das Lesen von {worktree} kehrt nicht zurück: Berechtigungen und Datenträger des Arbeitsverzeichnisses prüfen"
     },
     "preflight.check.error": {
       "en": "The check itself failed: {error}",
@@ -285,6 +337,14 @@
       "en": "{name} is not scheduled: the journal of this origin grows without compaction; run the provisioning script",
       "de": "{name} ist nicht geplant: Das Journal dieses Origin wächst ohne Verdichtung; das Provisioning-Skript ausführen"
     },
+    "preflight.git.ok": {
+      "en": "git found ({path}); stage and commit state replicates on this machine",
+      "de": "git gefunden ({path}); Stage und Commits werden auf dieser Maschine repliziert"
+    },
+    "preflight.git.missing": {
+      "en": "no git executable found on PATH or in the usual install locations (on Windows Git for Windows): stage and commit state is NOT shared on this machine, files still sync; install git and restart the replica service",
+      "de": "keine ausführbare git-Datei im PATH oder an den üblichen Installationsorten gefunden (unter Windows Git for Windows): Stage und Commits werden auf dieser Maschine NICHT geteilt, Dateien synchronisieren weiterhin; git installieren und den Replica-Dienst neu starten"
+    },
     "preflight.native.ok": {
       "en": "bootstrap complete ({marker})",
       "de": "Bootstrap abgeschlossen ({marker})"
@@ -292,6 +352,38 @@
     "preflight.native.pending": {
       "en": "pending: the native bootstrap has not completed ({marker} is missing), so this machine syncs but cannot build yet; run the provisioning script again to retry it, the log is {log}",
       "de": "ausstehend: Der native Bootstrap ist nicht abgeschlossen ({marker} fehlt), diese Maschine synchronisiert, kann aber noch nicht bauen; das Provisioning-Skript erneut ausführen, um ihn zu wiederholen, das Log ist {log}"
+    },
+    "preflight.watcher.ok": {
+      "en": "the recursive file watcher runs; the scans are only the safety net",
+      "de": "der rekursive Dateiwächter läuft; die Scans sind nur das Sicherheitsnetz"
+    },
+    "preflight.watcher.degraded": {
+      "en": "the file watcher stopped on {platform}: only the scans remain and an edit can take up to the scan interval to be seen (on Linux raise the inotify limits)",
+      "de": "der Dateiwächter wurde unter {platform} beendet: nur die Scans bleiben und eine Änderung kann bis zum Scan-Intervall brauchen (unter Linux die inotify-Grenzen erhöhen)"
+    },
+    "preflight.watcher.skip": {
+      "en": "the daemon is not running, so its watcher cannot be read",
+      "de": "der Daemon läuft nicht, sein Dateiwächter kann daher nicht gelesen werden"
+    },
+    "preflight.visibility.ok": {
+      "en": "events from other machines were applied after {p50} ms (median) and {p95} ms (95th percentile) over {samples} samples on {platform}; the limit is {limit} ms",
+      "de": "Ereignisse anderer Maschinen wurden nach {p50} ms (Median) und {p95} ms (95. Perzentil) bei {samples} Stichproben unter {platform} angewendet; die Grenze ist {limit} ms"
+    },
+    "preflight.visibility.slow": {
+      "en": "events from other machines reach this {platform} machine slowly: {p95} ms at the 95th percentile (median {p50} ms, {samples} samples, limit {limit} ms); look at the client cache options of the store mount",
+      "de": "Ereignisse anderer Maschinen erreichen diese {platform}-Maschine langsam: {p95} ms beim 95. Perzentil (Median {p50} ms, {samples} Stichproben, Grenze {limit} ms); die Cache-Optionen des Store-Mounts prüfen"
+    },
+    "preflight.visibility.skip": {
+      "en": "fewer than {minimum} applied events were measured yet; run the check again after the fleet has been busy",
+      "de": "bisher wurden weniger als {minimum} angewendete Ereignisse gemessen; die Prüfung wiederholen, nachdem das Fleet beschäftigt war"
+    },
+    "preflight.logon.auto": {
+      "en": "automatic logon is configured, so the replica task starts after a reboot without anyone logging on",
+      "de": "die automatische Anmeldung ist eingerichtet, die Replica-Aufgabe startet daher nach einem Neustart ohne Anmeldung"
+    },
+    "preflight.logon.manual": {
+      "en": "the replica task starts only after this account logs on: a reboot leaves the machine out of the fleet until someone logs on; configure automatic logon (Winlogon AutoAdminLogon) for this account",
+      "de": "die Replica-Aufgabe startet erst nach der Anmeldung dieses Kontos: ein Neustart lässt die Maschine aus dem Fleet, bis sich jemand anmeldet; die automatische Anmeldung (Winlogon AutoAdminLogon) für dieses Konto einrichten"
     },
     "preflight.replica.ok": {
       "en": "daemon running, {files} files, {origins} origins, queue {incoming} incoming and {outgoing} outgoing",
@@ -312,6 +404,110 @@
     "preflight.replica.behind": {
       "en": "far behind: {origins}",
       "de": "weit zurück: {origins}"
+    },
+    "preflight.name.guards.git": {
+      "en": "git version and pins",
+      "de": "git-Version und Pins"
+    },
+    "preflight.name.guards.exclude": {
+      "en": "private exclude rules",
+      "de": "private Ausschlussregeln"
+    },
+    "preflight.name.guards.case": {
+      "en": "case and normalisation of names",
+      "de": "Gross- und Kleinschreibung und Normalisierung der Namen"
+    },
+    "preflight.name.guards.tracked": {
+      "en": "tracked paths",
+      "de": "versionierte Pfade"
+    },
+    "preflight.name.guards.paths": {
+      "en": "path length",
+      "de": "Pfadlänge"
+    },
+    "preflight.name.guards.symlinks": {
+      "en": "symbolic links",
+      "de": "symbolische Links"
+    },
+    "preflight.name.guards.scripts": {
+      "en": "shell script line endings",
+      "de": "Zeilenenden der Shell-Skripte"
+    },
+    "preflight.guards.scripts.ok": {
+      "en": "no tracked shell script contains a carriage return",
+      "de": "kein versioniertes Shell-Skript enthält ein Wagenrücklaufzeichen"
+    },
+    "preflight.guards.scripts.crlf": {
+      "en": "{count} tracked shell scripts contain a carriage return (CRLF), which breaks bash on Linux and macOS: {paths}; save them with LF line endings",
+      "de": "{count} versionierte Shell-Skripte enthalten ein Wagenrücklaufzeichen (CRLF), das bash unter Linux und macOS bricht: {paths}; mit LF-Zeilenenden speichern"
+    },
+    "preflight.guards.skip": {
+      "en": "not measured: no git, no repository or the guards could not be read",
+      "de": "nicht gemessen: kein git, kein Repository oder die Wächter waren nicht lesbar"
+    },
+    "preflight.guards.git.ok": {
+      "en": "git {version}, the pinned view configuration has the hash {pins} (the same on every machine of a healthy fleet)",
+      "de": "git {version}, die gepinnte Konfiguration der Sicht hat den Hash {pins} (auf jeder Maschine einer gesunden Flotte derselbe)"
+    },
+    "preflight.guards.git.old": {
+      "en": "git {version} is older than 2.32: it ignores GIT_CONFIG_GLOBAL, so machine-local configuration changes the view; update git",
+      "de": "git {version} ist älter als 2.32: Es ignoriert GIT_CONFIG_GLOBAL, daher verändert lokale Konfiguration die Sicht; git aktualisieren"
+    },
+    "preflight.guards.exclude.ok": {
+      "en": "no rules in .git/info/exclude",
+      "de": "keine Regeln in .git/info/exclude"
+    },
+    "preflight.guards.exclude.fail": {
+      "en": "{count} rules in {file}: no flag removes them from git's view, so this machine sees other untracked files than the others; delete the rules (use .gitignore, which is shared)",
+      "de": "{count} Regeln in {file}: Kein Schalter entfernt sie aus der Sicht von git, diese Maschine sieht daher andere unversionierte Dateien als die anderen; die Regeln löschen (.gitignore verwenden, sie wird geteilt)"
+    },
+    "preflight.guards.case.ok": {
+      "en": "names are exact on disk and in the index (volume: {case}, {normalisation}); the replica pins core.ignorecase=false for its view",
+      "de": "Namen stimmen auf Platte und im Index genau überein (Volume: {case}, {normalisation}); das Replikat pinnt core.ignorecase=false für seine Sicht"
+    },
+    "preflight.guards.case.mismatch": {
+      "en": "{count} tracked paths are spelled differently on this disk (case or NFC/NFD): {paths}; a git GUI here and on Linux disagree about them until `git add` records the disk spelling",
+      "de": "{count} versionierte Pfade sind auf dieser Platte anders geschrieben (Gross-/Kleinschreibung oder NFC/NFD): {paths}; eine git-Oberfläche hier und unter Linux widersprechen sich darüber, bis `git add` die Schreibweise der Platte einträgt"
+    },
+    "preflight.guards.case.ignore": {
+      "en": "{count} existing paths are hidden by a case-insensitive .gitignore match (macOS and Windows git) but shared by the replica and shown by Linux git: {paths}; fix the rule or the directory name",
+      "de": "{count} vorhandene Pfade werden von einem Gross-/Kleinschreibung ignorierenden .gitignore-Treffer verborgen (git unter macOS und Windows), vom Replikat aber geteilt und von git unter Linux angezeigt: {paths}; die Regel oder den Verzeichnisnamen korrigieren"
+    },
+    "preflight.guards.tracked.ok": {
+      "en": "tracked paths are valid on every operating system ({ignored} ignored, {links} links)",
+      "de": "versionierte Pfade sind auf jedem Betriebssystem gültig ({ignored} ignoriert, {links} Links)"
+    },
+    "preflight.guards.tracked.refused": {
+      "en": "{count} tracked paths or links are refused by the path policy (illegal or reserved name, too long, unsafe link target, case collision): {paths}; they never reach the other machines",
+      "de": "{count} versionierte Pfade oder Links verweigert die Pfadregel (unzulässiger oder reservierter Name, zu lang, unsicheres Linkziel, Gross-/Kleinschreibungs-Kollision): {paths}; sie erreichen die anderen Maschinen nie"
+    },
+    "preflight.guards.tracked.ignored": {
+      "en": "{count} tracked paths match an ignore rule; git keeps tracking them, a GUI that hides ignored files shows them differently",
+      "de": "{count} versionierte Pfade passen auf eine Ignorierregel; git verfolgt sie weiter, eine Oberfläche, die ignorierte Dateien verbirgt, zeigt sie anders"
+    },
+    "preflight.guards.tracked.mode": {
+      "en": "{count} tracked files have an executable bit that differs from the index mode: {paths}; stage them (git add) so that every machine agrees",
+      "de": "{count} versionierte Dateien haben ein anderes Ausführbar-Bit als der Index-Modus: {paths}; mit git add einpflegen, damit alle Maschinen übereinstimmen"
+    },
+    "preflight.guards.paths.ok": {
+      "en": "every tracked path fits this operating system below this worktree (limit {limit} {unit} units)",
+      "de": "jeder versionierte Pfad passt unter diesem Worktree auf dieses Betriebssystem (Grenze {limit} {unit}-Einheiten)"
+    },
+    "preflight.guards.paths.over": {
+      "en": "{count} tracked paths are longer than {limit} {unit} units below this worktree: {paths}; enable long paths (Windows LongPathsEnabled) or shorten them",
+      "de": "{count} versionierte Pfade sind unter diesem Worktree länger als {limit} {unit}-Einheiten: {paths}; lange Pfade aktivieren (Windows LongPathsEnabled) oder kürzen"
+    },
+    "preflight.guards.symlinks.ok": {
+      "en": "symbolic links can be created on this volume",
+      "de": "symbolische Links können auf diesem Volume angelegt werden"
+    },
+    "preflight.guards.symlinks.warn": {
+      "en": "symbolic links cannot be created on this volume (Windows without Developer Mode or the privilege); the repository tracks none today",
+      "de": "symbolische Links können auf diesem Volume nicht angelegt werden (Windows ohne Entwicklermodus oder Berechtigung); das Repository versioniert derzeit keine"
+    },
+    "preflight.guards.symlinks.fail": {
+      "en": "symbolic links cannot be created on this volume but the repository tracks {count}: they would show as deleted here; enable Developer Mode or the symlink privilege",
+      "de": "symbolische Links können auf diesem Volume nicht angelegt werden, das Repository versioniert aber {count}: Sie würden hier als gelöscht erscheinen; Entwicklermodus oder Symlink-Berechtigung aktivieren"
     }
   }
 }

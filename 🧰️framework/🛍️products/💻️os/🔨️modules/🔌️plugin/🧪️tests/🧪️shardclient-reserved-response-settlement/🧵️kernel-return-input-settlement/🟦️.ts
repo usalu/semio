@@ -1,6 +1,6 @@
 /** 🧵️ The kernel return input resident payload, settlement and framing tests. */
 import { loadRetainedResidentSlotFixture, loadRetainedResidentPayloadFixture, loadRetainedResidentBuilderFixture, loadRetainedResidentEvidenceFixture, loadRetainedResidentReaderFixture, loadRetainedResidentPageFixture, loadResidentPageBindingFixture, loadResidentEvidenceCopiedFixture, loadResidentEvidenceCopiedSchema, loadResidentPageBindingSchema } from "@semio-tech/ui/testing/fixtures";
-import { loadContentInputAuthorityFixture, loadContentInputPayloadFixture } from "@semio-tech/framework-kernel/testing/fixtures";
+import { loadContentInputAuthorityFixture, loadContentInputPayloadFixture } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
 import type { OwnedUiResidentPayload, ShardClientSettlementTestKit, UiResidentSourceProof } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { CapturedReturnHelpers } from "../🛠️captured-return-helpers/🟦️.ts";
 

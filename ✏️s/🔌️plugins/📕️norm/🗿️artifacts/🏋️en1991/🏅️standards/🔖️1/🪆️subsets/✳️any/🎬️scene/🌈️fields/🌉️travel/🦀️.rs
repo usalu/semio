@@ -39,11 +39,6 @@ fn travel_length(span: f64, spacing: f64) -> f64 {
     span + spacing
 }
 
-/// 🌈️ Envelope of the travel: the largest mid-span moment (N·m) and left reaction (N); both are piecewise linear in the front axle position, so the maximum sits at one of the breakpoints.
-pub fn envelope(axle_n: f64, span: f64, spacing: f64) -> (f64, f64) {
-    [0.0, spacing, span / 2.0, span / 2.0 + spacing, span, span + spacing].iter().map(|x| effects(axle_n, *x, span, spacing)).fold((0.0, 0.0), |a, e| (f64::max(a.0, e.0), f64::max(a.1, e.1)))
-}
-
 fn field(id: String, nm: f64) -> ScalarField {
     ScalarField { id, unit: QuantityKind::Moment, samples: FieldSamples::Instance { values: vec![nm] } }
 }

@@ -1,0 +1,264 @@
+service log: /var/folders/xq/z6t8hmcd0qj871bx0sj7pbn80000gn/T//semio-repo/501/host-c5f530f58f3a.log
+closure entries before: 42066
+2026-11-15T04:09:48Z no slice worker
+2026-11-15T04:09:53Z no slice worker
+2026-11-15T04:09:58Z no slice worker
+2026-11-15T04:10:03Z no slice worker
+2026-11-15T04:10:08Z no slice worker
+2026-11-15T04:10:13Z no slice worker
+2026-11-15T04:10:18Z no slice worker
+2026-11-15T04:10:24Z no slice worker
+2026-11-15T04:10:29Z no slice worker
+2026-11-15T04:10:34Z no slice worker
+2026-11-15T04:10:39Z no slice worker
+2026-11-15T04:10:44Z no slice worker
+2026-11-15T04:10:49Z no slice worker
+2026-11-15T04:10:54Z no slice worker
+2026-11-15T04:11:00Z no slice worker
+2026-11-15T04:11:05Z no slice worker
+2026-11-15T04:11:10Z no slice worker
+2026-11-15T04:11:15Z no slice worker
+2026-11-15T04:11:20Z no slice worker
+2026-11-15T04:11:25Z no slice worker
+2026-11-15T04:11:30Z no slice worker
+2026-11-15T04:11:35Z no slice worker
+2026-11-15T04:11:40Z no slice worker
+2026-11-15T04:11:45Z no slice worker
+2026-11-15T04:11:50Z no slice worker
+2026-11-15T04:11:56Z no slice worker
+2026-11-15T04:12:01Z no slice worker
+2026-11-15T04:12:06Z no slice worker
+2026-11-15T04:12:11Z no slice worker
+2026-11-15T04:12:16Z no slice worker
+2026-11-15T04:12:21Z no slice worker
+2026-11-15T04:12:26Z no slice worker
+2026-11-15T04:12:31Z no slice worker
+2026-11-15T04:12:36Z no slice worker
+2026-11-15T04:12:41Z no slice worker
+2026-11-15T04:12:46Z no slice worker
+2026-11-15T04:12:51Z no slice worker
+2026-11-15T04:12:56Z no slice worker
+2026-11-15T04:13:02Z no slice worker
+2026-11-15T04:13:07Z no slice worker
+2026-11-15T04:13:12Z no slice worker
+2026-11-15T04:13:17Z no slice worker
+2026-11-15T04:13:22Z no slice worker
+2026-11-15T04:13:27Z no slice worker
+2026-11-15T04:13:32Z no slice worker
+2026-11-15T04:13:37Z no slice worker
+2026-11-15T04:13:42Z no slice worker
+2026-11-15T04:13:48Z no slice worker
+2026-11-15T04:13:53Z no slice worker
+2026-11-15T04:13:58Z no slice worker
+2026-11-15T04:14:03Z no slice worker
+2026-11-15T04:14:08Z no slice worker
+2026-11-15T04:14:13Z no slice worker
+2026-11-15T04:14:18Z no slice worker
+2026-11-15T04:14:23Z no slice worker
+2026-11-15T04:14:28Z no slice worker
+2026-11-15T04:14:33Z no slice worker
+2026-11-15T04:14:39Z no slice worker
+2026-11-15T04:14:44Z no slice worker
+2026-11-15T04:14:49Z no slice worker
+2026-11-15T04:14:54Z no slice worker
+2026-11-15T04:14:59Z no slice worker
+2026-11-15T04:15:04Z no slice worker
+2026-11-15T04:15:09Z no slice worker
+2026-11-15T04:15:14Z no slice worker
+2026-11-15T04:15:19Z pid=45766 rss=69MB footprint=[bun [45766]: 64-bit    Footprint: 26 MB (16384 bytes per page)] last=[]
+2026-11-15T04:15:24Z pid=45766 rss=330MB footprint=[bun [45766]: 64-bit    Footprint: 86 MB (16384 bytes per page)] last=[]
+2026-11-15T04:15:30Z pid=45766 rss=369MB footprint=[bun [45766]: 64-bit    Footprint: 121 MB (16384 bytes per page)] last=[]
+2026-11-15T04:15:35Z pid=45766 rss=391MB footprint=[bun [45766]: 64-bit    Footprint: 129 MB (16384 bytes per page)] last=[]
+2026-11-15T04:15:40Z pid=45766 rss=394MB footprint=[bun [45766]: 64-bit    Footprint: 128 MB (16384 bytes per page)] last=[]
+2026-11-15T04:15:45Z pid=45766 rss=397MB footprint=[bun [45766]: 64-bit    Footprint: 129 MB (16384 bytes per page)] last=[]
+2026-11-15T04:15:50Z pid=45766 rss=398MB footprint=[bun [45766]: 64-bit    Footprint: 127 MB (16384 bytes per page)] last=[]
+2026-11-15T04:15:55Z pid=45766 rss=419MB footprint=[bun [45766]: 64-bit    Footprint: 86 MB (16384 bytes per page)] last=[graph: waiting for the graph build of a peer (27 s in the queue, generation -1 was the newest when this command queued)]
+2026-11-15T04:16:00Z pid=45766 rss=650MB footprint=[bun [45766]: 64-bit    Footprint: 135 MB (16384 bytes per page)] last=[graph: waiting for the graph build of a peer (27 s in the queue, generation -1 was the newest when this command queued)]
+2026-11-15T04:16:05Z pid=45766 rss=1798MB footprint=[bun [45766]: 64-bit    Footprint: 137 MB (16384 bytes per page)] last=[graph: waiting for the graph build of a peer (27 s in the queue, generation -1 was the newest when this command queued)]
+2026-11-15T04:16:10Z pid=45766 rss=2361MB footprint=[bun [45766]: 64-bit    Footprint: 109 MB (16384 bytes per page)] last=[graph: generation 221 (5100 projects) restored from the remote cache, 5104 documents (48 MB) downloaded in 16 s, from a state 33 min old with 49 projects stale]
+2026-11-15T04:16:15Z pid=45766 rss=2362MB footprint=[bun [45766]: 64-bit    Footprint: 110 MB (16384 bytes per page)] last=[]
+2026-11-15T04:16:20Z pid=45766 rss=2364MB footprint=[bun [45766]: 64-bit    Footprint: 106 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 197 MB, resident 2363 MB)]
+2026-11-15T04:16:25Z pid=45766 rss=2368MB footprint=[bun [45766]: 64-bit    Footprint: 107 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 197 MB, resident 2363 MB)]
+2026-11-15T04:16:31Z pid=45766 rss=2372MB footprint=[bun [45766]: 64-bit    Footprint: 110 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 197 MB, resident 2363 MB)]
+2026-11-15T04:16:36Z pid=45766 rss=2374MB footprint=[bun [45766]: 64-bit    Footprint: 111 MB (16384 bytes per page)] last=[]
+2026-11-15T04:16:41Z pid=45766 rss=2376MB footprint=[bun [45766]: 64-bit    Footprint: 112 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (936 of 1168 MB reserved, 1 projects running)]
+2026-11-15T04:16:46Z pid=45766 rss=2378MB footprint=[bun [45766]: 64-bit    Footprint: 111 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (936 of 1137 MB reserved, 1 projects running)]
+2026-11-15T04:16:51Z pid=45766 rss=2387MB footprint=[bun [45766]: 64-bit    Footprint: 115 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (936 of 1137 MB reserved, 1 projects running)]
+2026-11-15T04:16:56Z pid=45766 rss=2387MB footprint=[bun [45766]: 64-bit    Footprint: 116 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (936 of 1250 MB reserved, 1 projects running)]
+2026-11-15T04:17:01Z pid=45766 rss=2400MB footprint=[bun [45766]: 64-bit    Footprint: 116 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1000 of 136 MB reserved, 1 projects running)]
+2026-11-15T04:17:06Z pid=45766 rss=2400MB footprint=[bun [45766]: 64-bit    Footprint: 116 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1000 of 1098 MB reserved, 1 projects running)]
+2026-11-15T04:17:11Z pid=45766 rss=2402MB footprint=[bun [45766]: 64-bit    Footprint: 116 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1000 of 1187 MB reserved, 1 projects running)]
+2026-11-15T04:17:16Z pid=45766 rss=2405MB footprint=[bun [45766]: 64-bit    Footprint: 119 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1000 of 988 MB reserved, 1 projects running)]
+2026-11-15T04:17:21Z pid=45766 rss=2406MB footprint=[bun [45766]: 64-bit    Footprint: 120 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1000 of 1328 MB reserved, 1 projects running)]
+2026-11-15T04:17:27Z pid=45766 rss=2403MB footprint=[bun [45766]: 64-bit    Footprint: 126 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1000 of 1424 MB reserved, 1 projects running)]
+2026-11-15T04:17:32Z pid=45766 rss=2080MB footprint=[bun [45766]: 64-bit    Footprint: 261 MB (16384 bytes per page)] last=[graph: headroom of 400 MB again (2 MB taken), resuming]
+2026-11-15T04:17:37Z pid=45766 rss=2018MB footprint=[bun [45766]: 64-bit    Footprint: 260 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (228 of 400 MB reserved, 1 projects running)]
+2026-11-15T04:17:42Z pid=45766 rss=1875MB footprint=[bun [45766]: 64-bit    Footprint: 261 MB (16384 bytes per page)] last=[graph: headroom of 625 MB is below one project (1000 MB), inferring one project at a time]
+2026-11-15T04:17:47Z pid=45766 rss=1847MB footprint=[bun [45766]: 64-bit    Footprint: 371 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (630 of 649 MB reserved, 1 projects running)]
+2026-11-15T04:17:52Z pid=45766 rss=1901MB footprint=[bun [45766]: 64-bit    Footprint: 374 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (630 of 588 MB reserved, 1 projects running)]
+2026-11-15T04:17:57Z pid=45766 rss=1903MB footprint=[bun [45766]: 64-bit    Footprint: 372 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (637 of 622 MB reserved, 1 projects running)]
+2026-11-15T04:18:02Z pid=45766 rss=1915MB footprint=[bun [45766]: 64-bit    Footprint: 369 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (637 of 452 MB reserved, 1 projects running)]
+2026-11-15T04:18:08Z pid=45766 rss=1953MB footprint=[bun [45766]: 64-bit    Footprint: 369 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (637 of 87 MB reserved, 1 projects running)]
+2026-11-15T04:18:13Z pid=45766 rss=1965MB footprint=[bun [45766]: 64-bit    Footprint: 372 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (637 of 180 MB reserved, 1 projects running)]
+2026-11-15T04:18:18Z pid=45766 rss=1976MB footprint=[bun [45766]: 64-bit    Footprint: 667 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (637 of 457 MB reserved, 1 projects running)]
+2026-11-15T04:18:23Z pid=45766 rss=1981MB footprint=[bun [45766]: 64-bit    Footprint: 621 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (637 of 441 MB reserved, 1 projects running)]
+2026-11-15T04:18:28Z pid=45766 rss=1921MB footprint=[bun [45766]: 64-bit    Footprint: 850 MB (16384 bytes per page)] last=[graph: headroom of 304 MB is below one project (637 MB), inferring one project at a time]
+2026-11-15T04:18:34Z pid=45766 rss=1924MB footprint=[bun [45766]: 64-bit    Footprint: 850 MB (16384 bytes per page)] last=[graph: headroom of 361 MB again (346 MB taken), resuming]
+2026-11-15T04:18:39Z pid=45766 rss=1932MB footprint=[bun [45766]: 64-bit    Footprint: 779 MB (16384 bytes per page)] last=[graph: headroom of 262 MB is below one project (346 MB), inferring one project at a time]
+2026-11-15T04:18:44Z pid=45766 rss=1941MB footprint=[bun [45766]: 64-bit    Footprint: 762 MB (16384 bytes per page)] last=[graph: headroom of 762 MB again (346 MB taken), resuming]
+2026-11-15T04:18:49Z pid=45766 rss=1941MB footprint=[bun [45766]: 64-bit    Footprint: 761 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (692 of 689 MB reserved, 2 projects running)]
+2026-11-15T04:18:54Z pid=45766 rss=1911MB footprint=[bun [45766]: 64-bit    Footprint: 838 MB (16384 bytes per page)] last=[graph: headroom of 494 MB again (292 MB taken), resuming]
+2026-11-15T04:19:00Z pid=45766 rss=1580MB footprint=[bun [45766]: 64-bit    Footprint: 1108 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (637 of 700 MB reserved, 1 projects running)]
+2026-11-15T04:19:05Z pid=45766 rss=1619MB footprint=[bun [45766]: 64-bit    Footprint: 1106 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (722 of 644 MB reserved, 1 projects running)]
+2026-11-15T04:19:10Z pid=45766 rss=1662MB footprint=[bun [45766]: 64-bit    Footprint: 1103 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (560 of 593 MB reserved, 1 projects running)]
+2026-11-15T04:19:15Z pid=45766 rss=1682MB footprint=[bun [45766]: 64-bit    Footprint: 1104 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (560 of 442 MB reserved, 1 projects running)]
+2026-11-15T04:19:20Z pid=45766 rss=1692MB footprint=[bun [45766]: 64-bit    Footprint: 1103 MB (16384 bytes per page)] last=[graph: headroom of 391 MB is below one project (521 MB), inferring one project at a time]
+2026-11-15T04:19:25Z pid=45766 rss=1719MB footprint=[bun [45766]: 64-bit    Footprint: 1103 MB (16384 bytes per page)] last=[graph: headroom of 671 MB again (302 MB taken), resuming]
+2026-11-15T04:19:30Z pid=45766 rss=1734MB footprint=[bun [45766]: 64-bit    Footprint: 1106 MB (16384 bytes per page)] last=[graph: headroom of 380 MB is below one project (521 MB), inferring one project at a time]
+2026-11-15T04:19:35Z pid=45766 rss=1788MB footprint=[bun [45766]: 64-bit    Footprint: 1105 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (443 of 319 MB reserved, 1 projects running)]
+2026-11-15T04:19:41Z pid=45766 rss=1797MB footprint=[bun [45766]: 64-bit    Footprint: 1105 MB (16384 bytes per page)] last=[graph: headroom of 334 MB is below one project (443 MB), inferring one project at a time]
+2026-11-15T04:19:46Z pid=45766 rss=1815MB footprint=[bun [45766]: 64-bit    Footprint: 1105 MB (16384 bytes per page)] last=[graph: headroom of 532 MB again (302 MB taken), resuming]
+2026-11-15T04:19:51Z pid=45766 rss=1816MB footprint=[bun [45766]: 64-bit    Footprint: 1105 MB (16384 bytes per page)] last=[graph: headroom of 212 MB is below one project (443 MB), inferring one project at a time]
+2026-11-15T04:19:57Z pid=45766 rss=1830MB footprint=[bun [45766]: 64-bit    Footprint: 1113 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (443 of 298 MB reserved, 1 projects running)]
+2026-11-15T04:20:02Z pid=45766 rss=1869MB footprint=[bun [45766]: 64-bit    Footprint: 1065 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (443 of 378 MB reserved, 1 projects running)]
+2026-11-15T04:20:07Z pid=45766 rss=1882MB footprint=[bun [45766]: 64-bit    Footprint: 1065 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (443 of 500 MB reserved, 1 projects running)]
+2026-11-15T04:20:12Z pid=45766 rss=1890MB footprint=[bun [45766]: 64-bit    Footprint: 1065 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (885 of 916 MB reserved, 2 projects running)]
+2026-11-15T04:20:17Z pid=45766 rss=1913MB footprint=[bun [45766]: 64-bit    Footprint: 1064 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (724 of 1042 MB reserved, 2 projects running)]
+2026-11-15T04:20:22Z pid=45766 rss=1914MB footprint=[bun [45766]: 64-bit    Footprint: 1064 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (724 of 1008 MB reserved, 2 projects running)]
+2026-11-15T04:20:28Z pid=45766 rss=1914MB footprint=[bun [45766]: 64-bit    Footprint: 1064 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (447 of 462 MB reserved, 1 projects running)]
+2026-11-15T04:20:33Z pid=45766 rss=1915MB footprint=[bun [45766]: 64-bit    Footprint: 1064 MB (16384 bytes per page)] last=[graph: headroom of 284 MB is below one project (419 MB), inferring one project at a time]
+2026-11-15T04:20:38Z pid=45766 rss=1915MB footprint=[bun [45766]: 64-bit    Footprint: 1063 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (419 of 516 MB reserved, 1 projects running)]
+2026-11-15T04:20:43Z pid=45766 rss=1915MB footprint=[bun [45766]: 64-bit    Footprint: 1063 MB (16384 bytes per page)] last=[graph: headroom of 518 MB again (220 MB taken), resuming]
+2026-11-15T04:20:49Z pid=45766 rss=1908MB footprint=[bun [45766]: 64-bit    Footprint: 1079 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (639 of 676 MB reserved, 2 projects running)]
+2026-11-15T04:20:55Z pid=45766 rss=1915MB footprint=[bun [45766]: 64-bit    Footprint: 1079 MB (16384 bytes per page)] last=[graph: headroom of 227 MB is below one project (419 MB), inferring one project at a time]
+2026-11-15T04:21:00Z pid=45766 rss=1917MB footprint=[bun [45766]: 64-bit    Footprint: 1079 MB (16384 bytes per page)] last=[graph: headroom of 177 MB is below one project (419 MB), inferring one project at a time]
+2026-11-15T04:21:05Z pid=45766 rss=1935MB footprint=[bun [45766]: 64-bit    Footprint: 1079 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (430 of 545 MB reserved, 1 projects running)]
+2026-11-15T04:21:10Z pid=45766 rss=1948MB footprint=[bun [45766]: 64-bit    Footprint: 1079 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (447 of 318 MB reserved, 1 projects running)]
+2026-11-15T04:21:16Z pid=45766 rss=1973MB footprint=[bun [45766]: 64-bit    Footprint: 1086 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (193 of 192 MB reserved, 1 projects running)]
+2026-11-15T04:21:21Z pid=45766 rss=1982MB footprint=[bun [45766]: 64-bit    Footprint: 1083 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (447 of 147 MB reserved, 1 projects running)]
+2026-11-15T04:21:26Z pid=45766 rss=1896MB footprint=[bun [45766]: 64-bit    Footprint: 1248 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (479 of 422 MB reserved, 1 projects running)]
+2026-11-15T04:21:31Z pid=45766 rss=1908MB footprint=[bun [45766]: 64-bit    Footprint: 1214 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (479 of 398 MB reserved, 1 projects running)]
+2026-11-15T04:21:37Z pid=45766 rss=1919MB footprint=[bun [45766]: 64-bit    Footprint: 1204 MB (16384 bytes per page)] last=[graph: headroom of 515 MB again (479 MB taken), resuming]
+2026-11-15T04:21:42Z pid=45766 rss=1923MB footprint=[bun [45766]: 64-bit    Footprint: 1205 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (317 of 276 MB reserved, 1 projects running)]
+2026-11-15T04:21:47Z pid=45766 rss=1926MB footprint=[bun [45766]: 64-bit    Footprint: 1205 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (479 of 505 MB reserved, 1 projects running)]
+2026-11-15T04:21:52Z pid=45766 rss=1929MB footprint=[bun [45766]: 64-bit    Footprint: 1205 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (479 of 407 MB reserved, 1 projects running)]
+2026-11-15T04:21:57Z pid=45766 rss=1915MB footprint=[bun [45766]: 64-bit    Footprint: 1242 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (479 of 373 MB reserved, 1 projects running)]
+2026-11-15T04:22:03Z pid=45766 rss=1922MB footprint=[bun [45766]: 64-bit    Footprint: 1242 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (479 of 764 MB reserved, 1 projects running)]
+2026-11-15T04:22:08Z pid=45766 rss=1925MB footprint=[bun [45766]: 64-bit    Footprint: 1240 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (479 of 273 MB reserved, 1 projects running)]
+2026-11-15T04:22:13Z pid=45766 rss=1926MB footprint=[bun [45766]: 64-bit    Footprint: 1240 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (479 of 233 MB reserved, 1 projects running)]
+2026-11-15T04:22:18Z pid=45766 rss=1935MB footprint=[bun [45766]: 64-bit    Footprint: 1240 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (290 of 225 MB reserved, 1 projects running)]
+2026-11-15T04:22:23Z pid=45766 rss=1939MB footprint=[bun [45766]: 64-bit    Footprint: 1240 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (788 of 845 MB reserved, 2 projects running)]
+2026-11-15T04:22:29Z pid=45766 rss=1946MB footprint=[bun [45766]: 64-bit    Footprint: 1242 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (356 of 201 MB reserved, 1 projects running)]
+2026-11-15T04:22:34Z pid=45766 rss=1954MB footprint=[bun [45766]: 64-bit    Footprint: 1242 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (524 of 148 MB reserved, 1 projects running)]
+2026-11-15T04:22:39Z pid=45766 rss=1961MB footprint=[bun [45766]: 64-bit    Footprint: 1239 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (524 of 367 MB reserved, 1 projects running)]
+2026-11-15T04:22:44Z pid=45766 rss=1963MB footprint=[bun [45766]: 64-bit    Footprint: 1239 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (524 of 80 MB reserved, 1 projects running)]
+2026-11-15T04:22:50Z pid=45766 rss=1984MB footprint=[bun [45766]: 64-bit    Footprint: 1307 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (524 of 197 MB reserved, 1 projects running)]
+2026-11-15T04:22:55Z pid=45766 rss=1991MB footprint=[bun [45766]: 64-bit    Footprint: 1354 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (524 of 382 MB reserved, 1 projects running)]
+2026-11-15T04:23:00Z pid=45766 rss=1997MB footprint=[bun [45766]: 64-bit    Footprint: 1253 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (524 of 522 MB reserved, 1 projects running)]
+2026-11-15T04:23:05Z pid=45766 rss=2006MB footprint=[bun [45766]: 64-bit    Footprint: 1253 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (397 of 128 MB reserved, 1 projects running)]
+2026-11-15T04:23:10Z pid=45766 rss=2110MB footprint=[bun [45766]: 64-bit    Footprint: 1254 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (397 of 476 MB reserved, 1 projects running)]
+2026-11-15T04:23:15Z pid=45766 rss=2113MB footprint=[bun [45766]: 64-bit    Footprint: 1253 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (588 of 165 MB reserved, 1 projects running)]
+2026-11-15T04:23:20Z pid=45766 rss=2115MB footprint=[bun [45766]: 64-bit    Footprint: 1253 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (326 of 352 MB reserved, 1 projects running)]
+2026-11-15T04:23:25Z pid=45766 rss=2082MB footprint=[bun [45766]: 64-bit    Footprint: 1281 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (356 of 255 MB reserved, 1 projects running)]
+2026-11-15T04:23:31Z pid=45766 rss=2038MB footprint=[bun [45766]: 64-bit    Footprint: 1461 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (193 of 120 MB reserved, 1 projects running)]
+2026-11-15T04:23:36Z pid=45766 rss=1868MB footprint=[bun [45766]: 64-bit    Footprint: 1468 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (588 of 394 MB reserved, 1 projects running)]
+2026-11-15T04:23:41Z pid=45766 rss=1913MB footprint=[bun [45766]: 64-bit    Footprint: 1463 MB (16384 bytes per page)] last=[graph: headroom of 379 MB again (162 MB taken), resuming]
+2026-11-15T04:23:46Z pid=45766 rss=1957MB footprint=[bun [45766]: 64-bit    Footprint: 1463 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (588 of 339 MB reserved, 1 projects running)]
+2026-11-15T04:23:51Z pid=45766 rss=1962MB footprint=[bun [45766]: 64-bit    Footprint: 1463 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (588 of 474 MB reserved, 1 projects running)]
+2026-11-15T04:23:56Z pid=45766 rss=1980MB footprint=[bun [45766]: 64-bit    Footprint: 1466 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (588 of 546 MB reserved, 1 projects running)]
+2026-11-15T04:24:02Z pid=45766 rss=1994MB footprint=[bun [45766]: 64-bit    Footprint: 1462 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (424 of 72 MB reserved, 1 projects running)]
+2026-11-15T04:24:07Z pid=45766 rss=2050MB footprint=[bun [45766]: 64-bit    Footprint: 1462 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (588 of 312 MB reserved, 1 projects running)]
+2026-11-15T04:24:12Z pid=45766 rss=2093MB footprint=[bun [45766]: 64-bit    Footprint: 1455 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (424 of -53 MB reserved, 1 projects running)]
+2026-11-15T04:24:17Z pid=45766 rss=2154MB footprint=[bun [45766]: 64-bit    Footprint: 1471 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (625 of 197 MB reserved, 1 projects running)]
+2026-11-15T04:24:22Z pid=45766 rss=2163MB footprint=[bun [45766]: 64-bit    Footprint: 1463 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (424 of 128 MB reserved, 1 projects running)]
+2026-11-15T04:24:27Z pid=45766 rss=2164MB footprint=[bun [45766]: 64-bit    Footprint: 1463 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (625 of 123 MB reserved, 1 projects running)]
+2026-11-15T04:24:33Z pid=45766 rss=2184MB footprint=[bun [45766]: 64-bit    Footprint: 1498 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (625 of -149 MB reserved, 1 projects running)]
+2026-11-15T04:24:38Z pid=45766 rss=2204MB footprint=[bun [45766]: 64-bit    Footprint: 1482 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (625 of 215 MB reserved, 1 projects running)]
+2026-11-15T04:24:43Z pid=45766 rss=2209MB footprint=[bun [45766]: 64-bit    Footprint: 1434 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (625 of 741 MB reserved, 1 projects running)]
+2026-11-15T04:24:48Z pid=45766 rss=2154MB footprint=[bun [45766]: 64-bit    Footprint: 1400 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (625 of 118 MB reserved, 1 projects running)]
+2026-11-15T04:24:53Z pid=45766 rss=2170MB footprint=[bun [45766]: 64-bit    Footprint: 1399 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (625 of 175 MB reserved, 1 projects running)]
+2026-11-15T04:24:58Z pid=45766 rss=2160MB footprint=[bun [45766]: 64-bit    Footprint: 1415 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (625 of 84 MB reserved, 1 projects running)]
+2026-11-15T04:25:04Z pid=45766 rss=2163MB footprint=[bun [45766]: 64-bit    Footprint: 1414 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (522 of 772 MB reserved, 1 projects running)]
+2026-11-15T04:25:09Z pid=45766 rss=2192MB footprint=[bun [45766]: 64-bit    Footprint: 1428 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (527 of 143 MB reserved, 1 projects running)]
+2026-11-15T04:25:14Z pid=45766 rss=2193MB footprint=[bun [45766]: 64-bit    Footprint: 1411 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (527 of 247 MB reserved, 1 projects running)]
+2026-11-15T04:25:19Z pid=45766 rss=2194MB footprint=[bun [45766]: 64-bit    Footprint: 1411 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (527 of -1 MB reserved, 1 projects running)]
+2026-11-15T04:25:24Z pid=45766 rss=2197MB footprint=[bun [45766]: 64-bit    Footprint: 1411 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (527 of 179 MB reserved, 1 projects running)]
+2026-11-15T04:25:29Z pid=45766 rss=2199MB footprint=[bun [45766]: 64-bit    Footprint: 1403 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (527 of 115 MB reserved, 1 projects running)]
+2026-11-15T04:25:35Z pid=45766 rss=2201MB footprint=[bun [45766]: 64-bit    Footprint: 1404 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (310 of -47 MB reserved, 1 projects running)]
+2026-11-15T04:25:40Z pid=45766 rss=2232MB footprint=[bun [45766]: 64-bit    Footprint: 1410 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (434 of 376 MB reserved, 1 projects running)]
+2026-11-15T04:25:45Z pid=45766 rss=2237MB footprint=[bun [45766]: 64-bit    Footprint: 1405 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (526 of 429 MB reserved, 1 projects running)]
+2026-11-15T04:25:50Z pid=45766 rss=2138MB footprint=[bun [45766]: 64-bit    Footprint: 1471 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (557 of 309 MB reserved, 1 projects running)]
+2026-11-15T04:25:56Z pid=45766 rss=2144MB footprint=[bun [45766]: 64-bit    Footprint: 1476 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (434 of -90 MB reserved, 1 projects running)]
+2026-11-15T04:26:01Z pid=45766 rss=2098MB footprint=[bun [45766]: 64-bit    Footprint: 1657 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (557 of 274 MB reserved, 1 projects running)]
+2026-11-15T04:26:06Z pid=45766 rss=2122MB footprint=[bun [45766]: 64-bit    Footprint: 1647 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (557 of 201 MB reserved, 1 projects running)]
+2026-11-15T04:26:11Z pid=45766 rss=2129MB footprint=[bun [45766]: 64-bit    Footprint: 1583 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (556 of -18 MB reserved, 1 projects running)]
+2026-11-15T04:26:16Z pid=45766 rss=2132MB footprint=[bun [45766]: 64-bit    Footprint: 1581 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (434 of 420 MB reserved, 1 projects running)]
+2026-11-15T04:26:22Z pid=45766 rss=2146MB footprint=[bun [45766]: 64-bit    Footprint: 1580 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (557 of 76 MB reserved, 1 projects running)]
+2026-11-15T04:26:27Z pid=45766 rss=2151MB footprint=[bun [45766]: 64-bit    Footprint: 1580 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (557 of 27 MB reserved, 1 projects running)]
+2026-11-15T04:26:32Z pid=45766 rss=2153MB footprint=[bun [45766]: 64-bit    Footprint: 1583 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (436 of -5 MB reserved, 1 projects running)]
+2026-11-15T04:26:37Z pid=45766 rss=2070MB footprint=[bun [45766]: 64-bit    Footprint: 1670 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (557 of 92 MB reserved, 1 projects running)]
+2026-11-15T04:26:42Z pid=45766 rss=2100MB footprint=[bun [45766]: 64-bit    Footprint: 1659 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (436 of -29 MB reserved, 1 projects running)]
+2026-11-15T04:26:47Z pid=45766 rss=2108MB footprint=[bun [45766]: 64-bit    Footprint: 1659 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (557 of 57 MB reserved, 1 projects running)]
+2026-11-15T04:26:53Z pid=45766 rss=2109MB footprint=[bun [45766]: 64-bit    Footprint: 1657 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (449 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:26:58Z pid=45766 rss=2149MB footprint=[bun [45766]: 64-bit    Footprint: 1657 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (557 of 363 MB reserved, 1 projects running)]
+2026-11-15T04:27:03Z pid=45766 rss=2158MB footprint=[bun [45766]: 64-bit    Footprint: 1657 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (557 of -146 MB reserved, 1 projects running)]
+2026-11-15T04:27:08Z pid=45766 rss=2167MB footprint=[bun [45766]: 64-bit    Footprint: 1656 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (449 of -28 MB reserved, 1 projects running)]
+2026-11-15T04:27:13Z pid=45766 rss=2173MB footprint=[bun [45766]: 64-bit    Footprint: 1657 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (449 of -28 MB reserved, 1 projects running)]
+2026-11-15T04:27:18Z pid=45766 rss=2175MB footprint=[bun [45766]: 64-bit    Footprint: 1654 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (530 of 79 MB reserved, 1 projects running)]
+2026-11-15T04:27:23Z pid=45766 rss=2185MB footprint=[bun [45766]: 64-bit    Footprint: 1654 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (530 of -59 MB reserved, 1 projects running)]
+2026-11-15T04:27:29Z pid=45766 rss=2187MB footprint=[bun [45766]: 64-bit    Footprint: 1656 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (519 of -181 MB reserved, 1 projects running)]
+2026-11-15T04:27:34Z pid=45766 rss=2197MB footprint=[bun [45766]: 64-bit    Footprint: 1655 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (416 of -180 MB reserved, 1 projects running)]
+2026-11-15T04:27:39Z pid=45766 rss=2201MB footprint=[bun [45766]: 64-bit    Footprint: 1654 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (383 of 62 MB reserved, 1 projects running)]
+2026-11-15T04:27:44Z pid=45766 rss=2228MB footprint=[bun [45766]: 64-bit    Footprint: 1666 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (610 of -237 MB reserved, 1 projects running)]
+2026-11-15T04:27:49Z pid=45766 rss=2239MB footprint=[bun [45766]: 64-bit    Footprint: 1545 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (415 of -219 MB reserved, 1 projects running)]
+2026-11-15T04:27:54Z pid=45766 rss=2246MB footprint=[bun [45766]: 64-bit    Footprint: 1543 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (610 of 18 MB reserved, 1 projects running)]
+2026-11-15T04:27:59Z pid=45766 rss=2248MB footprint=[bun [45766]: 64-bit    Footprint: 1543 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (610 of 525 MB reserved, 1 projects running)]
+2026-11-15T04:28:05Z pid=45766 rss=2249MB footprint=[bun [45766]: 64-bit    Footprint: 1543 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (610 of 292 MB reserved, 1 projects running)]
+2026-11-15T04:28:10Z pid=45766 rss=2390MB footprint=[bun [45766]: 64-bit    Footprint: 1822 MB (16384 bytes per page)] last=[]
+2026-11-15T04:28:15Z pid=45766 rss=2348MB footprint=[bun [45766]: 64-bit    Footprint: 1669 MB (16384 bytes per page)] last=[graph: 7 projects taken from the fleet, 43 inferred here]
+2026-11-15T04:28:20Z pid=45766 rss=2300MB footprint=[bun [45766]: 64-bit    Footprint: 1552 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of -148 MB reserved, 1 projects running)]
+2026-11-15T04:28:25Z pid=45766 rss=2201MB footprint=[bun [45766]: 64-bit    Footprint: 1548 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (610 of 385 MB reserved, 1 projects running)]
+2026-11-15T04:28:31Z pid=45766 rss=2208MB footprint=[bun [45766]: 64-bit    Footprint: 1549 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (610 of 298 MB reserved, 1 projects running)]
+2026-11-15T04:28:36Z pid=45766 rss=2215MB footprint=[bun [45766]: 64-bit    Footprint: 1549 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 49 MB reserved, 1 projects running)]
+2026-11-15T04:28:41Z pid=45766 rss=2223MB footprint=[bun [45766]: 64-bit    Footprint: 1548 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (610 of 51 MB reserved, 1 projects running)]
+2026-11-15T04:28:47Z pid=45766 rss=2201MB footprint=[bun [45766]: 64-bit    Footprint: 1547 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (584 of 137 MB reserved, 1 projects running)]
+2026-11-15T04:28:52Z pid=45766 rss=2136MB footprint=[bun [45766]: 64-bit    Footprint: 1547 MB (16384 bytes per page)] last=[graph: asking the host for up to 9 worker processes for 4774 projects; the projects wait for them]
+2026-11-15T04:28:57Z pid=45766 rss=2125MB footprint=[bun [45766]: 64-bit    Footprint: 1554 MB (16384 bytes per page)] last=[graph: the worker processes are starting; this process infers no project meanwhile and holds them for the workers for at most 60 s]
+2026-11-15T04:29:02Z pid=45766 rss=2149MB footprint=[bun [45766]: 64-bit    Footprint: 1555 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:07Z pid=45766 rss=2149MB footprint=[bun [45766]: 64-bit    Footprint: 1555 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:12Z pid=45766 rss=2144MB footprint=[bun [45766]: 64-bit    Footprint: 1556 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:17Z pid=45766 rss=2146MB footprint=[bun [45766]: 64-bit    Footprint: 1556 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:22Z pid=45766 rss=2078MB footprint=[bun [45766]: 64-bit    Footprint: 1568 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:27Z pid=45766 rss=2075MB footprint=[bun [45766]: 64-bit    Footprint: 1570 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:33Z pid=45766 rss=2026MB footprint=[bun [45766]: 64-bit    Footprint: 1576 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:38Z pid=45766 rss=2024MB footprint=[bun [45766]: 64-bit    Footprint: 1577 MB (16384 bytes per page)] last=[]
+2026-11-15T04:29:43Z pid=45766 rss=2024MB footprint=[bun [45766]: 64-bit    Footprint: 1577 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:48Z pid=45766 rss=2024MB footprint=[bun [45766]: 64-bit    Footprint: 1577 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:53Z pid=45766 rss=2024MB footprint=[bun [45766]: 64-bit    Footprint: 1577 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (581 of 300 MB reserved, 1 projects running)]
+2026-11-15T04:29:58Z pid=45766 rss=2126MB footprint=[bun [45766]: 64-bit    Footprint: 1585 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (498 of -35 MB reserved, 1 projects running)]
+2026-11-15T04:30:04Z pid=45766 rss=2105MB footprint=[bun [45766]: 64-bit    Footprint: 1580 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (812 of -57 MB reserved, 2 projects running)]
+2026-11-15T04:30:09Z pid=45766 rss=1935MB footprint=[bun [45766]: 64-bit    Footprint: 1624 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (748 of 355 MB reserved, 2 projects running)]
+2026-11-15T04:30:14Z pid=45766 rss=1758MB footprint=[bun [45766]: 64-bit    Footprint: 1748 MB (16384 bytes per page)] last=[graph: headroom of 373 MB again (300 MB taken), resuming]
+2026-11-15T04:30:19Z pid=45766 rss=1652MB footprint=[bun [45766]: 64-bit    Footprint: 1706 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (448 of 72 MB reserved, 1 projects running)]
+2026-11-15T04:30:24Z pid=45766 rss=1773MB footprint=[bun [45766]: 64-bit    Footprint: 1681 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (671 of 825 MB reserved, 1 projects running)]
+2026-11-15T04:30:30Z pid=45766 rss=1743MB footprint=[bun [45766]: 64-bit    Footprint: 1710 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (496 of 44 MB reserved, 1 projects running)]
+2026-11-15T04:30:35Z pid=45766 rss=1795MB footprint=[bun [45766]: 64-bit    Footprint: 1698 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (671 of 37 MB reserved, 1 projects running)]
+2026-11-15T04:30:41Z pid=45766 rss=1371MB footprint=[bun [45766]: 64-bit    Footprint: 1754 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (448 of 10 MB reserved, 1 projects running)]
+2026-11-15T04:30:46Z pid=45766 rss=1790MB footprint=[bun [45766]: 64-bit    Footprint: 1735 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (691 of 307 MB reserved, 1 projects running)]
+2026-11-15T04:30:51Z pid=45766 rss=1853MB footprint=[bun [45766]: 64-bit    Footprint: 1733 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (496 of -147 MB reserved, 1 projects running)]
+2026-11-15T04:30:56Z pid=45766 rss=1892MB footprint=[bun [45766]: 64-bit    Footprint: 1718 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (465 of 413 MB reserved, 1 projects running)]
+2026-11-15T04:31:01Z pid=45766 rss=1907MB footprint=[bun [45766]: 64-bit    Footprint: 1717 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (691 of -6 MB reserved, 1 projects running)]
+2026-11-15T04:31:06Z no slice worker
+2026-11-15T04:31:12Z no slice worker
+2026-11-15T04:31:17Z no slice worker
+2026-11-15T04:31:22Z no slice worker
+2026-11-15T04:31:27Z no slice worker
+2026-11-15T04:31:32Z no slice worker
+2026-11-15T04:31:37Z no slice worker
+2026-11-15T04:31:42Z no slice worker
+2026-11-15T04:31:47Z no slice worker
+2026-11-15T04:31:52Z no slice worker
+2026-11-15T04:31:57Z no slice worker
+2026-11-15T04:32:02Z no slice worker
+service log at the end: /var/folders/xq/z6t8hmcd0qj871bx0sj7pbn80000gn/T//semio-repo/501/host-ada6c7a0852c.log
+closure entries after: 40586

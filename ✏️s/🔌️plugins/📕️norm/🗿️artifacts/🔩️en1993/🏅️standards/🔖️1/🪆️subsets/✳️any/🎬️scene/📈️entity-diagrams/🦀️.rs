@@ -1,12 +1,12 @@
 //! 📈️ Entity diagrams: the joint moment-rotation characteristic with its classification limits, χ_LT(λ̄_LT) and the M_cr mode shape of a restraint, the weld stress vectors of a weld group, the hollow joint resistance over the chord wall and the parametric section outline against its section row.
 
-use super::checks::clauses::{hollow_joints as hj, joint_components as jc, weld_group as wg};
-use super::checks::{fire_ltb_summary, frame_eigen, joint_frame, joint_row_summary, restraint_summary, torsional_summary};
-use super::model::{En1993Snapshot, FireExposure, HollowJoint, ParametricSection, Restraint, SteelMember, WeldGroup};
-use super::norm::CheckReport;
-use super::scene::diagram_kit::{curves, Xy};
-use super::scene::projection_kit::diagram_parts::{axis, column, stroke};
-use super::scene::*;
+use super::super::checks::clauses::{hollow_joints as hj, joint_components as jc, weld_group as wg};
+use super::super::checks::{fire_ltb_summary, frame_eigen, joint_frame, joint_row_summary, restraint_summary, torsional_summary};
+use super::super::model::{En1993Snapshot, FireExposure, HollowJoint, ParametricSection, Restraint, SteelMember, WeldGroup};
+use super::super::norm::CheckReport;
+use super::super::scene::diagram_kit::{curves, Xy};
+use super::super::scene::projection_kit::diagram_parts::{axis, column, stroke};
+use super::super::scene::*;
 
 const SAMPLES: usize = 60;
 const LAMBDA_MAX: f64 = 3.0;
@@ -18,7 +18,7 @@ fn loc(en: &str, de: &str) -> LocalizedCopy {
 }
 
 fn tone(ratio: f64) -> Tone {
-    super::scene::utilisation_tone(ratio)
+    super::super::scene::utilisation_tone(ratio)
 }
 
 fn point(q: Xy) -> Vec2 {
@@ -182,7 +182,7 @@ fn weld_vectors(d: &En1993Snapshot, report: &CheckReport, g: &WeldGroup) -> Opti
     let vectors: Vec<(f64, f64, f64, f64)> = points.iter().map(|(x, y)| { let (qx, qy) = wg::vector_at(&props, f, e, *x, *y); (*x, *y, qx, qy) }).collect();
     let q_max = wg::max_force_per_length(&props, f, e).max(1e-9);
     let scale = 0.18 * depth.max(b) / q_max;
-    let rd = wg::resistance_per_length(g.throat * 1e3, g.steel_fu / 1e6, g.beta_w, super::checks::AnnexParams::for_choice(d.annex).gamma_m2);
+    let rd = wg::resistance_per_length(g.throat * 1e3, g.steel_fu / 1e6, g.beta_w, super::super::checks::AnnexParams::for_choice(d.annex).gamma_m2);
     let utilisation = q_max / rd.max(1e-9);
     let line_tone = tone(utilisation.max(worst_of(report, &g.id)));
     let outline: Vec<Series> = points.chunks(VECTORS_PER_LINE).enumerate().map(|(i, line)| Series::Polyline { id: format!("weld-{i}"), label: loc("Weld line", "Schweißnaht"), points: line.iter().map(|(x, y)| Vec2::new(*x, *y)).collect(), style: stroke(Tone::Neutral, 3.0, Dash::Solid) }).collect();
@@ -238,7 +238,7 @@ fn hollow_resistance(j: &HollowJoint) -> Option<Diagram2d> {
 
 fn parametric_outline(d: &En1993Snapshot, p: &ParametricSection) -> Option<Diagram2d> {
     let section = d.sections.iter().find(|s| s.id == p.section_id)?;
-    let shape = super::kit::section_shape(section);
+    let shape = super::super::kit::section_shape(section);
     let extent = section.h.max(p.height).max(0.05);
     let ratio = if section.area > 0.0 { (area_of(p) / section.area - 1.0).abs() } else { 0.0 };
     Some(Diagram2d {

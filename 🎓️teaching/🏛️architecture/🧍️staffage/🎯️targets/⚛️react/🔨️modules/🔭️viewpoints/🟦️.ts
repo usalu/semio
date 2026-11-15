@@ -7,6 +7,7 @@
  * @see ../🧮️pipeline/🟦️.ts — the evaluator and `SceneFrame`
  * @see ../🗺️routing/🟦️.ts — the `vp` and `vl` address parameters
  */
+import { authoredScales } from "@teaching/staffage";
 import { RepresentationError, PLANAR_VIEWPOINTS, VIEWPOINT_CAPTIONS, ViewMissingError, resolutionLabel, resolveDepiction } from "@teaching/staffage";
 import type { Asset, EvaluationQuery, Language, Text, View, PlanarViewpoint, Viewpoint } from "@teaching/staffage";
 import { translator, type Key, type Params } from "../🌐️i18n/🟦️.ts";
@@ -79,10 +80,10 @@ export function resolveViewpoint(asset: Asset, viewpoint: PlanarViewpoint, denom
   }
 }
 
-/** 🗃️ The resolution of the two viewpoints in space: both need the authored volume of the asset; an asset without one names why and keeps its place. Whether the axonometric drawing itself can be made is the depiction's own refusal, shown where it is drawn. */
+/** 🗃️ The resolution of the two viewpoints in space: both need an authored volume of the asset at some scale (the stage and the drawing name the scales it has when the shown scale is not among them); an asset without one names why and keeps its place. Whether the axonometric drawing itself can be made is the depiction's own refusal, shown where it is drawn. */
 export const resolveSpatial = (asset: Asset): Readonly<Record<SpatialViewpoint, ViewResolution>> => {
   const no = (viewpoint: SpatialViewpoint): ViewResolution => ({ viewpoint, available: false, reason: "no-volume", message: both(`viewpoints.missing.${viewpoint}`) });
-  return { axonometric: asset.volume === undefined ? no("axonometric") : { viewpoint: "axonometric", available: true }, model: asset.volume === undefined ? no("model") : { viewpoint: "model", available: true } };
+  return { axonometric: authoredScales(asset.volumes).length === 0 ? no("axonometric") : { viewpoint: "axonometric", available: true }, model: authoredScales(asset.volumes).length === 0 ? no("model") : { viewpoint: "model", available: true } };
 };
 
 /** 💾️ The resolution of every viewpoint of a figure: the planar ones at a denominator, then the two in space. */

@@ -5,7 +5,7 @@ use semio_s_artifact_norm_en1991_checks::{assess_covers, copy, force_n as force,
 use semio_s_plugin_norm_compliance::{CheckReport, CheckResult, ClauseId, Quantity, QuantityKind, Remedy, SubjectRef};
 use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
-use semio_s_artifact_norm_en1991_inferences_rail_silo::{covers, first_non_positive, positive};
+use semio_s_artifact_norm_en1991_inferences_rail_silo::{covers, first_non_positive, info_check, invalid, positive};
 use semio_s_artifact_norm_en1991_model::{FatigueModel, LocalFire, SnowGuard, StructureKind, SupportCollision};
 use semio_s_plugin_norm_compliance::{ndp_common, AnnexChoice};
 

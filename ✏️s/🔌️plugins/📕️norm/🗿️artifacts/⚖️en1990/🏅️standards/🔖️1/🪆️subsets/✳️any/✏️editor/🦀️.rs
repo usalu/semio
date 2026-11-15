@@ -15,7 +15,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::NormHost;
-use crate::commands::{apply_remedy, insert_item, remove_item, selected_check, set_field, set_fields, preview_remedy, clear_preview, cancel_evaluation, evaluate_units, copy_entities, duplicate_entities, paste_entities, move_entity, delete_entities};
+use crate::commands::{apply_remedy, insert_item, remove_item, selected_check, set_field, set_fields, preview_remedy, clear_preview, cancel_evaluation, evaluate_units, viewport_act, copy_entities, duplicate_entities, paste_entities, move_entity, delete_entities};
 use crate::modes::edit as edit_mode;
 use crate::modes::edit::windows::{checks, diagrams, outliner, properties, viewport};
 use crate::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -267,7 +267,9 @@ fn live_handles(document: &En1990Snapshot, selection: &[semio_s_plugin_norm_stru
 }
 
 semio_s_plugin_norm_app_surface::norm_live_editor!(En1990PlayApp, En1990Command, handles = live_handles, entities = live_entities, palette = viewport::insert_specs, resolve = semio_s_artifact_norm_en1990_mutations::resolve_edit, scene = |d, r, view| viewport::scene_of(d, r, view), diagrams = |d, r| diagrams::all(d, r));
+#[cfg(test)]
 semio_s_plugin_norm_app_surface::norm_live_acceptance!(En1990PlayApp, entities = live_entities);
+#[cfg(test)]
 semio_s_plugin_norm_app_surface::norm_latency_bench!(En1990PlayApp, variant = "en1990", seed = semio_s_artifact_norm_en1990_model::En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), scene = |d, r| viewport::scene_of(d, r, semio_s_plugin_norm_structural_scene::projection::ViewOptions::none()), full = viewport::full_scene_of);
 //#endregion 🫧️LiveEditor
 
@@ -359,6 +361,7 @@ pub fn create_en1990_app() -> semio_plugin::AppDefinition {
             .mode_def(edit_mode::definition())
             .default_mode_id(semio_s_plugin_norm_app_surface::MODE_EDIT)
             .interaction(semio_s_plugin_norm_app_surface::viewport_interaction_definition(VARIANT, LocalizedLabel::native("EN 1990 model", "EN-1990-Modell"), ENTITY_KIND_SCENE_KINDS))
+            .utility(semio_s_plugin_norm_app_surface::transform_utility_definition())
             .window_kind_def(outliner::definition())
             .window_kind_def(properties::definition())
             .window_kind_def(viewport::definition())

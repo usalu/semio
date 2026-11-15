@@ -1,0 +1,23 @@
+{
+  "title": "Get All Print Products Running End to End",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "Get all print products running end to end as fast as possible on the shared repo: inventory every print product, run each through the repo binary, fix every failure (including unrelated fundamental issues found on the way), and verify each product end to end.",
+  "goal": "runningframework/runningproducts/runningprint",
+  "sessions": [
+    "4dad62df-9b33-4f7f-aa29-82fea83c6169"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-12 19:59:51",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get all print products running end to end as fast as possible on the shared repo: inventory every print product, run each through the repo binary, fix every failure (including unrelated fundamental issues found on the way), and verify each product end to end.",
+      "llm": "fable-5-2",
+      "effort": "medium"
+    }
+  ]
+}

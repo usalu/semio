@@ -43,6 +43,17 @@ pub enum Shape {
     Sphere(f64),
 }
 
+impl Shape {
+    /// 🏷️ The schema primitive kind id of this shape.
+    pub fn kind(self) -> &'static str {
+        match self {
+            Self::Box(_) => "box",
+            Self::Cylinder(..) => "cylinder",
+            Self::Sphere(_) => "sphere",
+        }
+    }
+}
+
 /// 📍️ A primitive in its world frame: `world = rot * local + origin`; the single definition of the axis convention shared by checks and scene.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Primitive {
@@ -79,7 +90,7 @@ fn rotation(deg: V3) -> M3 {
     mul(&rz, &mul(&ry, &rx))
 }
 
-fn parameter(parameters: &std::collections::BTreeMap<String, f64>, key: &'static str) -> Result<f64, SolidError> {
+fn parameter(parameters: &crate::IdMap<f64>, key: &'static str) -> Result<f64, SolidError> {
     parameters.get(key).copied().ok_or(SolidError::Missing(key))
 }
 

@@ -1,7 +1,7 @@
 /** 🔌 The two seams of the graph generation host (membership proof and fact checks) answered from the watcher journal: the dirty set since the cursor at which the generation was last verified decides what is stat'ed again, and a journal that cannot vouch is announced as one verify epoch (the unchanged scan of the host, then trusted again). No service has to answer: the journal is read directly. */
 import {GRAPH_HOOKS_POLICY_V1,advanceFrontierByDirtySetV1,classifyChangesV1,derivedDirtySetV1,dirtyIndexV1,dirtySetFromRowsV1} from "../🟨️.mjs";
 
-const TRUSTED=new Set(GRAPH_HOOKS_POLICY_V1.trustedKinds),cursorKey=generation=>"g"+generation;
+const TRUSTED=new Set(GRAPH_HOOKS_POLICY_V1.trustedKinds),FILE_ROWS=new Set(GRAPH_HOOKS_POLICY_V1.fileRowKinds),cursorKey=generation=>"g"+generation;
 const slashed=path=>String(path).replaceAll("\\","/");
 
 /** 📐 Maps the path of a fact row to a workspace-relative path; undefined where the row lies outside the workspace (the journal cannot see it). */
@@ -13,6 +13,13 @@ export function relativeFactPathV1(root,path){
 }
 
 const parentOfPath=path=>{const cut=path.lastIndexOf("/");return cut<0?"":path.slice(0,cut);};
+
+/** 📍 The workspace-relative path of a file row: environment rows (`field`, `digest`) name their file relative to the workspace, the others absolutely; undefined where the path lies outside the workspace or cannot be told apart from a drive path. */
+export function rowFilePathV1(root,path){
+ const text=slashed(path);
+ if(text.startsWith("/")||/^[A-Za-z]:\//u.test(text))return relativeFactPathV1(root,text);
+ return text.startsWith("..")?undefined:text;
+}
 
 /** 🧭 Whether a `resolve` row `[importer, specifier] => resolved` may have moved: an absolute workspace specifier resolves by probing its own path, its directory and the resolved file, so the journal vouches when none of them is dirty; a bare specifier walks `node_modules` directories the journal never reports and is always doubtful. */
 export function resolveRowDoubtfulV1(root,row,index,excluded,installed=false){
@@ -56,24 +63,24 @@ function bareResolveDoubtfulV1(root,key,row,index,installed){
  return installCoveredV1(resolved)?false:index.has(resolved)||index.has(parentOfPath(resolved));
 }
 
-/** 🔌 Wraps `membership` and `holds` of the host. `journal` reads the watcher journal, `store` keeps the cursor (and the paths still owed a check) at which each generation was verified, `ports` are the frontier ports of the host, `membership`/`holds` the unchanged scan used by a verify epoch, `adopt(files)` receives the member list like the scan stores it and `notify` announces every verify epoch. A verify epoch of a full load commits its cursor as soon as the fact verification ends (`factsVerified`), with the changes and stale rows found so far as a carry that stays doubtful, so a scan that dies later resumes instead of repeating. */
+/** 🔌 Wraps `membership` and `holds` of the host. `journal` reads the watcher journal, `store` keeps the cursor (and the paths still owed a check) at which each generation was verified, `ports` are the frontier ports of the host, `membership`/`holds` the unchanged scan used by a verify epoch (and, for a port that `watches` only the `governed` shared files, by every read: the port then decides the facts and the scan proves the membership), `adopt(files)` receives the member list like the scan stores it and `notify` announces every verify epoch. A verify epoch of a full load commits its cursor as soon as the fact verification ends (`factsVerified`), with the changes and stale rows found so far as a carry that stays doubtful, so a scan that dies later resumes instead of repeating. */
 export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,holds,classify=async changes=>changes,adopt=()=>undefined,notify=()=>undefined,install=async()=>undefined,now=()=>Date.now(),maximumCarry=GRAPH_HOOKS_POLICY_V1.maximumCarry}){
  const stats={advanced:0,verified:0,checked:0,trusted:0,doubtful:0,resumed:0};
- let pending,full;
+ let pending,full,observed;const memory=new Map();
  const track=async(rows,signal)=>{
   const ok=await holds(rows,signal);
   const held=pending;
-  if(!ok&&held&&held.stale&&!held.overflow){
+  if(!ok&&held&&held.stale){
    for(const row of rows){const path=TRUSTED.has(row.kind)?relativeFactPathV1(root,row.path):undefined;if(path!==undefined)held.stale.add(path);}
    if(held.stale.size>maximumCarry)held.overflow=true;
   }
   return ok;
  };
  const lookup=manifest=>{
-  const own=store.get(cursorKey(manifest.generation));
+  const own=store.get(cursorKey(manifest.generation))??memory.get(cursorKey(manifest.generation));
   if(own)return own;
   const base=manifest.built?.base;
-  return typeof base==="number"?store.get(cursorKey(base)):undefined;
+  return typeof base==="number"?store.get(cursorKey(base))??memory.get(cursorKey(base)):undefined;
  };
  const epoch=async(previous,notice,signal)=>{
   notify(notice);stats.verified++;
@@ -82,18 +89,21 @@ export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,
   pending={digest:result.digest,cursor,index:undefined,excluded:()=>false,generation:previous?.manifest?.generation,owed,stale:new Set(),overflow:owed.exact.size>maximumCarry,entry:undefined,install:fingerprint,installed:false};
   return result;
  };
- const doubtfulRow=(row,held)=>{
-  if(row.kind===GRAPH_HOOKS_POLICY_V1.resolveKind)return resolveRowDoubtfulV1(root,row,held.index,held.excluded,held.installed);
-  if(!TRUSTED.has(row.kind))return true;
-  const path=relativeFactPathV1(root,row.path);
-  if(path===undefined)return true;
-  if(held.installed&&installCoveredV1(path))return false;
-  return held.index.has(path)||held.excluded(path);
+ const pathLevel=(held,filed,text)=>{
+  const path=filed?rowFilePathV1(root,text):relativeFactPathV1(root,text);
+  return path===undefined?1:held.installed&&installCoveredV1(path)?0:held.index.has(path)?1:held.excluded(path)?held.governed?2:1:0;
  };
- return Object.freeze({
-  stats,
-  scope(isFull){full=isFull;},
-  async membership(previous,signal){
+ const doubtLevel=(row,held)=>{
+  if(row.kind===GRAPH_HOOKS_POLICY_V1.resolveKind)return resolveRowDoubtfulV1(root,row,held.index,held.excluded,held.installed)?1:0;
+  const filed=FILE_ROWS.has(row.kind);
+  if(!filed&&!TRUSTED.has(row.kind))return 1;
+  const memo=filed?held.fileLevels??=new Map():held.levels??=new Map();
+  let level=memo.get(row.path);
+  if(level===undefined){level=pathLevel(held,filed,row.path);memo.set(row.path,level);}
+  return level;
+ };
+ const doubtfulRow=(row,held)=>doubtLevel(row,held)!==0;
+ const observe=async(previous,signal)=>{
    if(!previous?.frontier){
     const cursor=await journal.cursor(signal),result=await membership(previous,signal);
     pending={digest:result.digest,cursor,index:undefined,excluded:()=>false,generation:undefined,owed:undefined,stale:undefined,overflow:true,entry:undefined,install:undefined,installed:false};
@@ -103,7 +113,15 @@ export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,
    if(!entry)return epoch(previous,{reason:"unrecorded",generation},signal);
    const answer=await journal.since({instance:entry.instance,seq:entry.seq},signal);
    if(!answer.complete)return epoch(previous,{...answer,generation},signal);
-   const set=unionDirty(dirtySetFromRowsV1(answer.rows,answer.cursor),entry.carry),advanced=await advanceFrontierByDirtySetV1({frontier:previous.frontier,set,...ports,signal,now:now()});
+   let set=unionDirty(dirtySetFromRowsV1(answer.rows,answer.cursor),entry.carry);
+   if(journal.watches==="governed"){
+    const result=await membership(previous,signal),fingerprint=await install();
+    set=unionDirty(dirtySetFromRowsV1([...answer.rows,...(result.changes??[]).map(change=>[change.kind==="added"?"a":change.kind==="removed"?"r":"m",change.directory?1:0,change.path])],answer.cursor),entry.carry);
+    stats.advanced++;if(entry.carry)stats.resumed++;
+    pending={digest:result.digest,cursor:answer.cursor,index:dirtyIndexV1(set),excluded:journal.excluded(),governed:true,generation,owed:undefined,stale:undefined,overflow:true,entry,install:fingerprint,installed:fingerprint!==undefined&&entry.install===fingerprint};
+    return{...result,dirty:{...derivedDirtySetV1(set),directories:set.complete?[...set.subtrees].filter(path=>path!==""):[],excluded:journal.excluded()}};
+   }
+   const advanced=await advanceFrontierByDirtySetV1({frontier:previous.frontier,set,...ports,signal,now:now()});
    if(!advanced)return epoch(previous,{reason:"outside",generation},signal);
    stats.advanced++;stats.checked+=advanced.checked;if(entry.carry)stats.resumed++;
    const fingerprint=await install();
@@ -114,11 +132,41 @@ export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,
    pending.digest=changes.some(change=>!change.directory)?digest(frontier.members):previous.manifest.membership;
    adopt(frontier.members.map(row=>row[0]));
    return{digest:pending.digest,frontier,changes,dirty};
+  };
+ return Object.freeze({
+  stats,
+  scope(isFull){full=isFull;},
+  /** 🪞️ Whether the change cursor proves that nothing changed since `live`, the result of the newest membership call, was observed: the journal is at the cursor that call used and the install fingerprint is the same. An answer of false only makes the caller plan again. */
+  async unchanged(live,signal){
+   const seen=observed;
+   if(!seen||seen.live!==live||!seen.cursor)return false;
+   try{const now=await journal.cursor(signal);return now!==undefined&&now.instance===seen.cursor.instance&&now.seq===seen.cursor.seq&&await install()===seen.install;}catch{return false;}
   },
-  /** 🔢️ The doubt of each row as the journal sees it (1 where the row must be checked), or undefined when no dirty set vouches (an epoch): rows the journal does not name are vouched for without any call. */
+  async membership(previous,signal){
+   const live=await observe(previous,signal);
+   observed={live,cursor:pending?.cursor,install:pending?.install};
+   return live;
+  },
+  /** 🔢️ The doubt of each row as the journal sees it (1 where the row must be checked, 2 where only a region the journal cannot see makes it doubtful and the caller may vouch for it by stamps), or undefined when no dirty set vouches (an epoch): rows the journal does not name are vouched for without any call. */
   doubtful(rows){
    const held=pending;
-   return held?.index?Uint8Array.from(rows,row=>doubtfulRow(row,held)?1:0):undefined;
+   return held?.index?Uint8Array.from(rows,row=>doubtLevel(row,held)):undefined;
+  },
+  /** 🆔️ The same verdicts for rows named by id in a lazily opened fact index: the kind and the path string id are read, a path is judged once however many rows name it, and only a `resolve` row is decoded. Undefined where no dirty set vouches or the index cannot answer by id. */
+  doubtfulIds(index,ids){
+   const held=pending;
+   if(!held?.index||typeof index.rowPathIdOf!=="function")return undefined;
+   if(held.idsOf!==index){held.idsOf=index;held.idTrusted=new Int8Array(index.stringCount).fill(-1);held.idFiled=new Int8Array(index.stringCount).fill(-1);}
+   return Uint8Array.from(ids,id=>{
+    const kind=index.rowKindOf(id);
+    if(kind===GRAPH_HOOKS_POLICY_V1.resolveKind)return resolveRowDoubtfulV1(root,index.rows[id],held.index,held.excluded,held.installed)?1:0;
+    const filed=FILE_ROWS.has(kind);
+    if(!filed&&!TRUSTED.has(kind))return 1;
+    const table=filed?held.idFiled:held.idTrusted,at=index.rowPathIdOf(id);
+    let level=table[at];
+    if(level<0){level=pathLevel(held,filed,index.textOf(at));table[at]=level;}
+    return level;
+   });
   },
   async holds(rows,signal){
    const held=pending;
@@ -129,8 +177,22 @@ export function journalGraphSeamsV1({root,journal,store,ports,digest,membership,
   },
   factsVerified(){
    const held=pending;
-   if(full!==true||!held?.cursor||held.overflow||held.generation===undefined||held.index)return;
-   store.set(cursorKey(held.generation),withInstall(held.cursor,held.install),{exact:[...new Set([...held.owed.exact,...held.stale])].sort(),subtrees:[...held.owed.subtrees].sort()});
+   if(full!==true||!held?.cursor||held.generation===undefined||held.index||held.owed===undefined)return;
+   const cursor=withInstall(held.cursor,held.install),carry={exact:[...new Set([...held.owed.exact,...held.stale])].sort(),subtrees:[...held.owed.subtrees].sort()};
+   memory.set(cursorKey(held.generation),{...cursor,carry});
+   if(!held.overflow)store.set(cursorKey(held.generation),cursor,carry);
+  },
+  /** 📍 Records, for a generation a build published before it finished, the cursor and the paths still owed that the pass in progress verified against: the next read of that generation resumes from them (a cursor never vouches for more than the pass checked, a recomputed owner is only checked again). Nothing is recorded where the pass could not persist its carry (overflow) or knows no cursor. */
+  published(generation){
+   const held=pending;
+   if(!held?.cursor)return;
+   if(held.entry){store.set(cursorKey(generation),withInstall({instance:held.entry.instance,seq:held.entry.seq},held.entry.install),held.entry.carry);return;}
+   if(full!==false&&held.generation===undefined&&held.owed===undefined){store.set(cursorKey(generation),withInstall(held.cursor,held.install));return;}
+   if(held.overflow||held.generation===undefined)return;
+   const kept=memory.get(cursorKey(held.generation));
+   if(!kept)return;
+   const{carry,...cursor}=kept;
+   store.set(cursorKey(generation),cursor,carry);
   },
   commit(record){
    const held=pending;

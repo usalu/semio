@@ -1,6 +1,8 @@
 import{pendingCratePathsV1}from"./🕓️pending-crates/🟨️.mjs";
+import{staleConfigOwnersV1}from"./🏷️config-owners/🟨️.mjs";
 import{readEdgeReadsV1,readEnvironmentPartsV1}from"./🧵️edge-reads/🟨️.mjs";
 import{createBoundedCacheV1}from"../../🧊️bounded/🟨️.mjs";
+import{orderOwnersV1,readPriorityV1,writePendingV1}from"./🧭️steering/🟨️.mjs";
 import{createHash,randomBytes}from"node:crypto";
 import{brotliCompressSync,brotliDecompressSync,constants as zlibConstants}from"node:zlib";
 import{lstat,mkdir,open,readdir,readFile,rename,rm}from"node:fs/promises";
@@ -12,22 +14,42 @@ import{coverageOfV1,mergeVerifiedStampV1,readVerifiedStampV1,uncoveredOfV1}from"
 import{INDEX_CHUNK_POLICY_V1,addOwnerRunsV1,bulkUpsertClassesV1,classesOfChunksV1,createChunkInternerV1}from"./🧱️chunk-classes/🟨️.mjs";
 import{createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1}from"./🧭️frontier/🟨️.mjs";
 import{mergeIntoHeadV1}from"./🔀️merge/🟨️.mjs";
-import{createClosureSettlerV1,sharedClosureSettlerV1}from"../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
+import{createClosureSettlerV1,sharedClosureSettlerV1,stampOfV1}from"../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
 import{createCasStoreV1}from"../../🗄️cas/🗃️store/🟦️.ts";
 import{createNodeStoreV1}from"../🧮️derived-nodes/💾️store/🟨️.mjs";
 import{selectDoubtfulRowsV1}from"./🔎️doubt/🟨️.mjs";
+import{profilePhaseV1}from"../../⏱️profile/🟨️.mjs";
 import{derivedOwnerNameV1,derivedUpsertsV1,holdersOfDerivedV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,scopeWithDerivedV1,splitStaleConsumersV1,suspectRowsV1,suspectsWithinV1,unsupportedDerivedV1,verifiableRowIdsV1}from"./✂️cutoff/🟨️.mjs";
 import{GENERATION_POLICY_V1,P,HEX,sha256,isObject,unpack,aborted,fail,requireKeys,requireHex,requireCount,requireText}from"./🧱️guards/🟨️.mjs";
-import{ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1 as createFactIndexRowsV1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1}from"./🧮️fact-rows/🟨️.mjs";
+import{ROW_KEY_TEXT_LIMIT_V1,createFactIndexV1 as createFactIndexRowsV1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,rowOwnerNamesV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1}from"./🧮️fact-rows/🟨️.mjs";
 export{GENERATION_POLICY_V1,ROW_KEY_TEXT_LIMIT_V1,factConsumersV1,patchFactIndexV1,refineFactIndexV1,rowKeyV1,selectFactClassesV1,staleConsumersV1,staleFactRowsV1};
 import{emptyFactIndexViewV1,patchFactIndexBytesV1}from"./🌊️stream-patch/🟨️.mjs";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 export{canonicalJsonV1,compareCodePointsV1,createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1};
+let processStartedV1=false;
+/** ⏱️ The milliseconds stages outside the build took since the last build (`start.reader` and `start.prefetch` of the first load, `yield` of the pause between two waves): their owners fill it, the next build reports it and empties it. */
+export const carriedStagesV1={};
 
+
+/** 🌊 The owners one wave re-infers: the policy wave, or its share when the load was granted `basisPoints` of the memory it asked for (the host could not give more: `SEMIO_SLICE_WAVE_BASIS_POINTS`, set by the slice pool), never fewer than one. The wave is what bounds the memory of a build, so a narrower grant means smaller waves: slower, never a wait.
+ * @see ../../🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs */
+export function scaledOwnerWaveV1(ownerWave,basisPoints){
+ const share=Number(basisPoints);
+ return Number.isFinite(share)&&share>0&&share<10000?Math.max(1,Math.floor(ownerWave*share/10000)):Math.max(1,ownerWave);
+}
+
+/** 📈️ The owners of the wave after one that took `elapsedMilliseconds` for `size` owners and inferred `inferred` of them: a wave that inferred nothing costs a fixed time of the whole graph, so the next one grows toward the time budget at the speed of the last, at most by the growth factor and never beyond the maximum; a wave that inferred a quarter at most holds its size and shrinks only when it was over the budget; a wave that said nothing about its inference or inferred more than a quarter returns to the base wave, whose publication is the progress the fleet waits on. Both bounds follow the share the host could grant (`basisPoints`).
+ * @see ./🧬️schema/🔣️.json */
+export function nextOwnerWaveV1({size,elapsedMilliseconds,inferred,basisPoints}){
+ const base=scaledOwnerWaveV1(P.ownerWave,basisPoints);
+ if(!Number.isSafeInteger(inferred)||inferred<0||inferred*4>size)return base;
+ const maximum=Math.max(base,scaledOwnerWaveV1(P.ownerWaveMaximum,basisPoints)),fitting=Math.floor(size*P.ownerWaveBudgetMilliseconds/Math.max(1,elapsedMilliseconds));
+ return Math.max(base,Math.min(maximum,inferred===0?size*P.ownerWaveGrowth:size,fitting));
+}
 
 /** 🔌️ Admits bounded consumer external roots without changing their sealed package identity. */
-export function readGenerationExternalInputsV1(value){const rule=schema.definitions.ExternalInputs;if(!Array.isArray(value)||value.length>rule.maxItems||value.some(name=>{if(typeof name!=="string"||!name.length)return true;let length=0;for(const point of name)if(++length>rule.items.maxLength)return true;return false;}))throw fail("Bounded external input references required","GENERATION_EXTERNAL_INPUTS");return Object.freeze([...new Set(value)].sort(compareCodePointsV1));}
+export function readGenerationExternalInputsV1(value){const rule=schema.definitions.ExternalInputs;if(!Array.isArray(value))throw fail("Bounded external input references required: received "+(value===null?"null":typeof value),"GENERATION_EXTERNAL_INPUTS");if(value.length>rule.maxItems)throw fail("Bounded external input references required: "+value.length+" items exceed "+rule.maxItems,"GENERATION_EXTERNAL_INPUTS");const bad=value.findIndex(name=>{if(typeof name!=="string"||!name.length)return true;let length=0;for(const point of name)if(++length>rule.items.maxLength)return true;return false;});if(bad>=0)throw fail("Bounded external input references required: item "+bad+" is "+(typeof value[bad]==="string"?(value[bad].length?"longer than "+rule.items.maxLength:"empty"):typeof value[bad]),"GENERATION_EXTERNAL_INPUTS");return Object.freeze([...new Set(value)].sort(compareCodePointsV1));}
 /** 🏷️ Resolves exact external keys before root npm package references, including scoped names. */
 export function resolveGenerationExternalInputV1(nodes,name){if(Object.hasOwn(nodes??{},name))return name;const canonical="npm:"+name;return Object.hasOwn(nodes??{},canonical)?canonical:undefined;}
 
@@ -184,10 +206,10 @@ export function createAnswersV1({root,fs=createNodeFilePortV1(),durable=true,wor
  * 🛠️ Creates the generation store over `root`: readers never take a lease; a builder publishes the next immutable generation with one compare-and-swap of the pointer under an exclusive hold that covers one small read and one rename.
  * `holds(rows, signal)` answers whether every observation row still holds; `membership(previous, signal)` answers `{digest, frontier, changes}` against the previous frontier (`changes` is meaningful only with a previous frontier); `compute(spec, signal)` refreshes exactly the dirty owners.
  */
-export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,holds,doubt,derive,answers=createAnswersV1({root,fs}),resources,now=()=>Date.now(),sleep=defaultSleep,stamp=P.stampVerification}){
+export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,holds,doubt,derive,answers=createAnswersV1({root,fs}),resources,now=()=>Date.now(),sleep=defaultSleep,stamp=P.stampVerification,workspaceRoot}){
  if(typeof root!=="string"||!root||typeof holds!=="function"||!resources?.facts)throw fail("Generation store root, fact check and facts resource required");
  const{nodes,settler}=answers;
- const stats={holdCalls:0,rowsChecked:0,computed:0,published:0,casConflicts:0,merged:0,mergeConflicts:0,publishHeldMs:[],indexLoads:0,fragmentReads:0,indexViews:0};
+ const stats={holdCalls:0,rowsChecked:0,computed:0,published:0,casConflicts:0,merged:0,mergeConflicts:0,publishHeldMs:[],indexLoads:0,fragmentReads:0,indexViews:0,plansReused:0};
  const at=(directory,digest,extension)=>join(root,directory,digest+extension),pointerPath=join(root,P.pointer),indexCache=createBoundedCacheV1({name:"generation:indexes",maxEntries:P.indexCacheEntries,maxBytes:P.indexCacheBytes,sizeOf:index=>index.stats?index.stats().bytes:index.rows.length*P.indexRowBytes,onEvict:(_key,index)=>index.drop?.()});
  const manifestPath=digest=>at(P.manifests,digest,".json"),fragmentPath=digest=>at(P.fragments,digest,".json.br"),indexPath=digest=>at(P.indexes,digest,".facts.br"),frontierPath=digest=>at(P.frontiers,digest,".json.br");
  const hold=async(rows,signal)=>{stats.holdCalls++;stats.rowsChecked+=rows.length;return holds(rows,signal);};
@@ -260,7 +282,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const manifest=current.manifest;
   if(manifest.identity!==identity)return cold("identity");
   if(changes===undefined)return cold("frontier");
-  const index=await readIndexView(manifest.factIndex);if(!index)return cold("index");
+  const times={},indexAt=now(),index=await profilePhaseV1("graph.plan.index",()=>readIndexView(manifest.factIndex));times.index=now()-indexAt;if(!index)return cold("index");
   const present=new Set(await fs.names(join(root,P.fragments)));if(!present.has(manifest.global+".json.br"))return cold("global");
   const dirty=new Set(),added=[],removed=new Set(),reasons=[],owners=Object.entries(manifest.owners),ownerOf=createProjectFileIndexV1(Object.fromEntries(owners.map(([name,row])=>[name,{root:row.root}])));
   const configs=new Map(owners.filter(([,row])=>row.config!==undefined).map(([name,row])=>[row.config,name]));
@@ -278,29 +300,30 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const[name,row]of owners)if((!only||only.has(name))&&!present.has(row.fragment+".json.br"))dirty.add(name);
   const unfounded=unfoundedWithheldOwnersV1(index,manifest.owners);for(const name of unfounded)dirty.add(name);
   const scope=only?new Set(skipEnvironment?only:[...only,P.envOwner]):undefined,selection=selectFactClassesV1(index,scope?scopeWithDerivedV1(index,scope):undefined);
-  const verifiable=verifiableRowIdsV1(index,selection.ids),candidates=doubt?await selectDoubtfulRowsV1(index,verifiable,doubt,{signal,progress,chunk:P.doubtChunkRows}):verifiable;
-  const{stale}=await staleFactRowsV1(index,candidates,hold,{signal,progress,...doubt?{budget:Infinity}:{}});
-  await doubt?.settled?.({rows:index.rows,ids:verifiable,stale});
-  const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await settler.settle({pseudoRows:suspectRowsV1(index,suspects),derive,signal,progress,hold,...journalDirty?{dirty:journalDirty}:{}}),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
-  await settler.release?.();
+  const factsAt=now(),verifiable=verifiableRowIdsV1(index,selection.ids),candidates=doubt?await profilePhaseV1("graph.plan.doubt",()=>selectDoubtfulRowsV1(index,verifiable,doubt,{signal,progress,chunk:P.doubtChunkRows})):verifiable;
+  const{stale}=await profilePhaseV1("graph.plan.facts",()=>staleFactRowsV1(index,candidates,hold,{signal,progress,...doubt?{budget:Infinity}:{}}));
+  times.facts=now()-factsAt;await doubt?.settled?.({rows:index.rows,ids:verifiable,stale});
+  const settleAt=now();const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await profilePhaseV1("graph.plan.settle",()=>settler.settle({pseudoRows:suspectRowsV1(index,suspects),derive,signal,progress,hold,...journalDirty?{dirty:journalDirty}:{staleFacts:[...stale].map(id=>index.rows[id])},...workspaceRoot!==undefined?{vouchStamp:name=>stampOfV1(join(workspaceRoot,name))}:{}})),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
+  await settler.release?.();times.settle=now()-settleAt;
   for(const name of direct){if(name===P.envOwner)envStale=true;else if(manifest.owners[name])dirty.add(name);}
+  for(const name of staleConfigOwnersV1({rows:index.rows,stale,configs,workspaceRoot}))if(manifest.owners[name])dirty.add(name);
   for(const holders of changedHolders.values())for(const name of holders)if(manifest.owners[name])dirty.add(name);
   for(const change of changes){
    if(reasons.length>=P.reasonRows)break;if(change.directory&&change.kind!=="removed"||pending.has(change.path))continue;
    const owner=configs.get(change.path)??ownerOf(change.path);reasons.push({change:{path:change.path,kind:change.kind},owners:[owner??P.envOwner]});
   }
-  for(const id of[...stale].sort((a,b)=>a-b)){
+  const staleIds=[...stale].sort((a,b)=>a-b),holders=reasons.length<P.reasonRows&&staleIds.length?rowOwnerNamesV1(index,selection.classes,staleIds,isDerivedOwnerV1):new Map();
+  for(const id of staleIds){
    if(reasons.length>=P.reasonRows)break;
-   const names=[];
-   for(const at of selection.classes){const cls=index.classes[at];if(cls.r.includes(id))for(const owner of cls.o){const name=index.owners[owner];if(!isDerivedOwnerV1(name)&&!names.includes(name))names.push(name);if(names.length>=3)break;}if(names.length>=3)break;}
-   if(!names.length)continue;
+   const names=holders.get(id);
+   if(!names?.length)continue;
    reasons.push({row:index.rows[id],owners:names});
   }
   for(const[name,row]of settled.changed){if(reasons.length>=P.reasonRows)break;const names=[...changedHolders.get(name)??[]].sort(compareCodePointsV1).slice(0,3);if(names.length)reasons.push({row,owners:names});}
   for(const name of removed)dirty.delete(name);
   const scoped=only?new Set([...[...dirty].filter(name=>only.has(name)),...unfounded]):dirty,clean=!scoped.size&&!added.length&&!removed.size&&!envStale;
   const staleKinds={};for(const id of stale){const kind=index.rows[id].kind;staleKinds[kind]=(staleKinds[kind]??0)+1;}
-  return{kind:clean?"clean":"delta",dirty:scoped,added,removed:[...removed],pending:[...pending].sort(compareCodePointsV1),envStale,checked:selection.ids.length,stale:stale.size,doubtful:candidates.length,staleKinds,reasons,cutoff:{questions:suspects.size,held:settled.held.size,kept:settled.kept.size,changed:settled.changed.size,failed:settled.failed,reused:settled.reused},refresh:settled.held};
+  return{kind:clean?"clean":"delta",times,dirty:scoped,added,removed:[...removed],pending:[...pending].sort(compareCodePointsV1),envStale,checked:selection.ids.length,stale:stale.size,doubtful:candidates.length,staleKinds,reasons,cutoff:{questions:suspects.size,held:settled.held.size,kept:settled.kept.size,changed:settled.changed.size,failed:settled.failed,reused:settled.reused},refresh:settled.held};
  }
 
  /** 🤝️ Swaps the pointer for the next generation only if it still names the generation the builder started from; the exclusive hold covers one small read and one rename and nothing else. */
@@ -315,25 +338,39 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🏗️ Builds and publishes the next generation from the newest one: the plan names the dirty owners, `compute` refreshes exactly those and unchanged fragments are carried over by digest. The verification view of the fact index (the rows the plan read stay materialized in it) is released before `compute` runs, so the inference never carries it; a later plan in this process opens it again. */
- async function build(request){let computed;try{return await buildOnce(request,result=>{computed=result;});}finally{await computed?.dispose?.();}}
+ async function build(request){
+  let wave,total=0,last;
+  for(;;){
+   let computed;
+   try{last=await buildOnce(wave?{...request,hint:wave}:request,result=>{computed=result;});}finally{await computed?.dispose?.();}
+   total+=last.computed??0;
+   if(last.published&&last.current){try{await request.published?.(last.current.manifest.generation,{done:total,total:total+(last.deferred?.plan?.dirty?.size??0),...(last.phases?{phases:last.phases}:{})});}catch{}}
+   if(!last.more||!last.published)return{...last,computed:total};
+   wave=last.deferred;
+  }
+ }
  async function buildOnce({identity,implementation,membership,compute,prime,signal,progress,hint,only,observedAtMs=now(),coverage,claim},own){
-  await prime?.(signal);
+  const marks={};if(!processStartedV1){processStartedV1=true;marks.start=Math.round(process.uptime()*1000);}Object.assign(marks,carriedStagesV1);for(const key of Object.keys(carriedStagesV1))delete carriedStagesV1[key];let markedAt=now();const mark=name=>{const at=now();marks[name]=(marks[name]??0)+at-markedAt;markedAt=at;};
+  await profilePhaseV1("graph.build.prime",async()=>prime?.(signal));mark("prime");
   const current=await read(signal),usable=current?.manifest&&current.manifest.identity===identity?current.manifest:undefined;
-  const reuse=hint&&usable&&current.pointer.generation===hint.generation&&now()-hint.atMs<=P.hintMaximumAgeMilliseconds;
-  let previous=usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined,live=reuse?hint.live:await membership(previous?.frontier?previous:undefined,signal);
-  const found=reuse?hint.plan:await plan({current,identity,changes:previous?.frontier?live.changes:undefined,...previous?.frontier&&live.dirty?{journalDirty:live.dirty}:{},only,skipEnvironment:coverage!==undefined,signal,progress});
+  const reuse=hint&&usable&&current.pointer.generation===hint.generation&&(hint.wave!==undefined||now()-hint.atMs<=P.hintMaximumAgeMilliseconds);
+  let previous=usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined,live=reuse?hint.live:await profilePhaseV1("graph.build.membership",async()=>{const began=now();try{return await membership(previous?.frontier?previous:undefined,signal);}finally{marks.membership=now()-began;}});
+  const found=reuse?hint.plan:await profilePhaseV1("graph.build.plan",()=>plan({current,identity,changes:previous?.frontier?live.changes:undefined,...previous?.frontier&&live.dirty?{journalDirty:live.dirty}:{},only,skipEnvironment:coverage!==undefined,signal,progress}));
+  const priority=readPriorityV1();mark("plan");for(const[name,ms]of Object.entries(found.times??{}))marks["plan."+name]=ms;
   if(found.kind==="clean"){
+   writePendingV1(process.env,current?.pointer.generation??-1,[],priority);
    if(usable.membership===live.digest&&!found.refresh?.size)return{current,built:false,published:false,plan:found,computed:0};
    return{...await refreshMetadata({current,live,signal,held:found.refresh}),built:false,plan:found,computed:0};
   }
-  const cold=found.kind==="cold",owners0=cold?{}:usable.owners,names=cold?[]:[...found.dirty].sort(compareCodePointsV1);
+  const cold=found.kind==="cold",owners0=cold?{}:usable.owners,names=cold?[]:orderOwnersV1([...found.dirty].sort(compareCodePointsV1),priority),offset=hint?.wave?.done??0,wave=names.slice(0,hint?.wave?.size??scaledOwnerWaveV1(P.ownerWave,process.env.SEMIO_SLICE_WAVE_BASIS_POINTS)),rest=names.slice(wave.length),waveStartedMs=now();
+  if(!cold)writePendingV1(process.env,current?.pointer.generation??-1,names,priority);
   const want=claim&&await claim.extend({owners:[...names,...found.removed],structural:cold||found.envStale||found.added.length>0,signal});
   if(want&&!want.held)return{current,built:false,published:false,computed:0,plan:found,needsBuild:true,pending:{generation:current?.pointer.generation??-1,roots:{},...want.request}};
   aborted(signal);
-  const spec={cold,owners:names,discover:found.added,removed:found.removed,changed:cold?[]:(live.changes??[]).filter(change=>!change.directory).map(change=>change.path),previousEnv:cold?null:usable.env,previousParts:cold?undefined:usable.envParts,envStale:found.envStale,generation:(current?.pointer.generation??-1)+1,coldReason:cold?found.reason:undefined,reasons:found.reasons??[],staleRows:found.stale??0,staleKinds:found.staleKinds,
+  const spec={cold,owners:wave,more:rest.length>0,total:offset+names.length,done:offset,discover:found.added,removed:found.removed,changed:cold?[]:(live.changes??[]).filter(change=>!change.directory).map(change=>change.path),previousEnv:cold?null:usable.env,previousParts:cold?undefined:usable.envParts,envStale:found.envStale,generation:(current?.pointer.generation??-1)+1,coldReason:cold?found.reason:undefined,reasons:found.reasons??[],staleRows:found.stale??0,staleKinds:found.staleKinds,
    stubs:Object.fromEntries(Object.entries(owners0).map(([name,row])=>[name,{root:row.root,kind:row.kind,targets:row.targets,...(row.nativeRoot?{nativeRoot:row.nativeRoot}:{}),...(row.config?{config:row.config}:{}),...(row.tag?{tag:row.tag}:{}),...(row.reads?{reads:row.reads}:{})}]))};
   previous=undefined;indexCache.clear();
-    const result=await compute(spec,signal);own(result);
+    const result=await profilePhaseV1("graph.build.compute",()=>compute(spec,signal));own(result);mark("compute");
   stats.computed+=result.owners.length;aborted(signal);
   const envDigest=result.env.digest,owners={...owners0},dropped=new Set(found.removed),upserts=new Map(),append=new Map(),returned=new Set(),stored=[];
   for(const name of dropped)delete owners[name];
@@ -353,39 +390,44 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    });
    upserts.set(owner.name,owner.rows??[]);
   }
-    await mapLimit(stored,P.readConcurrency,job=>job(),signal);
-  for(const name of names)if(!returned.has(name)&&!dropped.has(name)){delete owners[name];dropped.add(name);}
+    await profilePhaseV1("graph.build.fragments",()=>mapLimit(stored,P.readConcurrency,job=>job(),signal));mark("fragments");
+  for(const name of wave)if(!returned.has(name)&&!dropped.has(name)){delete owners[name];dropped.add(name);}
   for(const[name,row]of Object.entries(owners))if(row.tag&&result.replaceTags?.includes(row.tag)&&!returned.has(name)){delete owners[name];dropped.add(name);}
   for(const name of returned)dropped.delete(name);
   const renamed=new Map();
   for(const name of returned){const row=owners[name];if(row&&!row.tag&&row.kind==="project")renamed.set(row.root,name);}
   for(const[name,row]of Object.entries(owners))if(!returned.has(name)&&!row.tag&&row.kind==="project"&&renamed.has(row.root)){delete owners[name];dropped.add(name);}
   for(const name of result.carried??[])if(owners[name]&&!returned.has(name))owners[name]={...owners[name],edgesEnv:envDigest};
-  for(const[name,row]of Object.entries(owners))if(row.edgesEnv!==envDigest)throw fail("Every owner needs edges of the published environment: "+name+" ("+JSON.stringify({kind:row.kind,tag:row.tag??null,edges:String(row.edgesEnv??"none").slice(0,12),environment:String(envDigest).slice(0,12),root:row.root,dirty:names.includes(name),returned:returned.has(name),dropped:dropped.has(name),carried:(result.carried??[]).includes(name),sameRootReturned:[...returned].filter(other=>owners[other]?.root===row.root)})+")","GENERATION_INCOMPLETE");
+  for(const[name,row]of Object.entries(owners))if(row.edgesEnv!==envDigest)throw fail("Every owner needs edges of the published environment: "+name+" ("+JSON.stringify({kind:row.kind,tag:row.tag??null,edges:String(row.edgesEnv??"none").slice(0,12),environment:String(envDigest).slice(0,12),root:row.root,dirty:wave.includes(name),returned:returned.has(name),dropped:dropped.has(name),carried:(result.carried??[]).includes(name),sameRootReturned:[...returned].filter(other=>owners[other]?.root===row.root)})+")","GENERATION_INCOMPLETE");
   upserts.set(P.envOwner,result.env.rows??[]);
   for(const[name,rows]of derivedUpsertsV1(result.derived??[],found.refresh))upserts.set(name,rows);
-    let index=await patchView(cold?emptyFactIndexViewV1():await readIndexView(usable.factIndex),{drop:[...dropped],upserts,append},signal);
+    let index=await profilePhaseV1("graph.build.patch",async()=>patchView(cold?emptyFactIndexViewV1():await readIndexView(usable.factIndex),{drop:[...dropped],upserts,append},signal));
   
   const orphans=orphanedDerivedOwnersV1(index);if(orphans.length)index=await patchView(index,{drop:orphans},signal);
   const unsupported=unsupportedDerivedV1(index);if(unsupported.length)throw fail("Derived facts need a supporting computation: "+unsupported.slice(0,3).map(row=>row.path.slice(0,96)).join(", "),"GENERATION_INCOMPLETE");
 
-  const packedIndex=packFactIndexBytesV1(index.document.buffer,P.maximumIndexBytes),indexStored=await keep(P.indexes,packedIndex.bytes,".facts.br");
+  mark("patch");
+  const packedIndex=await profilePhaseV1("graph.build.pack",()=>packFactIndexBytesV1(index.document.buffer,P.maximumIndexBytes)),indexStored=await profilePhaseV1("graph.build.keep",()=>keep(P.indexes,packedIndex.bytes,".facts.br"));
   
+  mark("pack");
   const globalStored=await store(P.fragments,{version:1,name:"@global",value:result.global??null},".json.br",P.maximumFragmentBytes);
   const frontierStored=await store(P.frontiers,live.frontier,".json.br",P.maximumIndexBytes);
   const expectedGeneration=current?.pointer.generation??-1;
   const{owners:_table,...envParts}=result.env.parts??{},next={version:1,generation:expectedGeneration+1,parent:current?.pointer.manifest??null,identity,implementation,env:envDigest,membership:live.digest,frontier:frontierStored.digest,factIndex:indexStored.digest,global:globalStored.digest,...(result.env.parts?{envParts}:{}),owners,built:{kind:cold?"cold":"delta",base:cold?null:usable.generation,dirty:[...returned].sort(compareCodePointsV1)}};
   const manifestDigest=await writeManifest(next);aborted(signal);
-  const verified=stamp?mergeVerifiedStampV1({owners:Object.keys(owners).sort(compareCodePointsV1),scope:cold?undefined:only,observedAtMs,carried:cold?undefined:coverage}):undefined;
-  let outcome=await publish({manifestDigest,expectedGeneration,verified,signal}),done=outcome.published?{next,index,packed:packedIndex,kept:indexStored}:undefined;
+  const verified=stamp&&!rest.length?mergeVerifiedStampV1({owners:Object.keys(owners).sort(compareCodePointsV1),scope:cold?undefined:only,observedAtMs,carried:cold?undefined:coverage}):undefined;
+  let outcome=await profilePhaseV1("graph.build.publish",()=>publish({manifestDigest,expectedGeneration,verified,signal})),done=outcome.published?{next,index,packed:packedIndex,kept:indexStored}:undefined;
+  mark("publish");
   if(!done&&!cold){index=undefined;const merged=await mergeIntoHeadV1({read,readIndex:readIndexView,writeManifest,publish,patch:(base,patch)=>patchView(base,patch,signal),pack:value=>packFactIndexBytesV1(value.document.buffer,P.maximumIndexBytes),keep:bytes=>keep(P.indexes,bytes,".facts.br"),key:rowKeyV1,stats},{base:current,mine:next,patch:{drop:[...dropped],upserts,append},verified,signal});if(merged.outcome){outcome=merged.outcome;done=merged;}}
   
   if(!done)return{current:await read(signal),built:true,published:false,plan:found,computed:result.owners.length};
   indexCache.set("view:"+done.kept.digest,done.index);
-  await settler.markIndexed({held:found.refresh,dropped:(result.derived??[]).map(fact=>derivedOwnerNameV1(fact.row))}).catch(()=>undefined);
-  await doubt?.published?.({rows:done.index.rows,observedAt:observedAtMs}).catch(()=>false);
-  if(await(claim?claim.alone({signal}).catch(()=>false):true))await retire({signal}).catch(error=>{if(signal?.aborted)throw error;});
-  return{current:{pointer:outcome.pointer,manifest:done.next},built:true,published:true,plan:found,computed:result.owners.length,carried:result.carried?.length??0,...(done.theirs?{merged:done.theirs.length}:{}),index:{rows:done.index.rows.length,owners:done.index.owners.filter(name=>!isDerivedOwnerV1(name)).length,expandedBytes:done.packed.expandedBytes,packedBytes:done.kept.bytes}};
+  await profilePhaseV1("graph.build.indexed",()=>settler.markIndexed({held:found.refresh,dropped:(result.derived??[]).map(fact=>derivedOwnerNameV1(fact.row))}).catch(()=>undefined));
+  if(!done.theirs)writePendingV1(process.env,outcome.pointer.generation,rest,priority);
+  const deferred=!done.theirs?{generation:outcome.pointer.generation,live,atMs:now(),wave:{done:offset+wave.length,size:nextOwnerWaveV1({size:wave.length,elapsedMilliseconds:now()-waveStartedMs,inferred:result.inferred,basisPoints:process.env.SEMIO_SLICE_WAVE_BASIS_POINTS})},plan:{...found,times:{},kind:"delta",dirty:new Set(rest),added:[],removed:[],pending:[],envStale:false,reasons:[],refresh:new Map(),stale:0,staleKinds:{}}}:undefined;
+  if(!rest.length)await profilePhaseV1("graph.build.stamps",async()=>doubt?.published?.({rows:done.index.rows,observedAt:observedAtMs}).catch(()=>false));
+  if(!rest.length&&await(claim?claim.alone({signal}).catch(()=>false):true))await profilePhaseV1("graph.build.retire",()=>retire({signal}).catch(error=>{if(signal?.aborted)throw error;}));
+  return{current:{pointer:outcome.pointer,manifest:done.next},built:true,published:true,plan:found,computed:result.owners.length,phases:{...marks,...Object.fromEntries(Object.entries(result.phases??{}).map(([name,ms])=>["compute."+name,ms]))},...(rest.length?{more:true,...deferred?{deferred}:{}}:{}),carried:result.carried?.length??0,...(done.theirs?{merged:done.theirs.length}:{}),index:{rows:done.index.rows.length,owners:done.index.owners.filter(name=>!isDerivedOwnerV1(name)).length,expandedBytes:done.packed.expandedBytes,packedBytes:done.kept.bytes}};
  }
 
  /** 🧷️ Publishes the same owners under a refreshed membership frontier, so the next verification is a stat pass again; losing the swap is harmless. */
@@ -401,30 +443,32 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  }
 
  /** 🔁️ Brings the caller to a generation that holds. `current` serves the newest generation of this identity without verification or waiting; `fresh` verifies (only the closure `only` when given), serves a verified generation without any lease and builds otherwise, inside `builder` (which hands the build its slice claim; see `./🔐️custody`) or the builder lease, where a holder that finds the work done by a peer returns that generation untouched and a build whose swap a peer won merges onto the peer's generation (see `./🔀️merge`). */
- async function refresh({identity,implementation,policy="fresh",only,membership,compute,prime,signal,progress,builder,requestedAt}){
+ async function refresh({identity,implementation,policy="fresh",only,membership,compute,prime,signal,progress,builder,requestedAt,published,planned}){
   if(!P.policies.includes(policy))throw fail("Closed graph policy required");
   const started=now(),first=await read(signal),usable=first?.manifest&&first.manifest.identity===identity;
   if(policy==="current"&&usable)return{current:first,served:"current",built:false,published:false,computed:0};
-  let hint,scope=only,coverage,pending;
+  let hint,scope=only,coverage,pending,carried;
   if(usable&&requestedAt!==undefined&&first.pointer.verified!==undefined){
    const owners=Object.keys(first.manifest.owners).sort(compareCodePointsV1);
    coverage=coverageOfV1({stamp:first.pointer.verified,owners,implementation,manifestImplementation:first.manifest.implementation,requestedAtMs:requestedAt});
    if(coverage){const open=uncoveredOfV1({needed:only,owners,coverage});if(!open.size)return{current:first,served:"covered",built:false,published:false,computed:0};scope=open;}
   }
   if(usable){
-   const previous={manifest:first.manifest,frontier:await readFrontier(first.manifest.frontier)},live=await membership(previous.frontier?previous:undefined,signal);
-   const verdict=await plan({current:first,identity,changes:previous.frontier?live.changes:undefined,...previous.frontier&&live.dirty?{journalDirty:live.dirty}:{},only:scope,skipEnvironment:coverage!==undefined,signal,progress});
+   const previous={manifest:first.manifest,frontier:await readFrontier(first.manifest.frontier)},key=JSON.stringify([first.pointer.generation,scope?[...scope].sort(compareCodePointsV1):null,coverage!==undefined]),reuse=planned?.key===key&&planned.plan.kind==="delta"&&previous.frontier!==undefined&&await planned.holds().catch(()=>false);
+   const live=reuse?planned.live:await profilePhaseV1("graph.refresh.membership",()=>membership(previous.frontier?previous:undefined,signal));
+   const verdict=reuse?planned.plan:await profilePhaseV1("graph.refresh.plan",()=>plan({current:first,identity,changes:previous.frontier?live.changes:undefined,...previous.frontier&&live.dirty?{journalDirty:live.dirty}:{},only:scope,skipEnvironment:coverage!==undefined,signal,progress}));
+   if(reuse)stats.plansReused++;
    if(verdict.kind==="clean"){
     if(!scope&&live.digest!==first.manifest.membership||verdict.refresh?.size){const refreshed=await refreshMetadata({current:first,live:!scope&&live.digest!==first.manifest.membership?live:undefined,signal,held:verdict.refresh});return{...refreshed,served:"verified",built:false,computed:0,plan:verdict};}
     return{current:first,served:"verified",built:false,published:false,computed:0,plan:verdict};
    }
    if(verdict.kind==="delta")pending={structural:verdict.envStale||verdict.added.length>0||verdict.removed.length>0,generation:first.pointer.generation,dirty:[...verdict.dirty].sort(compareCodePointsV1),roots:Object.fromEntries([...verdict.dirty].filter(name=>first.manifest.owners[name]).map(name=>[name,first.manifest.owners[name].root]))};
-   if(verdict.kind==="delta"&&previous.frontier)hint={generation:first.pointer.generation,plan:verdict,live,atMs:now()};
+   if(verdict.kind==="delta"&&previous.frontier){hint={generation:first.pointer.generation,plan:verdict,live,atMs:now()};carried={key,plan:verdict,live};}
   }
-  const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,hint,only:scope,observedAtMs:started,coverage,claim});
+  const body=claim=>build({identity,implementation,membership,compute,prime,signal,progress,published,hint,only:scope,observedAtMs:started,coverage,claim});
   for(let attempt=0;attempt<8;attempt++){
    const result=await(builder?builder(body,pending):lease?lease.exclusive(resources.builder,body,{signal}):body());
-   if(result.published||!result.built)return{...result,served:"built"};
+   if(result.published||!result.built)return{...result,served:"built",...result.needsBuild&&carried?{planned:carried}:{}};
   }
   throw fail("Generation keeps changing while it is built","GENERATION_CONFLICT");
  }

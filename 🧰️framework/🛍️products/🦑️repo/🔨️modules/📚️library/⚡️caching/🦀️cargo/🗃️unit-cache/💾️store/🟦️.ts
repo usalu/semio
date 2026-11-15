@@ -1,15 +1,17 @@
-import {randomBytes} from "node:crypto";
+import {createHash,randomBytes} from "node:crypto";
 import {appendFileSync,chmodSync,constants,copyFileSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,readlinkSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {basename,dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
-import {laneNeutralV1,laneRestoreV1,parseDepInfoV1,sha256V1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+import {differingComponentsV1,laneNeutralV1,laneRestoreV1,parseDepInfoV1,sha256V1,UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {casObjectPathV1,casRootV1} from "../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {hasCasObjectSyncV1,putCasObjectSyncV1,readCasObjectSyncV1,touchCasObjectSyncV1} from "../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
+import {claimUnitV1} from "../🧹️gc/🪢️supersession/🙋️claim/🟦️.ts";
+import {uncoveredOutputsV1} from "../✅️complete/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1,layout=policy.layout;
 type Definitions=typeof schema.definitions;
 /** 📦️ One cached compilation: the files it read, the environment it observed, the files it wrote and the compiler's own messages. */
-export type UnitEntryV1={version:1;key:string;crate:string;dependencies:{path:string;sha256:string|null}[];environment:{name:string;value:string|null}[];outputs:{name:string;sha256:string;bytes:number;executable:boolean;template?:boolean}[];stderr:string|null;stdout:string|null;createdMs:number;provenance?:{peakRssBytes:number;userMs:number;sysMs:number;wallMs:number;rmetaOffsetMs:number|null}|null};
+export type UnitEntryV1={version:1;key:string;slot?:string;crate:string;dependencies:{path:string;sha256:string|null}[];environment:{name:string;value:string|null}[];outputs:{name:string;sha256:string;bytes:number;executable:boolean;template?:boolean}[];stderr:string|null;stdout:string|null;createdMs:number;provenance?:{peakRssBytes:number;userMs:number;sysMs:number;wallMs:number;rmetaOffsetMs:number|null}|null};
 /** 🧾️ One measured cache decision (`Event` in the schema). */
 export type UnitEventV1={version:1;atMs:number;lane:string;pid:number;kind:Definitions["Event"]["properties"]["kind"]["enum"][number];crate:string;key:string|null;milliseconds:number;waitedMs:number;reason?:string};
 
@@ -40,20 +42,107 @@ export function emitUnitEventV1(root:string,event:Omit<UnitEventV1,"version"|"at
  try{const directory=ensure(join(root,layout.events)),file=join(directory,event.lane+".jsonl");appendFileSync(file,JSON.stringify({version:1,atMs:Date.now(),pid:process.pid,...event})+"\n");}catch{}
 }
 
-const putObject=(_root:string,bytes:Uint8Array|string):string=>putCasObjectSyncV1(casRootV1(),bytes);
+/** 🔎️ One unit lookup with the named components of its key (`Lookup` in the schema). */
+export type UnitLookupV1={version:1;atMs:number;lane:string;pid:number;crate:string;key:string;remote?:string;outcome:"local-hit"|"fleet-hit"|"miss";components:Record<string,string>;values?:Record<string,string>};
+
+const logFiles=(root:string,name:string):[string,string]=>{const directory=join(root,layout.lookups);return[join(directory,name),join(directory,name.replace(/\.jsonl$/u,".1.jsonl"))];};
+const lookupFiles=(root:string):[string,string]=>logFiles(root,policy.lookups.file);
+
+function appendBounded(root:string,name:string,line:string):void{
+ const [file,older]=logFiles(root,name);ensure(dirname(file));
+ try{if(statSync(file).size>=policy.lookups.maximumFileBytes)renameSync(file,older);}catch{}
+ appendFileSync(file,line+"\n");
+}
+
+/** ♻️ What a collection or a forget removed, by kind (`Eviction` in the schema): lanes, lane incremental sets, incremental sessions, stale build units, entries superseded by a newer key of their slot, entries that lost an object, entries forgotten on request. */
+export type EvictionCountsV1=Partial<Record<"lanes"|"incremental"|"sessions"|"units"|"superseded"|"entries"|"forgotten",number>>;
+
+/** ♻️ Appends one eviction record to the bounded eviction log beside the lookup log; all-zero counts are not written. Best effort, never throws.
+ * @see ../🧬️schema/🔣️.json */
+export function recordEvictionV1(root:string,counts:EvictionCountsV1):void{
+ try{
+  const kept=Object.fromEntries(Object.entries(counts).filter(([,value])=>Number.isSafeInteger(value)&&(value as number)>0));
+  if(Object.keys(kept).length===0)return;
+  appendBounded(root,policy.evictions.file,JSON.stringify({version:1,atMs:Date.now(),pid:process.pid,...kept}));
+ }catch{}
+}
+
+/** ♻️ The evictions recorded so far, summed by kind, with the time of the first and the last record. */
+export function readEvictionsV1(root:string):{records:number;totals:Record<string,number>;firstMs:number|null;lastMs:number|null}{
+ const totals:Record<string,number>={};let records=0,firstMs:number|null=null,lastMs:number|null=null;
+ for(const file of[...logFiles(root,policy.evictions.file)].reverse()){
+  let text:string;try{text=readFileSync(file,"utf8");}catch{continue;}
+  for(const line of text.split("\n")){if(!line)continue;try{const row=JSON.parse(line) as Record<string,number>;if(row.version!==1)continue;records++;firstMs=firstMs===null?row.atMs!:Math.min(firstMs,row.atMs!);lastMs=lastMs===null?row.atMs!:Math.max(lastMs,row.atMs!);for(const [name,value] of Object.entries(row))if(!["version","atMs","pid"].includes(name)&&typeof value==="number")totals[name]=(totals[name]??0)+value;}catch{}}
+ }
+ return{records,totals,firstMs,lastMs};
+}
+
+/** 🔎️ Appends one lookup to the machine's bounded, rotating lookup log: when the file passes its bound it becomes the single older file and a new one starts, so two files of at most `maximumFileBytes` are all there is. Best effort, never throws.
+ * @see ../🧬️schema/🔣️.json */
+export function recordLookupV1(root:string,row:Omit<UnitLookupV1,"version"|"atMs"|"pid">):void{
+ try{appendBounded(root,policy.lookups.file,JSON.stringify({version:1,atMs:Date.now(),pid:process.pid,...row}));}catch{}
+}
+
+/** 🔎️ Reads the recorded lookups, oldest first, optionally only those at or after `sinceMs`; a torn or foreign line is skipped. */
+export function readLookupsV1(root:string,sinceMs=0):UnitLookupV1[]{
+ const rows:UnitLookupV1[]=[];
+ for(const file of[...lookupFiles(root)].reverse()){
+  let text:string;try{text=readFileSync(file,"utf8");}catch{continue;}
+  for(const line of text.split("\n")){if(!line)continue;try{const row=JSON.parse(line) as UnitLookupV1;if(row.version===1&&row.atMs>=sinceMs&&typeof row.crate==="string"&&typeof row.key==="string"&&row.components!==null&&typeof row.components==="object")rows.push(row);}catch{}}
+ }
+ return rows;
+}
+
+/** 🔀️ The churn of a window of lookups: how they ended, and for every crate that was looked up under more than one key, WHICH named components differ between its keys (with the texts seen for the small classes), plus the crates grouped by the set of differing components, most frequent first. A key is the fleet key when the lookup knew it, else the local key. */
+export type ChurnReportV1={lookups:number;outcomes:Record<string,number>;crates:number;multiKey:number;causes:{components:string[];crates:number;examples:string[]}[];perCrate:{crate:string;keys:number;differs:string[];samples:Record<string,string[]>}[]};
+
+export function churnReportV1(rows:readonly UnitLookupV1[],limit=50):ChurnReportV1{
+ const outcomes:Record<string,number>={},byCrate=new Map<string,Map<string,UnitLookupV1>>();
+ for(const row of rows){outcomes[row.outcome]=(outcomes[row.outcome]??0)+1;let keys=byCrate.get(row.crate);if(!keys){keys=new Map();byCrate.set(row.crate,keys);}keys.set(row.remote??row.key,row);}
+ const perCrate:ChurnReportV1["perCrate"]=[],causes=new Map<string,{components:string[];crates:string[]}>();
+ for(const [crate,keys] of byCrate){
+  if(keys.size<2)continue;
+  const list=[...keys.values()],differs=differingComponentsV1(list.map(row=>row.components)),samples:Record<string,string[]>={};
+  for(const name of differs){const seen=[...new Set(list.map(row=>row.values?.[name]).filter((value):value is string=>value!==undefined))];if(seen.length>0)samples[name]=seen.slice(0,4);}
+  perCrate.push({crate,keys:keys.size,differs,samples});
+  const id=differs.join(","),cause=causes.get(id)??{components:differs,crates:[]};cause.crates.push(crate);causes.set(id,cause);
+ }
+ perCrate.sort((left,right)=>right.keys-left.keys||left.crate.localeCompare(right.crate));
+ return{lookups:rows.length,outcomes,crates:byCrate.size,multiKey:perCrate.length,causes:[...causes.values()].map(row=>({components:row.components,crates:row.crates.length,examples:row.crates.sort().slice(0,3)})).sort((left,right)=>right.crates-left.crates||left.components.join().localeCompare(right.components.join())),perCrate:perCrate.slice(0,limit)};
+}
+
+const putObjectCas=(_root:string,bytes:Uint8Array|string):string=>putCasObjectSyncV1(casRootV1(),bytes);
+const putObject=putObjectCas;
 
 const readObject=(_root:string,sha:string):Buffer|undefined=>readCasObjectSyncV1(casRootV1(),sha);
 
-/** 🔎️ Returns the newest entry of `key` whose recorded files and environment still hold, `undefined` on a miss. A missing object or an unreadable entry is a miss, never an error. */
-export function lookupUnitV1(root:string,key:string,context:Readonly<{cwd:string;laneRoot:string|undefined;environment:Readonly<Record<string,string|undefined>>;stampDirectory:string|undefined}>):UnitEntryV1|undefined{
+const spillDirectory=(root:string)=>join(root,layout.temporary,"spill");
+/** 💧️ Keeps one object of a unit that could not enter the host store (the write guard of a nearly full disk refused it) in a spill folder of the unit cache until the fleet upload has read it; returns its sha256. */
+export function putSpillObjectV1(root:string,bytes:Uint8Array|string):string{
+ const data=typeof bytes==="string"?Buffer.from(bytes):Buffer.from(bytes),sha=createHash("sha256").update(data).digest("hex"),directory=ensure(spillDirectory(root)),temporary=join(directory,sha+"."+randomBytes(4).toString("hex")+".tmp");
+ writeFileSync(temporary,data);renameSync(temporary,join(directory,sha));return sha;
+}
+/** 💧️ Reads a spilled object, `undefined` when absent or when its bytes do not hash to its name. */
+export function readSpillObjectV1(root:string,sha:string):Buffer|undefined{
+ try{const data=readFileSync(join(spillDirectory(root),sha));return createHash("sha256").update(data).digest("hex")===sha?data:undefined;}catch{return undefined;}
+}
+/** 💧️ Removes the spilled objects of an entry once its upload is over, whatever the outcome. */
+export function dropSpillObjectsV1(root:string,entry:Readonly<{outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):void{
+ for(const sha of[...entry.outputs.map(row=>row.sha256),entry.stdout,entry.stderr])if(typeof sha==="string")rmSync(join(spillDirectory(root),sha),{force:true});
+}
+
+/** 🔎️ Returns the newest entry of `key` whose recorded files and environment still hold, `undefined` on a miss. A missing object, an unreadable entry or an entry that lacks one of the `expected` output names (a hit must leave every file a dependant names) is a miss, never an error. */
+export function lookupUnitV1(root:string,key:string,context:Readonly<{cwd:string;laneRoot:string|undefined;environment:Readonly<Record<string,string|undefined>>;stampDirectory:string|undefined;expected?:readonly string[]}>):UnitEntryV1|undefined{
  const directory=entryDirectory(root,key);let names:string[];
  try{names=readdirSync(directory).filter(name=>name.endsWith(".json")).sort().reverse();}catch{return undefined;}
  for(const name of names.slice(0,policy.key.maximumVariants)){
   let entry:UnitEntryV1;try{entry=JSON.parse(readFileSync(join(directory,name),"utf8"));}catch{continue;}
   if(entry.version!==1||entry.key!==key)continue;
+  if(context.expected&&uncoveredOutputsV1(entry.outputs.map(row=>row.name),context.expected).length>0)continue;
   if(entry.dependencies.some(row=>digestFileV1(resolveStored(context.cwd,laneRestoreV1(row.path,context.laneRoot)),context.stampDirectory)!==row.sha256))continue;
   if(entry.environment.some(row=>{const value=context.environment[row.name];return(value===undefined?null:laneNeutralV1(value,context.laneRoot))!==row.value;}))continue;
   if(lostObjectV1(root,entry))continue;
+  if(entry.slot!==undefined)claimUnitV1(root,key);
   return entry;
  }
  return undefined;
@@ -61,15 +150,20 @@ export function lookupUnitV1(root:string,key:string,context:Readonly<{cwd:string
 
 function resolveStored(cwd:string,path:string):string{return isAbsolute(path)?path:resolve(cwd,path);}
 
+/** 🧷️ Puts a file in place under its final name in one step (written aside, renamed over), so a compiler that reads the output directory while a cached unit is restored sees the old file or the new one and never an absent name. */
+function placeV1(destination:string,write:(temporary:string)=>void):void{
+ const temporary=destination+"."+randomBytes(4).toString("hex")+".tmp";
+ try{write(temporary);renameSync(temporary,destination);}catch(error){rmSync(temporary,{force:true});throw error;}
+}
+
 /** ♻️ Writes a cached compilation into `outDir` as the compiler would have: output files by reflink where the filesystem supports it (a copy elsewhere, never a shared inode) stamped with the restore time as a compile writes them (a reflink or Windows copy keeps the cache object's last-use time, which Cargo reads as an output older than a dependency's and re-runs the unit on every later build; see https://doc.rust-lang.org/nightly/nightly-rustc/cargo/core/compiler/fingerprint/index.html), the dependency file rewritten for this lane, and the compiler's messages returned for replay. */
 export function restoreUnitV1(root:string,entry:UnitEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined;stampDirectory:string|undefined}>):{stdout:string;stderr:string}{
  const render=(text:string)=>laneRestoreV1(text.split(policy.key.outputToken).join(context.outDir),context.laneRoot);
  ensure(context.outDir);
  for(const row of entry.outputs){
-  const destination=join(context.outDir,row.name);rmSync(destination,{force:true});
-  const source=objectPath(row.sha256);
-  if(row.template){writeFileSync(destination,render(readFileSync(source,"utf8")));}
-  else{copyFileSync(source,destination,constants.COPYFILE_FICLONE);chmodSync(destination,row.executable?0o755:0o644);}
+  const destination=join(context.outDir,row.name),source=objectPath(row.sha256);
+  if(row.template){const text=render(readFileSync(source,"utf8"));placeV1(destination,temporary=>writeFileSync(temporary,text));}
+  else placeV1(destination,temporary=>{copyFileSync(source,temporary,constants.COPYFILE_FICLONE);chmodSync(temporary,row.executable?0o755:0o644);});
   touchCasObjectSyncV1(casRootV1(),row.sha256);const now=new Date();
   if(!row.template)utimesSync(destination,now,now);
   if(!row.template&&context.stampDirectory)stampFile(destination,row.sha256,context.stampDirectory);
@@ -82,8 +176,10 @@ function stampFile(path:string,sha:string,stampDirectory:string):void{
  try{const stat=statSync(path,{bigint:true}),hash=sha256V1(path),stamp=join(stampDirectory,hash.slice(0,2),hash.slice(2,34));ensure(dirname(stamp));const temporary=stamp+"."+randomBytes(3).toString("hex");writeFileSync(temporary,`${stat.size}:${stat.mtimeNs}:${stat.ino} ${sha}`);rmSync(stamp,{force:true});renameSync(temporary,stamp);}catch{}
 }
 
-/** 📥️ Publishes one successful compilation. Objects are content-addressed and the entry is renamed into place last, so a reader sees all of it or none of it. Returns the digests, `undefined` when the dependency file is missing or the outputs exceed the bound. */
-export function publishUnitV1(root:string,input:Readonly<{key:string;crate:string;cwd:string;outDir:string;laneRoot:string|undefined;outputs:readonly string[];stdout:string;stderr:string;stampDirectory:string|undefined;provenance?:UnitEntryV1["provenance"]}>):UnitEntryV1|undefined{
+/** 📥️ Publishes one successful compilation. Objects are content-addressed and the entry is renamed into place last, so a reader sees all of it or none of it. Returns the digests, `undefined` when the dependency file is missing, an `expected` output is absent (an entry that cannot serve its dependants is never stored) or the outputs exceed the bound. */
+export function publishUnitV1(root:string,input:Readonly<{key:string;crate:string;cwd:string;outDir:string;laneRoot:string|undefined;outputs:readonly string[];stdout:string;stderr:string;stampDirectory:string|undefined;provenance?:UnitEntryV1["provenance"];slot?:string;spill?:boolean;expected?:readonly string[]}>):UnitEntryV1|undefined{
+ const putObject=input.spill===true?putSpillObjectV1:putObjectCas;
+ if(input.expected&&uncoveredOutputsV1(input.outputs.map(path=>basename(path)),input.expected).length>0)return undefined;
  const depInfoPath=input.outputs.find(path=>path.endsWith(".d"));if(!depInfoPath||!existsSync(depInfoPath))return undefined;
  const info=parseDepInfoV1(readFileSync(depInfoPath,"utf8"));
  if(info.dependencies.length>policy.key.maximumDependencyFiles)return undefined;
@@ -93,14 +189,45 @@ export function publishUnitV1(root:string,input:Readonly<{key:string;crate:strin
   const stat=statSync(path);total+=stat.size;if(total>policy.key.maximumOutputBytes)return undefined;
   const template=path===depInfoPath,bytes=template?Buffer.from(neutral(readFileSync(path,"utf8"))):readFileSync(path),sha=putObject(root,bytes);
   outputs.push({name:basename(path),sha256:sha,bytes:bytes.length,executable:(stat.mode&0o111)!==0&&!template,...(template?{template:true}:{})});
-  if(!template&&input.stampDirectory)stampFile(path,sha,input.stampDirectory);
+  if(!template&&input.stampDirectory&&input.spill!==true)stampFile(path,sha,input.stampDirectory);
  }
  const dependencies=info.dependencies.map(path=>({path:laneNeutralV1(path,input.laneRoot),sha256:digestFileV1(resolveStored(input.cwd,path),input.stampDirectory)}));
- const entry:UnitEntryV1={version:1,key:input.key,crate:input.crate,dependencies,environment:info.environment.map(row=>({name:row.name,value:row.value===null?null:laneNeutralV1(row.value,input.laneRoot)})),outputs,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,createdMs:Date.now(),provenance:input.provenance??null};
- const directory=ensure(entryDirectory(root,input.key)),temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex")),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
+ const entry:UnitEntryV1={version:1,key:input.key,...(input.slot===undefined?{}:{slot:input.slot}),crate:input.crate,dependencies,environment:info.environment.map(row=>({name:row.name,value:row.value===null?null:laneNeutralV1(row.value,input.laneRoot)})),outputs,stderr:input.stderr?putObject(root,neutral(input.stderr)):null,stdout:input.stdout?putObject(root,neutral(input.stdout)):null,createdMs:Date.now(),provenance:input.provenance??null};
+ writeEntryV1(root,entry);
+ return entry;
+}
+
+/** 📝️ Writes one entry as the newest variant of its key (written aside and renamed into place, the oldest variants beyond the bound dropped); shared by a compile that publishes and by a unit installed from the fleet cache. */
+export function writeEntryV1(root:string,entry:UnitEntryV1):void{
+ const directory=ensure(entryDirectory(root,entry.key)),temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex")),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
  writeFileSync(temporary,JSON.stringify(entry));renameSync(temporary,join(directory,name));
  try{const names=readdirSync(directory).filter(file=>file.endsWith(".json")).sort();for(const old of names.slice(0,Math.max(0,names.length-policy.key.maximumVariants)))rmSync(join(directory,old),{force:true});}catch{}
- return entry;
+}
+
+/** 📖️ The newest recorded variant of `key` as written, without checking anything; `undefined` when there is none. */
+export function newestEntryV1(root:string,key:string):UnitEntryV1|undefined{
+ const directory=entryDirectory(root,key);let names:string[];
+ try{names=readdirSync(directory).filter(name=>name.endsWith(".json")).sort().reverse();}catch{return undefined;}
+ for(const name of names){try{const entry=JSON.parse(readFileSync(join(directory,name),"utf8")) as UnitEntryV1;if(entry.version===1&&entry.key===key)return entry;}catch{}}
+ return undefined;
+}
+
+/** 🫥️ Forgets the local entries (compiled units and build script runs) of one crate, by the crate name the entries record, and nothing else: the objects stay in the host store for other entries, the fleet copy stays where it is. Returns the number of entry files removed. */
+export function forgetCrateEntriesV1(root:string,crate:string):{entries:number}{
+ if(!crate||crate==="-")throw Error("Crate name required");
+ let entries=0;
+ for(const kind of[layout.entries,layout.runs]){
+  const base=join(root,kind);let shards:string[];try{shards=readdirSync(base);}catch{continue;}
+  for(const shard of shards){let keys:string[];try{keys=readdirSync(join(base,shard));}catch{continue;}
+   for(const key of keys){
+    const directory=join(base,shard,key);let files:string[];try{files=readdirSync(directory);}catch{continue;}
+    for(const file of files){try{if((JSON.parse(readFileSync(join(directory,file),"utf8")) as {crate?:string}).crate===crate){rmSync(join(directory,file),{force:true});entries++;}}catch{}}
+    try{if(readdirSync(directory).length===0)rmSync(directory,{recursive:true,force:true});}catch{}
+   }
+  }
+ }
+ recordEvictionV1(root,{forgotten:entries});
+ return{entries};
 }
 
 /** 🧽️ Drops entries that lost an object, empty entry directories, the pre-host object directory of the workspace image that nothing replays any more (the natural drain of its bytes), and temporary files of writers that died an hour ago. */
@@ -117,6 +244,7 @@ export function pruneEntriesV1(root:string,nowMs:number):{entries:number;tempora
  rmSync(join(root,layout.objects),{recursive:true,force:true});
  const work=join(root,layout.temporary);let names:string[];try{names=readdirSync(work);}catch{names=[];}
  for(const name of names){try{if(nowMs-statSync(join(work,name)).mtimeMs>3600000){rmSync(join(work,name),{force:true});temporary++;}}catch{}}
+ recordEvictionV1(root,{entries});
  return{entries,temporary};
 }
 
@@ -209,16 +337,16 @@ export function publishBuildRunV1(root:string,input:Readonly<{key:string;package
  return entry;
 }
 
-/** ⏪️ Writes a cached run's OUT_DIR tree, and returns the streams to replay, as the script would have produced them. */
+/** ⏪️ Writes a cached run's OUT_DIR tree, and returns the streams to replay, as the script would have produced them; throws (the caller runs the script) when a recorded file is not in place afterwards. */
 export function restoreBuildRunV1(root:string,entry:BuildEntryV1,context:Readonly<{outDir:string;laneRoot:string|undefined}>):{stdout:string;stderr:string}{
  ensure(context.outDir);
  for(const row of entry.outputs){
-  const destination=join(context.outDir,row.path);ensure(dirname(destination));rmSync(destination,{force:true});
-  const source=objectPath(row.sha256);
-  if(row.template)writeFileSync(destination,laneRestoreV1(readFileSync(source,"utf8"),context.laneRoot));else{copyFileSync(source,destination,constants.COPYFILE_FICLONE);chmodSync(destination,0o644);}
+  const destination=join(context.outDir,row.path),source=objectPath(row.sha256);ensure(dirname(destination));
+  if(row.template){const text=laneRestoreV1(readFileSync(source,"utf8"),context.laneRoot);placeV1(destination,temporary=>writeFileSync(temporary,text));}else placeV1(destination,temporary=>{copyFileSync(source,temporary,constants.COPYFILE_FICLONE);chmodSync(temporary,0o644);});
   if(row.executable)chmodSync(destination,0o755);
   touchCasObjectSyncV1(casRootV1(),row.sha256);
  }
+ for(const row of entry.outputs)if(!lstatSync(join(context.outDir,row.path)).isFile())throw Error("Restored OUT_DIR file absent: "+row.path);
  const text=(sha:string|null)=>sha===null?"":laneRestoreV1(readObject(root,sha)?.toString("utf8")??"",context.laneRoot);
  return{stdout:text(entry.stdout),stderr:text(entry.stderr)};
 }

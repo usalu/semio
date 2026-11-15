@@ -90,8 +90,14 @@ class AirChangeTransitionTest(unittest.TestCase):
                 """➕ Accept the readout insertion without rendering an unrelated scene."""
                 return self
 
+            def remove(self, *objects):
+                """➖ Accept the removal of the frozen readouts before they join one group."""
+                return self
+
         glyph = self.house()
-        namespace = {**vars(self.module), "self": Driver(), "house": glyph, "count": ValueTracker(0),
+        driver = Driver()
+        namespace = {**vars(self.module), "self": driver, "morphs": self.module._morph.stage(driver, self.module.TRANSITIONS),
+                     "house": glyph, "count": ValueTracker(0),
                      "minutes": ValueTracker(0), "stage": np.array(CASES["house"]["center"]),
                      "stage_label": lambda *args: (Dot(), Dot()), "dots": [Dot(CASES["target"])],
                      "labels": [VGroup(Dot([1.2, 0, 0]))], "leaders": [Line(CASES["target"], [1.2, 0, 0])]}

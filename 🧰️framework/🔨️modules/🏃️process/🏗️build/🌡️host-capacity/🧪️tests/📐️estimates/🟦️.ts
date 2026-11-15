@@ -6,7 +6,7 @@ import {churnProtocolV1} from "../../../../../📁️filesystem/🧾️observati
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {readHostCapacityPolicyV1,isHostCapacityV1,type HostCapacityPolicyV1,type HostRequestV1} from "../../📏️decision/🟦️.ts";
-import {emptyHostEstimateStoreV1,estimateHostRatioV1,hostEstimateLineageV1,hostRequestPriorityV1,learnableHostRunV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostOutcomeV1,scaleHostRequestV1,updateHostEstimateStoreV1,type HostEstimateStoreV1,type HostEstimateV1,type HostOutcomeV1,type HostRunStatusV1} from "../../📐️estimates/🟦️.ts";
+import {emptyHostEstimateStoreV1,estimateHostRatioV1,robustHostSamplesV1,hostEstimateLineageV1,hostRequestPriorityV1,learnableHostRunV1,rampHostRequestV1,readHostEstimateStoreV1,recordHostOutcomeV1,scaleHostRequestV1,updateHostEstimateStoreV1,type HostEstimateStoreV1,type HostEstimateV1,type HostOutcomeV1,type HostRunStatusV1} from "../../📐️estimates/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import host from "../🧫️fixtures/🔣️.json";
@@ -168,4 +168,17 @@ test("A store another run holds open (a Windows sharing violation) is replaced a
   expect(readHostEstimateStoreV1(directory).classes["run"]!.samples.length,"the stored samples are untouched").toBe(1);
   expect(await updateHostEstimateStoreV1(directory,policy,update,{platform:"linux",sleepSync:()=>{throw Error("no pause expected");},rename:()=>{throw busy("EPERM");}}),"on POSIX a permission refusal is final").toBe(false);
  }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("Law: a single run that held more than the outlier factor of the next highest run sets nothing, a heavy tail stays, exactly as the Python oracle on every stored vector",()=>{
+ for(const item of fixture.outliers)expect(estimateHostRatioV1(policy,item.store as HostEstimateStoreV1,item.lineage,item.nowMs),item.name).toEqual(item.expect);
+ const sample=(ratioBasisPoints:number,atMs:number)=>({atMs,ratioBasisPoints,activeMilliseconds:60000});
+ const factor=schema.definitions.Protocol.const.outlierBasisPoints;
+ expect(factor).toBe(40000);
+ expect(robustHostSamplesV1(policy,[sample(40000,3),sample(10000,2),sample(9000,1)],5).samples.length,"exactly at the factor stays").toBe(3);
+ expect(robustHostSamplesV1(policy,[sample(40001,3),sample(10000,2),sample(9000,1)],5).samples.map(row=>row.ratioBasisPoints),"just over the factor leaves out the highest only").toEqual([10000,9000]);
+ expect(robustHostSamplesV1(policy,[sample(250518,3)],5).samples.length,"a lone sample stays").toBe(1);
+ expect(robustHostSamplesV1(policy,[sample(250518,3),sample(240000,2),sample(11563,1)],5).samples.length,"two high runs are a heavy tail").toBe(3);
+ const spiked=estimateHostRatioV1(policy,{version:1,classes:{run:{samples:[sample(250518,3),sample(11563,2)]}}},["run"],5),calm=estimateHostRatioV1(policy,{version:1,classes:{run:{samples:[sample(11563,2)]}}},["run"],5);
+ expect(spiked,"the spike changes nothing").toEqual(calm);
 });

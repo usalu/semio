@@ -1,0 +1,8 @@
+🪑️objects/bicycle-stand
+🪑️objects/chalkboard
+🪑️objects/charcoal-grill
+🪑️objects/cooking-pot
+🪑️objects/drinking-fountain
+🪑️objects/market-parasol
+🪑️objects/patio-heater
+🪑️objects/playground-swing

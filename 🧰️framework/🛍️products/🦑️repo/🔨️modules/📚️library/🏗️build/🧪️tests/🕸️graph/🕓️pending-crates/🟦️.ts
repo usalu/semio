@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
-import {adoptPendingBuildOwnersV1,pendingCrateManifestV1,pendingOwnerRootsV1} from "../../../🕸️graph/🟦️.ts";
+import {adoptPendingBuildOwnersV1,pendingCrateManifestV1,pendingOwnerRootsV1,vanishedOwnerRootsV1} from "../../../🕸️graph/🟦️.ts";
 import {pendingCratePathsV1} from "../../../🕸️graph/🕰️generations/🕓️pending-crates/🟨️.mjs";
 
 const registry=(owners:object[])=>({version:1,owners,catalogProviders:[]}) as never;
@@ -43,5 +43,19 @@ test("the reconciler adopts a crate that has a manifest and no row, once",()=>{
   expect(adoptPendingBuildOwnersV1(root,"Native dependency has no build project owner: m/rust (required by p:build; candidates=0)")).toBe(true);
   expect(JSON.parse(readFileSync(join(root,"📋️build-owners.json"),"utf8")).owners.map((row:{root:string})=>row.root)).toEqual(["m/rust"]);
   expect(adoptPendingBuildOwnersV1(root,"Native dependency has no build project owner: m/rust (required by p:build; candidates=1)")).toBe(false);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a vanished owner manifest is named through any wrapper and its stale row is dropped before the next plan",()=>{
+ const message="farm: worker threw Error: Native execution contract requires a native project owner: p:build; Build owner manifest absent: m/rust/Cargo.toml (required by p:build)";
+ expect(vanishedOwnerRootsV1(message)).toEqual(["m/rust"]);
+ expect(vanishedOwnerRootsV1("something else")).toEqual([]);
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"vanished-owner-"));
+ try{
+  mkdirSync(join(root,"m/rust"),{recursive:true});
+  writeFileSync(join(root,"📋️build-owners.json"),JSON.stringify({version:1,owners:[{name:"m-crate",root:"m/rust",manifest:"m/rust/Cargo.toml",packages:[]}],catalogProviders:[]}));
+  expect(adoptPendingBuildOwnersV1(root,message)).toBe(true);
+  expect(JSON.parse(readFileSync(join(root,"📋️build-owners.json"),"utf8")).owners).toEqual([]);
+  expect(adoptPendingBuildOwnersV1(root,message)).toBe(false);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

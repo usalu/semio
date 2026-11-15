@@ -1,0 +1,20 @@
+import {readFileSync,writeFileSync} from "node:fs";
+import {brotliDecompressSync,brotliCompressSync} from "node:zlib";
+const B="/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/";
+const {openFactIndexV1}=await import(B+"🕸️graph/🕰️generations/🧮️fact-codec/🟨️.mjs");
+const {relativeFactPathV1,installCoveredV1,rowFilePathV1}=await import(B+"🏡️resident/🕰️graph-hooks/🔌️host/🟨️.mjs");
+const {manifestJournalPortV1}=await import(B+"🪪️graph-state/📍️cursor/🟦️.ts");
+const root="/Users/Shared/semio",dir=root+"/.cache/b/g/m/generations";
+const pointer=JSON.parse(readFileSync(dir+"/current.json","utf8")),manifest=JSON.parse(readFileSync(dir+"/m/"+pointer.manifest+".json","utf8"));
+const raw=brotliDecompressSync(readFileSync(dir+"/x/"+manifest.factIndex+".facts.br"),{maxOutputLength:2**31});
+const index:any=openFactIndexV1(raw,{maximumBytes:raw.length});
+const port=manifestJournalPortV1({root});const cur=await port.cursor();await port.since(cur!);
+const excluded=port.excluded();
+let t=performance.now();
+const paths:string[]=[];for(let s=0;s<index.stringCount;s++)paths.push(index.textOf(s));
+console.log("strings",paths.length,"decode ms",Math.round(performance.now()-t));
+t=performance.now();const ex:string[]=[];let nrel=0;
+for(const p of paths){const r=p.startsWith("/")?relativeFactPathV1(root,p):p;if(r===undefined)continue;nrel++;if(excluded(r))ex.push(p);}
+console.log("verdicts ms",Math.round(performance.now()-t),"excluded",ex.length,"rel",nrel);
+const blob=brotliCompressSync(Buffer.from(ex.join("\n")));writeFileSync("memo.br",blob);console.log("blob",blob.length);
+t=performance.now();const set=new Set(brotliDecompressSync(readFileSync("memo.br")).toString().split("\n"));console.log("load ms",Math.round(performance.now()-t),set.size);

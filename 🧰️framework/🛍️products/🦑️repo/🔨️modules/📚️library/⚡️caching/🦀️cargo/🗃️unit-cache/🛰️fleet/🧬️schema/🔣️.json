@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.cargo/UnitCacheFleetV1",
+  "title": "Fleet tier of the Cargo compile-unit cache: platform identity, portable unit manifest, upload spool, claims and counters",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "namespace": "semio.cargo.unit-cache.fleet/v1",
+        "layout": { "state": "fl", "spool": "up", "costs": "cost", "down": "down", "denied": "denied", "noClaims": "noclaims", "reachable": "reachable", "uploader": "uploader.lock", "spawned": "uploader.spawned" },
+        "tokens": { "cwd": "@@semio-cwd@@", "workspace": "@@semio-ws@@" },
+        "slotType": "type.semio.tech/semio.cargo.unit-cache.slot.v1",
+        "worker": "semio-unit-cache",
+        "slotHeader": "x-semio-slot",
+        "manifestName": "unit.json",
+        "timeouts": {
+          "lookupMilliseconds": 3000,
+          "claimMilliseconds": 1500,
+          "blobMilliseconds": 20000,
+          "blobBytesPerSecond": 2097152,
+          "awaitSliceMilliseconds": 20000,
+          "headMilliseconds": 1500,
+          "rideThroughMilliseconds": 12000,
+          "rideThroughInitialMilliseconds": 250,
+          "rideThroughMaximumMilliseconds": 2000
+        },
+        "breaker": { "downFaults": 2, "downMilliseconds": 15000, "deniedMilliseconds": 15000, "noClaimsMilliseconds": 600000, "reachableMilliseconds": 300000 },
+        "claim": { "ttlMilliseconds": 30000, "heartbeatMilliseconds": 8000, "finalTtlMilliseconds": 90000, "minimumWaitMilliseconds": 30000, "maximumWaitMilliseconds": 1200000, "defaultExpectedMilliseconds": 90000, "waitFactor": 2, "maximumRounds": 40 },
+        "limits": { "maximumEntryBytes": 268435456, "maximumBlobBytes": 268435456, "maximumBlobs": 64, "maximumManifestBytes": 4194304, "maximumDownloadConcurrency": 4, "maximumUploadConcurrency": 3, "maximumSpool": 512 },
+        "uploader": { "heartbeatMilliseconds": 2000, "staleMilliseconds": 10000, "idleMilliseconds": 15000, "pollMilliseconds": 200, "spawnThrottleMilliseconds": 3000, "jobMilliseconds": 120000, "maximumJobAgeMilliseconds": 600000, "maximumAttempts": 4, "retryBackoffMilliseconds": 15000 },
+        "linkedCrateTypes": ["proc-macro", "bin", "cdylib", "dylib", "staticlib"],
+        "hostIndependent": { "targetPrefixes": ["wasm32-"], "crateTypes": ["lib", "rlib"], "token": "any" }
+      }
+    },
+    "Digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "Platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "os", "arch", "host", "rustc", "toolchain", "linker", "cpu"],
+      "properties": {
+        "version": { "const": 1 },
+        "os": { "enum": ["darwin", "linux", "win32", "any"] },
+        "arch": { "type": "string", "minLength": 1 },
+        "host": { "type": "string", "minLength": 1 },
+        "rustc": { "$ref": "#/definitions/Digest" },
+        "toolchain": { "type": "string" },
+        "linker": { "type": "string" },
+        "cpu": { "type": "string" }
+      }
+    },
+    "Output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sha256", "bytes", "executable"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^/\\\\]+$" },
+        "sha256": { "$ref": "#/definitions/Digest" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "executable": { "type": "boolean" },
+        "template": { "type": "boolean" }
+      }
+    },
+    "RemoteUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "localKey", "slot", "crate", "platform", "createdMs", "costMs", "dependencies", "environment", "outputs", "stdout", "stderr"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "$ref": "#/definitions/Digest" },
+        "localKey": { "$ref": "#/definitions/Digest" },
+        "slot": { "$ref": "#/definitions/Digest" },
+        "crate": { "type": "string", "minLength": 1 },
+        "platform": { "$ref": "#/definitions/Platform" },
+        "createdMs": { "type": "integer", "minimum": 0 },
+        "costMs": { "type": "integer", "minimum": 0 },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": { "path": { "type": "string", "minLength": 1 }, "sha256": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] } }
+          }
+        },
+        "environment": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "value"],
+            "properties": { "name": { "type": "string", "minLength": 1 }, "value": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }
+          }
+        },
+        "outputs": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/definitions/Output" } },
+        "stdout": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] },
+        "stderr": { "anyOf": [{ "$ref": "#/definitions/Digest" }, { "type": "null" }] }
+      }
+    },
+    "SpoolJob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "localKey", "slot", "crate", "cwd", "workspace", "laneRoot", "owner", "claimed", "costMs", "platform", "queuedMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "$ref": "#/definitions/Digest" },
+        "localKey": { "$ref": "#/definitions/Digest" },
+        "slot": { "$ref": "#/definitions/Digest" },
+        "crate": { "type": "string", "minLength": 1 },
+        "cwd": { "type": "string", "minLength": 1 },
+        "workspace": { "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] },
+        "laneRoot": { "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] },
+        "owner": { "type": "string" },
+        "claimed": { "type": "boolean" },
+        "offer": { "type": "boolean" },
+        "costMs": { "type": "integer", "minimum": 0 },
+        "platform": { "$ref": "#/definitions/Platform" },
+        "queuedMs": { "type": "integer", "minimum": 0 },
+        "attempts": { "type": "integer", "minimum": 0 },
+        "notBeforeMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Counters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "wallMs", "unit", "offload"],
+      "properties": {
+        "version": { "const": 1 },
+        "wallMs": { "type": "integer", "minimum": 0 },
+        "unit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["localHit", "remoteHit", "miss", "stored"],
+          "properties": {
+            "skipped": { "type": "integer", "minimum": 0 },
+            "localHit": { "type": "integer", "minimum": 0 },
+            "remoteHit": { "type": "integer", "minimum": 0 },
+            "miss": { "type": "integer", "minimum": 0 },
+            "stored": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "offload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["out", "refused", "fellBack"],
+          "properties": {
+            "out": { "type": "integer", "minimum": 0 },
+            "refused": { "type": "integer", "minimum": 0 },
+            "fellBack": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "SlotVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "arguments", "environment", "cwd", "rustc", "host", "slot", "parts"],
+      "properties": {
+        "name": { "type": "string" },
+        "arguments": { "type": "array", "items": { "type": "string" } },
+        "environment": { "type": "object", "additionalProperties": { "type": "string" } },
+        "cwd": { "type": "string" },
+        "rustc": { "$ref": "#/definitions/Digest" },
+        "host": { "type": "string" },
+        "slot": { "$ref": "#/definitions/Digest" },
+        "parts": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

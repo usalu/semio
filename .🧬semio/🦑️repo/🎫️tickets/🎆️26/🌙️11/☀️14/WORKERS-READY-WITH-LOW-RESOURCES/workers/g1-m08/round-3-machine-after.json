@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-14T16:58:36Z",
+  "disk": "Filesystem   1024-blocks      Used Available Capacity iused      ifree %iused  Mounted on\n/dev/disk3s5   239362496  84000000 117200000    42%  831433 1173919280    0%   /System/Volumes/Data\n",
+  "health": {
+    "code": "39e3688eb315d48831772ca305d78bcb6f35975794444da47750bc5fa7459759",
+    "pid": 75485,
+    "wallMs": 1794675515470,
+    "version": 1
+  }
+}

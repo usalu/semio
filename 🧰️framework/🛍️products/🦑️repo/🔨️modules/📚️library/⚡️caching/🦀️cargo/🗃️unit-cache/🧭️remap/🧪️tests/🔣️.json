@@ -1,0 +1,17 @@
+{
+ "description": "Vectors of rustc's path remapping: the remappings in command-line order, a path, and the name the compiler records for it.",
+ "cases": [
+  {"label": "workspace root becomes dot", "remaps": ["/w=."], "path": "/w/a/b.rs", "name": "./a/b.rs"},
+  {"label": "the root itself", "remaps": ["/w=."], "path": "/w", "name": "."},
+  {"label": "no component boundary", "remaps": ["/w=."], "path": "/wx/a.rs", "name": "/wx/a.rs"},
+  {"label": "empty replacement drops the prefix", "remaps": ["/h/.cargo/registry/src="], "path": "/h/.cargo/registry/src/idx/p-1.0.0/src/lib.rs", "name": "idx/p-1.0.0/src/lib.rs"},
+  {"label": "empty replacement of the exact prefix", "remaps": ["/h/r="], "path": "/h/r", "name": ""},
+  {"label": "the later remapping wins", "remaps": ["/w=.", "/w/t=/cargo/build-dir"], "path": "/w/t/debug/x.rs", "name": "/cargo/build-dir/debug/x.rs"},
+  {"label": "the earlier remapping stays for other paths", "remaps": ["/w=.", "/w/t=/cargo/build-dir"], "path": "/w/a.rs", "name": "./a.rs"},
+  {"label": "applied once, never chained", "remaps": ["/a=/b", "/b=/c"], "path": "/a/x", "name": "/b/x"},
+  {"label": "trailing slash on from", "remaps": ["/w/=."], "path": "/w/a.rs", "name": "./a.rs"},
+  {"label": "uncovered path", "remaps": ["/w=."], "path": "/other/a.rs", "name": "/other/a.rs"},
+  {"label": "to with a trailing slash", "remaps": ["/w=/v/"], "path": "/w/a.rs", "name": "/v/a.rs"},
+  {"label": "rust source copy", "remaps": ["/u/.rustup/toolchains/t/lib/rustlib/src/rust=/rustc/abc"], "path": "/u/.rustup/toolchains/t/lib/rustlib/src/rust/library/core/src/lib.rs", "name": "/rustc/abc/library/core/src/lib.rs"}
+ ]
+}

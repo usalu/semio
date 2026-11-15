@@ -1,13 +1,13 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
-import {mkdirSync,mkdtempSync,statSync} from "node:fs";
+import {existsSync,mkdirSync,mkdtempSync,statSync} from "node:fs";
 import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {closedPoolEnvironmentV1,emptyPoolV1,jobserverChildEnvironmentV1,jobserverClosedMessageV1,jobserverEndpointV1,jobserverPlanV1,jobserverStdioV1,JOBSERVER_VERIFIED_VARIABLE_V1 as census} from "../🟦️.ts";
+import {closedPoolEnvironmentV1,emptyPoolV1,jobserverChildEnvironmentV1,jobserverClosedMessageV1,jobserverEndpointV1,jobserverPlanV1,jobserverStdioV1,privatePoolV1,STARVED_POOL_TOKENS_V1,JOBSERVER_VERIFIED_VARIABLE_V1 as census} from "../🟦️.ts";
 import {buildJobserverProbeV1,type ProbeVerdictV1} from "./🦀️probe/🟦️.ts";
 import {cargoScratchBaseV1} from "../../🧪️tests/🏖️scratch/🟦️.ts";
 
@@ -63,3 +63,18 @@ test("the empty pool is one named pipe in the cache's bin directory, made once, 
  expect(first).toBe(join(root,"bin","jobserver-empty"));expect(statSync(first!).isFIFO()).toBe(true);expect(emptyPoolV1(root)).toBe(first);
  expect(emptyPoolV1(root,"win32")).toBeUndefined();expect(emptyPoolV1(undefined)).toBeUndefined();
 });
+
+test("a one-job admission swaps any reachable pool for a private pool of three tokens that the jobserver crate sees and release removes; wider admissions, no pool and Windows keep theirs",()=>{
+ const pool={path:"/tmp/p/pool",release:()=>{}},options={platform:"linux",pool:()=>pool} as const,pipe={CARGO_MAKEFLAGS:"-j --jobserver-auth=3,5",[census]:"3,5"};
+ const starved=jobserverPlanV1({...pipe,SEMIO_COMPILER_PARALLELISM:"1"},options);
+ expect(starved.descriptors).toEqual([]);expect(starved.endpoint).toEqual({kind:"fifo",path:pool.path});expect(starved.release).toBe(pool.release);
+ expect(starved.environment.CARGO_MAKEFLAGS).toBe("-j1 --jobserver-fds=fifo:/tmp/p/pool --jobserver-auth=fifo:/tmp/p/pool");expect(jobserverClosedMessageV1(starved)).toBe("");
+ for(const [environment,platform] of[[{...pipe,SEMIO_COMPILER_PARALLELISM:"4"},"linux"],[{SEMIO_COMPILER_PARALLELISM:"1"},"linux"],[{...pipe,SEMIO_COMPILER_PARALLELISM:"1"},"win32"],[pipe,"linux"]] as const)expect(jobserverPlanV1(environment,{platform,pool:()=>pool}).release,JSON.stringify(environment)).toBeUndefined();
+ expect(jobserverPlanV1({...pipe,SEMIO_COMPILER_PARALLELISM:"1"},{platform:"linux",pool:()=>undefined}).descriptors).toEqual([3,5]);
+ if(process.platform==="win32")return;
+ const directory=scratch(),made=privatePoolV1(STARVED_POOL_TOKENS_V1,directory)!;
+ const probe=buildJobserverProbeV1(join(directory,"probe"),cargo),plan=jobserverPlanV1({...pipe,PATH:"/bin",SEMIO_COMPILER_PARALLELISM:"1"},{pool:()=>made});
+ const run=spawnSync(probe,[],{env:{...plan.environment,PATH:"/bin"},encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
+ expect((JSON.parse(run.stdout) as ProbeVerdictV1).pool).toEqual({client:true,tokens:STARVED_POOL_TOKENS_V1});
+ plan.release!();expect(existsSync(made.path)).toBe(false);
+},300000);

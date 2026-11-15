@@ -1,6 +1,6 @@
 /** 🧩️ `defineModelViewerElement`: registers a custom element that hosts a {@link ModelViewer} in a shadow root. The client must set `strings` (there is no default language) before connecting, then `model`.
  *
- * Attributes `preset`, `variant`, `animation` (id), `playing` (boolean), `follow` (`off`, `bounds` or `node:<node id>`) and `root-motion` (`travel` or `in-place`) mirror the controller. The style sheet is a constructable one adopted by the shadow root (so a Content-Security-Policy without `style-src 'unsafe-inline'` does not block it), with a `<style>` element only where adoption is unsupported. CSS custom properties on the element: `--semio-viewer-background` (picture and host background), `--semio-viewer-focus` (focus ring colour), `--semio-viewer-min-height`.
+ * Attributes `preset`, `variant`, `scene` (a model scene id), `animation` (id), `playing` (boolean), `follow` (`off`, `bounds` or `node:<node id>`) and `root-motion` (`travel` or `in-place`) mirror the controller. The style sheet is a constructable one adopted by the shadow root (so a Content-Security-Policy without `style-src 'unsafe-inline'` does not block it), with a `<style>` element only where adoption is unsupported. CSS custom properties on the element: `--semio-viewer-background` (picture and host background), `--semio-viewer-focus` (focus ring colour), `--semio-viewer-min-height`.
  * Events of the controller are re-dispatched as `CustomEvent`s named `semio-<event>` (`semio-ready`, `semio-progress`, `semio-camera`, `semio-time`, `semio-playing`, `semio-pick`, `semio-error`, `semio-backend`, `semio-issues`, `semio-preset`, `semio-follow`, `semio-rootMotion`) with the payload in `detail`.
  * @see ../🕹️controller/🟦️.ts */
 import type { ModelDocument } from "../../🧬️schema/🟦️.ts";
@@ -9,14 +9,14 @@ import type { RootMotion, ViewerFollow } from "../🎥️follow/🟦️.ts";
 import { ModelViewer, type ModelViewerOptions, type ViewerEvents, type ViewerStrings } from "../🕹️controller/🟦️.ts";
 
 const STYLE = `:host{display:block;position:relative;background:var(--semio-viewer-background,transparent);min-height:var(--semio-viewer-min-height,12rem)}canvas{display:block;width:100%;height:100%;outline:none}canvas:focus-visible{outline:2px solid var(--semio-viewer-focus,currentColor);outline-offset:-2px}`;
-const EVENTS: (keyof ViewerEvents)[] = ["ready", "progress", "camera", "time", "playing", "pick", "error", "backend", "issues", "preset", "follow", "rootMotion"];
+const EVENTS: (keyof ViewerEvents)[] = ["ready", "progress", "camera", "time", "playing", "pick", "error", "backend", "issues", "preset", "follow", "rootMotion", "scene"];
 
 /** 🏷️ Registers `tagName` (once) and returns its class. */
 export function defineModelViewerElement(tagName = "semio-model-viewer", registry: CustomElementRegistry = customElements): CustomElementConstructor {
   const existing = registry.get(tagName);
   if (existing) return existing;
   class ModelViewerElement extends HTMLElement {
-    static observedAttributes = ["preset", "variant", "animation", "playing", "follow", "root-motion"];
+    static observedAttributes = ["preset", "variant", "scene", "animation", "playing", "follow", "root-motion"];
     strings: ViewerStrings | null = null;
     options: Omit<ModelViewerOptions, "canvas" | "strings"> = {};
     viewer: ModelViewer | null = null;
@@ -77,6 +77,8 @@ export function defineModelViewerElement(tagName = "semio-model-viewer", registr
       try {
         const preset = this.getAttribute("preset");
         if (preset) v.setPreset(preset as CameraPreset);
+        const scene = this.getAttribute("scene");
+        if (scene && scene !== v.activeScene) v.setScene(scene);
         if (this.hasAttribute("variant")) v.setVariant(this.getAttribute("variant") || null);
         const follow = this.getAttribute("follow");
         const wanted: ViewerFollow = !follow || follow === "off" ? "off" : follow === "bounds" ? "bounds" : { node: follow.replace(/^node:/u, "") };

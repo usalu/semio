@@ -1,0 +1,134 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/replica/entry/v1",
+ "title": "Shared worktree service entry: the installed boot program, its manifest, its state file and the language-agnostic fixture",
+ "definitions": {
+  "Sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+  "Count": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+  "InstalledFile": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["bytes", "sha256"],
+   "properties": {"sha256": {"$ref": "#/definitions/Sha256"}, "bytes": {"$ref": "#/definitions/Count"}}
+  },
+  "EntryManifest": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["bootVersion", "files", "installedMs", "module", "store", "version", "worktree"],
+   "properties": {
+    "version": {"const": 1},
+    "bootVersion": {"type": "integer", "minimum": 1, "maximum": 1000000},
+    "files": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["boot.mjs", "boot.ps1", "boot.sh"],
+     "properties": {
+      "boot.mjs": {"$ref": "#/definitions/InstalledFile"},
+      "boot.sh": {"$ref": "#/definitions/InstalledFile"},
+      "boot.ps1": {"$ref": "#/definitions/InstalledFile"}
+     }
+    },
+    "previous": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["sha256"],
+     "properties": {"sha256": {"$ref": "#/definitions/Sha256"}}
+    },
+    "worktree": {"type": "string", "minLength": 1},
+    "module": {"type": "string", "minLength": 1},
+    "store": {"type": ["string", "null"]},
+    "installedMs": {"$ref": "#/definitions/Count"}
+   }
+  },
+  "EntryAttempt": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["atMs", "digest", "outcome", "source"],
+   "properties": {
+    "source": {"enum": ["worktree", "snapshot", "store"]},
+    "digest": {"type": ["string", "null"]},
+    "outcome": {"type": "string"},
+    "atMs": {"$ref": "#/definitions/Count"}
+   }
+  },
+  "EntryState": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["attempts", "base", "bootVersion", "digest", "nextMs", "phase", "pid", "reason", "source", "startedMs", "version", "wallMs"],
+   "properties": {
+    "version": {"const": 1},
+    "pid": {"$ref": "#/definitions/Count"},
+    "startedMs": {"$ref": "#/definitions/Count"},
+    "wallMs": {"$ref": "#/definitions/Count"},
+    "bootVersion": {"type": "integer", "minimum": 1},
+    "phase": {"enum": ["starting", "running", "waiting", "exhausted"]},
+    "source": {"enum": ["worktree", "snapshot", "store", null]},
+    "digest": {"type": ["string", "null"]},
+    "base": {"type": ["string", "null"]},
+    "reason": {"type": "string"},
+    "attempts": {"type": "array", "maxItems": 8, "items": {"$ref": "#/definitions/EntryAttempt"}},
+    "nextMs": {"type": ["integer", "null"]}
+   }
+  },
+  "EntryResult": {
+   "type": "object",
+   "required": ["action", "version"],
+   "properties": {
+    "action": {"enum": ["installed", "current", "refused-downgrade", "refused-same-version", "refused-selftest", "refused-foreign", "refused-incomplete"]},
+    "version": {"type": "integer", "minimum": 1},
+    "reason": {"type": "string"},
+    "installed": {"type": "integer"},
+    "changed": {"type": "boolean"}
+   }
+  },
+  "DirectoryCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["env", "expected", "home", "platform"],
+   "properties": {
+    "platform": {"enum": ["darwin", "linux", "win32"]},
+    "home": {"type": "string"},
+    "env": {"type": "object", "additionalProperties": {"type": "string"}},
+    "expected": {"type": "string"}
+   }
+  },
+  "HashCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["sha256", "text"],
+   "properties": {"text": {"type": "string"}, "sha256": {"$ref": "#/definitions/Sha256"}}
+  },
+  "DecisionCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["damaged", "expected", "identical", "installed", "name", "selfTestBroken", "source"],
+   "properties": {
+    "name": {"type": "string"},
+    "installed": {"type": ["integer", "null"]},
+    "source": {"type": "integer", "minimum": 1},
+    "identical": {"type": "boolean"},
+    "damaged": {"type": "boolean"},
+    "selfTestBroken": {"type": "boolean"},
+    "expected": {"enum": ["installed", "current", "refused-downgrade", "refused-same-version", "refused-selftest"]}
+   }
+  },
+  "GuardCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["admitted", "name", "source"],
+   "properties": {"name": {"type": "string"}, "source": {"type": "string"}, "admitted": {"type": "boolean"}}
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["decisions", "directories", "guards", "hashes", "version"],
+   "properties": {
+    "version": {"const": 1},
+    "directories": {"type": "array", "items": {"$ref": "#/definitions/DirectoryCase"}},
+    "hashes": {"type": "array", "items": {"$ref": "#/definitions/HashCase"}},
+    "decisions": {"type": "array", "items": {"$ref": "#/definitions/DecisionCase"}},
+    "guards": {"type": "array", "items": {"$ref": "#/definitions/GuardCase"}}
+   }
+  }
+ }
+}

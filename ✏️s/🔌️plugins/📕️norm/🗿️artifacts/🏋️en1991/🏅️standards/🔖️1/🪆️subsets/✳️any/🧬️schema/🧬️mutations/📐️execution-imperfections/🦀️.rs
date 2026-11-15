@@ -19,4 +19,4 @@ pub mod change_imperfection_vertical_load;
 pub mod change_imperfection_x;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_en1991_mut_execution_imperfections_more::{change_imperfection_y, change_imperfection_assumed_force, insert_imperfection, remove_imperfection};
+pub use semio_s_artifact_norm_en1991_mut_execution_more::{change_imperfection_y, change_imperfection_assumed_force, insert_imperfection, remove_imperfection};

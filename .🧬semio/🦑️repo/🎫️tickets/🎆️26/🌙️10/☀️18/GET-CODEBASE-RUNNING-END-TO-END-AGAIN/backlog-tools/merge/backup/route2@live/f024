@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+  "targets": {
+    "build": "build",
+    "build-storybook": "build storybook",
+    "build-canvas-font-assets": "build canvas fonts"
+  },
+  "modes": ["prototype", "release"],
+  "invalidModes": ["dev", "ship", "", null],
+  "forbiddenInputs": ["📜️script.ts", "tool-job", "interactivity"],
+  "invalidSelections": [["unknown"], ["canvas"], ["canvas", "unknown"]]
+}

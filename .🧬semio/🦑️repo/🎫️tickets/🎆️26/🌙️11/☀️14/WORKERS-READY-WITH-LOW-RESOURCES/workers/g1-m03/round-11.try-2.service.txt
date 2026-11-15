@@ -1,0 +1,36 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ac6bfe8f337c.log (lines after 13158)
+-- graph lines
+graph: refreshing 259 projects (generation 64)
+graph: 61 stale facts (analysis 58, file 2, readdir 1) leave 259 projects stale
+graph: asking the host for up to 8 worker processes for 48 projects; the projects wait for them
+-- last 30 lines when the try ended
+[repo] still working after 4250 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+graph: waiting for memory headroom (1357 of -254 MB reserved, 1 projects running)
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:44:259:1:0:%40semio-tech%2Frepo-test|project|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:45:48","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 45 of 48 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:45:259:1:0:%40semio-tech%2Frepo-hooks-go|project|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:46:48","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 46 of 48 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:46:259:1:0:%40semio-tech%2Frepo-identity-go|project|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:47:48","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 47 of 48 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:48:48","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 48 of 48 projects
+graph: 0 of 48 projects inferred by 3 worker processes in 393 s (0 failed, 0 lost, 0 restarts)
+[fleet] projects from the fleet: 2 taken, 0 stored, 0 offered, 0 waited for another machine, 1 computed here | Projekte aus der Flotte: 2 übernommen, 0 gespeichert, 0 angeboten, 0 auf eine andere Maschine gewartet, 1 hier berechnet
+[capacity] waiting 51s for exec: not enough free memory (need 1536 MB; 859 MB spare above the 2048 MB floor, load 13.42; 5 running, 0 ahead); behind graph-plan (running, 1 job(s), 7511 MB), graph-farm (running, 1 job(s), 1536 MB), workspace:setup (quiet, 1 job(s), 47 MB)
+2026-11-15T00:23:14.292Z graph-owner-too-heavy {"named":"@semio-tech/framework-os (about 5424 MB), @semio-tech/framework-process (about 3612 MB)","limit":"1756"}
+[repository:command] still running after 4251 s
+[repository:command] still running after 4261 s
+[repository:command] still running after 4271 s

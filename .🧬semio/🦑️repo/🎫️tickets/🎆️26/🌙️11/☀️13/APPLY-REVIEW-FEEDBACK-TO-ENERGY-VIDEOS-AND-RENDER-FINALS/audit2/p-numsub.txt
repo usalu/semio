@@ -1,0 +1,1 @@
+(?<![A-Za-z_])\d[\d{},.]*\s*(\\cdot|·|\\times|⋅|×)\s*\d[\d{},.]*(?!\s*\\?,?\s*\\?(mathrm|text|W|K|kWh|Wh|m|kg|°C|h|Pa|kJ|s\b|%|€|d\b|kKh|g|a\b))

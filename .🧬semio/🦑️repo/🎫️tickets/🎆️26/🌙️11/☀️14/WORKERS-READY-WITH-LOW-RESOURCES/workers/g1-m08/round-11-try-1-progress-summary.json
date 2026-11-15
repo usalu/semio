@@ -1,0 +1,409 @@
+{
+  "at": "2026-11-15T00:38:36Z",
+  "last_progress_gap_s": 0.123,
+  "unique_progress_lines": 2164,
+  "recent": [
+    {
+      "at": "2026-11-15T00:37:04Z",
+      "line": "Reading the project graph slice (607 s): owners 48 of 614."
+    },
+    {
+      "at": "2026-11-15T00:37:30Z",
+      "line": "graph: the worker processes of the earlier waves are ready; the 48 projects of this wave go to them"
+    },
+    {
+      "at": "2026-11-15T00:37:30Z",
+      "line": "graph: headroom of 446 MB is below one project (1698 MB), inferring one project at a time"
+    },
+    {
+      "at": "2026-11-15T00:37:30Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:48:614:1:0:%40semio-tech%2Fframework-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:37:30Z",
+      "line": "graph: waiting for memory headroom (1698 of 446 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:37:35Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:48:1:5:%40semio-tech%2Fframework-rs|language%3Acargo|5|0:waiting|1698|446|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:37:35Z",
+      "line": "[script] build:projects · Inferring projects: 0 of 48 projects · 1 running, longest 5 s: @semio-tech/framework-rs (language:cargo, 5 s, 0 rows) · waiting for memory headroom (1698 of 446 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:37:35Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:48:614:1:5:%40semio-tech%2Fframework-rs|language%3Acargo|5|0:waiting|1698|446|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:37:35Z",
+      "line": "Reading the project graph slice (635 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 0, 0)."
+    },
+    {
+      "at": "2026-11-15T00:37:35Z",
+      "line": "Reading the project graph slice (639 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 5, 0); waiting for memory headroom (1698 of 446 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:37:40Z",
+      "line": "graph: waiting for memory headroom (1698 of 373 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:37:40Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:48:1:10:%40semio-tech%2Fframework-rs|language%3Acargo|10|0:waiting|1698|373|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:37:40Z",
+      "line": "[script] build:projects · Inferring projects: 0 of 48 projects · 1 running, longest 10 s: @semio-tech/framework-rs (language:cargo, 10 s, 0 rows) · waiting for memory headroom (1698 of 373 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:37:40Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:48:614:1:10:%40semio-tech%2Fframework-rs|language%3Acargo|10|0:waiting|1698|373|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:37:45Z",
+      "line": "graph: waiting for memory headroom (1698 of 502 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:37:45Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:derived-walk\",\"stage\":\"running\"}"
+    },
+    {
+      "at": "2026-11-15T00:37:45Z",
+      "line": "Reading the project graph slice (645 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 11, 0); waiting for memory headroom (1698 of 373 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:37:50Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:48:1:15:%40semio-tech%2Fframework-rs|language%3Acargo|15|0:waiting|1698|502|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:37:50Z",
+      "line": "[script] build:projects · Inferring projects: 0 of 48 projects · 1 running, longest 15 s: @semio-tech/framework-rs (language:cargo, 15 s, 0 rows) · waiting for memory headroom (1698 of 502 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:37:50Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:48:614:1:15:%40semio-tech%2Fframework-rs|language%3Acargo|15|0:waiting|1698|502|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:37:50Z",
+      "line": "graph: waiting for memory headroom (1698 of 514 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:37:50Z",
+      "line": "Reading the project graph slice (651 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 16, 0); waiting for memory headroom (1698 of 502 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:37:55Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:48:1:20:%40semio-tech%2Fframework-rs|language%3Acargo|20|0:waiting|1698|514|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:37:55Z",
+      "line": "[script] build:projects · Inferring projects: 0 of 48 projects · 1 running, longest 20 s: @semio-tech/framework-rs (language:cargo, 20 s, 0 rows) · waiting for memory headroom (1698 of 514 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:37:55Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:48:614:1:20:%40semio-tech%2Fframework-rs|language%3Acargo|20|0:waiting|1698|514|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:37:55Z",
+      "line": "graph: waiting for memory headroom (1698 of 505 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:37:55Z",
+      "line": "Reading the project graph slice (655 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 21, 0); waiting for memory headroom (1698 of 514 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:38:00Z",
+      "line": "graph: waiting for memory headroom (1698 of 586 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:38:00Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:48:1:25:%40semio-tech%2Fframework-rs|language%3Acargo|25|0:waiting|1698|586|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:00Z",
+      "line": "[script] build:projects · Inferring projects: 0 of 48 projects · 1 running, longest 25 s: @semio-tech/framework-rs (language:cargo, 25 s, 0 rows) · waiting for memory headroom (1698 of 586 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:38:00Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:48:614:1:25:%40semio-tech%2Fframework-rs|language%3Acargo|25|0:waiting|1698|586|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:00Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:48:2:30:%40semio-tech%2Fframework-rs|language%3Acargo|30|0,%40semio-tech%2Fframework-pack-error-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:00Z",
+      "line": "[script] build:projects · Inferring projects: 0 of 48 projects · 2 running, longest 30 s: @semio-tech/framework-rs (language:cargo, 30 s, 0 rows), @semio-tech/framework-pack-error-rs (language:cargo, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:00Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:48:614:2:30:%40semio-tech%2Fframework-rs|language%3Acargo|30|0,%40semio-tech%2Fframework-pack-error-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:00Z",
+      "line": "Reading the project graph slice (661 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 27, 0); waiting for memory headroom (1698 of 586 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:49:614:2:30:%40semio-tech%2Fframework-rs|language%3Acargo|30|0,%40semio-tech%2Fframework-pack-error-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:48:1:30:%40semio-tech%2Fframework-rs|language%3Acargo|30|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "[script] build:projects · Inferring projects: 0 of 48 projects · 1 running, longest 30 s: @semio-tech/framework-rs (language:cargo, 30 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "graph: waiting for memory headroom (264 of 407 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:1:48:2:30:%40semio-tech%2Fframework-rs|language%3Acargo|30|0,%40semio-tech%2Fframework-pack-record-rs|language%3Arust|0|0:waiting|264|407|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "[script] build:projects · Inferring projects: 1 of 48 projects · 2 running, longest 30 s: @semio-tech/framework-rs (language:cargo, 30 s, 0 rows), @semio-tech/framework-pack-record-rs (language:rust, 0 s, 0 rows) · waiting for memory headroom (264 of 407 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:49:614:2:30:%40semio-tech%2Fframework-rs|language%3Acargo|30|0,%40semio-tech%2Fframework-pack-record-rs|language%3Arust|0|0:waiting|264|407|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:50:614:2:30:%40semio-tech%2Fframework-rs|language%3Acargo|30|0,%40semio-tech%2Fframework-pack-record-rs|language%3Arust|0|0:waiting|264|407|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:1:48:1:30:%40semio-tech%2Fframework-rs|language%3Acargo|30|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "[script] build:projects · Inferring projects: 1 of 48 projects · 1 running, longest 30 s: @semio-tech/framework-rs (language:cargo, 30 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "Reading the project graph slice (665 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 30, 0), @semio-tech/framework-pack-error-rs (language:cargo, 0, 0)."
+    },
+    {
+      "at": "2026-11-15T00:38:05Z",
+      "line": "Reading the project graph slice (667 s): owners 49 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 32, 0), @semio-tech/framework-pack-record-rs (language:rust, 1, 0); waiting for memory headroom (264 of 407 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "graph: waiting for memory headroom (1698 of 349 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:2:48:2:35:%40semio-tech%2Fframework-rs|language%3Acargo|35|0,%40semio-tech%2Fframework-pack-rs|language%3Acargo|0|0:waiting|1698|349|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "[script] build:projects · Inferring projects: 2 of 48 projects · 2 running, longest 35 s: @semio-tech/framework-rs (language:cargo, 35 s, 0 rows), @semio-tech/framework-pack-rs (language:cargo, 0 s, 0 rows) · waiting for memory headroom (1698 of 349 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:50:614:2:35:%40semio-tech%2Fframework-rs|language%3Acargo|35|0,%40semio-tech%2Fframework-pack-rs|language%3Acargo|0|0:waiting|1698|349|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:51:614:2:35:%40semio-tech%2Fframework-rs|language%3Acargo|35|0,%40semio-tech%2Fframework-pack-rs|language%3Acargo|0|0:waiting|1698|349|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:2:48:1:35:%40semio-tech%2Fframework-rs|language%3Acargo|35|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "[script] build:projects · Inferring projects: 2 of 48 projects · 1 running, longest 35 s: @semio-tech/framework-rs (language:cargo, 35 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:53:614:2:35:%40semio-tech%2Fframework-rs|language%3Acargo|35|0,%40semio-tech%2Fframework-pack-json-float-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:4:48:1:35:%40semio-tech%2Fframework-rs|language%3Acargo|35|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "[script] build:projects · Inferring projects: 4 of 48 projects · 1 running, longest 35 s: @semio-tech/framework-rs (language:cargo, 35 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "Reading the project graph slice (671 s): owners 50 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 37, 0), @semio-tech/framework-pack-rs (language:cargo, 5, 0); waiting for memory headroom (1698 of 349 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:38:10Z",
+      "line": "Reading the project graph slice (673 s): owners 51 of 614."
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:5:48:2:40:%40semio-tech%2Fframework-rs|language%3Acargo|40|0,%40semio-tech%2Fframework-pack-json-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "[script] build:projects · Inferring projects: 5 of 48 projects · 2 running, longest 40 s: @semio-tech/framework-rs (language:cargo, 40 s, 0 rows), @semio-tech/framework-pack-json-rs (language:cargo, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:53:614:2:40:%40semio-tech%2Fframework-rs|language%3Acargo|40|0,%40semio-tech%2Fframework-pack-json-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "graph: waiting for memory headroom (1698 of 155 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:54:614:2:40:%40semio-tech%2Fframework-rs|language%3Acargo|40|0,%40semio-tech%2Fframework-pack-json-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:5:48:1:40:%40semio-tech%2Fframework-rs|language%3Acargo|40|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "[script] build:projects · Inferring projects: 5 of 48 projects · 1 running, longest 40 s: @semio-tech/framework-rs (language:cargo, 40 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "graph: headroom of 306 MB again (264 MB taken), resuming"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:55:614:2:40:%40semio-tech%2Fframework-rs|language%3Acargo|40|0,%40semio-tech%2Fframework-pack-json-canonical-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:6:48:1:40:%40semio-tech%2Fframework-rs|language%3Acargo|40|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "[script] build:projects · Inferring projects: 6 of 48 projects · 1 running, longest 40 s: @semio-tech/framework-rs (language:cargo, 40 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "graph: headroom of 306 MB is below one project (1204 MB), inferring one project at a time"
+    },
+    {
+      "at": "2026-11-15T00:38:15Z",
+      "line": "Reading the project graph slice (677 s): owners 56 of 614."
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "graph: waiting for memory headroom (1508 of 481 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:8:48:2:45:%40semio-tech%2Fframework-rs|language%3Acargo|45|0,%40semio-tech%2Fframework-process|project|0|0:waiting|1508|481|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "[script] build:projects · Inferring projects: 8 of 48 projects · 2 running, longest 45 s: @semio-tech/framework-rs (language:cargo, 45 s, 0 rows), @semio-tech/framework-process (project, 0 s, 0 rows) · waiting for memory headroom (1508 of 481 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:56:614:2:45:%40semio-tech%2Fframework-rs|language%3Acargo|45|0,%40semio-tech%2Fframework-process|project|0|0:waiting|1508|481|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "graph: project @semio-tech/framework-process (project) grew by 2148 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here"
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "graph: project @semio-tech/framework-rs (language:cargo) grew by 1855 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here"
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:8:48:1:5:%40semio-tech%2Fframework-process|project|5|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "[script] build:projects · Inferring projects: 8 of 48 projects · 1 running, longest 5 s: @semio-tech/framework-process (project, 5 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:56:614:1:5:%40semio-tech%2Fframework-process|project|5|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:20Z",
+      "line": "Reading the project graph slice (681 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 47, 0), @semio-tech/framework-process (project, 4, 0); waiting for memory headroom (1508 of 481 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "graph: waiting for memory headroom (3460 of -865 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:9:48:1:5:%40semio-tech%2Fframework-process|project|5|0:waiting|3460|0|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "[script] build:projects · Inferring projects: 9 of 48 projects · 1 running, longest 5 s: @semio-tech/framework-process (project, 5 s, 0 rows) · waiting for memory headroom (3460 of 0 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:56:614:1:5:%40semio-tech%2Fframework-process|project|5|0:waiting|3460|0|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:9:48:2:10:%40semio-tech%2Fframework-process|project|10|0,%40semio-tech%2Fframework-replication-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "[script] build:projects · Inferring projects: 9 of 48 projects · 2 running, longest 10 s: @semio-tech/framework-process (project, 10 s, 0 rows), @semio-tech/framework-replication-rs (language:cargo, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:56:614:2:10:%40semio-tech%2Fframework-process|project|10|0,%40semio-tech%2Fframework-replication-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "Reading the project graph slice (685 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 8, 0)."
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "Reading the project graph slice (687 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 9, 0); waiting for memory headroom (3460 of -865 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:38:26Z",
+      "line": "Reading the project graph slice (689 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 11, 0), @semio-tech/framework-replication-rs (language:cargo, 0, 0)."
+    },
+    {
+      "at": "2026-11-15T00:38:31Z",
+      "line": "graph: waiting for memory headroom (4198 of -4066 MB reserved, 1 projects running)"
+    },
+    {
+      "at": "2026-11-15T00:38:31Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:9:48:2:10:%40semio-tech%2Fframework-process|project|10|0,%40semio-tech%2Fframework-replication-rs|language%3Acargo|0|0:waiting|4198|0|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:31Z",
+      "line": "[script] build:projects · Inferring projects: 9 of 48 projects · 2 running, longest 10 s: @semio-tech/framework-process (project, 10 s, 0 rows), @semio-tech/framework-replication-rs (language:cargo, 0 s, 0 rows) · waiting for memory headroom (4198 of 0 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:38:31Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:56:614:2:10:%40semio-tech%2Fframework-process|project|10|0,%40semio-tech%2Fframework-replication-rs|language%3Acargo|0|0:waiting|4198|0|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:38:31Z",
+      "line": "Reading the project graph slice (691 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 15, 0), @semio-tech/framework-replication-rs (language:cargo, 4, 0); waiting for memory headroom (4198 of -4066 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:38:36Z",
+      "line": "The graph service could not answer (lost); look at `repo service host status` and try again"
+    },
+    {
+      "at": "2026-11-15T00:38:36Z",
+      "line": "end 2026-11-15T00:38:33Z"
+    },
+    {
+      "at": "2026-11-15T00:38:36Z",
+      "line": "native_rc=1"
+    }
+  ],
+  "stall": false,
+  "writer_failure": false
+}

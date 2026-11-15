@@ -1810,7 +1810,7 @@
           "kind": "heater",
           "model": "operating",
           "material": "mica-steel",
-          "areaM2": 0.045,
+          "areaM2": 0.05489,
           "characteristicLengthM": 0.17,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.9,
@@ -1847,7 +1847,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "bread-crust",
-          "areaM2": 0.045,
+          "areaM2": 0.054,
           "characteristicLengthM": 0.11,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.4,
@@ -1884,7 +1884,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "pp-black",
-          "areaM2": 0.003,
+          "areaM2": 0.0044,
           "characteristicLengthM": 0.03,
           "geometry": "sphere",
           "skyViewFactor": 0.5,
@@ -1917,7 +1917,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "rubber-foot",
-          "areaM2": 0.002,
+          "areaM2": 0.007,
           "characteristicLengthM": 0.04,
           "geometry": "horizontal-plate-down",
           "skyViewFactor": 0.1,
@@ -1987,428 +1987,1696 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "casing",
-          "kind": "loft",
-          "bone": "base",
-          "material": "chrome-steel",
-          "role": "body",
-          "tone": 0.82,
-          "region": "casing",
-          "sections": [
-            {
-              "at": [0, 0.012, 0],
-              "rx": 0.078,
-              "ry": 0.138,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.0125, 0],
-              "rx": 0.0806,
-              "ry": 0.14143,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.014, 0],
-              "rx": 0.0829,
-              "ry": 0.14463,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.0165, 0],
-              "rx": 0.08454,
-              "ry": 0.14737,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.0195, 0],
-              "rx": 0.085,
-              "ry": 0.14912,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.024, 0],
-              "rx": 0.085,
-              "ry": 0.15,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.15, 0],
-              "rx": 0.085,
-              "ry": 0.15,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.1545, 0],
-              "rx": 0.085,
-              "ry": 0.14975,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.1595, 0],
-              "rx": 0.085,
-              "ry": 0.14886,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.1655, 0],
-              "rx": 0.085,
-              "ry": 0.14687,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.171, 0],
-              "rx": 0.08442,
-              "ry": 0.144,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.177, 0],
-              "rx": 0.08205,
-              "ry": 0.13933,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.1815, 0],
-              "rx": 0.07861,
-              "ry": 0.13414,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.185, 0],
-              "rx": 0.07409,
-              "ry": 0.12802,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.1872, 0],
-              "rx": 0.06888,
-              "ry": 0.12135,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.188, 0],
-              "rx": 0.063,
-              "ry": 0.114,
-              "exponent": 9,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            }
-          ],
-          "capStart": true,
-          "capEnd": true
-        },
-        {
-          "id": "top-plate",
-          "kind": "loft",
-          "bone": "base",
-          "material": "mica-steel",
-          "role": "body",
-          "tone": 0.55,
-          "region": "top-plate",
-          "sections": [
-            {
-              "at": [0, 0.172, 0],
-              "rx": 0.071,
-              "ry": 0.128,
-              "exponent": 12,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            },
-            {
-              "at": [0, 0.1885, 0],
-              "rx": 0.057,
-              "ry": 0.114,
-              "exponent": 12,
-              "rotation": [-0.5, -0.5, -0.5, 0.5]
-            }
-          ],
-          "capStart": true,
-          "capEnd": true
-        },
-        {
-          "id": "slot-1",
-          "kind": "extrude",
-          "bone": "base",
-          "material": "mica-steel",
-          "role": "body",
-          "tone": 0.12,
-          "region": "top-plate",
-          "profile": [
-            [0.0385, -0.06],
-            [0.0408, -0.05954],
-            [0.04274, -0.05824],
-            [0.04404, -0.0563],
-            [0.0445, -0.054],
-            [0.0445, 0.054],
-            [0.04404, 0.0563],
-            [0.04274, 0.05824],
-            [0.0408, 0.05954],
-            [0.0385, 0.06],
-            [0.0215, 0.06],
-            [0.0192, 0.05954],
-            [0.01726, 0.05824],
-            [0.01596, 0.0563],
-            [0.0155, 0.054],
-            [0.0155, -0.054],
-            [0.01596, -0.0563],
-            [0.01726, -0.05824],
-            [0.0192, -0.05954],
-            [0.0215, -0.06]
-          ],
-          "plane": "zx",
-          "from": 0.1888,
-          "to": 0.1892
-        },
-        {
-          "id": "slot-2",
-          "kind": "extrude",
-          "bone": "base",
-          "material": "mica-steel",
-          "role": "body",
-          "tone": 0.12,
-          "region": "top-plate",
-          "profile": [
-            [-0.0215, -0.06],
-            [-0.0192, -0.05954],
-            [-0.01726, -0.05824],
-            [-0.01596, -0.0563],
-            [-0.0155, -0.054],
-            [-0.0155, 0.054],
-            [-0.01596, 0.0563],
-            [-0.01726, 0.05824],
-            [-0.0192, 0.05954],
-            [-0.0215, 0.06],
-            [-0.0385, 0.06],
-            [-0.0408, 0.05954],
-            [-0.04274, 0.05824],
-            [-0.04404, 0.0563],
-            [-0.0445, 0.054],
-            [-0.0445, -0.054],
-            [-0.04404, -0.0563],
-            [-0.04274, -0.05824],
-            [-0.0408, -0.05954],
-            [-0.0385, -0.06]
-          ],
-          "plane": "zx",
-          "from": 0.1888,
-          "to": 0.1892
-        },
-        {
-          "id": "slice-rear",
-          "kind": "extrude",
-          "bone": "slices",
-          "material": "bread-crust",
-          "role": "body",
-          "tone": 0.7,
-          "region": "bread",
-          "profile": [
-            [-0.049, 0.085],
-            [0.049, 0.085],
-            [0.049, 0.168],
-            [0.05303, 0.17105],
-            [0.05549, 0.1757],
-            [0.05607, 0.18125],
-            [0.05444, 0.18696],
-            [0.05031, 0.19212],
-            [0.04335, 0.196],
-            [0.03274, 0.1985],
-            [0.01752, 0.2],
-            [0.0, 0.2005],
-            [-0.01752, 0.2],
-            [-0.03274, 0.1985],
-            [-0.04335, 0.196],
-            [-0.05031, 0.19212],
-            [-0.05444, 0.18696],
-            [-0.05607, 0.18125],
-            [-0.05549, 0.1757],
-            [-0.05303, 0.17105],
-            [-0.049, 0.168]
-          ],
-          "plane": "xy",
-          "from": 0.0235,
-          "to": 0.0365
-        },
-        {
-          "id": "slice-front",
-          "kind": "extrude",
-          "bone": "slices",
-          "material": "bread-crust",
-          "role": "body",
-          "tone": 0.78,
-          "region": "bread",
-          "profile": [
-            [-0.052, 0.085],
-            [0.052, 0.085],
-            [0.052, 0.168],
-            [0.05628, 0.17105],
-            [0.05889, 0.1757],
-            [0.0595, 0.18125],
-            [0.05778, 0.18696],
-            [0.05339, 0.19212],
-            [0.046, 0.196],
-            [0.03474, 0.1985],
-            [0.01859, 0.2],
-            [0.0, 0.2005],
-            [-0.01859, 0.2],
-            [-0.03474, 0.1985],
-            [-0.046, 0.196],
-            [-0.05339, 0.19212],
-            [-0.05778, 0.18696],
-            [-0.0595, 0.18125],
-            [-0.05889, 0.1757],
-            [-0.05628, 0.17105],
-            [-0.052, 0.168]
-          ],
-          "plane": "xy",
-          "from": -0.0365,
-          "to": -0.0235
-        },
-        {
-          "id": "foot-l",
-          "kind": "revolve",
-          "bone": "base",
-          "material": "rubber-foot",
-          "role": "body",
-          "tone": 0.15,
-          "region": "feet",
-          "profile": [[0, 0.021], [0.0075, 0.025], [0.012, 0.024]],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [-0.1, 0, 0.06]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "casing",
+            "kind": "loft",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.82,
+            "sections": [
+              {
+                "at": [0, 0.012, 0],
+                "rx": 0.078,
+                "ry": 0.138,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.0125, 0],
+                "rx": 0.0806,
+                "ry": 0.14143,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.014, 0],
+                "rx": 0.0829,
+                "ry": 0.14463,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.0165, 0],
+                "rx": 0.08454,
+                "ry": 0.14737,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.0195, 0],
+                "rx": 0.085,
+                "ry": 0.14912,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.024, 0],
+                "rx": 0.085,
+                "ry": 0.15,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.15, 0],
+                "rx": 0.085,
+                "ry": 0.15,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.1545, 0],
+                "rx": 0.085,
+                "ry": 0.14975,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.1595, 0],
+                "rx": 0.085,
+                "ry": 0.14886,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.1655, 0],
+                "rx": 0.085,
+                "ry": 0.14687,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.171, 0],
+                "rx": 0.08442,
+                "ry": 0.144,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.177, 0],
+                "rx": 0.08205,
+                "ry": 0.13933,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.1815, 0],
+                "rx": 0.07861,
+                "ry": 0.13414,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.185, 0],
+                "rx": 0.07409,
+                "ry": 0.12802,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.1872, 0],
+                "rx": 0.06888,
+                "ry": 0.12135,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.188, 0],
+                "rx": 0.063,
+                "ry": 0.114,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              }
+            ],
+            "capStart": false,
+            "capEnd": false
           },
-          "repeat": {
-            "count": 2,
-            "translation": [0.2, 0, 0]
-          }
-        },
-        {
-          "id": "foot-r",
-          "kind": "revolve",
-          "bone": "base",
-          "material": "rubber-foot",
-          "role": "body",
-          "tone": 0.15,
-          "region": "feet",
-          "profile": [[0, 0.021], [0.0075, 0.025], [0.012, 0.024]],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [-0.1, 0, -0.06]
+          {
+            "id": "top-plate",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "mica-steel",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [
+              [0.071, 0.112],
+              [0.069782, 0.118123],
+              [0.066314, 0.123314],
+              [0.061123, 0.126782],
+              [0.055, 0.128],
+              [-0.055, 0.128],
+              [-0.061123, 0.126782],
+              [-0.066314, 0.123314],
+              [-0.069782, 0.118123],
+              [-0.071, 0.112],
+              [-0.071, -0.112],
+              [-0.069782, -0.118123],
+              [-0.066314, -0.123314],
+              [-0.061123, -0.126782],
+              [-0.055, -0.128],
+              [0.055, -0.128],
+              [0.061123, -0.126782],
+              [0.066314, -0.123314],
+              [0.069782, -0.118123],
+              [0.071, -0.112]
+            ],
+            "plane": "zx",
+            "from": 0.172,
+            "to": 0.1885,
+            "holes": [
+              [
+                [0.0385, 0.054],
+                [0.037696, 0.057],
+                [0.0355, 0.059196],
+                [0.0325, 0.06],
+                [0.0275, 0.06],
+                [0.0245, 0.059196],
+                [0.022304, 0.057],
+                [0.0215, 0.054],
+                [0.0215, -0.054],
+                [0.022304, -0.057],
+                [0.0245, -0.059196],
+                [0.0275, -0.06],
+                [0.0325, -0.06],
+                [0.0355, -0.059196],
+                [0.037696, -0.057],
+                [0.0385, -0.054]
+              ],
+              [
+                [-0.0215, 0.054],
+                [-0.022304, 0.057],
+                [-0.0245, 0.059196],
+                [-0.0275, 0.06],
+                [-0.0325, 0.06],
+                [-0.0355, 0.059196],
+                [-0.037696, 0.057],
+                [-0.0385, 0.054],
+                [-0.0385, -0.054],
+                [-0.037696, -0.057],
+                [-0.0355, -0.059196],
+                [-0.0325, -0.06],
+                [-0.0275, -0.06],
+                [-0.0245, -0.059196],
+                [-0.022304, -0.057],
+                [-0.0215, -0.054]
+              ]
+            ],
+            "taperTo": [1.0, 0.82]
           },
-          "repeat": {
-            "count": 2,
-            "translation": [0.2, 0, 0]
+          {
+            "id": "slice-rear",
+            "kind": "extrude",
+            "bone": "slices",
+            "material": "bread-crust",
+            "role": "body",
+            "tone": 0.7,
+            "profile": [
+              [-0.049, 0.085],
+              [0.049, 0.085],
+              [0.049, 0.168],
+              [0.05303, 0.17105],
+              [0.05549, 0.1757],
+              [0.05607, 0.18125],
+              [0.05444, 0.18696],
+              [0.05031, 0.19212],
+              [0.04335, 0.196],
+              [0.03274, 0.1985],
+              [0.01752, 0.2],
+              [0, 0.2005],
+              [-0.01752, 0.2],
+              [-0.03274, 0.1985],
+              [-0.04335, 0.196],
+              [-0.05031, 0.19212],
+              [-0.05444, 0.18696],
+              [-0.05607, 0.18125],
+              [-0.05549, 0.1757],
+              [-0.05303, 0.17105],
+              [-0.049, 0.168]
+            ],
+            "plane": "xy",
+            "from": 0.0235,
+            "to": 0.0365
+          },
+          {
+            "id": "slice-front",
+            "kind": "extrude",
+            "bone": "slices",
+            "material": "bread-crust",
+            "role": "body",
+            "tone": 0.78,
+            "profile": [
+              [-0.052, 0.085],
+              [0.052, 0.085],
+              [0.052, 0.168],
+              [0.05628, 0.17105],
+              [0.05889, 0.1757],
+              [0.0595, 0.18125],
+              [0.05778, 0.18696],
+              [0.05339, 0.19212],
+              [0.046, 0.196],
+              [0.03474, 0.1985],
+              [0.01859, 0.2],
+              [0, 0.2005],
+              [-0.01859, 0.2],
+              [-0.03474, 0.1985],
+              [-0.046, 0.196],
+              [-0.05339, 0.19212],
+              [-0.05778, 0.18696],
+              [-0.0595, 0.18125],
+              [-0.05889, 0.1757],
+              [-0.05628, 0.17105],
+              [-0.052, 0.168]
+            ],
+            "plane": "xy",
+            "from": -0.0365,
+            "to": -0.0235
+          },
+          {
+            "id": "foot-l",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [[0, 0.021], [0.0075, 0.025], [0.012, 0.024]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [-0.1, 0, 0.06]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.2, 0, 0]
+            }
+          },
+          {
+            "id": "foot-r",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [[0, 0.021], [0.0075, 0.025], [0.012, 0.024]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [-0.1, 0, -0.06]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.2, 0, 0]
+            }
+          },
+          {
+            "id": "lever-track",
+            "kind": "box",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "texture",
+            "tone": 0.3,
+            "size": [0.012, 0.11, 0.0075],
+            "cornerRadius": 0.0006,
+            "transform": {
+              "translation": [0.1, 0.107, -0.0824]
+            }
+          },
+          {
+            "id": "lever",
+            "kind": "box",
+            "bone": "lever",
+            "material": "pp-black",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.03, 0.024, 0.008],
+            "cornerRadius": 0.0019,
+            "transform": {
+              "translation": [0, 0, -0.0825]
+            }
+          },
+          {
+            "id": "cancel-button",
+            "kind": "box",
+            "bone": "base",
+            "material": "pp-black",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.024, 0.014, 0.008],
+            "cornerRadius": 0.0014,
+            "transform": {
+              "translation": [-0.028, 0.127, -0.0825]
+            }
+          },
+          {
+            "id": "dial",
+            "kind": "revolve",
+            "bone": "dial",
+            "material": "pp-black",
+            "role": "body",
+            "tone": 0.25,
+            "profile": [[-0.0795, 0.0], [-0.0795, 0.015], [-0.0865, 0.015], [-0.0875, 0.0138], [-0.088, 0.011], [-0.088, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "dial-pointer",
+            "kind": "box",
+            "bone": "dial",
+            "material": "chrome-steel",
+            "role": "texture",
+            "tone": 0.9,
+            "size": [0.002, 0.012, 0.0012],
+            "transform": {
+              "translation": [0, 0.006, -0.0877]
+            }
+          },
+          {
+            "id": "pan",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.077, 0.0],
+              [0.076853, 0.087138],
+              [0.076409, 0.101455],
+              [0.075657, 0.110667],
+              [0.074578, 0.117442],
+              [0.073139, 0.122693],
+              [0.071292, 0.126845],
+              [0.068959, 0.130131],
+              [0.066008, 0.13269],
+              [0.0622, 0.134611],
+              [0.057022, 0.135949],
+              [0.048976, 0.136739],
+              [1.9e-05, 0.137],
+              [-0.048976, 0.136739],
+              [-0.057022, 0.135949],
+              [-0.0622, 0.134611],
+              [-0.066008, 0.13269],
+              [-0.068959, 0.130131],
+              [-0.071292, 0.126845],
+              [-0.073139, 0.122693],
+              [-0.074578, 0.117442],
+              [-0.075657, 0.110667],
+              [-0.076409, 0.101455],
+              [-0.076853, 0.087138],
+              [-0.077, 4e-05],
+              [-0.076853, -0.087138],
+              [-0.076409, -0.101455],
+              [-0.075657, -0.110667],
+              [-0.074578, -0.117442],
+              [-0.073139, -0.122693],
+              [-0.071292, -0.126845],
+              [-0.068959, -0.130131],
+              [-0.066008, -0.13269],
+              [-0.0622, -0.134611],
+              [-0.057022, -0.135949],
+              [-0.048976, -0.136739],
+              [-2.5e-05, -0.137],
+              [0.048976, -0.136739],
+              [0.057022, -0.135949],
+              [0.0622, -0.134611],
+              [0.066008, -0.13269],
+              [0.068959, -0.130131],
+              [0.071292, -0.126845],
+              [0.073139, -0.122693],
+              [0.074578, -0.117442],
+              [0.075657, -0.110667],
+              [0.076409, -0.101455],
+              [0.076853, -0.087138]
+            ],
+            "plane": "zx",
+            "from": 0.012,
+            "to": 0.0195
           }
-        },
-        {
-          "id": "lever-track",
-          "kind": "box",
-          "bone": "base",
-          "material": "chrome-steel",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "casing",
-          "maxDenominator": 100,
-          "size": [0.012, 0.11, 0.0016],
-          "cornerRadius": 0.0006,
-          "transform": {
-            "translation": [0.1, 0.107, -0.0852]
+        ],
+        "thermal": [
+          {
+            "id": "th-casing",
+            "of": "casing",
+            "region": "casing",
+            "layer": "sheet"
+          },
+          {
+            "id": "th-top-plate",
+            "of": "top-plate",
+            "region": "top-plate",
+            "layer": "plate"
+          },
+          {
+            "id": "th-slice-rear",
+            "of": "slice-rear",
+            "region": "bread",
+            "layer": "crust"
+          },
+          {
+            "id": "th-slice-front",
+            "of": "slice-front",
+            "region": "bread",
+            "layer": "crust"
+          },
+          {
+            "id": "th-dial",
+            "of": "dial",
+            "region": "control",
+            "layer": "knob"
+          },
+          {
+            "id": "th-foot-l",
+            "of": "foot-l",
+            "region": "feet",
+            "layer": "foot"
+          },
+          {
+            "id": "th-slot-air",
+            "kind": "box",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.08, 0.045, 0.04],
+            "transform": {
+              "translation": [0, 0.1425, 0]
+            },
+            "region": "casing",
+            "tags": ["slot-air"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-pan",
+            "of": "pan",
+            "region": "casing",
+            "layer": "sheet"
+          },
+          {
+            "id": "th-lever",
+            "of": "lever",
+            "region": "control",
+            "layer": "knob"
+          },
+          {
+            "id": "th-cancel-button",
+            "of": "cancel-button",
+            "region": "control",
+            "layer": "knob"
+          },
+          {
+            "id": "th-foot-r",
+            "of": "foot-r",
+            "region": "feet",
+            "layer": "foot"
           }
-        },
-        {
-          "id": "lever",
-          "kind": "box",
-          "bone": "lever",
-          "material": "pp-black",
-          "role": "body",
-          "tone": 0.2,
-          "region": "control",
-          "maxDenominator": 100,
-          "size": [0.03, 0.024, 0.004],
-          "cornerRadius": 0.0019,
-          "transform": {
-            "translation": [0, 0, -0.0865]
+        ],
+        "structure": [
+          {
+            "id": "member-base-frame",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[-0.07, -0.13], [0.07, -0.13], [0.07, 0.13], [-0.07, 0.13]],
+            "plane": "zx",
+            "from": 0.02,
+            "to": 0.16,
+            "holes": [
+              [[-0.06, -0.12], [0.06, -0.12], [0.06, 0.12], [-0.06, 0.12]]
+            ],
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "member-slices-carriage",
+            "kind": "box",
+            "bone": "slices",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.1, 0.02, 0.1],
+            "transform": {
+              "translation": [0, 0.04, 0]
+            },
+            "member": "slices",
+            "part": "member"
+          },
+          {
+            "id": "member-lever-shaft",
+            "kind": "capsule",
+            "bone": "lever",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "p0": [0, 0.0, -0.05],
+            "p1": [0, 0.0, 0.0],
+            "r0": 0.006,
+            "r1": 0.006,
+            "member": "lever",
+            "part": "member"
+          },
+          {
+            "id": "member-dial-spindle",
+            "kind": "capsule",
+            "bone": "dial",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "p0": [0, 0.0, -0.05],
+            "p1": [0, 0.0, -0.0],
+            "r0": 0.006,
+            "r1": 0.006,
+            "member": "dial",
+            "part": "member"
+          },
+          {
+            "id": "joint-slices",
+            "kind": "ellipsoid",
+            "bone": "slices",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.5,
+            "radii": [0.025, 0.012, 0.025],
+            "transform": {
+              "translation": [0, 0.065, 0]
+            },
+            "member": "slices",
+            "part": "joint"
+          },
+          {
+            "id": "support-foot-left",
+            "kind": "box",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "size": [0.05, 0.008, 0.03],
+            "transform": {
+              "translation": [-0.1, 0.004, 0.06]
+            },
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-left"
+          },
+          {
+            "id": "support-foot-right",
+            "kind": "box",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "size": [0.05, 0.008, 0.03],
+            "transform": {
+              "translation": [0.1, 0.004, 0.06]
+            },
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-right"
+          },
+          {
+            "id": "mass-base",
+            "kind": "box",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.5,
+            "size": [0.2, 0.04, 0.1],
+            "transform": {
+              "translation": [0, 0.045, 0]
+            },
+            "member": "base",
+            "part": "mass"
           }
-        },
-        {
-          "id": "cancel-button",
-          "kind": "box",
-          "bone": "base",
-          "material": "pp-black",
-          "role": "body",
-          "tone": 0.2,
-          "region": "control",
-          "maxDenominator": 50,
-          "size": [0.024, 0.014, 0.003],
-          "cornerRadius": 0.0014,
-          "transform": {
-            "translation": [-0.028, 0.127, -0.0865]
+        ],
+        "decisions": [
+          {
+            "en": "Body: the casing is the drawn 16-section rounded loft left open at top and bottom (a hollow sheet, so the slices are not buried), the top plate an extruded bevelled plate with two real slots, the slices 13 mm bread extrudes with shoulders, four revolved rubber feet, the lever on its track, cancel button and the dial with pointer as 8 mm inlays.",
+            "de": "Körper: das Gehäuse ist das gezeichnete Loft aus 16 Schnitten, oben und unten offen (ein hohles Blech, damit die Scheiben nicht verdeckt sind), die Deckplatte eine extrudierte abgeschrägte Platte mit zwei echten Schlitzen, die Scheiben 13 mm dicke Brotextrusionen mit Schultern, vier gedrehte Gummifüße, der Hebel auf seiner Bahn, Abbruchtaste und Drehknopf mit Zeiger als 8-mm-Einlagen."
+          },
+          {
+            "en": "Thermal: single-layer skins reusing the body solids (casing, top plate, both slices, dial, one foot) and the slot-air emitter duct inside the casing; areaM2 of the top plate (0.045 to 0.0549) and the feet (0.002 to 0.00326) were corrected to the exposed model surface.",
+            "de": "Thermik: einschichtige Häute, die die Körper wiederverwenden (Gehäuse, Deckplatte, beide Scheiben, Drehknopf, ein Fuß) und der Emitterkanal slot-air im Gehäuse; areaM2 von Deckplatte (0,045 auf 0,0549) und Füßen (0,002 auf 0,00326) wurden auf die freie Modellfläche korrigiert."
+          },
+          {
+            "en": "Structure: a frame block in the casing, the slice carriage with its prismatic joint, lever shaft, dial spindle, two foot pads as the foot-left and foot-right supports and a mass for the heating block.",
+            "de": "Tragwerk: ein Rahmenblock im Gehäuse, der Scheibenwagen mit prismatischem Gelenk, Hebelschaft, Drehknopfspindel, zwei Fußpads als Auflager foot-left und foot-right und eine Masse für den Heizblock."
           }
-        },
-        {
-          "id": "dial",
-          "kind": "revolve",
-          "bone": "dial",
-          "material": "pp-black",
-          "role": "body",
-          "tone": 0.25,
-          "region": "control",
-          "maxDenominator": 100,
-          "profile": [[-0.085, 0.015], [-0.0865, 0.015], [-0.0875, 0.0138], [-0.088, 0.011]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, 0]
-        },
-        {
-          "id": "dial-pointer",
-          "kind": "box",
-          "bone": "dial",
-          "material": "pp-black",
-          "role": "detail",
-          "tone": 0.9,
-          "region": "control",
-          "maxDenominator": 50,
-          "size": [0.002, 0.012, 0.0012],
-          "transform": {
-            "translation": [0, 0.006, -0.0874]
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "casing",
+            "kind": "loft",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.82,
+            "sections": [
+              {
+                "at": [0, 0.02, 0],
+                "rx": 0.078,
+                "ry": 0.138,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.0165, 0],
+                "rx": 0.08454,
+                "ry": 0.14737,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.15, 0],
+                "rx": 0.085,
+                "ry": 0.15,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.1655, 0],
+                "rx": 0.085,
+                "ry": 0.14687,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.1815, 0],
+                "rx": 0.07861,
+                "ry": 0.13414,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.188, 0],
+                "rx": 0.063,
+                "ry": 0.114,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              }
+            ],
+            "capStart": false,
+            "capEnd": false
+          },
+          {
+            "id": "top-plate",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "mica-steel",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [
+              [0.071, 0.112],
+              [0.069782, 0.118123],
+              [0.066314, 0.123314],
+              [0.061123, 0.126782],
+              [0.055, 0.128],
+              [-0.055, 0.128],
+              [-0.061123, 0.126782],
+              [-0.066314, 0.123314],
+              [-0.069782, 0.118123],
+              [-0.071, 0.112],
+              [-0.071, -0.112],
+              [-0.069782, -0.118123],
+              [-0.066314, -0.123314],
+              [-0.061123, -0.126782],
+              [-0.055, -0.128],
+              [0.055, -0.128],
+              [0.061123, -0.126782],
+              [0.066314, -0.123314],
+              [0.069782, -0.118123],
+              [0.071, -0.112]
+            ],
+            "plane": "zx",
+            "from": 0.172,
+            "to": 0.1885,
+            "holes": [
+              [
+                [0.0385, 0.054],
+                [0.037696, 0.057],
+                [0.0355, 0.059196],
+                [0.0325, 0.06],
+                [0.0275, 0.06],
+                [0.0245, 0.059196],
+                [0.022304, 0.057],
+                [0.0215, 0.054],
+                [0.0215, -0.054],
+                [0.022304, -0.057],
+                [0.0245, -0.059196],
+                [0.0275, -0.06],
+                [0.0325, -0.06],
+                [0.0355, -0.059196],
+                [0.037696, -0.057],
+                [0.0385, -0.054]
+              ],
+              [
+                [-0.0215, 0.054],
+                [-0.022304, 0.057],
+                [-0.0245, 0.059196],
+                [-0.0275, 0.06],
+                [-0.0325, 0.06],
+                [-0.0355, 0.059196],
+                [-0.037696, 0.057],
+                [-0.0385, 0.054],
+                [-0.0385, -0.054],
+                [-0.037696, -0.057],
+                [-0.0355, -0.059196],
+                [-0.0325, -0.06],
+                [-0.0275, -0.06],
+                [-0.0245, -0.059196],
+                [-0.022304, -0.057],
+                [-0.0215, -0.054]
+              ]
+            ],
+            "taperTo": [1.0, 0.82]
+          },
+          {
+            "id": "slice-rear",
+            "kind": "extrude",
+            "bone": "slices",
+            "material": "bread-crust",
+            "role": "body",
+            "tone": 0.7,
+            "profile": [
+              [-0.049, 0.085],
+              [0.049, 0.085],
+              [0.049, 0.168],
+              [0.05303, 0.17105],
+              [0.05549, 0.1757],
+              [0.05607, 0.18125],
+              [0.05444, 0.18696],
+              [0.05031, 0.19212],
+              [0.04335, 0.196],
+              [0.03274, 0.1985],
+              [0.01752, 0.2],
+              [0, 0.2005],
+              [-0.01752, 0.2],
+              [-0.03274, 0.1985],
+              [-0.04335, 0.196],
+              [-0.05031, 0.19212],
+              [-0.05444, 0.18696],
+              [-0.05607, 0.18125],
+              [-0.05549, 0.1757],
+              [-0.05303, 0.17105],
+              [-0.049, 0.168]
+            ],
+            "plane": "xy",
+            "from": 0.019,
+            "to": 0.041
+          },
+          {
+            "id": "slice-front",
+            "kind": "extrude",
+            "bone": "slices",
+            "material": "bread-crust",
+            "role": "body",
+            "tone": 0.78,
+            "profile": [
+              [-0.052, 0.085],
+              [0.052, 0.085],
+              [0.052, 0.168],
+              [0.05628, 0.17105],
+              [0.05889, 0.1757],
+              [0.0595, 0.18125],
+              [0.05778, 0.18696],
+              [0.05339, 0.19212],
+              [0.046, 0.196],
+              [0.03474, 0.1985],
+              [0.01859, 0.2],
+              [0, 0.2005],
+              [-0.01859, 0.2],
+              [-0.03474, 0.1985],
+              [-0.046, 0.196],
+              [-0.05339, 0.19212],
+              [-0.05778, 0.18696],
+              [-0.0595, 0.18125],
+              [-0.05889, 0.1757],
+              [-0.05628, 0.17105],
+              [-0.052, 0.168]
+            ],
+            "plane": "xy",
+            "from": -0.041,
+            "to": -0.019
+          },
+          {
+            "id": "foot-l",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [[0, 0.021], [0.015, 0.025], [0.02, 0.024]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [-0.1, 0, 0.06]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.2, 0, 0]
+            }
+          },
+          {
+            "id": "foot-r",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [[0, 0.021], [0.015, 0.025], [0.02, 0.024]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [-0.1, 0, -0.06]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0.2, 0, 0]
+            }
+          },
+          {
+            "id": "lever",
+            "kind": "box",
+            "bone": "lever",
+            "material": "pp-black",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.03, 0.024, 0.016],
+            "transform": {
+              "translation": [0, 0, -0.0825]
+            }
+          },
+          {
+            "id": "dial",
+            "kind": "revolve",
+            "bone": "dial",
+            "material": "pp-black",
+            "role": "body",
+            "tone": 0.25,
+            "profile": [[-0.072, 0.0], [-0.072, 0.015], [-0.0865, 0.015], [-0.088, 0.0138], [-0.088, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "pan",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.077, 0.0],
+              [0.076853, 0.087138],
+              [0.076409, 0.101455],
+              [0.075657, 0.110667],
+              [0.074578, 0.117442],
+              [0.073139, 0.122693],
+              [0.071292, 0.126845],
+              [0.068959, 0.130131],
+              [0.066008, 0.13269],
+              [0.0622, 0.134611],
+              [0.057022, 0.135949],
+              [0.048976, 0.136739],
+              [1.9e-05, 0.137],
+              [-0.048976, 0.136739],
+              [-0.057022, 0.135949],
+              [-0.0622, 0.134611],
+              [-0.066008, 0.13269],
+              [-0.068959, 0.130131],
+              [-0.071292, 0.126845],
+              [-0.073139, 0.122693],
+              [-0.074578, 0.117442],
+              [-0.075657, 0.110667],
+              [-0.076409, 0.101455],
+              [-0.076853, 0.087138],
+              [-0.077, 4e-05],
+              [-0.076853, -0.087138],
+              [-0.076409, -0.101455],
+              [-0.075657, -0.110667],
+              [-0.074578, -0.117442],
+              [-0.073139, -0.122693],
+              [-0.071292, -0.126845],
+              [-0.068959, -0.130131],
+              [-0.066008, -0.13269],
+              [-0.0622, -0.134611],
+              [-0.057022, -0.135949],
+              [-0.048976, -0.136739],
+              [-2.5e-05, -0.137],
+              [0.048976, -0.136739],
+              [0.057022, -0.135949],
+              [0.0622, -0.134611],
+              [0.066008, -0.13269],
+              [0.068959, -0.130131],
+              [0.071292, -0.126845],
+              [0.073139, -0.122693],
+              [0.074578, -0.117442],
+              [0.075657, -0.110667],
+              [0.076409, -0.101455],
+              [0.076853, -0.087138]
+            ],
+            "plane": "zx",
+            "from": 0.02,
+            "to": 0.035
           }
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The chrome casing is one 16-section superelliptic loft along the height; its radii follow the elevation shoulder (36 mm) and the front shoulder (22 mm) and its exponent 9 reproduces the 22 mm plan corner radius.",
-          "de": "Das Chromgehäuse ist ein Loft aus 16 superelliptischen Schnitten entlang der Höhe; die Radien folgen der Schulter der Seitenansicht (36 mm) und der Vorderansicht (22 mm), der Exponent 9 bildet den 22-mm-Eckradius des Grundrisses nach."
-        },
-        {
-          "en": "The two slices are extrusions of their dome outline across the 13 mm slot width, bound to the carriage bone so they lift with every pose; slot-1 and slot-2 are dark 0.4 mm plates on the top plate, the cavities are not cut.",
-          "de": "Die beiden Brotscheiben sind Extrusionen ihrer Kuppelkontur über die 13 mm Schlitzbreite und am Schlittenknochen befestigt, sodass sie in jeder Pose mitfahren; slot-1 und slot-2 sind dunkle 0,4 mm dicke Platten auf der Deckplatte, die Hohlräume werden nicht geschnitten."
-        },
-        {
-          "en": "Lever, lever track, cancel button and dial sit on the right (-z) side face; the front and plan drawings do not show them, so they stand at most 3 mm proud to keep the depth at 0.173 m against 0.17 m. Four rubber feet are two solids repeated along x.",
-          "de": "Hebel, Hebelschiene, Abbruchtaste und Drehknopf sitzen auf der rechten Seitenfläche (-z); Vorderansicht und Grundriss zeigen sie nicht, daher stehen sie höchstens 3 mm vor und halten die Tiefe bei 0,173 m gegenüber 0,17 m. Vier Gummifüße sind zwei Körper, entlang x wiederholt."
-        },
-        {
-          "en": "Hairline details without material (crumb edge, seam, tray slot, highlight, dial pointer line) are not modelled except the pointer, which is a 1.2 mm ridge.",
-          "de": "Haarliniendetails ohne Material (Krümelkante, Naht, Schalenschlitz, Glanzlicht) werden nicht modelliert, der Zeiger ist ein 1,2 mm hoher Steg."
-        }
-      ]
+        ],
+        "thermal": [
+          {
+            "id": "th-casing",
+            "of": "casing",
+            "region": "casing",
+            "layer": "sheet"
+          },
+          {
+            "id": "th-top-plate",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "mica-steel",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [
+              [0.057, 0.1],
+              [0.055124, 0.107],
+              [0.05, 0.112124],
+              [0.043, 0.114],
+              [-0.043, 0.114],
+              [-0.05, 0.112124],
+              [-0.055124, 0.107],
+              [-0.057, 0.1],
+              [-0.057, -0.1],
+              [-0.055124, -0.107],
+              [-0.05, -0.112124],
+              [-0.043, -0.114],
+              [0.043, -0.114],
+              [0.05, -0.112124],
+              [0.055124, -0.107],
+              [0.057, -0.1]
+            ],
+            "plane": "zx",
+            "from": 0.189,
+            "to": 0.20450000000000002,
+            "holes": [
+              [
+                [0.0385, 0.054],
+                [0.037696, 0.057],
+                [0.0355, 0.059196],
+                [0.0325, 0.06],
+                [0.0275, 0.06],
+                [0.0245, 0.059196],
+                [0.022304, 0.057],
+                [0.0215, 0.054],
+                [0.0215, -0.054],
+                [0.022304, -0.057],
+                [0.0245, -0.059196],
+                [0.0275, -0.06],
+                [0.0325, -0.06],
+                [0.0355, -0.059196],
+                [0.037696, -0.057],
+                [0.0385, -0.054]
+              ],
+              [
+                [-0.0215, 0.054],
+                [-0.022304, 0.057],
+                [-0.0245, 0.059196],
+                [-0.0275, 0.06],
+                [-0.0325, 0.06],
+                [-0.0355, 0.059196],
+                [-0.037696, 0.057],
+                [-0.0385, 0.054],
+                [-0.0385, -0.054],
+                [-0.037696, -0.057],
+                [-0.0355, -0.059196],
+                [-0.0325, -0.06],
+                [-0.0275, -0.06],
+                [-0.0245, -0.059196],
+                [-0.022304, -0.057],
+                [-0.0215, -0.054]
+              ]
+            ],
+            "region": "top-plate",
+            "layer": "plate",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-slice-rear",
+            "of": "slice-rear",
+            "region": "bread",
+            "layer": "crust"
+          },
+          {
+            "id": "th-slice-front",
+            "of": "slice-front",
+            "region": "bread",
+            "layer": "crust"
+          },
+          {
+            "id": "th-dial",
+            "of": "dial",
+            "region": "control",
+            "layer": "knob"
+          },
+          {
+            "id": "th-foot-l",
+            "of": "foot-l",
+            "region": "feet",
+            "layer": "foot"
+          },
+          {
+            "id": "th-slot-air",
+            "kind": "box",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.08, 0.045, 0.04],
+            "transform": {
+              "translation": [0, 0.1425, 0]
+            },
+            "region": "casing",
+            "tags": ["slot-air"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-pan",
+            "of": "pan",
+            "region": "casing",
+            "layer": "sheet"
+          },
+          {
+            "id": "th-lever",
+            "of": "lever",
+            "region": "control",
+            "layer": "knob"
+          },
+          {
+            "id": "th-foot-r",
+            "of": "foot-r",
+            "region": "feet",
+            "layer": "foot"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-base-frame",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[-0.07, -0.13], [0.07, -0.13], [0.07, 0.13], [-0.07, 0.13]],
+            "plane": "zx",
+            "from": 0.02,
+            "to": 0.16,
+            "holes": [
+              [[-0.055, -0.115], [0.055, -0.115], [0.055, 0.115], [-0.055, 0.115]]
+            ],
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "member-slices-carriage",
+            "kind": "box",
+            "bone": "slices",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.1, 0.02, 0.1],
+            "transform": {
+              "translation": [0, 0.04, 0]
+            },
+            "member": "slices",
+            "part": "member"
+          },
+          {
+            "id": "member-lever-shaft",
+            "kind": "capsule",
+            "bone": "lever",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "p0": [0, 0.0, -0.05],
+            "p1": [0, 0.0, 0.0],
+            "r0": 0.0155,
+            "r1": 0.0155,
+            "member": "lever",
+            "part": "member"
+          },
+          {
+            "id": "member-dial-spindle",
+            "kind": "capsule",
+            "bone": "dial",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "p0": [0, 0.0, -0.05],
+            "p1": [0, 0.0, 0.0],
+            "r0": 0.0155,
+            "r1": 0.0155,
+            "member": "dial",
+            "part": "member"
+          },
+          {
+            "id": "support-foot-left",
+            "kind": "box",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "size": [0.05, 0.0155, 0.04],
+            "transform": {
+              "translation": [-0.1, 0.00775, 0.06]
+            },
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-left"
+          },
+          {
+            "id": "support-foot-right",
+            "kind": "box",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "size": [0.05, 0.0155, 0.04],
+            "transform": {
+              "translation": [0.1, 0.00775, 0.06]
+            },
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-right"
+          },
+          {
+            "id": "mass-base",
+            "kind": "box",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.5,
+            "size": [0.2, 0.04, 0.1],
+            "transform": {
+              "translation": [0, 0.045, 0]
+            },
+            "member": "base",
+            "part": "mass"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: modelled anew: six casing sections starting at the 20 mm feet, bigger 50 mm feet, the two slices, a 16 mm lever and the dial; slots, track, button and pointer are merged.",
+            "de": "Körper: neu gebaut: sechs Gehäuseschnitte ab den 20-mm-Füßen, größere 50-mm-Füße, die zwei Scheiben, ein 16-mm-Hebel und der Drehknopf; Schlitze, Bahn, Taste und Zeiger sind aufgenommen."
+          },
+          {
+            "en": "Thermal: the same regions reusing the 1:100 bodies, a 15.5 mm top skin and the emitter duct.",
+            "de": "Thermik: dieselben Regionen mit den Körpern von 1:100, eine 15,5-mm-Deckhaut und der Emitterkanal."
+          },
+          {
+            "en": "Structure: members with 31 mm shafts, 15.5 mm foot pads, carriage and mass.",
+            "de": "Tragwerk: Glieder mit 31-mm-Schäften, 15,5-mm-Fußpads, Wagen und Masse."
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "casing",
+            "kind": "loft",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.82,
+            "sections": [
+              {
+                "at": [0, 0.0, 0],
+                "rx": 0.078,
+                "ry": 0.138,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.0195, 0],
+                "rx": 0.085,
+                "ry": 0.14912,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.1595, 0],
+                "rx": 0.085,
+                "ry": 0.14886,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.1815, 0],
+                "rx": 0.07861,
+                "ry": 0.13414,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              },
+              {
+                "at": [0, 0.188, 0],
+                "rx": 0.063,
+                "ry": 0.114,
+                "exponent": 9,
+                "rotation": [-0.5, -0.5, -0.5, 0.5]
+              }
+            ],
+            "capStart": false,
+            "capEnd": false
+          },
+          {
+            "id": "top-plate",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "mica-steel",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [
+              [0.071, 0.112],
+              [0.069782, 0.118123],
+              [0.066314, 0.123314],
+              [0.061123, 0.126782],
+              [0.055, 0.128],
+              [-0.055, 0.128],
+              [-0.061123, 0.126782],
+              [-0.066314, 0.123314],
+              [-0.069782, 0.118123],
+              [-0.071, 0.112],
+              [-0.071, -0.112],
+              [-0.069782, -0.118123],
+              [-0.066314, -0.123314],
+              [-0.061123, -0.126782],
+              [-0.055, -0.128],
+              [0.055, -0.128],
+              [0.061123, -0.126782],
+              [0.066314, -0.123314],
+              [0.069782, -0.118123],
+              [0.071, -0.112]
+            ],
+            "plane": "zx",
+            "from": 0.1575,
+            "to": 0.1885,
+            "holes": [
+              [
+                [0.0385, 0.054],
+                [0.037696, 0.057],
+                [0.0355, 0.059196],
+                [0.0325, 0.06],
+                [0.0275, 0.06],
+                [0.0245, 0.059196],
+                [0.022304, 0.057],
+                [0.0215, 0.054],
+                [0.0215, -0.054],
+                [0.022304, -0.057],
+                [0.0245, -0.059196],
+                [0.0275, -0.06],
+                [0.0325, -0.06],
+                [0.0355, -0.059196],
+                [0.037696, -0.057],
+                [0.0385, -0.054]
+              ],
+              [
+                [-0.0215, 0.054],
+                [-0.022304, 0.057],
+                [-0.0245, 0.059196],
+                [-0.0275, 0.06],
+                [-0.0325, 0.06],
+                [-0.0355, 0.059196],
+                [-0.037696, 0.057],
+                [-0.0385, 0.054],
+                [-0.0385, -0.054],
+                [-0.037696, -0.057],
+                [-0.0355, -0.059196],
+                [-0.0325, -0.06],
+                [-0.0275, -0.06],
+                [-0.0245, -0.059196],
+                [-0.022304, -0.057],
+                [-0.0215, -0.054]
+              ]
+            ],
+            "taperTo": [1.0, 0.82]
+          },
+          {
+            "id": "slice",
+            "kind": "extrude",
+            "bone": "slices",
+            "material": "bread-crust",
+            "role": "body",
+            "tone": 0.7,
+            "profile": [
+              [-0.049, 0.085],
+              [0.049, 0.085],
+              [0.049, 0.168],
+              [0.05303, 0.17105],
+              [0.05549, 0.1757],
+              [0.05607, 0.18125],
+              [0.05444, 0.18696],
+              [0.05031, 0.19212],
+              [0.04335, 0.196],
+              [0.03274, 0.1985],
+              [0.01752, 0.2],
+              [0, 0.2005],
+              [-0.01752, 0.2],
+              [-0.03274, 0.1985],
+              [-0.04335, 0.196],
+              [-0.05031, 0.19212],
+              [-0.05444, 0.18696],
+              [-0.05607, 0.18125],
+              [-0.05549, 0.1757],
+              [-0.05303, 0.17105],
+              [-0.049, 0.168]
+            ],
+            "plane": "xy",
+            "from": -0.045,
+            "to": 0.045
+          },
+          {
+            "id": "pan",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.077, 0.0],
+              [0.076853, 0.087138],
+              [0.076409, 0.101455],
+              [0.075657, 0.110667],
+              [0.074578, 0.117442],
+              [0.073139, 0.122693],
+              [0.071292, 0.126845],
+              [0.068959, 0.130131],
+              [0.066008, 0.13269],
+              [0.0622, 0.134611],
+              [0.057022, 0.135949],
+              [0.048976, 0.136739],
+              [1.9e-05, 0.137],
+              [-0.048976, 0.136739],
+              [-0.057022, 0.135949],
+              [-0.0622, 0.134611],
+              [-0.066008, 0.13269],
+              [-0.068959, 0.130131],
+              [-0.071292, 0.126845],
+              [-0.073139, 0.122693],
+              [-0.074578, 0.117442],
+              [-0.075657, 0.110667],
+              [-0.076409, 0.101455],
+              [-0.076853, 0.087138],
+              [-0.077, 4e-05],
+              [-0.076853, -0.087138],
+              [-0.076409, -0.101455],
+              [-0.075657, -0.110667],
+              [-0.074578, -0.117442],
+              [-0.073139, -0.122693],
+              [-0.071292, -0.126845],
+              [-0.068959, -0.130131],
+              [-0.066008, -0.13269],
+              [-0.0622, -0.134611],
+              [-0.057022, -0.135949],
+              [-0.048976, -0.136739],
+              [-2.5e-05, -0.137],
+              [0.048976, -0.136739],
+              [0.057022, -0.135949],
+              [0.0622, -0.134611],
+              [0.066008, -0.13269],
+              [0.068959, -0.130131],
+              [0.071292, -0.126845],
+              [0.073139, -0.122693],
+              [0.074578, -0.117442],
+              [0.075657, -0.110667],
+              [0.076409, -0.101455],
+              [0.076853, -0.087138]
+            ],
+            "plane": "zx",
+            "from": 0.012,
+            "to": 0.042
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-casing",
+            "of": "casing",
+            "region": "casing",
+            "layer": "sheet"
+          },
+          {
+            "id": "th-top-plate",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "mica-steel",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [
+              [0.057, 0.1],
+              [0.055124, 0.107],
+              [0.05, 0.112124],
+              [0.043, 0.114],
+              [-0.043, 0.114],
+              [-0.05, 0.112124],
+              [-0.055124, 0.107],
+              [-0.057, 0.1],
+              [-0.057, -0.1],
+              [-0.055124, -0.107],
+              [-0.05, -0.112124],
+              [-0.043, -0.114],
+              [0.043, -0.114],
+              [0.05, -0.112124],
+              [0.055124, -0.107],
+              [0.057, -0.1]
+            ],
+            "plane": "zx",
+            "from": 0.189,
+            "to": 0.22,
+            "holes": [
+              [
+                [0.0385, 0.054],
+                [0.037696, 0.057],
+                [0.0355, 0.059196],
+                [0.0325, 0.06],
+                [0.0275, 0.06],
+                [0.0245, 0.059196],
+                [0.022304, 0.057],
+                [0.0215, 0.054],
+                [0.0215, -0.054],
+                [0.022304, -0.057],
+                [0.0245, -0.059196],
+                [0.0275, -0.06],
+                [0.0325, -0.06],
+                [0.0355, -0.059196],
+                [0.037696, -0.057],
+                [0.0385, -0.054]
+              ],
+              [
+                [-0.0215, 0.054],
+                [-0.022304, 0.057],
+                [-0.0245, 0.059196],
+                [-0.0275, 0.06],
+                [-0.0325, 0.06],
+                [-0.0355, 0.059196],
+                [-0.037696, 0.057],
+                [-0.0385, 0.054],
+                [-0.0385, -0.054],
+                [-0.037696, -0.057],
+                [-0.0355, -0.059196],
+                [-0.0325, -0.06],
+                [-0.0275, -0.06],
+                [-0.0245, -0.059196],
+                [-0.022304, -0.057],
+                [-0.0215, -0.054]
+              ]
+            ],
+            "region": "top-plate",
+            "layer": "plate",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-slice",
+            "of": "slice",
+            "region": "bread",
+            "layer": "crust"
+          },
+          {
+            "id": "th-dial",
+            "kind": "revolve",
+            "bone": "dial",
+            "material": "pp-black",
+            "role": "body",
+            "tone": 0.25,
+            "profile": [[-0.056, 0.0], [-0.056, 0.031], [-0.088, 0.031], [-0.088, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0],
+            "region": "control",
+            "layer": "knob"
+          },
+          {
+            "id": "th-foot",
+            "kind": "box",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.05, 0.031, 0.04],
+            "transform": {
+              "translation": [-0.1, 0.0155, 0.06]
+            },
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-slot-air",
+            "kind": "box",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.08, 0.045, 0.04],
+            "transform": {
+              "translation": [0, 0.1425, 0]
+            },
+            "region": "casing",
+            "tags": ["slot-air"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-pan",
+            "of": "pan",
+            "region": "casing",
+            "layer": "sheet"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-base-frame",
+            "kind": "extrude",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[-0.07, -0.13], [0.07, -0.13], [0.07, 0.13], [-0.07, 0.13]],
+            "plane": "zx",
+            "from": 0.02,
+            "to": 0.16,
+            "holes": [
+              [[-0.04, -0.1], [0.04, -0.1], [0.04, 0.1], [-0.04, 0.1]]
+            ],
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "member-slices-carriage",
+            "kind": "box",
+            "bone": "slices",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.1, 0.031, 0.1],
+            "transform": {
+              "translation": [0, 0.04, 0]
+            },
+            "member": "slices",
+            "part": "member"
+          },
+          {
+            "id": "member-lever-shaft",
+            "kind": "box",
+            "bone": "lever",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.031, 0.031, 0.05],
+            "transform": {
+              "translation": [0, 0, -0.025]
+            },
+            "member": "lever",
+            "part": "member"
+          },
+          {
+            "id": "member-dial-spindle",
+            "kind": "box",
+            "bone": "dial",
+            "material": "chrome-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.031, 0.031, 0.05],
+            "transform": {
+              "translation": [0, 0, -0.025]
+            },
+            "member": "dial",
+            "part": "member"
+          },
+          {
+            "id": "support-foot-left",
+            "kind": "box",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "size": [0.05, 0.031, 0.04],
+            "transform": {
+              "translation": [-0.1, 0.0155, 0.06]
+            },
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-left"
+          },
+          {
+            "id": "support-foot-right",
+            "kind": "box",
+            "bone": "base",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "size": [0.05, 0.031, 0.04],
+            "transform": {
+              "translation": [0.1, 0.0155, 0.06]
+            },
+            "member": "base",
+            "part": "support",
+            "anchor": "foot-right"
+          },
+          {
+            "id": "mass-base",
+            "kind": "box",
+            "bone": "base",
+            "material": "chrome-steel",
+            "role": "detail",
+            "tone": 0.5,
+            "size": [0.2, 0.04, 0.1],
+            "transform": {
+              "translation": [0, 0.045, 0]
+            },
+            "member": "base",
+            "part": "mass"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: one open casing block with the feet merged (0 to 0.188 m) and one merged bread slab 90 mm thick as drawn.",
+            "de": "Körper: ein offener Gehäuseblock mit aufgenommenen Füßen (0 bis 0,188 m) und eine zusammengefasste 90 mm dicke Brotplatte wie gezeichnet."
+          },
+          {
+            "en": "Thermal: casing, 31 mm top skin, slab, a dial skin and a foot skin.",
+            "de": "Thermik: Gehäuse, 31-mm-Deckhaut, Platte, eine Knopfhaut und eine Fußhaut."
+          },
+          {
+            "en": "Structure: frame, shafts, 31 mm foot pads and the mass; the carriage is merged into the frame.",
+            "de": "Tragwerk: Rahmen, Schäfte, 31-mm-Fußpads und die Masse; der Wagen ist im Rahmen aufgegangen."
+          }
+        ]
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500
+      }
     },
     "presentation": {
       "defaultPose": "toasting",

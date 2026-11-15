@@ -1,5 +1,9 @@
 import json,os,glob
-p="/home/deck/semio/✏️s/🔌️plugins/📕️norm"
+import subprocess
+from pathlib import Path
+T = Path(__file__).resolve().parent
+R = Path(subprocess.check_output(['git', '-C', str(T), 'rev-parse', '--show-toplevel'], text=True).strip())
+p=str(R)+"/✏️s/🔌️plugins/📕️norm"
 plan=json.load(open(p+"/🧪️tests/🧫️fixtures/🏃️package-runner/🔣️.json"))
 out=[]
 for a in sorted(os.listdir(p+"/🗿️artifacts")):

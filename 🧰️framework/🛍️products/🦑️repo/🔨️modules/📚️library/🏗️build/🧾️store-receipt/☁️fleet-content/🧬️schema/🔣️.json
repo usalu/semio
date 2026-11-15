@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:store-receipt-fleet-content:v1",
+  "title": "Store Receipt Fleet Content",
+  "description": "☁️ The store content a receipt names travels through the fleet's content-addressed store instead of the task cache: the producing machine uploads every file by its SHA-256 and the tree manifest (the exact text whose SHA-256 is the receipt entry's directory digest: `<relative path>\\n<size>\\n<file digest>\\n` per file, sorted by byte order of the path) as one more blob under that digest; a machine that gets the receipt from the task cache but lacks the content restores it from there, verifying every byte, before the receipt is verified. The payload is stored once (the task cache holds the small receipt only), identical files across tasks are stored once, and a restore that cannot complete changes nothing: the receipt stays invalid and the task re-executes as before.",
+  "oneOf": [{ "$ref": "#/definitions/Policy" }, { "$ref": "#/definitions/PublishResult" }, { "$ref": "#/definitions/RestoreResult" }],
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "const": {
+        "version": 1,
+        "concurrency": 8,
+        "publishTimeoutSeconds": 300,
+        "restoreTimeoutSeconds": 300,
+        "requestTimeoutSeconds": 120,
+        "maximumManifestBytes": 16777216,
+        "maximumFiles": 100000,
+        "restoreDirectorySuffix": ".restore-"
+      }
+    },
+    "PublishResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "blobs", "uploaded", "bytes"],
+      "properties": {
+        "state": { "enum": ["published", "skipped", "failed"] },
+        "blobs": { "type": "integer", "minimum": 0 },
+        "uploaded": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "reason": { "type": "string" }
+      }
+    },
+    "RestoreResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "entries", "files", "bytes"],
+      "properties": {
+        "state": { "enum": ["restored", "partial", "unavailable", "nothing"] },
+        "entries": { "type": "integer", "minimum": 0 },
+        "files": { "type": "integer", "minimum": 0 },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "reason": { "type": "string" }
+      }
+    },
+    "Messages": {
+      "const": {
+        "restored": {
+          "en": "Restored {files} files ({bytes} bytes) of {task} from the fleet store.",
+          "de": "{files} Dateien ({bytes} Bytes) von {task} aus dem Flotten-Speicher wiederhergestellt."
+        },
+        "unavailable": {
+          "en": "The fleet store cannot restore the content of {task} ({reason}); the task runs here.",
+          "de": "Der Flotten-Speicher kann den Inhalt von {task} nicht wiederherstellen ({reason}); die Task läuft hier."
+        }
+      }
+    }
+  }
+}

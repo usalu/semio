@@ -81,16 +81,461 @@
         }
       ]
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        { "id": "stand", "kind": "box", "bone": "stand", "material": "steel", "role": "body", "tone": 0.5, "size": [0.2, 0.05, 0.094], "transform": { "translation": [0, 0.025, 0] } },
-        { "id": "rim", "kind": "revolve", "bone": "wheel", "material": "steel", "role": "body", "tone": 0.5, "profile": [[-0.047, 0.444], [0.047, 0.444], [0.047, 0.494], [-0.047, 0.494], [-0.047, 0.444]], "axis": [0, 0, 1], "origin": [0, 0, 0] },
-        { "id": "spoke", "kind": "box", "bone": "wheel", "material": "steel", "role": "detail", "tone": 0.5, "size": [0.444, 0.02, 0.02], "transform": { "translation": [0.222, 0, 0] } }
-      ],
-      "decisions": [
-        { "en": "The wheel is one annular revolve about the lateral axis of its bone (rim 0.444 to 0.494 m, 0.094 m wide) and one spoke box, the stand a flat box, read off the elevation, front and plan shapes of the fixture.", "de": "Das Rad ist ein ringförmiger Rotationskörper um die Querachse seines Knochens (Felge 0,444 bis 0,494 m, 0,094 m breit) und eine Speichenbox, das Gestell eine flache Box, abgelesen aus den Ansichten, der Vorderansicht und dem Grundriss des Fixtures." }
-      ]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "stand",
+            "kind": "box",
+            "bone": "stand",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.2, 0.05, 0.094],
+            "transform": {
+              "translation": [0, 0.025, 0]
+            }
+          },
+          {
+            "id": "rim",
+            "kind": "revolve",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [-0.047, 0.444],
+              [0.047, 0.444],
+              [0.047, 0.494],
+              [-0.047, 0.494],
+              [-0.047, 0.444]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "spoke",
+            "kind": "box",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "detail",
+            "tone": 0.5,
+            "size": [0.444, 0.02, 0.02],
+            "transform": {
+              "translation": [0.222, 0, 0]
+            }
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-rim",
+            "kind": "revolve",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [-0.03, 0.454],
+              [0.03, 0.454],
+              [0.03, 0.484],
+              [-0.03, 0.484],
+              [-0.03, 0.454]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0],
+            "region": "rim"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-stand",
+            "kind": "capsule",
+            "bone": "stand",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "p0": [0.0, 0.0, 0.0],
+            "p1": [0.5, 0.0, 0.0],
+            "r0": 0.04,
+            "r1": 0.04,
+            "member": "stand",
+            "part": "member"
+          },
+          {
+            "id": "member-wheel",
+            "kind": "capsule",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "p0": [0.0, 0.0, 0.0],
+            "p1": [0.5, 0.0, 0.0],
+            "r0": 0.04,
+            "r1": 0.04,
+            "member": "wheel",
+            "part": "member"
+          },
+          {
+            "id": "support-foot",
+            "kind": "box",
+            "bone": "stand",
+            "material": "steel",
+            "role": "ground",
+            "tone": 0.3,
+            "size": [0.05, 0.05, 0.05],
+            "transform": {
+              "translation": [0, 0, 0]
+            },
+            "member": "stand",
+            "part": "support",
+            "anchor": "foot"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Fixture model at 1:50: the rim and one spoke are modelled as in the drawing.",
+            "de": "Fixture-Modell bei 1:50: Felge und eine Speiche wie in der Zeichnung."
+          }
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "stand",
+            "kind": "box",
+            "bone": "stand",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.2, 0.05, 0.094],
+            "transform": {
+              "translation": [0, 0.025, 0]
+            }
+          },
+          {
+            "id": "rim",
+            "kind": "revolve",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [-0.047, 0.438],
+              [0.047, 0.438],
+              [0.047, 0.494],
+              [-0.047, 0.494],
+              [-0.047, 0.438]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-rim",
+            "kind": "revolve",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [-0.03, 0.448],
+              [0.03, 0.448],
+              [0.03, 0.484],
+              [-0.03, 0.484],
+              [-0.03, 0.448]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0],
+            "region": "rim"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-stand",
+            "kind": "capsule",
+            "bone": "stand",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "p0": [0.0, 0.0, 0.0],
+            "p1": [0.5, 0.0, 0.0],
+            "r0": 0.045,
+            "r1": 0.045,
+            "member": "stand",
+            "part": "member"
+          },
+          {
+            "id": "member-wheel",
+            "kind": "capsule",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "p0": [0.0, 0.0, 0.0],
+            "p1": [0.5, 0.0, 0.0],
+            "r0": 0.045,
+            "r1": 0.045,
+            "member": "wheel",
+            "part": "member"
+          },
+          {
+            "id": "support-foot",
+            "kind": "box",
+            "bone": "stand",
+            "material": "steel",
+            "role": "ground",
+            "tone": 0.3,
+            "size": [0.06, 0.06, 0.06],
+            "transform": {
+              "translation": [0, 0, 0]
+            },
+            "member": "stand",
+            "part": "support",
+            "anchor": "foot"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Fixture model at 1:100: the rim is drawn a little thicker and the spoke is left out.",
+            "de": "Fixture-Modell bei 1:100: Die Felge ist etwas dicker gezeichnet, die Speiche entfällt."
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "stand",
+            "kind": "box",
+            "bone": "stand",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.2, 0.05, 0.094],
+            "transform": {
+              "translation": [0, 0.025, 0]
+            }
+          },
+          {
+            "id": "rim",
+            "kind": "revolve",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [-0.047, 0.43],
+              [0.047, 0.43],
+              [0.047, 0.494],
+              [-0.047, 0.494],
+              [-0.047, 0.43]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "hub",
+            "kind": "box",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.06, 0.06, 0.06]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-rim",
+            "kind": "revolve",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [-0.03, 0.44],
+              [0.03, 0.44],
+              [0.03, 0.484],
+              [-0.03, 0.484],
+              [-0.03, 0.44]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0],
+            "region": "rim"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-stand",
+            "kind": "capsule",
+            "bone": "stand",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "p0": [0.0, 0.0, 0.0],
+            "p1": [0.5, 0.0, 0.0],
+            "r0": 0.05,
+            "r1": 0.05,
+            "member": "stand",
+            "part": "member"
+          },
+          {
+            "id": "member-wheel",
+            "kind": "capsule",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "p0": [0.0, 0.0, 0.0],
+            "p1": [0.5, 0.0, 0.0],
+            "r0": 0.05,
+            "r1": 0.05,
+            "member": "wheel",
+            "part": "member"
+          },
+          {
+            "id": "support-foot",
+            "kind": "box",
+            "bone": "stand",
+            "material": "steel",
+            "role": "ground",
+            "tone": 0.3,
+            "size": [0.07, 0.07, 0.07],
+            "transform": {
+              "translation": [0, 0, 0]
+            },
+            "member": "stand",
+            "part": "support",
+            "anchor": "foot"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Fixture model at 1:200: a hub block stands for the spokes.",
+            "de": "Fixture-Modell bei 1:200: Ein Nabenblock steht für die Speichen."
+          }
+        ]
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "body": [
+          {
+            "id": "stand",
+            "kind": "box",
+            "bone": "stand",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.2, 0.05, 0.1],
+            "transform": {
+              "translation": [0, 0.025, 0]
+            }
+          },
+          {
+            "id": "rim",
+            "kind": "revolve",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [-0.047, 0.42],
+              [0.047, 0.42],
+              [0.047, 0.494],
+              [-0.047, 0.494],
+              [-0.047, 0.42]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "hub",
+            "kind": "box",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.09, 0.09, 0.09]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-rim",
+            "kind": "revolve",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [-0.04, 0.43],
+              [0.04, 0.43],
+              [0.04, 0.484],
+              [-0.04, 0.484],
+              [-0.04, 0.43]
+            ],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, 0],
+            "region": "rim"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-stand",
+            "kind": "capsule",
+            "bone": "stand",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "p0": [0.0, 0.0, 0.0],
+            "p1": [0.5, 0.0, 0.0],
+            "r0": 0.06,
+            "r1": 0.06,
+            "member": "stand",
+            "part": "member"
+          },
+          {
+            "id": "member-wheel",
+            "kind": "capsule",
+            "bone": "wheel",
+            "material": "steel",
+            "role": "body",
+            "tone": 0.4,
+            "p0": [0.0, 0.0, 0.0],
+            "p1": [0.5, 0.0, 0.0],
+            "r0": 0.06,
+            "r1": 0.06,
+            "member": "wheel",
+            "part": "member"
+          },
+          {
+            "id": "support-foot",
+            "kind": "box",
+            "bone": "stand",
+            "material": "steel",
+            "role": "ground",
+            "tone": 0.3,
+            "size": [0.09, 0.09, 0.09],
+            "transform": {
+              "translation": [0, 0, 0]
+            },
+            "member": "stand",
+            "part": "support",
+            "anchor": "foot"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Fixture model at 1:500: the stand is a little wider and the hub is a larger block.",
+            "de": "Fixture-Modell bei 1:500: Der Ständer ist etwas breiter und die Nabe ein größerer Block."
+          }
+        ]
+      }
     },
     "anchors": [
       {
@@ -123,7 +568,12 @@
           "foot"
         ],
         "thermal": {
-          "regions": {},
+          "regions": {
+            "rim": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
           "emitters": {}
         },
         "loads": []
@@ -148,7 +598,12 @@
           "foot"
         ],
         "thermal": {
-          "regions": {},
+          "regions": {
+            "rim": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
           "emitters": {}
         },
         "loads": []
@@ -173,7 +628,12 @@
           "foot"
         ],
         "thermal": {
-          "regions": {},
+          "regions": {
+            "rim": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
           "emitters": {}
         },
         "loads": []
@@ -281,7 +741,29 @@
         "diffuseFraction": 1,
         "pressurePa": 101325
       },
-      "regions": [],
+      "regions": [
+        {
+          "id": "rim",
+          "title": {
+            "en": "Wheel rim",
+            "de": "Radfelge"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 0.85,
+          "characteristicLengthM": 0.094,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.8,
+          "layers": [],
+          "heatCapacityJM2K": 3000,
+          "source": "authored-estimate",
+          "hidden": {
+            "en": "The fixture draws no thermal shape for the rim.",
+            "de": "Die Fixture zeichnet keine thermische Form der Felge."
+          }
+        }
+      ],
       "emitters": [],
       "assumptions": [],
       "passengers": [],
@@ -511,14 +993,8 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.498,
-                  0
-                ]
+                [0, 0],
+                [0.498, 0]
               ],
               "closed": false
             }
@@ -565,14 +1041,8 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.498,
-                  0
-                ]
+                [0, 0],
+                [0.498, 0]
               ],
               "closed": false,
               "solid": {
@@ -625,14 +1095,8 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.498,
-                  0
-                ]
+                [0, 0],
+                [0.498, 0]
               ],
               "closed": false,
               "solid": {
@@ -731,14 +1195,8 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.496,
-                  0
-                ]
+                [0, 0],
+                [0.496, 0]
               ],
               "closed": false
             }
@@ -785,14 +1243,8 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.496,
-                  0
-                ]
+                [0, 0],
+                [0.496, 0]
               ],
               "closed": false,
               "solid": {
@@ -845,14 +1297,8 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.496,
-                  0
-                ]
+                [0, 0],
+                [0.496, 0]
               ],
               "closed": false,
               "solid": {
@@ -951,14 +1397,8 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.494,
-                  0
-                ]
+                [0, 0],
+                [0.494, 0]
               ],
               "closed": false
             }
@@ -1005,14 +1445,8 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.494,
-                  0
-                ]
+                [0, 0],
+                [0.494, 0]
               ],
               "closed": false,
               "solid": {
@@ -1065,14 +1499,8 @@
               "tone": 0.5,
               "kind": "poly",
               "points": [
-                [
-                  0,
-                  0
-                ],
-                [
-                  0.494,
-                  0
-                ]
+                [0, 0],
+                [0.494, 0]
               ],
               "closed": false,
               "solid": {
@@ -1131,9 +1559,7 @@
   "velocityToleranceDegS": 0.05,
   "epsilonS": 0.0001,
   "noClosing": {
-    "keysToRemove": [
-      2
-    ],
+    "keysToRemove": [2],
     "note": "without a closing key the loop wraps back to the first key (today's behaviour)"
   }
 }

@@ -14,3 +14,13 @@ test("managed namespace classification matches the existing ready schema without
  expect(classification({kind:"managed",authority:true,readiness:false,contentObserved:false})).toBe(false);
  expect([protocol.authority,protocol.readiness,protocol.contentObserved]).toEqual([false,false,false]);
 });
+
+test("a detached managed store is classified only for a generation of the declared store and never grants authority",()=>{
+ const ajv=new Ajv({strict:true}),rowShape=ajv.compile(schema.$defs.DetachedCase),classification=ajv.compile(schema.$defs.NamespaceClassification),detached=read("📦️workspaces/🧫️fixtures/🔌️detached.json"),store="/workspace/.cache/b/d/m/j",prefix="a".repeat(protocol.generationPrefixUnits),anchor=/^[a-f0-9]+$/;
+ for(const row of detached){expect(rowShape(row),row.id).toBe(true);
+  const generation=row.mutation==="wrong-generation"?"z".repeat(protocol.generationPrefixUnits):prefix,base=row.mutation==="foreign-store"?"/workspace/foreign":row.mutation==="other-store-depth"?store+"/deeper":store,name=row.mutation==="wrong-name"?"elsewhere":protocol.rootEndpoint,target=[base,generation,name].join("/");
+  const accepted=target.split("/").slice(0,-2).join("/")===store&&target.split("/").at(-1)===protocol.rootEndpoint&&anchor.test(target.split("/").at(-2)!);expect(accepted,row.id).toBe(row.accepted);
+ }
+ expect(classification({kind:"detached",authority:false,readiness:false,contentObserved:false})).toBe(true);
+ expect(classification({kind:"detached",authority:false,readiness:true,contentObserved:false})).toBe(false);
+});

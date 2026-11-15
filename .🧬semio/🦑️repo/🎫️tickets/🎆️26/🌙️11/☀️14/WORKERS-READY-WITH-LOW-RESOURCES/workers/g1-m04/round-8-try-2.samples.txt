@@ -1,0 +1,76 @@
+## 2026-11-14T22:00:35Z psi_memory_full_avg10=0.00 MemAvailable:10229856 kB SwapFree:15408232 kB 
+621748   2156    1977 /usr/lib/kf6/baloo_file
+589292 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+553468 119149  119113 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T22:01:05Z psi_memory_full_avg10=0.00 MemAvailable:8730448 kB SwapFree:15408252 kB 
+910632 2800103 2799752 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module'); const hash=value=>crypto.createHash('sha256').update(value).digest('hex'),check=()=>{const wir
+740400 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+610540   2156    1977 /usr/lib/kf6/baloo_file
+## 2026-11-14T22:01:35Z psi_memory_full_avg10=0.00 MemAvailable:8821224 kB SwapFree:15408252 kB 
+1229996 2800103 2799752 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module'); const hash=value=>crypto.createHash('sha256').update(value).digest('hex'),check=()=>{const wi
+610560   2156    1977 /usr/lib/kf6/baloo_file
+553452 119149  119113 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T22:02:05Z psi_memory_full_avg10=0.00 MemAvailable:8758464 kB SwapFree:15408256 kB 
+1245452 2800103 2799752 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module'); const hash=value=>crypto.createHash('sha256').update(value).digest('hex'),check=()=>{const wi
+610560   2156    1977 /usr/lib/kf6/baloo_file
+572528 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+## 2026-11-14T22:02:35Z psi_memory_full_avg10=0.08 MemAvailable:8360564 kB SwapFree:15408116 kB 
+1241196 2800103 2799752 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module'); const hash=value=>crypto.createHash('sha256').update(value).digest('hex'),check=()=>{const wi
+743088 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+610548   2156    1977 /usr/lib/kf6/baloo_file
+## 2026-11-14T22:03:05Z psi_memory_full_avg10=0.00 MemAvailable:8301084 kB SwapFree:15408108 kB 
+1408936 2800103 2799752 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module'); const hash=value=>crypto.createHash('sha256').update(value).digest('hex'),check=()=>{const wi
+815180 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+610548   2156    1977 /usr/lib/kf6/baloo_file
+## 2026-11-14T22:03:35Z psi_memory_full_avg10=0.00 MemAvailable:8450796 kB SwapFree:15408108 kB 
+1221980 2800103 2799752 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module'); const hash=value=>crypto.createHash('sha256').update(value).digest('hex'),check=()=>{const wi
+846516 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+610548   2156    1977 /usr/lib/kf6/baloo_file
+## 2026-11-14T22:04:05Z psi_memory_full_avg10=0.00 MemAvailable:8618296 kB SwapFree:15408128 kB 
+1136444 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+668092 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+610548   2156    1977 /usr/lib/kf6/baloo_file
+## 2026-11-14T22:04:35Z psi_memory_full_avg10=0.00 MemAvailable:8076188 kB SwapFree:15395696 kB 
+1652256 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+609508   2156    1977 /usr/lib/kf6/baloo_file
+552344 119149  119113 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T22:05:05Z psi_memory_full_avg10=0.00 MemAvailable:8227744 kB SwapFree:15395696 kB 
+1311432 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+602260   2156    1977 /usr/lib/kf6/baloo_file
+562708 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+## 2026-11-14T22:05:35Z psi_memory_full_avg10=0.00 MemAvailable:8732100 kB SwapFree:15395696 kB 
+1309496 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+602260   2156    1977 /usr/lib/kf6/baloo_file
+552236 119149  119113 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T22:06:05Z psi_memory_full_avg10=0.00 MemAvailable:8123156 kB SwapFree:15395708 kB 
+1300824 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1033588 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+602260   2156    1977 /usr/lib/kf6/baloo_file
+## 2026-11-14T22:06:36Z psi_memory_full_avg10=0.00 MemAvailable:8745300 kB SwapFree:15395708 kB 
+1297816 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+602260   2156    1977 /usr/lib/kf6/baloo_file
+552244 119149  119113 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T22:07:06Z psi_memory_full_avg10=0.00 MemAvailable:8662232 kB SwapFree:15395708 kB 
+1296180 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+602260   2156    1977 /usr/lib/kf6/baloo_file
+562208 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+## 2026-11-14T22:07:36Z psi_memory_full_avg10=0.00 MemAvailable:8744992 kB SwapFree:15395708 kB 
+1296456 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+602260   2156    1977 /usr/lib/kf6/baloo_file
+552240 119149  119113 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T22:08:06Z psi_memory_full_avg10=0.00 MemAvailable:8707312 kB SwapFree:15395708 kB 
+1297172 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+602260   2156    1977 /usr/lib/kf6/baloo_file
+552240 119149  119113 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T22:08:36Z psi_memory_full_avg10=0.00 MemAvailable:8743744 kB SwapFree:15395708 kB 
+1295656 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+602260   2156    1977 /usr/lib/kf6/baloo_file
+552356 119149  119113 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T22:09:06Z psi_memory_full_avg10=0.00 MemAvailable:8382892 kB SwapFree:15395708 kB 
+1296688 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+810540 2665867 2665848 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+602260   2156    1977 /usr/lib/kf6/baloo_file
+## 2026-11-14T22:09:36Z psi_memory_full_avg10=0.00 MemAvailable:8747784 kB SwapFree:15395708 kB 
+1296032 2806125 2805634 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun -- /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+602260   2156    1977 /usr/lib/kf6/baloo_file
+552404 119149  119113 /home/deck/.local/bin/claude --permission-mode auto

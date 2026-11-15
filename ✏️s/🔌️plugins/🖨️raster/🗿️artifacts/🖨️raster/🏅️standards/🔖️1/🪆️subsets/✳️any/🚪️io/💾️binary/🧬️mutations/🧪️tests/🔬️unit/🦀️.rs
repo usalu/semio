@@ -10,7 +10,7 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_mutations::binary::*;
 use semio_s_artifact_raster_raster_mutations_pixels::{add_layer_asset, remove_layer_asset};
 use semio_s_artifact_raster_raster_mutations_layers::{create_layer, delete_layer, move_layer, rename_layer, reorder_layers, resize_layer};
-use semio_s_artifact_raster_raster_mutations_layer_properties::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible};
+use semio_s_artifact_raster_raster_mutations_layer_props::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible};
 use semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document;
 use semio_s_artifact_raster_raster_model::{RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
@@ -450,7 +450,7 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
         RasterMutation::DeleteLayer(delete_layer::mutation::DeleteLayer { layer_id: "pixel".into() }),
         RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id: "pixel".into(), parent_id: Some("root".into()), index: 1 }),
         RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id: "pixel".into(), new_name: "Renamed".into() }),
-        RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_locked::ChangeLayerLocked {layer_id:"pixel".into(),expected:false,locked:true}),
+        RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layer_props::change_layer_locked::ChangeLayerLocked {layer_id:"pixel".into(),expected:false,locked:true}),
         RasterMutation::ChangeLayerVisible(change_layer_visible::mutation::ChangeLayerVisible { layer_id: "pixel".into(), new_visible: false }),
         RasterMutation::ChangeLayerOpacity(change_layer_opacity::mutation::ChangeLayerOpacity { layer_id: "pixel".into(), new_opacity: 0.5 }),
         RasterMutation::ChangeLayerBlendMode(change_layer_blend_mode::mutation::ChangeLayerBlendMode { layer_id: "pixel".into(), new_blend_mode: "multiply".into() }),
@@ -465,8 +465,8 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
             expected: Some(semio_s_artifact_raster_raster_model::RasterLayerMask { enabled: true, linked: true, invert: false, width: None, height: None, image_key: Some("previous".into()), transform: RasterTransform::default() }),
             mask: Some(semio_s_artifact_raster_raster_model::RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(2), height: Some(3), image_key: Some("next".into()), transform: RasterTransform::default() }),
         }),
-        RasterMutation::ChangeLayerAdjustmentParameter(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"tone".into(),parameter:"brightness".into(),expected:None,value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.25))}),
-        RasterMutation::ChangeLayerTransform(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::ChangeLayerTransform {layer_id:"pixel".into(),expected:RasterTransform::default(),transform:RasterTransform {x:2.0,y:3.0,..Default::default()}}),
+        RasterMutation::ChangeLayerAdjustmentParameter(semio_s_artifact_raster_raster_mutations_layer_props::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"tone".into(),parameter:"brightness".into(),expected:None,value:Some(semio_s_artifact_raster_raster_model::RasterAdjustmentNumber::decimal(0.25))}),
+        RasterMutation::ChangeLayerTransform(semio_s_artifact_raster_raster_mutations_layer_props::change_layer_transform::ChangeLayerTransform {layer_id:"pixel".into(),expected:RasterTransform::default(),transform:RasterTransform {x:2.0,y:3.0,..Default::default()}}),
         RasterMutation::PaintStroke(semio_s_artifact_raster_raster_mutations_pixels::paint_stroke::PaintStroke {
             layer_id: "pixel".into(),
             target: "mask".into(),

@@ -38,3 +38,14 @@ export async function readCasPinsV1(root:string,nowMs:number):Promise<Map<string
  }
  return pinned;
 }
+
+const holds=new Map<string,Set<string>>();
+
+/** 🪢️ Holds `digests` for `holder` while this process lives: the set only grows (the least recently named are dropped above `maximum`), is written at once and renewed before its lease ends, and a write that fails (a full disk) keeps the earlier pin, so a collection never takes what a live process still references. */
+export async function holdCasPinsV1(root:string,policy:Pick<CasPolicyV1,"leaseMaxMs">,holder:string,digests:Iterable<string>,maximum:number=65536):Promise<void>{
+ const key=root+"\0"+holder;let set=holds.get(key);
+ if(!set){const created=new Set<string>(),renew=setInterval(()=>{void pinCasV1(root,policy,holder,[...created],policy.leaseMaxMs,Date.now()).catch(()=>undefined);},Math.max(1,Math.floor(policy.leaseMaxMs/3)));renew.unref?.();holds.set(key,set=created);}
+ for(const digest of digests){set.delete(digest);set.add(digest);}
+ while(set.size>maximum)set.delete(set.values().next().value!);
+ await pinCasV1(root,policy,holder,[...set],policy.leaseMaxMs,Date.now()).catch(()=>undefined);
+}

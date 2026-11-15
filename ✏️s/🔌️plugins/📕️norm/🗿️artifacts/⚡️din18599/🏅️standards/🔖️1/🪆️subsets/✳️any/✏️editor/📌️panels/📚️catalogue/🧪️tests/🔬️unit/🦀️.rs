@@ -3,6 +3,7 @@ use semio_s_plugin_norm_app_surface::CatalogueCell;
 use semio_s_artifact_norm_din18599_checks::{evaluate_document, geg_anlage2_ht_prime_limits};
 use crate::unit_tests::context;
 use semio_plugin::{TreeWindows, ViewModel};
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {

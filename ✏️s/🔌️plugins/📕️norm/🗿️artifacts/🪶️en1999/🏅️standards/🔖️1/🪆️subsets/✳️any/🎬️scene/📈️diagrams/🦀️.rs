@@ -539,7 +539,7 @@ fn shell(d: &En1999Snapshot, report: &CheckReport, shell: &AluminiumShell) -> Op
     let material = d.materials.iter().find(|m| m.id == shell.material_id)?;
     let alloy = part_1_1::resolve_alloy_for_thickness(&material.designation, shell.thickness)?;
     let (r, t, l) = (shell.radius, shell.thickness, shell.length);
-    let alpha = part_1_4_1_5::alpha_x(r, t, part_1_4_1_5::shell_quality_q("B"));
+    let alpha = part_1_4_1_5::alpha_x(r, t, part_1_4_1_5::shell_quality_q(super::model::FabricationClass::B));
     let lambda = (alloy.f_o_pa / part_1_4_1_5::sigma_x_rcr(r, t, l)).sqrt();
     let chi = |x: f64| part_1_4_1_5::shell_chi(x, alpha, 0.60, 1.0, 0.20);
     let xs: Vec<f64> = (0..=SAMPLES).map(|i| LAMBDA_MAX * i as f64 / SAMPLES as f64).collect();

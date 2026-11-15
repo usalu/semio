@@ -32,7 +32,7 @@ fn diagram() -> Diagram2d {
         annotations: vec![],
         focus: None,
         legend: true,
-        table_twin: DataTable { columns: vec![DataColumn { header: copy("M", "M"), unit: "kNm".into(), values: vec![0.0, 200.0, 12345.678] }, DataColumn { header: copy("N", "N"), unit: "kN".into(), values: vec![0.0, 1500.5] }] },
+        table_twin: DataTable { columns: vec![DataColumn { header: copy("M", "M"), unit: "kNm".into(), values: vec![0.0, 200.0, 12345.678] }, DataColumn { header: copy("N", "N"), unit: "kN".into(), values: vec![0.0, 1502.75] }] },
     }
 }
 
@@ -201,7 +201,7 @@ fn table_twin_pads_short_columns_and_lists_markers() {
     let t = table_twin(&diagram(), Locale::De);
     assert_eq!(t.headers, ["M [kNm]", "N [kN]"]);
     assert_eq!(t.rows.len(), 3);
-    assert_eq!(t.rows[1], ["200", "1500,5"]);
+    assert_eq!(t.rows[1], ["200", "1503"], "four significant digits");
     assert_eq!(t.rows[2][1], "");
     assert_eq!(t.marker_rows[0][3], "62\u{202f}%");
     assert_eq!(t.marker_headers[0], "Markierung");

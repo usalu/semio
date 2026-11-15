@@ -2,7 +2,7 @@ import{cargoPreparationRecordPathsV1}from"../../../🗂️workspaces/🦀️carg
 import {withRepositoryCompilerLaneV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {testWasmBindgenToolSelection} from "../🕸️wasm/bindgen.ts";
-import{captureOwnedCommandV1}from"@semio-tech/process/execution";
+import{captureOwnedCommandV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {testRecordV1} from "../📋️values/🟦️.ts";
 import {WASM_BINDGEN_LOCKS_V1} from "../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
@@ -14,8 +14,8 @@ import { dirname, join, resolve, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import {createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{nxAuthorizerWorkspaceCandidateV1,nxAuthorizerWorkspaceIndexV1,resolveNxAuthorizerWorkspaceV1}from"@semio-tech/nx-bootstrap-tools/authorizers/workspace";
-import{readNxAuthorizerSourceV1}from"@semio-tech/nx-bootstrap-tools/authorizers";
+import{nxAuthorizerWorkspaceCandidateV1,nxAuthorizerWorkspaceIndexV1,resolveNxAuthorizerWorkspaceV1}from"../../🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🟦️.ts";
+import{readNxAuthorizerSourceV1}from"../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
 import {nativeCallerPhaseV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 
 /** 🏗️ Proves native preparation is an uncached, application-independent build leaf against Cargo and esbuild. */
@@ -52,7 +52,7 @@ export async function testNativeDependencies(workspace: string, output: string,i
   const inheritedBrowserPath = process.env.PLAYWRIGHT_BROWSERS_PATH;
   try {
     authorCargoFixture();
-    for (const [path, contents] of Object.entries(fixture.python.files)) writeFileSync(join(root, path), contents as string);
+    for (const [path, contents] of Object.entries({...fixture.python.files, ...fixture.pythonOracle.files})) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), contents as string); }
     const { cargoRepositoryPackages } = await import("../../../🗂️workspaces/🦀️cargo/🟦️.ts");
     assert.deepEqual(cargoRepositoryPackages(root), fixture.cargo.expectedMembers);
     delete process.env.PLAYWRIGHT_BROWSERS_PATH;
@@ -61,10 +61,11 @@ export async function testNativeDependencies(workspace: string, output: string,i
     const interpolate = (value: string): string => value.replace("{workspace}", root).replaceAll("/", process.platform === "win32" && value.startsWith("{workspace}") ? "\\" : "/");
     const browserPort=()=>({platform:fixture.browserSystem.platform,root:fixture.browserSystem.root,resolve:(name:string)=>fixture.browserSystem.tools[name]??null,isFile:(path:string)=>path===join(root,"node_modules/playwright/cli.js")});
     for (const row of fixture.environments) {
-      const target = projects.targets[`deps-${row.kind}`], calls: string[][] = [],providers:string[]=[];let bindingInstalled=false;
+      const owner = row.projectFile === undefined ? projects : JSON.parse(readFileSync(join(workspace, row.projectFile), "utf8")), target = owner.targets[row.targetName ?? `deps-${row.kind}`], calls: string[][] = [],providers:string[]=[],provisioned:string[][]=[];let bindingInstalled=false;
       const cargoHome=join(root,"cargo-home"),binding=join(cargoHome,"bin","wasm-bindgen"+(process.platform==="win32"?".exe":""));mkdirSync(dirname(binding),{recursive:true});writeFileSync(binding,"fixture");
       assert.equal(target.cache, false); assert.deepEqual(target.outputs, []);
-      assert.equal(target.options.command, `repo "${fixture.entry}" sync ${row.kind}`);
+      assert.equal(target.options.command, row.command ?? `repo "${fixture.entry}" sync ${row.kind}`);
+      assert.deepEqual(target.metadata?.semio?.execution, { version: 1, kind: "orchestration" });
       await prepareDependencies(row.kind, root, invocation,storage,phaseFor(controller.signal), async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean, env: NodeJS.ProcessEnv) => {
         assert.equal(cwd, root); assert.equal(signal,phaseFor(controller.signal).leaseControl.signal);
         if (capture) return command===binding?(bindingInstalled?"wasm-bindgen "+fixture.bindgenLock.match(/version = "([^"]+)"/)[1]:""):command==="cargo"&&args[0]==="--version"?identity(cwd,signal):command==="dotnet"?toolchainPolicy.dotnet.sdk:"";
@@ -72,8 +73,9 @@ export async function testNativeDependencies(workspace: string, output: string,i
         calls.push([command, ...args]);
         for (const [key, value] of Object.entries(row.environment ?? {})) assert.equal(env[key], interpolate(value as string));
         return "";
-      }, {...process.env,CARGO_HOME:cargoHome}, async (base: NodeJS.ProcessEnv) => {providers.push("go");return{ ...base, ...toolchainPolicy.go.variables };},async base=>{providers.push("uv");return base;},async base=>{providers.push("cargo-tools");return base;},browserPort);
+      }, {...process.env,CARGO_HOME:cargoHome}, async (base: NodeJS.ProcessEnv) => {providers.push("go");return{ ...base, ...toolchainPolicy.go.variables };},async base=>{providers.push("uv");return base;},async base=>{providers.push("cargo-tools");return base;},browserPort,async series=>{providers.push("python");provisioned.push([...series]);return Object.fromEntries(series.map(name=>[name,"/pinned/python"+name]));});
       assert.deepEqual(providers,row.providers,row.kind);
+      assert.deepEqual(provisioned,row.interpreters??[],row.kind);
       assert.deepEqual(calls.map(call => call[0] === process.execPath ? ["bun", ...call.slice(1)] : call), row.commands.map((command: string[]) => command.map(interpolate)), row.kind);
     }
     const bindgenCases=JSON.parse(readFileSync(join(vectors,"../🕸️wasm/bindgen.json"),"utf8")).readiness,locked=fixture.bindgenLock.match(/version = "([^"]+)"/)[1],semver=require("semver");

@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "shooting.sqlite.independent-oracle",
+  "title": "Shooting independent SQLite oracle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "normalization", "tables", "edit", "metadata", "totalRows", "totalCells"],
+  "properties": {
+    "schema": { "type": "string" },
+    "normalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "document_id", "integerBits", "boolean"],
+      "properties": {
+        "id": { "type": "string" },
+        "document_id": { "type": "string" },
+        "integerBits": { "type": "string" },
+        "boolean": { "type": "string" }
+      }
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "columns", "rows", "count"],
+        "properties": {
+          "name": { "type": "string" },
+          "columns": { "type": "array", "items": { "type": "string" } },
+          "rows": { "type": "array", "items": { "$ref": "#/definitions/row" } },
+          "count": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "edit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["table", "semanticIdentity", "columns", "before", "after"],
+      "properties": {
+        "table": { "type": "string" },
+        "semanticIdentity": { "type": "string" },
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "before": { "$ref": "#/definitions/row" },
+        "after": { "$ref": "#/definitions/row" }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["table", "columns", "rowsByEncoding"],
+      "properties": {
+        "table": { "type": "string" },
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "rowsByEncoding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["Binary", "Text"],
+          "properties": {
+            "Binary": { "type": "array", "items": { "$ref": "#/definitions/row" } },
+            "Text": { "type": "array", "items": { "$ref": "#/definitions/row" } }
+          }
+        }
+      }
+    },
+    "totalRows": { "type": "integer", "minimum": 0 },
+    "totalCells": { "type": "integer", "minimum": 0 }
+  },
+  "definitions": {
+    "cell": { "anyOf": [{ "type": "string" }, { "type": "integer" }, { "type": "number" }, { "type": "null" }] },
+    "row": { "type": "array", "items": { "$ref": "#/definitions/cell" } }
+  }
+}

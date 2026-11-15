@@ -1,4 +1,4 @@
-//! 📍️ `change-critical-region-steel-fyd` diff: patches `steel_design_yield_mpa` of the addressed critical_region row.
+//! 📍️ `change-critical-region-steel-design-yield-mpa` diff: patches `steel_design_yield_mpa` of the addressed critical_region row.
 
 use crate::change_critical_region_steel_fyd::ChangeCriticalRegionSteelDesignYieldMpa;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998CriticalRegionDelta, En1998CriticalRegionPatch};

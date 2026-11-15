@@ -1,0 +1,15 @@
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native-artifact-input-read","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-preserving-source:2","mode":"exclusive","elapsedMs":1.946832999936305}}
+[DATA] Dependency sync incomplete {"completedBindingsChanged":0,"sourceTransitionMayBeUnresolved":false,"wholeAllocationRetired":false,"sourceDirectory":null,"preservationIntentSha256":null}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-preserving-source:323","mode":"exclusive","elapsedMs":69.64391700003762}}
+Internal error: Original physical body, drain and cleanup settlement failed: Protected maintenance and accepted drainage failed: Producer reader and completed input validation failed: Current complete Source binding or whole receipt changed; Original process admission closed - first failure: Current complete Source binding or whole receipt changed; Current complete Source binding or whole receipt changed; Current complete Source binding or whole receipt changed
+repository:command failed with exit code 1

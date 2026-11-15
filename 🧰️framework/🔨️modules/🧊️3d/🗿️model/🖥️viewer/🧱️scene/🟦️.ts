@@ -3,8 +3,9 @@
  * Geometry shared by several nodes (one mesh, many nodes) is stored once. Missing normals are computed area-weighted, missing colours are white, skin weights are renormalised. Procedural documents (solids) must be tessellated first.
  * @see ../🧬️contract/🟦️.ts */
 import { Pace, silentOperation } from "../../⏱️operation/🟦️.ts";
+import { scenesOf } from "../../🎞️scenes/🟦️.ts";
 import type { ModelDocument, Operation, Primitive } from "../../🧬️schema/🟦️.ts";
-import { SKIN_STRIDE, VERTEX_STRIDE, type Bounds, type Scene, type SceneMaterial, type ScenePrimitive, type SceneSkin } from "../🧬️contract/🟦️.ts";
+import { SKIN_STRIDE, VERTEX_STRIDE, type Bounds, type Scene, type SceneMaterial, type SceneSet, type ScenePrimitive, type SceneSkin } from "../🧬️contract/🟦️.ts";
 import * as portable from "../../🧮️math/🎯️portable/🟦️.ts";
 
 /** 🛑️ Thrown when a document cannot be drawn: unresolved solids, dangling references, malformed buffers. */
@@ -75,6 +76,7 @@ export function* buildScene(document: ModelDocument, operation: Operation = sile
   if (document.solids.length > 0) fail("document carries solids; tessellate it first");
   const nodeIds = document.nodes.map((n) => n.id);
   const nodeIndex = new Map(nodeIds.map((id, i) => [id, i]));
+  const sets: SceneSet[] = scenesOf(document).map((scene) => ({ id: scene.id, title: scene.title, nodes: new Set(scene.nodes.flatMap((id) => (nodeIndex.has(id) ? [nodeIndex.get(id)!] : []))) }));
   const materials: SceneMaterial[] = document.materials.map((m) => ({ id: m.id, baseColor: m.baseColor, emissive: m.emissive, metallic: m.metallic, roughness: m.roughness, unlit: m.unlit, doubleSided: m.doubleSided, blend: m.alphaMode === "blend" }));
   const materialIndex = new Map(materials.map((m, i) => [m.id, i]));
   const meshes = new Map(document.meshes.map((m) => [m.id, m]));
@@ -165,7 +167,7 @@ export function* buildScene(document: ModelDocument, operation: Operation = sile
       }
       primitives.push({
         index: primitives.length, node: node.id, nodeIndex: nodeIndex.get(node.id)!, mesh: mesh.id, primitive: i, mode: p.mode, material: p.material, materialIndex: materialIndex.get(p.material)!,
-        skin: g.skinned ? skin : -1, vertexStart: g.vertexStart, vertexCount: g.vertexCount, indexStart: g.indexStart, indexCount: g.indexCount, bounds: g.bounds, tags: node.tags ?? [], solids: p.solids ?? [],
+        skin: g.skinned ? skin : -1, vertexStart: g.vertexStart, vertexCount: g.vertexCount, indexStart: g.indexStart, indexCount: g.indexCount, bounds: g.bounds, tags: node.tags ?? [], solids: p.solids ?? [], scenes: sets.flatMap((set, k) => (set.nodes.has(nodeIndex.get(node.id)!) ? [k] : [])),
       });
       yield;
     }
@@ -181,7 +183,7 @@ export function* buildScene(document: ModelDocument, operation: Operation = sile
     variants.set(v.id, map);
   }
   operation.report(1);
-  return { document, nodeIds, nodeIndex, materials, materialIndex, variants, vertices, skinning, indices, primitives, skins, jointCount };
+  return { document, nodeIds, nodeIndex, materials, materialIndex, variants, vertices, skinning, indices, primitives, skins, jointCount, scenes: sets };
 }
 
 /** 📥️ Synchronous scene preparation; progress through `operation.report`, cancellation throws the kernel's `CancelledError`. */

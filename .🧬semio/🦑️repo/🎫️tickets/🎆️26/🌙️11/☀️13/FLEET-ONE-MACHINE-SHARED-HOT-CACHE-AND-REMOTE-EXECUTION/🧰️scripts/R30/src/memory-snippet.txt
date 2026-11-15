@@ -1,0 +1,6 @@
+/** 🔭️ What a fleet read judges the machine by: its physical memory (a declared smaller machine counts as declared), bounded only by a cgroup limit ABOVE the groups this system creates for its own processes (`cgroupMachineLimitBytesV1`), never by `process.constrainedMemory()`, which inside the graph service is the service's own hard budget and made a 16 GB Linux worker a 4 GB machine (`it can give about 0 MB per project`). `availableMegabytes` is the kernel's available memory (Linux `MemAvailable`, macOS the `vm_stat` reading), bounded by the machine limit; it is printed with the plan, no decision depends on it. */
+export function fleetHostReadingV1({ports,total=totalmem,environment=process.env,limit=cgroupMachineLimitBytesV1,available=hostAvailableBytesV1}={}){
+ const physical=hostProfileV1(environment,{totalMegabytes:Math.floor(total()/MEGABYTE),cores:1,declared:false}).totalMegabytes,bound=limit(ports),limitMegabytes=Number.isFinite(bound)&&bound>0?Math.floor(bound/MEGABYTE):null,free=available();
+ const hostMegabytes=limitMegabytes===null?physical:Math.min(physical,limitMegabytes);
+ return Object.freeze({physicalMegabytes:physical,limitMegabytes,hostMegabytes,availableMegabytes:Number.isFinite(free)?Math.min(hostMegabytes,Math.floor(free/MEGABYTE)):null});
+}

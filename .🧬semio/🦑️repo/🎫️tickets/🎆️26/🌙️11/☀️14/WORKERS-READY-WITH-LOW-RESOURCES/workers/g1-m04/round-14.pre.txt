@@ -1,0 +1,11 @@
+pre-run facts, taken 2026-11-15T02:09:24Z
+replica: daemon running, store reachable, 10 incoming queued at the check; code digest "code":"d399114215f574cd93e191090e959fc4f901cfe0f2cd44963ab8d2b8d4046284"
+memory: Mem:           15848        6307        1677          26        8228        9541 | Swap:          25331       10074       15257
+repo service host processes (pid ppid etime rss):
+last 6 lines of build-agent.log:
+2026-11-15T02:08:01.971Z load report sent: reachable again
+2026-11-15T02:08:11.717Z agent code changed, restarting
+2026-11-15T02:08:11.720Z worker stopped: ueli-workstation-lin-1-3286700
+2026-11-15T02:08:12.451Z joining http://192.168.178.70:8981 offering rustc for 4 target(s)
+2026-11-15T02:08:12.491Z worker sandbox: linux-sandbox confined network denied
+2026-11-15T02:08:12.499Z worker registered: c4b9dc68-b527-43c4-9b6a-23e0571fd9dc cache http://192.168.178.70:6094

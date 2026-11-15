@@ -11,9 +11,11 @@ Presents the **Heating demand series** inside the shared virtual semio UI. The n
 
 Ventilation is explained once, season-neutral, in the second video of the curriculum
 (`🎓️teaching/🏛️architecture/⚡️energy/2_ventilation/`). Modul 3 is only the short winter bridge: it recalls
-`V · n` (Lüftung Kapitel 2), `c_Luft` and `Δθ = 20 K` (Kapitel 3), shows `Φ_V ≈ 1500 W` next to
-the transmission loss `Φ_T ≈ 2300 W` of Modul 2, applies `(1 − η_WRG)` (Kapitel 5) and links
+`V̇ = V · n` (Lüftung Kapitel 2), `c_Luft` and `Δθ = 20 K` (Kapitel 3), shows the ventilation load `Q̇_V ≈ 1500 W` next to
+the transmission load `Q̇_T ≈ 2300 W` of Modul 2 (both are the heat flow `Φ`, written as loads at the room; values come from the shared running example), applies `(1 − η_WRG)` (Kapitel 5) and links
 back with chips.
+
+Notation of Modul 1 to 3: `Φ` is the generic heat flow (`Φ_k`, `Φ_c`, `Φ_r` for conduction, convection, radiation; `Φ = U · A · Δθ`), `R_T = R_si + Σ d/λ + R_se` the total resistance and `U = 1/R_T` in W/(m²K), introduced once in Modul 1 (Beat 8) and recalled in Modul 2; `ψ` in W/(mK) is the linear thermal bridge coefficient. Units are never bracketed inside equations; compound units are set with a fraction bar. Modul 1 Beat 1 names the second law of thermodynamics, Beat 4 shows the spectrum strip (visible light vs infrared) linking thermal radiation to electromagnetic waves.
 
 Entry file: [`🐍️.py`](./🐍️.py)
 
@@ -41,6 +43,8 @@ The movie of a preview job is `<output-root>/preview/<language>/<audience>/rende
 | `Heating_04_InternalGains` | Modul 4 |
 | `Heating_05_Solar` | Modul 5, with canonical physics thermal-mass excerpts |
 | `Heating_06_FinalCalculation` | Final calculation |
+
+The first segment of `Heating_01_Introduction` is `🗺️roadmap` `Beat1_Fahrplan`, the Fahrplan of the whole video: six cards in chapter order (Grundlagen `Φ, Δθ` → Wärmeleitung `U, λ, ψ` → Lüftung `Q̇_V`, taken over from the ventilation video → interne Gewinne `Q̇_i` → solare Gewinne `Q̇_S, g⊥, F_C` → Bilanz `Q_h`, handed to the energy balance). It is declared as data on the shared `🏗️authoring/🗺️roadmap` builder; keep its steps in sync with renamed chapters.
 
 ## Authoring
 

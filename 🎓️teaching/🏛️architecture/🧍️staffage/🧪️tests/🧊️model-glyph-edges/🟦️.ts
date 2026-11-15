@@ -16,7 +16,7 @@ const assets = [sampleFigure(), ...withGlyphs(volumeAssets())];
 describe("🧊️ the feature edges of glyphs follow the variant of their glyph", () => {
   it.each(assets.map((a) => [a.id, a] as const))("%s: validator-clean GLB in which no hidden glyph has a visible outline", async (_id, asset) => {
     const pose = asset.poses.find((p) => p.key !== true)!.id;
-    const bytes = await writeGlb(asset, { pose, scale: 50 });
+    const bytes = await writeGlb(asset, { pose, scales: [50] });
     expect((await validateGlb(bytes, `${asset.id}.glb`)).messages).toEqual([]);
     const { parser } = await loadGlb(bytes);
     const json = parser.json as GlbJson;

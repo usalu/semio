@@ -1,4 +1,4 @@
-//! ↩️ `change-critical-region-restr-bar-space` inverse: restores the previous `restrained_bar_spacing_m`.
+//! ↩️ `change-critical-region-restrained-bar-spacing-m` inverse: restores the previous `restrained_bar_spacing_m`.
 
 use crate::change_critical_region_restr_bar_space::ChangeCriticalRegionRestrainedBarSpacingM;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

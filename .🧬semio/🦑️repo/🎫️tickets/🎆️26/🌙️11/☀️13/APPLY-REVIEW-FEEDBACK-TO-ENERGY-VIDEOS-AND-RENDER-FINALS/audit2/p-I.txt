@@ -1,0 +1,1 @@
+_\{?(\\mathrm\{)?I\}?(?![A-Za-z])|_\{?\\text\{I\}|_\{?\\mathrm I\b|_I\b

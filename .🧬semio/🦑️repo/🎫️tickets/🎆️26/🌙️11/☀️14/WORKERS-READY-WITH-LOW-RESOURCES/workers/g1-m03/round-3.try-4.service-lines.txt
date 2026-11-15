@@ -1,0 +1,16 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-f74179f31e9f.log
+141:graph: No verified change journal cursor is recorded for generation 44; verifying the tree once.
+1427:graph: 703 stale projects, 0 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 703
+1428:graph: waiting for the fleet: 0 of 703 projects arrived
+1498:graph: nothing to wait for any longer: asked the fleet for 703 stale projects and received 0 within 302 s, 703 remain and this machine can infer only 192; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+1499:2026-11-14T17:06:01.259Z graph-wanted-expired {"wanted":"703","arrived":"0","seconds":"302","missing":"703","local":"192"}
+2227:2026-11-14T17:15:26.759Z graph-wanted-expired {"wanted":"703","arrived":"0","seconds":"300","missing":"703","local":"192"}
+2957:graph: waiting for the fleet: 262 of 703 projects arrived
+2976:graph: waiting for the fleet: 310 of 703 projects arrived
+3002:graph: waiting for the fleet: 358 of 703 projects arrived
+3020:graph: waiting for the fleet: 406 of 703 projects arrived
+3057:graph: waiting for the fleet: 454 of 703 projects arrived
+3106:graph: waiting for the fleet: 502 of 703 projects arrived
+3202:2026-11-14T17:44:42.256Z graph-wanted-expired {"wanted":"703","arrived":"502","seconds":"1487","missing":"201","local":"192"}
+3834:graph: 703 stale projects, 502 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 201
+3835:graph: waiting for the fleet: 0 of 201 projects arrived

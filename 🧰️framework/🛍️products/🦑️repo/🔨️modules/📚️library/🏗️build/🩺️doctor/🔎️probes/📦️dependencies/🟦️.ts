@@ -4,9 +4,9 @@ import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/
 import type {DependencyScopeFactsV1} from "../../🟦️.ts";
 import {readJsonFileV1} from "../../🔌️ports/🟦️.ts";
 import type {DoctorProbeV1} from "../📋️contract/🟦️.ts";
-import {selectPackageManagerV1} from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 
-const manager=selectPackageManagerV1("javascript"),INPUTS=[...manager.manifestFileNames(),manager.primaryLockName(),...manager.configurationNames("scope")],READY="bindings.json",KEY=/^[a-f0-9]{20}$/u;
+const dependencyInputsV1=async():Promise<readonly string[]>=>{const manager=(await import("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts")).selectPackageManagerV1("javascript");return [...manager.manifestFileNames(),manager.primaryLockName(),...manager.configurationNames("scope")];};
+const READY="bindings.json",KEY=/^[a-f0-9]{20}$/u;
 type Pointer=Readonly<{version?:unknown;purpose?:unknown;scope?:unknown;generation?:unknown;publishedAtMs?:unknown;bytes?:unknown;retired?:unknown}>;
 
 const mtime=(path:string):number|null=>{try{return statSync(path).mtimeMs;}catch{return null;}};
@@ -19,6 +19,7 @@ export const dependenciesProbeV1:DoctorProbeV1=Object.freeze({
   if(!existsSync(mount))return {unavailable:"The dependency image is not attached or was never created"};
   const pointerDirectory=join(mount,"pointer"),generations=join(mount,"j"),now=ports.now();
   let names:string[]=[];try{names=readdirSync(pointerDirectory).filter(name=>name.endsWith(".pointer.json"));}catch{}
+  const INPUTS=names.length===0?[]:await dependencyInputsV1();
   const scopes:DependencyScopeFactsV1[]=[],referenced=new Set<string>(),sizes:number[]=[];
   for(const name of names){
    const pointer=readJsonFileV1(join(pointerDirectory,name),65536) as Pointer|undefined;

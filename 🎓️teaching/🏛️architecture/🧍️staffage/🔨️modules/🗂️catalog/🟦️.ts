@@ -15,6 +15,7 @@ import { VIEWPOINT_CAPTIONS } from "../🎨️depiction/✂️section/🟦️.ts
 import { sampleClip, samplePose } from "../🎞️animation/🟦️.ts";
 import { evaluate, flattenGeometry } from "../🧮️evaluation/🟦️.ts";
 import { exportIssues, volumeIssues } from "./🧊️volume/🟦️.ts";
+import { analyticRules } from "./🧊️volumes/🧱️rules/🟦️.ts";
 import { compareRepresentations } from "../🖨️representation/🪞️copies/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, measureSuitability, measureSymbolSuitability } from "../🖨️representation/🟦️.ts";
 import { effectiveOffset, restFrames, solveChain } from "../🦴️rig/🟦️.ts";
@@ -141,7 +142,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     return true;
   };
   const absent = missing((source.thermal as { passengers?: unknown }).passengers, "thermal.passengers");
-  missing((source as { volume?: unknown }).volume, "volume");
+  missing((source as { volumes?: unknown }).volumes, "volumes");
   const asset: Asset = absent ? { ...source, thermal: { ...source.thermal, passengers: [] } } : source;
   const unique = (path: string, ids: readonly string[]): void => {
     for (const id of duplicates(ids)) add(path, "duplicate-id", `Id "${id}" is used more than once in ${path}.`, `Id "${id}" wird in ${path} mehrfach verwendet.`);
@@ -706,7 +707,10 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
       add("$", "evaluation-failed", `Evaluating the asset failed: ${(error as Error).message}`, `Auswerten des Assets ist fehlgeschlagen: ${(error as Error).message}`);
     }
   }
-  out.push(...volumeIssues(asset), ...exportIssues(asset));
+  for (const region of asset.thermal.regions)
+    if (region.areaBasis !== "exchange" && (region.model === "leaf" || (["foliage", "fur", "feather", "hair"] as readonly string[]).includes(region.kind)))
+      add(`thermal.regions.${region.id}.areaBasis`, "thermal-area-basis", `Region "${region.id}" (model ${region.model}, kind ${region.kind}) has an exchange area, not an envelope: declare areaBasis "exchange".`, `Die Region "${region.id}" (Modell ${region.model}, Art ${region.kind}) hat eine Austauschfläche, keine Hüllfläche: areaBasis "exchange" angeben.`);
+  out.push(...volumeIssues(asset), ...(asset.volumes === undefined ? [] : analyticRules(asset)), ...exportIssues(asset));
   const { heightM, widthM, depthM, massKg } = asset.dimensions;
   if (!(heightM > 0 && widthM > 0 && depthM > 0 && massKg > 0)) add("dimensions", "dimension-invalid", "Dimensions and mass must be positive.", "Abmessungen und Masse müssen positiv sein.");
   return out;

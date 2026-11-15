@@ -3,7 +3,7 @@ use semio_s_artifact_raster_raster_model::{RasterAdjustmentParameter, RasterLaye
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot;
 use semio_s_artifact_raster_raster_diff::diff_patch_layer;
-use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::*;
+use semio_s_artifact_raster_raster_mutations_layer_props::change_layer_adjustment_parameter::*;
 use protocol::{ColdMutation, Mutation,MutationDiff,OpText,OpBinary};
 use protocol::ColdMutationDiff;
 fn retire(document:RasterSnapshot) {semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}

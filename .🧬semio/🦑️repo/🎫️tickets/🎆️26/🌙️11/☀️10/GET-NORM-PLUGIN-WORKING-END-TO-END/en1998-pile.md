@@ -1,0 +1,20 @@
+# en1998-pile: `En1998Foundation.pile_axial_load_n` added schema-first, substitution reverted
+
+Result: `repo cargo ... check --keep-going --target wasm32-wasip2 -p semio-s-artifact-norm-en1998` finishes with 0 errors (log `🗑️generated/en1998-pile-3.log`).
+
+## What was done
+1. Ran the queued schema-evolve spec (`specs/en1998-foundation-pile-axial-load.json`) against the current tree through `en1998-pile-apply.py` (this ticket; runs `evolve.build("add-leaf", ...)` + `plan.commit()`; the tool's own post step needs its removed `heavy.sh`, `scan_plan` needs Python 3.11 `tomllib`, so both were skipped). 854 files planned, 0 unsupported layers: JSON schemas (snapshot, artifact, diff), Rust model + diff, sqlite DDL, admission cells, Rust and TypeScript codecs, text DSL print/parse, binary protocol, mutation kind `change-foundation-pile-axial-load-n` (tag 362, inverse, diff, schema twins, demo case, leaf taxonomy), field-meta EN+DE, oracle json, DSL assets, 814 fixtures (hazard-pass/fail already carried 2e6 / 6e7).
+2. Ran `repo ./📜️script.ts schema twins generate --under <base>` (TS, proto, graphql twins) and `schema generate` (schema catalog now lists the new mutation).
+3. Hand fixes where the tool missed the current layout: sqlite Rust encode/decode rows (`Cell::Real(a.pile_axial_load_n)`, `a.real(35)`), TS decode (`readBinary64(a,35,...)`, table width 35 -> 36), sqlite test setter, compliance test struct literal, demo-cases struct literal, tidy diff patch spacing.
+4. Reverted the substitution: `liquefaction-checks` `check_pile_liquefied` uses `f.pile_axial_load_n` (condition, utilisation, de/en messages, remedy bisection); compliance test asserts `pile_axial_load_n / n_cr`; scene handle `pileAxialLoadN` ("Pile axial load N_Ed" / "Pfahlnormalkraft N_Ed") restored before `bearingNMaxN`.
+5. Side effect found and fixed at the source: regenerating the Rust twin re-added `skip_serializing_if = "String::is_empty"` to `en_ground_type` / `en_spectrum_type` (wave-en789 had hand-removed it; the attribute lived in `x-semio-rust.attributes` of the snapshot JSON schema). Removed it from the schema, regenerated, so twins and Rust agree.
+
+## Not done
+- `📋️build-owners.json` sync reports the removed `en1998-edit-rules` package root (pre-existing, wave-en789 note); `repo verify build-owners sync` also rewrote that file (+42/-2 entries, workspace-wide).
+- `🧰️framework/.../dsl/✨️derive/🗂️schema-document-index.json` not regenerated (needs `repo run @semio-tech/dsl-derive-rs:generate-schema-index`, forbidden here).
+- Host test target `check --tests -p semio-s-artifact-norm-en1998-schema` fails before reaching the test (pre-existing): `semio_s_plugin_norm_compliance::oracle_driver` unresolved, `serde` missing for test cfg. Test source is correct.
+
+## Touched files (base B = `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any`)
+Hand: `B/🧬️schema/💡️inferences/🫧️liquefaction-checks/🦀️.rs`, `B/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs`, `B/🎬️scene/🕹️handles/🦀️.rs`, `B/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs`, `.../📸️snapshot/🟦️.ts`, `.../📸️snapshot/🧪️tests/🦀️.rs`, `B/🧬️schema/🧬️mutations/🎲️demo-cases/🦀️.rs`, `B/🧬️schema/🔺️diff/🦀️.rs`, `B/🧬️schema/📸️snapshot/🔣️.json` (attribute removal).
+Tool/generated (full list = plan of 854 files; categories): `B/🧬️schema/` {`🔣️.json`, `🟦️.ts`, `🛰️.proto`, `🔗️.graphql`, `📸️snapshot/*`, `🔺️diff/*`, `🧬️mutations/*` incl. new `✏️change-foundation-pile-axial-load-n/`, `🏗️foundations*`, `🧭️edit-rules`}, `B/✏️editor/🏷️field-meta/🦀️.rs`, `B/🔮️oracles/🔣️.json`, `B/🖼️assets/*seismic*/🗣️.dsl.semio` (5), `B/🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio`, `B/🚪️io/📝️text/🧬️mutations/{🦀️.rs,🏗️foundations/🦀️.rs}`, `B/🚪️io/🪶️sqlite/📸️snapshot/{🗄️.sql,🛂️admission/🦀️.rs}`, `B/🧪️tests/🫨️mutate-en1998-1/{🐍️.py,🥒️.feature,🦀️.rs}`, `B/🧪️tests/🧫️fixtures/**` (814 JSON incl. new mutation fixture dir), `✏️s/🔌️plugins/📕️norm/🧪️tests/🧫️fixtures/📇️mutation-leaf-taxonomy-v1/🔣️.json`, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json` (generated).
+Ticket: `en1998-pile-apply.py`, this report, logs in `🗑️generated/en1998-pile-*.log`.

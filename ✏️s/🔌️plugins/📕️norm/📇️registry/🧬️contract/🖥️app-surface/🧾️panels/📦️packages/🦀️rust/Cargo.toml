@@ -39,6 +39,7 @@ semio-s-plugin-norm-app-surface-visual-chrome = { path = "../../../🖼️visual
 semio-s-plugin-norm-app-surface-live-core = { path = "../../../🧲️live-core/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-ui-contract-values = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

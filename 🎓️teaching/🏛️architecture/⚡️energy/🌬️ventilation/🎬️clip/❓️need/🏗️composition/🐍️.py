@@ -13,10 +13,12 @@ SPEECH_DIR = import_module("🎓️teaching.🏛️architecture.⚡️energy.�
 
 build_section_video = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔊️speech.🐍️").build_section_video
 
+ROADMAP_DIR = BASE_DIR.parent / "🗺️roadmap"
+ROADMAP_SPEECH_DIR = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(ROADMAP_DIR)
 SCENES = [
+    (ROADMAP_DIR / "🐍️.py", "Beat1_Fahrplan", ROADMAP_SPEECH_DIR / "beat_1_audio.mp3"),
     (BASE_DIR / "🐍️.py", "Beat1_Lueftungsbedarf", SPEECH_DIR / "beat_1_audio.mp3"),
     (BASE_DIR / "🐍️.py", "Beat2_Lueftungsweg", SPEECH_DIR / "beat_2_audio.mp3"),
-    (BASE_DIR / "🐍️.py", "Beat3_Fahrplan", SPEECH_DIR / "beat_3_audio.mp3"),
 ]
 
 

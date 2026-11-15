@@ -1,0 +1,16 @@
+Pre-run facts, 2026-11-14T17:56:29Z
+- replica code digest (.cache/f/health.json): 39e3688eb315d48831772ca305d78bcb6f35975794444da47750bc5fa7459759, store ok, daemon pid 35298
+- `ps -axo pid,ppid,etime,rss,args` lines of `repo show projects` or `repo service host` processes (arguments shortened to the part after the script path):
+    pid 8384 ppid 1 age 01:01:06 rss 64224 KiB: repo service host run
+    pid 8386 ppid 8384 age 01:01:04 rss 352272 KiB: \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await
+  (2 process(es))
+- last 8 lines of .cache/f/sidecars/build-agent.log:
+    2026-11-14T17:49:52.347Z joining http://192.168.178.70:8981 offering rustc for 3 target(s)
+    2026-11-14T17:49:52.394Z worker sandbox: darwin-sandbox confined network denied
+    2026-11-14T17:49:52.397Z worker registered: 7bd0830f-4828-4e0c-ab8b-141d774a4efb cache http://192.168.178.70:6094
+    2026-11-14T17:53:21.859Z agent code changed, restarting
+    2026-11-14T17:53:21.862Z worker stopped: ueli-workstation-mac-mini-m4-16gb-256gb-03-lan.fritz.box-36654
+    2026-11-14T17:53:23.833Z joining http://192.168.178.70:8981 offering rustc for 3 target(s)
+    2026-11-14T17:53:23.892Z worker sandbox: darwin-sandbox confined network denied
+    2026-11-14T17:53:23.897Z worker registered: fdcad750-9461-48da-8378-daf75a29023b cache http://192.168.178.70:6094
+- memory pressure level 1, free disk 100Gi

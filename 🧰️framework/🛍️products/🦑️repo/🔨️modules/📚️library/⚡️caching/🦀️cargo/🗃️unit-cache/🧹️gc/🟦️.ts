@@ -1,13 +1,14 @@
 import {closeSync,openSync,readSync,readdirSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {basename,dirname,join} from "node:path";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
-import {pruneEntriesV1} from "../💾️store/🟦️.ts";
+import {pruneEntriesV1,recordEvictionV1} from "../💾️store/🟦️.ts";
 import {listLanesV1,removeLaneV1} from "../🧵️lane/🟦️.ts";
 import {ensureBallastV1,tryClaimWithBallastV1} from "./🛟️ballast/🟦️.ts";
 import {collectIncrementalV1,type IncrementalReportV1} from "./🌱️incremental/🟦️.ts";
 import {collectUnitsV1,measureUnitsV1,unitProfilesV1} from "./🧱️units/🟦️.ts";
 import {recordFillSampleV1} from "./📈️fill/🟦️.ts";
 import {pruneAdmissionsV1} from "./📖️admissions/🟦️.ts";
+import {supersedeLocalUnitsV1} from "./🪢️supersession/🟦️.ts";
 import {nativeFreeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1.gc,layout=UNIT_CACHE_POLICY_V1.layout;
@@ -88,7 +89,7 @@ export function applyGcV1(root:string,plan:GcPlanV1,nowMs:number):{lanes:number;
  let lanes=0,incremental=0;
  for(const id of plan.removeLanes)if(removeLaneV1(root,id,"lane",nowMs))lanes++;
  for(const id of plan.removeIncremental)if(removeLaneV1(root,id,"incremental",nowMs))incremental++;
- pruneEntriesV1(root,nowMs);pruneEvents(root);
+ pruneEntriesV1(root,nowMs);pruneEvents(root);recordEvictionV1(root,{lanes,incremental});
  return{lanes,incremental};
 }
 
@@ -98,18 +99,19 @@ export async function applyGcYieldingV1(root:string,plan:GcPlanV1,nowMs:number,o
  const guard=():void=>options.signal?.throwIfAborted(),step=async()=>{options.progress?.(++done,total);await turn();};
  for(const id of plan.removeLanes){guard();if(removeLaneV1(root,id,"lane",nowMs))lanes++;await step();}
  for(const id of plan.removeIncremental){guard();if(removeLaneV1(root,id,"incremental",nowMs))incremental++;await step();}
- pruneEntriesV1(root,nowMs);pruneEvents(root);
+ pruneEntriesV1(root,nowMs);pruneEvents(root);recordEvictionV1(root,{lanes,incremental});
  return{lanes,incremental};
 }
 
-/** 🌱️ What a collection removed: lanes, lane incremental sets, the incremental sessions of the build and target directories and the stale build units. */
-export type GcAppliedV1={lanes:number;incremental:number;sessions:number;units:number};
+/** 🌱️ What a collection removed: lanes, lane incremental sets, the incremental sessions of the build and target directories, the stale build units and the cache entries a newer key of their slot superseded. */
+export type GcAppliedV1={lanes:number;incremental:number;sessions:number;units:number;superseded?:number};
 
 /** 🚰️ Collects once at a time: a second collector finds the claim taken and reports `running` instead of racing the first. The incremental sessions of every build, target and lane directory of the image go first (lock-aware, least recently used first, they regrow within hours), then lanes and objects are planned on what the image looks like afterwards. `demandBytes` is what waiting compiles need freed beyond the water marks: it raises the need of every stage, and the stages stop as soon as it is met. */
 export async function collectGarbageSingleFlightV1(root:string,capacityBytes:number,options:Readonly<{signal?:AbortSignal;progress?:(done:number,total:number)=>void;nowMs?:number;report?:IncrementalReportV1;volume?:(root:string,capacityBytes:number)=>VolumeFactsV1;demandBytes?:number}>={}):Promise<{running:true}|{running:false;plan:GcPlanV1;applied:GcAppliedV1}>{
  const measure=options.volume??measureVolumeV1,claim=tryClaimWithBallastV1(join(root,layout.locks),policy.collectorClaim);if(!claim)return{running:true};
  try{
-  const nowMs=options.nowMs??Date.now(),demand=Math.max(0,options.demandBytes??0),start=measure(root,capacityBytes);let sessions=0,units=0;
+  const nowMs=options.nowMs??Date.now(),demand=Math.max(0,options.demandBytes??0),start=measure(root,capacityBytes);let sessions=0,units=0,superseded=0;
+  if(basename(root)==="u")superseded=await supersedeLocalUnitsV1(root,nowMs,options.signal);
   if(basename(root)==="u"){
    const before=start,need=Math.max(gcNeedBytesV1(before.volumeBytes,before.freeBytes),demand);
    const result=await collectIncrementalV1(dirname(root),{dryRun:false,volumeBytes:before.volumeBytes,needBytes:()=>need,satisfied:()=>need>0&&measure(root,capacityBytes).freeBytes-before.freeBytes>=need,nowMs,signal:options.signal,report:options.report});
@@ -121,7 +123,7 @@ export async function collectGarbageSingleFlightV1(root:string,capacityBytes:num
     units=result.removed.length;recordFillSampleV1(root,{atMs:nowMs,freeBytes:after.freeBytes,volumeBytes:after.volumeBytes,profiles:result.profiles});
    }
   }
-  const measured=measureGcV1(root,capacityBytes,nowMs,measure),plan=planGcV1({...measured,demandBytes:Math.max(0,demand-(measured.freeBytes-start.freeBytes))}),applied={...await applyGcYieldingV1(root,plan,nowMs,options),sessions,units};
+  const measured=measureGcV1(root,capacityBytes,nowMs,measure),plan=planGcV1({...measured,demandBytes:Math.max(0,demand-(measured.freeBytes-start.freeBytes))}),applied={...await applyGcYieldingV1(root,plan,nowMs,options),sessions,units,superseded};recordEvictionV1(root,{sessions,units,superseded});
   await pruneAdmissionsV1(root,nowMs,{retentionMs:policy.admissionRetentionMilliseconds,temporaryMs:policy.admissionTemporaryMilliseconds,maximumBytes:Math.floor(capacityBytes*policy.admissionShare)},options.signal);
   return{running:false,plan,applied};
  }finally{claim.release();ensureBallastV1(root);}

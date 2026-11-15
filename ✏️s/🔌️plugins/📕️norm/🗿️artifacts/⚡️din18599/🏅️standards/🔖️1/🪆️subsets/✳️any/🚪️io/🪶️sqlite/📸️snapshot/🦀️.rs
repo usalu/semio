@@ -1,7 +1,7 @@
 //! ⚡️ Complete handwritten building, system, monthly climate and derived climate-table identity entities.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
-use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingPlant, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalMassClass, ThermalZone, UsageProfile, UseClass, VentilationSystem};
+use crate::Din18599Snapshot;
+use crate::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingPlant, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalMassClass, ThermalZone, UsageProfile, UseClass, VentilationSystem};
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};

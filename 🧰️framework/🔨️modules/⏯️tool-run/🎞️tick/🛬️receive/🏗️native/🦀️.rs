@@ -106,7 +106,7 @@ impl ToolRunReceivedTickSource{
 }
 fn close_demands(frame:&Option<Box<MaybeUninit<ToolRunReceivedTick>>>,headers:u8,receipt:Receipt,closing:bool,closed:bool)->Result<RetirementDemand,ValueError>{
  if receipt.is_some()||!closing||closed{return Ok(Default::default())}
- if headers==4{let target=frame.as_ref().ok_or_else(fault)?.as_ptr();let column=unsafe{&*std::ptr::addr_of!((*target).append_entities)};if !column.is_empty(){return Ok(RetirementDemand{depth:column.next_pop_depth_demand().map_err(|_|fault())?+1,..Default::default()})}if !column.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:column.next_release_allocation_bytes().map_err(|_|fault())?,depth:column.next_release_depth_demand().map_err(|_|fault())?+1,..Default::default()})}}
+ if headers==4{let target=frame.as_ref().ok_or_else(fault)?.as_ptr();let column=unsafe{&*std::ptr::addr_of!((*target).append_entities)};if !column.is_empty(){return Ok(RetirementDemand{depth:column.next_pop_depth_demand().map_err(|_|fault())?+1,..Default::default()})}if !column.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:column.next_release_copy_byte_demand().map_err(|_|fault())?,release_bytes:column.next_release_allocation_bytes().map_err(|_|fault())?,depth:column.next_release_depth_demand().map_err(|_|fault())?+1,..Default::default()})}}
  Ok(RetirementDemand{release_bytes:if frame.is_some()&&headers==0{ToolRunNativeTickPreparation::birth_bytes()}else{0},..metadata()})
 }
 fn close_frame(frame:&mut Option<Box<MaybeUninit<ToolRunReceivedTick>>>,headers:&mut u8,closed:&mut bool,d:RetirementDemand,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{

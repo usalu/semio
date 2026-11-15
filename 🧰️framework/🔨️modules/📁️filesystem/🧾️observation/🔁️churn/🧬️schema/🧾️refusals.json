@@ -329,6 +329,47 @@
             }
           },
           {
+            "id": "moved-source-closure",
+            "disposition": "reexec",
+            "markers": [],
+            "messages": [
+              {
+                "text": "closure.source-differs",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts"
+                ]
+              },
+              {
+                "text": "closure.source-not-admitted",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "A task found that a file of the build implementation differs from the list its process admitted at its start and could not admit the current sources for itself: the outermost command starts again with the current implementation, bounded.",
+              "de": "Eine Aufgabe fand, dass sich eine Datei der Build-Implementierung von der Liste unterscheidet, die ihr Prozess beim Start zugelassen hat, und konnte die aktuellen Quellen nicht für sich zulassen: der äußerste Befehl startet mit der aktuellen Implementierung neu, begrenzt."
+            }
+          },
+          {
+            "id": "closure-moving",
+            "disposition": "reobserve",
+            "layer": "build",
+            "markers": [],
+            "messages": [
+              {
+                "text": "closure.moving",
+                "sites": [
+                  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🛂️readmission/🟦️.ts"
+                ]
+              }
+            ],
+            "describe": {
+              "en": "The sources of the build implementation kept changing during every admission of one task: the lane that runs the actions runs the step again after a pause, bounded; only a closure that never holds still fails.",
+              "de": "Die Quellen der Build-Vorgabe änderten sich bei jeder Übernahme einer Aufgabe weiter: die Bahn, die die Aktionen ausführt, führt den Schritt nach einer Pause erneut aus, begrenzt; nur ein Abschluss, der nie stillhält, schlägt fehl."
+            }
+          },
+          {
             "id": "filesystem-race",
             "disposition": "reobserve",
             "layer": "snapshot",

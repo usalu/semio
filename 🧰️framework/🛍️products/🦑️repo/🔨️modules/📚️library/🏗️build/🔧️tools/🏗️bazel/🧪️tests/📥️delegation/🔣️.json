@@ -71,6 +71,30 @@
       "configuration": "prototype",
       "expected": "refusal",
       "calls": 1
+    },
+    {
+      "name": "operation-prototype",
+      "kind": "orchestration",
+      "children": "operation",
+      "configuration": "prototype",
+      "expected": "context",
+      "calls": 1
+    },
+    {
+      "name": "operation-unconfigured",
+      "kind": "orchestration",
+      "children": "operation",
+      "configuration": null,
+      "expected": "context",
+      "calls": 1
+    },
+    {
+      "name": "forged-operation-refused",
+      "kind": "orchestration",
+      "children": "forged-operation",
+      "configuration": "prototype",
+      "expected": "refusal",
+      "calls": 1
     }
   ]
 }

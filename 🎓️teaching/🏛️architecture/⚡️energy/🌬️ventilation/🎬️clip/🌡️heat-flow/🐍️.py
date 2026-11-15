@@ -64,8 +64,8 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
@@ -77,8 +77,7 @@ sun_glyph = _manim_module.sun_glyph
 thermometer_glyph = _manim_module.thermometer_glyph
 ripples = _manim_module.ripples
 
-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
-set_vo_language("de")
+# 🗣️ Measured clause durations live in vo_timing.json.
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -119,6 +118,9 @@ Q_SENS_W = V_DOT * C_LUFT * (THETA_I_W - THETA_E_W)
 Q_SENS_S = V_DOT * C_LUFT * (THETA_E_S - THETA_I_S)
 Q_LAT = RHO_AIR * R_LAT * D_X / 1000.0 * Q_V_R * 1000.0
 W_WINTER, W_SUMMER, W_LATENT = (round(v, -1) for v in (Q_SENS_W, Q_SENS_S, Q_LAT))
+_RUNNING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📏️running-example.🐍️")
+D_X_W = _RUNNING.D_X_WINTER_G_KG
+W_LATENT_WINTER = round(_RUNNING.Q_LAT_WINTER_W, -1)
 
 AIR = semio_color("secondary")
 SENS = P_RED
@@ -247,7 +249,7 @@ def _hide(scene, *mobs, run_time: float = 0.7):
 def _season_chip(season: str):
     """🔖 Season marker — Winter belongs to Heizung, Sommer to Kühlung, in the colour of its hand-over chip."""
     winter = season == "winter"
-    return chip("Winter" if winter else tr("Summer", "Sommer"), HEIZUNG if winter else KUEHLUNG)
+    return chip(tr("Example winter day", "Beispiel-Wintertag") if winter else tr("Example summer day", "Beispiel-Sommertag"), HEIZUNG if winter else KUEHLUNG)
 
 
 def _handover_chip(prefix: str, src: str, color: str):
@@ -268,23 +270,29 @@ class Beat1_Luftwaerme(Scene):
          "Take one cubic metre of air — the unit in which ventilation carries heat.",
          "Nehmen wir einen Kubikmeter Luft — die Einheit, in der die Lüftung Wärme transportiert."),
         ("mass",
-         "One cubic metre of air has a mass of about 1.2 kilograms.",
-         "Ein Kubikmeter Luft hat eine Masse von etwa 1,2 Kilogramm."),
+         r"One cubic metre of air at $20\,°\mathrm{C}$ has a mass of about $\rho = 1.2\,\mathrm{kg/m^3}$. Colder air is denser: $1.27\,\mathrm{kg/m^3}$ at $5\,°\mathrm{C}$.",
+         r"Ein Kubikmeter Luft bei $20\,°\mathrm{C}$ hat eine Masse von etwa $\rho = 1{,}2\,\mathrm{kg/m^3}$. Kältere Luft ist dichter: $1{,}27\,\mathrm{kg/m^3}$ bei $5\,°\mathrm{C}$."),
         ("coil",
          "A heating element warms that cubic metre from below.",
          "Ein Heizelement erwärmt diesen Kubikmeter von unten."),
         ("heat",
-         "From 20 to 21 degrees it takes 1.2 times 1005, that is 1206 joules.",
-         "Von 20 auf 21 °C braucht es 1,2 mal 1005, also 1206 Joule."),
+         r"From $20$ to $21\,°\mathrm{C}$ it takes $1.2\,\mathrm{kg} \cdot 1005\,\mathrm{J/(kg\,K)} \cdot 1\,\mathrm{K} = 1206\,\mathrm{J}$.",
+         r"Von $20$ auf $21\,°\mathrm{C}$ braucht es $1{,}2\,\mathrm{kg} \cdot 1005\,\mathrm{J/(kg\,K)} \cdot 1\,\mathrm{K} = 1206\,\mathrm{J}$."),
         ("c_luft",
-         "The energy per cubic metre and kelvin is the volumetric heat capacity of air, c Luft — about 0.34 watt-hours.",
-         "Die Energie je Kubikmeter und Kelvin ist die volumenbezogene Wärmekapazität der Luft, c-Luft — etwa 0,34 Wattstunden."),
+         r"The energy per cubic metre and kelvin is the volumetric heat capacity of air, $c_{\mathrm{Luft}}$.",
+         r"Die Energie je Kubikmeter und Kelvin ist die volumenbezogene Wärmekapazität der Luft, $c_{\mathrm{Luft}}$."),
+        ("norm",
+         r"The norm calculates with the fixed value $0.34\,\mathrm{Wh/(m^3K)}$.",
+         r"Die Norm rechnet mit dem festen Wert $0{,}34\,\mathrm{Wh/(m^3K)}$."),
         ("spell",
-         "Heating and Cooling spell the same quantity differently: c Luft in watt-hours, or rho times c p in joules.",
-         "Heizung und Kühlung schreiben dieselbe Größe verschieden: c-Luft in Wh/(m³·K) oder ρ mal c-p in J/(m³·K)."),
+         r"The same physics comes in two unit sets: building-related units with $\mathrm{m^3/h}$ and $\mathrm{Wh/(m^3K)}$, or SI units with $\mathrm{m^3/s}$ and $\mathrm{J/(m^3K)}$.",
+         r"Dieselbe Physik gibt es in zwei Einheitensätzen: gebäudebezogene Einheiten mit $\mathrm{m^3/h}$ und $\mathrm{Wh/(m^3K)}$ oder SI-Einheiten mit $\mathrm{m^3/s}$ und $\mathrm{J/(m^3K)}$."),
+        ("variiert",
+         "Unit usage varies, not only in the DIN. Both lines give the same result, apart from rounding.",
+         "Der Einheitengebrauch variiert, nicht nur in der DIN. Beide Zeilen liefern dasselbe Ergebnis, bis auf Rundung."),
         ("perk",
-         "So 220 cubic metres per hour carry about 75 watts for every kelvin of temperature difference.",
-         "Damit tragen 220 m³/h je Kelvin Temperaturunterschied rund 75 Watt."),
+         r"So $220\,\mathrm{m^3/h}$ carry about $75\,\mathrm{W/K}$, that is $75\,\mathrm{W}$ for every kelvin of temperature difference.",
+         r"Damit tragen $220\,\mathrm{m^3/h}$ rund $75\,\mathrm{W/K}$, also $75\,\mathrm{W}$ je Kelvin Temperaturdifferenz."),
     ]
 
     def construct(self):
@@ -293,7 +301,7 @@ class Beat1_Luftwaerme(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Heat capacity of air", "Wärmekapazität der Luft"))
-        din = _din_ref("DIN EN 12831-1")
+        din = _din_ref(_references.cite("din-en-12831-1"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "cube"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -305,15 +313,18 @@ class Beat1_Luftwaerme(Scene):
         hold_for(self, N, "cube", used=BEAT_SUBTITLE_FADE + 0.3 + 2.0)
 
         caption = swap_caption(self, caption, subtitle_text(N, "mass"))
-        xl = -6.45
+        xl, xq = -6.45, 1.55
         mass = ValueTracker(0.0)
-        rho_lbl = math_label(rf"\rho = {label_number(RHO_AIR, 1)}\,\mathrm{{kg/m^{{3}}}}", np.array([xl, 1.75, 0]),
+        rho_lbl = math_label(rf"\rho \approx {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(20\,°\mathrm{{C}})", np.array([xl, 2.25, 0]),
                              size=BODY_FONT_SIZE, color=P_CYAN, edge="left")
-        m_read = math_readout(lambda: rf"m = \rho \cdot 1\,\mathrm{{m^{{3}}}} = {label_number(mass.get_value(), 2)}\,\mathrm{{kg}}",
-                              np.array([xl, 1.2, 0]), size=BODY_FONT_SIZE, color=P_CYAN)
+        rho_note = math_label(rf"{label_number(1.27, 2)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(5\,°\mathrm{{C}})", np.array([xl, 1.2, 0]),
+                              size=LABEL_FONT_SIZE, color=P_CYAN, edge="left")
+        m_read = math_readout(lambda: rf"m = {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}} \cdot 1\,\mathrm{{m^{{3}}}} = {label_number(mass.get_value(), 2)}\,\mathrm{{kg}}",
+                              np.array([xl, 1.72, 0]), size=BODY_FONT_SIZE, color=P_CYAN)
         self.play(FadeIn(rho_lbl), run_time=0.5)
         self.add(m_read)
         self.play(mass.animate.set_value(RHO_AIR), Indicate(cube, color=P_CYAN, scale_factor=1.04), run_time=1.4)
+        self.play(FadeIn(rho_note, shift=DOWN * 0.1), run_time=0.6)
         hold_for(self, N, "mass")
 
         caption = swap_caption(self, caption, subtitle_text(N, "coil"))
@@ -327,7 +338,7 @@ class Beat1_Luftwaerme(Scene):
             heat = [ripples(heat_spots, r_max=0.42, rings=2, cycles=rt / 1.2, color=P_RED)]
             return heat + ([flow_animation([(rise, P_BLUE, P_ORANGE)], waves=3, cycles=0.45 * rt)] if convect else [])
 
-        cp_lbl = math_label(rf"c_{{p}} = {label_number(CP_AIR)}\,\mathrm{{J/(kg\,K)}}", np.array([xl, 0.55, 0]),
+        cp_lbl = math_label(rf"c_{{p}} = {label_number(CP_AIR)}\,\frac{{\mathrm{{J}}}}{{\mathrm{{kg\,K}}}}", np.array([xl, 0.55, 0]),
                             size=BODY_FONT_SIZE, color=P_RED, edge="left")
         self.play(Create(coil), FadeIn(coil_label), FadeIn(cp_lbl), run_time=1.5)
         hold_for(self, N, "coil", during=lambda rt: warming(rt, convect=False))
@@ -339,14 +350,16 @@ class Beat1_Luftwaerme(Scene):
         th_read = math_readout(lambda: rf"\theta = {label_number(theta.get_value(), 1)}\,°\mathrm{{C}}", np.array([xl, -0.1, 0]),
                                size=BODY_FONT_SIZE, color=P_ORANGE)
         q_read = math_readout(
-            lambda: rf"Q = {label_number(RHO_AIR, 1)} \cdot {label_number(CP_AIR)} \cdot {label_number(theta.get_value() - 20.0, 1)} = "
-                    rf"{label_number(RHO_AIR * CP_AIR * (theta.get_value() - 20.0))}\,\mathrm{{J}}",
-            np.array([xl, -0.75, 0]), size=BODY_FONT_SIZE, color=P_YELLOW)
+            lambda: rf"Q = {label_number(RHO_AIR, 1)}\,\mathrm{{kg}} \cdot {label_number(CP_AIR)}\,\mathrm{{\frac{{J}}{{kg\,K}}}} \cdot {label_number(theta.get_value() - 20.0, 1)}\,\mathrm{{K}}",
+            np.array([xq, -1.0, 0]), size=BODY_FONT_SIZE, color=P_YELLOW)
+        j_read = math_readout(
+            lambda: rf"= {label_number(RHO_AIR * CP_AIR * (theta.get_value() - 20.0))}\,\mathrm{{J}}",
+            np.array([xq + 0.42, -1.5, 0]), size=BODY_FONT_SIZE, color=P_YELLOW)
         wh_read = math_readout(
             lambda: rf"= {label_number(RHO_AIR * CP_AIR * (theta.get_value() - 20.0) / 3600.0, 3)}\,\mathrm{{Wh}}",
-            np.array([xl + 0.42, -1.3, 0]), size=BODY_FONT_SIZE, color=P_YELLOW)
+            np.array([xq + 0.42, -2.0, 0]), size=BODY_FONT_SIZE, color=P_YELLOW)
         self.play(FadeIn(thermo["group"]), FadeIn(thermo["column"]), *warming(0.4, convect=False), run_time=0.4)
-        self.add(th_read, q_read, wh_read)
+        self.add(th_read, q_read, j_read, wh_read)
         warm = _cube_faces(c_center, 1.0, P_ORANGE, warm=True)
         self.play(stage.transition("ventilation.heat-flow.air-heat.cube-warms", source=cube, target=warm), theta.animate.set_value(21.0), *warming(3.0),
                   run_time=3.0, rate_func=linear)
@@ -356,57 +369,71 @@ class Beat1_Luftwaerme(Scene):
         xr = 1.55
         c_name = body_text(tr("Volumetric heat capacity", "Volumenbezogene Wärmekapazität"), font_size=LABEL_FONT_SIZE, color=P_GREEN)
         c_name.move_to([xr + c_name.width / 2, 1.75, 0])
-        c_def = math_label(r"c_{\mathrm{Luft}} = \frac{\rho \cdot c_{p}}{3600\,\mathrm{s/h}}", np.array([xr, 1.0, 0]),
+        c_def = math_label(r"c_{\mathrm{Luft}} = \frac{\rho \cdot c_{p}}{3600\,\frac{\mathrm{s}}{\mathrm{h}}}", np.array([xr, 1.0, 0]),
                            size=BODY_FONT_SIZE, color=P_GREEN, edge="left")
-        c_j = math_label(rf"= {label_number(RHO_AIR * CP_AIR)}\,\mathrm{{J/(m^{{3}}K)}}", np.array([xr + 0.75, 0.3, 0]),
+        c_j = math_label(rf"= {label_number(RHO_AIR * CP_AIR)}\,\frac{{\mathrm{{J}}}}{{\mathrm{{m^{{3}}K}}}}", np.array([xr + 0.75, 0.3, 0]),
                          size=BODY_FONT_SIZE, color=P_GREEN, edge="left")
-        c_wh = math_label(rf"\approx {label_number(C_LUFT, 2)}\,\mathrm{{Wh/(m^{{3}}K)}}", np.array([xr + 0.75, -0.3, 0]),
+        c_wh = math_label(rf"\approx {label_number(C_LUFT, 2)}\,\frac{{\mathrm{{Wh}}}}{{\mathrm{{m^{{3}}K}}}}", np.array([xr + 0.75, -0.3, 0]),
                           size=BODY_FONT_SIZE, color=P_GREEN, edge="left")
         q_snap = math_label(rf"{label_number(RHO_AIR * CP_AIR)}\,\mathrm{{J}}", size=BODY_FONT_SIZE, color=P_YELLOW)
-        q_snap.move_to(q_read.get_right() + LEFT * q_snap.width / 2)
+        q_snap.move_to(j_read.get_right() + LEFT * q_snap.width / 2)
         wh_snap = math_label(rf"{label_number(RHO_AIR * CP_AIR / 3600.0, 3)}\,\mathrm{{Wh}}", size=BODY_FONT_SIZE, color=P_YELLOW)
         wh_snap.move_to(wh_read.get_right() + LEFT * wh_snap.width / 2)
         self.play(FadeIn(c_name), FadeIn(c_def), *warming(0.7), run_time=0.7)
         self.play(stage.transition("ventilation.heat-flow.air-heat.joules-per-m3-k", source=q_snap, target=c_j), *warming(0.9), run_time=0.9)
         self.play(stage.transition("ventilation.heat-flow.air-heat.wh-per-m3-k", source=wh_snap, target=c_wh), *warming(0.9), run_time=0.9)
+        self.remove(q_snap, wh_snap)
         hold_for(self, N, "c_luft", during=warming)
 
+        caption = swap_caption(self, caption, subtitle_text(N, "norm"))
+        self.play(Indicate(c_wh, color=P_GREEN, scale_factor=1.08), *warming(1.0), run_time=1.0)
+        hold_for(self, N, "norm", during=warming)
+
         caption = swap_caption(self, caption, subtitle_text(N, "spell"))
-        _hide(self, warm, cube_label, rho_lbl, m_read, coil, coil_label, cp_lbl, thermo["group"], thermo["column"],
-              th_read, q_read, wh_read, c_name, c_def, c_j, c_wh)
-        heiz_row, heiz = math_row([
-            ("v", r"\dot{V}\,[\mathrm{m^{3}/h}]", AIR), (None, r"\cdot", P_WHITE),
-            ("c", r"c_{\mathrm{Luft}}\,[\mathrm{Wh/(m^{3}\,K)}]", P_GREEN), (None, r"=\,\mathrm{W/K}", P_WHITE),
-        ], font_size=FORMULA_FONT_SIZE - 5)
-        kuehl_row, kuehl = math_row([
-            ("q", r"q_{v,\mathrm{R}}\,[\mathrm{m^{3}/s}]", AIR), (None, r"\cdot", P_WHITE),
-            ("c", r"\rho \cdot c_{p}\,[\mathrm{J/(m^{3}\,K)}]", P_GREEN), (None, r"=\,\mathrm{W/K}", P_WHITE),
-        ], font_size=FORMULA_FONT_SIZE - 5)
-        chip_h, chip_k = chip(tr("Heating", "Heizung"), HEIZUNG), chip(tr("Cooling", "Kühlung"), KUEHLUNG)
-        line_h = VGroup(chip_h, heiz_row).arrange(RIGHT, buff=0.45)
-        line_k = VGroup(chip_k, kuehl_row).arrange(RIGHT, buff=0.45)
-        both = VGroup(line_h, line_k).arrange(DOWN, aligned_edge=LEFT, buff=0.55).move_to(UP * 1.25)
-        both.set_x(0)
-        self.play(FadeIn(line_h, shift=RIGHT * 0.2), run_time=0.8)
-        self.play(FadeIn(line_k, shift=RIGHT * 0.2), run_time=0.8)
-        ring_h = highlight_param(heiz, "c", color=P_GREEN)
-        ring_k = highlight_param(kuehl, "c", color=P_GREEN)
-        self.play(Create(ring_h), Create(ring_k), run_time=0.6)
+        _hide(self, warm, cube_label, rho_lbl, rho_note, m_read, coil, coil_label, cp_lbl, thermo["group"], thermo["column"],
+              th_read, q_read, j_read, wh_read, c_name, c_def, c_j, c_wh)
+        v_si = V_DOT / 3600.0
+
+        def unit_block(head: str, formula: str, color: str):
+            title = body_text(head, font_size=BODY_FONT_SIZE, color=color)
+            line = math_label(formula, size=BODY_FONT_SIZE, color=P_WHITE)
+            line.scale_to_fit_width(min(line.width, 11.6))
+            frame = RoundedRectangle(width=12.2, height=title.height + line.height + 0.7, corner_radius=0, color=color,
+                                     stroke_width=_theme_module.CHROME_BORDER)
+            body = VGroup(title, line).arrange(DOWN, buff=0.22)
+            return VGroup(frame, body.move_to(frame))
+
+        block_h = unit_block(tr("Building-related units", "Gebäudebezogene Einheiten"),
+                             rf"\dot{{V}} \cdot c_{{\mathrm{{Luft}}}} = {label_number(V_DOT)}\,\mathrm{{\frac{{m^3}}{{h}}}} \cdot {label_number(C_LUFT, 2)}\,\mathrm{{\frac{{Wh}}{{m^3\,K}}}}"
+                             rf" \approx {label_number(V_DOT * C_LUFT)}\,\mathrm{{\frac{{W}}{{K}}}}", HEIZUNG)
+        block_k = unit_block(tr("SI units", "SI-Einheiten"),
+                             rf"q_{{v,\mathrm{{R}}}} \cdot \rho \cdot c_{{p}} = {label_number(v_si, 3)}\,\mathrm{{\frac{{m^3}}{{s}}}} \cdot {label_number(RHO_AIR, 1)}\,\mathrm{{\frac{{kg}}{{m^3}}}}"
+                             rf" \cdot {label_number(CP_AIR)}\,\mathrm{{\frac{{J}}{{kg\,K}}}} \approx {label_number(v_si * RHO_AIR * CP_AIR)}\,\mathrm{{\frac{{W}}{{K}}}}", KUEHLUNG)
+        both = VGroup(block_h, block_k).arrange(DOWN, buff=0.4).move_to(UP * 0.95)
+        note = body_text(tr("Same physics, two unit sets (rounding: 0.335 ≈ 0.34). Unit usage varies, not only in the DIN.",
+                            "Dieselbe Physik, zwei Einheitensätze (Rundung: 0,335 ≈ 0,34). Einheiten variieren, nicht nur in der DIN."),
+                         font_size=LABEL_FONT_SIZE, color=P_PRIMARY).next_to(both, DOWN, buff=0.3)
+        self.play(FadeIn(block_h, shift=RIGHT * 0.2), run_time=0.8)
+        self.play(FadeIn(block_k, shift=RIGHT * 0.2), run_time=0.8)
         hold_for(self, N, "spell")
+
+        caption = swap_caption(self, caption, subtitle_text(N, "variiert"))
+        self.play(FadeIn(note), run_time=0.6)
+        hold_for(self, N, "variiert")
 
         caption = swap_caption(self, caption, subtitle_text(N, "perk"))
         k = ValueTracker(0.0)
         perk = math_readout(
-            lambda: rf"\dot{{V}} \cdot c_{{\mathrm{{Luft}}}} = {label_number(V_DOT * k.get_value())} \cdot {label_number(C_LUFT, 2)} "
-                    rf"\approx {label_number(V_DOT * C_LUFT * k.get_value())}\,\mathrm{{W/K}}",
+            lambda: rf"\dot{{V}} \cdot c_{{\mathrm{{Luft}}}} = {label_number(V_DOT * k.get_value())}\,\mathrm{{\frac{{m^3}}{{h}}}} \cdot {label_number(C_LUFT, 2)}\,\mathrm{{\frac{{Wh}}{{m^3\,K}}}} "
+                    rf"\approx {label_number(V_DOT * C_LUFT * k.get_value())}\,\mathrm{{\frac{{W}}{{K}}}}",
             np.array([0.0, -0.4, 0]), size=FORMULA_FONT_SIZE, color=P_YELLOW, edge="center")
         row, box, items = math_panel([
             ("c", r"c_{\mathrm{Luft}}", P_GREEN), (None, "=", P_WHITE),
-            (None, r"\frac{\rho \cdot c_{p}}{3600\,\mathrm{s/h}}", P_WHITE),
-            (None, rf"\approx {label_number(C_LUFT, 2)}\,\mathrm{{Wh/(m^{{3}}\,K)}}", P_GREEN),
+            (None, rf"\frac{{{label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^3}}}} \cdot {label_number(CP_AIR)}\,\frac{{\mathrm{{J}}}}{{\mathrm{{kg\,K}}}}}}{{3600\,\frac{{\mathrm{{s}}}}{{\mathrm{{h}}}}}}", P_WHITE),
+            (None, rf"\approx {label_number(C_LUFT, 2)}\,\mathrm{{\frac{{Wh}}{{m^3\,K}}}}", P_GREEN),
         ])
         self.add(perk)
-        self.play(_ramp(k, 1.0), FadeOut(VGroup(ring_h, ring_k)), Create(box), FadeIn(row), run_time=1.8)
+        self.play(_ramp(k, 1.0), FadeOut(VGroup(both, note)), Create(box), FadeIn(row), run_time=1.8)
         hold_for(self, N, "perk")
 
         self.play(FadeOut(caption), run_time=0.3)
@@ -424,23 +451,23 @@ class Beat2_SensibleWaerme(Scene):
          "Sensible heat changes the air temperature: the exhaust air takes the room's heat out, the supply air brings the outdoor heat in.",
          "Sensible Wärme ändert die Lufttemperatur: Die Abluft nimmt Raumwärme mit, die Zuluft bringt Außenwärme herein."),
         ("delta",
-         "The driving force is the temperature difference delta theta, indoor minus outdoor. In winter that is 20 minus 0, so 20 kelvin.",
-         "Treiber ist die Temperaturdifferenz Delta-Theta, innen minus außen. Im Winter sind das 20 minus 0, also 20 Kelvin."),
+         r"The driving force is the temperature difference $\Delta\theta$, indoor minus outdoor. On our example winter day with $\theta_e = 0\,°\mathrm{C}$ that is $20\,°\mathrm{C} - 0\,°\mathrm{C} = 20\,\mathrm{K}$.",
+         r"Treiber ist die Temperaturdifferenz $\Delta\theta$, innen minus außen. Am Beispiel-Wintertag mit $\theta_e = 0\,°\mathrm{C}$ sind das $20\,°\mathrm{C} - 0\,°\mathrm{C} = 20\,\mathrm{K}$."),
         ("formula",
-         "The sensible ventilation heat flow is volume flow times c Luft times delta theta, in watts.",
-         "Der sensible Lüftungswärmestrom ist Volumenstrom mal c-Luft mal Delta-Theta, in Watt."),
+         r"The sensible ventilation heat flow is volume flow times $c_{\mathrm{Luft}}$ times $\Delta\theta$, in watts.",
+         r"Der sensible Lüftungswärmestrom $\dot{Q}_{\mathrm{V,sens}}$ ist Volumenstrom mal $c_{\mathrm{Luft}}$ mal $\Delta\theta$, in Watt."),
         ("v",
-         "The volume flow is V times n: 440 times 0.5 gives 220 cubic metres per hour.",
-         "Der Volumenstrom ist V mal n: 440 mal 0,5 ergibt 220 Kubikmeter pro Stunde."),
+         r"The volume flow is $V \cdot n$: $440\,\mathrm{m^3} \cdot 0.5\,\mathrm{h^{-1}} = 220\,\mathrm{m^3/h}$.",
+         r"Der Volumenstrom ist $V \cdot n$: $440\,\mathrm{m^3} \cdot 0{,}5\,\mathrm{h^{-1}} = 220\,\mathrm{m^3/h}$."),
         ("c",
-         "And c Luft is the heat capacity of air: 0.34 watt-hours per cubic metre and kelvin.",
-         "Und c-Luft ist die Wärmekapazität der Luft: 0,34 Wattstunden je Kubikmeter und Kelvin."),
+         r"And $c_{\mathrm{Luft}}$ is the heat capacity of air: $0.34\,\mathrm{Wh/(m^3K)}$.",
+         r"Und $c_{\mathrm{Luft}}$ ist die Wärmekapazität der Luft: $0{,}34\,\mathrm{Wh/(m^3K)}$."),
         ("winter",
-         "In winter: 220 times 0.34 times 20 — about 1500 watts leave with the air. Heating counts this as ventilation loss.",
-         "Im Winter: 220 mal 0,34 mal 20 — rund 1500 Watt gehen mit der Luft verloren. Die Heizung rechnet das als Lüftungsverlust."),
+         r"In winter: $220\,\mathrm{m^3/h} \cdot 0.34\,\mathrm{Wh/(m^3K)} \cdot 20\,\mathrm{K}$ — about $1500\,\mathrm{W}$ leave with the air. Heating counts this as ventilation loss.",
+         r"Im Winter: $220\,\mathrm{m^3/h} \cdot 0{,}34\,\mathrm{Wh/(m^3K)} \cdot 20\,\mathrm{K}$ — rund $1500\,\mathrm{W}$ gehen mit der Luft verloren. Die Heizung rechnet das als Lüftungsverlust."),
         ("summer",
-         "In summer: 26 minus 32, so delta theta is minus 6 kelvin and the result minus 450 watts — a gain. We quote the magnitudes 6 K and 450 W.",
-         "Im Sommer: 26 minus 32, also Delta-Theta minus 6 Kelvin und minus 450 Watt — ein Gewinn. Genannt werden die Beträge 6 K und 450 W."),
+         r"In summer: $26\,°\mathrm{C} - 32\,°\mathrm{C}$, so $\Delta\theta = -6\,\mathrm{K}$ and the result $-450\,\mathrm{W}$ — a gain. We quote the magnitudes $6\,\mathrm{K}$ and $450\,\mathrm{W}$.",
+         r"Im Sommer: $26\,°\mathrm{C} - 32\,°\mathrm{C}$, also $\Delta\theta = -6\,\mathrm{K}$ und $-450\,\mathrm{W}$ — ein Gewinn. Genannt werden die Beträge $6\,\mathrm{K}$ und $450\,\mathrm{W}$."),
     ]
 
     def construct(self):
@@ -449,7 +476,7 @@ class Beat2_SensibleWaerme(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Sensible heat", "Sensible Wärme"))
-        din = _din_ref("DIN EN 12831-1 · VDI 2078")
+        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -505,7 +532,7 @@ class Beat2_SensibleWaerme(Scene):
         row, box, items = math_panel([
             ("q", r"\dot{Q}_{\mathrm{V,sens}}", SENS), (None, "=", P_WHITE),
             ("v", r"\dot{V}", AIR), (None, r"\cdot", P_WHITE), ("c", r"c_{\mathrm{Luft}}", P_GREEN), (None, r"\cdot", P_WHITE),
-            ("dt", r"\Delta\theta", P_YELLOW), (None, r"\;[\mathrm{W}]", P_WHITE),
+            ("dt", r"\Delta\theta", P_YELLOW), (None, r"\;\text{in}\;\mathrm{W}", P_WHITE),
         ])
         rest = VGroup(*[m for m in row if m is not items["dt"]])
         self.play(stage.transition("ventilation.heat-flow.sensible.formula-dtheta", source=dt_name[0], target=items["dt"]), *air(1.0), run_time=1.0)
@@ -514,7 +541,7 @@ class Beat2_SensibleWaerme(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "v"))
         v_row = _row(_name(r"\dot{V} = V \cdot n", tr("Volume flow", "Volumenstrom"), AIR), x0, y_v, 2.9, AIR, lambda: v.get_value() / 300.0)
-        v_read = math_readout(lambda: rf"\dot{{V}} = {label_number(v.get_value())}\,\mathrm{{m^{{3}}/h}}",
+        v_read = math_readout(lambda: rf"\dot{{V}} = {label_number(v.get_value())}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
                               np.array([v_row["x_end"] + 0.25, y_v, 0]), size=BODY_FONT_SIZE, color=AIR)
         ring = highlight_param(items, "v", color=AIR)
         _show_row(self, v_row, v_read, run_time=0.5)
@@ -525,7 +552,7 @@ class Beat2_SensibleWaerme(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "c"))
         c_row = _row(_name(r"c_{\mathrm{Luft}}", tr("Heat capacity of air", "Wärmekapazität der Luft"), P_GREEN), x0, y_c, 2.9, P_GREEN,
                      lambda: c.get_value() / 0.5)
-        c_read = math_readout(lambda: rf"c_{{\mathrm{{Luft}}}} = {label_number(c.get_value(), 2)}\,\mathrm{{Wh/(m^{{3}}K)}}",
+        c_read = math_readout(lambda: rf"c_{{\mathrm{{Luft}}}} = {label_number(c.get_value(), 2)}\,\frac{{\mathrm{{Wh}}}}{{\mathrm{{m^{{3}}K}}}}",
                               np.array([c_row["x_end"] + 0.25, y_c, 0]), size=BODY_FONT_SIZE, color=P_GREEN)
         ring = highlight_param(items, "c", color=P_GREEN)
         _show_row(self, c_row, c_read, run_time=0.5)
@@ -568,23 +595,23 @@ class Beat3_LatenteLast(Scene):
          "Summer air carries more than heat: the humid outdoor air brings water vapour into the room.",
          "Sommerluft trägt mehr als Wärme: Die feuchte Außenluft bringt Wasserdampf in den Raum."),
         ("dx",
-         "Outdoor air at 32 °C and 50% holds 15 g/kg; the room at 26 °C and 50% holds 10.5 g/kg. Thus Δx = 4.5 g/kg.",
-         "Bei 32 °C und 50 % enthält die Außenluft 15 g Wasser je kg, die Raumluft bei 26 °C und 50 % nur 10,5 g — Delta-x beträgt 4,5 g/kg."),
+         r"Outdoor air at $32\,°\mathrm{C}$ and $50\,\%$ holds $15\,\mathrm{g/kg}$; the room at $26\,°\mathrm{C}$ and $50\,\%$ holds $10.5\,\mathrm{g/kg}$. Thus $\Delta x = 4.5\,\mathrm{g/kg}$.",
+         r"Bei $32\,°\mathrm{C}$ und $50\,\%$ hat die Außenluft $15\,\mathrm{g/kg}$, die Raumluft bei $26\,°\mathrm{C}$ nur $10{,}5\,\mathrm{g/kg}$: $\Delta x = 4{,}5\,\mathrm{g/kg}$."),
         ("formula",
-         "The latent ventilation load is density times latent heat r times delta x times volume flow.",
-         "Die latente Lüftungslast ist Dichte mal Verdampfungswärme r mal Delta-x mal Volumenstrom."),
+         r"The latent ventilation load $\dot{Q}_{\mathrm{V,lat}}$ is density $\rho$ times latent heat $r$ times $\Delta x$ times volume flow $q_{v,\mathrm{R}}$.",
+         r"Die latente Lüftungslast $\dot{Q}_{\mathrm{V,lat}}$ ist Dichte $\rho$ mal Verdampfungswärme $r$ mal $\Delta x$ mal Volumenstrom $q_{v,\mathrm{R}}$."),
         ("water",
-         "Per cubic metre that is 1.2 times 4.5, so 5.4 grams of water that must be condensed.",
-         "Je Kubikmeter sind das 1,2 mal 4,5, also 5,4 Gramm Wasser, die kondensiert werden müssen."),
+         r"Per cubic metre that is $1.2\,\mathrm{kg/m^3} \cdot 4.5\,\mathrm{g/kg} = 5.4\,\mathrm{g/m^3}$ of water that must be condensed.",
+         r"Je Kubikmeter sind das $1{,}2\,\mathrm{kg/m^3} \cdot 4{,}5\,\mathrm{g/kg} = 5{,}4\,\mathrm{g/m^3}$ Wasser, die kondensiert werden müssen."),
         ("r",
-         "Changing phase involves energy: r is about 2450 kilojoules per kilogram — condensing releases it, and it must be removed again.",
-         "Der Phasenwechsel benötigt r ≈ 2450 kJ/kg. Kondensation setzt diese Energie frei; sie muss abgeführt werden."),
+         r"Changing phase involves energy: $r$ is about $2450\,\mathrm{kJ/kg}$ — condensing releases it, and it must be removed again.",
+         r"Der Phasenwechsel benötigt $r \approx 2450\,\mathrm{kJ/kg}$. Kondensation setzt diese Energie frei; sie muss abgeführt werden."),
         ("qv",
-         "The air flow of 220 cubic metres per hour is 0.061 cubic metres per second.",
-         "Der Luftstrom von 220 Kubikmetern pro Stunde sind 0,061 Kubikmeter pro Sekunde."),
+         r"The air flow of $220\,\mathrm{m^3/h}$ is $0.061\,\mathrm{m^3/s}$.",
+         r"Der Luftstrom von $220\,\mathrm{m^3/h}$ sind $0{,}061\,\mathrm{m^3/s}$."),
         ("result",
-         "Together: about 810 watts of latent load — more than the 450 watts of sensible heat.",
-         "Zusammen: rund 810 Watt latente Last — mehr als die 450 Watt sensible Wärme."),
+         r"Together: about $810\,\mathrm{W}$ of latent load — more than the $450\,\mathrm{W}$ of sensible heat.",
+         r"Zusammen: rund $810\,\mathrm{W}$ latente Last — mehr als die $450\,\mathrm{W}$ sensible Wärme."),
     ]
 
     def construct(self):
@@ -593,7 +620,7 @@ class Beat3_LatenteLast(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Latent load from moisture", "Latente Last durch Feuchte"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite("vdi-2078"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -638,9 +665,9 @@ class Beat3_LatenteLast(Scene):
 
         heads = VGroup(head(cx_o, tr("Outdoor air", "Außenluft"), tr(rf"{THETA_E_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{RH}}", rf"{THETA_E_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{r.F.}}")),
                        head(cx_i, tr("Room air", "Raumluft"), tr(rf"{THETA_I_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{RH}}", rf"{THETA_I_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{r.F.}}")))
-        read_o = math_readout(lambda: rf"x = {label_number(x_out.get_value(), 1)}\,\mathrm{{g/kg}}", np.array([cx_o, y_b - 0.3, 0]),
+        read_o = math_readout(lambda: rf"x = {label_number(x_out.get_value(), 1)}\,\frac{{\mathrm{{g}}}}{{\mathrm{{kg}}}}", np.array([cx_o, y_b - 0.3, 0]),
                               size=BODY_FONT_SIZE, color=LATENT, edge="center")
-        read_i = math_readout(lambda: rf"x = {label_number(x_in.get_value(), 1)}\,\mathrm{{g/kg}}", np.array([cx_i, y_b - 0.3, 0]),
+        read_i = math_readout(lambda: rf"x = {label_number(x_in.get_value(), 1)}\,\frac{{\mathrm{{g}}}}{{\mathrm{{kg}}}}", np.array([cx_i, y_b - 0.3, 0]),
                               size=BODY_FONT_SIZE, color=LATENT, edge="center")
         self.play(Create(cols), FadeIn(heads), *air(0.8), run_time=0.8)
         hold_for(self, N, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 0.9 + 0.8, during=air)
@@ -653,7 +680,7 @@ class Beat3_LatenteLast(Scene):
         guide_i = DashedLine(np.array([cx_i - 0.45, y_lo, 0]), np.array([bx - 0.3, y_lo, 0]), color=P_BLUE, stroke_width=1.6)
         guide_o_full = DashedLine(np.array([cx_o + 0.45, y_lo, 0]), np.array([bx - 0.3, y_lo, 0]), color=P_BLUE, stroke_width=1.6)
         brace = dim_arrow(np.array([bx, y_lo, 0]), np.array([bx, y_hi, 0]), color=P_BLUE)
-        dx_lbl = math_label(rf"\Delta x = {label_number(D_X, 1)}\,\mathrm{{g/kg}}", np.array([bx + 0.3, (y_lo + y_hi) / 2, 0]),
+        dx_lbl = math_label(rf"\Delta x = {label_number(D_X, 1)}\,\frac{{\mathrm{{g}}}}{{\mathrm{{kg}}}}", np.array([bx + 0.3, (y_lo + y_hi) / 2, 0]),
                             size=LABEL_FONT_SIZE, color=P_BLUE, edge="left")
         self.play(Create(guide_o), Create(guide_o_full), Create(brace), FadeIn(dx_lbl), *air(1.0), run_time=1.0)
         hold_for(self, N, "dx", during=air)
@@ -663,7 +690,7 @@ class Beat3_LatenteLast(Scene):
             ("q", r"\dot{Q}_{\mathrm{V,lat}}", LATENT), (None, "=", P_WHITE),
             ("rho", r"\rho", P_WHITE), (None, r"\cdot", P_WHITE), ("r", "r", P_ORANGE), (None, r"\cdot", P_WHITE),
             ("dx", r"\Delta x", P_BLUE), (None, r"\cdot", P_WHITE), ("qv", r"q_{v,\mathrm{R}}", AIR),
-            (None, r"\;[\mathrm{W}]", P_WHITE),
+            (None, r"\;\text{in}\;\mathrm{W}", P_WHITE),
         ])
         rest = VGroup(*[m for m in row if m is not items["dx"]])
         self.play(stage.transition("ventilation.heat-flow.latent.formula-dx", source=dx_lbl, target=items["dx"]), *air(1.0), run_time=1.0)
@@ -673,8 +700,8 @@ class Beat3_LatenteLast(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "water"))
         w_name = _name(r"\rho \cdot \Delta x", tr("Water per m³", "Wasser je m³"), P_BLUE)
         w_row = _row(w_name, x0, y_w, 3.3, P_BLUE, lambda: kw.get_value() * WATER_PER_M3 / 6.0)
-        w_read = math_readout(lambda: rf"\rho \cdot \Delta x = {label_number(WATER_PER_M3 * kw.get_value(), 1)}\,\mathrm{{g/m^{{3}}}}",
-                              np.array([w_row["x_end"] + 0.25, y_w, 0]), size=BODY_FONT_SIZE, color=P_BLUE)
+        w_read = math_readout(lambda: rf"\rho \cdot \Delta x = {label_number(RHO_AIR, 1)}\,\mathrm{{\frac{{kg}}{{m^3}}}} \cdot {label_number(D_X, 1)}\,\mathrm{{\frac{{g}}{{kg}}}} = {label_number(WATER_PER_M3 * kw.get_value(), 1)}\,\mathrm{{\frac{{g}}{{m^3}}}}",
+                              np.array([w_row["x_end"] + 0.25, y_w, 0]), size=LABEL_FONT_SIZE, color=P_BLUE)
         _hide(self, cols, heads, base_o, extra_o, base_i, read_o, read_i, guide_o, guide_i, guide_o_full, brace, dx_lbl)
         ring = highlight_param(items, "dx", color=P_BLUE)
         _show_row(self, w_row, w_read, run_time=0.5)
@@ -684,7 +711,7 @@ class Beat3_LatenteLast(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "r"))
         r_row = _row(_name("r", tr("Heat of vaporisation", "Verdampfungswärme"), P_ORANGE), x0, y_r, 3.3, P_ORANGE, lambda: kr.get_value() * R_LAT / 3000.0)
-        r_read = math_readout(lambda: rf"r = {label_number(R_LAT * kr.get_value())}\,\mathrm{{kJ/kg}}",
+        r_read = math_readout(lambda: rf"r = {label_number(R_LAT * kr.get_value())}\,\frac{{\mathrm{{kJ}}}}{{\mathrm{{kg}}}}",
                               np.array([r_row["x_end"] + 0.25, y_r, 0]), size=BODY_FONT_SIZE, color=P_ORANGE)
         ring = highlight_param(items, "r", color=P_ORANGE)
         _show_row(self, r_row, r_read, run_time=0.5)
@@ -694,7 +721,7 @@ class Beat3_LatenteLast(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "qv"))
         v_row = _row(_name(r"q_{v,\mathrm{R}} = \dot{V}/3600", tr("Volume flow", "Volumenstrom"), AIR), x0, y_v, 3.3, AIR, lambda: kv.get_value() * Q_V_R / 0.1)
-        v_read = math_readout(lambda: rf"q_{{v,\mathrm{{R}}}} = {label_number(Q_V_R * kv.get_value(), 3)}\,\mathrm{{m^{{3}}/s}}",
+        v_read = math_readout(lambda: rf"q_{{v,\mathrm{{R}}}} = {label_number(Q_V_R * kv.get_value(), 3)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{s}}}}",
                               np.array([v_row["x_end"] + 0.25, y_v, 0]), size=BODY_FONT_SIZE, color=AIR)
         ring = highlight_param(items, "qv", color=AIR)
         _show_row(self, v_row, v_read, run_time=0.5)
@@ -732,17 +759,23 @@ class Beat4_WinterUndSommer(Scene):
          "One house, one formula, two seasons: the air carries heat in both, but in opposite directions.",
          "Ein Haus, eine Formel, zwei Jahreszeiten: Die Luft trägt in beiden Wärme, aber in entgegengesetzte Richtungen."),
         ("winter",
-         "In winter 20 kelvin drive 1500 watts of sensible heat out. Latent heat is not part of the heating load.",
-         "Im Winter treiben 20 Kelvin 1500 Watt sensible Wärme hinaus. Die latente Wärme gehört nicht zur Heizlast."),
+         r"On the example winter day $\Delta\theta = 20\,\mathrm{K}$ drives $1500\,\mathrm{W}$ of sensible heat out.",
+         r"Am Beispiel-Wintertag treibt $\Delta\theta = 20\,\mathrm{K}$ rund $1500\,\mathrm{W}$ sensible Wärme hinaus."),
+        ("winter_lat",
+         r"Moisture leaves with the exhaust air as well, about $770\,\mathrm{W}$ latent, but by convention the heating load counts only the sensible part.",
+         r"Auch Feuchte geht mit der Abluft verloren, rund $770\,\mathrm{W}$ latent, doch die Heizlast zählt per Konvention nur den sensiblen Anteil."),
+        ("humid",
+         "Humidifying the supply air would cost the latent part.",
+         "Das Befeuchten der Zuluft würde den latenten Anteil kosten."),
         ("sens",
-         "In summer only 6 kelvin drive 450 watts of sensible heat in.",
-         "Im Sommer treiben nur 6 Kelvin 450 Watt sensible Wärme herein."),
+         r"In summer only $\Delta\theta = 6\,\mathrm{K}$ drives $450\,\mathrm{W}$ of sensible heat in.",
+         r"Im Sommer treibt nur $\Delta\theta = 6\,\mathrm{K}$ rund $450\,\mathrm{W}$ sensible Wärme herein."),
         ("lat",
-         "On top comes the latent load of 810 watts from the moisture — together 1260 watts.",
-         "Dazu kommt die latente Last von 810 Watt aus der Feuchte — zusammen 1260 Watt."),
+         r"On top comes the latent load of $810\,\mathrm{W}$ from the moisture — together $\dot{Q}_{\mathrm{V}} = 1260\,\mathrm{W}$.",
+         r"Dazu kommt die latente Last von $810\,\mathrm{W}$ aus der Feuchte — zusammen $\dot{Q}_{\mathrm{V}} = 1260\,\mathrm{W}$."),
         ("use",
-         "Heating takes the winter value as its ventilation loss, Cooling takes both summer shares as its ventilation load.",
-         "Die Heizung übernimmt den Winterwert als Lüftungsverlust, die Kühlung beide Sommeranteile als Lüftungslast."),
+         r"Heating takes the winter value as its ventilation loss $\dot{Q}_{\mathrm{V}}$, Cooling takes both summer shares as its ventilation load $\dot{Q}_{\mathrm{V}}$.",
+         r"Die Heizung übernimmt den Winterwert als Lüftungsverlust $\dot{Q}_{\mathrm{V}}$, die Kühltechnik beide Sommeranteile als Lüftungslast $\dot{Q}_{\mathrm{V}}$."),
     ]
 
     def construct(self):
@@ -750,7 +783,7 @@ class Beat4_WinterUndSommer(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("The same formula, two seasons", "Dieselbe Formel, zwei Jahreszeiten"))
-        din = _din_ref("DIN EN 12831-1 · VDI 2078")
+        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -765,7 +798,7 @@ class Beat4_WinterUndSommer(Scene):
         row, box, items = math_panel([
             ("q", r"\dot{Q}_{\mathrm{V}}", P_WHITE), (None, "=", P_WHITE),
             ("s", r"\dot{Q}_{\mathrm{V,sens}}", SENS), (None, "+", P_WHITE), ("l", r"\dot{Q}_{\mathrm{V,lat}}", LATENT),
-            (None, r"\;[\mathrm{W}]", P_WHITE),
+            (None, r"\;\text{in}\;\mathrm{W}", P_WHITE),
         ])
         self.play(Create(house_w["group"]), Create(house_s["group"]), FadeIn(chip_w), FadeIn(chip_s), run_time=1.4)
         self.play(*_open_both(house_w), *_open_both(house_s), Create(_guides([(house_w, "winter"), (house_s, "summer")])),
@@ -789,15 +822,24 @@ class Beat4_WinterUndSommer(Scene):
             return label
 
         caption = swap_caption(self, caption, subtitle_text(N, "winter"))
-        bars_w = bar(-2.9, [("sens", W_WINTER, SENS)])
+        bars_w = bar(-2.9, [("sens", W_WINTER, SENS), ("lat", W_LATENT_WINTER, LATENT)])
         lab_w = side(bars_w, 0, -2.25, rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} = {label_number(W_WINTER)}\,\mathrm{{W}}",
                      rf"\Delta\theta = {label_number(THETA_I_W - THETA_E_W)}\,\mathrm{{K}}", SENS)
         self.play(GrowFromEdge(bars_w["bars"][0], DOWN), *air(1.6), run_time=1.6)
-        note_w = VGroup(body_text(tr("latent: not part", "latent: nicht Teil"), font_size=LABEL_FONT_SIZE - 2, color=LATENT),
-                        body_text(tr("of the heating load", "der Heizlast"), font_size=LABEL_FONT_SIZE - 2, color=LATENT)).arrange(DOWN, buff=0.05, aligned_edge=LEFT)
-        note_w.set_opacity(0.75).move_to(np.array([-2.25 + note_w.width / 2, -0.62, 0.0]))
-        self.play(FadeIn(lab_w), FadeIn(note_w), *air(0.5), run_time=0.5)
+        note_w = VGroup(body_text(tr("by convention", "per Konvention"), font_size=LABEL_FONT_SIZE - 2, color=LATENT),
+                        body_text(tr("not in the heating load", "nicht in der Heizlast"), font_size=LABEL_FONT_SIZE - 2, color=LATENT)).arrange(DOWN, buff=0.05, aligned_edge=LEFT)
+        lab_wl = side(bars_w, 1, -2.25, rf"\dot{{Q}}_{{\mathrm{{V,lat}}}} = {label_number(W_LATENT_WINTER)}\,\mathrm{{W}}",
+                      rf"\Delta x = {label_number(D_X_W, 1)}\,\frac{{\mathrm{{g}}}}{{\mathrm{{kg}}}}", LATENT)
+        note_w.set_opacity(0.75).next_to(lab_wl, DOWN, buff=0.12, aligned_edge=LEFT)
+        self.play(FadeIn(lab_w), *air(0.5), run_time=0.5)
         hold_for(self, N, "winter", during=air)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "winter_lat"))
+        self.play(GrowFromEdge(bars_w["bars"][1], DOWN), FadeIn(lab_wl), FadeIn(note_w), *air(1.2), run_time=1.2)
+        hold_for(self, N, "winter_lat", during=air)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "humid"))
+        hold_for(self, N, "humid", during=air)
 
         caption = swap_caption(self, caption, subtitle_text(N, "sens"))
         bars_s = bar(4.2, [("sens", W_SUMMER, SENS), ("lat", W_LATENT, LATENT)])
@@ -809,15 +851,15 @@ class Beat4_WinterUndSommer(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "lat"))
         lab_l = side(bars_s, 1, 4.85, rf"\dot{{Q}}_{{\mathrm{{V,lat}}}} = {label_number(W_LATENT)}\,\mathrm{{W}}",
-                     rf"\Delta x = {label_number(D_X, 1)}\,\mathrm{{g/kg}}", LATENT)
+                     rf"\Delta x = {label_number(D_X, 1)}\,\frac{{\mathrm{{g}}}}{{\mathrm{{kg}}}}", LATENT)
         self.play(GrowFromEdge(bars_s["bars"][1], DOWN), *air(1.4), run_time=1.4)
         self.play(FadeIn(lab_l), *air(0.5), run_time=0.5)
         hold_for(self, N, "lat", during=air)
 
         caption = swap_caption(self, caption, subtitle_text(N, "use"))
-        to_h = _handover_chip(tr("→ Heating:", "→ Heizung:"), r"\Phi_{\mathrm{V}}", HEIZUNG)
-        to_k = _handover_chip(tr("→ Cooling:", "→ Kühlung:"), r"\dot{Q}_{\mathrm{L}}", KUEHLUNG)
-        to_h.move_to(np.array([-4.5, 1.72, 0.0]))
+        to_h = _handover_chip(tr("→ Heating:", "→ Heizung:"), r"\dot{Q}_{\mathrm{V}}", HEIZUNG)
+        to_k = _handover_chip(tr("→ Cooling:", "→ Kühltechnik:"), r"\dot{Q}_{\mathrm{V}}", KUEHLUNG)
+        to_h.move_to(np.array([-5.0, 1.72, 0.0]))
         to_k.move_to(np.array([3.3, 1.72, 0.0]))
         self.play(FadeIn(to_h, shift=DOWN * 0.15), *air(0.8), run_time=0.8)
         self.play(FadeIn(to_k, shift=DOWN * 0.15), *air(0.8), run_time=0.8)

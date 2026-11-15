@@ -1,0 +1,383 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:wanted:v1",
+  "title": "Projects a machine wants the fleet to infer",
+  "description": "A machine whose admitted memory cannot infer the stale projects of a graph read publishes this request instead of computing them; a machine with headroom serves it by inferring the projects, whose records reach the requester through the project record exchange. The Policy numbers are measured: the parent holds 7.1 GB in one wave of 48 projects (7 121 MB, 7 172 MB) and 1.0 to 2.1 GB while it only verifies.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "baseMegabytes": 2200,
+        "waveMegabytes": 7200,
+        "waveProjects": 48,
+        "minimumWaveProjects": 8,
+        "maximumLocalWaves": 4,
+        "waitMilliseconds": 1800000,
+        "silenceMilliseconds": 300000,
+        "waitMaximumMilliseconds": 21600000,
+        "renewMilliseconds": 300000,
+        "pollMilliseconds": 2000,
+        "ttlMilliseconds": 1200000,
+        "maximumProjects": 8192,
+        "serveHeadroomMegabytes": 9400,
+        "availableFloorMegabytes": 2048,
+        "claimTtlMilliseconds": 180000,
+        "claimRenewMilliseconds": 45000,
+        "claimExpectedMilliseconds": 450000
+      }
+    },
+    "WantedRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "requester",
+        "platform",
+        "graphKey",
+        "projects",
+        "createdMs",
+        "expiresMs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "requester": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "graphKey": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "projects": {
+          "type": "array",
+          "maxItems": 8192,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "createdMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expiresMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heavy": {
+          "type": "array",
+          "maxItems": 8192,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "left": {
+          "type": "array",
+          "maxItems": 8192,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "plan": "graph: {stale} stale projects, {taken} taken from the fleet, this machine can infer {local} ({wave} per wave); asking the fleet for {wanted}",
+          "waiting": "graph: waiting for the fleet: {arrived} of {wanted} projects arrived",
+          "waitingServer": "graph: waiting for the fleet: {arrived} of {wanted} projects arrived; the server last progressed {age} s ago, estimated time left: {estimate}",
+          "causeSilent": "graph: no machine of this class gave a sign of life for {minutes} min, so no one holds the request",
+          "causeStalled": "graph: the fleet made no progress for {minutes} min although its server is alive",
+          "causeLimit": "graph: the wait reached its maximum of {hours} h",
+          "gave-up": "graph: the fleet delivered {arrived} of {wanted} projects within {seconds} s; {missing} remain, more than this machine can infer",
+          "unreachable": "graph: the fleet cache cannot be reached, so {wanted} stale projects cannot be requested from it; this machine can infer {local}",
+          "refused": "graph: nothing to wait for any longer: asked the fleet for {wanted} stale projects and received {arrived} within {seconds} s, {missing} remain and this machine can infer only {local}; try again when a machine with free memory serves the graph, or read the graph on a larger machine",
+          "serving": "graph-server: serving {count} stale projects for {requester}",
+          "alive": "graph-server: alive, {requesters} machines seen, {held} requests held, {cross} projects served across platform classes, {left} projects left to a machine of their class, read {reading}",
+          "foreign": "graph-server: all {count} stale projects of {requester} ({platform}) are bound to the host and left to a machine of the class {class}; this machine serves the class {own}",
+          "class": "graph: this machine is {platform} (class {class}); machines of every class serve its request except the projects bound to its host, which only a machine of that class or this machine infers, and their graph server logs 'serving' for it",
+          "answering": "graph-server: {arrived} of {count} projects of {requester} are fresh",
+          "joined": "graph-server: {requester} asked again for {count} projects: joined the held request, {arrived} are fresh already, nothing is inferred twice",
+          "lost": "graph-server: the claim for {requester} is held by {by}; this machine leaves the request to it",
+          "resumed": "graph-server: continuing after a restart with {held} held request(s), {fresh} projects already reported fresh",
+          "continuing": "graph-server: the read starts from the {count} projects that are published already",
+          "served": "graph-server: served {count} projects for {requester} in {seconds} s",
+          "refreshing": "graph-server: refreshing the fleet generation in the background ({reason})",
+          "refreshed": "graph-server: fleet generation refreshed in {seconds} s",
+          "failed": "graph-server: the graph read ended with status {status} after {seconds} s: {detail}",
+          "stalled": "no wave was published for {minutes} min; the read is stopped and the next one starts from the waves published so far",
+          "tooLong": "the read ran longer than the maximum of {hours} h and is stopped; the next one starts from the waves published so far",
+          "paused": "graph: paused after generation {generation}: {waiters} command(s) wait for memory on this machine ({seconds} s)",
+          "capped": "graph-server: the claim for {requester} reached the lifetime of the cache server; it is taken again in a moment",
+          "reclaimed": "graph-server: the claim for {requester} had lapsed; this machine holds it again",
+          "leaseWait": "graph-server: the read waits to start: {resource} is held exclusively by pid {holder} ({command}, {phase}) for {held} s, last progress {progress} s ago; waited {seconds} s so far",
+          "leaseWaitFree": "graph-server: {resource} is free; the read starts after waiting {seconds} s",
+          "leaseWaitLimit": "graph-server: waited {seconds} s for {resource}; the read starts now and queues in the highest class",
+          "stallHead": "graph-server: the read (pid {pid}) made no progress for {seconds} s; what it waits for:",
+          "stallLease": "graph-server:   the lease {resource} ({mode}) for {seconds} s, behind pid {holder} ({command}, {phase}), held for {held} s, last progress {progress} s ago",
+          "stallLeaseFree": "graph-server:   the lease {resource} ({mode}) for {seconds} s; no live holder is registered",
+          "stallGrant": "graph-server:   capacity gate: the read holds the grant {grant} of {reserved} MB; {grants} grants, {waiters} command(s) wait, pressure {pressure}, {free} of {total} MB free",
+          "stallQueued": "graph-server:   capacity gate: the read waits in the queue as {id} (class {class}) behind {ahead} command(s); pressure {pressure}, {free} of {total} MB free",
+          "stallNothing": "graph-server:   no lease and no capacity wait is registered for the read",
+          "stallOutput": "graph-server:   last output of the read: {last}",
+          "cross": "graph-server: {requester} ({platform}, class {class}) is served across platform classes by a machine of the class {own}: {served} projects served, {left} bound to the host and left to a machine of its class{named}",
+          "leftHere": "graph: {count} projects are bound to the host ({named}); the servers of other platform classes leave them, this machine infers them itself"
+        },
+        "de": {
+          "plan": "Graph: {stale} veraltete Projekte, {taken} aus der Flotte übernommen, diese Maschine kann {local} berechnen ({wave} pro Welle); frage die Flotte nach {wanted}",
+          "waiting": "Graph: warte auf die Flotte: {arrived} von {wanted} Projekten eingetroffen",
+          "waitingServer": "Graph: warte auf die Flotte: {arrived} von {wanted} Projekten eingetroffen; der Server kam zuletzt vor {age} s voran, geschätzte Restzeit: {estimate}",
+          "causeSilent": "Graph: keine Maschine dieser Klasse gab {minutes} min lang ein Lebenszeichen, also hält niemand die Anfrage",
+          "causeStalled": "Graph: die Flotte kam {minutes} min lang nicht voran, obwohl ihr Server lebt",
+          "causeLimit": "Graph: das Warten erreichte sein Maximum von {hours} h",
+          "gave-up": "Graph: die Flotte lieferte {arrived} von {wanted} Projekten innerhalb von {seconds} s; {missing} fehlen, mehr als diese Maschine berechnen kann",
+          "unreachable": "Graph: der Flotten-Cache ist nicht erreichbar, daher können {wanted} veraltete Projekte nicht angefragt werden; diese Maschine kann {local} berechnen",
+          "refused": "Graph: es gibt nichts mehr abzuwarten: {wanted} veraltete Projekte bei der Flotte angefragt, {arrived} in {seconds} s erhalten, {missing} fehlen und diese Maschine kann nur {local} berechnen; erneut versuchen, sobald eine Maschine mit freiem Speicher den Graphen bedient, oder den Graphen auf einer größeren Maschine lesen",
+          "serving": "Graph-Server: bediene {count} veraltete Projekte für {requester}",
+          "alive": "Graph-Server: lebt, {requesters} Maschinen gesehen, {held} Anfragen gehalten, {cross} Projekte klassenübergreifend bedient, {left} Projekte einer Maschine ihrer Klasse überlassen, Lesen {reading}",
+          "foreign": "Graph-Server: alle {count} veralteten Projekte von {requester} ({platform}) sind an den Host gebunden und bleiben einer Maschine der Klasse {class} überlassen; diese Maschine bedient die Klasse {own}",
+          "class": "Graph: diese Maschine ist {platform} (Klasse {class}); Maschinen jeder Klasse bedienen ihre Anfrage bis auf die an den Host gebundenen Projekte, die nur eine Maschine dieser Klasse oder diese Maschine selbst berechnet, und deren Graph-Server meldet dafür 'bediene'",
+          "answering": "Graph-Server: {arrived} von {count} Projekten von {requester} sind aktuell",
+          "joined": "Graph-Server: {requester} fragte erneut nach {count} Projekten: der gehaltenen Anfrage beigetreten, {arrived} sind schon aktuell, nichts wird doppelt berechnet",
+          "lost": "Graph-Server: den Anspruch für {requester} hält {by}; diese Maschine überlässt ihm die Anfrage",
+          "resumed": "Graph-Server: setze nach einem Neustart fort mit {held} gehaltenen Anfrage(n), {fresh} Projekte schon als aktuell gemeldet",
+          "continuing": "Graph-Server: das Lesen beginnt bei den {count} Projekten, die schon veröffentlicht sind",
+          "served": "Graph-Server: {count} Projekte für {requester} in {seconds} s bedient",
+          "refreshing": "Graph-Server: aktualisiere die Flotten-Generation im Hintergrund ({reason})",
+          "refreshed": "Graph-Server: Flotten-Generation in {seconds} s aktualisiert",
+          "failed": "Graph-Server: das Lesen des Graphen endete nach {seconds} s mit Status {status}: {detail}",
+          "stalled": "seit {minutes} min wurde keine Welle veröffentlicht; das Lesen wird beendet und das nächste beginnt bei den bisher veröffentlichten Wellen",
+          "tooLong": "das Lesen dauerte länger als das Maximum von {hours} h und wird beendet; das nächste beginnt bei den bisher veröffentlichten Wellen",
+          "paused": "Graph: pausiert nach Generation {generation}: {waiters} Befehl(e) warten auf Speicher auf diesem Rechner ({seconds} s)",
+          "capped": "Graph-Server: der Anspruch für {requester} erreichte die Lebensdauer des Cache-Servers; er wird gleich neu genommen",
+          "reclaimed": "Graph-Server: der Anspruch für {requester} war abgelaufen; diese Maschine hält ihn wieder",
+          "leaseWait": "Graph-Server: das Lesen wartet auf den Start: {resource} hält pid {holder} ({command}, {phase}) seit {held} s exklusiv, letzter Fortschritt vor {progress} s; bisher {seconds} s gewartet",
+          "leaseWaitFree": "Graph-Server: {resource} ist frei; das Lesen beginnt nach {seconds} s Warten",
+          "leaseWaitLimit": "Graph-Server: {seconds} s auf {resource} gewartet; das Lesen beginnt jetzt und reiht sich in der höchsten Klasse ein",
+          "stallHead": "Graph-Server: das Lesen (pid {pid}) kam {seconds} s lang nicht voran; worauf es wartet:",
+          "stallLease": "Graph-Server:   die Sperre {resource} ({mode}) seit {seconds} s, hinter pid {holder} ({command}, {phase}), gehalten seit {held} s, letzter Fortschritt vor {progress} s",
+          "stallLeaseFree": "Graph-Server:   die Sperre {resource} ({mode}) seit {seconds} s; kein lebender Halter ist eingetragen",
+          "stallGrant": "Graph-Server:   Kapazitätstor: das Lesen hält die Zuteilung {grant} mit {reserved} MB; {grants} Zuteilungen, {waiters} Befehl(e) warten, Druck {pressure}, {free} von {total} MB frei",
+          "stallQueued": "Graph-Server:   Kapazitätstor: das Lesen wartet in der Schlange als {id} (Klasse {class}) hinter {ahead} Befehl(en); Druck {pressure}, {free} von {total} MB frei",
+          "stallNothing": "Graph-Server:   für das Lesen ist weder eine Sperre noch ein Kapazitätswarten eingetragen",
+          "stallOutput": "Graph-Server:   letzte Ausgabe des Lesens: {last}",
+          "cross": "Graph-Server: {requester} ({platform}, Klasse {class}) wird klassenübergreifend von einer Maschine der Klasse {own} bedient: {served} Projekte bedient, {left} an den Host gebunden und einer Maschine seiner Klasse überlassen{named}",
+          "leftHere": "Graph: {count} Projekte sind an den Host gebunden ({named}); die Server anderer Plattformklassen überlassen sie, diese Maschine berechnet sie selbst"
+        }
+      }
+    },
+    "Served": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "requester",
+        "platform",
+        "server",
+        "projects",
+        "generation",
+        "atMs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "requester": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "server": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "projects": {
+          "type": "array",
+          "maxItems": 8192,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "generation": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "progressAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "remainingMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "left": {
+          "type": "array",
+          "maxItems": 8192,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        }
+      }
+    },
+    "Refusal": {
+      "const": {
+        "code": "unserved",
+        "key": "build.graph.wanted-expired",
+        "exitStatus": 75
+      }
+    },
+    "ServeState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owner",
+        "platform",
+        "savedMs",
+        "held",
+        "told",
+        "reading"
+      ],
+      "description": "What the graph server of a machine keeps in serve-state.json between two of its processes: the requests it holds with the projects it already reported fresh, the claim keys it completed (at most 4096, the newest) and the kind of read that was running. A new process of the same owner and platform renews the claims, answers with at least these projects and tells its read which projects are published already.",
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "savedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "held": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "request",
+              "list",
+              "told",
+              "toldAt",
+              "heldAt"
+            ],
+            "properties": {
+              "request": {
+                "$ref": "#/definitions/WantedRequest"
+              },
+              "list": {
+                "type": "array",
+                "maxItems": 8192,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                }
+              },
+              "told": {
+                "type": "boolean"
+              },
+              "toldAt": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "heldAt": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "told": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "reading": {
+          "type": "string",
+          "enum": [
+            "none",
+            "request",
+            "refresh"
+          ]
+        }
+      }
+    },
+    "Server": {
+      "const": {
+        "roundMilliseconds": 5000,
+        "heartbeatMilliseconds": 20000,
+        "aliveRounds": 60,
+        "refreshQuietMilliseconds": 180000,
+        "refreshIntervalMilliseconds": 600000,
+        "inferStallMilliseconds": 1500000,
+        "inferMaximumMilliseconds": 43200000,
+        "watchMilliseconds": 5000,
+        "yieldPollMilliseconds": 5000,
+        "yieldNoticeMilliseconds": 60000,
+        "yieldMaximumMilliseconds": 1200000,
+        "refreshHeadroomMegabytes": 9400,
+        "requestHeadroomMegabytes": 6144,
+        "serveTotalMegabytes": 24000,
+        "costsMilliseconds": 60000,
+        "stallDumpMilliseconds": 120000,
+        "stallDumpRepeatMilliseconds": 300000,
+        "leasePollMilliseconds": 5000,
+        "leaseNoticeMilliseconds": 60000,
+        "leaseWaitMilliseconds": 1200000,
+        "leaseResourcePrefixes": [
+          "native-fixed-image:"
+        ]
+      }
+    }
+  }
+}

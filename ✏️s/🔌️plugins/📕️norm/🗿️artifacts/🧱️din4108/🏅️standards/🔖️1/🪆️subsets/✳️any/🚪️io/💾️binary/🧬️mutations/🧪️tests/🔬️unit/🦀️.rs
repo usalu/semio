@@ -1,4 +1,4 @@
-use crate::binary::mutations::*;
+use crate::binary::*;
 use semio_s_artifact_norm_din4108_mut_building::change_airtightness_n50::ChangeAirtightnessN50;
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 

@@ -1,0 +1,27 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:108: "seated-worker": {"chest": (0.15, 0.95), "head": (0.12, 1.3), "head_top": (0.1, 1.43), "mouth": (0.22, 1.27), "laptop": (0.8, 0.8)},
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:101: RHO_AIR, C_LUFT, R_LAT = 1.2, 0.34, 2450.0
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:29: | `c_Luft = ρ·c_p / 3600 ≈ 0,34 Wh/(m³·K)` (ρ ≈ 1,2 kg/m³ at 20 °C, 1,27 kg/m³ at 5 °C; the norm uses the fixed 0,34) | Kapitel 3 | winter factor | summer factor |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:48: c_Luft ≈ 0,34 Wh/(m³·K)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:106: | 3 | `Beat1_Luftwaerme` | 1 m³ Luft, `c_Luft ≈ 0,34 Wh/(m³·K)` |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:362: texts.add(math_label(rf"{label_number(PER_PERSON_M3H)}\,\mathrm{{m^{{3}}/h}}", np.array([x, -1.29, 0.0]),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:364: n_tag = math_label(rf"{PEOPLE}\,\times", np.array([-5.75, -1.29, 0.0]), color=P_ORANGE, edge="center")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:367: np.array([-0.2, -1.29, 0.0]), color=P_WHITE, edge="left")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:107: RHO_AIR, CP_AIR = 1.2, 1005.0
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:274: r"One cubic metre of air at $20\,°\mathrm{C}$ has a mass of about $\rho = 1.2\,\mathrm{kg/m^3}$. Colder air is denser: $1.27\,\mathrm{kg/m^3}$ at $5\,°\mathrm{C}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:321: rho_note = math_label(rf"{label_number(1.27, 2)}\,\mathrm{{kg/m^{{3}}}}\;(5\,°\mathrm{{C}})", np.array([xl, 1.2, 0]),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:278: c_Luft = ρ·c_p/3600 = 1,2 kg/m³ · 1005 J/(kg·K) / (3600 J/Wh) ≈ 0,34 Wh/(m³·K); Winter 20 °C innen gegen 0 °C außen (Δθ = 20 K),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:281: RHO_AIR, CP_AIR = 1.2, 1005.0
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🐍️.py:58: short = (lightness - 0.0894841775 * axis_a - 1.2914855480 * axis_b) ** 3
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📝️narration/🧪️tests/🧮️tex/🔣️.cases.json:16: {"tex": "0{,}34\\,\\mathrm{Wh/(m^3K)}", "expected": "0,34 Wh/(m³K)"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📝️narration/🧪️tests/🧮️tex/🔣️.cases.json:30: {"tex": "\\rho=1{,}2\\,\\mathrm{kg/m^3}", "expected": "ρ = 1,2 kg/m³"},
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:35: The building blocks of `Q_V` (airflow `V̇ = V·n`, `ρ·c_p = 0,34 Wh/(m³K)` for `ρ ≈ 1,2 kg/m³` at 20 °C, `Δθ`, `η_WRG`) come
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:456: body_text(text, font_size=LABEL_FONT_SIZE, color=PRIM_VIOLET).move_to(np.array([x, G + 1.27, 0.0]))
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:643: r"It belongs to $\rho \approx 1.2\;\mathrm{kg/m^3}$ at $20\;^{\circ}\mathrm{C}$; colder air is denser, $1.27\;\mathrm{kg/m^3}$ at $5\;^{\circ}\mathrm{C}$, but the standard keeps the fixed value.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🧪️tests/🧮️balance/🔣️.json:12: "oracle": "numpy re-derivation from areas, U-values, volume, n, 0.34 Wh/(m3K), 0.6 g, 0.7 F_S, 5 W/m2 * 60 m2"
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:165: | 3 · Was die Luft trägt | Luftwärme · sensible Wärme · latente Last · Winter und Sommer | c_Luft ≈ 0,34 Wh/(m³·K) · Winter 1 500 W Verlust · Sommer 450 W sensibel + 810 W latent |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:177: | **c_Luft** | volumenbezogene Wärmekapazität, ρ · c_p / 3 600 | ≈ 0,34 Wh/(m³·K) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:187: | **c_Luft = ρ · c_p / 3 600** | 1,2 · 1 005 / 3 600 ≈ 0,34 Wh/(m³·K) |
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:202: th_i = math_label(r"\theta_{\mathrm{i}} = 20\,°\mathrm{C}", np.array([-3.9, 1.27, 0.0]), size=LABEL_FONT_SIZE + 1,
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1236: parts["roof"] = section_material(Polygon(P(-7.0, 1.45), P(-4.0, 2.4), P(-1.0, 1.45), P(-1.0, 1.29), P(-4.0, 2.24), P(-7.0, 1.29)))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:258: RISE_PTS = [(RADIATOR_X, -0.48), (RADIATOR_X, 0.55), (RADIATOR_X + 0.25, 1.27), (RADIATOR_X + 0.9, 1.50),
+TOTAL 26

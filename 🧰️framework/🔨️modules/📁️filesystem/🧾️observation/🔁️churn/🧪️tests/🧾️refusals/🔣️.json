@@ -1,6 +1,9 @@
 {
  "version": 1,
  "texts": [
+    {"id": "closure-moved-nx", "text": "[script] build:implementation-source · Reading the sources of the build implementation\nRepoError: stale build.closure.source-differs {\"path\":\"a/b.ts\",\"expectedSha256\":\"ff\",\"observedSha256\":\"88\"}", "class": "moved-source-closure", "disposition": "reexec"},
+    {"id": "closure-not-admitted-nx", "text": "RepoError: refused build.closure.source-not-admitted {\"path\":\"a/new.ts\"}", "class": "moved-source-closure", "disposition": "reexec"},
+    {"id": "closure-moving-nx", "text": "RepoError: unserved build.closure.moving {\"count\":2,\"files\":\"a.ts, b.ts\",\"origin\":\"-\",\"attempts\":5}", "class": "closure-moving", "disposition": "reobserve"},
   {"id": "moved-stamp-en", "text": "[bazel] task x failed\nThis command runs an outdated implementation: the declared format stamp graph.record moved from 1 to 2. It yields r without producing anything.", "class": "moved-format-stamp", "disposition": "reexec"},
   {"id": "moved-stamp-de", "text": "Dieser Befehl führt eine veraltete Implementierung aus: der deklarierte Formatstempel graph.record wechselte von 1 zu 2.", "class": "moved-format-stamp", "disposition": "reexec"},
   {"id": "stale-reader", "text": "error: Stale loaded Source revision reader; restart required\n at current", "class": "stale-loaded-implementation", "disposition": "reexec"},

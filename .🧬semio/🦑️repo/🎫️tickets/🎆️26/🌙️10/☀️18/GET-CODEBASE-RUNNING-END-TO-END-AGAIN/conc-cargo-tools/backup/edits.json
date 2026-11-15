@@ -1,0 +1,78 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts": [
+  "custody-mode",
+  "custody-lease",
+  "shared-write"
+ ],
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧬️schema/🔣️.json": [
+  "writer-request-mode"
+ ],
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts": [
+  "imports",
+  "lane-store",
+  "fs-imports",
+  "admitted-type",
+  "shared-writer",
+  "compiler-chain",
+  "run-type",
+  "shared-store",
+  "memo-argument",
+  "features"
+ ],
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts": [
+  "memo-type",
+  "memo-parameter",
+  "memo-recall",
+  "memo-probes",
+  "memo-probe-record",
+  "memo-remember"
+ ],
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts": [
+  "dependencies-import",
+  "fetch-shared",
+  "compile-shared"
+ ],
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/💾️storage/🟦️.ts": [
+  "fetch-key",
+  "fetch-writer",
+  "file-stamps"
+ ],
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🟦️.ts": [
+  "receipt-type",
+  "stamps",
+  "capture",
+  "holds"
+ ],
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧾️fetched/🧬️schema/🔣️.json": [
+  "protocol",
+  "stamp-definition",
+  "receipt-registry"
+ ],
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts": [
+  "record-type",
+  "request-types",
+  "handler",
+  "observations",
+  "os-import",
+  "wrapper-chain"
+ ],
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json": [
+  "definitions"
+ ],
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts": [
+  "import",
+  "job-site",
+  "pass-site"
+ ],
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts": [
+  "store-environment-import",
+  "store-environment"
+ ],
+ ".cargo/config.toml": [
+  "paths",
+  "comment"
+ ],
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts": [
+  "unique-edges"
+ ]
+}

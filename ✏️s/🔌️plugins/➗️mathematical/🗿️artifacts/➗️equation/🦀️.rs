@@ -142,16 +142,16 @@ pub mod text {
                     #[path = "."]
                     pub mod mutations {
                         pub use semio_s_artifact_mathematical_equation_inferences::standards::v1::subsets::graph::schema::mutations::change_graph_directed;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm;
                         pub use semio_s_artifact_mathematical_equation_mut_family::standards::v1::subsets::graph::schema::mutations::create_node;
                         pub use semio_s_artifact_mathematical_equation_mut_family::standards::v1::subsets::graph::schema::mutations::delete_node;
                         pub use semio_s_artifact_mathematical_equation_mutations::standards::v1::subsets::graph::schema::mutations::delete_nodes;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::move_nodes;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::set_node_positions;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::change_node_label;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::move_node;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::connect_nodes;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::disconnect_nodes;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::move_nodes;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::set_node_positions;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::change_node_label;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::move_node;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::connect_nodes;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::disconnect_nodes;
                     
 
 }

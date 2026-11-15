@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-s-artifact-energy-model-mut-window-layer-optics-visible"
+name = "semio-s-artifact-energy-model-mut-layer-optics-visible"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

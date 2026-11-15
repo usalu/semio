@@ -1,0 +1,27 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/blobs/v1",
+ "title": "Shared worktree blob wants: the blobs one origin cannot read and asks the fleet to put back",
+ "definitions": {
+  "Want": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["sha256", "path"],
+   "properties": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "path": {"type": "string", "minLength": 1, "maxLength": 4096}
+   }
+  },
+  "Wants": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "originId", "wallMs", "wants"],
+   "properties": {
+    "version": {"type": "integer", "const": 1},
+    "originId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"},
+    "wallMs": {"type": "integer", "minimum": 0},
+    "wants": {"type": "array", "maxItems": 64, "items": {"$ref": "#/definitions/Want"}}
+   }
+  }
+ }
+}

@@ -6,6 +6,7 @@
 import type { Animation, Channel, Issue, Joint, ModelDocument, Node, Slug, Text } from "../🧬️schema/🟦️.ts";
 import { compose, dot, normalize, qAxisAngle, qConj, qMul, qNormalize, qSlerp, clamp, lerp3, sub, mul, length, worldMatrices, type M4, type Q4, type V3 } from "../🧮️math/🟦️.ts";
 import * as portable from "../🧮️math/🎯️portable/🟦️.ts";
+import { materialsOfScene, selectScene, type SceneOption } from "../🎞️scenes/🟦️.ts";
 
 export type PoseSelector = Slug | { readonly animation: Slug; readonly timeS: number } | null | undefined;
 export type LocalTransform = { translation: V3; rotation: Q4; scale: V3 };
@@ -98,21 +99,24 @@ const keyed = (c: Channel, width: number, timeS: number): number[] => {
 
 const clipTime = (a: Animation, timeS: number): number => (a.loop ? ((timeS % a.durationS) + a.durationS) % a.durationS : clamp(timeS, 0, a.durationS));
 
-/** 🎨️ Sampled material colour channels of a clip at `timeS`: material id to the animated colours. */
-export function sampleMaterials(document: ModelDocument, animationId: Slug, timeS: number): Record<Slug, { baseColor?: number[]; emissive?: number[] }> {
+/** 🎨️ Sampled material colour channels of a clip at `timeS`: material id to the animated colours; with `option.scene` only the materials that scene draws. */
+export function sampleMaterials(document: ModelDocument, animationId: Slug, timeS: number, option: SceneOption = {}): Record<Slug, { baseColor?: number[]; emissive?: number[] }> {
+  const drawn = option.scene === undefined ? undefined : materialsOfScene(document, option.scene);
   const animation = document.animations.find((a) => a.id === animationId);
   if (!animation) throw new Error(`unknown animation ${animationId}`);
   const t = clipTime(animation, timeS);
   const out: Record<Slug, { baseColor?: number[]; emissive?: number[] }> = {};
   for (const c of animation.channels) {
-    if (!("material" in c.target)) continue;
+    if (!("material" in c.target) || (drawn !== undefined && !drawn.has(c.target.material))) continue;
     (out[c.target.material] ??= {})[c.target.path] = keyed(c, c.target.path === "baseColor" ? 4 : 3, t);
   }
   return out;
 }
 
-/** 🧍️ Local transforms, world matrices (column-major) and findings of a pose id, a clip sampled at `timeS`, or the rest pose. Throws on an unknown pose or animation. */
-export function poseModel(document: ModelDocument, selector?: PoseSelector): PoseResult {
+/** 🧍️ Local transforms, world matrices (column-major) and findings of a pose id, a clip sampled at `timeS`, or the rest pose. Throws on an unknown pose or animation. With `option.scene` only the nodes that scene needs are posed (`selectScene`); finding paths still point into the full document. */
+export function poseModel(whole: ModelDocument, selector?: PoseSelector, option: SceneOption = {}): PoseResult {
+  const document = option.scene === undefined ? whole : selectScene(whole, option.scene);
+  const original = option.scene === undefined ? undefined : new Map(whole.nodes.map((n, i) => [n.id, i]));
   const local = new Map<Slug, LocalTransform>(document.nodes.map((n) => [n.id, { translation: [...n.translation] as V3, rotation: [...n.rotation] as Q4, scale: [...n.scale] as V3 }]));
   if (typeof selector === "string") {
     const pose = document.poses.find((p) => p.id === selector);
@@ -141,7 +145,7 @@ export function poseModel(document: ModelDocument, selector?: PoseSelector): Pos
   }
   const issues: Issue[] = [];
   document.nodes.forEach((n, i) => {
-    if (n.joint) local.set(n.id, applyJoint(n, n.joint, local.get(n.id)!, issues, i));
+    if (n.joint) local.set(n.id, applyJoint(n, n.joint, local.get(n.id)!, issues, original?.get(n.id) ?? i));
   });
   const world = worldMatrices(document.nodes, (n) => {
     const t = local.get(n.id)!;

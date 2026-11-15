@@ -57,6 +57,7 @@ pub enum ShootingMutation {
     ChangeSceneShadowEnabled(crate::standards::v1::subsets::any::schema::mutations::change_scene_shadow_enabled::ChangeSceneShadowEnabled),
     ChangeSceneMaterialRoughness(crate::standards::v1::subsets::any::schema::mutations::change_scene_material_roughness::ChangeSceneMaterialRoughness),
 }
+dsl::original_pack_value_operation_receiving!(ShootingMutation);
 
 /// 🏷️ The kebab spelling of every [`ShootingMutation`] variant, in DECLARATION ORDER — the one list
 /// the language-neutral test platform is measured against. It is duplicated in exactly two other

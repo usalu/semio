@@ -1,0 +1,40 @@
+start 2026-11-15T11:56:26Z
+[semio] Homebrew not available; install pkg-config, Cairo, Pango and DejaVu fonts before running native C++ builds (CMake and Ninja are provisioned by the repository).
+[semio] Building the repo launcher (it provisions the pinned JavaScript runtime itself)…
+[semio] The repo launcher is current, nothing was replaced: /Users/ueli/.local/share/semio/launcher/bin/repo
+[semio] Der Repo-Launcher ist aktuell, nichts wurde ersetzt: /Users/ueli/.local/share/semio/launcher/bin/repo
+[semio] Add to PATH: /Users/ueli/.local/share/semio/launcher/bin
+[semio] Zum PATH hinzufügen: /Users/ueli/.local/share/semio/launcher/bin
+[semio] Another repository frontend is on PATH: /Users/ueli/.local/bin/repo. Installed launcher: /Users/ueli/.local/share/semio/launcher/bin/versions/50ff6101d0ecc30c/repo
+[semio] Ein weiteres Repository-Frontend liegt im PATH: /Users/ueli/.local/bin/repo. Installierter Launcher: /Users/ueli/.local/share/semio/launcher/bin/versions/50ff6101d0ecc30c/repo
+[semio] Installing the rust-toolchain.toml toolchain…
+info: using existing install for nightly-2026-07-20-aarch64-apple-darwin
+info: the active toolchain `nightly-2026-07-20-aarch64-apple-darwin` has been installed
+info: it's active because: overridden by '/Users/ueli/Documents/semio/rust-toolchain.toml'
+[semio] Installing the native repository command…
+[capacity] run: sized at 5% of the default from 14 earlier run(s) of its class
+[capacity] waiting 0s for run: memory pressure is raised (need 512 MB; 1145 MB spare above the 2048 MB floor, load 11.65; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[repo] still working after 5 s; last phase started: door.capacity
+[capacity] waiting 5s for run: memory pressure is critical (need 512 MB; 1187 MB spare above the 2048 MB floor, load 10.87; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[repo] still working after 10 s; last phase started: door.capacity
+[capacity] waiting 11s for run: memory pressure is critical (need 512 MB; 1223 MB spare above the 2048 MB floor, load 11.04; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 16s for run: memory pressure is raised (need 512 MB; 1225 MB spare above the 2048 MB floor, load 10.24; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[repo] still working after 20 s; last phase started: door.capacity
+[capacity] waiting 22s for run: memory pressure is critical (need 512 MB; 1084 MB spare above the 2048 MB floor, load 10.06; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 27s for run: memory pressure is raised (need 512 MB; 1183 MB spare above the 2048 MB floor, load 9.33; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 33s for run: memory pressure is raised (need 512 MB; 1247 MB spare above the 2048 MB floor, load 8.29; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 38s for run: memory pressure is raised (need 512 MB; 1267 MB spare above the 2048 MB floor, load 8.29; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 43s for run: memory pressure is raised (need 512 MB; 1218 MB spare above the 2048 MB floor, load 7.96; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 49s for run: memory pressure is raised (need 512 MB; 1325 MB spare above the 2048 MB floor, load 7.48; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[repo] still working after 50 s; last phase started: door.capacity
+[capacity] waiting 54s for run: memory pressure is raised (need 512 MB; 1303 MB spare above the 2048 MB floor, load 7.12; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 59s for run: memory pressure is raised (need 512 MB; 1296 MB spare above the 2048 MB floor, load 6.71; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 64s for run: memory pressure is critical (need 512 MB; 1212 MB spare above the 2048 MB floor, load 6.42; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 70s for run: memory pressure is raised (need 512 MB; 1199 MB spare above the 2048 MB floor, load 6.14; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 75s for run: memory pressure is raised (need 512 MB; 1361 MB spare above the 2048 MB floor, load 5.73; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[repo] still working after 80 s; last phase started: door.capacity
+[capacity] waiting 81s for run: memory pressure is raised (need 512 MB; 1190 MB spare above the 2048 MB floor, load 5.59; 0 running, 0 ahead); behind the host itself (nothing of ours)
+[capacity] waiting 86s for run: memory pressure is raised (need 512 MB; 1234 MB spare above the 2048 MB floor, load 5.46; 0 running, 0 ahead); behind the host itself (nothing of ours)
+Waiting for host capacity was cancelled by SIGINT
+end 2026-11-15T11:57:56Z
+native_rc=130

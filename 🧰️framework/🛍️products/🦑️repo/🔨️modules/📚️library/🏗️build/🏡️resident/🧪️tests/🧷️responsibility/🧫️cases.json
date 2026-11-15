@@ -1,0 +1,10 @@
+{
+ "pid": 100,
+ "cases": [
+  {"name": "a stable responsible app is never lost", "answers": [7, 7, 7], "expect": ["watch", "watch", "watch"]},
+  {"name": "the responsible app ends and the service falls back to itself", "answers": [7, 7, 100], "expect": ["watch", "watch", "lost"]},
+  {"name": "another responsible app than the first one is lost as well", "answers": [7, 8], "expect": ["watch", "lost"]},
+  {"name": "a service that answers for itself has nothing to lose", "answers": [100, 100, 7], "expect": ["own", "own", "own"]},
+  {"name": "an unknown responsible app is never judged", "answers": [null, 7, null], "expect": ["own", "own", "own"]}
+ ]
+}

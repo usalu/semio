@@ -3,11 +3,11 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📈️diagrams/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧱️foundation/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎪️showcase/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📈️diagrams/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧱️foundation/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
@@ -297,7 +297,7 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1992-mut-anchor-actions-loads]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️anchor-actions-loads/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-norm-en1992-mut-anchor-actions-resultants]
+[workspace.dependencies.semio-s-artifact-norm-en1992-mut-anchor-resultants]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️anchor-actions-resultants/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1992-mut-grades-rows]
@@ -318,7 +318,7 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1992-mut-placements-rows]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️placements-rows/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-norm-en1992-mut-member-fields-liquid-bridge]
+[workspace.dependencies.semio-s-artifact-norm-en1992-mut-fields-liquid-bridge]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰member-fields-liquid-bridge/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1992-mutations-typescript]
@@ -384,7 +384,7 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1992-mut-project-more]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️project-more/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-norm-en1992-mut-geometry-tendons-studs-more]
+[workspace.dependencies.semio-s-artifact-norm-en1992-mut-tendons-studs-more]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧬️geometry-tendons-studs-more/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1992-showcase]

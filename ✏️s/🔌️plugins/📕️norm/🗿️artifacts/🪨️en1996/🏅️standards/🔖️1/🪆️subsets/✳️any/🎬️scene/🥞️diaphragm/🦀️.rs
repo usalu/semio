@@ -6,7 +6,7 @@ use super::scene::projection_kit::{loc};
 use super::kit::*;
 use super::layout::{Layout, WallPose, EPS};
 use super::model::{En1996Snapshot, MasonryWall};
-use super::scene::projection_kit::handle_kit::{handle, field_binding, HandleSpec as Spec};
+use super::scene::projection_kit::handle_kit::{handle, field_binding, HandleSpec};
 use super::scene::*;
 use super::{masonry as m, SceneInput};
 
@@ -97,7 +97,7 @@ pub(crate) fn handles(document: &En1996Snapshot, wall: &MasonryWall, pose: &Wall
         .map(|(w, e)| field_binding(format!("walls[id={}].diaphragmStiffnessNPerM", w.id), Affine { base: e - DECADES_PER_METRE * z0, k: DECADES_PER_METRE }, "N/m", Some(Quantise::Decades { per_decade: STEPS_PER_DECADE })))
         .collect();
     let axis_key = d.axis.key();
-    vec![handle(Spec {
+    vec![handle(HandleSpec {
         entity: &entity,
         tag: "stiffness",
         kind: HandleKind::ScalarAlong { axis: Vec3::Z },

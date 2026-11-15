@@ -20,7 +20,81 @@
           "pdb",
           "d"
         ],
-        "maximumDiagnosticPaths": 16
+        "maximumDiagnosticPaths": 16,
+        "temporaryDirectory": "z",
+        "temporaryFileCharacters": 143,
+        "wholeCodegenHashCharacters": 16,
+        "wholeCodegenIndexCharacters": 3,
+        "incrementalCrateCharacters": 13,
+        "incrementalTimestampCharacters": 10,
+        "incrementalSessionCharacters": 25
+      }
+    },
+    "Budget": {
+      "const": {
+        "version": 1,
+        "accountCharacters": 16,
+        "roots": [
+          {
+            "id": "macos",
+            "template": "/Users/{account}/Documents/semio",
+            "flavor": "posix"
+          },
+          {
+            "id": "linux",
+            "template": "/home/{account}/semio",
+            "flavor": "posix"
+          },
+          {
+            "id": "windows",
+            "template": "C:\\semio",
+            "flavor": "win32"
+          }
+        ],
+        "generatedTrees": [
+          ".cache",
+          "dist"
+        ],
+        "cacheDirectory": ".cache/b/r/m/u",
+        "laneDirectory": "l",
+        "laneCharacters": 7,
+        "profiles": [
+          "prototype",
+          "release"
+        ],
+        "targets": [
+          {
+            "id": "host",
+            "directory": "",
+            "zone": null
+          },
+          {
+            "id": "component",
+            "directory": "wasm32-wasip2",
+            "zone": "component"
+          },
+          {
+            "id": "browser",
+            "directory": "wasm32-unknown-unknown",
+            "zone": "browser"
+          }
+        ],
+        "zones": [
+          {
+            "id": "component",
+            "roots": {
+              "kind": "crate-type",
+              "value": "cdylib"
+            }
+          },
+          {
+            "id": "browser",
+            "roots": {
+              "kind": "path",
+              "value": "📺️renderer"
+            }
+          }
+        ]
       }
     },
     "Unit": {

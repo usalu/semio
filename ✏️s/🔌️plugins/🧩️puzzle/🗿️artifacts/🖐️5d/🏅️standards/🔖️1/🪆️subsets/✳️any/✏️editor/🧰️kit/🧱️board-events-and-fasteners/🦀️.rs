@@ -79,6 +79,7 @@ pub struct Puzzle5dBoardEventsWork {
     pub fastener_cursor: usize,
     pending_delete_id: Option<String>,
     pub brush: Option<Puzzle5dAddBrushPartWork>,
+    pub brush_admission: semio_framework_job::OriginalConstructionAdmission,
     brush_first: Option<Puzzle5dMutation>,
     brush_second: Option<Puzzle5dMutation>,
     pub camera2d: Option<Puzzle5dCamera2d>,
@@ -117,6 +118,7 @@ impl Puzzle5dBoardEventsWork {
             fastener_cursor: 0,
             pending_delete_id: None,
             brush: None,
+            brush_admission: Default::default(),
             brush_first: None,
             brush_second: None,
             camera2d: None,
@@ -318,7 +320,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                         let event = &mut self.event;
                         let nonce = self.operation_nonce;
                         let fresh = self.fresh_cursor;
-                        let ready = semio_framework_action_bus::admit_original_tool_construction_scoped(cx, &mut self.brush, demand, |scope| {
+                        let status = semio_framework_action_bus::admit_original_tool_construction_scoped(cx, &mut self.brush_admission, &mut self.brush, demand, |scope| {
                             let (mut brush, mut progress) = Puzzle5dAddBrushPartWork::from_original_construction("addBrushPart", scope)?;
                             brush.payload = Some(event.as_mut().and_then(Value::as_object_mut).and_then(|event| event.get_mut("payload")).map_or(Value::Null, |value| std::mem::replace(value, Value::Null)));
                             brush.operation_nonce = nonce;
@@ -326,7 +328,8 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                             progress.copied_items = progress.copied_items.max(1);
                             Ok((brush, progress))
                         })?;
-                        if !ready { return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Pending { stage: "puzzle5d-board-brush-admission", preview: br#"{"en":"Preparing brush","de":"Pinsel wird vorbereitet"}"# }); }
+                        if status == semio_framework_job::OriginalConstructionStatus::Failed { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "puzzle5d brush construction failed; its complete causes remain in the admission").into()); }
+                        if status != semio_framework_job::OriginalConstructionStatus::Ready { return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Pending { stage: "puzzle5d-board-brush-admission", preview: br#"{"en":"Preparing brush","de":"Pinsel wird vorbereitet"}"# }); }
                         self.fresh_cursor = self.fresh_cursor.saturating_add(2);
                         self.stage = Puzzle5dBoardEventsStage::Brush;
                     }

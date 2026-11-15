@@ -1,0 +1,1416 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "hea-top-flange",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.03867,
+       -0.03115
+      ],
+      [
+       4.59768,
+       -0.03115
+      ],
+      [
+       4.608853,
+       -0.04015
+      ],
+      [
+       0.049843,
+       -0.04015
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08
+    },
+    {
+     "id": "hea-bottom-flange",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.226157,
+       -0.18218
+      ],
+      [
+       4.785167,
+       -0.18218
+      ],
+      [
+       4.79634,
+       -0.19118
+      ],
+      [
+       0.23733,
+       -0.19118
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08
+    },
+    {
+     "id": "hea-web",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.048601,
+       -0.03915
+      ],
+      [
+       4.607611,
+       -0.03915
+      ],
+      [
+       4.786409,
+       -0.18318
+      ],
+      [
+       0.227399,
+       -0.18318
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.00375,
+     "to": 0.00375
+    },
+    {
+     "id": "gusset",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.26669,
+       0.04413
+      ],
+      [
+       0.33678,
+       -0.01233
+      ],
+      [
+       0.32161,
+       -0.03115
+      ],
+      [
+       0.20605,
+       -0.03115
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.03,
+     "to": 0.03,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "tread",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.10315,
+       0.17587
+      ],
+      [
+       0.354299,
+       -0.026445
+      ],
+      [
+       0.364845,
+       -0.025309
+      ],
+      [
+       0.380525,
+       -0.005841
+      ],
+      [
+       0.379389,
+       0.004705
+      ],
+      [
+       0.12824,
+       0.20702
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": 0.6,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "screw-1",
+     "kind": "revolve",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.009
+      ],
+      [
+       0.0085,
+       0.009
+      ]
+     ],
+     "axis": [
+      -0.62733,
+      -0.778754,
+      0.0
+     ],
+     "origin": [
+      0.167805,
+      0.176432,
+      -0.02
+     ],
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "screw-2",
+     "kind": "revolve",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.009
+      ],
+      [
+       0.0085,
+       0.009
+      ]
+     ],
+     "axis": [
+      -0.62733,
+      -0.778754,
+      0.0
+     ],
+     "origin": [
+      0.167805,
+      0.176432,
+      0.02
+     ],
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "screw-3",
+     "kind": "revolve",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.009
+      ],
+      [
+       0.0085,
+       0.009
+      ]
+     ],
+     "axis": [
+      -0.62733,
+      -0.778754,
+      0.0
+     ],
+     "origin": [
+      0.346919,
+      0.032145,
+      -0.02
+     ],
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "screw-4",
+     "kind": "revolve",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.009
+      ],
+      [
+       0.0085,
+       0.009
+      ]
+     ],
+     "axis": [
+      -0.62733,
+      -0.778754,
+      0.0
+     ],
+     "origin": [
+      0.346919,
+      0.032145,
+      0.02
+     ],
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-hea-top-flange",
+     "of": "hea-top-flange",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-hea-web",
+     "of": "hea-web",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-hea-bottom-flange",
+     "of": "hea-bottom-flange",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-gusset",
+     "of": "gusset",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-tread-top",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.12824,
+       0.20702
+      ],
+      [
+       0.38523,
+       0.0
+      ],
+      [
+       0.380525,
+       -0.005841
+      ],
+      [
+       0.123535,
+       0.201179
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": 0.6,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     },
+     "sectionFaces": [
+      "-v",
+      "+u",
+      "-u",
+      "-w",
+      "+w"
+     ],
+     "region": "tread-top"
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-hea-top-flange",
+     "of": "hea-top-flange",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "st-hea-web",
+     "of": "hea-web",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "st-hea-bottom-flange",
+     "of": "hea-bottom-flange",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "st-gusset",
+     "of": "gusset",
+     "member": "stringer",
+     "part": "joint"
+    },
+    {
+     "id": "st-tread",
+     "of": "tread",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "support-foot-pin",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.046725,
+       -0.03764
+      ],
+      [
+       0.05143,
+       -0.031799
+      ],
+      [
+       0.035855,
+       -0.019253
+      ],
+      [
+       0.048456,
+       0.01233
+      ],
+      [
+       0.02028,
+       -0.006706
+      ],
+      [
+       0.004705,
+       0.005841
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.05,
+     "to": 0.05,
+     "member": "stringer",
+     "part": "support",
+     "anchor": "foot-pin"
+    },
+    {
+     "id": "support-landing-roller",
+     "kind": "revolve",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0,
+       0.02
+      ],
+      [
+       0.1,
+       0.02
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      4.627053,
+      -0.026564,
+      -0.05
+     ],
+     "member": "stringer",
+     "part": "support",
+     "anchor": "landing-roller"
+    },
+    {
+     "id": "mass-stringer",
+     "kind": "ellipsoid",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "radii": [
+      0.06,
+      0.06,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       2.31,
+       -0.11,
+       0.0
+      ]
+     },
+     "member": "stringer",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "The 1:50 model is the flight as built: an HEA 160 centre stringer as three extrusions along the slope (two 9 mm flanges 160 mm wide and a web of 7.5 mm, the real 6 mm lifted to the feature) with horizontal end cuts that bear on the landings, twelve 60 mm wide gusset blocks welded to the top flange, twelve 1.2 m wide timber treads of 40 mm with 7.5 mm eased nosing edges and four countersunk steel screws per tread, flush with the tread top (heads 18 mm).",
+     "de": "Das 1:50-Modell ist der Lauf wie gebaut: eine HEA-160-Mittelwange als drei Strangk\u00f6rper entlang der Neigung (zwei Flansche von 9 mm und 160 mm Breite und ein Steg von 7,5 mm, die wirklichen 6 mm auf das Merkmal angehoben) mit waagrechten Endschnitten, die auf den Podesten auflagern, zw\u00f6lf 60 mm breite Knaggenbl\u00f6cke am Obergurt, zw\u00f6lf 1,2 m breite Holzstufen von 40 mm mit 7,5 mm gebrochenen Vorderkanten und vier Senkkopfschrauben aus Stahl je Stufe, b\u00fcndig mit der Stufenoberseite (K\u00f6pfe 18 mm)."
+    },
+    {
+     "en": "Thermal: stringer-steel is the outer surface of flanges, web and gussets by reference; tread-top is a 7.5 mm skin patch inside the top of each tread whose back, edge and end faces are declared section faces, so only the walking surface counts (the declared 4.75 m2 is the sum of the twelve tread tops, the undersides belong to no region).",
+     "de": "Thermik: Wangenstahl ist die Au\u00dfenfl\u00e4che von Flanschen, Steg und Knaggen per Verweis; Stufenoberseite ist je Stufe ein 7,5 mm dickes Hautst\u00fcck im oberen Teil der Stufe, dessen R\u00fcck-, Rand- und Stirnfl\u00e4chen als Schnittfl\u00e4chen erkl\u00e4rt sind, so z\u00e4hlt nur die Trittfl\u00e4che (die angegebenen 4,75 m2 sind die Summe der zw\u00f6lf Stufenoberseiten, die Unterseiten geh\u00f6ren zu keiner Region)."
+    },
+    {
+     "en": "Structure: flanges and web are the member (the HEA 160 section), the treads carry the load to twelve gussets that are the joints; a 60 mm pin wedge on a 7.5 mm pad at the foot anchor, a 40 mm roller at the landing anchor, and the stringer mass as one 120 mm point at mid-span.",
+     "de": "Tragwerk: Flansche und Steg sind das Bauteil (der Querschnitt HEA 160), die Stufen tragen die Last in zw\u00f6lf Knaggen, die die Knoten sind; ein 60-mm-Keil als Festlager auf einer 7,5-mm-Platte am Fu\u00dfanker, eine 40-mm-Rolle am Podestanker und die Wangenmasse als ein 120-mm-Punkt in Feldmitte."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "hea-top-flange",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.03867,
+       -0.03115
+      ],
+      [
+       4.59768,
+       -0.03115
+      ],
+      [
+       4.616549,
+       -0.04635
+      ],
+      [
+       0.057539,
+       -0.04635
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08
+    },
+    {
+     "id": "hea-bottom-flange",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.218461,
+       -0.17598
+      ],
+      [
+       4.777471,
+       -0.17598
+      ],
+      [
+       4.79634,
+       -0.19118
+      ],
+      [
+       0.23733,
+       -0.19118
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08
+    },
+    {
+     "id": "hea-web",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.056298,
+       -0.04535
+      ],
+      [
+       4.615308,
+       -0.04535
+      ],
+      [
+       4.778712,
+       -0.17698
+      ],
+      [
+       0.219702,
+       -0.17698
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0076,
+     "to": 0.0076
+    },
+    {
+     "id": "gusset",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.26669,
+       0.04413
+      ],
+      [
+       0.36014,
+       -0.03115
+      ],
+      [
+       0.20605,
+       -0.03115
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.03,
+     "to": 0.03,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "tread",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.10315,
+       0.17587
+      ],
+      [
+       0.36014,
+       -0.03115
+      ],
+      [
+       0.38523,
+       0.0
+      ],
+      [
+       0.12824,
+       0.20702
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": 0.6,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-hea-top-flange",
+     "of": "hea-top-flange",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-hea-web",
+     "of": "hea-web",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-hea-bottom-flange",
+     "of": "hea-bottom-flange",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-gusset",
+     "of": "gusset",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-tread-top",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.12824,
+       0.20702
+      ],
+      [
+       0.38523,
+       0.0
+      ],
+      [
+       0.375695,
+       -0.011837
+      ],
+      [
+       0.118705,
+       0.195183
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": 0.6,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     },
+     "sectionFaces": [
+      "-v",
+      "+u",
+      "-u",
+      "-w",
+      "+w"
+     ],
+     "region": "tread-top"
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-hea-top-flange",
+     "of": "hea-top-flange",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "st-hea-web",
+     "of": "hea-web",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "st-hea-bottom-flange",
+     "of": "hea-bottom-flange",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "st-gusset",
+     "of": "gusset",
+     "member": "stringer",
+     "part": "joint"
+    },
+    {
+     "id": "st-tread",
+     "of": "tread",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "support-foot-pin",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.046725,
+       -0.03764
+      ],
+      [
+       0.056135,
+       -0.025958
+      ],
+      [
+       0.04056,
+       -0.013412
+      ],
+      [
+       0.054729,
+       0.020118
+      ],
+      [
+       0.024985,
+       -0.000865
+      ],
+      [
+       0.00941,
+       0.011681
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.05,
+     "to": 0.05,
+     "member": "stringer",
+     "part": "support",
+     "anchor": "foot-pin"
+    },
+    {
+     "id": "support-landing-roller",
+     "kind": "revolve",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0,
+       0.02
+      ],
+      [
+       0.1,
+       0.02
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      4.627053,
+      -0.026564,
+      -0.05
+     ],
+     "member": "stringer",
+     "part": "support",
+     "anchor": "landing-roller"
+    },
+    {
+     "id": "mass-stringer",
+     "kind": "ellipsoid",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "radii": [
+      0.0775,
+      0.0775,
+      0.0775
+     ],
+     "transform": {
+      "translation": [
+       2.31,
+       -0.11,
+       0.0
+      ]
+     },
+     "member": "stringer",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:100 the stringer keeps its three parts with 15.2 mm flanges and web (the 15 mm feature), the gussets are the drawn triangular brackets of 60 mm width, the treads are plain 40 mm timber boards 1.2 m wide; the screws are below the feature and left out, the eased nosing edges vanish.",
+     "de": "Bei 1:100 beh\u00e4lt die Wange ihre drei Teile mit 15,2 mm Flanschen und Steg (das 15-mm-Merkmal), die Knaggen sind die gezeichneten dreieckigen Konsolen von 60 mm Breite, die Stufen sind schlichte 40-mm-Holzbohlen von 1,2 m Breite; die Schrauben liegen unter dem Merkmal und entfallen, die gebrochenen Kanten verschwinden."
+    },
+    {
+     "en": "Thermal: stringer parts and brackets by reference, tread-top as a 15.2 mm skin patch under the top face with the same section faces as at 1:50.",
+     "de": "Thermik: Wangenteile und Konsolen per Verweis, Stufenoberseite als 15,2 mm dickes Hautst\u00fcck unter der Oberfl\u00e4che mit denselben Schnittfl\u00e4chen wie bei 1:50."
+    },
+    {
+     "en": "Structure: the same member parts, brackets as joints and treads; a 15 mm pin pad with a 50 mm wedge, a 40 mm roller and a 155 mm mass point.",
+     "de": "Tragwerk: dieselben Bauteile, Konsolen als Knoten und die Stufen; eine 15-mm-Auflagerplatte mit 50-mm-Keil, eine 40-mm-Rolle und ein 155-mm-Massenpunkt."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "stringer",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.09345,
+       -0.07528
+      ],
+      [
+       0.23733,
+       -0.19118
+      ],
+      [
+       4.63693,
+       -0.19118
+      ],
+      [
+       4.73361,
+       -0.26906
+      ],
+      [
+       4.79634,
+       -0.19118
+      ],
+      [
+       4.59768,
+       -0.03115
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08
+    },
+    {
+     "id": "tread",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.0906,
+       0.16029
+      ],
+      [
+       0.34759,
+       -0.04673
+      ],
+      [
+       0.38523,
+       0.0
+      ],
+      [
+       0.12824,
+       0.20702
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": 0.6,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-stringer",
+     "of": "stringer",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-tread-top",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.12824,
+       0.20702
+      ],
+      [
+       0.38523,
+       0.0
+      ],
+      [
+       0.36641,
+       -0.023363
+      ],
+      [
+       0.10942,
+       0.183657
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": 0.6,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     },
+     "sectionFaces": [
+      "-v",
+      "+u",
+      "-u",
+      "-w",
+      "+w"
+     ],
+     "region": "tread-top"
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-stringer",
+     "of": "stringer",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "st-tread",
+     "of": "tread",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "support-foot-pin",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.046725,
+       -0.03764
+      ],
+      [
+       0.065545,
+       -0.014277
+      ],
+      [
+       0.04997,
+       -0.001731
+      ],
+      [
+       0.061002,
+       0.027905
+      ],
+      [
+       0.034395,
+       0.010816
+      ],
+      [
+       0.01882,
+       0.023363
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.05,
+     "to": 0.05,
+     "member": "stringer",
+     "part": "support",
+     "anchor": "foot-pin"
+    },
+    {
+     "id": "support-landing-roller",
+     "kind": "revolve",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0,
+       0.03
+      ],
+      [
+       0.1,
+       0.03
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      4.641114,
+      -0.02505,
+      -0.05
+     ],
+     "member": "stringer",
+     "part": "support",
+     "anchor": "landing-roller"
+    },
+    {
+     "id": "mass-stringer",
+     "kind": "ellipsoid",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "radii": [
+      0.0775,
+      0.0775,
+      0.0775
+     ],
+     "transform": {
+      "translation": [
+       2.31,
+       -0.11,
+       0.0
+      ]
+     },
+     "member": "stringer",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:200 the stringer is one extrusion of the drawn outline (flanges and web merged, 160 mm wide, with the bearing seat under the head), the treads are 60 mm boards (the drawn thickness, the real 40 mm is below the 30 mm feature once eased), and the gussets are merged into the beam and the treads.",
+     "de": "Bei 1:200 ist die Wange ein Strangk\u00f6rper der gezeichneten Kontur (Flansche und Steg zusammengefasst, 160 mm breit, mit der Auflagernase unter dem Kopf), die Stufen sind 60-mm-Bohlen (die gezeichnete Dicke), und die Knaggen sind in Wange und Stufen aufgegangen."
+    },
+    {
+     "en": "Thermal: the beam by reference, tread-top as a 30 mm skin patch with the section faces of 1:50; the beam exposes less than the HEA (flange inner faces are lost), the total stays within 30 %.",
+     "de": "Thermik: die Wange per Verweis, Stufenoberseite als 30 mm dickes Hautst\u00fcck mit den Schnittfl\u00e4chen von 1:50; die Wange zeigt weniger Fl\u00e4che als die HEA (die Flanschinnenseiten fehlen), die Summe bleibt im 30-%-Band."
+    },
+    {
+     "en": "Structure: the merged beam and the treads as members, a 30 mm pin pad with a 60 mm wedge, a 60 mm roller and a 155 mm mass point; no joints at this scale.",
+     "de": "Tragwerk: die zusammengefasste Wange und die Stufen als Bauteile, eine 30-mm-Auflagerplatte mit 60-mm-Keil, eine 60-mm-Rolle und ein 155-mm-Massenpunkt; keine Knoten in diesem Ma\u00dfstab."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "stringer",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.09345,
+       -0.07528
+      ],
+      [
+       0.23733,
+       -0.19118
+      ],
+      [
+       4.63693,
+       -0.19118
+      ],
+      [
+       4.79634,
+       -0.19118
+      ],
+      [
+       4.59768,
+       -0.03115
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08
+    },
+    {
+     "id": "tread",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.12824,
+       0.20702
+      ],
+      [
+       0.38523,
+       0.0
+      ],
+      [
+       0.33818,
+       -0.058407
+      ],
+      [
+       0.08119,
+       0.148613
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": 0.6,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-stringer",
+     "of": "stringer",
+     "region": "stringer-steel"
+    },
+    {
+     "id": "th-tread-top",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.12824,
+       0.20702
+      ],
+      [
+       0.38523,
+       0.0
+      ],
+      [
+       0.337553,
+       -0.059185
+      ],
+      [
+       0.080563,
+       0.147835
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": 0.6,
+     "repeat": {
+      "count": 12,
+      "translation": [
+       0.38523,
+       0,
+       0
+      ]
+     },
+     "sectionFaces": [
+      "-v",
+      "+u",
+      "-u",
+      "-w",
+      "+w"
+     ],
+     "region": "tread-top"
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-stringer",
+     "of": "stringer",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "st-tread",
+     "of": "tread",
+     "member": "stringer",
+     "part": "member"
+    },
+    {
+     "id": "support-foot-pin",
+     "kind": "extrude",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.09345,
+       -0.07528
+      ],
+      [
+       0.141128,
+       -0.016094
+      ],
+      [
+       0.109977,
+       0.008999
+      ],
+      [
+       0.109458,
+       0.040236
+      ],
+      [
+       0.078827,
+       0.034092
+      ],
+      [
+       0.047677,
+       0.059185
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.05,
+     "to": 0.05,
+     "member": "stringer",
+     "part": "support",
+     "anchor": "foot-pin"
+    },
+    {
+     "id": "support-landing-roller",
+     "kind": "revolve",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0,
+       0.04
+      ],
+      [
+       0.1,
+       0.04
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      4.655175,
+      -0.023536,
+      -0.05
+     ],
+     "member": "stringer",
+     "part": "support",
+     "anchor": "landing-roller"
+    },
+    {
+     "id": "mass-stringer",
+     "kind": "ellipsoid",
+     "bone": "stringer",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "radii": [
+      0.0775,
+      0.0775,
+      0.0775
+     ],
+     "transform": {
+      "translation": [
+       2.31,
+       -0.11,
+       0.0
+      ]
+     },
+     "member": "stringer",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:500 the stringer is one block of the drawn outline without the 75 mm bearing nose, and the treads are 75 mm boards (the smallest feature, drawn the same way in elevation and front); the 2D head bearing stroke is the beam end.",
+     "de": "Bei 1:500 ist die Wange ein Block der gezeichneten Kontur ohne die 75-mm-Auflagernase, und die Stufen sind 75-mm-Bohlen (das kleinste Merkmal, in Seiten- und Vorderansicht gleich gezeichnet); der gezeichnete Kopflagerstrich ist das Wangenende."
+    },
+    {
+     "en": "Thermal: the beam by reference, tread-top as a 76 mm skin patch with the section faces of 1:50; only the total is compared at this scale.",
+     "de": "Thermik: die Wange per Verweis, Stufenoberseite als 76 mm dickes Hautst\u00fcck mit den Schnittfl\u00e4chen von 1:50; in diesem Ma\u00dfstab z\u00e4hlt nur die Summe."
+    },
+    {
+     "en": "Structure: beam and treads as members, a 120 mm pin pad with a 100 mm wedge, an 80 mm roller and a 155 mm mass point.",
+     "de": "Tragwerk: Wange und Stufen als Bauteile, eine 120-mm-Auflagerplatte mit 100-mm-Keil, eine 80-mm-Rolle und ein 155-mm-Massenpunkt."
+    }
+   ]
+  }
+ }
+}

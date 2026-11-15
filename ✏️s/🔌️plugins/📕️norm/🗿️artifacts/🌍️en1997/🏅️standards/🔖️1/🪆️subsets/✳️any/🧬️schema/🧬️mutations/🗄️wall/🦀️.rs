@@ -23,4 +23,4 @@ pub mod change_wall_backfill_gamma;
 pub mod change_wall_wall_friction_deg;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_en1997_mut_wall_seismic_reinforcement::{change_wall_earth_pressure_mode, change_wall_seismic_kh, change_wall_seismic_kv, change_wall_reinforcement_spacing, change_wall_reinforcement_width, change_wall_rebar_friction};
+pub use semio_s_artifact_norm_en1997_mut_wall_reinforcement::{change_wall_earth_pressure_mode, change_wall_seismic_kh, change_wall_seismic_kv, change_wall_reinforcement_spacing, change_wall_reinforcement_width, change_wall_rebar_friction};

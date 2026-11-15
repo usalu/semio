@@ -1,4 +1,4 @@
-//! ➕️ `insert-layer` diff — inserts the layer into the element's stack at its position, clamped to the end of the stack.
+//! ➕️ `insert-layer` diff — inserts the layer into the element's stack at its position, clamped to the end of the stack; an id the stack already holds is a `mutation.duplicate-id`.
 
 use crate::insert_layer::InsertLayer;
 use semio_s_artifact_norm_din4108_diff::{Din4108Diff, Din4108ElementDelta, Din4108ElementPatch, Din4108LayerDelta};
@@ -8,6 +8,9 @@ pub fn diff(payload: &InsertLayer, base: &Din4108Snapshot) -> protocol::Mutation
     let Some(element) = base.elements.iter().find(|element| element.id == payload.element_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "element not found", Vec::<String>::new());
     };
+    if element.layers.iter().any(|existing| existing.id == payload.layer.id) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A layer with id '{}' already exists in element '{}'.", payload.layer.id, element.id), [payload.layer.id.clone()]);
+    }
     let index = payload.index.unwrap_or(usize::MAX).min(element.layers.len());
     let nested = Din4108LayerDelta::insertion(index, payload.layer.clone());
     protocol::MutationOutcome::new(Din4108Diff { elements: Din4108ElementDelta::modification(&element.id, Din4108ElementPatch { layers: nested, ..Default::default() }), ..Default::default() })

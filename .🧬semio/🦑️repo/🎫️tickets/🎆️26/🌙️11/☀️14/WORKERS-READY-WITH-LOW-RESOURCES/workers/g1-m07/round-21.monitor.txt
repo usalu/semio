@@ -1,0 +1,4 @@
+started pid=22134 at 2026-11-15T06:17:58Z log=/Users/ueli/native-bootstrap-round-21.log
+HARD STOP at 2026-11-15T06:57:41Z: no new progress line for 15 minutes in the graph slice; sending one SIGINT to process group 22134
+one minute after SIGINT: alive=no
+ended at 2026-11-15T06:58:42Z peak_rss_kib=2839488 run_peak_rss_kib=2839664 hard_stop=no new progress line for 15 minutes in the graph slice

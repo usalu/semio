@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-14T20:08:29.991962+00:00",
+  "rc": 0,
+  "selected_lines": [
+    "\tstate = running",
+    "\truns = 4",
+    "\tlast exit code = 0",
+    "\t\tstate = active",
+    "\t\tstate = active"
+  ],
+  "kickstart_count": 0
+}

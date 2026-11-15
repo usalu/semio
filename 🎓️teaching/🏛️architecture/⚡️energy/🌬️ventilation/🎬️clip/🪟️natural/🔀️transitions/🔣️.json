@@ -1149,7 +1149,7 @@
         "scenario": null
       },
       "relation": "one-to-one",
-      "recipe": "replace",
+      "recipe": "fade",
       "copy": false,
       "timing": {
         "duration": 1.6,
@@ -1194,7 +1194,7 @@
         "scenario": null
       },
       "relation": "one-to-one",
-      "recipe": "replace",
+      "recipe": "fade",
       "copy": false,
       "timing": {
         "duration": 2.2,
@@ -1239,7 +1239,7 @@
         "scenario": null
       },
       "relation": "one-to-one",
-      "recipe": "replace",
+      "recipe": "fade",
       "copy": false,
       "timing": {
         "duration": 1.4,
@@ -1284,7 +1284,7 @@
         "scenario": null
       },
       "relation": "one-to-one",
-      "recipe": "replace",
+      "recipe": "fade",
       "copy": false,
       "timing": {
         "duration": 1.4,
@@ -1329,7 +1329,7 @@
         "scenario": null
       },
       "relation": "one-to-one",
-      "recipe": "replace",
+      "recipe": "fade",
       "copy": false,
       "timing": {
         "duration": 1.4,

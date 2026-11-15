@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/async-macros-rs",
-  "namedInputs": {
+  "namedInputs": { "default": ["{projectRoot}/**/*", "sharedGlobals", { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🔨️modules/⏳️async/🤖️generated\"" }],
     "testEnv": [
       { "env": "SEMIO_TEST_LEVEL" },
       { "env": "SEMIO_TEST_BUDGET_MS" },

@@ -206,8 +206,10 @@ test("one watcher owns a cache root, a cancellation ends it cleanly and frees th
 });
 
 test("a long compile re-checks the image on a timer and stops checking when it ends, and an out-of-space failure collects once and runs the build again",async()=>{
- let checks=0;const result=await withUnitPressureRecheckV1(async()=>{checks++;throw Error("a failing check never fails the compile");},async()=>{await new Promise(done=>setTimeout(done,95));return "built";},20);
- expect(result).toBe("built");const seen=checks;expect(seen).toBeGreaterThanOrEqual(3);await new Promise(done=>setTimeout(done,60));expect(checks).toBe(seen);
+ let checks=0,tick:(()=>void)|undefined,stopped=0,interval=0;const timer=(callback:()=>void,milliseconds:number)=>{tick=callback;interval=milliseconds;return()=>{stopped++;tick=undefined;};};
+ const result=await withUnitPressureRecheckV1(async()=>{checks++;throw Error("a failing check never fails the compile");},async()=>{for(let index=0;index<3;index++)tick!();await Promise.resolve();return "built";},20,timer);
+ expect(result).toBe("built");expect(interval).toBe(20);expect(checks).toBe(3);expect(stopped,"the timer stops when the compile ends").toBe(1);expect(tick).toBeUndefined();
+ stopped=0;await expect(withUnitPressureRecheckV1(async()=>undefined,async()=>{throw Error("compile failed");},20,timer)).rejects.toThrow("compile failed");expect(stopped,"and when it fails").toBe(1);
  const root=scratch(),store=join(root,"m");mkdirSync(join(store,"u",UNIT_CACHE_POLICY_V1.layout.locks),{recursive:true});
  try{
   let runs=0;const lines:string[]=[];

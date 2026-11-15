@@ -15,7 +15,7 @@ export type JavascriptLockScopeV1=Readonly<{scope:string;lock:string;manifests:R
 /** 📊️ What the lock check found in one scope. */
 export type JavascriptLockReportV1=Readonly<{scope:string;drift:readonly LockDriftV1[]}>;
 
-const memberKeyV1=(member:string):string=>posix.normalize(member.replaceAll("\\","/")).replace(/\/$/u,"");
+const memberKeyV1=(member:string):string=>posix.normalize(member.replaceAll("\\","/").normalize("NFC")).replace(/\/$/u,"");
 const readManifestV1=(path:string):unknown=>{const text=readFileSync(path,"utf8");try{return JSON.parse(text);}catch{return parseJsoncV1(text);}};
 
 /** 🧭️ Reads every dependency scope of the checkout without walking it: the root scope and each directory its `semio.workspace.owners` pattern (one level below the root) names that carries a lock file; the members are the explicit list the scope's last sync published. */

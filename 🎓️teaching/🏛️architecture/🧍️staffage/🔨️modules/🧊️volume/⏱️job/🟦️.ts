@@ -39,10 +39,13 @@ export async function cancellable<T>(control: JobControl, work: () => Promise<T>
   }
 }
 
-/** 🎚️ The tessellation quality of an asset: a chord deviation of 1/800 of its largest dimension between 0.5 and 20 mm, 12 to 64 segments per circle. */
-export function qualityOf(asset: Asset): Quality {
+/** 🎚️ The tessellation quality of an asset at a scale, the one rule of the viewer, every download and the budget oracle: the chord deviation is 0.1 mm of paper at that scale, never finer than 1/800 of the largest dimension (clamped to 0.5 to 20 mm) and never coarser than 1/60 of it; the segments of a full circle are 12 to 64 up to 1:20, 8 to 48 up to 1:100 and 8 to 32 beyond, so a coarser scale never has more triangles than a finer one. Without a scale it is the finest quality (1/800 of the largest dimension, 12 to 64 segments), the reference of the validators that measure silhouettes. */
+export function qualityOf(asset: Asset, scale?: number): Quality {
   const largest = Math.max(asset.dimensions.heightM, asset.dimensions.widthM, asset.dimensions.depthM);
-  return { chordM: Math.min(0.02, Math.max(0.0005, largest / 800)), minSegments: 12, maxSegments: 64 };
+  const finest = Math.min(0.02, Math.max(0.0005, largest / 800));
+  if (scale === undefined) return { chordM: finest, minSegments: 12, maxSegments: 64 };
+  const chordM = Math.min(Math.max(scale * 0.0001, finest), Math.max(finest, largest / 60));
+  return { chordM, minSegments: scale <= 20 ? 12 : 8, maxSegments: scale <= 20 ? 64 : scale <= 100 ? 48 : 32 };
 }
 
 /** 🏷️ The phases every export shares. */

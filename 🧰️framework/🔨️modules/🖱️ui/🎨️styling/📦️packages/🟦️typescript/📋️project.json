@@ -3,7 +3,7 @@
   "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated\"" }, "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts",
       "sharedGlobals"
     ],

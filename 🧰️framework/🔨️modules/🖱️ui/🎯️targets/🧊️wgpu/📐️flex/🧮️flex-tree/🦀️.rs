@@ -475,6 +475,19 @@ impl FlexTree {
         table!(flows,grids,intrinsic,resolved,tracks);
         Ok(0)
     }
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{
+        if let Some(Some(grid))=self.grids.last(){
+            if !grid.columns.is_empty(){return Ok(0)}
+            if !grid.columns.terminal_is_empty(){return grid.columns.next_release_copy_byte_demand().map_err(semio_framework_value::ValueError::from)}
+            if !grid.rows.is_empty(){return Ok(0)}
+            if !grid.rows.terminal_is_empty(){return grid.rows.next_release_copy_byte_demand().map_err(semio_framework_value::ValueError::from)}
+            return Ok(0)
+        }
+        if self.nodes_remain(){return Ok(0)}
+        macro_rules! table{($($table:ident),+)=>{$(if !self.$table.terminal_is_empty(){return self.$table.next_release_copy_byte_demand().map_err(semio_framework_value::ValueError::from)})+}}
+        table!(flows,grids,intrinsic,resolved,tracks);
+        Ok(0)
+    }
     fn nodes_remain(&self)->bool{!self.flows.is_empty()||!self.grids.is_empty()||!self.intrinsic.is_empty()||!self.resolved.is_empty()||!self.tracks.is_empty()}
     pub fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{
         let overflow=||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"flex close native parent depth overflow");

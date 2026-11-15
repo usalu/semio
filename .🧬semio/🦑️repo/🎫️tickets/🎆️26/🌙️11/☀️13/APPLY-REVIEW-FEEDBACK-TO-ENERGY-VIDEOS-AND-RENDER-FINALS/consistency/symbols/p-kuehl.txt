@@ -1,0 +1,3 @@
+Kühlung|Kuehlung|Kühlungen
+Pettenkoferwert|Pettenkofer.?[Ww]ert
+lights up|light up|leuchtet|erscheint|verblasst|blendet|\bfades?\b|fading

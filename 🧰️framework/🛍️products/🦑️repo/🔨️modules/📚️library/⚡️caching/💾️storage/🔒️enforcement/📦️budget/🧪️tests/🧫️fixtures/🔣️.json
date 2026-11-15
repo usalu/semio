@@ -227,7 +227,9 @@
       "minimumBytes": 51539607552,
       "hostFreeBytes": 2147483648000,
       "capacityBytes": 103079215104
-    }
+    },
+    {"id":"this host 2026-11-13: 91 GiB free, below the 96 GiB declared capacity","minimumBytes":34359738368,"hostFreeBytes":97886126080,"capacityBytes":48318382080},
+    {"id":"256 GB Mac mini with 60 GiB free","minimumBytes":34359738368,"hostFreeBytes":64424509440,"capacityBytes":34359738368}
   ],
   "imageBackends": [
     {

@@ -1,0 +1,40 @@
+2026-11-14T17:48:11Z git pid 35411
+35411 47709 2299968 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+47709 47677 378912 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-ar
+47677     1 246912 /Applications/Claude.app/Contents/MacOS/Claude
+    1     0 /sbin/launchd
+2026-11-14T17:48:41Z git pid 35864
+35864 47709 1741696 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+47709 47677 226672 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-ar
+47677     1 243392 /Applications/Claude.app/Contents/MacOS/Claude
+    1     0 /sbin/launchd
+2026-11-14T17:49:41Z git pid 36302
+36302 47709 2299536 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+47709 47677 347728 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-ar
+47677     1 247936 /Applications/Claude.app/Contents/MacOS/Claude
+    1     0 /sbin/launchd
+2026-11-14T17:50:11Z git pid 36759
+36759 47709 1323808 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+47709 47677 349008 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-ar
+47677     1 244416 /Applications/Claude.app/Contents/MacOS/Claude
+    1     0 /sbin/launchd
+2026-11-14T17:52:42Z git pid 38181
+38181 47709 1089056 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+47709 47677 467904 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-ar
+47677     1 251264 /Applications/Claude.app/Contents/MacOS/Claude
+    1     0 /sbin/launchd
+2026-11-14T17:53:42Z git pid 38675
+38675 47709 1846080 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+47709 47677 249216 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-ar
+47677     1 254448 /Applications/Claude.app/Contents/MacOS/Claude
+    1     0 /sbin/launchd
+2026-11-14T17:54:42Z git pid 39124
+39124 47709 2311264 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+47709 47677 366704 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-ar
+47677     1 254384 /Applications/Claude.app/Contents/MacOS/Claude
+    1     0 /sbin/launchd
+2026-11-14T17:55:12Z git pid 39455
+39455 47709 2225024 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+47709 47677 361744 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-ar
+47677     1 255728 /Applications/Claude.app/Contents/MacOS/Claude
+    1     0 /sbin/launchd

@@ -60,7 +60,7 @@ impl RetainedSourceDictionary{
   if self.receipt.is_some()||self.phase==4{return Ok(Default::default())}
   if self.closing{
    if !self.original_source_ranges.is_empty(){return Ok(RetirementDemand{depth:self.original_source_ranges.next_pop_depth_demand().map_err(Self::list_error)?,..Default::default()})}
-   return Ok(RetirementDemand{release_bytes:self.original_source_ranges.next_release_allocation_bytes().map_err(Self::list_error)?,depth:self.original_source_ranges.next_release_depth_demand().map_err(Self::list_error)?.max(1),..Default::default()})
+   return Ok(RetirementDemand{copy_bytes:self.original_source_ranges.next_release_copy_byte_demand().map_err(Self::list_error)?,release_bytes:self.original_source_ranges.next_release_allocation_bytes().map_err(Self::list_error)?,depth:self.original_source_ranges.next_release_depth_demand().map_err(Self::list_error)?.max(1),..Default::default()})
   }
   match self.phase{
    0=>Ok(Default::default()),

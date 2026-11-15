@@ -38,10 +38,10 @@
       }
     },
     "budget": {
-      "description": "What a release build of the site may weigh, pinned from the real release build: the scripts the document runs (the entry chunk, compressed as a CDN sends them) per topology — `publish` is the build for the production proctor, `rehearsal` the one the end-to-end gate serves against its own proctor; the development topology serves unbundled modules and has no entry chunk to weigh —, the stylesheet compressed, and the whole artifact on disk. Lazy chunks the document merely hints at low priority (`fetchpriority=\"low\"`) are not charged to the scripts.",
+      "description": "What a release build of the site may weigh, pinned from the real release build: the scripts the document runs (the entry chunk, compressed as a CDN sends them) per topology — `publish` is the build for the production proctor, `rehearsal` the one the end-to-end gate serves against its own proctor; the development topology serves unbundled modules and has no entry chunk to weigh —, the stylesheet compressed, the artifact on disk besides its published assignment documents, and those documents themselves. Lazy chunks the document merely hints at low priority (`fetchpriority=\"low\"`) are not charged to the scripts.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["scriptGzipBytes", "styleGzipBytes", "totalBytes"],
+      "required": ["scriptGzipBytes", "styleGzipBytes", "totalBytes", "assignmentBytes"],
       "properties": {
         "scriptGzipBytes": {
           "type": "object",
@@ -53,7 +53,8 @@
           }
         },
         "styleGzipBytes": { "$ref": "#/$defs/Bytes" },
-        "totalBytes": { "$ref": "#/$defs/Bytes" }
+        "totalBytes": { "$ref": "#/$defs/Bytes" },
+        "assignmentBytes": { "$ref": "#/$defs/Bytes" }
       }
     }
   },

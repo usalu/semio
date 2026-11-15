@@ -10,7 +10,7 @@ description = "Trinity rewriting artifact"
 role = "artifact"
 
 [features]
-testkit = ["semio-s-artifact-trinity-rewriting-model/testkit", "semio-s-artifact-trinity-rewriting-layout/testkit", "semio-s-artifact-trinity-rewriting-inferences/testkit", "semio-s-artifact-trinity-rewriting-schema/testkit", "semio-s-artifact-trinity-rewriting-mut-any/testkit", "semio-s-artifact-trinity-rewriting-operations/testkit", "semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour/testkit", "semio-s-artifact-trinity-rewriting-editor/testkit", "semio-s-artifact-trinity-rewriting-v1/testkit"]
+testkit = ["semio-s-artifact-trinity-rewriting-model/testkit", "semio-s-artifact-trinity-rewriting-layout/testkit", "semio-s-artifact-trinity-rewriting-inferences/testkit", "semio-s-artifact-trinity-rewriting-schema/testkit", "semio-s-artifact-trinity-rewriting-mut-any/testkit", "semio-s-artifact-trinity-rewriting-operations/testkit", "semio-s-artifact-trinity-rewriting-tests-narrows-lhs/testkit", "semio-s-artifact-trinity-rewriting-editor/testkit", "semio-s-artifact-trinity-rewriting-v1/testkit"]
 [lints]
 workspace = true
 
@@ -26,7 +26,7 @@ semio-s-artifact-trinity-rewriting-inferences = { path = "../../🏅️standards
 semio-s-artifact-trinity-rewriting-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting-mut-any = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting-operations = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/📦️packages/🦀️rust" }
-semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-rewriting-tests-narrows-lhs = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting-editor = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting-v1 = { path = "../../🏅️standards/🔖️1/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
@@ -74,7 +74,7 @@ semio-s-artifact-trinity-rewriting-inferences = { path = "../../🏅️standards
 semio-s-artifact-trinity-rewriting-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-trinity-rewriting-mut-any = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-trinity-rewriting-operations = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/📦️packages/🦀️rust", features = ["testkit"] }
-semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-trinity-rewriting-tests-narrows-lhs = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-trinity-rewriting-editor = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-trinity-rewriting-v1 = { path = "../../🏅️standards/🔖️1/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

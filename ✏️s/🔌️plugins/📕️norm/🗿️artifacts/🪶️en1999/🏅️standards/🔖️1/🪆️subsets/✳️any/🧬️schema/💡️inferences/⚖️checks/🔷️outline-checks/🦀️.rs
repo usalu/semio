@@ -211,7 +211,7 @@ pub fn check_outline(section: &AluminiumSection, vertices: &[SectionVertex], ann
             let mut c = CheckResult::assess(format!("en1999.6.1.outline.match.{}", section.id), "DIN EN 1999-1-1", clause("6.1"), section_subject(section, "kind"), loc("Outline against the parametric section", "Umriss gegen den parametrischen Querschnitt"))
                 .utilization(q_dim(rel), q_dim(0.05))
                 .annex(annex)
-                .explanation(loc(&format!("Polygon area {:.1} mm² against {:.1} mm² of the parametric {:?} section ({:.1} %).", p.a * 1e6, parametric * 1e6, section.kind, rel * 100.0), &format!("Polygonfläche {:.1} mm² gegen {:.1} mm² des parametrischen Querschnitts {} ({:.1} %).", p.a * 1e6, parametric * 1e6, section.kind, rel * 100.0)));
+                .explanation(loc(&format!("Polygon area {:.1} mm² against {:.1} mm² of the parametric {:?} section ({:.1} %).", p.a * 1e6, parametric * 1e6, section.kind, rel * 100.0), &format!("Polygonfläche {:.1} mm² gegen {:.1} mm² des parametrischen Querschnitts {:?} ({:.1} %).", p.a * 1e6, parametric * 1e6, section.kind, rel * 100.0)));
             if rel > 0.05 {
                 c = c.status(CheckStatus::Warning).remedy(Remedy::one_of(section_subject(section, "kind"), vec!["free".into()], loc("Let the polygon define the section (kind free).", "Das Polygon den Querschnitt bestimmen lassen (Art free).")));
             }

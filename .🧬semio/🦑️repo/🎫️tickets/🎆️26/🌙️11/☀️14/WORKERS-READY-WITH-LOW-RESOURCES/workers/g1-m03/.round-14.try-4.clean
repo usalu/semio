@@ -1,0 +1,1475 @@
+start 2026-11-15T02:55:38Z
+[semio] Homebrew not available; install pkg-config, Cairo, Pango and DejaVu fonts before running native C++ builds (CMake and Ninja are provisioned by the repository).
+[semio] Building the repo launcher (it provisions the pinned JavaScript runtime itself)…
+[semio] The repo launcher is current, nothing was replaced: /Users/ueli/.local/share/semio/launcher/bin/repo
+[semio] Der Repo-Launcher ist aktuell, nichts wurde ersetzt: /Users/ueli/.local/share/semio/launcher/bin/repo
+[semio] Add to PATH: /Users/ueli/.local/share/semio/launcher/bin
+[semio] Zum PATH hinzufügen: /Users/ueli/.local/share/semio/launcher/bin
+[semio] Another repository frontend is on PATH: /Users/ueli/.local/bin/repo. Installed launcher: /Users/ueli/.local/share/semio/launcher/bin/versions/cf25f2b751f83336/repo
+[semio] Ein weiteres Repository-Frontend liegt im PATH: /Users/ueli/.local/bin/repo. Installierter Launcher: /Users/ueli/.local/share/semio/launcher/bin/versions/cf25f2b751f83336/repo
+[semio] Installing the rust-toolchain.toml toolchain…
+info: using existing install for nightly-2026-07-20-aarch64-apple-darwin
+info: the active toolchain `nightly-2026-07-20-aarch64-apple-darwin` has been installed
+info: it's active because: overridden by '/Users/ueli/Documents/semio/rust-toolchain.toml'
+[semio] Installing the native repository command…
+[capacity] run: sized at 5% of the default from 16 earlier run(s) of its class, at least 4482 MB because of its assembly phase
+[capacity] admitted run: 8 job(s), 5140 MB reserved (7921 MB available, 2048 MB floor)
+[capacity] run: sized at 5% of the default from 16 earlier run(s) of its class, at least 4482 MB because of its assembly phase
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] build:neutral-child · Running the neutral build child
+$ repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo run repo-mcp:build
+[capacity] run: sized at 46% of the default from 12 earlier run(s) of its class
+[capacity] run: sized at 46% of the default from 12 earlier run(s) of its class
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[repo] still working after 5 s; last phase started: source.served
+[repo] still working after 5 s; last phase started: source.served
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+repo - Tool-neutral build entry with two implementations: Nx with Bun (default) and Bazel.
+
+Usage:
+  repo [--tool=nx|bazel|semio] <command> [options] [-- <arguments>]
+  repo <command> --help [--lang=en|de]
+
+Commands:
+  run <project:target[:configuration]>            Run one task of one project.
+  run-many --targets=<targets> [--projects=<projects>]
+                                                  Run the same targets in many projects.
+  affected --targets=<targets>                    Run targets in the projects changed against HEAD and their dependents.
+  exec --projects=<projects> -- <command>         Run a command once per selected project, in the project root.
+  watch --projects=<projects> -- <command>        Rerun a command when selected source files change.
+  graph                                           Print the tool-neutral build graph.
+  show projects|project <name>|targets            Print projects, one project or all targets of the neutral graph.
+  inputs <project:target[:configuration]>         Print what the selected implementation hashes for one task: files, environment, runtime values and external packages.
+  reset                                           Invalidate the graph and reset the selected tool's local state.
+  tools setup [nx|bazel|semio|toolchains [tool...]|all]|verify [tool...]|list [--json]|exec <tool|command> -- <arguments>
+                                                  Provision the pinned tools for this host, report where it differs from the pins and run every other external tool through the tool registry.
+  preflight                                       Check the host against the finite requirements before any store is provisioned.
+  incremental list|plan|prepare|run|discard       Prove in a disposable copy that Nx and Bazel rebuild exactly what an edit affects, no more and no less.
+  concurrency list|plan|run                       Prove that simulated agents working in one checkout copy at the same time never wait for unrelated projects, share cached work and get the results of a serial run, with Nx and Bazel.
+  conformance list|plan|run                       Judge every build backend against the same language-agnostic scenarios: plan, run, cache hit and miss, outputs, test results, affected, cancellation, progress, concurrency and remote cache.
+  units plan|run|emit|exec                        Plan, run and emit language-neutral compilation units (Go, Python, .NET, C/C++, WIT, TeX) whose dependents re-run only when a dependency's interface changes, and execute one unit as the action of Nx or Bazel.
+  bench list|run|compare|acceptance               Measure the performance objectives (hot-cache latency, edit to rebuild per language, cache hit rate, graph, memory, concurrent agents) in a disposable checkout copy, judge them against the SLO table and compare with a stored baseline; `bench acceptance` holds the acceptance scenarios of the three products (hot no-op, peer edit, one-line edit with byte-exact revert) on the checkout itself to declared budgets.
+  dependencies sync|lock --all|--scope <owner> | ensure
+                                                  Install, lock or ensure the workspace dependencies.
+  cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <cargo subcommand> <args>
+                                                  Compile through the repository's Cargo ingress gate.
+  cache status|gc|verify|dedupe|cas|clear         Show and collect every declared cache home with its budget, or clear the selected tool's local task cache.
+  remote-cache serve|status|gc|rotate             Serve a bounded, shared result cache for Bazel and Nx from this machine, inspect the remote cache contract and the server, or collect the cache store.
+  capacity status|run                             Show the machine's free memory, floor, load and the running and waiting grants, or run any command under a machine-wide capacity grant.
+  leases status                                   Show which processes hold and wait for resource leases, how long, who blocks whom, deadlock cycles, lock order violations and the machine's admission queue.
+  fleet status                                    Show one picture of the shared workspace: who runs what (phase, progress, age, priority, code freshness), the queues with waiting-time estimates, memory admitted against really used, the Bazel servers, storage against its budgets, the sealed implementation and the last graph generation.
+  scheduler status|cancel|run                     Show or steer the fair global build queue shared by every agent on this machine, or run a command through it.
+  service host start|status|stop|run              Run, inspect or stop the per-host graph service: the one process of this machine that holds the fact index and answers every agent's plan request over one local socket or pipe.
+  remote-execution serve|status|workers           Run the in-house remote execution service that hermetic Bazel actions can run on, inspect it, or join this machine to it as a worker.
+  doctor [--json] [--fix [--dry-run]] [--only=<area>[,<area>]] [--strict] [--facts]
+                                                  Answer in one shot why work is waiting, slow or failing: tool pins, storage images, leases, capacity grants, agent sessions, graph and dependency generations, caches, running repo processes and the host, each problem with its owner and the command that resolves it.
+  session open|status|close|list                  Show, open and close agent sessions: one identity per agent working in this worktree, with its cargo lane, Bazel slot preference, Nx daemon namespace, test sandbox root, lease owner tag, budget share and capability.
+
+Options:
+  --agent=<id>                                    service issue: the agent the token is issued to; service revoke: revoke every session of this agent. (used by: service, session)
+  -p, --projects=<projects>                       Comma list of project names with * wildcards, tag:<tag>, name:<name>, directory:<root> and !<pattern> negation. (used by: run-many, exec, watch)
+  --exclude=<projects>                            Comma list of projects to leave out (same patterns as --projects). (used by: run-many, affected, exec, watch)
+  -t, --targets=<targets>, --target               Comma list of target names or * patterns. (used by: run-many, affected)
+  -c, --configuration=<prototype|release>         Compiler configuration; disagreeing values (also a :<configuration> suffix or SEMIO_BUILD_MODE) are refused; cargo takes the full name only. (used by: run, run-many, affected, cargo)
+  --parallel=<n>                                  Maximum number of concurrent tasks. (used by: run, run-many, affected)
+  --bail                                          Stop at the first failing task. (used by: run, run-many, affected)
+  --verbose                                       Print more detail. (used by: run, run-many, affected)
+  --output=<stream|stream-without-prefixes|static>, --output-style
+                                                  Output style of the task logs. (used by: run, run-many, affected)
+  --skip-cache                                    Ignore the task cache. (used by: run, run-many, affected)
+  --skip-remote-cache                             Ignore the remote cache. (used by: run, run-many, affected)
+  --exclude-dependencies, --exclude-task-dependencies
+                                                  Run only the named tasks, not the tasks they depend on. (used by: run, run-many, affected)
+  --dry-run                                       Print the task graph as a DryRunPlan on stdout and execute nothing; the same for every tool. With cache gc or remote-cache gc: list what would be removed and remove nothing. (used by: run, run-many, affected, exec, cache, remote-cache, doctor)
+  --graph[=<file>]                                Same as --dry-run; with a file the plan is written there (Nx: the file as given, Bazel: a report whose path is printed). (used by: run, run-many, affected, exec)
+  --all                                           Select every project (affected, watch), every dependency owner (dependencies) or every lease directory with registered processes (leases). (used by: affected, watch, dependencies, leases, session)
+  --base=<ref>                                    Compare against this revision instead of HEAD. (used by: affected)
+  --head=<ref>                                    End revision of the comparison. (used by: affected)
+  --files=<files>                                 Comma list of changed files instead of the git comparison. (used by: affected)
+  --uncommitted                                   Only uncommitted changes. (used by: affected)
+  --untracked                                     Only untracked files. (used by: affected)
+  --include-global-files                          Also react to files outside any project. (used by: watch)
+  --file=<path>                                   Write the result as a report file and print its path. (used by: graph, show, incremental, concurrency, bench, conformance, units)
+  --json                                          Print lists as JSON instead of one entry per line. (used by: graph, show, incremental, concurrency, bench, capacity, fleet, scheduler, leases, cache, remote-cache, doctor, tools, conformance, units, service, session)
+  --area=<id[,id]>                                cache status|gc: limit the report or the collection to these ledger areas (or retired, undeclared); cache dedupe: limit the search to these places (bazel-outputs, bazel-workspaces, vite-products, tools). (used by: cache)
+  --budget=<size>                                 cache status|gc: the disk budget of this machine for this call (an integer or a number with KiB, MiB, GiB, TiB, e.g. 40GiB); it beats the SEMIO_CACHE_BUDGET_BYTES variable, which beats the machine file in the repository cache root, which beats the declared default. (used by: cache)
+  --deep                                          cache verify (required): read every indexed optional graph leaf and every closure inventory again and compare it with its recorded hash. cache status: walk every cache home now (with progress, cancellable) and record the sizes, instead of reading statfs and the size ledger. (used by: cache)
+  --tasks                                         cache status: print the selected tool's task cache (a CacheStatus) instead of the cache ledger. (used by: cache)
+  --graph-policy=<fresh|current>                  fresh (default) verifies the graph and waits for a rebuild when a project changed; current serves the newest sealed graph at once and never waits; otherwise SEMIO_BUILD_GRAPH_POLICY. (used by: graph, show)
+  --scenario=<ids|all>                            incremental plan|run and bench acceptance: comma list of scenario ids, or all (bench acceptance also takes kind:<noop|peer|edit> and product:<course|print|dashboard>; without --in-place, all leaves the scenarios that edit files out). (used by: incremental, conformance, bench)
+  --implementations=<nx|bazel|semio>              incremental and concurrency plan|run: implementations to judge (default: every registered backend). (used by: incremental, concurrency, bench, conformance)
+  --root=<path>                                   incremental, concurrency, bench: the disposable repository copy (default: the folder .sinc in the home directory, else sinc in the temporary directory of the process, else /tmp/sinc); it must not lie inside or contain the checkout, and its path stays short because absolute paths are limited to 256 characters. (used by: incremental, concurrency, bench, units)
+  --phases=<warm,edit,revert>                     incremental run: phases to judge (default: all three). (used by: incremental)
+  --fresh                                         incremental prepare: discard the copy and clone it again. (used by: incremental)
+  --workloads=<ids|all>                           concurrency plan|run: comma list of workload ids, or all. (used by: concurrency)
+  --sessions=<n>                                  concurrency plan|run: simulated agents per workload, the first n of its sessions (default: 3, at most 8). (used by: concurrency)
+  --criteria=<id>                                 concurrency run: judge every workload with this set of pass criteria instead of its own. (used by: concurrency)
+  --keep                                          conformance run: keep the scratch workspaces for inspection. (used by: conformance)
+  --slo=<ids|all>                                 bench run: comma list of objective ids, probe:<id>, kind:<cli-help|noop|edit|graph|cache|concurrency|planning>, or all. (used by: bench)
+  --runs=<n>                                      bench run: samples per probe instead of the authored count (the 95th percentile needs 20 samples, the 99th needs 100; fewer leave those objectives unproven). (used by: bench)
+  --baseline=<path>                               bench run|compare: a stored report to compare with; a change beyond the tolerance of an objective is a regression or an improvement. (used by: bench)
+  --save-baseline=<path>                          bench run: store the report as the baseline of later runs. (used by: bench)
+  --history=<folder>                              bench run: store the report in this folder as <UTC start>-<host class>.json and compare with the newest earlier report of this host class when no --baseline is given; bench compare: compare the two newest reports of this host class. (used by: bench)
+  --current=<path>                                bench compare: the stored report to judge against --baseline. (used by: bench)
+  --markdown=<path>                               bench run|compare|acceptance: also write the report as a markdown file. (used by: bench)
+  --max-load=<per-core>                           bench run: refuse to start when the one-minute load per core of the host exceeds this number. (used by: bench)
+  --prepare                                       bench run: discard and prepare the disposable copy first, so that the cold graph probe starts from a copy without graph. (used by: bench)
+  --in-place                                      bench acceptance: run the scenarios that edit and restore source files in this checkout (a CI runner, a private clone); nobody else may edit it meanwhile. (used by: bench)
+  --scope <owner>                                 Restrict the operation to one dependency owner. (used by: dependencies)
+  --store=<shared|isolated>                       Cargo target store; never create a private target directory. (used by: cargo)
+  --parallelism=<cores>                           Positive number of cores for Cargo. (used by: cargo)
+  --port <port>                                   remote-cache serve: port to listen on; 0 picks a free port (default from the build policy). (used by: remote-cache)
+  --host <address>                                remote-cache serve: address to listen on; beyond loopback a token is required. (used by: remote-cache)
+  --directory <path>                              remote-cache serve|status|gc: store directory, relative to the workspace root (default: the remote cache home of the cache ledger). (used by: remote-cache)
+  --max-bytes <bytes>                             remote-cache serve|gc: upper bound of the store; the least recently used entries are evicted beyond it. (used by: remote-cache)
+  --read-only                                     remote-cache serve: refuse every write with 403, whatever token is presented. (used by: remote-cache)
+  --tls-certificate <path>                        remote-cache serve, remote-execution serve: PEM certificate chain; together with --tls-key the server speaks HTTPS (grpcs for the execution service). (used by: remote-cache, remote-execution)
+  --tls-key <path>                                remote-cache serve, remote-execution serve: PEM private key of the certificate. (used by: remote-cache, remote-execution)
+  --origin <id>                                   remote-execution workers: origin id of this machine in the fleet (default: the origin of the replica, else the host name); the scheduler never gives a machine the units it requested itself. (used by: remote-execution)
+  --load-interval <seconds>                       remote-execution workers: seconds between the load reports of this machine to the scheduler (default 5). (used by: remote-execution)
+  --bind <address>                                remote-execution serve: address both listeners bind to (default 127.0.0.1); beyond loopback the cache tokens and the worker token are required. (used by: remote-execution)
+  --grpc-port <port>                              remote-execution serve: port of the gRPC listener for build tools (default 8980); 0 picks a free port. (used by: remote-execution)
+  --worker-port <port>                            remote-execution serve: port of the HTTP listener for workers and status (default 8981); 0 picks a free port. (used by: remote-execution)
+  --cache <url>                                   remote-execution serve: the shared store to use, the URL of a running repo remote-cache server; by default serve starts the store itself. (used by: remote-execution)
+  --local-workers <n>                             remote-execution serve: worker processes started with the service (default 1; 0 starts none). (used by: remote-execution)
+  --concurrency <n>                               remote-execution serve|workers: actions one worker runs at the same time (default: one per CPU). (used by: remote-execution)
+  --advertise <host>                              remote-execution serve: the host name clients and workers use to reach the service (default: loopback, else this machine's name). (used by: remote-execution)
+  --sandbox <auto|darwin-sandbox|linux-sandbox|isolated-root>
+                                                  remote-execution serve|workers: how workers confine an action (default: the first available strategy of the hermetic table for this host). (used by: remote-execution)
+  --work-directory <path>                         remote-execution serve|workers: directory of a worker's blob cache and private input roots, relative to the workspace root (default: the remote execution home of the cache ledger). (used by: remote-execution)
+  --join <url>                                    remote-execution workers|status: the worker API of the scheduler, for example http://build-host:8981 (default: SEMIO_REMOTE_EXECUTION_SCHEDULER). (used by: remote-execution)
+  --name <name>                                   remote-execution workers: name of the worker in status and logs (default: host name and process id). (used by: remote-execution)
+  --properties <name=value,...>                   remote-execution workers: platform properties the worker offers in addition to OSFamily and Arch. (used by: remote-execution)
+  --operation=<name>                              capacity run: the catalogue operation whose estimate is reserved (default: command). (used by: capacity)
+  --memory=<megabytes>                            capacity run: reserve exactly this many megabytes instead of an operation's estimate. (used by: capacity)
+  --cpu=<cores>                                   capacity run: cores the command keeps busy, counted against the load ceiling (default: 1). (used by: capacity)
+  --jobs=<n>                                      capacity run: jobs of a task operation to reserve (default: 1). (used by: capacity)
+  --cwd=<path>                                    tools exec: the directory the tool runs in (default: the current directory). (used by: tools)
+  --light                                         tools exec: run without waiting for machine capacity, for short queries. (used by: tools)
+  --lease-directory=<path>                        leases status: the lease directory to inspect (default: the checkout's lease store). (used by: leases)
+  --limit=<n>                                     fleet status: how many runs the text output lists (default: 20, the JSON output always lists all). (used by: fleet)
+  --key=<key>                                     scheduler run: the dedupe key; agents that run the same key at the same time share one run (default: the command line). (used by: scheduler)
+  --priority=<band>                               scheduler run: priority band background, agent or interactive (default: agent). (used by: scheduler)
+  --depth=<n>                                     scheduler run: length of the longest chain of dependents of the target; deeper (shared) targets start first (default: 0). (used by: scheduler)
+  --peak-mb=<n>                                   scheduler run: expected peak memory in MB that is reserved for the command (default: 1024). (used by: scheduler)
+  --lane=<lane>                                   scheduler run: shared compiler lane (rustc or tsc) whose concurrency is capped. (used by: scheduler)
+  --class=<class>                                 scheduler run: job class plan, compile, test or generate (default: compile). (used by: scheduler)
+  --violations=<n>                                leases status: how many recent lock order violations to list (default: 10). (used by: leases)
+  --fix                                           doctor: apply the declared safe repairs for the findings (publications of dead processes, stale lease registry rows, gone agent sessions); with --dry-run list what they would remove. (used by: doctor)
+  --only=<area[,area]>                            doctor: limit the report to these areas (tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host). (used by: doctor)
+  --strict                                        doctor: exit with status 1 for warnings as well as errors. (used by: doctor)
+  --facts                                         doctor: print the raw facts document the findings are derived from, as JSON, instead of the report. (used by: doctor)
+  --for=<go|python|dotnet|cpp|wit|tex>            units plan|run|emit: the source language whose units are planned (go, python, dotnet, cpp through CMake and Ninja, wit, tex; the tracked files of the checkout). (used by: units)
+  --out=<path>                                    units emit: the directory that receives the spec files and the build files; units exec: the result file of the unit (out.json). (used by: units)
+  --out-root=<path>                               units exec: read the files of the dependencies from and write the files of the unit below this directory (the layout the Nx targets use) instead of naming each file. (used by: units)
+  --spec=<path>                                   units exec: the spec file of the unit to execute. (used by: units)
+  --iface=<path>                                  units exec: the interface file (iface.json) the unit publishes. (used by: units)
+  --iface-dep=<path>                              units exec: the interface file of one dependency whose interface the unit consumes; repeatable. (used by: units)
+  --impl-dep=<path>                               units exec: a result file (out.json) of the implementation closure of the unit; repeatable. (used by: units)
+  --only=<unit-id>                                units run: run only this unit and its dependencies; repeatable. (used by: units)
+  --concurrency=<n>                               units run: units executed at the same time, 1 to 16 (default: 1). (used by: units)
+  --receipts=<path>                               units run: directory of the shared receipts, so later runs and other sessions reuse results (default: memory only). (used by: units)
+  --client=<name>                                 session open: the name of the agent client, used to name the agent of an MCP connection when no client variable identifies it. (used by: session)
+  --client-pid=<pid>                              session open: the process id of the agent client of a connection (part of the connection's identity). (used by: session)
+  --owner-pid=<pid>                               session open: a process whose end ends the session (default: the nearest agent-client ancestor). (used by: session)
+  --weight=<n>                                    session open: the weight of the session in the budget split between live sessions, 1 to 16 (default: 1). (used by: session)
+  --export                                        session open: also print the environment line NAME=value that attaches child processes to the session. (used by: session)
+  --dead                                          session close: close every gone session instead of one. (used by: session)
+  --force                                         session close: close a session although its owner process is still alive. (used by: session)
+
+Global options:
+  --tool=<nx|bazel|semio>  Select the build implementation; otherwise SEMIO_BUILD_TOOL, then the policy default (nx).
+  --workers=<on|off>       Run actions in persistent workers (on) or in one process each (off); otherwise SEMIO_BUILD_WORKERS, then the worker policy of the build policy.
+  -h, --help               Print the usage of the command and stop.
+  --lang=<en|de>           Language of the texts; otherwise SEMIO_LANGUAGE, then LANGUAGE and the locale variables (LC_ALL, LC_MESSAGES, LANG), then the operating system language. No language is assumed: the command refuses when none resolves.
+
+Examples:
+  repo run @semio-tech/semio-tech-play:serve
+      Run the serve task with the default implementation.
+  repo run-many --targets=test --projects=tag:rust
+      Run the test target in every project tagged rust.
+  repo affected --targets=test
+      Test what changed against HEAD plus untracked files.
+  repo exec --projects=@semio-tech/repo-client -- repo tools exec bun -- test
+      Run one command inside one project root.
+  repo watch --projects=@semio-tech/repo-client -- repo run @semio-tech/repo-client:build
+      Rebuild one project on every source change.
+  repo graph --file=graph.json
+      Write the graph as a report file.
+  repo show projects
+      List all projects.
+  repo --tool=nx inputs @teaching/architecture-course:test
+      List the inputs Nx hashes for the course tests.
+  repo reset --tool=bazel
+      Reset the Bazel state.
+  repo tools setup all
+      Provision Nx, Bazel and every native toolchain at its pin.
+  repo preflight
+      Check architecture, free space, tools and directory exchange.
+  repo incremental list
+      List the incremental build scenarios.
+  repo concurrency list
+      List the concurrent workloads.
+  repo conformance list
+      List the conformance scenarios.
+  repo units plan --for=go
+      Plan the Go units of the checkout.
+  repo bench list
+      List the performance objectives.
+  repo dependencies lock --all
+      Regenerate the lock after editing a package.json.
+  repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
+      Type-check one crate in the shared store.
+  repo cache status
+      Show every cache partition and area against its budget.
+  repo remote-cache serve
+      Serve a local remote cache on 127.0.0.1:6090.
+  repo capacity status
+      See how much memory the machine has left above its floor and who holds it.
+  repo leases status
+      See who holds the repository's leases, who waits behind whom and for how long.
+  repo fleet status
+      See at a glance who runs what, who waits for what and for how long, and what the disk and memory budgets look like.
+  repo scheduler status
+      See what runs and waits in the global queue and every agent's share.
+  repo service host status
+      Show the one service of this machine, its memory and how many workspaces it serves.
+  repo remote-execution serve
+      Run the service with the shared store and one local worker: gRPC for build tools on 127.0.0.1:8980, HTTP for workers, status and the fleet load table on 127.0.0.1:8981; hermetic Bazel actions can then run remotely.
+  repo doctor
+      See who waits for whom, what is slow and what is broken, with the command that fixes each finding.
+  repo session status
+      See which agent session this command belongs to and what it holds.
+
+Native commands of the repository (repo <command> --help):
+  mcp [kind]                           Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)
+  graphql [query]                      Execute a GraphQL query
+  test [testable-id-or-uri]...         Run tests for given entities
+  ticket                               Ticket management commands
+  todo                                 Todo management commands
+  goal                                 Goal management commands
+  contributor                          Contributor management commands
+  folder                               Folder management commands
+  file                                 File management commands
+  section                              Section management commands
+  move <source> <target>               Move an artifact from source to target
+  integrate [source] [target]          Integrate source code into a target file section
+  extract [source] [target]            Extract a section from a source file into a target file
+  rename <old> <new> [scope]           Rename a token across non-gitignored files (all case variants)
+  sync                                 Synchronize monorepo artifacts
+  search [query]                       Search monorepo tree
+  list [query]                         Stream a flat list of monorepo items
+  query [keywords]                     Keyword search across monorepo resources
+  tree                                 Show a repository tree
+  export [output]                      Export repo data to an event log
+  hook <event> <client>                Run a lifecycle hook (git or agent)
+  mermaid <visualization>              Generate mermaid diagram strings
+  loc                                  Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)
+  technology                           Manage technologies
+  bundle                               Bundle management commands
+  analyze [scope]                      Analyze codebase for breachs
+  entity-emojis                        List all entity-identifying emojis
+  configure                            Remove blocking git hooks; repo config files are edited manually
+  micro-commit [subcommand] [args...]  Micro-commit workflow (reset, prepare-commit-msg, stage, diff, prepare)
+  benchmark                            Run benchmarks for all ecosystems
+  update [target]                      Update dependencies (npm, python, rust, go, dotnet)
+  auth                                 Server authentication
+  autofix [scope]                      Apply autofixes for breachs
+  statute                              Statute management commands
+  checkpoint                           Checkpoint management commands
+  interaction                          Interaction management commands
+  draft                                Draft management commands
+  definition                           Definition management commands
+  dashboard [arguments]                Human control plane (not for agents).
+  dev mcp stdio os [arguments]         MCP server of the OS over stdio.
+repo - Tool-neutral build entry with two implementations: Nx with Bun (default) and Bazel.
+
+Usage:
+  repo [--tool=nx|bazel|semio] <command> [options] [-- <arguments>]
+  repo <command> --help [--lang=en|de]
+
+Commands:
+  run <project:target[:configuration]>            Run one task of one project.
+  run-many --targets=<targets> [--projects=<projects>]
+                                                  Run the same targets in many projects.
+  affected --targets=<targets>                    Run targets in the projects changed against HEAD and their dependents.
+  exec --projects=<projects> -- <command>         Run a command once per selected project, in the project root.
+  watch --projects=<projects> -- <command>        Rerun a command when selected source files change.
+  graph                                           Print the tool-neutral build graph.
+  show projects|project <name>|targets            Print projects, one project or all targets of the neutral graph.
+  inputs <project:target[:configuration]>         Print what the selected implementation hashes for one task: files, environment, runtime values and external packages.
+  reset                                           Invalidate the graph and reset the selected tool's local state.
+  tools setup [nx|bazel|semio|toolchains [tool...]|all]|verify [tool...]|list [--json]|exec <tool|command> -- <arguments>
+                                                  Provision the pinned tools for this host, report where it differs from the pins and run every other external tool through the tool registry.
+  preflight                                       Check the host against the finite requirements before any store is provisioned.
+  incremental list|plan|prepare|run|discard       Prove in a disposable copy that Nx and Bazel rebuild exactly what an edit affects, no more and no less.
+  concurrency list|plan|run                       Prove that simulated agents working in one checkout copy at the same time never wait for unrelated projects, share cached work and get the results of a serial run, with Nx and Bazel.
+  conformance list|plan|run                       Judge every build backend against the same language-agnostic scenarios: plan, run, cache hit and miss, outputs, test results, affected, cancellation, progress, concurrency and remote cache.
+  units plan|run|emit|exec                        Plan, run and emit language-neutral compilation units (Go, Python, .NET, C/C++, WIT, TeX) whose dependents re-run only when a dependency's interface changes, and execute one unit as the action of Nx or Bazel.
+  bench list|run|compare|acceptance               Measure the performance objectives (hot-cache latency, edit to rebuild per language, cache hit rate, graph, memory, concurrent agents) in a disposable checkout copy, judge them against the SLO table and compare with a stored baseline; `bench acceptance` holds the acceptance scenarios of the three products (hot no-op, peer edit, one-line edit with byte-exact revert) on the checkout itself to declared budgets.
+  dependencies sync|lock --all|--scope <owner> | ensure
+                                                  Install, lock or ensure the workspace dependencies.
+  cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <cargo subcommand> <args>
+                                                  Compile through the repository's Cargo ingress gate.
+  cache status|gc|verify|dedupe|cas|clear         Show and collect every declared cache home with its budget, or clear the selected tool's local task cache.
+  remote-cache serve|status|gc|rotate             Serve a bounded, shared result cache for Bazel and Nx from this machine, inspect the remote cache contract and the server, or collect the cache store.
+  capacity status|run                             Show the machine's free memory, floor, load and the running and waiting grants, or run any command under a machine-wide capacity grant.
+  leases status                                   Show which processes hold and wait for resource leases, how long, who blocks whom, deadlock cycles, lock order violations and the machine's admission queue.
+  fleet status                                    Show one picture of the shared workspace: who runs what (phase, progress, age, priority, code freshness), the queues with waiting-time estimates, memory admitted against really used, the Bazel servers, storage against its budgets, the sealed implementation and the last graph generation.
+  scheduler status|cancel|run                     Show or steer the fair global build queue shared by every agent on this machine, or run a command through it.
+  service host start|status|stop|run              Run, inspect or stop the per-host graph service: the one process of this machine that holds the fact index and answers every agent's plan request over one local socket or pipe.
+  remote-execution serve|status|workers           Run the in-house remote execution service that hermetic Bazel actions can run on, inspect it, or join this machine to it as a worker.
+  doctor [--json] [--fix [--dry-run]] [--only=<area>[,<area>]] [--strict] [--facts]
+                                                  Answer in one shot why work is waiting, slow or failing: tool pins, storage images, leases, capacity grants, agent sessions, graph and dependency generations, caches, running repo processes and the host, each problem with its owner and the command that resolves it.
+  session open|status|close|list                  Show, open and close agent sessions: one identity per agent working in this worktree, with its cargo lane, Bazel slot preference, Nx daemon namespace, test sandbox root, lease owner tag, budget share and capability.
+
+Options:
+  --agent=<id>                                    service issue: the agent the token is issued to; service revoke: revoke every session of this agent. (used by: service, session)
+  -p, --projects=<projects>                       Comma list of project names with * wildcards, tag:<tag>, name:<name>, directory:<root> and !<pattern> negation. (used by: run-many, exec, watch)
+  --exclude=<projects>                            Comma list of projects to leave out (same patterns as --projects). (used by: run-many, affected, exec, watch)
+  -t, --targets=<targets>, --target               Comma list of target names or * patterns. (used by: run-many, affected)
+  -c, --configuration=<prototype|release>         Compiler configuration; disagreeing values (also a :<configuration> suffix or SEMIO_BUILD_MODE) are refused; cargo takes the full name only. (used by: run, run-many, affected, cargo)
+  --parallel=<n>                                  Maximum number of concurrent tasks. (used by: run, run-many, affected)
+  --bail                                          Stop at the first failing task. (used by: run, run-many, affected)
+  --verbose                                       Print more detail. (used by: run, run-many, affected)
+  --output=<stream|stream-without-prefixes|static>, --output-style
+                                                  Output style of the task logs. (used by: run, run-many, affected)
+  --skip-cache                                    Ignore the task cache. (used by: run, run-many, affected)
+  --skip-remote-cache                             Ignore the remote cache. (used by: run, run-many, affected)
+  --exclude-dependencies, --exclude-task-dependencies
+                                                  Run only the named tasks, not the tasks they depend on. (used by: run, run-many, affected)
+  --dry-run                                       Print the task graph as a DryRunPlan on stdout and execute nothing; the same for every tool. With cache gc or remote-cache gc: list what would be removed and remove nothing. (used by: run, run-many, affected, exec, cache, remote-cache, doctor)
+  --graph[=<file>]                                Same as --dry-run; with a file the plan is written there (Nx: the file as given, Bazel: a report whose path is printed). (used by: run, run-many, affected, exec)
+  --all                                           Select every project (affected, watch), every dependency owner (dependencies) or every lease directory with registered processes (leases). (used by: affected, watch, dependencies, leases, session)
+  --base=<ref>                                    Compare against this revision instead of HEAD. (used by: affected)
+  --head=<ref>                                    End revision of the comparison. (used by: affected)
+  --files=<files>                                 Comma list of changed files instead of the git comparison. (used by: affected)
+  --uncommitted                                   Only uncommitted changes. (used by: affected)
+  --untracked                                     Only untracked files. (used by: affected)
+  --include-global-files                          Also react to files outside any project. (used by: watch)
+  --file=<path>                                   Write the result as a report file and print its path. (used by: graph, show, incremental, concurrency, bench, conformance, units)
+  --json                                          Print lists as JSON instead of one entry per line. (used by: graph, show, incremental, concurrency, bench, capacity, fleet, scheduler, leases, cache, remote-cache, doctor, tools, conformance, units, service, session)
+  --area=<id[,id]>                                cache status|gc: limit the report or the collection to these ledger areas (or retired, undeclared); cache dedupe: limit the search to these places (bazel-outputs, bazel-workspaces, vite-products, tools). (used by: cache)
+  --budget=<size>                                 cache status|gc: the disk budget of this machine for this call (an integer or a number with KiB, MiB, GiB, TiB, e.g. 40GiB); it beats the SEMIO_CACHE_BUDGET_BYTES variable, which beats the machine file in the repository cache root, which beats the declared default. (used by: cache)
+  --deep                                          cache verify (required): read every indexed optional graph leaf and every closure inventory again and compare it with its recorded hash. cache status: walk every cache home now (with progress, cancellable) and record the sizes, instead of reading statfs and the size ledger. (used by: cache)
+  --tasks                                         cache status: print the selected tool's task cache (a CacheStatus) instead of the cache ledger. (used by: cache)
+  --graph-policy=<fresh|current>                  fresh (default) verifies the graph and waits for a rebuild when a project changed; current serves the newest sealed graph at once and never waits; otherwise SEMIO_BUILD_GRAPH_POLICY. (used by: graph, show)
+  --scenario=<ids|all>                            incremental plan|run and bench acceptance: comma list of scenario ids, or all (bench acceptance also takes kind:<noop|peer|edit> and product:<course|print|dashboard>; without --in-place, all leaves the scenarios that edit files out). (used by: incremental, conformance, bench)
+  --implementations=<nx|bazel|semio>              incremental and concurrency plan|run: implementations to judge (default: every registered backend). (used by: incremental, concurrency, bench, conformance)
+  --root=<path>                                   incremental, concurrency, bench: the disposable repository copy (default: the folder .sinc in the home directory, else sinc in the temporary directory of the process, else /tmp/sinc); it must not lie inside or contain the checkout, and its path stays short because absolute paths are limited to 256 characters. (used by: incremental, concurrency, bench, units)
+  --phases=<warm,edit,revert>                     incremental run: phases to judge (default: all three). (used by: incremental)
+  --fresh                                         incremental prepare: discard the copy and clone it again. (used by: incremental)
+  --workloads=<ids|all>                           concurrency plan|run: comma list of workload ids, or all. (used by: concurrency)
+  --sessions=<n>                                  concurrency plan|run: simulated agents per workload, the first n of its sessions (default: 3, at most 8). (used by: concurrency)
+  --criteria=<id>                                 concurrency run: judge every workload with this set of pass criteria instead of its own. (used by: concurrency)
+  --keep                                          conformance run: keep the scratch workspaces for inspection. (used by: conformance)
+  --slo=<ids|all>                                 bench run: comma list of objective ids, probe:<id>, kind:<cli-help|noop|edit|graph|cache|concurrency|planning>, or all. (used by: bench)
+  --runs=<n>                                      bench run: samples per probe instead of the authored count (the 95th percentile needs 20 samples, the 99th needs 100; fewer leave those objectives unproven). (used by: bench)
+  --baseline=<path>                               bench run|compare: a stored report to compare with; a change beyond the tolerance of an objective is a regression or an improvement. (used by: bench)
+  --save-baseline=<path>                          bench run: store the report as the baseline of later runs. (used by: bench)
+  --history=<folder>                              bench run: store the report in this folder as <UTC start>-<host class>.json and compare with the newest earlier report of this host class when no --baseline is given; bench compare: compare the two newest reports of this host class. (used by: bench)
+  --current=<path>                                bench compare: the stored report to judge against --baseline. (used by: bench)
+  --markdown=<path>                               bench run|compare|acceptance: also write the report as a markdown file. (used by: bench)
+  --max-load=<per-core>                           bench run: refuse to start when the one-minute load per core of the host exceeds this number. (used by: bench)
+  --prepare                                       bench run: discard and prepare the disposable copy first, so that the cold graph probe starts from a copy without graph. (used by: bench)
+  --in-place                                      bench acceptance: run the scenarios that edit and restore source files in this checkout (a CI runner, a private clone); nobody else may edit it meanwhile. (used by: bench)
+  --scope <owner>                                 Restrict the operation to one dependency owner. (used by: dependencies)
+  --store=<shared|isolated>                       Cargo target store; never create a private target directory. (used by: cargo)
+  --parallelism=<cores>                           Positive number of cores for Cargo. (used by: cargo)
+  --port <port>                                   remote-cache serve: port to listen on; 0 picks a free port (default from the build policy). (used by: remote-cache)
+  --host <address>                                remote-cache serve: address to listen on; beyond loopback a token is required. (used by: remote-cache)
+  --directory <path>                              remote-cache serve|status|gc: store directory, relative to the workspace root (default: the remote cache home of the cache ledger). (used by: remote-cache)
+  --max-bytes <bytes>                             remote-cache serve|gc: upper bound of the store; the least recently used entries are evicted beyond it. (used by: remote-cache)
+  --read-only                                     remote-cache serve: refuse every write with 403, whatever token is presented. (used by: remote-cache)
+  --tls-certificate <path>                        remote-cache serve, remote-execution serve: PEM certificate chain; together with --tls-key the server speaks HTTPS (grpcs for the execution service). (used by: remote-cache, remote-execution)
+  --tls-key <path>                                remote-cache serve, remote-execution serve: PEM private key of the certificate. (used by: remote-cache, remote-execution)
+  --origin <id>                                   remote-execution workers: origin id of this machine in the fleet (default: the origin of the replica, else the host name); the scheduler never gives a machine the units it requested itself. (used by: remote-execution)
+  --load-interval <seconds>                       remote-execution workers: seconds between the load reports of this machine to the scheduler (default 5). (used by: remote-execution)
+  --bind <address>                                remote-execution serve: address both listeners bind to (default 127.0.0.1); beyond loopback the cache tokens and the worker token are required. (used by: remote-execution)
+  --grpc-port <port>                              remote-execution serve: port of the gRPC listener for build tools (default 8980); 0 picks a free port. (used by: remote-execution)
+  --worker-port <port>                            remote-execution serve: port of the HTTP listener for workers and status (default 8981); 0 picks a free port. (used by: remote-execution)
+  --cache <url>                                   remote-execution serve: the shared store to use, the URL of a running repo remote-cache server; by default serve starts the store itself. (used by: remote-execution)
+  --local-workers <n>                             remote-execution serve: worker processes started with the service (default 1; 0 starts none). (used by: remote-execution)
+  --concurrency <n>                               remote-execution serve|workers: actions one worker runs at the same time (default: one per CPU). (used by: remote-execution)
+  --advertise <host>                              remote-execution serve: the host name clients and workers use to reach the service (default: loopback, else this machine's name). (used by: remote-execution)
+  --sandbox <auto|darwin-sandbox|linux-sandbox|isolated-root>
+                                                  remote-execution serve|workers: how workers confine an action (default: the first available strategy of the hermetic table for this host). (used by: remote-execution)
+  --work-directory <path>                         remote-execution serve|workers: directory of a worker's blob cache and private input roots, relative to the workspace root (default: the remote execution home of the cache ledger). (used by: remote-execution)
+  --join <url>                                    remote-execution workers|status: the worker API of the scheduler, for example http://build-host:8981 (default: SEMIO_REMOTE_EXECUTION_SCHEDULER). (used by: remote-execution)
+  --name <name>                                   remote-execution workers: name of the worker in status and logs (default: host name and process id). (used by: remote-execution)
+  --properties <name=value,...>                   remote-execution workers: platform properties the worker offers in addition to OSFamily and Arch. (used by: remote-execution)
+  --operation=<name>                              capacity run: the catalogue operation whose estimate is reserved (default: command). (used by: capacity)
+  --memory=<megabytes>                            capacity run: reserve exactly this many megabytes instead of an operation's estimate. (used by: capacity)
+  --cpu=<cores>                                   capacity run: cores the command keeps busy, counted against the load ceiling (default: 1). (used by: capacity)
+  --jobs=<n>                                      capacity run: jobs of a task operation to reserve (default: 1). (used by: capacity)
+  --cwd=<path>                                    tools exec: the directory the tool runs in (default: the current directory). (used by: tools)
+  --light                                         tools exec: run without waiting for machine capacity, for short queries. (used by: tools)
+  --lease-directory=<path>                        leases status: the lease directory to inspect (default: the checkout's lease store). (used by: leases)
+  --limit=<n>                                     fleet status: how many runs the text output lists (default: 20, the JSON output always lists all). (used by: fleet)
+  --key=<key>                                     scheduler run: the dedupe key; agents that run the same key at the same time share one run (default: the command line). (used by: scheduler)
+  --priority=<band>                               scheduler run: priority band background, agent or interactive (default: agent). (used by: scheduler)
+  --depth=<n>                                     scheduler run: length of the longest chain of dependents of the target; deeper (shared) targets start first (default: 0). (used by: scheduler)
+  --peak-mb=<n>                                   scheduler run: expected peak memory in MB that is reserved for the command (default: 1024). (used by: scheduler)
+  --lane=<lane>                                   scheduler run: shared compiler lane (rustc or tsc) whose concurrency is capped. (used by: scheduler)
+  --class=<class>                                 scheduler run: job class plan, compile, test or generate (default: compile). (used by: scheduler)
+  --violations=<n>                                leases status: how many recent lock order violations to list (default: 10). (used by: leases)
+  --fix                                           doctor: apply the declared safe repairs for the findings (publications of dead processes, stale lease registry rows, gone agent sessions); with --dry-run list what they would remove. (used by: doctor)
+  --only=<area[,area]>                            doctor: limit the report to these areas (tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host). (used by: doctor)
+  --strict                                        doctor: exit with status 1 for warnings as well as errors. (used by: doctor)
+  --facts                                         doctor: print the raw facts document the findings are derived from, as JSON, instead of the report. (used by: doctor)
+  --for=<go|python|dotnet|cpp|wit|tex>            units plan|run|emit: the source language whose units are planned (go, python, dotnet, cpp through CMake and Ninja, wit, tex; the tracked files of the checkout). (used by: units)
+  --out=<path>                                    units emit: the directory that receives the spec files and the build files; units exec: the result file of the unit (out.json). (used by: units)
+  --out-root=<path>                               units exec: read the files of the dependencies from and write the files of the unit below this directory (the layout the Nx targets use) instead of naming each file. (used by: units)
+  --spec=<path>                                   units exec: the spec file of the unit to execute. (used by: units)
+  --iface=<path>                                  units exec: the interface file (iface.json) the unit publishes. (used by: units)
+  --iface-dep=<path>                              units exec: the interface file of one dependency whose interface the unit consumes; repeatable. (used by: units)
+  --impl-dep=<path>                               units exec: a result file (out.json) of the implementation closure of the unit; repeatable. (used by: units)
+  --only=<unit-id>                                units run: run only this unit and its dependencies; repeatable. (used by: units)
+  --concurrency=<n>                               units run: units executed at the same time, 1 to 16 (default: 1). (used by: units)
+  --receipts=<path>                               units run: directory of the shared receipts, so later runs and other sessions reuse results (default: memory only). (used by: units)
+  --client=<name>                                 session open: the name of the agent client, used to name the agent of an MCP connection when no client variable identifies it. (used by: session)
+  --client-pid=<pid>                              session open: the process id of the agent client of a connection (part of the connection's identity). (used by: session)
+  --owner-pid=<pid>                               session open: a process whose end ends the session (default: the nearest agent-client ancestor). (used by: session)
+  --weight=<n>                                    session open: the weight of the session in the budget split between live sessions, 1 to 16 (default: 1). (used by: session)
+  --export                                        session open: also print the environment line NAME=value that attaches child processes to the session. (used by: session)
+  --dead                                          session close: close every gone session instead of one. (used by: session)
+  --force                                         session close: close a session although its owner process is still alive. (used by: session)
+
+Global options:
+  --tool=<nx|bazel|semio>  Select the build implementation; otherwise SEMIO_BUILD_TOOL, then the policy default (nx).
+  --workers=<on|off>       Run actions in persistent workers (on) or in one process each (off); otherwise SEMIO_BUILD_WORKERS, then the worker policy of the build policy.
+  -h, --help               Print the usage of the command and stop.
+  --lang=<en|de>           Language of the texts; otherwise SEMIO_LANGUAGE, then LANGUAGE and the locale variables (LC_ALL, LC_MESSAGES, LANG), then the operating system language. No language is assumed: the command refuses when none resolves.
+
+Examples:
+  repo run @semio-tech/semio-tech-play:serve
+      Run the serve task with the default implementation.
+  repo run-many --targets=test --projects=tag:rust
+      Run the test target in every project tagged rust.
+  repo affected --targets=test
+      Test what changed against HEAD plus untracked files.
+  repo exec --projects=@semio-tech/repo-client -- repo tools exec bun -- test
+      Run one command inside one project root.
+  repo watch --projects=@semio-tech/repo-client -- repo run @semio-tech/repo-client:build
+      Rebuild one project on every source change.
+  repo graph --file=graph.json
+      Write the graph as a report file.
+  repo show projects
+      List all projects.
+  repo --tool=nx inputs @teaching/architecture-course:test
+      List the inputs Nx hashes for the course tests.
+  repo reset --tool=bazel
+      Reset the Bazel state.
+  repo tools setup all
+      Provision Nx, Bazel and every native toolchain at its pin.
+  repo preflight
+      Check architecture, free space, tools and directory exchange.
+  repo incremental list
+      List the incremental build scenarios.
+  repo concurrency list
+      List the concurrent workloads.
+  repo conformance list
+      List the conformance scenarios.
+  repo units plan --for=go
+      Plan the Go units of the checkout.
+  repo bench list
+      List the performance objectives.
+  repo dependencies lock --all
+      Regenerate the lock after editing a package.json.
+  repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
+      Type-check one crate in the shared store.
+  repo cache status
+      Show every cache partition and area against its budget.
+  repo remote-cache serve
+      Serve a local remote cache on 127.0.0.1:6090.
+  repo capacity status
+      See how much memory the machine has left above its floor and who holds it.
+  repo leases status
+      See who holds the repository's leases, who waits behind whom and for how long.
+  repo fleet status
+      See at a glance who runs what, who waits for what and for how long, and what the disk and memory budgets look like.
+  repo scheduler status
+      See what runs and waits in the global queue and every agent's share.
+  repo service host status
+      Show the one service of this machine, its memory and how many workspaces it serves.
+  repo remote-execution serve
+      Run the service with the shared store and one local worker: gRPC for build tools on 127.0.0.1:8980, HTTP for workers, status and the fleet load table on 127.0.0.1:8981; hermetic Bazel actions can then run remotely.
+  repo doctor
+      See who waits for whom, what is slow and what is broken, with the command that fixes each finding.
+  repo session status
+      See which agent session this command belongs to and what it holds.
+
+Native commands of the repository (repo <command> --help):
+  mcp [kind]                           Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)
+  graphql [query]                      Execute a GraphQL query
+  test [testable-id-or-uri]...         Run tests for given entities
+  ticket                               Ticket management commands
+  todo                                 Todo management commands
+  goal                                 Goal management commands
+  contributor                          Contributor management commands
+  folder                               Folder management commands
+  file                                 File management commands
+  section                              Section management commands
+  move <source> <target>               Move an artifact from source to target
+  integrate [source] [target]          Integrate source code into a target file section
+  extract [source] [target]            Extract a section from a source file into a target file
+  rename <old> <new> [scope]           Rename a token across non-gitignored files (all case variants)
+  sync                                 Synchronize monorepo artifacts
+  search [query]                       Search monorepo tree
+  list [query]                         Stream a flat list of monorepo items
+  query [keywords]                     Keyword search across monorepo resources
+  tree                                 Show a repository tree
+  export [output]                      Export repo data to an event log
+  hook <event> <client>                Run a lifecycle hook (git or agent)
+  mermaid <visualization>              Generate mermaid diagram strings
+  loc                                  Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)
+  technology                           Manage technologies
+  bundle                               Bundle management commands
+  analyze [scope]                      Analyze codebase for breachs
+  entity-emojis                        List all entity-identifying emojis
+  configure                            Remove blocking git hooks; repo config files are edited manually
+  micro-commit [subcommand] [args...]  Micro-commit workflow (reset, prepare-commit-msg, stage, diff, prepare)
+  benchmark                            Run benchmarks for all ecosystems
+  update [target]                      Update dependencies (npm, python, rust, go, dotnet)
+  auth                                 Server authentication
+  autofix [scope]                      Apply autofixes for breachs
+  statute                              Statute management commands
+  checkpoint                           Checkpoint management commands
+  interaction                          Interaction management commands
+  draft                                Draft management commands
+  definition                           Definition management commands
+  dashboard [arguments]                Human control plane (not for agents).
+  dev mcp stdio os [arguments]         MCP server of the OS over stdio.
+[repo] Installed native repository command: /Users/ueli/.local/bin/repo
+[semio] Installing the dependency scopes (the planner of every later run needs them)…
+[capacity] dependencies: sized at 12% of the default from 16 earlier run(s) of its class, at least 5903 MB because of its assembly phase
+[capacity] admitted dependencies with 5429 of 5903 MB: only 5429 MB are free above the 2048 MB floor right now, and 3072 MB are enough to start
+[capacity] dependencies: sized at 12% of the default from 16 earlier run(s) of its class, at least 5903 MB because of its assembly phase
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[repo] still working after 5 s; last phase started: source.served
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4800 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4832 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4864 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4896 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4928 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4960 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:4992 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5024 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5056 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5088 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5120 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5152 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5184 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5216 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5248 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5280 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5312 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5344 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5376 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5408 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5440 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5472 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5504 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5536 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5568 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5600 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5632 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5664 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5696 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5728 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5760 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5792 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5824 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5856 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5888 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5920 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5952 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:5984 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6016 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6048 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6080 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6112 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6144 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6176 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6208 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6240 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6272 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6304 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6336 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6368 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6400 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6432 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6464 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6496 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6528 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6560 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6592 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6624 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6656 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6688 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6720 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6752 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6784 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6816 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6848 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6880 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6912 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6944 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:6976 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7008 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7040 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7072 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7104 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7136 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7168 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7200 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7232 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7264 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7296 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7328 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7360 (shared, 15 s)
+[script] bun:dependency-storage remains active on dependencies:sync-gate:7392 (shared, 15 s)
+[DATA] Store dependency sync current {"version":1,"purpose":"current-store-dependency-sync-current","scopes":6}
+[semio] workspace:setup…
+[capacity] run: sized at 70% of the default from 7 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 2048 MB reserved (7024 MB available, 2048 MB floor)
+Planning 1 targets.
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+The graph service under the launcher was denied access; it is started again under the access of the calling app / Der Graphdienst unter dem Launcher wurde abgewiesen; er wird erneut mit dem Zugriff der aufrufenden App gestartet
+Starting the repo graph service for this host.
+Waiting for the repo graph service (3 ms).
+[repo] still working after 5 s; last phase started: door.script
+Waiting for the repo graph service (2005 ms).
+Waiting for the repo graph service (4054 ms).
+[repo] still working after 10 s; last phase started: door.script
+Waiting for the repo graph service (6057 ms).
+Loading the project graph of 440cffa5563d.
+Planning 1 targets.
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s).
+[repo] still working after 20 s; last phase started: door.script
+Reading the project graph slice (10 s): files 0 of 0.
+Reading the project graph slice (12 s): doubt 453127 of 453127.
+Reading the project graph slice (14 s): facts 12288 of 207372.
+Reading the project graph slice (16 s): facts 86016 of 207372.
+Reading the project graph slice (18 s): facts 147456 of 207372.
+Reading the project graph slice (20 s): verification 0 of 1051.
+Reading the project graph slice (22 s): verification 0 of 1051.
+Reading the project graph slice (24 s): verification 1 of 1051.
+Reading the project graph slice (26 s): parts 2061 of 9686.
+Reading the project graph slice (28 s): verification 512 of 1051.
+Reading the project graph slice (30 s): flush 1 of 1.
+Reading the project graph slice (32 s): flush 1 of 1.
+Reading the project graph slice (34 s): verification 536 of 1051.
+Reading the project graph slice (36 s): rederivation 256 of 256.
+Reading the project graph slice (38 s): flush 1 of 1.
+[repo] still working after 50 s; last phase started: door.script
+Reading the project graph slice (40 s): flush 1 of 1.
+Reading the project graph slice (42 s): flush 1 of 1.
+Reading the project graph slice (44 s): flush 1 of 1.
+Reading the project graph slice (46 s): flush 1 of 1.
+Reading the project graph slice (48 s): flush 1 of 1.
+Reading the project graph slice (50 s): flush 1 of 1.
+Reading the project graph slice (52 s): flush 1 of 1.
+Reading the project graph slice (54 s): flush 1 of 1.
+Reading the project graph slice (56 s): flush 1 of 1.
+Reading the project graph slice (58 s): flush 1 of 1.
+Reading the project graph slice (60 s): flush 1 of 1.
+Reading the project graph slice (62 s): flush 1 of 1.
+Reading the project graph slice (64 s): flush 1 of 1.
+Reading the project graph slice (66 s): flush 1 of 1.
+Reading the project graph slice (68 s): flush 1 of 1.
+[repo] still working after 80 s; last phase started: door.script
+Reading the project graph slice (70 s): flush 1 of 1.
+Reading the project graph slice (72 s): flush 1 of 1.
+Reading the project graph slice (74 s): flush 1 of 1.
+Reading the project graph slice (76 s): flush 1 of 1.
+Reading the project graph slice (78 s): flush 1 of 1.
+Reading the project graph slice (80 s): flush 1 of 1.
+Reading the project graph slice (82 s): flush 1 of 1.
+Reading the project graph slice (84 s): flush 1 of 1.
+Reading the project graph slice (86 s): flush 1 of 1.
+Reading the project graph slice (88 s): flush 1 of 1.
+Reading the project graph slice (90 s): flush 1 of 1.
+Reading the project graph slice (92 s): flush 1 of 1.
+Reading the project graph slice (94 s): flush 1 of 1.
+Reading the project graph slice (96 s): flush 1 of 1.
+Reading the project graph slice (98 s): flush 1 of 1.
+[repo] still working after 110 s; last phase started: door.script
+Reading the project graph slice (100 s): flush 1 of 1.
+Reading the project graph slice (102 s): flush 1 of 1.
+Reading the project graph slice (104 s): flush 1 of 1.
+Reading the project graph slice (106 s): flush 1 of 1.
+Reading the project graph slice (108 s): flush 1 of 1.
+Reading the project graph slice (110 s): flush 1 of 1.
+Reading the project graph slice (112 s): flush 1 of 1.
+Reading the project graph slice (114 s): flush 1 of 1.
+Reading the project graph slice (116 s): flush 1 of 1.
+Reading the project graph slice (118 s): flush 1 of 1.
+Reading the project graph slice (120 s): flush 1 of 1.
+Reading the project graph slice (122 s): flush 1 of 1.
+Reading the project graph slice (124 s): flush 1 of 1.
+Reading the project graph slice (126 s): flush 1 of 1.
+Reading the project graph slice (128 s): flush 1 of 1.
+[repo] still working after 140 s; last phase started: door.script
+Reading the project graph slice (130 s): flush 1 of 1.
+Reading the project graph slice (132 s): flush 1 of 1.
+Reading the project graph slice (134 s): flush 1 of 1.
+Reading the project graph slice (136 s): flush 1 of 1.
+Reading the project graph slice (138 s): flush 1 of 1.
+Reading the project graph slice (140 s): flush 1 of 1.
+Reading the project graph slice (142 s): flush 1 of 1.
+Reading the project graph slice (144 s): flush 1 of 1.
+Reading the project graph slice (146 s): flush 1 of 1.
+Reading the project graph slice (148 s): flush 1 of 1.
+Reading the project graph slice (150 s): flush 1 of 1.
+Reading the project graph slice (152 s): flush 1 of 1.
+Reading the project graph slice (154 s): flush 1 of 1.
+Reading the project graph slice (156 s): flush 1 of 1.
+Reading the project graph slice (158 s): flush 1 of 1.
+[repo] still working after 170 s; last phase started: door.script
+Reading the project graph slice (160 s): flush 1 of 1.
+Reading the project graph slice (162 s): flush 1 of 1.
+Reading the project graph slice (164 s): flush 1 of 1.
+Reading the project graph slice (166 s): flush 1 of 1.
+Reading the project graph slice (168 s): flush 1 of 1.
+Reading the project graph slice (170 s): flush 1 of 1.
+Reading the project graph slice (172 s): flush 1 of 1.
+Reading the project graph slice (174 s): flush 1 of 1.
+Reading the project graph slice (176 s): flush 1 of 1.
+Reading the project graph slice (178 s): flush 1 of 1.
+Reading the project graph slice (180 s): flush 1 of 1.
+Reading the project graph slice (182 s): flush 1 of 1.
+Reading the project graph slice (184 s): flush 1 of 1.
+Reading the project graph slice (186 s): flush 1 of 1.
+Reading the project graph slice (188 s): flush 1 of 1.
+[repo] still working after 200 s; last phase started: door.script
+Reading the project graph slice (190 s): flush 1 of 1.
+Reading the project graph slice (192 s): flush 1 of 1.
+Reading the project graph slice (194 s): flush 1 of 1.
+Reading the project graph slice (196 s): flush 1 of 1.
+Reading the project graph slice (198 s): flush 1 of 1.
+Reading the project graph slice (200 s): flush 1 of 1.
+Reading the project graph slice (202 s): flush 1 of 1.
+Reading the project graph slice (204 s): flush 1 of 1.
+Reading the project graph slice (206 s): flush 1 of 1.
+Reading the project graph slice (208 s): flush 1 of 1.
+Reading the project graph slice (210 s): flush 1 of 1.
+Reading the project graph slice (212 s): flush 1 of 1.
+Reading the project graph slice (214 s): flush 1 of 1.
+Reading the project graph slice (216 s): flush 1 of 1.
+Reading the project graph slice (218 s): flush 1 of 1.
+[repo] still working after 230 s; last phase started: door.script
+Reading the project graph slice (220 s): flush 1 of 1.
+Reading the project graph slice (222 s): flush 1 of 1.
+Reading the project graph slice (224 s): flush 1 of 1.
+Reading the project graph slice (226 s): flush 1 of 1.
+Reading the project graph slice (228 s): flush 1 of 1.
+Reading the project graph slice (230 s): flush 1 of 1.
+Reading the project graph slice (232 s): flush 1 of 1.
+Reading the project graph slice (234 s): flush 1 of 1.
+Reading the project graph slice (236 s): flush 1 of 1.
+Reading the project graph slice (238 s): flush 1 of 1.
+Reading the project graph slice (240 s): flush 1 of 1.
+Reading the project graph slice (242 s): flush 1 of 1.
+Reading the project graph slice (244 s): flush 1 of 1.
+Reading the project graph slice (246 s): flush 1 of 1.
+Reading the project graph slice (248 s): flush 1 of 1.
+[repo] still working after 260 s; last phase started: door.script
+Reading the project graph slice (250 s): flush 1 of 1.
+Reading the project graph slice (252 s): flush 1 of 1.
+Reading the project graph slice (254 s): flush 1 of 1.
+Reading the project graph slice (256 s): flush 1 of 1.
+Reading the project graph slice (258 s): flush 1 of 1.
+Reading the project graph slice (260 s): flush 1 of 1.
+Reading the project graph slice (262 s): flush 1 of 1.
+Reading the project graph slice (264 s): flush 1 of 1.
+Reading the project graph slice (266 s): flush 1 of 1.
+Reading the project graph slice (268 s): flush 1 of 1.
+Reading the project graph slice (270 s): flush 1 of 1.
+Reading the project graph slice (272 s): flush 1 of 1.
+Reading the project graph slice (274 s): flush 1 of 1.
+Reading the project graph slice (276 s): flush 1 of 1.
+Reading the project graph slice (278 s): flush 1 of 1.
+[repo] still working after 290 s; last phase started: door.script
+Reading the project graph slice (280 s): flush 1 of 1.
+Reading the project graph slice (282 s): flush 1 of 1.
+Reading the project graph slice (284 s): flush 1 of 1.
+Reading the project graph slice (286 s): flush 1 of 1.
+Reading the project graph slice (288 s): flush 1 of 1.
+Reading the project graph slice (290 s): flush 1 of 1.
+Reading the project graph slice (292 s): flush 1 of 1.
+Reading the project graph slice (294 s): flush 1 of 1.
+Reading the project graph slice (296 s): flush 1 of 1.
+Reading the project graph slice (298 s): flush 1 of 1.
+Reading the project graph slice (300 s): flush 1 of 1.
+Reading the project graph slice (302 s): flush 1 of 1.
+Reading the project graph slice (304 s): flush 1 of 1.
+Reading the project graph slice (306 s): flush 1 of 1.
+Reading the project graph slice (308 s): flush 1 of 1.
+[repo] still working after 320 s; last phase started: door.script
+Reading the project graph slice (310 s): flush 1 of 1.
+Reading the project graph slice (312 s): flush 1 of 1.
+Reading the project graph slice (314 s): flush 1 of 1.
+Reading the project graph slice (316 s): flush 1 of 1.
+Reading the project graph slice (318 s): flush 1 of 1.
+Reading the project graph slice (320 s): flush 1 of 1.
+Reading the project graph slice (322 s): flush 1 of 1.
+Reading the project graph slice (324 s): flush 1 of 1.
+Reading the project graph slice (326 s): flush 1 of 1.
+Reading the project graph slice (328 s): flush 1 of 1.
+Reading the project graph slice (330 s): flush 1 of 1.
+Reading the project graph slice (332 s): flush 1 of 1.
+Reading the project graph slice (334 s): flush 1 of 1.
+Reading the project graph slice (336 s): flush 1 of 1.
+Reading the project graph slice (338 s): flush 1 of 1.
+[repo] still working after 350 s; last phase started: door.script
+Reading the project graph slice (340 s): flush 1 of 1.
+Reading the project graph slice (342 s): flush 1 of 1.
+Reading the project graph slice (344 s): flush 1 of 1.
+Reading the project graph slice (346 s): flush 1 of 1.
+Reading the project graph slice (348 s): flush 1 of 1.
+Reading the project graph slice (350 s): flush 1 of 1.
+Reading the project graph slice (352 s): flush 1 of 1.
+Reading the project graph slice (354 s): flush 1 of 1.
+Reading the project graph slice (356 s): flush 1 of 1.
+Reading the project graph slice (358 s): flush 1 of 1.
+Reading the project graph slice (360 s): flush 1 of 1.
+Reading the project graph slice (362 s): flush 1 of 1.
+Reading the project graph slice (364 s): flush 1 of 1.
+Reading the project graph slice (366 s): flush 1 of 1.
+Reading the project graph slice (368 s): flush 1 of 1.
+[repo] still working after 380 s; last phase started: door.script
+Reading the project graph slice (370 s): flush 1 of 1.
+Reading the project graph slice (372 s): flush 1 of 1.
+Reading the project graph slice (374 s): flush 1 of 1.
+Reading the project graph slice (376 s): flush 1 of 1.
+Reading the project graph slice (378 s): flush 1 of 1.
+Reading the project graph slice (380 s): flush 1 of 1.
+Reading the project graph slice (382 s): flush 1 of 1.
+Reading the project graph slice (384 s): flush 1 of 1.
+Reading the project graph slice (386 s): flush 1 of 1.
+Reading the project graph slice (388 s): flush 1 of 1.
+Reading the project graph slice (390 s): flush 1 of 1.
+Reading the project graph slice (392 s): flush 1 of 1.
+Reading the project graph slice (394 s): flush 1 of 1.
+Reading the project graph slice (396 s): flush 1 of 1.
+Reading the project graph slice (398 s): flush 1 of 1.
+[repo] still working after 410 s; last phase started: door.script
+Reading the project graph slice (400 s): flush 1 of 1.
+Reading the project graph slice (402 s): flush 1 of 1.
+Reading the project graph slice (404 s): flush 1 of 1.
+Reading the project graph slice (406 s): flush 1 of 1.
+Reading the project graph slice (408 s): flush 1 of 1.
+Reading the project graph slice (410 s): flush 1 of 1.
+Reading the project graph slice (412 s): flush 1 of 1.
+Reading the project graph slice (414 s): flush 1 of 1.
+Reading the project graph slice (416 s): flush 1 of 1.
+Reading the project graph slice (418 s): flush 1 of 1.
+Reading the project graph slice (420 s): flush 1 of 1.
+Reading the project graph slice (422 s): flush 1 of 1.
+Reading the project graph slice (424 s): flush 1 of 1.
+Reading the project graph slice (426 s): flush 1 of 1.
+Reading the project graph slice (428 s): flush 1 of 1.
+[repo] still working after 440 s; last phase started: door.script
+Reading the project graph slice (430 s): flush 1 of 1.
+Reading the project graph slice (432 s): flush 1 of 1.
+Reading the project graph slice (434 s): flush 1 of 1.
+Reading the project graph slice (436 s): flush 1 of 1.
+Reading the project graph slice (438 s): flush 1 of 1.
+Reading the project graph slice (440 s): flush 1 of 1.
+Reading the project graph slice (442 s): flush 1 of 1.
+Reading the project graph slice (444 s): flush 1 of 1.
+Reading the project graph slice (446 s): flush 1 of 1.
+Reading the project graph slice (448 s): flush 1 of 1.
+Reading the project graph slice (450 s): flush 1 of 1.
+Reading the project graph slice (452 s): flush 1 of 1.
+Reading the project graph slice (454 s): flush 1 of 1.
+Reading the project graph slice (456 s): flush 1 of 1.
+Reading the project graph slice (458 s): flush 1 of 1.
+[repo] still working after 470 s; last phase started: door.script
+Reading the project graph slice (460 s): flush 1 of 1.
+Reading the project graph slice (462 s): flush 1 of 1.
+Reading the project graph slice (464 s): flush 1 of 1.
+Reading the project graph slice (466 s): flush 1 of 1.
+Reading the project graph slice (468 s): flush 1 of 1.
+Reading the project graph slice (470 s): flush 1 of 1.
+Reading the project graph slice (472 s): flush 1 of 1.
+Reading the project graph slice (474 s): flush 1 of 1.
+Reading the project graph slice (476 s): flush 1 of 1.
+Reading the project graph slice (478 s): flush 1 of 1.
+Reading the project graph slice (480 s): flush 1 of 1.
+Reading the project graph slice (482 s): flush 1 of 1.
+Reading the project graph slice (484 s): flush 1 of 1.
+Reading the project graph slice (486 s): flush 1 of 1.
+Reading the project graph slice (488 s): flush 1 of 1.
+[repo] still working after 500 s; last phase started: door.script
+Reading the project graph slice (490 s): flush 1 of 1.
+Reading the project graph slice (492 s): flush 1 of 1.
+Reading the project graph slice (494 s): flush 1 of 1.
+Reading the project graph slice (496 s): flush 1 of 1.
+Reading the project graph slice (498 s): flush 1 of 1.
+Reading the project graph slice (500 s): flush 1 of 1.
+Reading the project graph slice (502 s): flush 1 of 1.
+Reading the project graph slice (504 s): flush 1 of 1.
+Reading the project graph slice (506 s): flush 1 of 1.
+Reading the project graph slice (508 s): flush 1 of 1.
+Reading the project graph slice (510 s): flush 1 of 1.
+Reading the project graph slice (512 s): flush 1 of 1.
+Reading the project graph slice (514 s): flush 1 of 1.
+Reading the project graph slice (516 s): flush 1 of 1.
+Reading the project graph slice (518 s): flush 1 of 1.
+[repo] still working after 530 s; last phase started: door.script
+Reading the project graph slice (520 s): flush 1 of 1.
+Reading the project graph slice (522 s): flush 1 of 1.
+Reading the project graph slice (525 s): flush 1 of 1.
+Reading the project graph slice (527 s): flush 1 of 1.
+Reading the project graph slice (529 s): flush 1 of 1.
+Reading the project graph slice (531 s): flush 1 of 1.
+Reading the project graph slice (533 s): flush 1 of 1.
+Reading the project graph slice (535 s): flush 1 of 1.
+Reading the project graph slice (537 s): flush 1 of 1.
+Reading the project graph slice (539 s): flush 1 of 1.
+Reading the project graph slice (541 s): flush 1 of 1.
+Reading the project graph slice (543 s): flush 1 of 1.
+Reading the project graph slice (545 s): flush 1 of 1.
+Reading the project graph slice (547 s): flush 1 of 1.
+Reading the project graph slice (549 s): flush 1 of 1.
+[repo] still working after 560 s; last phase started: door.script
+Reading the project graph slice (551 s): flush 1 of 1.
+Reading the project graph slice (553 s): flush 1 of 1.
+Reading the project graph slice (555 s): flush 1 of 1.
+Reading the project graph slice (557 s): flush 1 of 1.
+Reading the project graph slice (559 s): flush 1 of 1.
+Reading the project graph slice (561 s): flush 1 of 1.
+Reading the project graph slice (563 s): flush 1 of 1.
+Reading the project graph slice (565 s): flush 1 of 1.
+Reading the project graph slice (567 s): flush 1 of 1.
+Reading the project graph slice (569 s): flush 1 of 1.
+Reading the project graph slice (571 s): flush 1 of 1.
+Reading the project graph slice (573 s): flush 1 of 1.
+Reading the project graph slice (575 s): flush 1 of 1.
+Reading the project graph slice (577 s): flush 1 of 1.
+Reading the project graph slice (579 s): flush 1 of 1.
+[repo] still working after 590 s; last phase started: door.script
+Reading the project graph slice (581 s): flush 1 of 1.
+Reading the project graph slice (583 s): flush 1 of 1.
+Reading the project graph slice (585 s): flush 1 of 1.
+Reading the project graph slice (587 s): flush 1 of 1.
+Reading the project graph slice (589 s): flush 1 of 1.
+Reading the project graph slice (591 s): flush 1 of 1.
+Reading the project graph slice (593 s): flush 1 of 1.
+Reading the project graph slice (595 s): flush 1 of 1.
+Reading the project graph slice (597 s): flush 1 of 1.
+Reading the project graph slice (599 s): flush 1 of 1.
+Reading the project graph slice (601 s): flush 1 of 1.
+Reading the project graph slice (603 s): flush 1 of 1.
+Reading the project graph slice (605 s): flush 1 of 1.
+Reading the project graph slice (607 s): flush 1 of 1.
+Reading the project graph slice (609 s): flush 1 of 1.
+[repo] still working after 620 s; last phase started: door.script
+Reading the project graph slice (611 s): flush 1 of 1.
+Reading the project graph slice (613 s): flush 1 of 1.
+Reading the project graph slice (615 s): flush 1 of 1.
+Reading the project graph slice (617 s): flush 1 of 1.
+Reading the project graph slice (619 s): flush 1 of 1.
+Reading the project graph slice (621 s): flush 1 of 1.
+Reading the project graph slice (623 s): flush 1 of 1.
+Reading the project graph slice (625 s): flush 1 of 1.
+Reading the project graph slice (627 s): flush 1 of 1.
+Reading the project graph slice (629 s): flush 1 of 1.
+Reading the project graph slice (631 s): flush 1 of 1.
+Reading the project graph slice (633 s): flush 1 of 1.
+Reading the project graph slice (635 s): flush 1 of 1.
+Reading the project graph slice (637 s): flush 1 of 1.
+Reading the project graph slice (639 s): flush 1 of 1.
+[repo] still working after 650 s; last phase started: door.script
+Reading the project graph slice (641 s): flush 1 of 1.
+Reading the project graph slice (643 s): flush 1 of 1.
+Reading the project graph slice (645 s): flush 1 of 1.
+Reading the project graph slice (647 s): flush 1 of 1.
+Reading the project graph slice (649 s): flush 1 of 1.
+Reading the project graph slice (651 s): flush 1 of 1.
+Reading the project graph slice (653 s): flush 1 of 1.
+Reading the project graph slice (655 s): flush 1 of 1.
+Reading the project graph slice (657 s): flush 1 of 1.
+Reading the project graph slice (659 s): flush 1 of 1.
+Reading the project graph slice (661 s): flush 1 of 1.
+Reading the project graph slice (663 s): flush 1 of 1.
+Reading the project graph slice (665 s): flush 1 of 1.
+Reading the project graph slice (667 s): flush 1 of 1.
+Reading the project graph slice (669 s): flush 1 of 1.
+[repo] still working after 680 s; last phase started: door.script
+Reading the project graph slice (671 s): flush 1 of 1.
+Reading the project graph slice (673 s): flush 1 of 1.
+Reading the project graph slice (675 s): flush 1 of 1.
+Reading the project graph slice (677 s): flush 1 of 1.
+Reading the project graph slice (679 s): flush 1 of 1.
+Reading the project graph slice (681 s): flush 1 of 1.
+Reading the project graph slice (683 s): flush 1 of 1.
+Reading the project graph slice (685 s): flush 1 of 1.
+Reading the project graph slice (687 s): flush 1 of 1.
+Reading the project graph slice (689 s): flush 1 of 1.
+Reading the project graph slice (691 s): flush 1 of 1.
+Reading the project graph slice (693 s): flush 1 of 1.
+Reading the project graph slice (695 s): flush 1 of 1.
+Reading the project graph slice (697 s): flush 1 of 1.
+Reading the project graph slice (699 s): flush 1 of 1.
+[repo] still working after 710 s; last phase started: door.script
+Reading the project graph slice (701 s): flush 1 of 1.
+Reading the project graph slice (703 s): flush 1 of 1.
+Reading the project graph slice (705 s): flush 1 of 1.
+Reading the project graph slice (707 s): flush 1 of 1.
+Reading the project graph slice (709 s): flush 1 of 1.
+Reading the project graph slice (711 s): flush 1 of 1.
+Reading the project graph slice (713 s): flush 1 of 1.
+Reading the project graph slice (715 s): flush 1 of 1.
+Reading the project graph slice (717 s): flush 1 of 1.
+Reading the project graph slice (719 s): flush 1 of 1.
+Reading the project graph slice (721 s): flush 1 of 1.
+Reading the project graph slice (723 s): flush 1 of 1.
+Reading the project graph slice (725 s): flush 1 of 1.
+Reading the project graph slice (727 s): flush 1 of 1.
+Reading the project graph slice (729 s): flush 1 of 1.
+[repo] still working after 740 s; last phase started: door.script
+Reading the project graph slice (731 s): flush 1 of 1.
+Reading the project graph slice (733 s): flush 1 of 1.
+Reading the project graph slice (735 s): flush 1 of 1.
+Reading the project graph slice (737 s): flush 1 of 1.
+Reading the project graph slice (739 s): flush 1 of 1.
+Reading the project graph slice (741 s): flush 1 of 1.
+Reading the project graph slice (743 s): flush 1 of 1.
+Reading the project graph slice (745 s): flush 1 of 1.
+Reading the project graph slice (747 s): flush 1 of 1.
+Reading the project graph slice (749 s): flush 1 of 1.
+Reading the project graph slice (751 s): flush 1 of 1.
+Reading the project graph slice (753 s): flush 1 of 1.
+Reading the project graph slice (755 s): flush 1 of 1.
+Reading the project graph slice (757 s): flush 1 of 1.
+Reading the project graph slice (759 s): flush 1 of 1.
+[repo] still working after 770 s; last phase started: door.script
+Reading the project graph slice (761 s): flush 1 of 1.
+Reading the project graph slice (763 s): flush 1 of 1.
+Reading the project graph slice (765 s): flush 1 of 1.
+Reading the project graph slice (767 s): flush 1 of 1.
+Reading the project graph slice (769 s): flush 1 of 1.
+Reading the project graph slice (771 s): flush 1 of 1.
+Reading the project graph slice (773 s): flush 1 of 1.
+Reading the project graph slice (775 s): flush 1 of 1.
+Reading the project graph slice (777 s): flush 1 of 1.
+Reading the project graph slice (779 s): flush 1 of 1.
+Reading the project graph slice (781 s): flush 1 of 1.
+Reading the project graph slice (783 s): flush 1 of 1.
+Reading the project graph slice (785 s): flush 1 of 1.
+Reading the project graph slice (787 s): flush 1 of 1.
+Reading the project graph slice (789 s): flush 1 of 1.
+[repo] still working after 800 s; last phase started: door.script
+Reading the project graph slice (791 s): flush 1 of 1.
+Reading the project graph slice (793 s): flush 1 of 1.
+Reading the project graph slice (795 s): flush 1 of 1.
+Reading the project graph slice (797 s): flush 1 of 1.
+Reading the project graph slice (799 s): flush 1 of 1.
+Reading the project graph slice (801 s): flush 1 of 1.
+Reading the project graph slice (803 s): flush 1 of 1.
+Reading the project graph slice (805 s): flush 1 of 1.
+Reading the project graph slice (807 s): flush 1 of 1.
+Reading the project graph slice (809 s): flush 1 of 1.
+Reading the project graph slice (811 s): flush 1 of 1.
+Reading the project graph slice (813 s): flush 1 of 1.
+Reading the project graph slice (815 s): flush 1 of 1.
+Reading the project graph slice (817 s): flush 1 of 1.
+Reading the project graph slice (819 s): flush 1 of 1.
+[repo] still working after 830 s; last phase started: door.script
+Reading the project graph slice (821 s): flush 1 of 1.
+Reading the project graph slice (823 s): flush 1 of 1.
+Reading the project graph slice (825 s): flush 1 of 1.
+Reading the project graph slice (827 s): flush 1 of 1.
+Reading the project graph slice (829 s): flush 1 of 1.
+Reading the project graph slice (831 s): flush 1 of 1.
+Reading the project graph slice (833 s): flush 1 of 1.
+Reading the project graph slice (835 s): flush 1 of 1.
+Reading the project graph slice (837 s): flush 1 of 1.
+Reading the project graph slice (839 s): flush 1 of 1.
+Reading the project graph slice (841 s): flush 1 of 1.
+Reading the project graph slice (843 s): flush 1 of 1.
+Reading the project graph slice (845 s): flush 1 of 1.
+Reading the project graph slice (847 s): flush 1 of 1.
+Reading the project graph slice (849 s): flush 1 of 1.
+[repo] still working after 860 s; last phase started: door.script
+Reading the project graph slice (851 s): flush 1 of 1.
+Reading the project graph slice (853 s): flush 1 of 1.
+Reading the project graph slice (855 s): flush 1 of 1.
+Reading the project graph slice (857 s): flush 1 of 1.
+Reading the project graph slice (859 s): flush 1 of 1.
+Reading the project graph slice (861 s): flush 1 of 1.
+Reading the project graph slice (863 s): flush 1 of 1.
+Reading the project graph slice (865 s): flush 1 of 1.
+Reading the project graph slice (867 s): flush 1 of 1.
+Reading the project graph slice (869 s): flush 1 of 1.
+Reading the project graph slice (871 s): flush 1 of 1.
+Reading the project graph slice (873 s): flush 1 of 1.
+Reading the project graph slice (875 s): flush 1 of 1.
+Reading the project graph slice (877 s): flush 1 of 1.
+Reading the project graph slice (879 s): flush 1 of 1.
+[repo] still working after 890 s; last phase started: door.script
+Reading the project graph slice (881 s): flush 1 of 1.
+Reading the project graph slice (883 s): flush 1 of 1.
+Reading the project graph slice (885 s): flush 1 of 1.
+Reading the project graph slice (887 s): flush 1 of 1.
+Reading the project graph slice (889 s): flush 1 of 1.
+Reading the project graph slice (891 s): flush 1 of 1.
+Reading the project graph slice (893 s): flush 1 of 1.
+Reading the project graph slice (895 s): flush 1 of 1.
+Reading the project graph slice (897 s): flush 1 of 1.
+Reading the project graph slice (899 s): flush 1 of 1.
+Reading the project graph slice (901 s): flush 1 of 1.
+Reading the project graph slice (903 s): flush 1 of 1.
+Reading the project graph slice (905 s): flush 1 of 1.
+Reading the project graph slice (907 s): flush 1 of 1.
+Reading the project graph slice (909 s): flush 1 of 1.
+[repo] still working after 920 s; last phase started: door.script
+Reading the project graph slice (911 s): flush 1 of 1.
+Reading the project graph slice (913 s): flush 1 of 1.
+Reading the project graph slice (915 s): flush 1 of 1.
+Reading the project graph slice (917 s): flush 1 of 1.
+Reading the project graph slice (919 s): flush 1 of 1.
+Reading the project graph slice (921 s): flush 1 of 1.
+Reading the project graph slice (923 s): flush 1 of 1.
+Reading the project graph slice (925 s): flush 1 of 1.
+Reading the project graph slice (927 s): flush 1 of 1.
+Reading the project graph slice (929 s): flush 1 of 1.
+Reading the project graph slice (931 s): flush 1 of 1.
+Reading the project graph slice (933 s): flush 1 of 1.
+Reading the project graph slice (935 s): flush 1 of 1.
+Reading the project graph slice (937 s): flush 1 of 1.
+Reading the project graph slice (939 s): flush 1 of 1.
+[repo] still working after 950 s; last phase started: door.script
+Reading the project graph slice (941 s): flush 1 of 1.
+Reading the project graph slice (943 s): flush 1 of 1.
+Reading the project graph slice (945 s): flush 1 of 1.
+Reading the project graph slice (947 s): flush 1 of 1.
+Reading the project graph slice (949 s): flush 1 of 1.
+Reading the project graph slice (951 s): flush 1 of 1.
+Reading the project graph slice (953 s): flush 1 of 1.
+Reading the project graph slice (955 s): flush 1 of 1.
+Reading the project graph slice (957 s): flush 1 of 1.
+Reading the project graph slice (959 s): flush 1 of 1.
+Reading the project graph slice (961 s): flush 1 of 1.
+Reading the project graph slice (963 s): flush 1 of 1.
+Reading the project graph slice (965 s): flush 1 of 1.
+Reading the project graph slice (967 s): flush 1 of 1.
+Reading the project graph slice (969 s): flush 1 of 1.
+[repo] still working after 980 s; last phase started: door.script
+Reading the project graph slice (971 s): flush 1 of 1.
+Reading the project graph slice (973 s): flush 1 of 1.
+Reading the project graph slice (975 s): flush 1 of 1.
+Reading the project graph slice (977 s): flush 1 of 1.
+Reading the project graph slice (979 s): flush 1 of 1.
+Reading the project graph slice (981 s): flush 1 of 1.
+Reading the project graph slice (983 s): flush 1 of 1.
+Reading the project graph slice (985 s): flush 1 of 1.
+Reading the project graph slice (987 s): flush 1 of 1.
+Reading the project graph slice (989 s): flush 1 of 1.
+Reading the project graph slice (991 s): flush 1 of 1.
+Reading the project graph slice (993 s): flush 1 of 1.
+Reading the project graph slice (995 s): flush 1 of 1.
+Reading the project graph slice (997 s): flush 1 of 1.
+Reading the project graph slice (999 s): flush 1 of 1.
+[repo] still working after 1010 s; last phase started: door.script
+Reading the project graph slice (1001 s): flush 1 of 1.
+Reading the project graph slice (1003 s): flush 1 of 1.
+Reading the project graph slice (1005 s): flush 1 of 1.
+Reading the project graph slice (1007 s): flush 1 of 1.
+Reading the project graph slice (1009 s): flush 1 of 1.
+Reading the project graph slice (1011 s): flush 1 of 1.
+Reading the project graph slice (1013 s): flush 1 of 1.
+Reading the project graph slice (1015 s): flush 1 of 1.
+Reading the project graph slice (1017 s): flush 1 of 1.
+Reading the project graph slice (1019 s): flush 1 of 1.
+Reading the project graph slice (1021 s): flush 1 of 1.
+Reading the project graph slice (1023 s): flush 1 of 1.
+Reading the project graph slice (1025 s): flush 1 of 1.
+Reading the project graph slice (1027 s): flush 1 of 1.
+Reading the project graph slice (1029 s): flush 1 of 1.
+[repo] still working after 1040 s; last phase started: door.script
+Reading the project graph slice (1031 s): flush 1 of 1.
+Reading the project graph slice (1033 s): flush 1 of 1.
+Reading the project graph slice (1035 s): flush 1 of 1.
+Reading the project graph slice (1037 s): flush 1 of 1.
+Reading the project graph slice (1039 s): flush 1 of 1.
+Reading the project graph slice (1041 s): flush 1 of 1.
+Reading the project graph slice (1043 s): flush 1 of 1.
+Reading the project graph slice (1045 s): flush 1 of 1.
+Reading the project graph slice (1047 s): flush 1 of 1.
+Reading the project graph slice (1049 s): flush 1 of 1.
+Reading the project graph slice (1051 s): flush 1 of 1.
+Reading the project graph slice (1053 s): flush 1 of 1.
+Reading the project graph slice (1055 s): flush 1 of 1.
+Reading the project graph slice (1057 s): flush 1 of 1.
+Reading the project graph slice (1059 s): flush 1 of 1.
+[repo] still working after 1070 s; last phase started: door.script
+Reading the project graph slice (1061 s): flush 1 of 1.
+Reading the project graph slice (1063 s): flush 1 of 1.
+Reading the project graph slice (1065 s): flush 1 of 1.
+Reading the project graph slice (1067 s): flush 1 of 1.
+Reading the project graph slice (1069 s): flush 1 of 1.
+Reading the project graph slice (1071 s): flush 1 of 1.
+Reading the project graph slice (1073 s): flush 1 of 1.
+Reading the project graph slice (1075 s): flush 1 of 1.
+Reading the project graph slice (1077 s): flush 1 of 1.
+Reading the project graph slice (1079 s): flush 1 of 1.
+Reading the project graph slice (1081 s): flush 1 of 1.
+Reading the project graph slice (1083 s): flush 1 of 1.
+Reading the project graph slice (1085 s): flush 1 of 1.
+Reading the project graph slice (1087 s): flush 1 of 1.
+Reading the project graph slice (1089 s): flush 1 of 1.
+[repo] still working after 1100 s; last phase started: door.script
+Reading the project graph slice (1091 s): flush 1 of 1.
+Reading the project graph slice (1093 s): flush 1 of 1.
+Reading the project graph slice (1095 s): flush 1 of 1.
+Reading the project graph slice (1097 s): flush 1 of 1.
+Reading the project graph slice (1099 s): flush 1 of 1.
+Reading the project graph slice (1101 s): flush 1 of 1.
+Reading the project graph slice (1103 s): flush 1 of 1.
+Reading the project graph slice (1105 s): flush 1 of 1.
+Reading the project graph slice (1107 s): flush 1 of 1.
+Reading the project graph slice (1109 s): flush 1 of 1.
+Reading the project graph slice (1111 s): flush 1 of 1.
+Reading the project graph slice (1113 s): flush 1 of 1.
+Reading the project graph slice (1115 s): flush 1 of 1.
+Reading the project graph slice (1117 s): flush 1 of 1.
+Reading the project graph slice (1119 s): flush 1 of 1.
+[repo] still working after 1130 s; last phase started: door.script
+Reading the project graph slice (1121 s): flush 1 of 1.
+Reading the project graph slice (1123 s): flush 1 of 1.
+Reading the project graph slice (1125 s): flush 1 of 1.
+Reading the project graph slice (1127 s): flush 1 of 1.
+Reading the project graph slice (1129 s): flush 1 of 1.
+Reading the project graph slice (1131 s): flush 1 of 1.
+Reading the project graph slice (1133 s): flush 1 of 1.
+Reading the project graph slice (1135 s): flush 1 of 1.
+Reading the project graph slice (1137 s): flush 1 of 1.
+Reading the project graph slice (1139 s): flush 1 of 1.
+Reading the project graph slice (1141 s): flush 1 of 1.
+Reading the project graph slice (1143 s): flush 1 of 1.
+Reading the project graph slice (1145 s): flush 1 of 1.
+Reading the project graph slice (1147 s): flush 1 of 1.
+Reading the project graph slice (1149 s): flush 1 of 1.
+[repo] still working after 1160 s; last phase started: door.script
+Reading the project graph slice (1151 s): flush 1 of 1.
+Reading the project graph slice (1153 s): flush 1 of 1.
+Reading the project graph slice (1155 s): flush 1 of 1.
+Reading the project graph slice (1157 s): flush 1 of 1.
+Reading the project graph slice (1159 s): flush 1 of 1.
+Reading the project graph slice (1161 s): flush 1 of 1.
+Reading the project graph slice (1163 s): flush 1 of 1.
+Reading the project graph slice (1165 s): flush 1 of 1.
+Reading the project graph slice (1167 s): flush 1 of 1.
+Reading the project graph slice (1169 s): flush 1 of 1.
+Reading the project graph slice (1171 s): flush 1 of 1.
+Reading the project graph slice (1173 s): flush 1 of 1.
+Reading the project graph slice (1175 s): flush 1 of 1.
+Reading the project graph slice (1177 s): flush 1 of 1.
+[repo] still working after 1190 s; last phase started: door.script
+Reading the project graph slice (1179 s): flush 1 of 1.
+Reading the project graph slice (1181 s): flush 1 of 1.
+Reading the project graph slice (1183 s): flush 1 of 1.
+Reading the project graph slice (1185 s): flush 1 of 1.
+Reading the project graph slice (1187 s): flush 1 of 1.
+Reading the project graph slice (1189 s): flush 1 of 1.
+Reading the project graph slice (1191 s): flush 1 of 1.
+Reading the project graph slice (1193 s): flush 1 of 1.
+Reading the project graph slice (1195 s): flush 1 of 1.
+Reading the project graph slice (1197 s): flush 1 of 1.
+Reading the project graph slice (1199 s): flush 1 of 1.
+Reading the project graph slice (1201 s): flush 1 of 1.
+Reading the project graph slice (1203 s): flush 1 of 1.
+Reading the project graph slice (1205 s): flush 1 of 1.
+Reading the project graph slice (1207 s): flush 1 of 1.
+[repo] still working after 1220 s; last phase started: door.script
+Reading the project graph slice (1209 s): flush 1 of 1.
+Reading the project graph slice (1211 s): flush 1 of 1.
+Reading the project graph slice (1213 s): flush 1 of 1.
+Reading the project graph slice (1215 s): flush 1 of 1.
+Reading the project graph slice (1217 s): flush 1 of 1.
+Reading the project graph slice (1219 s): flush 1 of 1.
+Reading the project graph slice (1221 s): flush 1 of 1.
+Reading the project graph slice (1223 s): flush 1 of 1.
+Reading the project graph slice (1225 s): flush 1 of 1.
+Reading the project graph slice (1227 s): flush 1 of 1.
+Reading the project graph slice (1229 s): flush 1 of 1.
+Reading the project graph slice (1231 s): flush 1 of 1.
+Reading the project graph slice (1233 s): flush 1 of 1.
+Reading the project graph slice (1235 s): flush 1 of 1.
+Reading the project graph slice (1237 s): flush 1 of 1.
+[repo] still working after 1250 s; last phase started: door.script
+Reading the project graph slice (1239 s): flush 1 of 1.
+Reading the project graph slice (1241 s): flush 1 of 1.
+Reading the project graph slice (1243 s): flush 1 of 1.
+Reading the project graph slice (1245 s): flush 1 of 1.
+Reading the project graph slice (1247 s): flush 1 of 1.
+Reading the project graph slice (1249 s): flush 1 of 1.
+Reading the project graph slice (1251 s): flush 1 of 1.
+Reading the project graph slice (1253 s): flush 1 of 1.
+Reading the project graph slice (1255 s): flush 1 of 1.
+Reading the project graph slice (1257 s): flush 1 of 1.
+Reading the project graph slice (1259 s): flush 1 of 1.
+Reading the project graph slice (1261 s): flush 1 of 1.
+Reading the project graph slice (1263 s): flush 1 of 1.
+Reading the project graph slice (1265 s): flush 1 of 1.
+Reading the project graph slice (1267 s): flush 1 of 1.
+[repo] still working after 1280 s; last phase started: door.script
+Reading the project graph slice (1269 s): flush 1 of 1.
+Reading the project graph slice (1271 s): flush 1 of 1.
+Reading the project graph slice (1273 s): flush 1 of 1.
+Reading the project graph slice (1275 s): flush 1 of 1.
+Reading the project graph slice (1277 s): flush 1 of 1.
+Reading the project graph slice (1279 s): flush 1 of 1.
+Reading the project graph slice (1281 s): flush 1 of 1.
+Reading the project graph slice (1283 s): flush 1 of 1.
+Reading the project graph slice (1285 s): flush 1 of 1.
+Reading the project graph slice (1287 s): flush 1 of 1.
+Reading the project graph slice (1289 s): flush 1 of 1.
+Reading the project graph slice (1291 s): flush 1 of 1.
+Reading the project graph slice (1293 s): flush 1 of 1.
+Reading the project graph slice (1295 s): flush 1 of 1.
+Reading the project graph slice (1297 s): flush 1 of 1.
+[repo] still working after 1310 s; last phase started: door.script
+Reading the project graph slice (1299 s): flush 1 of 1.
+Reading the project graph slice (1301 s): flush 1 of 1.
+Reading the project graph slice (1303 s): flush 1 of 1.
+Reading the project graph slice (1305 s): flush 1 of 1.
+Reading the project graph slice (1307 s): flush 1 of 1.
+Reading the project graph slice (1309 s): flush 1 of 1.
+Reading the project graph slice (1311 s): flush 1 of 1.
+Reading the project graph slice (1313 s): flush 1 of 1.
+Reading the project graph slice (1315 s): flush 1 of 1.
+Reading the project graph slice (1317 s): flush 1 of 1.
+Reading the project graph slice (1319 s): flush 1 of 1.
+Reading the project graph slice (1321 s): flush 1 of 1.
+Reading the project graph slice (1323 s): flush 1 of 1.
+Reading the project graph slice (1325 s): flush 1 of 1.
+Reading the project graph slice (1327 s): flush 1 of 1.
+[repo] still working after 1340 s; last phase started: door.script
+Reading the project graph slice (1329 s): flush 1 of 1.
+Reading the project graph slice (1331 s): flush 1 of 1.
+Reading the project graph slice (1333 s): flush 1 of 1.
+Reading the project graph slice (1335 s): flush 1 of 1.
+Reading the project graph slice (1337 s): flush 1 of 1.
+Reading the project graph slice (1339 s): flush 1 of 1.
+Reading the project graph slice (1341 s): flush 1 of 1.
+Reading the project graph slice (1343 s): flush 1 of 1.
+Reading the project graph slice (1345 s): flush 1 of 1.
+Reading the project graph slice (1347 s): flush 1 of 1.
+Reading the project graph slice (1349 s): flush 1 of 1.
+Reading the project graph slice (1351 s): flush 1 of 1.
+Reading the project graph slice (1353 s): flush 1 of 1.
+Reading the project graph slice (1355 s): flush 1 of 1.
+Reading the project graph slice (1357 s): flush 1 of 1.
+[repo] still working after 1370 s; last phase started: door.script
+Reading the project graph slice (1359 s): flush 1 of 1.
+Reading the project graph slice (1361 s): flush 1 of 1.
+Reading the project graph slice (1363 s): flush 1 of 1.
+Reading the project graph slice (1365 s): flush 1 of 1.
+Reading the project graph slice (1367 s): flush 1 of 1.
+Reading the project graph slice (1369 s): flush 1 of 1.
+Reading the project graph slice (1371 s): flush 1 of 1.
+Reading the project graph slice (1373 s): flush 1 of 1.
+Reading the project graph slice (1375 s): flush 1 of 1.
+Reading the project graph slice (1377 s): flush 1 of 1.
+Reading the project graph slice (1379 s): flush 1 of 1.
+Reading the project graph slice (1381 s): flush 1 of 1.
+Reading the project graph slice (1383 s): flush 1 of 1.
+Reading the project graph slice (1385 s): flush 1 of 1.
+Reading the project graph slice (1387 s): flush 1 of 1.
+[repo] still working after 1400 s; last phase started: door.script
+Reading the project graph slice (1389 s): flush 1 of 1.
+Reading the project graph slice (1391 s): flush 1 of 1.
+Reading the project graph slice (1393 s): flush 1 of 1.
+Reading the project graph slice (1395 s): flush 1 of 1.
+Reading the project graph slice (1397 s): flush 1 of 1.
+Reading the project graph slice (1399 s): flush 1 of 1.
+Reading the project graph slice (1401 s): flush 1 of 1.
+Reading the project graph slice (1403 s): flush 1 of 1.
+Reading the project graph slice (1405 s): flush 1 of 1.
+Reading the project graph slice (1407 s): flush 1 of 1.
+Reading the project graph slice (1409 s): flush 1 of 1.
+Reading the project graph slice (1411 s): flush 1 of 1.
+Reading the project graph slice (1413 s): flush 1 of 1.
+Reading the project graph slice (1415 s): flush 1 of 1.
+Reading the project graph slice (1417 s): flush 1 of 1.
+[repo] still working after 1430 s; last phase started: door.script
+Reading the project graph slice (1419 s): flush 1 of 1.
+Reading the project graph slice (1421 s): flush 1 of 1.
+Reading the project graph slice (1423 s): flush 1 of 1.
+Reading the project graph slice (1425 s): flush 1 of 1.
+Reading the project graph slice (1427 s): flush 1 of 1.
+Reading the project graph slice (1429 s): flush 1 of 1.
+Reading the project graph slice (1431 s): flush 1 of 1.
+Reading the project graph slice (1433 s): flush 1 of 1.
+Reading the project graph slice (1435 s): flush 1 of 1.
+Reading the project graph slice (1437 s): flush 1 of 1.
+Reading the project graph slice (1439 s): flush 1 of 1.
+Reading the project graph slice (1441 s): flush 1 of 1.
+Reading the project graph slice (1443 s): flush 1 of 1.
+Reading the project graph slice (1445 s): flush 1 of 1.
+Reading the project graph slice (1447 s): flush 1 of 1.
+[repo] still working after 1460 s; last phase started: door.script
+Reading the project graph slice (1449 s): flush 1 of 1.
+Reading the project graph slice (1451 s): flush 1 of 1.
+Reading the project graph slice (1453 s): flush 1 of 1.
+Reading the project graph slice (1455 s): flush 1 of 1.
+Reading the project graph slice (1457 s): flush 1 of 1.
+Reading the project graph slice (1459 s): flush 1 of 1.
+Reading the project graph slice (1461 s): flush 1 of 1.
+Reading the project graph slice (1463 s): flush 1 of 1.
+Reading the project graph slice (1465 s): flush 1 of 1.
+Reading the project graph slice (1467 s): flush 1 of 1.
+Reading the project graph slice (1469 s): flush 1 of 1.
+Reading the project graph slice (1471 s): flush 1 of 1.
+Reading the project graph slice (1473 s): flush 1 of 1.
+Reading the project graph slice (1475 s): flush 1 of 1.
+Reading the project graph slice (1477 s): flush 1 of 1.
+[repo] still working after 1490 s; last phase started: door.script
+Reading the project graph slice (1479 s): flush 1 of 1.
+Reading the project graph slice (1481 s): flush 1 of 1.
+Reading the project graph slice (1483 s): flush 1 of 1.
+Reading the project graph slice (1485 s): flush 1 of 1.
+Reading the project graph slice (1487 s): flush 1 of 1.
+Reading the project graph slice (1489 s): flush 1 of 1.
+Reading the project graph slice (1491 s): flush 1 of 1.
+Reading the project graph slice (1493 s): flush 1 of 1.
+Reading the project graph slice (1495 s): flush 1 of 1.
+Reading the project graph slice (1497 s): flush 1 of 1.
+Reading the project graph slice (1499 s): flush 1 of 1.
+Reading the project graph slice (1501 s): flush 1 of 1.
+Reading the project graph slice (1503 s): flush 1 of 1.
+Reading the project graph slice (1505 s): flush 1 of 1.
+Reading the project graph slice (1507 s): flush 1 of 1.
+[repo] still working after 1520 s; last phase started: door.script
+Reading the project graph slice (1509 s): flush 1 of 1.
+Reading the project graph slice (1511 s): flush 1 of 1.
+Reading the project graph slice (1513 s): flush 1 of 1.
+Reading the project graph slice (1515 s): flush 1 of 1.
+Reading the project graph slice (1517 s): flush 1 of 1.
+Reading the project graph slice (1519 s): flush 1 of 1.
+Reading the project graph slice (1521 s): flush 1 of 1.
+Reading the project graph slice (1523 s): flush 1 of 1.
+Reading the project graph slice (1525 s): flush 1 of 1.
+Reading the project graph slice (1527 s): flush 1 of 1.
+Reading the project graph slice (1529 s): flush 1 of 1.
+Reading the project graph slice (1531 s): flush 1 of 1.
+The project graph could not be read on this machine: it can infer only 0 of the stale projects, the fleet was asked for 657 and delivered 144 within 1495 s, 513 are still missing, among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/s-dev-composition (about 3702 MB), @semio-tech/cargo-workspaces (about 2950 MB), @semio-tech/framework-compiler-rs (about 2884 MB), @semio-tech/framework-mesh-engine-rs (about 2662 MB), and 94 more (this machine can give about 0 MB per project). Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T03:21:52Z
+native_rc=75

@@ -43,7 +43,7 @@ class RecursiveChapterPacketContract(unittest.TestCase):
         self.assertEqual({topic["id"] for topic in actual_course["topics"]}, {topic["id"] for topic in course["topics"]})
         sources, occurrences, clauses = set(), 0, 0
         for video, golden in zip(manifest, CASES["clips"], strict=True):
-            self.assertEqual(video["chapters"], golden["chapters"])
+            self.assertEqual([{key: value for key, value in chapter.items() if key != "poster"} for chapter in video["chapters"]], golden["chapters"])
             topic = next(topic for topic in actual_course["topics"] if topic["id"] == golden["topic"])
             projected = next(clip for clip in topic["videos"] if clip["id"] == video["id"])
             self.assertEqual([chapter["id"] for chapter in projected["chapters"]], [chapter["scene"] for chapter in golden["chapters"]])
@@ -150,7 +150,7 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
 
         browser = importlib.import_module(PACKAGE + ".🌐️browser.🐍️")
         hierarchy = importlib.import_module(PACKAGE + ".🥞️hierarchy.🐍️")
-        catalog = hierarchy.hierarchy_contract()
+        catalog = importlib.import_module(PACKAGE + ".🖼️posters.🧪️tests.🧰️synthetic.🐍️").catalog()
         output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]).resolve()
         output.mkdir(parents=True, exist_ok=True)
         work = Path(tempfile.mkdtemp(prefix="chapter-dom-", dir=output))
@@ -207,7 +207,8 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
             pairs.append((left, right, case["path"]))
         requests += [{"video_id": CASES["boundaries"][-1]["left"], "phase": "restore", "t": 1, "output": work / "last.png"}]
         settings = {"language": "de", "audience": "spectator", "resolution": "480,270", "fps": 4.0, "profile": "preview"}
-        measured = renderer.frame_batch(requests, settings)
+        with importlib.import_module(PACKAGE + ".🖼️posters.🧪️tests.🧰️synthetic.🐍️").captured():
+            measured = renderer.frame_batch(requests, settings)
         self.assertEqual(len(measured), len(requests))
         for request, result in zip(requests, measured, strict=True):
             self.assertEqual(result["timeline"]["hierarchy"]["revealed_path"], [])
@@ -218,8 +219,9 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
         body = work / "body.png"
         Image.new("RGB", (1600, 900), tuple(color)).save(body)
         target = work / "content.png"
-        renderer.frame_batch([{"video_id": CASES["boundaries"][0]["right"], "phase": "focus", "t": 1,
-                               "snapshot": body, "output": target}], settings)
+        with importlib.import_module(PACKAGE + ".🖼️posters.🧪️tests.🧰️synthetic.🐍️").captured():
+            renderer.frame_batch([{"video_id": CASES["boundaries"][0]["right"], "phase": "focus", "t": 1,
+                                   "snapshot": body, "output": target}], settings)
         actual = np.asarray(Image.open(target).convert("RGB"), dtype=np.int16)
         self.assertLessEqual(int(np.abs(actual - color).max()), 1)
 
@@ -254,7 +256,7 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
                                "cursor": {"point": projected["point"], "kind": "arrow", "pressed": False},
                                "transition_elapsed": 2000})
             packets.append({"schema": "semio-presentation-browser/v1", "viewport": {"width": 480, "height": 270},
-                            "catalog": hierarchy.hierarchy_contract(), "language": "de", "work_directory": str(directory), "frames": frames})
+                            "catalog": importlib.import_module(PACKAGE + ".🖼️posters.🧪️tests.🧰️synthetic.🐍️").catalog(), "language": "de", "work_directory": str(directory), "frames": frames})
         for packet in packets:
             directory = Path(packet["work_directory"])
             directory.mkdir(parents=True, exist_ok=True)

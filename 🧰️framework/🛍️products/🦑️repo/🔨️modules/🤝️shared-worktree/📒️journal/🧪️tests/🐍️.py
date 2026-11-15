@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """🐍️ Independent oracle of the shared worktree journal rules. It shares no code with `../🟦️.ts`: it reads only the language-agnostic fixture and recomputes the hybrid logical clock, the total order, event admission and the fold.
 usage: 🐍️.py [fixture.json]    check every vector of the fixture (default: the committed one); exit 1 on any mismatch
+       🐍️.py events <file.ndjson>   print 1 or 0 per line: whether the JSON event on that line is admitted (schema and relative path)
 Python 3.9 compatible, standard library only."""
 import json,os,re,sys
 HERE=os.path.dirname(os.path.abspath(__file__))
@@ -60,7 +61,18 @@ def fold(initial,events):
     order=sorted(won.values(),key=lambda i:(key(events[i]["hlc"]),events[i]["path"]))
     return manifest,order
 
+def admit_lines(path):
+    with open(path,encoding="utf8") as handle:
+        for line in handle:
+            line=line.rstrip("\n")
+            if line=="": continue
+            try: value=json.loads(line)
+            except ValueError: print(0);continue
+            print(1 if admitted(value) else 0)
+    return 0
+
 def main(argv):
+    if len(argv)>2 and argv[1]=="events": return admit_lines(argv[2])
     fixture=json.load(open(argv[1] if len(argv)>1 else DEFAULT,encoding="utf8"))
     failures=[];checks=[0]
     def expect(name,actual,wanted):

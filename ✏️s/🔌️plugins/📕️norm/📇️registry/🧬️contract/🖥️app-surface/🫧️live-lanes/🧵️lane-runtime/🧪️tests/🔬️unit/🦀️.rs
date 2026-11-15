@@ -78,7 +78,7 @@ fn evaluation_is_debounced_per_tier_and_commit_is_immediate() {
     s.on_tick(0);
     assert!(s.poll(59).is_empty());
     assert_eq!(s.poll(60), [EvalTier::T1]);
-    assert_eq!(s.poll(60), [EvalTier::T1]);
+    assert!(s.poll(60).is_empty(), "a debounced tier fires once per burst");
     assert!(s.poll(249).is_empty());
     assert_eq!(s.poll(250), [EvalTier::T2]);
     assert!(s.poll(1000).is_empty());

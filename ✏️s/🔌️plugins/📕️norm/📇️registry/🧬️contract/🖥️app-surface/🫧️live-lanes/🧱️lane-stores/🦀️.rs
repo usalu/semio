@@ -6,6 +6,12 @@ use semio_framework_value::{FromValue, ToValue};
 #[doc(hidden)]
 pub use pack as __pack;
 
+#[doc(hidden)]
+pub use semio_framework_pack_json as __pack_json;
+
+#[doc(hidden)]
+pub use semio_plugin as __plugin;
+
 /// 🔄️ The canonical text of a lane payload; ephemeral lanes never persist, so the text is the only wire shape.
 fn encode<T: ToValue>(value: &T) -> String {
     semio_framework_pack_json::to_json_string(&value.to_value())
@@ -58,161 +64,50 @@ impl Default for NormPresence {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __norm_lane_store {
-    ($record:ident, $diff:ident, $mutation:ident, $lane_trait:ident, $lane_ty:ty, $state:ident, $of_state:ident, $extension:literal, $owner:literal, $emoji:literal, $semantic:literal, $display:literal, $presence:tt) => {
-        #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value_derive::NativeReceive)]
-        #[value(rename_all = "camelCase", default)]
-        #[artifact(extension = $extension)]
-        #[dsl(layout = "lines")]
+    ($module:ident, $record:ident, $diff:ident, $mutation:ident, $lane_trait:ident, $lane_ty:ty, $state:ident, $of_state:ident, $extension:literal, $owner:literal, $emoji:literal, $semantic:literal, $display:literal, $presence:tt) => {
+        mod $module {
+        use $crate::__pack as pack;
+        #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
+        #[canonical_json(owner = $crate::__pack_json)]
+        #[value(rename_all = "camelCase", default, by_value_projection)]
         pub struct $record {
             pub state: String,
         }
 
-        #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-        #[value(rename_all = "camelCase", default)]
-        pub struct $diff {
-            #[value(skip_serializing_if = "Option::is_none")]
-            pub state: Option<String>,
+        $crate::__plugin::transient_root! {
+            state: $record,
+            mutation: $mutation,
+            diff: $diff,
+            owner: $owner,
+            kind: $semantic,
+            display_name: $display,
+            payload_schema: "🧬️schema/🔣️.json",
+            envelope: $extension,
+            extension: $extension,
+            retained: true,
+            fields: { state: String },
         }
 
-        impl protocol::MutationDiff<$record> for $diff {}
+        semio_os_kernel::original_pack_value_operation_receiving!($mutation);
 
-        impl protocol::ColdMutationDiff<$record> for $diff {
-            fn absorb(&mut self, other: Self) {
-                if other.state.is_some() {
-                    self.state = other.state;
+        impl $crate::__pack_json::ArtifactCanonicalJsonTree for $mutation {
+            fn canonical_tree_node(&self) -> Result<$crate::__pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+                Ok($crate::__pack_json::ArtifactCanonicalJsonNode::Object(2))
+            }
+            fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn $crate::__pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
+                static KIND: &str = "snapshot";
+                match (self, ordinal) {
+                    (_, 0) => Ok(&KIND),
+                    (Self::Snapshot { transient }, 1) => Ok(transient),
+                    _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical lane mutation ordinal is absent")),
                 }
             }
-
-            fn apply(&self, unpublished: &mut $record, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
-                if let Some(state) = &self.state {
-                    unpublished.state = state.clone();
+            fn canonical_tree_key(&self, ordinal: usize) -> Result<$crate::__pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+                match ordinal {
+                    0 => Ok("kind".into()),
+                    1 => Ok("transient".into()),
+                    _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical lane mutation key ordinal is absent")),
                 }
-                Ok(())
-            }
-        }
-
-        impl protocol::DiffAlgebra<$record> for $diff {
-            fn is_empty(&self) -> bool {
-                self.state.is_none()
-            }
-        }
-
-        impl protocol::ColdDiffAlgebra<$record> for $diff {
-            fn inverse(&self, base: &$record) -> Self {
-                Self { state: self.state.as_ref().map(|_| base.state.clone()) }
-            }
-        }
-
-        impl $crate::__pack::snapshot::ArtifactDsl for $record {
-            const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-            fn envelope_id() -> &'static str {
-                Self::__DSL_ENVELOPE_ID
-            }
-            fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-                let body = match store::semio_format::split_text_preamble(text) {
-                    Ok((_, rest)) => rest,
-                    Err(_) => text,
-                };
-                if body.trim().is_empty() {
-                    return Ok(Self::default());
-                }
-                let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-                Self::__dsl_from_record(&record)
-            }
-            fn print_dsl(&self) -> String {
-                let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-                let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as $crate::__pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-                store::semio_format::wrap_text(&envelope, &body)
-            }
-        }
-
-        impl $crate::__pack::snapshot::ArtifactPack for $record {
-            fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-                let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as $crate::__pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
-                Ok(store::semio_format::wrap_binary(&envelope, &inner))
-            }
-            fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                if bytes.is_empty() {
-                    return Ok(Self::default());
-                }
-                let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
-                if !envelope.matches_identity(<Self as $crate::__pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-                    return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as $crate::__pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-                }
-                let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-                Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
-            }
-            fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-                Some(Self::__dsl_spec())
-            }
-        }
-
-        impl store::os_store::serialization::ArtifactStoreSnapshot for $record {
-            fn reference_snapshot_codec() -> Option<store::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>> {
-                Some(store::os_store::serialization::reference_snapshot_codec::<Self>())
-            }
-        }
-
-        #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
-        #[value(rename_all = "camelCase")]
-        pub enum $mutation {
-            #[dsl(key = "set")]
-            Set { state: String },
-        }
-
-        impl protocol::Mutation<$record> for $mutation {
-            type Diff = $diff;
-
-            const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-                schema_version: 1,
-                owner: $owner,
-                semantic_kind: $semantic,
-                display_name: $display,
-                emoji: $emoji,
-                aggregate_variant: "Set",
-                payload_schema: "🧬️schema/🔣️.json",
-                text_opcode: None,
-                binary_tag: None,
-                invertibility: protocol::MutationInvertibility::ExplicitMutation,
-                diff_participation: protocol::MutationDiffParticipation::Detect,
-                outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-                composition: protocol::MutationComposition::Atomic,
-                required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-            }];
-
-            fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-                &Self::DESCRIPTORS[0]
-            }
-        }
-
-        impl protocol::ColdMutation<$record> for $mutation {
-            type ReferenceDiff = $diff;
-            fn diff(&self, base: &$record) -> protocol::MutationOutcome<$diff> {
-                match self {
-                    Self::Set { state } => protocol::MutationOutcome::new($diff { state: (&base.state != state).then(|| state.clone()) }),
-                }
-            }
-            fn inverse(&self, base: &$record) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-                Ok(vec![Self::Set { state: base.state.clone() }])
-            }
-        }
-
-        impl protocol::OpText for $mutation {
-            fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-                semio_framework_dsl_record::variants_text::parse_op(line)
-            }
-            fn print_op(&self) -> String {
-                semio_framework_dsl_record::variants_text::print_op(self)
-            }
-        }
-
-        impl protocol::OpBinary for $mutation {
-            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-                dsl::variants_binary::encode_op(self)
-            }
-            fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                dsl::variants_binary::decode_op(bytes)
             }
         }
 
@@ -222,11 +117,13 @@ macro_rules! __norm_lane_store {
                 $crate::$of_state(&self.state)
             }
             fn replace(lane: &$lane_ty) -> $mutation {
-                $mutation::Set { state: $crate::$state(lane) }
+                $mutation::Snapshot { transient: $record { state: $crate::$state(lane) } }
             }
         }
 
         $crate::__norm_lane_store!(@presence $presence, $record);
+        }
+        pub use $module::{$record, $diff, $mutation};
     };
     (@presence true, $record:ident) => {
         impl store::ArtifactPresenceSnapshot for $record {
@@ -242,8 +139,8 @@ macro_rules! __norm_lane_store {
 #[macro_export]
 macro_rules! norm_lane_stores {
     (presence_extension = $presence_extension:literal, transient_extension = $transient_extension:literal, owner = $owner:literal) => {
-        $crate::__norm_lane_store!(NormLanePresence, NormLanePresenceDiff, NormLanePresenceMutation, LanePresence, $crate::NormPresence, presence_state, presence_of_state, $presence_extension, $owner, "👥️", "set-lane-presence", "Set Lane Presence", true);
-        $crate::__norm_lane_store!(NormLaneTransient, NormLaneTransientDiff, NormLaneTransientMutation, LaneTransient, $crate::NormTransient, transient_state, transient_of_state, $transient_extension, $owner, "🫧️", "set-lane-transient", "Set Lane Transient", false);
+        $crate::__norm_lane_store!(__norm_lane_presence_store, NormLanePresence, NormLanePresenceDiff, NormLanePresenceMutation, LanePresence, $crate::NormPresence, presence_state, presence_of_state, $presence_extension, $owner, "👥️", "set-lane-presence", "Set Lane Presence", true);
+        $crate::__norm_lane_store!(__norm_lane_transient_store, NormLaneTransient, NormLaneTransientDiff, NormLaneTransientMutation, LaneTransient, $crate::NormTransient, transient_state, transient_of_state, $transient_extension, $owner, "🫧️", "set-lane-transient", "Set Lane Transient", false);
     };
 }
 
@@ -251,6 +148,6 @@ macro_rules! norm_lane_stores {
 #[macro_export]
 macro_rules! norm_viewer_lane_stores {
     (transient_extension = $transient_extension:literal, owner = $owner:literal) => {
-        $crate::__norm_lane_store!(NormLaneTransient, NormLaneTransientDiff, NormLaneTransientMutation, LaneTransient, $crate::NormTransient, transient_state, transient_of_state, $transient_extension, $owner, "🫧️", "set-lane-transient", "Set Lane Transient", false);
+        $crate::__norm_lane_store!(__norm_lane_transient_store, NormLaneTransient, NormLaneTransientDiff, NormLaneTransientMutation, LaneTransient, $crate::NormTransient, transient_state, transient_of_state, $transient_extension, $owner, "🫧️", "set-lane-transient", "Set Lane Transient", false);
     };
 }

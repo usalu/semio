@@ -5,7 +5,7 @@
    "name": "one task",
    "targets": ["lib-a:build"],
    "tasks": [{"id": "lib-a:build", "dependsOn": [], "stale": true}],
-   "expected": {"projects": ["lib-a"], "tasks": ["lib-a:build"], "edges": [], "stale": ["lib-a:build"]}
+   "expected": {"projects": ["lib-a"], "tasks": ["lib-a:build"], "edges": [], "stale": ["lib-a:build"], "scope": ["lib-a:build"]}
   },
   {
    "name": "closure across projects, order kept, cached task not stale",
@@ -15,13 +15,38 @@
     {"id": "util:build", "dependsOn": ["core:build"], "stale": true},
     {"id": "app:build", "dependsOn": ["util:build", "core:build"], "stale": true}
    ],
-   "expected": {"projects": ["app", "core", "util"], "tasks": ["core:build", "util:build", "app:build"], "edges": [["util:build", "core:build"], ["app:build", "util:build"], ["app:build", "core:build"]], "stale": ["util:build", "app:build"]}
+   "expected": {"projects": ["app", "core", "util"], "tasks": ["core:build", "util:build", "app:build"], "edges": [["util:build", "core:build"], ["app:build", "util:build"], ["app:build", "core:build"]], "stale": ["util:build", "app:build"], "scope": ["app:build"]}
   },
   {
    "name": "roster request has no literal scope target",
    "targets": ["*:*"],
    "tasks": [{"id": "p:test", "dependsOn": ["p:build"], "stale": true}, {"id": "p:build", "dependsOn": [], "stale": false}],
-   "expected": {"projects": ["p"], "tasks": ["p:test", "p:build"], "edges": [["p:test", "p:build"]], "stale": ["p:test"]}
+   "expected": {"projects": ["p"], "tasks": ["p:test", "p:build"], "edges": [["p:test", "p:build"]], "stale": ["p:test"], "scope": ["p:test"]}
+  },
+  {
+   "name": "run-many over projects that lack some targets, with repeated dependencies and a repeated task",
+   "targets": ["*:*"],
+   "tasks": [
+    {"id": "a:check", "dependsOn": [], "stale": true},
+    {"id": "a:test", "dependsOn": ["a:build", "core:build", "a:build"], "stale": true},
+    {"id": "a:build", "dependsOn": ["core:build", "core:build"], "stale": true},
+    {"id": "b:test", "dependsOn": ["b:build", "core:build"], "stale": false},
+    {"id": "b:build", "dependsOn": ["core:build"], "stale": true},
+    {"id": "c:build", "dependsOn": ["core:build"], "stale": true},
+    {"id": "core:build", "dependsOn": [], "stale": true},
+    {"id": "a:build", "dependsOn": ["core:build"], "stale": true}
+   ],
+   "expected": {"projects": ["a", "b", "c", "core"], "tasks": ["a:check", "a:test", "a:build", "b:test", "b:build", "c:build", "core:build"], "edges": [["a:test", "a:build"], ["a:test", "core:build"], ["a:build", "core:build"], ["b:test", "b:build"], ["b:test", "core:build"], ["b:build", "core:build"], ["c:build", "core:build"]], "stale": ["a:check", "a:test", "a:build", "b:build", "c:build", "core:build"], "scope": ["a:check", "a:test", "b:test", "c:build"]}
+  },
+  {
+   "name": "named targets repeated by a multi-target selection are one scope target",
+   "targets": ["a:build", "a:build", "b:build"],
+   "tasks": [
+    {"id": "core:build", "dependsOn": [], "stale": true},
+    {"id": "a:build", "dependsOn": ["core:build"], "stale": true},
+    {"id": "b:build", "dependsOn": ["core:build"], "stale": true}
+   ],
+   "expected": {"projects": ["a", "b", "core"], "tasks": ["core:build", "a:build", "b:build"], "edges": [["a:build", "core:build"], ["b:build", "core:build"]], "stale": ["core:build", "a:build", "b:build"], "scope": ["a:build", "b:build"]}
   },
   {
    "name": "a dependency outside the plan is refused",
@@ -41,6 +66,8 @@
  ],
  "refusals": [
   {"name": "the memory limit refuses the plan", "error": "PlanRefusedErrorV1", "frame": {"code": "memory", "retry": "later", "message": {"en": "The plan cannot continue: the service holds 2583 MB of its 2583 MB memory limit (safety margin 256 MB), so it was cancelled to keep the service up; try again later or ask for a smaller selection.", "de": "Der Plan kann nicht fortgesetzt werden: der Dienst belegt 2583 MB seines Speicherlimits von 2583 MB (Sicherheitsabstand 256 MB); er wurde abgebrochen, damit der Dienst am Leben bleibt; später erneut versuchen oder eine kleinere Auswahl anfragen."}}, "expected": {"code": "refused", "exit": 1, "en": "The plan cannot continue: the service holds 2583 MB of its 2583 MB memory limit (safety margin 256 MB), so it was cancelled to keep the service up; try again later or ask for a smaller selection.", "de": "Der Plan kann nicht fortgesetzt werden: der Dienst belegt 2583 MB seines Speicherlimits von 2583 MB (Sicherheitsabstand 256 MB); er wurde abgebrochen, damit der Dienst am Leben bleibt; später erneut versuchen oder eine kleinere Auswahl anfragen."}},
-  {"name": "a service that cannot answer fails the command", "error": "HostUnavailableErrorV1", "reason": "timeout", "expected": {"code": "failed", "exit": 1, "en": "The graph service could not answer (timeout); look at `repo service host status` and try again", "de": "Der Graph-Dienst konnte nicht antworten (timeout); `repo service host status` ansehen und erneut versuchen"}}
+  {"name": "a service that cannot answer fails the command", "error": "HostUnavailableErrorV1", "reason": "timeout", "expected": {"code": "failed", "exit": 1, "en": "The graph service could not answer (timeout); look at `repo service host status` and try again", "de": "Der Graph-Dienst konnte nicht antworten (timeout); `repo service host status` ansehen und erneut versuchen"}},
+  {"name": "a graph read the fleet did not serve ends the command with exit status 75", "error": "PlanRefusedErrorV1", "frame": {"code": "unserved", "retry": "later", "message": {"en": "The project graph could not be read on this machine: it can infer only 192 of the stale projects, the fleet was asked for 703 and delivered 0 within 902 s, 703 are still missing. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.", "de": "Der Projektgraph konnte auf diesem Rechner nicht gelesen werden: er kann nur 192 der veralteten Projekte selbst ableiten, die Flotte wurde um 703 gebeten und lieferte innerhalb von 902 s 0, 703 fehlen noch. An deinem Baum ist nichts falsch; führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner."}}, "expected": {"code": "unserved", "exit": 75, "en": "The project graph could not be read on this machine: it can infer only 192 of the stale projects, the fleet was asked for 703 and delivered 0 within 902 s, 703 are still missing. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.", "de": "Der Projektgraph konnte auf diesem Rechner nicht gelesen werden: er kann nur 192 der veralteten Projekte selbst ableiten, die Flotte wurde um 703 gebeten und lieferte innerhalb von 902 s 0, 703 fehlen noch. An deinem Baum ist nichts falsch; führe den Befehl erneut aus, sobald ein Rechner mit freiem Speicher den Graphen bereitstellt, oder lies den Graphen auf einem größeren Rechner."}},
+  {"name": "a service that macOS keeps from reading the checkout ends the command with exit status 4", "error": "PlanRefusedErrorV1", "frame": {"code": "consent", "retry": "later", "message": {"en": "macOS does not let `repo` read your Documents folder, so /Users/worker/Documents/semio cannot be read. Open System Settings, Privacy & Security, Files & Folders, switch on Documents Folder for `repo` (/Users/worker/.local/share/semio/launcher/bin/repo) (or give it Full Disk Access) or click \"Allow\" on the dialog \"repo would like to access files in your Documents folder\", then run the command again. The consent is asked once per machine; a checkout outside Documents, Desktop and Downloads needs none.", "de": "macOS erlaubt `repo` nicht, deinen Ordner Documents zu lesen, daher kann /Users/worker/Documents/semio nicht gelesen werden. Öffne Systemeinstellungen, Datenschutz & Sicherheit, Dateien & Ordner, schalte den Ordner Documents für `repo` (/Users/worker/.local/share/semio/launcher/bin/repo) ein (oder gib ihm Voller Festplattenzugriff) oder klicke bei der Abfrage „repo möchte auf Dateien in deinem Ordner Documents zugreifen“ auf „Erlauben“ und führe den Befehl dann erneut aus. Die Erlaubnis wird einmal pro Rechner gefragt; ein Verzeichnis außerhalb von Dokumente, Schreibtisch und Downloads braucht keine."}}, "expected": {"code": "consent", "exit": 4, "en": "macOS does not let `repo` read your Documents folder, so /Users/worker/Documents/semio cannot be read. Open System Settings, Privacy & Security, Files & Folders, switch on Documents Folder for `repo` (/Users/worker/.local/share/semio/launcher/bin/repo) (or give it Full Disk Access) or click \"Allow\" on the dialog \"repo would like to access files in your Documents folder\", then run the command again. The consent is asked once per machine; a checkout outside Documents, Desktop and Downloads needs none.", "de": "macOS erlaubt `repo` nicht, deinen Ordner Documents zu lesen, daher kann /Users/worker/Documents/semio nicht gelesen werden. Öffne Systemeinstellungen, Datenschutz & Sicherheit, Dateien & Ordner, schalte den Ordner Documents für `repo` (/Users/worker/.local/share/semio/launcher/bin/repo) ein (oder gib ihm Voller Festplattenzugriff) oder klicke bei der Abfrage „repo möchte auf Dateien in deinem Ordner Documents zugreifen“ auf „Erlauben“ und führe den Befehl dann erneut aus. Die Erlaubnis wird einmal pro Rechner gefragt; ein Verzeichnis außerhalb von Dokumente, Schreibtisch und Downloads braucht keine."}}
  ]
 }

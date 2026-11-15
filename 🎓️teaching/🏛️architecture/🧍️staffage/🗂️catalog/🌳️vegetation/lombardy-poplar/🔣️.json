@@ -3335,6 +3335,7 @@
      "model": "leaf",
      "material": "poplar-leaf",
      "areaM2": 240,
+     "areaBasis": "exchange",
      "characteristicLengthM": 0.06,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.5,

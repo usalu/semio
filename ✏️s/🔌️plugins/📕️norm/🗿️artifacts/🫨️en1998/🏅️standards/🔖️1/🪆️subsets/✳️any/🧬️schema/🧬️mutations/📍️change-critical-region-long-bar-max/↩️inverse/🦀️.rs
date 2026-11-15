@@ -1,4 +1,4 @@
-//! ↩️ `change-critical-region-long-bar-max` inverse: restores the previous `longitudinal_bar_max_diameter_m`.
+//! ↩️ `change-critical-region-longitudinal-bar-max-diameter-m` inverse: restores the previous `longitudinal_bar_max_diameter_m`.
 
 use crate::change_critical_region_long_bar_max::ChangeCriticalRegionLongitudinalBarMaxDiameterM;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

@@ -301,6 +301,7 @@ fn moving_a_row_by_step_position_or_drop_is_one_move_item_edit_and_the_tree_foll
 
 #[test]
 fn the_touch_menu_renders_actions_for_enabled_entries_and_names_the_disabled_ones_in_both_languages() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     use crate::viewport3d::config::Lang;
     let entries = touch_menu(0, false, None);
     for (locale, copy, none) in [(Locale::En, "Copy", "Not available"), (Locale::De, "Kopieren", "Nicht verfügbar")] {
@@ -332,6 +333,7 @@ mod select_all {
 
     #[test]
     fn the_touch_menu_select_all_raises_the_framework_verb_with_the_norm_scope_for_any_scene_size() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
         use crate::viewport3d::config::Lang;
         let entries = touch_menu(0, false, None);
         let tree = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(render_touch_menu(&entries, "norm.mock", Locale::En).expect("menu"))).expect("projection");

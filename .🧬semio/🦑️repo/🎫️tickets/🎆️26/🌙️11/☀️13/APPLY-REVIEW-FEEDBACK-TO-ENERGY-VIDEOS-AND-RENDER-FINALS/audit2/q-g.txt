@@ -1,0 +1,1 @@
+(g_\{?\\?(perp|bot|mathrm\{\\perp\}|⊥)|g_⊥|g_\{\\mathrm\{tot|g_\{?tot|g_\{\\text\{tot|g_\\mathrm\{tot|g_\{?\\mathrm\{?ges|g⊥|g_\{?\\mathrm\{?w|g-Wert|g-value|g-Wert|g_\{?\\perp)[^\n]{0,40}?(=|≈)\s*0[.,]\d+

@@ -9,7 +9,7 @@ pub fn payload_demands(bytes: &MountedCausalPayload) -> Result<RetirementDemand,
     if owner.terminal_is_empty() {
         return Ok(Default::default());
     }
-    Ok(RetirementDemand { release_bytes: owner.next_release_allocation_bytes().map_err(ValueError::from)?, depth: owner.next_release_depth_demand().map_err(ValueError::from)?, ..Default::default() })
+    Ok(RetirementDemand { copy_bytes:owner.next_release_copy_byte_demand().map_err(ValueError::from)?,release_bytes:owner.next_release_allocation_bytes().map_err(ValueError::from)?, depth: owner.next_release_depth_demand().map_err(ValueError::from)?, ..Default::default() })
 }
 pub fn payload_close(bytes: &mut MountedCausalPayload, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
     let grant = effect.grant();

@@ -34,7 +34,7 @@ pub(crate) fn paint_report(document: &En1995Snapshot) -> std::sync::Arc<semio_s_
     semio_s_artifact_norm_en1995_inferences::live::responsive(document, std::time::Duration::from_millis(16)).0
 }
 
-semio_s_plugin_norm_app_surface::norm_viewer_commands!(En1995Snapshot);
+semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_en1995_model::En1995Snapshot);
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(En1995ViewBoundedCommandJobFactory, En1995Viewer);
 

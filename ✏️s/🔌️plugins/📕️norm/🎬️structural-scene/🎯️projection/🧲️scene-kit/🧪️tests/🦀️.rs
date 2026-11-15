@@ -58,6 +58,7 @@ impl SceneKit for Tiny {
             let end = Vec3::new(row.length + weight, 0.0, 0.0);
             out.member(&entity, MemberGeometry { axis: Path3::Polyline(Polyline3 { points: vec![Vec3::ZERO, end] }), frame: Frame::WORLD, section: SectionShape::parametric(ProfileKind::Rect, &[("h", 0.2), ("b", 0.1)]), section_taper: None, start_offset: Vec2::ZERO, end_offset: Vec2::ZERO, start_release: EndRelease::Rigid, end_release: EndRelease::Rigid, stations: Vec::new() })
                 .named(&format!("Row {} ({reported})", row.id), &format!("Zeile {} ({reported})", row.id))
+                .detail(&format!("Row {} of the test kit", row.id), &format!("Zeile {} des Testsatzes", row.id))
                 .add();
             out.label(&format!("{}:label", row.id), Vec3::ZERO, loc(&row.id, &row.id), Tone::Info);
         }
@@ -65,7 +66,7 @@ impl SceneKit for Tiny {
     }
 
     fn finish(doc: &KitDoc<'_, Snap>, summary: &CheckReport, scene: &mut StructuralScene) {
-        scene.description = loc(&format!("{} rows, worst {:.2}", doc.snapshot.rows.len(), summary.summary.worst_utilization), "");
+        scene.description = loc(&format!("{} rows, worst {:.2}", doc.snapshot.rows.len(), summary.summary.worst_utilization), &format!("{} Zeilen, schlechtester Wert {:.2}", doc.snapshot.rows.len(), summary.summary.worst_utilization));
     }
 }
 

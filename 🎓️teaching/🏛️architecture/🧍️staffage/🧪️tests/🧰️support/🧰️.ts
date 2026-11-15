@@ -25,6 +25,7 @@ export function withUnavailableScale(asset: Asset, denominator: 500 | 200 | 100 
   const authored = (["200", "100", "50"] as const).filter((key) => key !== `${denominator}` && asset.representations[key]?.status === "authored");
   return {
     ...asset,
+    volumes: { ...asset.volumes, [`${denominator}`]: { status: "unavailable", denominator } },
     representations: {
       ...asset.representations,
       [`${denominator}`]: {

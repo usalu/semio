@@ -367,6 +367,40 @@
     "fRsiMinAtMinus5": 0.7049843321040286,
     "thetaSiMinIapwsC": 12.628200471747554
   },
+  "fRsiMinimum": [
+    {
+      "id": "reference",
+      "tIntC": 20.0,
+      "rhInt": 0.5,
+      "tExtC": -5.0,
+      "thetaSiMinC": 12.624608302600715,
+      "fRsiMinimum": 0.7
+    },
+    {
+      "id": "warm-humid",
+      "tIntC": 22.0,
+      "rhInt": 0.6,
+      "tExtC": -5.0,
+      "thetaSiMinC": 17.364267157502994,
+      "fRsiMinimum": 0.83
+    },
+    {
+      "id": "cool-dry",
+      "tIntC": 18.0,
+      "rhInt": 0.45,
+      "tExtC": -5.0,
+      "thetaSiMinC": 9.165444185424816,
+      "fRsiMinimum": 0.62
+    },
+    {
+      "id": "hot-wet",
+      "tIntC": 24.0,
+      "rhInt": 0.7,
+      "tExtC": -5.0,
+      "thetaSiMinC": 21.793951103232818,
+      "fRsiMinimum": 0.92
+    }
+  ],
   "glaser": [
     {
       "id": "etics-no-condensation",

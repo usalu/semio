@@ -1,0 +1,14 @@
+import{readFileSync}from"node:fs";import{readFile,lstat}from"node:fs/promises";import{join}from"node:path";import{execSync}from"node:child_process";
+const root="/Users/Shared/semio",E=await import(root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌍️environment/🟨️.mjs");
+const m=JSON.parse(readFileSync("manifest.json","utf8"));
+const projects=Object.entries(m.owners).filter(([,r])=>!r.tag&&r.kind==="project").map(([name,r])=>({name,root:r.root,nativeRoot:r.nativeRoot,config:r.config}));
+const manifests=execSync("cd "+JSON.stringify(root)+" && find . \\( -path ./.cache -o -path '*/node_modules' -o -path ./.git -o -path ./.🧬semio \\) -prune -o -type f -name Cargo.toml -print",{maxBuffer:1<<28}).toString().split("\n").filter(Boolean).map(p=>p.slice(2));
+let reads=0,bytes=0,biggest=0,bigPath="";
+const read=async p=>{try{const t=await readFile(join(root,p),"utf8");reads++;bytes+=t.length;if(t.length>biggest){biggest=t.length;bigPath=p;}return t;}catch(e){if(["ENOENT","ENOTDIR"].includes(e.code))return undefined;throw e;}};
+const stat=async p=>{try{const s=await lstat(join(root,p));return s.isFile()?{size:s.size,mtimeMs:s.mtimeMs}:undefined;}catch(e){if(["ENOENT","ENOTDIR"].includes(e.code))return undefined;throw e;}};
+const guard=setInterval(()=>{if(process.memoryUsage().rss>3e9){console.log("ABORT rss>3GB reads",reads);process.exit(3);}},100);
+const mu=()=>{const u=process.memoryUsage();return{rss:Math.round(u.rss/1048576),heap:Math.round(u.heapUsed/1048576),ext:Math.round(u.external/1048576)}};
+const t=performance.now(),before=mu();
+const env=await E.deriveEnvironmentV1({projects,workspaceManifests:manifests.filter(f=>f==="Cargo.toml"||f.endsWith("/Cargo.toml")),lock:"bun.lock",taxonomy:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",read,stat});
+clearInterval(guard);
+console.log(JSON.stringify({projects:projects.length,manifests:manifests.length,ms:Math.round(performance.now()-t),reads,readMB:Math.round(bytes/1048576),biggest,bigPath:bigPath.slice(-60),before,after:mu(),rows:env.rows.length,digest:env.digest.slice(0,12)}));

@@ -12,6 +12,11 @@
    "start": "async function boundedScriptInputsV1(",
    "end": "export async function relativeScriptInputs("
   },
+  "targetScriptEntriesV1": {
+   "file": "scriptInputs",
+   "start": "export async function targetScriptEntriesV1(",
+   "end": "const toolTablesV1 = new WeakMap();"
+  },
   "targetScriptSources": {
    "file": "scriptInputs",
    "start": "export async function targetScriptSources(",
@@ -74,12 +79,12 @@
   },
   {
    "name": "an entry script is admitted by its physical shape",
-   "function": "targetScriptSources",
+   "function": "targetScriptEntriesV1",
    "text": "requirePhysicalSourceV1(bound.script)"
   },
   {
    "name": "the project's own manifest is read through its declared field, not by its bytes",
-   "function": "targetScriptSources",
+   "function": "targetScriptEntriesV1",
    "text": "observedFieldV1(manifest,\"toml\",\"/package/metadata/semio/cargo-execution\")"
   },
   {
@@ -116,7 +121,7 @@
   },
   {
    "name": "no entry script is read for its bytes",
-   "function": "targetScriptSources",
+   "function": "targetScriptEntriesV1",
    "text": "readPhysicalSource(bound.script)"
   },
   {

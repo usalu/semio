@@ -1,0 +1,43 @@
+{
+  "at": "2026-11-14T19:52:46.597039+00:00",
+  "first_repo_preflight_rc": 0,
+  "service_job_lines": [],
+  "service_jobs": {},
+  "service_pid_ps": [],
+  "repo_link": {
+    "rc": 0,
+    "output": "lrwxr-xr-x  1 root  wheel  27 Nov 14 04:40 /usr/local/bin/repo -> /Users/ueli/.local/bin/repo\n"
+  },
+  "SEMIO_SERVICE_LAUNCHD": "(unset)",
+  "entry_bootVersion": 5,
+  "replica_chain": [
+    {
+      "pid": 81549,
+      "ppid": 1,
+      "etime": "14:13",
+      "rss_kib": 2192,
+      "args": "/bin/sh /Users/ueli/Library/Application Support/semio/fleet/entry/boot.sh run"
+    },
+    {
+      "pid": 81556,
+      "ppid": 81549,
+      "etime": "14:13",
+      "rss_kib": 29424,
+      "args": "/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs run"
+    },
+    {
+      "pid": 81559,
+      "ppid": 81556,
+      "etime": "14:13",
+      "rss_kib": 1436736,
+      "args": "/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run"
+    }
+  ],
+  "shim_selected_lines": [],
+  "access_directory_names": [],
+  "service_receipts": {},
+  "digest": "28b4f47dc4d69fae3a080d0c58d3520741c02c444760d2a3cec506db943ae8ff",
+  "replica_pid": 81559,
+  "processes": [],
+  "build_agent_last8": "2026-11-14T19:41:53.726Z worker reconnecting: Unable to connect. Is the computer able to access the url?\n2026-11-14T19:41:54.974Z worker reconnecting: Unable to connect. Is the computer able to access the url?\n2026-11-14T19:41:56.106Z worker reconnecting: Unable to connect. Is the computer able to access the url?\n2026-11-14T19:41:57.162Z worker reconnecting: Unable to connect. Is the computer able to access the url?\n2026-11-14T19:41:58.187Z worker registered: 7ef632ec-0738-4b86-b9eb-4cf432483736 cache http://192.168.178.70:6094\n2026-11-14T19:42:02.713Z load report sent: reachable again\n2026-11-14T19:44:08.470Z graph-server: alive, 0 machines seen, 0 requests held, read none\n2026-11-14T19:49:12.792Z graph-server: alive, 0 machines seen, 0 requests held, read none"
+}

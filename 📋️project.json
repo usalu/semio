@@ -2744,6 +2744,10 @@
       },
       "metadata": {
         "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
           "cache": {
             "version": 1,
             "class": "side-effecting",
@@ -2813,6 +2817,15 @@
       },
       "metadata": {
         "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "orchestration",
+            "operation": [
+              "tools",
+              "setup",
+              "all"
+            ]
+          },
           "cache": {
             "version": 1,
             "class": "side-effecting",

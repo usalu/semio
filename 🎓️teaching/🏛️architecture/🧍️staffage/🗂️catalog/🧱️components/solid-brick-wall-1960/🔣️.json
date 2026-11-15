@@ -1325,77 +1325,808 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "plaster",
-          "kind": "box",
-          "bone": "root",
-          "material": "lime-plaster",
-          "role": "body",
-          "tone": 0.9,
-          "region": "wall-field",
-          "size": [0.015, 1, 1],
-          "transform": {
-            "translation": [0.0075, 0.5, 0]
-          }
-        },
-        {
-          "id": "brick",
-          "kind": "box",
-          "bone": "root",
-          "material": "solid-brick",
-          "role": "body",
-          "tone": 0.55,
-          "region": "wall-field",
-          "size": [0.365, 1, 1],
-          "transform": {
-            "translation": [0.1975, 0.5, 0]
-          }
-        },
-        {
-          "id": "render",
-          "kind": "box",
-          "bone": "root",
-          "material": "mineral-render",
-          "role": "body",
-          "tone": 0.85,
-          "region": "wall-field",
-          "size": [0.02, 1, 1],
-          "transform": {
-            "translation": [0.39, 0.5, 0]
-          }
-        },
-        {
-          "id": "bed-joints",
-          "kind": "box",
-          "bone": "root",
-          "material": "lime-plaster",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "wall-field",
-          "maxDenominator": 50,
-          "size": [0.365, 0.01, 1.004],
-          "transform": {
-            "translation": [0.1975, 0.075, 0]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "plaster",
+            "kind": "box",
+            "bone": "root",
+            "material": "lime-plaster",
+            "role": "body",
+            "tone": 0.85,
+            "size": [0.015, 1.0, 1.0],
+            "transform": {
+              "translation": [0.0075, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
           },
-          "repeat": {
-            "count": 12,
-            "translation": [0, 0.075, 0]
+          {
+            "id": "brick-course-00",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.07, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.035, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.1125, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.1875, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.2625, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.3375, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.4125, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.4875, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.5625, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.6375, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-09",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.7125, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-10",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.7875, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-11",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.065, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.8625, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "brick-course-12",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 0.095, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.9525, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-01",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.075, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-02",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.15, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-03",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.225, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-04",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.3, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-05",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.375, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-06",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.45, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-07",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.525, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-08",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.6, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-09",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.675, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-10",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.75, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-11",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.825, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "bed-joint-12",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.78,
+            "size": [0.365, 0.01, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.9, 0.0]
+            },
+            "tags": ["mortar"],
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "render",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.8,
+            "size": [0.02, 1.0, 1.0],
+            "transform": {
+              "translation": [0.39, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
           }
-        }
-      ],
-      "decisions": [
-        {
-          "en": "Each construction layer of the 1960s wall strip is its own full-width box (interior plaster 15, solid brick 365, exterior render 20 mm), so the thermal view colours them separately; there is no insulation layer.",
-          "de": "Jede Schicht des Wandstreifens der 1960er ist ein eigener Quader über die ganze Breite (Innenputz 15, Vollziegel 365, Aussenputz 20 mm), sodass die thermische Ansicht sie getrennt einfärbt; es gibt keine Dämmschicht."
-        },
-        {
-          "en": "Bed joints are 8 mm mortar bands pushed 2 mm proud of the brick strip on both sides, repeated 12 times at 75 mm; only shown at 1:50 like the 2D joints.",
-          "de": "Lagerfugen sind 8 mm breite Mörtelbänder, beidseitig 2 mm über den Ziegelstreifen hinaus, 12 Mal im Abstand von 75 mm; wie die 2D-Fugen nur bei 1:50 sichtbar."
-        }
-      ]
+        ],
+        "thermal": [
+          {
+            "id": "th-plaster",
+            "of": "plaster",
+            "region": "wall-field",
+            "layer": "plaster"
+          },
+          {
+            "id": "th-brick",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.365, 1.0, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.5, 0.0]
+            },
+            "region": "wall-field",
+            "layer": "brick",
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "th-render",
+            "of": "render",
+            "region": "wall-field",
+            "layer": "render"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-brick-course-00",
+            "of": "brick-course-00",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-01",
+            "of": "brick-course-01",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-02",
+            "of": "brick-course-02",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-03",
+            "of": "brick-course-03",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-04",
+            "of": "brick-course-04",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-05",
+            "of": "brick-course-05",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-06",
+            "of": "brick-course-06",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-07",
+            "of": "brick-course-07",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-08",
+            "of": "brick-course-08",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-09",
+            "of": "brick-course-09",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-10",
+            "of": "brick-course-10",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-11",
+            "of": "brick-course-11",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "member-brick-course-12",
+            "of": "brick-course-12",
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "support-base-fixed",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.365, 0.0076, 1.0],
+            "transform": {
+              "translation": [0.1975, 0.0038, 0.0]
+            },
+            "member": "root",
+            "part": "support",
+            "anchor": "base"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: the wall as built, layer by layer: 15 mm lime plaster on the room side, the 365 mm solid brick leaf as 13 courses of 65 mm (the lowest and the highest cut to the base and the top of the 1 m sample) with 12 mortar bed joints of 10 mm (lighter tone, the joint lines of the drawing), and 20 mm mineral render outside; the head joints are inside the cut and not drawn, so the courses run through. All full 1 m x 1 m, the cut edges are section faces.",
+            "de": "Körper: die Wand wie gebaut, Schicht für Schicht: 15 mm Kalkputz raumseitig, die 365 mm starke Vollziegelschale als 13 Schichten zu 65 mm (die unterste und die oberste an Fuß und Kopf der 1-m-Probe abgeschnitten) mit 12 Lagerfugen zu 10 mm (heller getönt, die Fugenlinien der Zeichnung) und 20 mm mineralischer Putz außen; die Stoßfugen liegen im Schnitt und sind nicht gezeichnet, die Schichten laufen also durch. Alle voll 1 m x 1 m, die Schnittkanten sind Schnittflächen."
+          },
+          {
+            "en": "Thermal: the three layer shells of a planar wall, innermost first (plaster, brick, render), stacked as slabs of their real thicknesses; plaster and render are referenced from the body, the brick layer is one solid slab (the bed joints lie inside the layer). The area of the region is the outer face of the render (the cut edges carry no area).",
+            "de": "Thermisch: die drei Schichthüllen einer ebenen Wand von innen nach außen (Putz, Ziegel, Außenputz), als Platten ihrer echten Dicken gestapelt; Putz und Außenputz werden aus dem Körper referenziert, die Ziegelschicht ist eine durchgehende Platte (die Lagerfugen liegen in der Schicht). Die Fläche der Region ist die Außenseite des Außenputzes (die Schnittkanten tragen keine Fläche)."
+          },
+          {
+            "en": "Structure: the 365 mm brick leaf (its 13 courses, each a compression member of 365 x 65 mm over the metre) is the load path; plaster and render are finishes and absent; the fixed support is a bearing block under the leaf at the base anchor.",
+            "de": "Tragwerk: die Ziegelschale von 365 mm (ihre 13 Schichten, je ein Druckglied 365 x 65 mm über den Meter) ist der Lastpfad; Putz und Außenputz sind Oberflächen und fehlen; das feste Auflager ist ein Lagerblock unter der Schale am Fußanker."
+          }
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "brick",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.38, 1.0, 1.0],
+            "transform": {
+              "translation": [0.19, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "render",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.8,
+            "size": [0.02, 1.0, 1.0],
+            "transform": {
+              "translation": [0.39, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-wall-core",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.38, 1.0, 1.0],
+            "transform": {
+              "translation": [0.19, 0.5, 0.0]
+            },
+            "region": "wall-field",
+            "layer": "brick",
+            "sectionFaces": ["-v", "+v", "-w", "+w", "-u"]
+          },
+          {
+            "id": "th-wall-render",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.8,
+            "size": [0.02, 1.0, 1.0],
+            "transform": {
+              "translation": [0.39, 0.5, 0.0]
+            },
+            "region": "wall-field",
+            "layer": "render",
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-brick-leaf",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.38, 1.0, 1.0],
+            "transform": {
+              "translation": [0.19, 0.5, 0.0]
+            },
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "support-base-fixed",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.38, 0.0152, 1.0],
+            "transform": {
+              "translation": [0.19, 0.0076, 0.0]
+            },
+            "member": "root",
+            "part": "support",
+            "anchor": "base"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: the 1960 wall has no insulation, so at 1:100 it is just the 380 mm masonry slab (plaster, courses and joints merged, the drawing hatches one leaf) and a separate 20 mm render skin that stays above the 15 mm feature.",
+            "de": "Körper: die Wand von 1960 hat keine Dämmung, daher besteht sie bei 1:100 nur aus der 380-mm-Mauerwerksplatte (Putz, Schichten und Fugen zusammengefasst, die Zeichnung schraffiert eine Schale) und einer getrennten 20-mm-Putzhaut oberhalb der Einzelheit 15 mm."
+          },
+          {
+            "en": "Thermal: two stacked slabs (masonry core with the plaster merged in, render) carrying the layers the drawing keeps. Structure: the leaf as one 380 mm member; the base support is a 15 mm block. One member solid is right: the masonry leaf is the only load-bearing layer of this wall (the render is cladding), carried by one base support.",
+            "de": "Thermisch: zwei gestapelte Platten (Mauerkern mit dem Putz darin, Außenputz) mit den Schichten, die die Zeichnung behält. Tragwerk: die Schale als ein Stab von 380 mm; das Fußauflager ist ein Block von 15 mm. Ein Stabkörper ist richtig: die Mauerwerksschale ist die einzige tragende Schicht dieser Wand (der Putz ist Verkleidung), getragen von einem Fußauflager."
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "brick",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.37, 1.0, 1.0],
+            "transform": {
+              "translation": [0.185, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          },
+          {
+            "id": "render",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.8,
+            "size": [0.03, 1.0, 1.0],
+            "transform": {
+              "translation": [0.385, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-wall-masonry",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.37, 1.0, 1.0],
+            "transform": {
+              "translation": [0.185, 0.5, 0.0]
+            },
+            "region": "wall-field",
+            "layer": "brick",
+            "sectionFaces": ["-v", "+v", "-w", "+w", "-u"]
+          },
+          {
+            "id": "th-wall-render",
+            "kind": "box",
+            "bone": "root",
+            "material": "mineral-render",
+            "role": "body",
+            "tone": 0.8,
+            "size": [0.03, 1.0, 1.0],
+            "transform": {
+              "translation": [0.385, 0.5, 0.0]
+            },
+            "region": "wall-field",
+            "layer": "render",
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-brick-leaf",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.37, 1.0, 1.0],
+            "transform": {
+              "translation": [0.185, 0.5, 0.0]
+            },
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "support-base-fixed",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.37, 0.0302, 1.0],
+            "transform": {
+              "translation": [0.185, 0.0151, 0.0]
+            },
+            "member": "root",
+            "part": "support",
+            "anchor": "base"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: masonry leaf of 370 mm and a render skin of 30 mm (the smallest feature; it takes the outer 10 mm of the masonry and the 20 mm render, the drawing is one 400 mm rectangle).",
+            "de": "Körper: Mauerschale von 370 mm und eine Putzhaut von 30 mm (die kleinste Einzelheit; sie nimmt die äußeren 10 mm des Mauerwerks und den 20-mm-Putz auf, die Zeichnung ist ein Rechteck von 400 mm)."
+          },
+          {
+            "en": "Thermal: two stacked slabs, masonry and render skin. Structure: the same 370 mm leaf member; the base support grows to the 30 mm feature. One member solid is right: the masonry leaf is the only load-bearing layer of this wall (the render is cladding), carried by one base support.",
+            "de": "Thermisch: zwei gestapelte Platten, Mauerwerk und Putzhaut. Tragwerk: derselbe Schalenstab von 370 mm; das Fußauflager wächst auf die Einzelheit 30 mm. Ein Stabkörper ist richtig: die Mauerwerksschale ist die einzige tragende Schicht dieser Wand (der Putz ist Verkleidung), getragen von einem Fußauflager."
+          },
+          {
+            "en": "Minimal: a masonry block, a render skin, one member and one support are the whole of a plain leaf; nothing coarser keeps the layers.",
+            "de": "Minimal: ein Mauerblock, eine Putzhaut, ein Stab und ein Auflager sind die ganze glatte Schale; gröber bleiben die Schichten nicht erhalten."
+          }
+        ]
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "body": [
+          {
+            "id": "wall",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.55,
+            "size": [0.4, 1.0, 1.0],
+            "transform": {
+              "translation": [0.2, 0.5, 0.0]
+            },
+            "sectionFaces": ["-v", "+v", "-w", "+w"]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-wall",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.55,
+            "size": [0.4, 1.0, 1.0],
+            "transform": {
+              "translation": [0.2, 0.5, 0.0]
+            },
+            "region": "wall-field",
+            "sectionFaces": ["-v", "+v", "-w", "+w", "-u"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-wall",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.38, 1.0, 1.0],
+            "transform": {
+              "translation": [0.19, 0.5, 0.0]
+            },
+            "member": "root",
+            "part": "member"
+          },
+          {
+            "id": "support-base-fixed",
+            "kind": "box",
+            "bone": "root",
+            "material": "solid-brick",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.38, 0.0752, 1.0],
+            "transform": {
+              "translation": [0.19, 0.0376, 0.0]
+            },
+            "member": "root",
+            "part": "support",
+            "anchor": "base"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: the 400 mm uninsulated wall is a single block at 1:500, as the drawing is one rectangle; plaster, leaf and render are not distinguishable at the 75 mm feature.",
+            "de": "Körper: die 400 mm dicke ungedämmte Wand ist bei 1:500 ein einziger Block, wie die Zeichnung ein Rechteck ist; Putz, Schale und Außenputz sind bei der Einzelheit 75 mm nicht unterscheidbar."
+          },
+          {
+            "en": "Thermal: one wall solid carries the whole region (its room face carries no area). Structure: the 380 mm masonry leaf as the member inside the block, the base support a 75 mm block. One member solid is right: the masonry leaf is the only load-bearing layer of this wall (the render is cladding), carried by one base support.",
+            "de": "Thermisch: ein Wandkörper trägt die ganze Region (seine Raumseite trägt keine Fläche). Tragwerk: die 380 mm starke Mauerwerksschale als Stab im Block, das Fußauflager ein Block von 75 mm. Ein Stabkörper ist richtig: die Mauerwerksschale ist die einzige tragende Schicht dieser Wand (der Putz ist Verkleidung), getragen von einem Fußauflager."
+          },
+          {
+            "en": "Minimal: one block, one thermal solid, one member, one support.",
+            "de": "Minimal: ein Block, ein Thermalkörper, ein Stab, ein Auflager."
+          }
+        ]
+      }
     },
     "presentation": {
       "defaultPose": "winter-night",

@@ -1,0 +1,173 @@
+import {afterAll,expect,test} from "bun:test";
+import {cpSync,existsSync,lstatSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {dirname,join,sep} from "node:path";
+import {createHash} from "node:crypto";
+import replicaFixture from "../../🧪️tests/🧫️fixtures/🔣️.json" with {type:"json"};
+import {listOriginsV1} from "../../../📒️journal/🟦️.ts";
+import Ajv from "ajv";
+import storageSchema from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import mountSchema from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json" with {type:"json"};
+import {admitNativeImageRelocationV1,readNativeImageAncestryV1,requireNativeImageAncestryBindingV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🥾️boot/🟦️.ts";
+import {carryImagesV1,readRelocationV1,relocateV1,RelocateRefusedV1,type RelocateStepV1} from "../🟦️.ts";
+import {closeReplicaV1,followOnceV1,joinV1,openReplicaV1,publishOnceV1,seedV1,syncEnabledV1,verifyV1,type ReplicaOptionsV1,type ReplicaV1} from "../../🟦️.ts";
+
+type Machine={name:string;options:ReplicaOptionsV1;replica?:ReplicaV1};
+const scratch:string[]=[],fast={pollMilliseconds:10,scanSeconds:900,debounceMilliseconds:5,persistMilliseconds:0};
+const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`relocate-${label}-`));scratch.push(path);return path;};
+afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
+const posixTest=process.platform==="win32"||Bun.spawnSync(["git","--version"]).exitCode!==0?test.skip:test;
+const environment={...process.env,GIT_AUTHOR_NAME:"t",GIT_AUTHOR_EMAIL:"t@example.test",GIT_COMMITTER_NAME:"t",GIT_COMMITTER_EMAIL:"t@example.test",GIT_CONFIG_GLOBAL:"/dev/null",GIT_CONFIG_NOSYSTEM:"1"};
+const git=(directory:string,...args:string[]):string=>{
+ const result=Bun.spawnSync(["git",...args],{cwd:directory,env:environment,stdout:"pipe",stderr:"pipe"});
+ if(result.exitCode!==0)throw Error(`git ${args.join(" ")}: ${result.stderr.toString()}`);
+ return result.stdout.toString();
+};
+const at=(directory:string,path:string)=>join(directory,...path.split("/"));
+function write(directory:string,path:string,text:string):void{const file=at(directory,path);mkdirSync(dirname(file),{recursive:true});writeFileSync(file,text);}
+const machine=(name:string,store:string,worktree:string=temp(name)):Machine=>({name,options:{worktree,storeRoot:store,originId:name,groupId:"g1",...fast}});
+const open=async(who:Machine):Promise<void>=>{who.replica=await openReplicaV1(who.options);};
+const shut=async(who:Machine):Promise<void>=>{if(who.replica){await closeReplicaV1(who.replica);who.replica=undefined;}};
+async function converge(machines:readonly Machine[],done:()=>boolean,rounds:number=400):Promise<void>{
+ for(let round=0;round<rounds;round++){
+  for(const who of machines)await publishOnceV1(who.replica!);
+  for(const who of machines)await followOnceV1(who.replica!);
+  if(done())return;
+  await Bun.sleep(15);
+ }
+ throw Error("The machines did not converge");
+}
+const sha=(data:Buffer):string=>createHash("sha256").update(data).digest("hex");
+function snapshot(root:string):string[]{
+ const lines:string[]=[];
+ const walk=(directory:string):void=>{
+  for(const item of readdirSync(directory,{withFileTypes:true}).sort((left,right)=>left.name<right.name?-1:1)){
+   const path=join(directory,item.name),info=statSync(path);
+   if(item.isDirectory()){lines.push(`d ${path.slice(root.length)} ${info.mtimeMs}`);walk(path);}
+   else lines.push(`f ${path.slice(root.length)} ${info.size} ${info.mtimeMs} ${sha(readFileSync(path))}`);
+  }
+ };
+ walk(root);
+ return lines;
+}
+
+async function build(){
+ const store=temp("store"),server=machine("g1-server",store),old=machine("g1-m01",store);
+ write(server.options.worktree,".gitignore",replicaFixture.gitignore);write(server.options.worktree,"a.txt","alpha\n");write(server.options.worktree,"b.txt","bravo\n");write(server.options.worktree,"dir/c.txt","charlie\n");
+ git(server.options.worktree,"init","-q","-b","main");git(server.options.worktree,"add","-A");git(server.options.worktree,"commit","-q","-m","initial");
+ await seedV1(server.options);
+ await joinV1(old.options);
+ const target=temp("target");
+ cpSync(server.options.worktree,target,{recursive:true,filter:source=>!source.slice(server.options.worktree.length).includes(`${sep}.cache`)});
+ const future=Date.now()/1000+30*86400;
+ utimesSync(at(target,"b.txt"),future,future);
+ await open(server);await open(old);
+ write(server.options.worktree,"b.txt","bravo two\n");git(server.options.worktree,"add","-A");git(server.options.worktree,"commit","-q","-m","second");
+ await converge([server,old],()=>old.replica!.files.manifestHex()===server.replica!.files.manifestHex()&&git(old.options.worktree,"log","-1","--format=%s").trim()==="second");
+ write(old.options.worktree,"from-old.txt","published by the old tree\n");
+ await converge([server,old],()=>existsSync(at(server.options.worktree,"from-old.txt")));
+ await shut(old);
+ const kept=await openReplicaV1(old.options),clock={ms:kept.clock.ms,counter:kept.clock.counter},cursors=JSON.stringify(kept.cursors);
+ await closeReplicaV1(kept);
+ write(server.options.worktree,"c2.txt","fleet only\n");
+ await converge([server],()=>true,2);
+ return {store,server,old,target,clock,cursors};
+}
+
+const run=(fleet:Awaited<ReturnType<typeof build>>,extra:Partial<{phase:"prepare"|"move"|"finish"|"all";dryRun:boolean;waitSeconds:number;fault:(step:RelocateStepV1|string)=>void}>={})=>relocateV1({from:fleet.old.options.worktree,to:fleet.target,phase:"all",dryRun:false,force:false,sample:20,waitSeconds:0,...extra} as never);
+
+async function checkRelocated(fleet:Awaited<ReturnType<typeof build>>,origins:readonly string[]):Promise<void>{
+ const {store,server,old,target}=fleet,moved=machine("g1-m01",store,target);
+ expect(JSON.parse(readFileSync(at(target,".cache/f/machine.json"),"utf8"))).toEqual({version:1,originId:"g1-m01",groupId:"g1",storeRoot:store,key:expect.stringMatching(/^[0-9a-f]{32}$/u)});
+ expect(await listOriginsV1(store)).toEqual(origins);
+ expect(existsSync(at(old.options.worktree,"a.txt"))).toBe(true);expect(existsSync(at(old.options.worktree,"from-old.txt"))).toBe(true);
+ expect(existsSync(at(old.options.worktree,".cache/f/relocated.json"))).toBe(true);
+ expect(await syncEnabledV1(old.options.worktree)).toBe(false);
+ expect((await readRelocationV1(old.options.worktree))?.step).toBe("finished");expect((await readRelocationV1(target))?.step).toBe("finished");
+ expect(readFileSync(at(target,"c2.txt"),"utf8")).toBe("fleet only\n");expect(readFileSync(at(target,"from-old.txt"),"utf8")).toBe("published by the old tree\n");expect(readFileSync(at(target,"b.txt"),"utf8")).toBe("bravo two\n");
+ const lost=at(target,".cache/f/lost"),reports=readdirSync(lost).filter(name=>name.startsWith("adopt-")&&name.endsWith(".json"));
+ expect(reports.length).toBe(1);
+ const adopted=JSON.parse(readFileSync(join(lost,reports[0]!),"utf8")) as {stale:{path:string;lost:string;reason:string}[];conflicts:unknown[]};
+ expect(adopted.stale.map(item=>[item.path,item.reason])).toEqual([["b.txt","journal"]]);expect(adopted.conflicts).toEqual([]);
+ expect(readFileSync(at(target,".cache/f/"+adopted.stale[0]!.lost),"utf8")).toBe("bravo\n");
+ expect(await verifyV1(moved.options)).toMatchObject({ok:true});
+ await open(moved);
+ const clock=moved.replica!.clock;
+ expect(clock.ms>fleet.clock.ms||clock.ms===fleet.clock.ms&&clock.counter>=fleet.clock.counter).toBe(true);
+ for(const [origin,position] of Object.entries(JSON.parse(fleet.cursors) as Record<string,{segment:number;bytes:number}>)){const now=moved.replica!.cursors[origin]!;expect(now.segment>position.segment||now.segment===position.segment&&now.bytes>=position.bytes).toBe(true);}
+ try{
+  await converge([server,moved],()=>server.replica!.files.manifestHex()===moved.replica!.files.manifestHex()&&git(server.options.worktree,"rev-parse","HEAD")===git(target,"rev-parse","HEAD"));
+  expect(git(target,"log","-1","--format=%s").trim()).toBe("second");
+ }finally{await shut(moved);await shut(server);}
+}
+
+posixTest("a joined machine moves to another repository keeping its origin id, cursors and clock, adopts the store there, retires the old tree without deleting it and converges",async()=>{
+ const fleet=await build(),origins=await listOriginsV1(fleet.store);
+ try{
+  await run(fleet);
+  await checkRelocated(fleet,origins);
+ }finally{await shut(fleet.server);}
+},180_000);
+
+posixTest("the dry run plans the adoption in the new tree and changes nothing, and a running old daemon stops the move until it is gone",async()=>{
+ const fleet=await build();
+ try{
+  const before=[snapshot(fleet.target),snapshot(fleet.old.options.worktree),snapshot(fleet.store)];
+  const dry=await run(fleet,{dryRun:true});
+  expect(dry.plan?.dryRun).toBe(true);expect(dry.plan!.counts.materialise).toBeGreaterThanOrEqual(1);
+  expect([snapshot(fleet.target),snapshot(fleet.old.options.worktree),snapshot(fleet.store)]).toEqual(before);
+  expect(existsSync(at(fleet.target,".cache"))).toBe(false);
+  await open(fleet.old);
+  await run(fleet,{phase:"prepare"});
+  await expect(run(fleet,{phase:"move"})).rejects.toBeInstanceOf(RelocateRefusedV1);
+  expect(existsSync(at(fleet.target,".cache/f/machine.json"))).toBe(false);
+  await shut(fleet.old);
+  await expect(run(fleet,{phase:"finish"})).rejects.toMatchObject({reason:"order"});
+  await run(fleet,{phase:"move"});
+  await run(fleet,{phase:"finish"});
+  await checkRelocated(fleet,await listOriginsV1(fleet.store));
+ }finally{await shut(fleet.server);await shut(fleet.old);}
+},180_000);
+
+for(const step of ["prepared","moved","planned","files","applied","reported","adopted","finished"]){
+ posixTest(`a relocation that crashes after ${step} is continued by the same command and ends in the same state`,async()=>{
+  const fleet=await build(),origins=await listOriginsV1(fleet.store);
+  try{
+   let crashed=false;
+   await expect(run(fleet,{fault:reached=>{if(reached===step&&!crashed){crashed=true;throw Error(`[DEBUG] injected crash after ${reached}`);}}})).rejects.toThrow("injected crash");
+   await run(fleet);
+   await checkRelocated(fleet,origins);
+  }finally{await shut(fleet.server);}
+ },180_000);
+}
+
+posixTest("a relocation into itself, into a nested tree or onto another origin's tree is refused",async()=>{
+ const fleet=await build();
+ try{
+  await expect(relocateV1({from:fleet.old.options.worktree,to:fleet.old.options.worktree,phase:"all",dryRun:false,force:false,sample:3,waitSeconds:0})).rejects.toMatchObject({reason:"same-path"});
+  await expect(relocateV1({from:fleet.old.options.worktree,to:join(fleet.old.options.worktree,"inside"),phase:"all",dryRun:false,force:false,sample:3,waitSeconds:0})).rejects.toMatchObject({reason:"nested"});
+  await expect(relocateV1({from:fleet.old.options.worktree,to:fleet.server.options.worktree,phase:"all",dryRun:false,force:false,sample:3,waitSeconds:0})).rejects.toMatchObject({reason:"target-joined"});
+  await expect(relocateV1({from:fleet.target,to:fleet.old.options.worktree,phase:"all",dryRun:false,force:false,sample:3,waitSeconds:0})).rejects.toMatchObject({reason:"not-joined"});
+ }finally{await shut(fleet.server);}
+},180_000);
+
+test("the build cache images go along to a tree without any and bind again through the hint",async()=>{
+ const from=realpathSync(temp("images-old")),to=realpathSync(temp("images-new")),own=realpathSync(temp("images-own")),before=join(from,".cache","b","d"),after=join(to,".cache","b","d");
+ mkdirSync(join(before,"m"),{recursive:true});writeFileSync(join(before,"fixed.dmg"),Buffer.alloc(4096,7));
+ const backing=lstatSync(join(before,"fixed.dmg")),mount=lstatSync(join(before,"m")),receipt={version:1,mountDirectory:{dev:String(mount.dev),ino:String(mount.ino),mode:mount.mode},bootSession:"1E4A0CBE-3710-481F-9614-F8F1FCBD61D0",dev:backing.dev,ino:backing.ino,size:backing.size,ancestry:[...readNativeImageAncestryV1(before)],filesystemBytes:33554432,maximumPhysicalBytes:34603008};
+ writeFileSync(join(before,"image.json"),JSON.stringify(receipt)+"\n",{mode:0o600});
+ mkdirSync(join(own,".cache","b","t"),{recursive:true});
+ expect(await carryImagesV1(from,own)).toBe("kept");expect(existsSync(before)).toBe(true);
+ expect(await carryImagesV1(own,join(to,"missing"))).toBe("failed");
+ expect(await carryImagesV1(to,from)).toBe("none");
+ expect(await carryImagesV1(from,to)).toBe("carried");
+ expect(existsSync(join(from,".cache","b"))).toBe(false);expect(lstatSync(join(after,"fixed.dmg")).ino).toBe(backing.ino);
+ const hint=JSON.parse(readFileSync(join(to,".cache","b",storageSchema.definitions.AncestryRebindProtocol.const.hintName),"utf8")),ajv=new Ajv({strict:true}).addSchema(mountSchema).addSchema(storageSchema);
+ expect(ajv.validate({$ref:storageSchema.$id+"#/definitions/AncestryRelocationHint"},hint)).toBe(true);
+ expect(hint).toEqual({version:1,movedFrom:join(from,".cache","b"),movedTo:join(to,".cache","b")});
+ const bound=()=>requireNativeImageAncestryBindingV1({published:JSON.parse(readFileSync(join(after,"image.json"),"utf8")).ancestry,current:readNativeImageAncestryV1(after)});
+ expect(bound).toThrow("Original Native image ancestry changed");
+ admitNativeImageRelocationV1(after);bound();
+ expect(ajv.validate({$ref:storageSchema.$id+"#/definitions/ImageReceipt"},JSON.parse(readFileSync(join(after,"image.json"),"utf8")))).toBe(true);
+ expect(await carryImagesV1(from,to)).toBe("none");
+});

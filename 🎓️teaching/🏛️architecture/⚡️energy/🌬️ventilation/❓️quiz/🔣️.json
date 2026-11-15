@@ -644,11 +644,11 @@
           "id": "outdoor-cooling",
           "label": {
             "en": "Ventilation and active cooling must be coordinated so that unnecessary outdoor heat is not added.",
-            "de": "Lüftung und aktive Kühlung müssen abgestimmt werden, damit keine unnötige Außenwärme eingetragen wird."
+            "de": "Lüftung und aktive Kühltechnik müssen abgestimmt werden, damit keine unnötige Außenwärme eingetragen wird."
           },
           "short": {
             "en": "Coordinated ventilation and cooling",
-            "de": "Abgestimmte Lüftung und Kühlung"
+            "de": "Abgestimmte Lüftung und Kühltechnik"
           },
           "icon": {
             "emoji": "🌙",
@@ -751,8 +751,8 @@
             "motion": "bounce"
           },
           "explanation": {
-            "en": "About 0.13 1/h: only the building's own emissions need diluting, 0.35 l/(s·m²) for very low-polluting buildings (EN 16798-1) = 1.26 m³/(h·m²) spread over 10 m of height.",
-            "de": "Rund 0,13 1/h: nur die Emissionen des Gebäudes selbst sind zu verdünnen, 0,35 l/(s·m²) für sehr schadstoffarme Gebäude (EN 16798-1) = 1,26 m³/(h·m²) verteilt auf 10 m Höhe."
+            "en": "About 0.13 1/h: only the building's own emissions need diluting, 0.35 l/(s·m²) for very low-polluting buildings (DIN EN 16798-1:2022-03) = 1.26 m³/(h·m²) spread over 10 m of height.",
+            "de": "Rund 0,13 1/h: nur die Emissionen des Gebäudes selbst sind zu verdünnen, 0,35 l/(s·m²) für sehr schadstoffarme Gebäude (DIN EN 16798-1:2022-03) = 1,26 m³/(h·m²) verteilt auf 10 m Höhe."
           },
           "value": 0.13
         },
@@ -792,8 +792,8 @@
           },
           "familiar": true,
           "explanation": {
-            "en": "About 0.5 1/h: DIN 1946-6 requires −0.001·A² + 1.15·A + 20 = 125 m³/h for a 100 m² apartment with 250 m³ of air.",
-            "de": "Rund 0,5 1/h: DIN 1946-6 verlangt −0,001·A² + 1,15·A + 20 = 125 m³/h für eine 100-m²-Wohnung mit 250 m³ Luft."
+            "en": "About 0.5 1/h: DIN 1946-6:2019-12 requires −0.001·A² + 1.15·A + 20 = 125 m³/h for a 100 m² apartment with 250 m³ of air.",
+            "de": "Rund 0,5 1/h: DIN 1946-6:2019-12 verlangt −0,001·A² + 1,15·A + 20 = 125 m³/h für eine 100-m²-Wohnung mit 250 m³ Luft."
           },
           "value": 0.5
         },
@@ -813,8 +813,8 @@
           },
           "familiar": true,
           "explanation": {
-            "en": "About 0.8 1/h: 60 m³/h per athlete (DIN 18032-1) × 30 = 1,800 m³/h in 2,230 m³ – a large volume for few people.",
-            "de": "Rund 0,8 1/h: 60 m³/h je sporttreibender Person (DIN 18032-1) × 30 = 1.800 m³/h in 2.230 m³ – viel Volumen für wenige Menschen."
+            "en": "About 0.8 1/h: 60 m³/h per athlete (DIN 18032-1:2014-11) × 30 athletes = 1,800 m³/h in 2,230 m³ – a large volume for few people.",
+            "de": "Rund 0,8 1/h: 60 m³/h je sporttreibender Person (DIN 18032-1:2014-11) × 30 Personen = 1.800 m³/h in 2.230 m³ – viel Volumen für wenige Menschen."
           },
           "value": 0.8
         },
@@ -833,8 +833,8 @@
             "motion": "sway"
           },
           "explanation": {
-            "en": "About 1.5 1/h: category II of EN 16798-1 requires 7 l/s per person + 0.7 l/(s·m²), i.e. 55 m³/h for 36 m³ of room.",
-            "de": "Rund 1,5 1/h: Kategorie II der EN 16798-1 verlangt 7 l/s je Person + 0,7 l/(s·m²), also 55 m³/h für 36 m³ Raum."
+            "en": "About 1.5 1/h: category II of DIN EN 16798-1:2022-03 requires 7 l/s per person + 0.7 l/(s·m²), i.e. 55 m³/h for 36 m³ of room.",
+            "de": "Rund 1,5 1/h: Kategorie II der DIN EN 16798-1:2022-03 verlangt 7 l/s je Person + 0,7 l/(s·m²), also 55 m³/h für 36 m³ Raum."
           },
           "value": 1.5
         },
@@ -874,8 +874,8 @@
           },
           "familiar": true,
           "explanation": {
-            "en": "About 3.5 1/h: EN 16798-1 category II with one seat per m² (27.7 m³/(h·m²)) spread over about 8 m of room height.",
-            "de": "Rund 3,5 1/h: EN 16798-1 Kategorie II mit einem Sitz je m² (27,7 m³/(h·m²)) verteilt auf rund 8 m Raumhöhe."
+            "en": "About 3.5 1/h: DIN EN 16798-1:2022-03 category II with one seat per m² (27.7 m³/(h·m²)) spread over about 8 m of room height.",
+            "de": "Rund 3,5 1/h: DIN EN 16798-1:2022-03 Kategorie II mit einem Sitz je m² (27,7 m³/(h·m²)) verteilt auf rund 8 m Raumhöhe."
           },
           "value": 3.5
         },
@@ -895,8 +895,8 @@
           },
           "familiar": true,
           "explanation": {
-            "en": "About 4.8 1/h: EN 16798-1 category II gives 28 × 25 m³/h + 60 m² × 2.5 m³/(h·m²) ≈ 860 m³/h for 180 m³, which is why window ventilation alone struggles.",
-            "de": "Rund 4,8 1/h: EN 16798-1 Kategorie II ergibt 28 × 25 m³/h + 60 m² × 2,5 m³/(h·m²) ≈ 860 m³/h für 180 m³, deshalb kommt Fensterlüftung allein kaum hinterher."
+            "en": "About 4.8 1/h: DIN EN 16798-1:2022-03 category II gives 28 persons × 25.2 m³/(h·person) + 60 m² × 2.52 m³/(h·m²) ≈ 860 m³/h for 180 m³, which is why window ventilation alone struggles.",
+            "de": "Rund 4,8 1/h: DIN EN 16798-1:2022-03 Kategorie II ergibt 28 Pers. × 25,2 m³/(h·Pers.) + 60 m² × 2,52 m³/(h·m²) ≈ 860 m³/h für 180 m³, deshalb kommt Fensterlüftung allein kaum hinterher."
           },
           "value": 4.8
         },
@@ -912,8 +912,8 @@
           },
           "familiar": true,
           "explanation": {
-            "en": "About 6.4 1/h: EN 16798-1 category II with 1.5 m² per guest and 3 m room height.",
-            "de": "Rund 6,4 1/h: EN 16798-1 Kategorie II mit 1,5 m² je Gast und 3 m Raumhöhe."
+            "en": "About 6.4 1/h: DIN EN 16798-1:2022-03 category II with 1.5 m² per guest and 3 m room height.",
+            "de": "Rund 6,4 1/h: DIN EN 16798-1:2022-03 Kategorie II mit 1,5 m² je Gast und 3 m Raumhöhe."
           },
           "value": 6.4
         },
@@ -928,8 +928,8 @@
             "motion": "sway"
           },
           "explanation": {
-            "en": "About 8.3 1/h: DIN 1946-7 requires at least 25 m³/h of outdoor air per m² of floor; at 3 m height that is 8.3 air changes.",
-            "de": "Rund 8,3 1/h: DIN 1946-7 fordert mindestens 25 m³/h Außenluft je m² Grundfläche; bei 3 m Höhe sind das 8,3 Luftwechsel."
+            "en": "About 8.3 1/h: DIN 1946-7:2022-08 requires at least 25 m³/h of outdoor air per m² of floor; at 3 m height that is 8.3 air changes.",
+            "de": "Rund 8,3 1/h: DIN 1946-7:2022-08 fordert mindestens 25 m³/h Außenluft je m² Grundfläche; bei 3 m Höhe sind das 8,3 Luftwechsel."
           },
           "value": 8.3
         },
@@ -948,8 +948,8 @@
             "motion": "sway"
           },
           "explanation": {
-            "en": "About 20 1/h: DIN 1946-4 requires 60 m³/(h·m²) of filtered supply air, 20 air changes at 3 m height (and at least 1,200 m³/h of outdoor air).",
-            "de": "Rund 20 1/h: DIN 1946-4 verlangt 60 m³/(h·m²) gefilterte Zuluft, also 20 Luftwechsel bei 3 m Höhe (und mindestens 1.200 m³/h Außenluft)."
+            "en": "About 20 1/h: DIN 1946-4:2018-09 requires 60 m³/(h·m²) of filtered supply air, 20 air changes at 3 m height (and at least 1,200 m³/h of outdoor air).",
+            "de": "Rund 20 1/h: DIN 1946-4:2018-09 verlangt 60 m³/(h·m²) gefilterte Zuluft, also 20 Luftwechsel bei 3 m Höhe (und mindestens 1.200 m³/h Außenluft)."
           },
           "value": 20
         },
@@ -964,8 +964,8 @@
             "motion": "bounce"
           },
           "explanation": {
-            "en": "About 25 1/h: the exhaust air is sized to the heat and vapour of the cooking appliances (VDI 2052), typically 12–30 air changes per hour.",
-            "de": "Rund 25 1/h: die Abluft wird nach Wärme und Dampf der Kochgeräte bemessen (VDI 2052), typisch 12–30 Luftwechsel pro Stunde."
+            "en": "About 25 1/h: the exhaust air is sized to the heat and vapour of the cooking appliances (VDI 2052 Blatt 1:2017-04), typically 12–30 air changes per hour.",
+            "de": "Rund 25 1/h: die Abluft wird nach Wärme und Dampf der Kochgeräte bemessen (VDI 2052 Blatt 1:2017-04), typisch 12–30 Luftwechsel pro Stunde."
           },
           "value": 25
         },
@@ -984,8 +984,8 @@
             "motion": "flip"
           },
           "explanation": {
-            "en": "About 60 1/h: HEPA-filtered air dilutes the particles; guideline value of IEST-RP-CC012 for ISO class 7.",
-            "de": "Rund 60 1/h: HEPA-gefilterte Luft verdünnt die Partikel; Richtwert der IEST-RP-CC012 für ISO-Klasse 7."
+            "en": "About 60 1/h: HEPA-filtered air dilutes the particles; typical guideline value for ISO class 7.",
+            "de": "Rund 60 1/h: HEPA-gefilterte Luft verdünnt die Partikel; üblicher Richtwert für ISO-Klasse 7."
           },
           "value": 60
         },
@@ -1000,8 +1000,8 @@
             "motion": "sway"
           },
           "explanation": {
-            "en": "About 150 1/h (90–180 1/h, IEST-RP-CC012): ten times fewer particles than ISO 7 need about two and a half times the air.",
-            "de": "Rund 150 1/h (90–180 1/h, IEST-RP-CC012): zehnmal weniger Partikel als ISO 7 brauchen etwa zweieinhalbmal so viel Luft."
+            "en": "About 150 1/h (90–180 1/h): ten times fewer particles than ISO 7 need about two and a half times the air.",
+            "de": "Rund 150 1/h (90–180 1/h): zehnmal weniger Partikel als ISO 7 brauchen etwa zweieinhalbmal so viel Luft."
           },
           "value": 150
         },
@@ -1020,8 +1020,8 @@
             "motion": "pulse"
           },
           "explanation": {
-            "en": "About 540 1/h: the whole ceiling blows filtered air downwards at about 0.45 m/s (ISO 14644-4: 0.2–0.5 m/s); 0.45 m/s × 3,600 s ÷ 3 m = 540.",
-            "de": "Rund 540 1/h: die ganze Decke bläst gefilterte Luft mit etwa 0,45 m/s nach unten (ISO 14644-4: 0,2–0,5 m/s); 0,45 m/s × 3.600 s ÷ 3 m = 540."
+            "en": "About 540 1/h: the whole ceiling blows filtered air downwards at about 0.45 m/s (ISO 14644-4:2022: 0.2–0.5 m/s); 0.45 m/s × 3,600 s ÷ 3 m = 540.",
+            "de": "Rund 540 1/h: die ganze Decke bläst gefilterte Luft mit etwa 0,45 m/s nach unten (ISO 14644-4:2022: 0,2–0,5 m/s); 0,45 m/s × 3.600 s ÷ 3 m = 540."
           },
           "value": 540
         },

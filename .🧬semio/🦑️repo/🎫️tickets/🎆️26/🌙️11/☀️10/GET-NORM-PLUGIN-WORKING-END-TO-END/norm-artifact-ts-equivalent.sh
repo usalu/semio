@@ -1,7 +1,9 @@
 #!/bin/bash
+T="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+R="$(git -C "$T" rev-parse --show-toplevel)"
 # Equivalent of `repo run @semio-tech/norm-<code>:build|check|test` while the graph service is blocked.
 # Runs bun build (bundle), tsc --noEmit on source and suites, and bun test on suites, all via the tool registry.
-cd /home/deck/semio || exit 1
+cd "$R" || exit 1
 G="$1"; : > "$G/artifacts.txt"
 LIBS=$(python3 -c "import json;print(','.join(json.load(open('tsconfig.json'))['compilerOptions']['lib']))")
 for d in ${ONLY:-✏️s/🔌️plugins/📕️norm/🗿️artifacts/*/}; do

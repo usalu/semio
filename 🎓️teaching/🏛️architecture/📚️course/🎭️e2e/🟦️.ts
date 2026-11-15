@@ -35,7 +35,7 @@ import { withCourseAssignmentPdfsV1 } from "../🏗️builder/🌐️vite/📦�
  * https://playwright.dev/docs/test-cli */
 import { buildModeEnvironment } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { createServer as createListener, type AddressInfo } from "node:net";
@@ -54,7 +54,7 @@ import { acquireProctor } from "../../../🛂️proctor/🏗️bootstrap/🧾️
 import { siteArtifactProblems } from "../🚀️deploy/🌐️site/🟦️.ts";
 import { SITE_FIRST_ANSWER_MS, awaitReady, httpAnswers, launchOwned, serveStaticSite } from "../🧱️stack/🟦️.ts";
 import {courseOriginalBuildModeV1} from "../🏗️builder/🎚️mode/🟦️.ts";
-import { SHARD_TABLE, allocateWorkersV1, runTopologySessionsV1, scheduleStacksV1, splitProjectArgumentsV1, splitWorkerArgumentsV1, waveArgumentsV1, workerBudgetV1, type StackPlanV1 } from "./🔒️sessions/🟦️.ts";
+import { SHARD_TABLE, allocateWorkersV1, browserInstallOutputV1, runTopologySessionsV1, scheduleStacksV1, splitProjectArgumentsV1, splitWorkerArgumentsV1, waveArgumentsV1, workerBudgetV1, type StackPlanV1 } from "./🔒️sessions/🟦️.ts";
 import { startToolV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import { plannedTestWorkersV1, withPlannedTestWorkersV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/👷️workers/🟦️.ts";
 
@@ -108,7 +108,8 @@ export const COURSE_E2E_CLASS = "architecture-course";
 /** 👥️ How many Playwright workers in all the gate asks the worker policy for (the policy still bounds them by the admitted memory and cores and by its maximum, and `SEMIO_PLAYWRIGHT_WORKERS` overrides them). */
 const PLAYWRIGHT_WORKERS_WANTED = 4;
 
-const PLAYWRIGHT_CLI = ["node_modules", "playwright", "cli.js"] as const;
+/** 🎭️ The Playwright of the scope the specs and the config import `@playwright/test` from: a second copy refuses their `test()`. */
+const PLAYWRIGHT_CLI = join(dirname(createRequire(import.meta.url).resolve("playwright/package.json")), "cli.js");
 const PLAYWRIGHT_CONFIG = ["🎓️teaching", "🏛️architecture", "📚️course", "🎭️e2e", "🎚️config", "🟦️.ts"] as const;
 
 /** 📋️ What a command line asks for: the topologies (all when none is named), whether they run one after the other,
@@ -356,19 +357,19 @@ async function withStack(slot: Slot, run: Run, consume: (stack: Stack) => Promis
  * `playwright-core` at the root). */
 async function ensureBrowser(invocation: ScriptInvocation, repoRoot: string, browsers: string, signal: AbortSignal): Promise<void> {
   signal.throwIfAborted();
-  const core = dirname(createRequire(realpathSync(join(repoRoot, ...PLAYWRIGHT_CLI))).resolve("playwright-core/package.json"));
+  const core = dirname(createRequire(PLAYWRIGHT_CLI).resolve("playwright-core/package.json"));
   const manifest = JSON.parse(readFileSync(join(core, "browsers.json"), "utf8")) as { readonly browsers: readonly { readonly name: string; readonly revision: string }[] };
   const installed = ["chromium", "chromium-headless-shell"].every((name) => existsSync(join(browsers, `${name.replaceAll("-", "_")}-${manifest.browsers.find((browser) => browser.name === name)?.revision}`, "INSTALLATION_COMPLETE")));
   if (installed) return;
   say(`installing Chromium for Playwright into ${browsers}`);
-  await runOwnedCommand(invocation, process.execPath, [join(repoRoot, ...PLAYWRIGHT_CLI), "install", "chromium"], repoRoot, "architecture-course:test-e2e browser", { version: 1, maximumElapsedMilliseconds: scriptInvocationBudget(invocation, 600_000), output: readNativeCallerAuthorityV1(invocation.capabilities).transport }, { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsers } });
+  await runOwnedCommand(invocation, process.execPath, [PLAYWRIGHT_CLI, "install", "chromium"], repoRoot, "architecture-course:test-e2e browser", { version: 1, maximumElapsedMilliseconds: scriptInvocationBudget(invocation, 600_000), output: browserInstallOutputV1(readNativeCallerAuthorityV1(invocation.capabilities).transport) }, { env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsers } });
 }
 
 /** 🎬️ Runs `playwright test` against one stack, every output line prefixed with the stack's label; resolves with the exit status and whether Playwright found no test to run. */
 function runSpecs(stack: Stack, run: Run, output: string, forwarded: readonly string[]): Promise<{ readonly code: number; readonly empty: boolean }> {
   run.signal.throwIfAborted();
   const env = { ...process.env, PLAYWRIGHT_BROWSERS_PATH: run.browsers, PLAYWRIGHT_BASE_URL: stack.site, PLAYWRIGHT_LAST_RUN_OUTPUT_FILE: join(output, ".last-run.json"), [COURSE_E2E_ENVIRONMENT.topology]: stack.topology, [COURSE_E2E_ENVIRONMENT.proctor]: stack.proctor, [COURSE_E2E_ENVIRONMENT.control]: stack.control };
-  const child = startToolV1("node", [join(run.repoRoot, ...PLAYWRIGHT_CLI), "test", "--config", join(run.repoRoot, ...PLAYWRIGHT_CONFIG), "--output", output, ...forwarded], { cwd: run.repoRoot, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+  const child = startToolV1("node", [PLAYWRIGHT_CLI, "test", "--config", join(run.repoRoot, ...PLAYWRIGHT_CONFIG), "--output", output, ...forwarded], { cwd: run.repoRoot, env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
   const cancel = (): void => terminateOwnedChildTree(child);
   run.signal.addEventListener("abort", cancel, { once: true });
   let empty = false;

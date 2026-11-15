@@ -34,6 +34,8 @@ export type StaffageFigureProps = {
   viewpoint: ViewpointKey;
   preset?: CameraPresetName;
   onPreset?: (preset: CameraPresetName) => void;
+  onScale?: (scale: number) => void;
+  onView?: (view: View) => void;
   background?: string | null;
   toolbar?: boolean;
   representation?: RepresentationSelector;
@@ -145,7 +147,7 @@ class Refusals extends Component<{ readonly language: Language; readonly viewpoi
 
 /** 📏️ Renders one staffage asset in one view at one scale, as a drawing or, for the viewpoint `model`, as an interactive 3D model. */
 export function StaffageFigure(props: StaffageFigureProps): ReactElement {
-  const { viewpoint, preset, onPreset, background, toolbar, ...drawn } = props;
+  const { viewpoint, preset, onPreset, onScale, onView, background, toolbar, ...drawn } = props;
   if (viewpoint === "model") return <ModelFace {...props} />;
   return (
     <ViewpointGate viewpoint={viewpoint} language={props.language}>
@@ -172,6 +174,8 @@ function ModelFace(props: StaffageFigureProps): ReactElement {
         language={language}
         preset={props.preset ?? DEFAULT_CAMERA}
         {...(props.onPreset === undefined ? {} : { onPreset: props.onPreset })}
+        {...(props.onScale === undefined ? {} : { onScale: props.onScale })}
+        {...(props.onView === undefined ? {} : { onView: props.onView })}
         {...(props.environment === undefined ? {} : { environment: props.environment })}
         {...(props.thermalQuantity === undefined ? {} : { thermalQuantity: props.thermalQuantity })}
         {...(props.forceQuantity === undefined ? {} : { forceQuantity: props.forceQuantity })}
@@ -184,7 +188,7 @@ function ModelFace(props: StaffageFigureProps): ReactElement {
   );
 }
 
-type DrawnProps = Omit<StaffageFigureProps, "viewpoint" | "preset" | "onPreset" | "background" | "toolbar"> & { viewpoint: Viewpoint };
+type DrawnProps = Omit<StaffageFigureProps, "viewpoint" | "preset" | "onPreset" | "onScale" | "onView" | "background" | "toolbar"> & { viewpoint: Viewpoint };
 
 /** 🖼️ A drawing of one staffage asset in one view at one scale. */
 function DrawnFigure(props: DrawnProps): ReactElement {

@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "name": "first claim is granted, a second owner is told who holds it and until when",
+      "steps": [
+        { "at": 0, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 30000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 30000, "ttlMilliseconds": 30000 } },
+        { "at": 10, "op": "claim", "key": "a", "owner": "m2:7", "ttl": 30000, "expect": { "state": "held", "by": "m1:1", "untilMilliseconds": 30000 } },
+        { "at": 20, "op": "claimed", "key": "a", "expect": { "claimed": true } }
+      ]
+    },
+    {
+      "name": "the same owner claiming again refreshes its own claim",
+      "steps": [
+        { "at": 0, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 10000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 10000, "ttlMilliseconds": 10000 } },
+        { "at": 5000, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 10000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 15000, "ttlMilliseconds": 10000 } }
+      ]
+    },
+    {
+      "name": "a claim dies with its owner: after the TTL another owner takes over",
+      "steps": [
+        { "at": 0, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 5000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 5000, "ttlMilliseconds": 5000 } },
+        { "at": 4999, "op": "claim", "key": "a", "owner": "m2:2", "ttl": 5000, "expect": { "state": "held", "by": "m1:1", "untilMilliseconds": 5000 } },
+        { "at": 5000, "op": "claim", "key": "a", "owner": "m2:2", "ttl": 5000, "expect": { "state": "granted", "owner": "m2:2", "untilMilliseconds": 10000, "ttlMilliseconds": 5000 } },
+        { "at": 5001, "op": "renew", "key": "a", "owner": "m1:1", "ttl": 5000, "expect": { "state": "lost" } }
+      ]
+    },
+    {
+      "name": "heartbeats keep a long compile alive and only the holder can renew or release",
+      "steps": [
+        { "at": 0, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 3000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 3000, "ttlMilliseconds": 3000 } },
+        { "at": 2000, "op": "renew", "key": "a", "owner": "m1:1", "ttl": 3000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 5000, "ttlMilliseconds": 3000 } },
+        { "at": 4000, "op": "renew", "key": "a", "owner": "m1:1", "ttl": 3000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 7000, "ttlMilliseconds": 3000 } },
+        { "at": 4100, "op": "renew", "key": "a", "owner": "m2:2", "ttl": 3000, "expect": { "state": "lost" } },
+        { "at": 4200, "op": "release", "key": "a", "owner": "m2:2", "expect": { "state": "absent" } },
+        { "at": 4300, "op": "release", "key": "a", "owner": "m1:1", "expect": { "state": "released" } },
+        { "at": 4400, "op": "claimed", "key": "a", "expect": { "claimed": false } }
+      ]
+    },
+    {
+      "name": "TTLs are clamped to the policy bounds",
+      "steps": [
+        { "at": 0, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 1, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 1000, "ttlMilliseconds": 1000 } },
+        { "at": 0, "op": "claim", "key": "b", "owner": "m1:1", "ttl": 99999999, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 300000, "ttlMilliseconds": 300000 } }
+      ]
+    },
+    {
+      "name": "a stored entry answers stored and ends the claim",
+      "steps": [
+        { "at": 0, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 30000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 30000, "ttlMilliseconds": 30000 } },
+        { "at": 100, "op": "stored", "key": "a", "expect": { "state": "ok" } },
+        { "at": 101, "op": "claimed", "key": "a", "expect": { "claimed": false } },
+        { "at": 102, "op": "claim", "key": "a", "owner": "m2:2", "ttl": 30000, "stored": true, "expect": { "state": "stored" } }
+      ]
+    },
+    {
+      "name": "the expected cost of the holder is told to the waiter and survives a refresh",
+      "steps": [
+        { "at": 0, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 30000, "expected": 90000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 30000, "ttlMilliseconds": 30000 } },
+        { "at": 1, "op": "claim", "key": "a", "owner": "m2:2", "ttl": 30000, "expect": { "state": "held", "by": "m1:1", "untilMilliseconds": 30000, "expectedMilliseconds": 90000 } },
+        { "at": 2, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 30000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 30002, "ttlMilliseconds": 30000 } },
+        { "at": 3, "op": "claim", "key": "a", "owner": "m2:2", "ttl": 30000, "expect": { "state": "held", "by": "m1:1", "untilMilliseconds": 30002, "expectedMilliseconds": 90000 } }
+      ]
+    },
+    {
+      "name": "the summary counts live claims and the age of the oldest",
+      "steps": [
+        { "at": 0, "op": "claim", "key": "a", "owner": "m1:1", "ttl": 60000, "expect": { "state": "granted", "owner": "m1:1", "untilMilliseconds": 60000, "ttlMilliseconds": 60000 } },
+        { "at": 5000, "op": "claim", "key": "b", "owner": "m2:2", "ttl": 2000, "expect": { "state": "granted", "owner": "m2:2", "untilMilliseconds": 7000, "ttlMilliseconds": 2000 } },
+        { "at": 6000, "op": "summary", "expect": { "active": 2, "oldestSeconds": 6 } },
+        { "at": 8000, "op": "summary", "expect": { "active": 1, "oldestSeconds": 8 } }
+      ]
+    }
+  ],
+  "routes": [
+    { "path": "/claim/ac/0000000000000000000000000000000000000000000000000000000000000000", "address": { "namespace": "main", "kind": "ac", "key": "0000000000000000000000000000000000000000000000000000000000000000", "action": "claim" } },
+    { "path": "/team/claim/nx/abc_123/renew", "address": { "namespace": "team", "kind": "nx", "key": "abc_123", "action": "renew" } },
+    { "path": "/team/claim/nx/abc_123/release", "address": { "namespace": "team", "kind": "nx", "key": "abc_123", "action": "release" } },
+    { "path": "/claim/nx/abc_123/await", "address": { "namespace": "main", "kind": "nx", "key": "abc_123", "action": "await" } },
+    { "path": "/claim/ac/short", "address": null },
+    { "path": "/claim/cas/0000000000000000000000000000000000000000000000000000000000000000", "address": null },
+    { "path": "/claim/nx/abc_123/steal", "address": null },
+    { "path": "/claim/nx/abc_123/claim", "address": null },
+    { "path": "/ac/0000000000000000000000000000000000000000000000000000000000000000", "address": null },
+    { "path": "/Bad Instance/claim/nx/abc", "address": null }
+  ]
+}

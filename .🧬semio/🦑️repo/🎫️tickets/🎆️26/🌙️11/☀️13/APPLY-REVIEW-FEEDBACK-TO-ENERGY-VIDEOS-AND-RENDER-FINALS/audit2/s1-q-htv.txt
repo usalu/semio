@@ -1,0 +1,5 @@
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:610: r"The envelope contributes the transmission heat transfer coefficient $H_T = 115\;\mathrm{W/K}$ — simplified.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:611: r"Die Hülle liefert den Transmissions-Wärmetransferkoeffizienten $H_T = 115\;\mathrm{W/K}$ — vereinfacht."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:613: r"The air exchange contributes the ventilation coefficient $H_V = 75\;\mathrm{W/K}$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:614: r"Der Luftaustausch liefert den Lüftungs-Wärmetransferkoeffizienten $H_V = 75\;\mathrm{W/K}$."),
+TOTAL 4

@@ -62,16 +62,16 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
+_example = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📏️running-example.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 label_number = _manim_module.label_number
 load_vo_timing = _manim_module.load_vo_timing
 begin_vo_beat = _manim_module.begin_vo_beat
 
-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
-set_vo_language("de")
+# 🗣️ Measured clause durations live in vo_timing.json.
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -94,6 +94,16 @@ def _m(src: str, at=None, *, size: float = BODY_FONT_SIZE, color: str = P_WHITE,
     """∑ Typeset label, optionally placed on a baseline point."""
     mob = math_text(src, font_size=size, color=color)
     return _place(mob, at, edge) if at is not None else mob
+
+
+def _word_over_value(word: str, value: str, at, *, size: float = BODY_FONT_SIZE, color: str = P_WHITE, edge: str = "right"):
+    """🏷️ Two stacked right-aligned lines — a quantity name over its symbol and value — ending on ``at``."""
+    top = _m(rf"\text{{{word}}}", size=size, color=color)
+    low = _m(value, size=size, color=color)
+    group = VGroup(top, low).arrange(DOWN, buff=0.04, aligned_edge=RIGHT if edge == "right" else LEFT)
+    anchor = np.array(at, dtype=float)
+    x = group.get_right()[0] if edge == "right" else group.get_left()[0]
+    return group.shift(np.array([anchor[0] - x, anchor[1] - group.get_center()[1], 0.0]))
 
 
 def _readout(fn, at, *, size: float = BODY_FONT_SIZE, color: str = P_WHITE, edge: str = "left"):
@@ -146,16 +156,16 @@ def _reveal(scene, *mobs, run_time: float = 0.35):
 
 
 #region Charts
-def _axes(origin, x_len: float, y_len: float, x_label: str, y_label: str, *, color: str = P_WHITE):
-    """📐 Axis cross with arrow tips and typeset axis names."""
+def _axes(origin, x_len: float, y_len: float, x_label: str, y_label: str, *, color: str = P_WHITE, beside: bool = False):
+    """📐 Axis cross with arrow tips and typeset axis names; ``beside`` sets the x name right of the arrow tip instead of under it, where a last tick label would meet it."""
     o = np.array(origin, dtype=float)
     x_ax = Arrow(o, o + RIGHT * x_len, buff=0, stroke_width=2.4, color=color,
                  tip_length=0.15, max_tip_length_to_length_ratio=0.06)
     y_ax = Arrow(o, o + UP * y_len, buff=0, stroke_width=2.4, color=color,
                  tip_length=0.15, max_tip_length_to_length_ratio=0.08)
     xl = _m(x_label, size=LABEL_FONT_SIZE, color=color)
-    xl.next_to(x_ax.get_end(), DOWN, buff=0.14).align_to(x_ax.get_end(), RIGHT)
-    yl = _m(y_label, size=LABEL_FONT_SIZE, color=color)
+    xl.next_to(x_ax.get_end(), RIGHT, buff=0.16) if beside else xl.next_to(x_ax.get_end(), DOWN, buff=0.14).align_to(x_ax.get_end(), RIGHT)
+    yl =_m(y_label, size=LABEL_FONT_SIZE, color=color)
     yl.next_to(y_ax.get_end(), RIGHT, buff=0.14)
     return {"o": o, "x": x_ax, "y": y_ax, "xl": xl, "yl": yl, "group": VGroup(x_ax, y_ax, xl, yl)}
 
@@ -497,7 +507,7 @@ POT_BOIL_RATE = 30.5
 KETTLE_RATE = 60.0
 VACUUM_RATE = 60.0
 SHOWER_UNIT = 2.2
-SHOWER_NOZZLE = np.array([0.23, 0.86, 0.0])
+SHOWER_NOZZLE = np.array([0.15, 1.65, 0.0])
 SHOWER_RATE = 40.0
 
 
@@ -563,8 +573,8 @@ def _lamp(anchor, height: float = 0.8):
 class Beat1_Leistung(Scene):
     NARRATION = [
         ("rate",
-         "Power tells us how quickly energy is transferred. Its symbol is P and its unit is the watt.",
-         "Leistung sagt, wie schnell Energie übertragen wird. Ihr Formelzeichen ist P, ihre Einheit Watt."),
+         "Power tells us how quickly energy is transferred. Its symbol is $P$ and its unit is the watt.",
+         "Leistung sagt, wie schnell Energie übertragen wird. Ihr Formelzeichen ist $P$, ihre Einheit Watt."),
         ("unit",
          "One watt means one joule of energy per second; one kilowatt is one thousand watts.",
          "1 Watt bedeutet 1 Joule Energie pro Sekunde; 1 Kilowatt sind 1 000 Watt."),
@@ -581,8 +591,8 @@ class Beat1_Leistung(Scene):
          "A warm shower: one kilowatt-hour in three minutes is about twenty kilowatts — so instantaneous heaters have 18 to 24.",
          "Eine warme Dusche: 1 kWh in drei Minuten sind rund 20 kW — darum haben Durchlauferhitzer 18 bis 24 kW."),
         ("formula",
-         "So energy is power times time, and power is energy divided by time.",
-         "Also: Energie ist Leistung mal Zeit, Leistung ist Energie durch Zeit."),
+         r"So energy is power times time, $E = P \cdot t$, and power is energy divided by time.",
+         r"Also: Energie ist Leistung mal Zeit, $E = P \cdot t$, und Leistung ist Energie durch Zeit."),
         ("watt",
          "The base unit: one watt is one joule per second.",
          "Die Grundeinheit: 1 Watt ist 1 Joule pro Sekunde."),
@@ -608,11 +618,11 @@ class Beat1_Leistung(Scene):
          "All power stations in the world together: about nine terawatts of installed capacity.",
          "Alle Kraftwerke der Welt zusammen: rund 9 TW installierte Leistung."),
         ("load",
-         "The design heating load is determined for defined design conditions and is not the annual energy use.",
-         "Die Auslegungsheizlast wird für definierte Auslegungsbedingungen bestimmt und ist nicht der Jahresenergieverbrauch."),
+         r"The design heating load $\dot{Q}_{\mathrm{H}}$ is determined for defined design conditions and is not the annual energy use.",
+         r"Die Auslegungsheizlast $\dot{Q}_{\mathrm{H}}$ wird für definierte Auslegungsbedingungen bestimmt und ist nicht der Jahresenergieverbrauch."),
         ("demand",
-         "The annual heating demand in kilowatt-hours is the area under the power curve over the year.",
-         "Der Jahres-Heizwärmebedarf in kWh ist die Fläche unter der Leistungskurve übers Jahr."),
+         r"The annual heating demand $Q_{\mathrm{h}}$ in kilowatt-hours is the area under the power curve over the year.",
+         r"Der Jahres-Heizwärmebedarf $Q_{\mathrm{h}}$ in kWh ist die Fläche unter der Leistungskurve übers Jahr."),
         ("summer",
          "From May to September, sun and internal heat cover the losses — the heating only runs on cool days.",
          "Von Mai bis September decken Sonne und innere Wärme die Verluste — geheizt wird nur an kühlen Tagen."),
@@ -627,7 +637,7 @@ class Beat1_Leistung(Scene):
         caption = caption_bar(subtitle_text(N, "rate"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        power_unit = _m(r"P\;[\mathrm{W}]", size=FORMULA_FONT_SIZE, color=P_CYAN)
+        power_unit = _m(r"P\;\text{in}\;\;\mathrm{W}", size=FORMULA_FONT_SIZE, color=P_CYAN)
         self.play(FadeIn(power_unit), run_time=0.8)
         hold_for(self, N, "rate", used=BEAT_SUBTITLE_FADE + 0.3 + 0.8)
         caption = swap_caption(self, caption, subtitle_text(N, "unit"))
@@ -647,7 +657,7 @@ class Beat1_Leistung(Scene):
         tank = _energy_tank(np.array([-1.8, 0.4, 0.0]), height=2.2)
         tank_lbl = _m(r"1\,\mathrm{kWh}", color=P_YELLOW).next_to(tank["cap"], UP, buff=0.14)
         self.play(FadeIn(tank["group"]), FadeIn(tank["fill"]), FadeIn(tank_lbl), run_time=0.8)
-        ax = _axes(O, 5.1, 2.95, r"t\;[\mathrm{h}]", r"P\;[\mathrm{kW}]")
+        ax = _axes(O, 5.1, 2.95, r"t\;\text{in}\;\;\mathrm{h}", r"P\;\text{in}\;\;\mathrm{kW}")
         t_ticks = VGroup(*[Line(pt(t, 0) + DOWN * 0.07, pt(t, 0) + UP * 0.07, color=P_WHITE, stroke_width=2)
                            for t in (0.5, 1.0)])
         p_ticks = VGroup(*[Line(pt(0, p) + LEFT * 0.07, pt(0, p) + RIGHT * 0.07, color=P_WHITE, stroke_width=2)
@@ -712,7 +722,7 @@ class Beat1_Leistung(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "kettle"))
         locked["on"] = True
         kettle_icon = _fitted_staffage("physics-fundamentals-kettle", width=0.8, height=0.6, rate=0.0, window=(-0.12, 0.0, 0.13, 0.25)).move_to(np.array([4.8, 1.95, 0.0]))
-        shower_icon = _fitted_staffage("physics-fundamentals-shower", width=0.8, height=0.6, rate=0.0, window=(-0.02, 0.5, 0.24, 0.83)).move_to(np.array([4.8, 1.95, 0.0]))
+        shower_icon = _fitted_staffage("physics-fundamentals-shower", width=0.8, height=0.6, rate=0.0).move_to(np.array([4.8, 1.95, 0.0]))
         kettle_name = Text(tr("Kettle", "Wasserkocher"), font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to(name)
         self.play(stage.transition("physics.fundamentals.devices.vacuum-to-kettle-name", source=name, target=kettle_name),
                   FadeOut(device_icon), FadeIn(kettle_icon), run_time=0.5)
@@ -758,8 +768,8 @@ class Beat1_Leistung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "watt"))
         self.play(FadeOut(ring_p), FadeOut(ring_t), FadeOut(e_read), FadeOut(t_read), FadeOut(p_read), run_time=0.4)
-        new_xl = _m(r"t\;[\mathrm{s}]", size=LABEL_FONT_SIZE).move_to(ax["xl"])
-        new_yl = _m(r"P\;[\mathrm{W}]", size=LABEL_FONT_SIZE).move_to(ax["yl"], aligned_edge=LEFT)
+        new_xl = _m(r"t\;\text{in}\;\;\mathrm{s}", size=LABEL_FONT_SIZE).move_to(ax["xl"])
+        new_yl = _m(r"P\;\text{in}\;\;\mathrm{W}", size=LABEL_FONT_SIZE).move_to(ax["yl"], aligned_edge=LEFT)
         new_t = VGroup(_m(r"1\,800", t_lbls[0].get_center(), size=LABEL_FONT_SIZE),
                        _m(r"3\,600", t_lbls[1].get_center(), size=LABEL_FONT_SIZE))
         new_p = VGroup(_m(r"1\,000", size=LABEL_FONT_SIZE).move_to(p_lbls[0], aligned_edge=RIGHT),
@@ -797,7 +807,7 @@ class Beat1_Leistung(Scene):
             (8000, tr(r"\text{Detached house, coldest day} \approx 8\,\mathrm{kW}", r"\text{Einfamilienhaus, kältester Tag} \approx 8\,\mathrm{kW}"), P_RED),
             (1e5, tr(r"\text{Car} \approx 100\,\mathrm{kW}", r"\text{Auto} \approx 100\,\mathrm{kW}"), P_CYAN),
             (5e6, tr(r"\text{Wind turbine} \approx 5\,\mathrm{MW}", r"\text{Windrad} \approx 5\,\mathrm{MW}"), P_GREEN),
-            (1.4e9, tr(r"\text{Kraftwerksblock} \approx 1.4\,\mathrm{GW}", r"\text{Kraftwerksblock} \approx 1{,}4\,\mathrm{GW}"), P_ORANGE),
+            (1.4e9, tr(r"\text{Power-station unit} \approx 1.4\,\mathrm{GW}", r"\text{Kraftwerksblock} \approx 1{,}4\,\mathrm{GW}"), P_ORANGE),
             (9e12, tr(r"\text{all power plants in the world} \approx 9\,\mathrm{TW}", r"\text{alle Kraftwerke der Welt} \approx 9\,\mathrm{TW}"), P_PRIMARY),
         ]
         dots, labels, leaders = _ladder_marks(ladder, entries, x_text=-0.15)
@@ -842,8 +852,8 @@ class Beat1_Leistung(Scene):
         def ypt(d, p):
             return YO + RIGHT * d * DX + UP * p * DY
 
-        yax = _axes(YO, 10.7, 3.0, "t", r"P\;[\mathrm{kW}]")
-        chart_title = _m(tr(r"\text{Heating power}\; P \;\text{over the year (schematic)}", r"\text{Heizleistung}\; P \;\text{über das Jahr (schematisch)}"), size=LABEL_FONT_SIZE,
+        yax = _axes(YO, 10.7, 3.0, "t", r"\dot{Q}_{\mathrm{H}}\;\text{in}\;\;\mathrm{kW}")
+        chart_title = _m(tr(r"\text{Heating load}\; \dot{Q}_{\mathrm{H}} \;\text{over the year (schematic)}", r"\text{Heizlast}\; \dot{Q}_{\mathrm{H}} \;\text{über das Jahr (schematisch)}"), size=LABEL_FONT_SIZE,
                          color=P_PRIMARY).move_to(UP * NOTE_BAND_Y)
         months = VGroup(*[
             Text(m, font_size=LABEL_FONT_SIZE, color=P_WHITE).move_to(ypt(15 + 30.4 * i, 0) + DOWN * 0.24)
@@ -852,7 +862,7 @@ class Beat1_Leistung(Scene):
         curve = VMobject(color=P_CYAN, stroke_width=3)
         curve.set_points_smoothly([ypt(d, kw_day[d]) for d in range(0, 366, 2)])
         design = DashedLine(ypt(0, 8), ypt(365, 8), color=P_RED, stroke_width=2.5, dash_length=0.12)
-        design_lbl = _m(tr(r"\text{Design heating load}\; P_{\mathrm{HL}} \approx 8\,\mathrm{kW}", r"\text{Auslegungsheizlast}\; P_{\mathrm{HL}} \approx 8\,\mathrm{kW}"), ypt(200, 8) + UP * 0.2,
+        design_lbl = _m(tr(r"\text{Design heating load}\; \dot{Q}_{\mathrm{H}} \approx 8\,\mathrm{kW}", r"\text{Auslegungsheizlast}\; \dot{Q}_{\mathrm{H}} \approx 8\,\mathrm{kW}"), ypt(200, 8) + UP * 0.2,
                         color=P_RED, size=LABEL_FONT_SIZE, edge="left")
         p_ticks2 = VGroup(*[_m(str(p), ypt(0, p) + LEFT * 0.22 + DOWN * 0.07, size=LABEL_FONT_SIZE, edge="right")
                             for p in (2, 4, 6, 8)])
@@ -870,12 +880,12 @@ class Beat1_Leistung(Scene):
             return Polygon(*pts, stroke_width=0, fill_color=P_CYAN, fill_opacity=0.3)
 
         fill = always_redraw(year_area)
-        q_read = _readout(lambda: rf"Q = {label_number(cum[int(np.clip(sweep.get_value(), 0, 365))])}\,\mathrm{{kWh}}",
+        q_read = _readout(lambda: rf"Q_{{\mathrm{{h}}}} = {label_number(cum[int(np.clip(sweep.get_value(), 0, 365))])}\,\mathrm{{kWh}}",
                           ypt(200, 6.2), color=P_CYAN, edge="left")
         self.add(fill)
         _reveal(self, q_read)
         self.play(sweep.animate.set_value(365), run_time=4.0, rate_func=linear)
-        year_lbl = _m(tr(r"\text{Heating demand} \approx 15\,000\,\mathrm{kWh/a}", r"\text{Heizwärmebedarf} \approx 15\,000\,\mathrm{kWh/a}"), ypt(200, 6.2), color=P_CYAN,
+        year_lbl = _m(tr(r"\text{Heating demand}\; Q_{\mathrm{h}} \approx 15\,000\,\frac{\mathrm{kWh}}{\mathrm{a}}", r"\text{Heizwärmebedarf}\; Q_{\mathrm{h}} \approx 15\,000\,\frac{\mathrm{kWh}}{\mathrm{a}}"), ypt(200, 6.2), color=P_CYAN,
                       edge="left")
         self.play(stage.transition("physics.fundamentals.demand.readout-to-year", source=q_read, target=year_lbl), run_time=0.6)
         hold_for(self, N, "demand")
@@ -905,8 +915,8 @@ class Beat2_EnergieImAlltag(Scene):
          "But the h is the hour. Without it the number describes a power, not an amount.",
          "Doch das h ist die Stunde. Ohne sie beschreibt die Zahl eine Leistung, keine Menge."),
         ("product",
-         "Work is transferred energy: at constant power, E equals P times t. One kilowatt for one hour is one kilowatt-hour.",
-         "Arbeit ist übertragene Energie: Bei konstanter Leistung gilt E = P · t. 1 kW über 1 h ergibt 1 kWh."),
+         r"Work is transferred energy: at constant power, $E = P \cdot t$. One kilowatt for one hour is one kilowatt-hour.",
+         r"Arbeit ist übertragene Energie: Bei konstanter Leistung gilt $E = P \cdot t$. 1 kW über 1 h ergibt 1 kWh."),
         ("vacuum",
          "What is one kilowatt-hour? A vacuum cleaner of about 700 watts runs on it for about an hour and a half.",
          "Was ist 1 kWh? Ein Staubsauger mit rund 700 W läuft damit rund anderthalb Stunden."),
@@ -1173,8 +1183,8 @@ class Beat2_EnergieImAlltag(Scene):
             (1.0, rf"\text{{{tr('Vacuum cleaner, 1.4 hours', 'Staubsauger, 1,4 Stunden')}}} \approx 1\,\mathrm{{kWh}}", P_YELLOW),
             (3000, tr(r"\text{Household electricity per year} \approx 3\,000\,\mathrm{kWh}", r"\text{Haushaltsstrom pro Jahr} \approx 3\,000\,\mathrm{kWh}"), P_CYAN),
             (15000, tr(r"\text{Space heat of a detached house per year} \approx 15\,000\,\mathrm{kWh}", r"\text{Heizwärme Einfamilienhaus pro Jahr} \approx 15\,000\,\mathrm{kWh}"), P_RED),
-            (2.4e12, tr(r"\text{Deutschland pro Jahr, Endenergie} \approx 2.4 \cdot 10^{12}\,\mathrm{kWh}", r"\text{Deutschland pro Jahr, Endenergie} \approx 2{,}4 \cdot 10^{12}\,\mathrm{kWh}"), P_GREEN),
-            (1.7e14, tr(r"\text{Welt pro Jahr, Primärenergie} \approx 1.7 \cdot 10^{14}\,\mathrm{kWh}", r"\text{Welt pro Jahr, Primärenergie} \approx 1{,}7 \cdot 10^{14}\,\mathrm{kWh}"), P_PRIMARY),
+            (2.4e12, tr(r"\text{Germany per year, final energy} \approx 2.4 \cdot 10^{12}\,\mathrm{kWh}", r"\text{Deutschland pro Jahr, Endenergie} \approx 2{,}4 \cdot 10^{12}\,\mathrm{kWh}"), P_GREEN),
+            (1.7e14, tr(r"\text{World per year, primary energy} \approx 1.7 \cdot 10^{14}\,\mathrm{kWh}", r"\text{Welt pro Jahr, Primärenergie} \approx 1{,}7 \cdot 10^{14}\,\mathrm{kWh}"), P_PRIMARY),
         ]
         dots, labels, leaders = _ladder_marks(ladder, entries, x_text=-0.15)
         thermo["level"].clear_updaters()
@@ -1466,8 +1476,8 @@ class Beat3_Energieerhaltung(Scene):
         refl_tag = Text(tr("Reflection", "Reflexion"), font_size=LABEL_FONT_SIZE - 2, color=P_BLUE)
         refl_tag.move_to(refl_arrow.get_end() + UP * 0.33)
         row, box, items = _panel([
-            ("in", r"E_{\mathrm{ein}}", P_CYAN), (None, "=", P_WHITE), ("out", r"E_{\mathrm{aus}}", P_RED),
-            (None, "+", P_WHITE), ("st", r"\Delta E_{\mathrm{Speicher}}", P_ORANGE),
+            ("in", tr(r"E_{\mathrm{in}}", r"E_{\mathrm{ein}}"), P_CYAN), (None, "=", P_WHITE), ("out", tr(r"E_{\mathrm{out}}", r"E_{\mathrm{aus}}"), P_RED),
+            (None, "+", P_WHITE), ("st", tr(r"\Delta E_{\mathrm{stored}}", r"\Delta E_{\mathrm{Speicher}}"), P_ORANGE),
         ])
         self.play(FadeOut(VGroup(forms[2], form_lbls[2], form_brace, form_sum, law_lamp["group"], law_glow)),
                   room["air"].animate.set_fill(P_RED, opacity=0.0), run_time=0.6)
@@ -1546,8 +1556,8 @@ class Beat3_Energieerhaltung(Scene):
                   _ripples([bulb_c], r_max=0.7, color=P_RED, down=True),
                   LaggedStart(*[Create(r) for r in light_rays], lag_ratio=0.1), run_time=2.0)
         p_row, p_box, p_items = _panel([
-            ("el", r"P_{\mathrm{el}}", P_CYAN), (None, "=", P_WHITE), ("l", r"P_{\mathrm{Licht}}", P_YELLOW),
-            (None, "+", P_WHITE), ("w", r"P_{\mathrm{Wärme}}", P_RED), (None, "=", P_WHITE),
+            ("el", r"P_{\mathrm{el}}", P_CYAN), (None, "=", P_WHITE), ("l", tr(r"P_{\mathrm{light}}", r"P_{\mathrm{Licht}}"), P_YELLOW),
+            (None, "+", P_WHITE), ("w", tr(r"P_{\mathrm{heat}}", r"P_{\mathrm{Wärme}}"), P_RED), (None, "=", P_WHITE),
             ("v", r"3\,\mathrm{W} + 57\,\mathrm{W}", P_WHITE),
         ])
         self.play(FadeIn(p_row), Create(p_box), run_time=0.8)
@@ -1572,7 +1582,7 @@ class Beat3_Energieerhaltung(Scene):
         sink_lbl = _m(rf"60\,\mathrm{{W}}\;\text{{{tr('Heat', 'Wärme')}}}", np.array([sink.get_right()[0], top_y - total_h - 0.35, 0.0]),
                       size=LABEL_FONT_SIZE, color=P_RED, edge="right")
         tot_row, tot_box, _ = _panel([
-            (None, r"P_{\mathrm{el}}", P_CYAN), (None, "=", P_WHITE), (None, r"P_{\mathrm{Wärme}}", P_RED),
+            (None, r"P_{\mathrm{el}}", P_CYAN), (None, "=", P_WHITE), (None, tr(r"P_{\mathrm{heat}}", r"P_{\mathrm{Wärme}}"), P_RED),
             (None, "=", P_WHITE), (None, r"60\,\mathrm{W}", P_RED),
         ])
         self.play(GrowFromEdge(sink, LEFT), FadeIn(sink_lbl), run_time=0.9)
@@ -1689,32 +1699,38 @@ class Beat4_Waermepumpe(Scene):
          "The expansion valve lowers the pressure, the refrigerant becomes very cold again, and the cycle restarts.",
          "Das Expansionsventil senkt den Druck, das Kältemittel wird wieder sehr kalt — der Kreislauf beginnt neu."),
         ("balance",
-         "The balance: one kilowatt-hour of electricity plus three of ambient heat gives four of heating heat.",
-         "Die Bilanz: 1 kWh Strom plus 3 kWh Umweltwärme ergeben 4 kWh Heizwärme."),
+         r"The balance: one kilowatt-hour of electricity, the final energy $Q_{\mathrm{E}}$, plus three of ambient heat $Q_{\mathrm{U}}$ gives four of useful heat $Q_{\mathrm{N}}$.",
+         r"Die Bilanz: 1 kWh Strom, die Endenergie $Q_{\mathrm{E}}$, plus 3 kWh Umweltwärme $Q_{\mathrm{U}}$ ergeben 4 kWh Nutzwärme $Q_{\mathrm{N}}$."),
         ("cop",
-         "Heat divided by electricity is the coefficient of performance, COP — here four.",
-         "Heizwärme durch Strom ist die Leistungszahl COP — hier 4."),
+         "Useful heat divided by final energy is the coefficient of performance, COP — here four.",
+         "Nutzwärme durch Endenergie ist die Leistungszahl COP — hier 4."),
         ("temp",
          "The colder the outdoor air, the more the compressor has to lift — the COP drops.",
          "Je kälter die Außenluft, desto mehr muss der Verdichter leisten — der COP sinkt."),
         ("jaz",
-         "Averaged over a year this is the seasonal performance factor JAZ — for air-source units often around three.",
-         "Übers Jahr gemittelt ergibt sich die Jahresarbeitszahl JAZ — bei Luft-Wärmepumpen oft rund 3."),
+         "Averaged over a year this is the seasonal performance factor, in German the Jahresarbeitszahl JAZ — for air-source units often around three.",
+         "Übers Jahr gemittelt ergibt sich die Jahresarbeitszahl, kurz JAZ — bei Luft-Wärmepumpen oft rund 3."),
+        ("jaz_ref",
+         "You find it as seasonal performance factor in the guideline VDI 4650 Blatt 1; the European label calls it SCOP, DIN EN 14825.",
+         "Du findest sie als Jahresarbeitszahl in der Richtlinie VDI 4650 Blatt 1; das europäische Label nennt sie SCOP, DIN EN 14825."),
         ("final",
          "Final energy is what is delivered to the building and paid for: fuel in the tank, electricity at the meter.",
          "Endenergie ist, was ans Haus geliefert und bezahlt wird: Brennstoff im Tank, Strom am Zähler."),
+        ("useful",
+         "What actually warms the rooms is useful heat, the useful energy. Final energy and useful heat are not the same.",
+         "Was die Räume tatsächlich erwärmt, ist die Nutzwärme, die Nutzenergie. Endenergie und Nutzwärme sind nicht dasselbe."),
         ("compare1",
-         "Per kilowatt-hour of final energy: wood chips give about 0.85 kilowatt-hours of heat, oil about 0.94, gas about 0.96.",
-         "Je 1 kWh Endenergie liefern Holzhackschnitzel rund 0,85 kWh Wärme, Heizöl rund 0,94, Erdgas rund 0,96."),
+         r"Per kilowatt-hour of final energy $Q_{\mathrm{E}}$: wood chips give about 0.85 kWh of useful heat $Q_{\mathrm{N}}$, oil 0.94, gas 0.96.",
+         r"Je 1 kWh Endenergie $Q_{\mathrm{E}}$ liefert Holz rund 0,85 kWh Nutzwärme $Q_{\mathrm{N}}$, Öl 0,94, Erdgas 0,96."),
         ("compare2",
-         "Electric heater: exactly one at the house. Fuels lose the rest with flue gas; electricity may cause flue gas elsewhere.",
-         "Elektroheizstab: am Haus genau 1. Brennstoffe verlieren den Rest mit dem Abgas; Strom kann anderswo Abgas verursachen."),
+         "Electric heater: exactly one kilowatt-hour of heat at the house. Fuels lose the rest in flue gas; electricity may do so elsewhere.",
+         "Elektroheizstab: am Haus genau 1 kWh Nutzwärme. Brennstoffe verlieren den Rest mit dem Abgas; Strom kann anderswo Abgas verursachen."),
         ("power",
          "But electricity is often made from fuels too: then the flue gas arises at the power station, not in the house.",
          "Auch Strom entsteht oft aus Brennstoffen: Dann entsteht das Abgas im Kraftwerk, nicht im Haus."),
         ("compare3",
-         "The air-source heat pump gives about three, the ground-source about four — because it adds ambient heat.",
-         "Die Luft-Wärmepumpe liefert rund 3, die Erd-Wärmepumpe rund 4 — weil sie Umweltwärme dazuholt."),
+         "The air-source heat pump gives about three kilowatt-hours of useful heat, the ground-source about four — because it adds ambient heat.",
+         "Die Luft-Wärmepumpe liefert rund 3 kWh Nutzwärme, die Erd-Wärmepumpe rund 4 kWh — weil sie Umweltwärme dazuholt."),
     ]
 
     def construct(self):
@@ -1835,16 +1851,13 @@ class Beat4_Waermepumpe(Scene):
         stack_x = 5.9
         w_bar = block(stack_x, unit, P_CYAN, width=0.62)
         u_bar = block(stack_x, 3 * unit, P_GREEN, width=0.62, y0=base + unit)
-        w_lbl = _m(r"W_{\mathrm{el}} = 1\,\mathrm{kWh}", np.array([stack_x - 0.42, base + unit / 2 - 0.07, 0.0]),
-                   size=LABEL_FONT_SIZE, color=P_CYAN, edge="right")
-        u_lbl = _m(r"Q_{\mathrm{U}} = 3\,\mathrm{kWh}", np.array([stack_x - 0.42, base + 2.5 * unit - 0.07, 0.0]),
-                   size=LABEL_FONT_SIZE, color=P_GREEN, edge="right")
+        w_lbl = _word_over_value(tr("Final energy", "Endenergie"), r"Q_{\mathrm{E}} = 1\,\mathrm{kWh}", np.array([stack_x - 0.52, base + unit / 2 - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=P_CYAN)
+        u_lbl = _word_over_value(tr("Ambient heat", "Umweltwärme"), r"Q_{\mathrm{U}} = 3\,\mathrm{kWh}", np.array([stack_x - 0.52, base + 2.5 * unit - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=P_GREEN)
         self.play(Indicate(power, color=P_CYAN), GrowFromEdge(w_bar, DOWN), FadeIn(w_lbl), run_time=0.9)
         self.play(Indicate(air_rays, color=P_GREEN), GrowFromEdge(u_bar, DOWN), FadeIn(u_lbl), run_time=0.9)
         h_frame = Rectangle(width=0.72, height=4 * unit + 0.1, color=P_RED, stroke_width=3).move_to(
             np.array([stack_x, base + 2 * unit, 0.0]))
-        h_lbl = _m(r"Q_{\mathrm{H}} = 4\,\mathrm{kWh}", np.array([stack_x - 0.42, h_frame.get_top()[1] + 0.05, 0.0]),
-                   size=LABEL_FONT_SIZE, color=P_RED, edge="right")
+        h_lbl = _word_over_value(tr("Useful heat", "Nutzwärme"), r"Q_{\mathrm{N}} = 4\,\mathrm{kWh}", np.array([stack_x - 0.52, h_frame.get_top()[1] + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=P_RED)
         self.play(Create(h_frame), FadeIn(h_lbl), run_time=0.7)
         hold_for(self, N, "balance")
 
@@ -1858,11 +1871,11 @@ class Beat4_Waermepumpe(Scene):
             self.play(stage.transition("physics.fundamentals.cop.bar-copy", source=w_bar, target=tower[k]), count.animate.set_value(k + 1), run_time=0.45)
         row, box, items = _panel([
             (None, r"\mathrm{COP}", P_PRIMARY), (None, "=", P_WHITE),
-            ("f", r"\frac{\textcolor{semio_primary}{Q_{\mathrm{H}}}}{\textcolor{semio_secondary}{W_{\mathrm{el}}}}".replace("semio_primary", semio_color("primary")).replace("semio_secondary", semio_color("secondary")), P_WHITE),
+            ("f", r"\frac{\textcolor{semio_primary}{Q_{\mathrm{N}}}}{\textcolor{semio_secondary}{Q_{\mathrm{E}}}}".replace("semio_primary", semio_color("primary")).replace("semio_secondary", semio_color("secondary")), P_WHITE),
             (None, "=", P_WHITE), (None, r"\frac{4\,\mathrm{kWh}}{1\,\mathrm{kWh}}", P_WHITE), (None, "=", P_WHITE),
             ("v", "4", P_YELLOW),
         ])
-        self.play(FadeIn(row), Create(box), run_time=0.9)
+        self.play(FadeIn(row), Create(box), FadeOut(lbl_valve), run_time=0.9)
         hold_for(self, N, "cop")
 
         caption = swap_caption(self, caption, subtitle_text(N, "temp"))
@@ -1876,7 +1889,7 @@ class Beat4_Waermepumpe(Scene):
 
         thermo = _thermometer(np.array([-5.9, -0.4, 0.0]), height=1.6, color=P_BLUE, level=0.5)
         thermo["level"].add_updater(lambda m: m.set_value((t_out.get_value() + 15) / 30))
-        t_read = _readout(lambda: rf"{label_number(t_out.get_value())}\,\mathrm{{°C}}", np.array([-5.55, 0.75, 0.0]),
+        t_read = _readout(lambda: rf"{label_number(round(t_out.get_value()))}\,\mathrm{{°C}}", np.array([-5.55, 0.75, 0.0]),
                           size=LABEL_FONT_SIZE, color=P_BLUE)
 
         def live_stack():
@@ -1888,8 +1901,8 @@ class Beat4_Waermepumpe(Scene):
         stack = always_redraw(live_stack)
         cop_read = _readout(lambda: rf"\mathrm{{COP}} \approx {label_number(cop_of(t_out.get_value()), 1)}",
                             np.array([stack_x, base + 4 * unit + 0.3, 0.0]), color=P_YELLOW, edge="center")
-        w_live = _readout(lambda: rf"W_{{\mathrm{{el}}}} = {label_number(4.0 / cop_of(t_out.get_value()), 2)}\,\mathrm{{kWh}}",
-                          np.array([stack_x - 0.42, base + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=P_CYAN, edge="right")
+        w_live = _readout(lambda: rf"Q_{{\mathrm{{E}}}} = {label_number(4.0 / cop_of(t_out.get_value()), 2)}\,\mathrm{{kWh}}",
+                          np.array([stack_x - 0.52, base + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=P_CYAN, edge="right")
         self.play(FadeOut(air_rays), FadeIn(thermo["group"]), FadeIn(thermo["column"]), run_time=0.6)
         self.add(stack)
         _reveal(self, cop_read, t_read, w_live)
@@ -1899,10 +1912,16 @@ class Beat4_Waermepumpe(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "jaz"))
         self.play(t_out.animate.set_value(0.0), run_time=1.5)
-        jaz = _m(tr(r"\mathrm{SPF} \approx 3 \quad \text{(Bohne 2022)}", r"\mathrm{JAZ} \approx 3 \quad \text{(Bohne 2022)}"), np.array([stack_x - 0.9, 1.95, 0.0]),
-                 size=LABEL_FONT_SIZE, color=P_PRIMARY)
+        jaz = _m(tr(r"\text{Seasonal performance factor}\; \mathrm{SPF} \approx 3", r"\text{Jahresarbeitszahl}\; \mathrm{JAZ} \approx 3"), np.array([6.6, 3.05, 0.0]),
+                 size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
         self.play(FadeIn(jaz, shift=DOWN * 0.1), run_time=0.7)
         hold_for(self, N, "jaz")
+
+        caption = swap_caption(self, caption, subtitle_text(N, "jaz_ref"))
+        jaz_ref = _m(rf"\text{{{_references.cite('vdi-4650-1', 'din-en-14825')} (SCOP)}}", np.array([6.6, 2.7, 0.0]),
+                     size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
+        self.play(FadeIn(jaz_ref, shift=DOWN * 0.1), run_time=0.7)
+        hold_for(self, N, "jaz_ref")
 
         caption = swap_caption(self, caption, subtitle_text(N, "final"))
         thermo["level"].clear_updaters()
@@ -1922,17 +1941,21 @@ class Beat4_Waermepumpe(Scene):
                                                                                                aligned_edge=LEFT)
         fe_brace = Brace(VGroup(fe_fuel, fe_fuel_lbl), UP, color=P_YELLOW).stretch_to_fit_width(4.6, about_edge=RIGHT)
         fe_brace.move_to(np.array([(-5.6 + fe_limit_x) / 2, fe_fuel_lbl.get_top()[1] + 0.3, 0.0]))
-        fe_lbl = Text(tr("Final energy", "Endenergie"), font_size=BODY_FONT_SIZE, color=P_YELLOW).next_to(fe_brace, UP, buff=0.12)
+        fe_lbl = _m(tr(r"\text{Final energy}\; Q_{\mathrm{E}}", r"\text{Endenergie}\; Q_{\mathrm{E}}"), color=P_YELLOW).next_to(fe_brace, UP, buff=0.12)
         fe_metre = room_metre(fe_house["w_height"] / 2)
         fe_floor = fe_house["bottom_left"][1]
         fe_heater = _staffage("shared-radiator-front-winter", unit=fe_metre, anchor=np.array([2.35, fe_floor, 0.0]))
-        fe_heat_lbl = Text(tr("Useful heat", "Nutzwärme"), font_size=LABEL_FONT_SIZE, color=P_RED).move_to(np.array([1.8, 0.45, 0.0]))
+        fe_heat_lbl = _m(tr(r"\text{Useful heat}\; Q_{\mathrm{N}}", r"\text{Nutzwärme}\; Q_{\mathrm{N}}"), np.array([1.8, 0.45, 0.0]), size=LABEL_FONT_SIZE, color=P_RED)
         self.play(FadeIn(fe_house["group"]), Create(fe_limit), FadeIn(fe_limit_tag), run_time=1.0)
         self.play(GrowArrow(fe_fuel), FadeIn(fe_fuel_lbl), GrowArrow(fe_power), FadeIn(fe_power_lbl), run_time=1.4)
         self.play(GrowFromCenter(fe_brace), FadeIn(fe_lbl), run_time=0.8)
         self.play(FadeIn(fe_heater), FadeIn(fe_heat_lbl),
                   _ripples([fe_heater.get_top() + UP * 0.04], r_max=0.7, color=P_RED), run_time=2.0)
-        hold_for(self, N, "final", during=lambda rt: [
+        hold_for(self, N, "final")
+
+        caption = swap_caption(self, caption, subtitle_text(N, "useful"))
+        self.play(Indicate(fe_heat_lbl, color=P_RED), Indicate(fe_lbl, color=P_YELLOW), run_time=1.2)
+        hold_for(self, N, "useful", during=lambda rt: [
             _ripples([fe_heater.get_top() + UP * 0.04], r_max=0.7, color=P_RED, cycles=max(1.0, rt / 1.4))])
 
         self.play(*[FadeOut(m) for m in self.mobjects if m not in (subtitle, caption)], run_time=0.7)
@@ -1947,20 +1970,21 @@ class Beat4_Waermepumpe(Scene):
         base_line = Line(np.array([-5.3, cb, 0.0]), np.array([5.9, cb, 0.0]), color=P_WHITE, stroke_width=2)
         one_line = DashedLine(np.array([-5.3, cb + cu, 0.0]), np.array([5.9, cb + cu, 0.0]), color=P_WHITE,
                               stroke_width=1.6, stroke_opacity=0.6, dash_length=0.1)
-        one_lbl = _m(r"1\,\mathrm{kWh}", np.array([-6.2, cb + cu - 0.06, 0.0]), size=LABEL_FONT_SIZE, color=P_WHITE,
+        one_lbl = _m(r"Q_{\mathrm{E}} = 1\,\mathrm{kWh}", np.array([-6.9, cb + cu - 0.06, 0.0]), size=LABEL_FONT_SIZE, color=P_WHITE,
                      edge="left")
         names = VGroup(*[
             centered_body_text(name, font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(
                 np.array([x, cb, 0.0]), DOWN, buff=0.14)
             for x, (name, _v, _k) in zip(xs, specs)
         ])
-        axis_lbl = Text(tr("Useful heat from 1 kWh final energy", "Nutzwärme aus 1 kWh Endenergie"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(
-            np.array([-3.0, 2.15, 0.0]))
+        axis_lbl = _m(tr(r"\text{Useful heat}\; Q_{\mathrm{N}}\; \text{from}\; Q_{\mathrm{E}} = 1\,\mathrm{kWh}\; \text{final energy}",
+                         r"\text{Nutzwärme}\; Q_{\mathrm{N}}\; \text{aus}\; Q_{\mathrm{E}} = 1\,\mathrm{kWh}\; \text{Endenergie}"),
+                      np.array([0.0, 2.55, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY)
         legend = VGroup(*[
             VGroup(Square(side_length=0.2, stroke_width=0, fill_color=c, fill_opacity=0.75),
                    Text(t, font_size=LABEL_FONT_SIZE, color=c)).arrange(RIGHT, buff=0.12)
-            for t, c in ((tr("Fuel", "Brennstoff"), P_ORANGE), (tr("Electricity", "Strom"), P_CYAN), (tr("Ambient heat", "Umweltwärme"), P_GREEN))
-        ]).arrange(RIGHT, buff=0.4).move_to(np.array([3.0, 2.15, 0.0]))
+            for t, c in ((tr("Fuel (final energy)", "Brennstoff (Endenergie)"), P_ORANGE), (tr("Electricity (final energy)", "Strom (Endenergie)"), P_CYAN), (tr("Ambient heat", "Umweltwärme"), P_GREEN))
+        ]).arrange(RIGHT, buff=0.4).move_to(np.array([0.0, 1.95, 0.0]))
         grow = [ValueTracker(0.0) for _ in specs]
 
         def bar_for(i):
@@ -2034,8 +2058,8 @@ class Beat5_Strahlung(Scene):
          "The share that passes is the g-value — for triple glazing about half.",
          "Welcher Anteil hindurchkommt, beschreibt der g-Wert — bei Dreifachverglasung rund die Hälfte."),
         ("gain",
-         "Solar gain is g times window area times irradiance.",
-         "Solarer Gewinn: g mal Fensterfläche mal Einstrahlung."),
+         r"The solar heat flow is the g-value times window area $A$ times irradiance $I_{\mathrm{s}}$.",
+         r"Der solare Wärmestrom ist der g-Wert mal Fensterfläche $A$ mal Einstrahlung $I_{\mathrm{s}}$."),
         ("absorb",
          "Inside, the radiation hits floor and walls. The surfaces warm up.",
          "Drinnen trifft die Strahlung auf Boden und Wände. Die Oberflächen erwärmen sich."),
@@ -2095,10 +2119,11 @@ class Beat5_Strahlung(Scene):
         patch.set_points_as_corners([hits[0], *corner, hits[-1]])
         pass_paths = [[starts[k], entries[k], hits[k]] for k in (1, 3, 5, 7)]
         split_paths = [[starts[k], entries[k], entries[k] + bounce_dir * 0.55] for k in (0, 2, 4, 6)]
-        i_lbl = _m(r"I = 500\,\mathrm{W/m^{2}}", sun_c + LEFT * 0.4 + DOWN * 0.8, size=LABEL_FONT_SIZE,
+        i_sun = _example.I_S_CLEAR_W_M2
+        i_lbl = _m(rf"I_{{\mathrm{{s}}}} = {label_number(i_sun)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}", sun_c + LEFT * 0.4 + DOWN * 0.8, size=LABEL_FONT_SIZE,
                    color=P_YELLOW)
-        g_lbl = _m(tr(r"g = 0.50", r"g = 0{,}50"), np.array([4.6, 1.95, 0.0]), color=P_YELLOW)
-        gi_lbl = _m(r"g \cdot I \approx 250\,\mathrm{W/m^{2}}", np.array([gx + 0.3, room["y_c"] - 0.32, 0.0]),
+        g_lbl = _m(rf"g_{{\perp}} = {label_number(_example.G_PERP, 2)}", np.array([4.6, 1.95, 0.0]), color=P_YELLOW)
+        gi_lbl = _m(rf"g_{{\perp}} \cdot I_{{\mathrm{{s}}}} = {label_number(_example.G_PERP * i_sun)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}", np.array([gx + 0.3, room["y_c"] - 0.32, 0.0]),
                     size=LABEL_FONT_SIZE, color=P_YELLOW, edge="left")
         self.play(FadeIn(room["group"]), FadeIn(sun), run_time=1.0)
         self.play(LaggedStart(*[Create(b) for b in beams_out], lag_ratio=0.08), run_time=1.0)
@@ -2111,13 +2136,14 @@ class Beat5_Strahlung(Scene):
                   Indicate(room["glass"], color=P_ORANGE, scale_factor=1.0), FadeIn(i_lbl), run_time=0.9)
         _beam_pulses(self, pass_paths + split_paths, P_YELLOW, repeats=1, run_time=2.6, kind="short",
                      extra=[FadeIn(g_lbl), FadeIn(gi_lbl, shift=RIGHT * 0.1)])
-        norm_tag = Text("Willems et al. 2024", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).next_to(g_lbl, DOWN, buff=0.12).shift(RIGHT * 0.5)
+        norm_tag = _m(rf"\text{{{_references.cite('din-en-410')} · }} g_{{\perp}}", np.array([6.6, 1.45, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
         self.play(FadeIn(norm_tag), run_time=0.4)
         hold_for(self, N, "g")
 
         caption = swap_caption(self, caption, subtitle_text(N, "gain"))
         pane_c = np.array([5.6, 0.1, 0.0])
-        pane_w, pane_h = 1.0, 0.96
+        pane_h = 0.96
+        pane_w = pane_h * _example.WINDOW_W_M / _example.WINDOW_H_M
         pane = Rectangle(width=pane_w, height=pane_h, color=P_CYAN, stroke_width=2.5).move_to(pane_c)
         a_frac = ValueTracker(0.0)
         pane_fill = always_redraw(lambda: Rectangle(
@@ -2125,9 +2151,9 @@ class Beat5_Strahlung(Scene):
             fill_opacity=0.35).move_to(pane.get_bottom() + UP * pane_h * a_frac.get_value() / 2))
         w_dim = dim_arrow(pane.get_corner(DL) + DOWN * 0.18, pane.get_corner(DR) + DOWN * 0.18, color=P_WHITE)
         h_dim = dim_arrow(pane.get_corner(DL) + LEFT * 0.18, pane.get_corner(UL) + LEFT * 0.18, color=P_WHITE)
-        w_lbl = _m(tr(r"1.25\,\mathrm{m}", r"1{,}25\,\mathrm{m}"), w_dim.get_center() + DOWN * 0.32, size=LABEL_FONT_SIZE)
-        h_lbl = _m(tr(r"1.2\,\mathrm{m}", r"1{,}2\,\mathrm{m}"), size=LABEL_FONT_SIZE).next_to(h_dim, LEFT, buff=0.08)
-        a_read = _readout(lambda: rf"A = {label_number(1.5 * a_frac.get_value(), 1)}\,\mathrm{{m^{{2}}}}",
+        w_lbl = _m(rf"{label_number(_example.WINDOW_W_M, 1)}\,\mathrm{{m}}", w_dim.get_center() + DOWN * 0.32, size=LABEL_FONT_SIZE)
+        h_lbl = _m(rf"{label_number(_example.WINDOW_H_M, 1)}\,\mathrm{{m}}", size=LABEL_FONT_SIZE).next_to(h_dim, LEFT, buff=0.08)
+        a_read = _readout(lambda: rf"A = {label_number(_example.WINDOW_A_M2 * a_frac.get_value(), 2)}\,\mathrm{{m^{{2}}}}",
                           pane.get_top() + UP * 0.3, size=LABEL_FONT_SIZE, color=P_CYAN, edge="center")
         self.play(FadeIn(pane), GrowFromCenter(w_dim), GrowFromCenter(h_dim), FadeIn(w_lbl), FadeIn(h_lbl),
                   FadeOut(reflected), FadeOut(gi_lbl), FadeOut(norm_tag), run_time=0.9)
@@ -2135,11 +2161,12 @@ class Beat5_Strahlung(Scene):
         _reveal(self, a_read)
         self.play(a_frac.animate.set_value(1.0), run_time=1.4)
         row, box, items = _panel([
-            (None, r"\dot{Q}_{\mathrm{S}}", P_ORANGE), (None, "=", P_WHITE), ("g", "g", P_YELLOW),
-            (None, r"\cdot", P_WHITE), ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE), ("i", "I", P_YELLOW),
-            (None, "=", P_WHITE), ("gv", tr(r"0.5", r"0{,}5"), P_YELLOW), (None, r"\cdot", P_WHITE),
-            ("av", tr(r"1.5\,\mathrm{m^{2}}", r"1{,}5\,\mathrm{m^{2}}"), P_CYAN), (None, r"\cdot", P_WHITE),
-            ("iv", r"500\,\mathrm{W/m^{2}}", P_YELLOW), (None, "=", P_WHITE), ("r", r"375\,\mathrm{W}", P_ORANGE),
+            (None, r"\dot{Q}_{\mathrm{S}}", P_ORANGE), (None, "=", P_WHITE), ("g", r"g_{\perp}", P_YELLOW),
+            (None, r"\cdot", P_WHITE), ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE), ("i", r"I_{\mathrm{s}}", P_YELLOW),
+            (None, "=", P_WHITE), ("gv", label_number(_example.G_PERP, 2), P_YELLOW), (None, r"\cdot", P_WHITE),
+            ("av", rf"{label_number(_example.WINDOW_A_M2, 2)}\,\mathrm{{m^{{2}}}}", P_CYAN), (None, r"\cdot", P_WHITE),
+            ("iv", rf"{label_number(i_sun)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}", P_YELLOW), (None, "=", P_WHITE),
+            ("r", rf"{label_number(_example.G_PERP * _example.WINDOW_A_M2 * i_sun)}\,\mathrm{{W}}", P_ORANGE),
         ])
         _fill_panel(self, stage, "physics.fundamentals.gain.fly", (row, box, items), {"gv": g_lbl, "av": a_read, "iv": i_lbl}, fly=False)
         hold_for(self, N, "gain")
@@ -2199,7 +2226,7 @@ class Beat5_Strahlung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "warm"))
         t_room = ValueTracker(20.0)
-        t_read = _readout(lambda: rf"\vartheta_{{\mathrm{{Raum}}}} = {label_number(t_room.get_value())}\,\mathrm{{°C}}",
+        t_read = _readout(lambda: rf"\theta_{{\mathrm{{i}}}} = {label_number(t_room.get_value())}\,\mathrm{{°C}}",
                           np.array([room["x_r"] - 0.15, room["y_c"] - 0.4, 0.0]), size=LABEL_FONT_SIZE,
                           color=P_RED, edge="right")
         _reveal(self, t_read)
@@ -2240,7 +2267,7 @@ class Beat5_Strahlung(Scene):
             back = stop + bounce * min(0.4, max(0.05, (room["win_hi"] + 0.04 - stop[1]) / max(bounce[1], 1e-6)))
             stopped.add(_beam(stop, back, opacity=0.4, width=1.6))
             shade_paths.append([start, stop])
-        norm2 = Text("Willems et al. 2024", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(np.array([-3.7, -1.4, 0.0]))
+        norm2 = _m(tr(rf"\text{{{_references.cite('din-4108-2')}: sun protection, reduction factor }} F_{{\mathrm{{C}}}}", rf"\text{{{_references.cite('din-4108-2')}: Sonnenschutz, Abminderungsfaktor }} F_{{\mathrm{{C}}}}"), np.array([6.6, 2.75, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
         self.play(FadeOut(radiator), FadeOut(need_read), FadeOut(lowe_lbl), FadeOut(lowe_leader), FadeOut(plain_lbl), FadeOut(plain_leader),
                   run_time=0.4)
         self.play(FadeIn(blind_group, shift=DOWN * 0.25), FadeIn(blind_lbl), run_time=1.2)
@@ -2369,13 +2396,13 @@ class Beat6_ThermischeMasse(Scene):
         dT = ValueTracker(0.0)
         v_line = _m(tr(r"V = 100\,\mathrm{cm} \cdot 100\,\mathrm{cm} \cdot 10\,\mathrm{cm} = 0.1\,\mathrm{m^{3}}", r"V = 100\,\mathrm{cm} \cdot 100\,\mathrm{cm} \cdot 10\,\mathrm{cm} = 0{,}1\,\mathrm{m^{3}}"),
                     np.array([col_x, rows[0], 0.0]), size=LABEL_FONT_SIZE, edge="left")
-        m_line = _m(tr(r"m = \rho \cdot V = 2\,400\,\mathrm{kg/m^{3}} \cdot 0.1\,\mathrm{m^{3}} = 240\,\mathrm{kg}", r"m = \rho \cdot V = 2\,400\,\mathrm{kg/m^{3}} \cdot 0{,}1\,\mathrm{m^{3}} = 240\,\mathrm{kg}"),
+        m_line = _m(tr(r"m = \rho \cdot V = 2\,400\,\frac{\mathrm{kg}}{\mathrm{m^{3}}} \cdot 0.1\,\mathrm{m^{3}} = 240\,\mathrm{kg}", r"m = \rho \cdot V = 2\,400\,\frac{\mathrm{kg}}{\mathrm{m^{3}}} \cdot 0{,}1\,\mathrm{m^{3}} = 240\,\mathrm{kg}"),
                     np.array([col_x, rows[1], 0.0]), size=LABEL_FONT_SIZE, color=P_CYAN, edge="left")
-        dt_read = _readout(lambda: rf"\Delta T = {label_number(dT.get_value(), 1)}\,\mathrm{{K}}\quad"
+        dt_read = _readout(lambda: rf"\Delta\theta = {label_number(dT.get_value(), 1)}\,\mathrm{{K}}\quad"
                                    rf"(20 \to {label_number(20 + dT.get_value(), 1)}\,\mathrm{{°C}})",
                            np.array([col_x, heat_rows[0], 0.0]), size=LABEL_FONT_SIZE, color=P_ORANGE)
         q_read = _readout(
-            lambda: (rf"Q = 240\,\mathrm{{kg}} \cdot 1\,000\,\mathrm{{J/(kg\,K)}} \cdot {label_number(dT.get_value(), 1)}\,"
+            lambda: (rf"Q = 240\,\mathrm{{kg}} \cdot 1\,000\,\frac{{\mathrm{{J}}}}{{\mathrm{{kg\,K}}}} \cdot {label_number(dT.get_value(), 1)}\,"
                      rf"\mathrm{{K}}"),
             np.array([col_x, heat_rows[1], 0.0]), size=LABEL_FONT_SIZE, color=P_ORANGE)
         kwh_read = _readout(lambda: rf"=\;{label_number(240 * dT.get_value())}\,\mathrm{{kJ}} \approx "
@@ -2400,7 +2427,7 @@ class Beat6_ThermischeMasse(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "heat"))
         row, box, items = _panel([
             (None, "Q", P_ORANGE), (None, "=", P_WHITE), ("m", "m", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("c", "c", P_WHITE), (None, r"\cdot", P_WHITE), ("dt", r"\Delta T", P_ORANGE),
+            ("c", "c", P_WHITE), (None, r"\cdot", P_WHITE), ("dt", r"\Delta\theta", P_ORANGE),
         ])
         self.wait(1.5)
         self.play(FadeOut(VGroup(d_w, d_w_lbl, d_d, d_d_lbl, d_t, d_t_lbl)), FadeOut(m_line), run_time=1.8)
@@ -2464,7 +2491,7 @@ class Beat6_ThermischeMasse(Scene):
         def t_heavy(h):
             return 25 + 2 * np.sin(TAU * (h - 15) / 24)
 
-        cax = _axes(CO, 7.15, 3.05, r"t\;[\mathrm{h}]", r"\vartheta\;[\mathrm{°C}]")
+        cax = _axes(CO, 7.15, 3.05, r"t\;\text{in}\;\;\mathrm{h}", r"\theta\;\text{in}\;\;\mathrm{°C}", beside=True)
         h_ticks = VGroup(*[_m(str(h), cpt(h, 14) + DOWN * 0.32, size=LABEL_FONT_SIZE) for h in (0, 6, 12, 18, 24)])
         clock_h = ValueTracker(0.0)
 
@@ -2530,7 +2557,7 @@ class Beat6_ThermischeMasse(Scene):
         v2 = DashedLine(p_heavy, cpt(21, 14), color=P_CYAN, stroke_width=1.6, dash_length=0.08)
         shift_arrow = dim_arrow(cpt(15, 33.3), cpt(21, 33.3), color=P_PRIMARY)
         phi = ValueTracker(0.0)
-        phi_read = _readout(lambda: rf"\varphi \approx {label_number(phi.get_value())}\,\mathrm{{h}}", cpt(18, 33.9),
+        phi_read = _readout(lambda: tr(rf"\text{{phase shift}}\; \Delta t \approx {label_number(phi.get_value())}\,\mathrm{{h}}", rf"\text{{Phasenverschiebung}}\; \Delta t \approx {label_number(phi.get_value())}\,\mathrm{{h}}"), cpt(18, 35.2),
                             size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="center")
         amp_out = dim_arrow(cpt(14.5, 16), cpt(14.5, 32), color=P_YELLOW)
         amp_heavy = dim_arrow(cpt(20.5, 23), cpt(20.5, 27), color=P_CYAN)
@@ -2574,8 +2601,8 @@ class Beat6_ThermischeMasse(Scene):
             (rise_paths[0].point_from_proportion(0.5), tr("warm air rises", "warme Luft steigt auf"), P_RED),
             (big["wall_r"].get_center(), tr("Radiation exchange with all surfaces", "Strahlung mit allen Flächen"), P_YELLOW),
         ], x=1.95, align="left", min_gap=0.55)
-        norm = Text("Willems et al. 2024", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(
-            np.array([3.9, -1.35, 0.0]))
+        norm = _m(tr(rf"\text{{{_references.cite('din-en-iso-13786')} · heat storage}}", rf"\text{{{_references.cite('din-en-iso-13786')} · Wärmespeicherung}}"),
+                  np.array([6.6, -1.75, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
         self.play(FadeIn(big["group"]), run_time=1.0)
         self.play(FadeIn(tags[0]), Create(tag_leaders[0]), Indicate(big["ceiling"], color=P_ORANGE, scale_factor=1.0),
                   run_time=1.0)
@@ -2611,7 +2638,7 @@ class Beat6_ThermischeMasse(Scene):
         sun = _build_sun(sky_pos).scale(0.35)
         moon = _moon(sky_pos)
         t_ceil = ValueTracker(24.0)
-        t_tag = _readout(lambda: rf"\vartheta_{{\mathrm{{Decke}}}} = {label_number(t_ceil.get_value())}\,\mathrm{{°C}}",
+        t_tag = _readout(lambda: tr(rf"\theta_{{\mathrm{{ceiling}}}} = {label_number(t_ceil.get_value())}\,\mathrm{{°C}}", rf"\theta_{{\mathrm{{Decke}}}} = {label_number(t_ceil.get_value())}\,\mathrm{{°C}}"),
                          np.array([big["x_r"] + 0.45, big["y_c"] + big["slab"] / 2 - 0.08, 0.0]),
                          size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left")
         day_flux = VGroup(*[Arrow(np.array([x, big["center"][1] - 0.35, 0.0]), np.array([x, big["y_c"] - 0.06, 0.0]),
@@ -2739,7 +2766,7 @@ class Beat7_SensibelLatent(Scene):
         def temp_of(q):
             return min(100.0, q / 4.19)
 
-        qax = _axes(QO, 7.4, 3.15, r"Q\;[\mathrm{kJ}]", r"T\;[\mathrm{°C}]")
+        qax = _axes(QO, 7.4, 3.15, r"Q\;\text{in}\;\;\mathrm{kJ}", r"\theta\;\text{in}\;\;\mathrm{°C}")
         t_ticks = VGroup(*[_m(str(t), qpt(0, t) + LEFT * 0.2 + DOWN * 0.07, size=LABEL_FONT_SIZE, edge="right")
                            for t in (50, 100)])
         Q = ValueTracker(0.0)
@@ -2762,7 +2789,7 @@ class Beat7_SensibelLatent(Scene):
         col_x = min(bl[0] - 0.35, hob.get_left()[0] - 0.3)
         q_read =_readout(lambda: rf"Q = {label_number(Q.get_value())}\,\mathrm{{kJ}}", np.array([col_x, pot_c[1] + 0.45, 0.0]),
                           color=P_ORANGE, edge="right")
-        t_read = _readout(lambda: rf"T = {label_number(temp_of(Q.get_value()))}\,\mathrm{{°C}}",
+        t_read = _readout(lambda: rf"\theta = {label_number(temp_of(Q.get_value()))}\,\mathrm{{°C}}",
                           np.array([col_x, pot_c[1] - 0.1, 0.0]), color=P_RED, edge="right")
         mass_tag = _m(r"m = 1\,\mathrm{kg}", np.array([col_x, pot_c[1] - 0.65, 0.0]), color=P_BLUE, edge="right")
         steam_paths = [smooth_path([np.array([pot_c[0] + dx, bl[1] + pot_h + 0.05, 0.0]),
@@ -2782,8 +2809,8 @@ class Beat7_SensibelLatent(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "water"))
         row, box, _ = _panel([
             (None, "Q", P_ORANGE), (None, "=", P_WHITE), (None, "m", P_BLUE), (None, r"\cdot", P_WHITE),
-            (None, "c", P_WHITE), (None, r"\cdot", P_WHITE), (None, r"\Delta T", P_RED), (None, "=", P_WHITE),
-            (None, tr(r"1\,\mathrm{kg} \cdot 4.19\,\mathrm{kJ/(kg\,K)} \cdot 100\,\mathrm{K}", r"1\,\mathrm{kg} \cdot 4{,}19\,\mathrm{kJ/(kg\,K)} \cdot 100\,\mathrm{K}"), P_WHITE),
+            (None, "c", P_WHITE), (None, r"\cdot", P_WHITE), (None, r"\Delta\theta", P_RED), (None, "=", P_WHITE),
+            (None, tr(r"1\,\mathrm{kg} \cdot 4.19\,\frac{\mathrm{kJ}}{\mathrm{kg\,K}} \cdot 100\,\mathrm{K}", r"1\,\mathrm{kg} \cdot 4{,}19\,\frac{\mathrm{kJ}}{\mathrm{kg\,K}} \cdot 100\,\mathrm{K}"), P_WHITE),
             (None, r"\approx", P_WHITE), (None, r"419\,\mathrm{kJ}", P_ORANGE),
         ])
         self.play(Q.animate.set_value(419.0), run_time=1.6, rate_func=linear)
@@ -2802,12 +2829,12 @@ class Beat7_SensibelLatent(Scene):
         sens_lbl = _m(r"419\,\mathrm{kJ}", qpt(210, 113), size=LABEL_FONT_SIZE, color=P_ORANGE)
         lat_lbl = _m(r"2\,257\,\mathrm{kJ}", qpt(1550, 113), size=LABEL_FONT_SIZE, color=P_BLUE)
         ratio = ValueTracker(0.0)
-        ratio_read = _readout(lambda: rf"\frac{{2\,257}}{{419}} \approx {label_number(ratio.get_value(), 1)}",
+        ratio_read = _readout(lambda: rf"\frac{{2\,257\,\mathrm{{kJ}}}}{{419\,\mathrm{{kJ}}}} \approx {label_number(ratio.get_value(), 1)}",
                               qpt(1550, 70), color=P_YELLOW, edge="center")
         lat_panel = _panel([
             (None, r"Q_{\mathrm{lat}}", P_BLUE), (None, "=", P_WHITE), (None, "m", P_BLUE), (None, r"\cdot", P_WHITE),
             (None, "r", P_WHITE), (None, "=", P_WHITE),
-            (None, r"1\,\mathrm{kg} \cdot 2\,257\,\mathrm{kJ/kg}", P_WHITE),
+            (None, r"1\,\mathrm{kg} \cdot 2\,257\,\frac{\mathrm{kJ}}{\mathrm{kg}}", P_WHITE),
         ])
         self.play(GrowFromCenter(sens), FadeIn(sens_lbl), GrowFromCenter(lat), FadeIn(lat_lbl), run_time=1.0)
         _reveal(self, ratio_read)
@@ -2825,7 +2852,7 @@ class Beat7_SensibelLatent(Scene):
         def apt(t, x):
             return AO + RIGHT * (t + 10) * AX + UP * x * AY
 
-        aax = _axes(AO, 6.2, 3.25, r"\vartheta\;[\mathrm{°C}]", r"x\;[\mathrm{g/kg}]")
+        aax = _axes(AO, 6.2, 3.25, r"\theta\;\text{in}\;\;\mathrm{°C}", r"x\;\text{in}\;\;\mathrm{g/kg}", beside=True)
         t_lbls = VGroup(*[_m(str(t).replace("-", "−"), apt(t, 0) + DOWN * 0.32, size=LABEL_FONT_SIZE)
                           for t in (-10, 0, 10, 20, 30)])
         x_lbls = VGroup(*[_m(str(x), apt(-10, x) + LEFT * 0.2 + DOWN * 0.07, size=LABEL_FONT_SIZE, edge="right")
@@ -2870,7 +2897,7 @@ class Beat7_SensibelLatent(Scene):
         phi_gauge["fill"].add_updater(lambda m: set_meter(phi_gauge, min(1.0, p_v / _p_sat(T.get_value()))))
         phi_read = _readout(lambda: rf"\varphi = {label_number(min(100.0, 100 * p_v / _p_sat(T.get_value())))}\,\%",
                             box_c + DOWN * 1.35, color=P_BLUE, edge="center")
-        st_read = _readout(lambda: rf"{label_number(T.get_value(), 1)}\,\mathrm{{°C}},\; x = {label_number(x_now(), 1)}\,\mathrm{{g/kg}}",
+        st_read = _readout(lambda: rf"{label_number(T.get_value(), 1)}\,\mathrm{{°C}},\; x = {label_number(x_now(), 1)}\,\frac{{\mathrm{{g}}}}{{\mathrm{{kg}}}}",
                            apt(-10, 0) + np.array([6.2, 3.25, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW,
                            edge="right")
         v20 = DashedLine(apt(20, 0), apt(20, _x_sat(20)), color=P_WHITE, stroke_width=1.8, stroke_opacity=0.7,
@@ -2974,7 +3001,7 @@ class Beat7_SensibelLatent(Scene):
                           np.array([0.2, bb + 2.1 + 0.25, 0.0]), size=LABEL_FONT_SIZE, color=P_RED, edge="center")
         l_read = _readout(lambda: rf"{label_number(30 * f.get_value())}\,\mathrm{{W}}\;\text{{latent}}",
                           np.array([1.6, bb + 0.9 + 0.25, 0.0]), size=LABEL_FONT_SIZE, color=P_BLUE, edge="center")
-        g_read = _readout(lambda: tr(rf"\approx {label_number(45 * f.get_value())}\,\mathrm{{g/h}}\;\text{{water}}", rf"\approx {label_number(45 * f.get_value())}\,\mathrm{{g/h}}\;\text{{Wasser}}"),
+        g_read = _readout(lambda: tr(rf"\approx {label_number(45 * f.get_value())}\,\frac{{\mathrm{{g}}}}{{\mathrm{{h}}}}\;\text{{water}}", rf"\approx {label_number(45 * f.get_value())}\,\frac{{\mathrm{{g}}}}{{\mathrm{{h}}}}\;\text{{Wasser}}"),
                           np.array([3.2, bb + 0.45, 0.0]), size=LABEL_FONT_SIZE, color=P_BLUE, edge="left")
         base = Line(np.array([-0.6, bb, 0.0]), np.array([2.4, bb, 0.0]), color=P_WHITE, stroke_width=2)
         self.play(FadeIn(person), Create(base), FadeIn(sens_tag), FadeIn(lat_tag), run_time=0.9)
@@ -3002,11 +3029,11 @@ class Beat7_SensibelLatent(Scene):
                                  stroke_width=2.5))
         w_head = Text(tr("Winter: condensation on cold surfaces", "Winter: Tauwasser an kalten Flächen"), font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(
             np.array([-3.1, head_y, 0.0]))
-        t_e = _m(r"\vartheta_{\mathrm{e}} = \text{−5}\,\mathrm{°C}", np.array([wx - 0.3, 0.3, 0.0]),
+        t_e = _m(r"\theta_{\mathrm{e}} = \text{−5}\,\mathrm{°C}", np.array([wx - 0.3, 0.3, 0.0]),
                  size=LABEL_FONT_SIZE, color=P_BLUE, edge="right")
-        t_i = _m(r"\vartheta_{\mathrm{i}} = 20\,\mathrm{°C},\; \varphi = 50\,\%", np.array([wx + 0.6, 1.1, 0.0]),
+        t_i = _m(r"\theta_{\mathrm{i}} = 20\,\mathrm{°C},\; \varphi = 50\,\%", np.array([wx + 0.6, 1.1, 0.0]),
                  size=LABEL_FONT_SIZE, color=P_RED, edge="left")
-        w_foot = _m(r"\vartheta_{\mathrm{si}} \approx 1\,\mathrm{°C} < \vartheta_{\mathrm{Tau}} \approx 9\,\mathrm{°C}",
+        w_foot = _m(tr(r"\theta_{\mathrm{si}} \approx 1\,\mathrm{°C} < \theta_{\mathrm{dew}} \approx 9\,\mathrm{°C}", r"\theta_{\mathrm{si}} \approx 1\,\mathrm{°C} < \theta_{\mathrm{Tau}} \approx 9\,\mathrm{°C}"),
                     np.array([-3.6, foot_y, 0.0]), size=LABEL_FONT_SIZE, color=P_CYAN)
         rng_w = np.random.default_rng(21)
         stick_ys = np.sort(rng_w.uniform(w_lo + 0.2, w_hi - 0.1, 7))
@@ -3038,14 +3065,14 @@ class Beat7_SensibelLatent(Scene):
         a_in = VGroup(
             _m(r"26\,\mathrm{°C} \cdot \varphi = 56\,\%", np.array([dx0 + 0.1, d_hi + 0.7, 0.0]),
                size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left"),
-            _m(tr(r"x = 11.7\,\mathrm{g/kg}", r"x = 11{,}7\,\mathrm{g/kg}"), np.array([dx0 + 0.1, d_hi + 0.3, 0.0]),
+            _m(tr(r"x = 11.7\,\frac{\mathrm{g}}{\mathrm{kg}}", r"x = 11{,}7\,\frac{\mathrm{g}}{\mathrm{kg}}"), np.array([dx0 + 0.1, d_hi + 0.3, 0.0]),
                size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left"))
         a_out = VGroup(
             _m(r"14\,\mathrm{°C} \cdot \varphi = 95\,\%", np.array([dx1 - 0.1, d_hi + 0.7, 0.0]),
                size=LABEL_FONT_SIZE, color=P_BLUE, edge="right"),
-            _m(tr(r"x = 9.5\,\mathrm{g/kg}", r"x = 9{,}5\,\mathrm{g/kg}"), np.array([dx1 - 0.1, d_hi + 0.3, 0.0]),
+            _m(tr(r"x = 9.5\,\frac{\mathrm{g}}{\mathrm{kg}}", r"x = 9{,}5\,\frac{\mathrm{g}}{\mathrm{kg}}"), np.array([dx1 - 0.1, d_hi + 0.3, 0.0]),
                size=LABEL_FONT_SIZE, color=P_BLUE, edge="right"))
-        s_foot = _m(r"\vartheta_{\mathrm{Reg}} \approx 8\,\mathrm{°C} < \vartheta_{\mathrm{Tau}} \approx 16\,\mathrm{°C}",
+        s_foot = _m(tr(r"\theta_{\mathrm{coil}} \approx 8\,\mathrm{°C} < \theta_{\mathrm{dew}} \approx 16\,\mathrm{°C}", r"\theta_{\mathrm{Reg}} \approx 8\,\mathrm{°C} < \theta_{\mathrm{Tau}} \approx 16\,\mathrm{°C}"),
                     np.array([(dx0 + dx1) / 2, foot_y, 0.0]), size=LABEL_FONT_SIZE, color=P_BLUE)
         air = [Line(np.array([dx0 - 0.3, y, 0.0]), np.array([dx1 + 0.3, y, 0.0])) for y in (0.2, 0.55, 0.9)]
         moist = [Line(np.array([dx0 - 0.3, y, 0.0]), np.array([cx - 0.36, y, 0.0])) for y in (0.08, 0.38, 0.72, 1.0)]
@@ -3096,8 +3123,8 @@ class Beat8_Zusammenfassung(Scene):
          "Energy is never lost: it leaves as heat or it is stored.",
          "Energie geht nie verloren: Sie kommt als Wärme heraus oder wird gespeichert."),
         ("pump",
-         "The heat pump transfers energy to a higher temperature level — the COP counts the heat per kilowatt-hour of electricity.",
-         "Die Wärmepumpe überträgt Energie auf ein höheres Temperaturniveau — der COP nennt die Wärme je kWh Strom."),
+         "The heat pump transfers energy to a higher temperature level — the COP counts the useful heat per kilowatt-hour of final energy.",
+         "Die Wärmepumpe überträgt Energie auf ein höheres Temperaturniveau — der COP nennt die Nutzwärme je kWh Endenergie."),
         ("sun",
          "Radiation comes through the glass short-wave and stays trapped long-wave — the g-value sets the gain.",
          "Strahlung kommt kurzwellig durchs Glas und bleibt langwellig gefangen — der g-Wert bestimmt den Gewinn."),
@@ -3109,10 +3136,10 @@ class Beat8_Zusammenfassung(Scene):
          "Wärme steckt in der Temperatur und im Wasserdampf — Verdampfen braucht über fünfmal so viel wie Erwärmen."),
         ("next",
          "With these seven building blocks we now calculate heating and cooling.",
-         "Mit diesen sieben Bausteinen rechnen wir nun Heizung und Kühlung."),
+         "Mit diesen sieben Bausteinen rechnen wir nun Heizung und Kühltechnik."),
         ("refs",
-         "To read more, two textbooks explain these topics step by step — the links are on screen.",
-         "Zum Nachlesen: Zwei Lehrbücher erklären diese Themen Schritt für Schritt — die Links siehst du hier."),
+         "To read more, two textbooks and the standards explain these topics — edition and designation are on screen.",
+         "Zum Nachlesen: Zwei Lehrbücher und die Normen erklären diese Themen — Auflage und Kennung siehst du hier."),
     ]
 
     def construct(self):
@@ -3126,10 +3153,10 @@ class Beat8_Zusammenfassung(Scene):
         specs = [
             ("power", tr("Power", "Leistung"), P_CYAN, r"P = E \,/\, t"),
             ("energy", tr("Work / energy", "Arbeit / Energie"), P_YELLOW, r"1\,\mathrm{kW} \cdot 1\,\mathrm{h} = 1\,\mathrm{kWh}"),
-            ("keep", tr("Energy conservation", "Energieerhaltung"), P_RED, r"E_{\mathrm{ein}} = E_{\mathrm{aus}} + \Delta E_{\mathrm{Speicher}}"),
-            ("pump", tr("Heat pump", "Wärmepumpe"), P_ORANGE, r"\mathrm{COP} = Q_{\mathrm{H}} \,/\, W_{\mathrm{el}}"),
-            ("sun", tr("Radiation", "Strahlung"), P_YELLOW, r"\dot{Q}_{\mathrm{S}} = g \cdot A \cdot I"),
-            ("mass", tr("Thermal mass", "Thermische Masse"), P_ORANGE, r"Q = m \cdot c \cdot \Delta T"),
+            ("keep", tr("Energy conservation", "Energieerhaltung"), P_RED, tr(r"E_{\mathrm{in}} = E_{\mathrm{out}} + \Delta E_{\mathrm{stored}}", r"E_{\mathrm{ein}} = E_{\mathrm{aus}} + \Delta E_{\mathrm{Speicher}}")),
+            ("pump", tr("Heat pump", "Wärmepumpe"), P_ORANGE, r"\mathrm{COP} = Q_{\mathrm{N}} \,/\, Q_{\mathrm{E}}"),
+            ("sun", tr("Radiation", "Strahlung"), P_YELLOW, r"\dot{Q}_{\mathrm{S}} = g_{\perp} \cdot A \cdot I_{\mathrm{s}}"),
+            ("mass", tr("Thermal mass", "Thermische Masse"), P_ORANGE, r"Q = m \cdot c \cdot \Delta\theta"),
             ("latent", tr("Sensible and latent", "Sensibel und latent"), P_BLUE, r"Q_{\mathrm{lat}} = m \cdot r"),
         ]
         top, pitch, x_bullet, x_topic, x_formula = 1.65, 0.62, -3.8, -3.5, 0.8
@@ -3157,23 +3184,28 @@ class Beat8_Zusammenfassung(Scene):
         hold_for(self, N, "next")
 
         caption = swap_caption(self, caption, subtitle_text(N, "refs"))
+        willems, bohne = (_references.card(book, _manim_module.language()) for book in ("willems-2024", "bohne-2026"))
         books = [
-            ("Willems WM, Schild K, Stricker D (2024)", "Formeln und Tabellen Bauphysik",
-             "Wärmeschutz – Feuchteschutz – Klima – Akustik – Brandschutz", tr("8th edition, Wiesbaden", "8. Auflage, Wiesbaden"),
-             "https://doi.org/10.1007/978-3-658-44974-2", tr("Radiation · Thermal mass · Moisture", "Strahlung · Thermische Masse · Feuchte"), P_YELLOW),
-            ("Bohne D (2022)", "Gebäudetechnik und technischer Ausbau von Gebäuden",
-             "", tr("12th edition, Wiesbaden", "12. Auflage, Wiesbaden"),
-             "https://doi.org/10.1007/978-3-658-37488-4", tr("Heat pump · Ventilation · Building services", "Wärmepumpe · Lüftung · Anlagentechnik"), P_CYAN),
+            (willems["who"], willems["title"], willems["subtitle"], willems["imprint"], willems["link"],
+             tr("Radiation · Thermal mass · Moisture", "Strahlung · Thermische Masse · Feuchte"), P_YELLOW),
+            (bohne["who"], bohne["title"], bohne["subtitle"], bohne["imprint"], bohne["link"],
+             tr("Heat pump · Ventilation · Building services", "Wärmepumpe · Lüftung · Anlagentechnik"), P_CYAN),
+            (tr("Standards", "Normen und Richtlinien"), _references.cite("vdi-4650-1", "din-en-14825", "din-en-410"),
+             _references.cite("din-4108-2", "din-en-iso-13786"), tr("Seasonal performance · g-value · Sun protection · Heat storage", "Jahresarbeitszahl · g-Wert · Sonnenschutz · Wärmespeicherung"),
+             "", "", P_GREEN),
         ]
         cards = []
         for who, book, subtitle, edition, link, topics, color in books:
-            lines = [Text(who, font_size=LABEL_FONT_SIZE, color=color), Text(book, font_size=BODY_FONT_SIZE, color=P_WHITE)]
+            lines = [Text(who, font_size=LABEL_FONT_SIZE, color=color), Text(book, font_size=LABEL_FONT_SIZE + 2, color=P_WHITE)]
             if subtitle:
                 lines.append(Text(subtitle, font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).set_opacity(0.7))
-            lines += [Text(f"{edition} · {topics}", font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).set_opacity(0.7),
-                      Text(link, font_size=LABEL_FONT_SIZE, color=P_PRIMARY)]
-            cards.append(VGroup(*lines).arrange(DOWN, buff=0.1))
-        VGroup(*cards).arrange(DOWN, buff=0.5).move_to(np.array([0.0, 0.1, 0.0]))
+            lines.append(Text(edition, font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).set_opacity(0.7))
+            if topics:
+                lines.append(Text(topics, font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).set_opacity(0.7))
+            if link:
+                lines.append(Text(link, font_size=LABEL_FONT_SIZE - 2, color=P_PRIMARY))
+            cards.append(VGroup(*lines).arrange(DOWN, buff=0.08))
+        VGroup(*cards).arrange(DOWN, buff=0.3).move_to(np.array([0.0, 0.05, 0.0]))
         self.play(FadeOut(VGroup(*rows.values(), frame)), run_time=0.6)
         for card in cards:
             self.play(FadeIn(card, shift=UP * 0.15), run_time=0.9)

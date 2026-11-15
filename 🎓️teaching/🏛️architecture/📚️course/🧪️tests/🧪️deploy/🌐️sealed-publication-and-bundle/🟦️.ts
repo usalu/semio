@@ -68,6 +68,8 @@ export function registerSealedPublicationAndBundleTests(): void {
     const heavy = `${released(COURSE_PROCTOR_ORIGIN)["assets/app-AbCd1234.js"] as string}\n/* ${randomBytes(COURSE_SITE_BUDGET.scriptGzipBytes.publish * 2).toString("base64")} */`;
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "assets/app-AbCd1234.js": heavy }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the document's scripts weigh \d+ bytes compressed, over the budget of \d+$/u)]);
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "🖼️assets/font.woff2": randomBytes(COURSE_SITE_BUDGET.totalBytes) }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the artifact weighs \d+ bytes, over the budget of \d+$/u)]);
+    const first = publication.assignmentFiles[0]!;
+    expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), [first]: `%PDF-${randomBytes(COURSE_SITE_BUDGET.assignmentBytes).toString("latin1")}` }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the assignment documents weigh \d+ bytes, over the budget of \d+$/u)]);
   });
   it("pins the weight of the entry chunk per topology, charges what the document runs and not what it hints at low priority", () => {
     const topologies = { publish: COURSE_PROCTOR_ORIGIN, rehearsal: "https://localhost:18443" } as const;

@@ -1,0 +1,37 @@
+[
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🌐️host/🟨️.mjs",
+  "kind": "literal",
+  "old": "void runInFlightV1().then(running=>",
+  "new": "void (ports.runInFlight??runInFlightV1)().then(running=>",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🌐️host/🟦️.ts",
+  "kind": "literal",
+  "old": "const h=inProcess(\"hold\",{idleShutdownMilliseconds:200});await h.service.start();",
+  "new": "const h=inProcess(\"hold\",{idleShutdownMilliseconds:200},0,{runInFlight:async()=>false});await h.service.start();",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🌐️host/🟦️.ts",
+  "kind": "literal",
+  "old": "function inProcess(name:string,extra:Record<string,unknown>={},loadMs=0){",
+  "new": "function inProcess(name:string,extra:Record<string,unknown>={},loadMs=0,morePorts:Record<string,unknown>={}){",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🌐️host/🟦️.ts",
+  "kind": "literal",
+  "old": "ports:{planner},policy:{residentCheckMilliseconds:50,...extra}});\n const spawnService",
+  "new": "ports:{planner,...morePorts},policy:{residentCheckMilliseconds:50,...extra}});\n const spawnService",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🌐️host/🟦️.ts",
+  "kind": "literal",
+  "old": "describe(\"host service held by a long run\",()=>{",
+  "new": "describe(\"host service held by a long run\",()=>{\n test(\"a run the machine reports in flight keeps an otherwise idle service alive: the probe is asked again and again and the service never retires\",async()=>{\n  let asked=0;const h=inProcess(\"inflight\",{idleShutdownMilliseconds:200},0,{runInFlight:async()=>{asked++;return true;}});await h.service.start();\n  const exits:string[]=[];h.service.closed.then(reason=>exits.push(reason));\n  for(let at=0;at<200&&asked<3;at++)await sleep(25);\n  expect(asked).toBeGreaterThanOrEqual(3);expect(exits).toEqual([]);\n  await h.service.stop(\"test\");\n });",
+  "count": 1
+ }
+]

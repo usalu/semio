@@ -20,9 +20,9 @@ pub mod cas {
     pub use semio_s_artifact_mathematical_equation_snapshot::cas::assume;
     pub use semio_s_artifact_mathematical_equation_snapshot::cas::visit;
     pub use semio_s_artifact_mathematical_equation_snapshot::cas::polybridge;
-    pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::cas::simplify;
+    pub use semio_s_artifact_mathematical_equation_update_graph::cas::simplify;
     pub use semio_s_artifact_mathematical_equation_schema::cas::diff;
-    pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::cas::limits;
+    pub use semio_s_artifact_mathematical_equation_update_graph::cas::limits;
     pub use semio_s_artifact_mathematical_equation_snapshot::cas::rootof;
     #[path = "../../../../../../✳️any/🧬️schema/💡️inferences/🌿️cas-internals/🧠️solve/🦀️.rs"]
     pub mod solve;
@@ -73,7 +73,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                         }
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::connect_nodes;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::connect_nodes;
                     }
                 }
             }

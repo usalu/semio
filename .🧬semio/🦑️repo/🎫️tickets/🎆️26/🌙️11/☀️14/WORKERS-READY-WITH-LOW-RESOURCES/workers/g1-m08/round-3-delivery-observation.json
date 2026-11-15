@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-14T17:07:16.127472+00:00",
+  "files": {
+    "round-3.md": {
+      "local_sha256": "d418bf8cb19bcd98bccb88ad7c150e4d1e578a3054f3ed0a5d47be51f3657547",
+      "journal_sha256": "d418bf8cb19bcd98bccb88ad7c150e4d1e578a3054f3ed0a5d47be51f3657547",
+      "hlc": "1794675517668-000002-g1-m08",
+      "matches": true
+    },
+    "state.json": {
+      "local_sha256": "c429256714134f5d6fecd69c49a33cc6d6321fb370b2228c0230ea0364271903",
+      "journal_sha256": "c429256714134f5d6fecd69c49a33cc6d6321fb370b2228c0230ea0364271903",
+      "hlc": "1794675517668-000003-g1-m08",
+      "matches": true
+    }
+  }
+}

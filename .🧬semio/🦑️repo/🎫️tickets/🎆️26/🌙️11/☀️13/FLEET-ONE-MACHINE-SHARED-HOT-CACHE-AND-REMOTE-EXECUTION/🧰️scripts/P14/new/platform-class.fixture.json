@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {"name": "a TypeScript project on macOS shares the POSIX class", "platform": "darwin-arm64", "keyText": "[\"inference/3\",null,[\"digest\",\"packages/ts\",{\"name\":\"@semio-tech/x\",\"targets\":{\"build\":{}}}]]", "record": "posix-shared", "class": "posix-shared"},
+    {"name": "the same project on Linux shares the POSIX class", "platform": "linux-x64", "keyText": "[\"inference/3\",null,[\"digest\",\"packages/ts\",{\"name\":\"@semio-tech/x\",\"targets\":{\"build\":{}}}]]", "record": "posix-shared", "class": "posix-shared"},
+    {"name": "Intel macOS and ARM Linux are the same class", "platform": "linux-arm64", "keyText": "[]", "record": "posix-shared", "class": "posix-shared"},
+    {"name": "the host-bound emitter is keyed by the exact macOS platform", "platform": "darwin-arm64", "keyText": "[\"inference/3\",null,[{\"metadata\":{\"semio\":{\"hostPlatformOutputsV1\":{\"version\":1}}}}]]", "record": "darwin-arm64", "class": "posix-shared"},
+    {"name": "the host-bound emitter is keyed by the exact Linux platform", "platform": "linux-x64", "keyText": "[\"inference/3\",null,[{\"metadata\":{\"semio\":{\"hostPlatformOutputsV1\":{\"version\":1}}}}]]", "record": "linux-x64", "class": "posix-shared"},
+    {"name": "Windows stays alone", "platform": "win32-x64", "keyText": "[]", "record": "win32-x64", "class": "win32-x64"},
+    {"name": "an unknown platform stays alone", "platform": "freebsd-x64", "keyText": "[]", "record": "freebsd-x64", "class": "freebsd-x64"}
+  ],
+  "serves": [
+    {"server": "darwin-arm64", "requester": "linux-x64", "serves": true},
+    {"server": "linux-x64", "requester": "darwin-arm64", "serves": true},
+    {"server": "darwin-arm64", "requester": "darwin-arm64", "serves": true},
+    {"server": "darwin-arm64", "requester": "win32-x64", "serves": false},
+    {"server": "win32-x64", "requester": "win32-x64", "serves": true},
+    {"server": "win32-x64", "requester": "win32-arm64", "serves": false}
+  ]
+}

@@ -8,7 +8,7 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_s_artifact_norm_en1998_model::{En1998Accelerogram, En1998Assessment, En1998Bearing, En1998Bridge, En1998Building, En1998Diaphragm, En1998Foundation, En1998Joint, En1998Member, En1998Pier, En1998Placement, En1998RetainingWall, En1998Silo, En1998Site, En1998Slope, En1998Snapshot, En1998SoilLayer, En1998Tank, En1998TieBeam, En1998Tower, MemberKind};
+use semio_s_artifact_norm_en1998_model::{En1998Accelerogram, En1998Assessment, En1998Bearing, En1998Bridge, En1998Building, En1998Diaphragm, En1998CriticalRegion, En1998Foundation, En1998IsolationSystem, En1998Joint, En1998Member, En1998Pier, En1998PierBase, En1998Placement, En1998RetainingWall, En1998Silo, En1998Site, En1998Slope, En1998Snapshot, En1998SoilLayer, En1998Tank, En1998TieBeam, En1998Tower, MemberKind};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -157,7 +157,7 @@ pub mod joints;
 #[path = "🪨️cracked-stiffness/🦀️.rs"]
 pub mod cracked_stiffness;
 
-pub use semio_s_artifact_norm_en1998_schema_formulas::{isolation, liquefaction_hazard, na_de, part_1, part_2, part_3, part_3_state, part_4, part_5, part_6, soil_structure};
+pub use semio_s_artifact_norm_en1998_schema_formulas::{critical_region, isolation, liquefaction_hazard, na_de, part_1, part_2, part_3, part_3_state, part_4, part_5, part_6, soil_structure};
 
 /// 🇪️🇺️ Resolved seismic-action model.
 #[derive(Clone, Debug, PartialEq)]

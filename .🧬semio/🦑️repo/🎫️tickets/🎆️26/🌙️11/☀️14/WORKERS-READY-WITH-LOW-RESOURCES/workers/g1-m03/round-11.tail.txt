@@ -1,0 +1,200 @@
+[repository:command] still running after 540 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.34950000001117587}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.37075000000186265}}
+Another process holds the dependency store; waiting for it (542 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4468340000603348}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4052920000394806}}
+[build:nx-command] still running after 550 s
+[repository:command] still running after 900 s
+[repository:command] still running after 550 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.36712499998975545}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3976249999832362}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3525000000372529}}
+Another process holds the dependency store; waiting for it (553 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7479159999638796}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2725419999333099}}
+[build:nx-command] still running after 560 s
+[repository:command] still running after 910 s
+[repository:command] still running after 560 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8745420000050217}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.5098749999888241}}
+[repo] still working after 980 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3388750000158325}}
+Another process holds the dependency store; waiting for it (563 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3517920000012964}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.41858300007879734}}
+[build:nx-command] still running after 570 s
+[repository:command] still running after 920 s
+[repository:command] still running after 570 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3577499999664724}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4148749999003485}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.47299999999813735}}
+Another process holds the dependency store; waiting for it (574 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3781249999301508}}
+[build:nx-command] still running after 580 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4116250000661239}}
+[repository:command] still running after 930 s
+[repository:command] still running after 580 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.40362500003539026}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0793330000014976}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.6542919999919832}}
+Another process holds the dependency store; waiting for it (585 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7438330000732094}}
+[build:nx-command] still running after 590 s
+[repository:command] still running after 940 s
+[repository:command] still running after 590 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.732291999971494}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.39637500001117587}}
+[repo] still working after 1010 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.5515829999931157}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3599580000154674}}
+Another process holds the dependency store; waiting for it (595 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":2.28954100003466}}
+[build:nx-command] still running after 600 s
+[repository:command] still running after 950 s
+[repository:command] still running after 600 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.38262499996926636}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4225829999195412}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3700000001117587}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.48408399999607354}}
+Another process holds the dependency store; waiting for it (605 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8703340000938624}}
+[build:nx-command] still running after 610 s
+[repository:command] still running after 960 s
+[repository:command] still running after 610 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3374580000527203}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.39533299999311566}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.33950000000186265}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9486250000772998}}
+Another process holds the dependency store; waiting for it (616 s of at most 21600 s)
+[build:nx-command] still running after 620 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9666250000009313}}
+[repository:command] still running after 970 s
+[repository:command] still running after 620 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.39649999991524965}}
+[repo] still working after 1040 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7364999999990687}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2854170000646263}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3978750000242144}}
+Another process holds the dependency store; waiting for it (627 s of at most 21600 s)
+[build:nx-command] still running after 630 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3860839999979362}}
+[repository:command] still running after 980 s
+[repository:command] still running after 630 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.045166999916546}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3695000000298023}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3619170000310987}}
+[build:nx-command] still running after 640 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4369169999845326}}
+Another process holds the dependency store; waiting for it (638 s of at most 21600 s)
+[repository:command] still running after 990 s
+[repository:command] still running after 640 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.2171670000534505}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3787079999456182}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3962499999906868}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.41808299999684095}}
+[build:nx-command] still running after 650 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.6273339999606833}}
+[repository:command] still running after 1000 s
+[repository:command] still running after 650 s
+Another process holds the dependency store; waiting for it (648 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.9022919998969883}}
+[repo] still working after 1070 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3582079999614507}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.34708300000056624}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.36654099996667355}}
+[build:nx-command] still running after 660 s
+[repository:command] still running after 1010 s
+[repository:command] still running after 660 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.35170799994375557}}
+Another process holds the dependency store; waiting for it (659 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.5780830000294372}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.35300000000279397}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4507919999305159}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.40291599999181926}}
+[build:nx-command] still running after 670 s
+[repository:command] still running after 1020 s
+[repository:command] still running after 670 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8782500000670552}}
+Another process holds the dependency store; waiting for it (670 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.38658299995586276}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.33916600001975894}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.35629099991638213}}
+[build:nx-command] still running after 680 s
+[repository:command] still running after 1030 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3434999999590218}}
+[repository:command] still running after 680 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8820830000331625}}
+Another process holds the dependency store; waiting for it (680 s of at most 21600 s)
+[repo] still working after 1100 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.5067089999793097}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3974999999627471}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3784999999916181}}
+[build:nx-command] still running after 690 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.537125000031665}}
+[repository:command] still running after 1040 s
+[repository:command] still running after 690 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.33341600000858307}}
+Another process holds the dependency store; waiting for it (691 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.36283300002105534}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3525000000372529}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.36537500005215406}}
+[build:nx-command] still running after 700 s
+[repository:command] still running after 1050 s
+[repository:command] still running after 700 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.39054199995007366}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8242920000338927}}
+Another process holds the dependency store; waiting for it (701 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.8406660000327975}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3524579999502748}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.863167000003159}}
+[build:nx-command] still running after 710 s
+[repository:command] still running after 1060 s
+[repository:command] still running after 710 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.39041699992958456}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3721669999649748}}
+Another process holds the dependency store; waiting for it (711 s of at most 21600 s)
+[repo] still working after 1130 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.0578750000568107}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.33445900003425777}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.7983329999260604}}
+[build:nx-command] still running after 720 s
+[repository:command] still running after 1070 s
+[repository:command] still running after 720 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.44529200007673353}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3388750000158325}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4518339999485761}}
+Another process holds the dependency store; waiting for it (723 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4014590000733733}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.325542000005953}}
+[build:nx-command] still running after 730 s
+[repository:command] still running after 1080 s
+[repository:command] still running after 730 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.8831250000512227}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3322080000070855}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3574169999919832}}
+Another process holds the dependency store; waiting for it (733 s of at most 21600 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.5838750000111759}}
+[build:nx-command] still running after 740 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3532079999567941}}
+[repository:command] still running after 1090 s
+[repository:command] still running after 740 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.36783300002571195}}
+[repo] still working after 1160 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4490409999853}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3859579999698326}}
+Another process holds the dependency store; waiting for it (746 s of at most 21600 s)
+[build:nx-command] still running after 750 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.592583000077866}}
+[repository:command] still running after 1100 s
+[repository:command] still running after 750 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3540420000208542}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":1.4895000000251457}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.4228329999605194}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:maintenance-parent-observation","mode":"shared","elapsedMs":0.3274580000434071}}
+Another process holds the dependency store; waiting for it (756 s of at most 21600 s)
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+Cancelled (SIGINT); leases released.
+Internal error: Original Script process interrupted
+end 2026-11-15T01:33:54Z
+native_rc=1

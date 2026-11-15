@@ -1,0 +1,200 @@
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[repository:command] still running after 1120 s
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+59 | `&&t[d]!=="\r")t[d]=" "},o=0,s=(a)=>{let c=0,d="";while(o<e.length){let l=e[o],u=e[o+1];if(l==="/"&&u==="/"){let m=e.indexOf(`
+60 | `,o),p=m<0?e.length:m;n(o,p),o=p;continue}if(l==="/"&&u==="*"){let m=e.indexOf("*/",o+2),p=m<0?e.length:m+2;n(o,p),o=p;continue}if(l==='"'||l==="'"){let m=o++;while(o<e.length&&e[o]!==l&&e[o]!==`
+61 | `){if(e[o]==="\\")o++;o++}r.push({start:m,end:o+1,value:e.slice(m+1,o)}),n(m+1,o),o++,d="x";continue}if(l==="`"){let m=o++,p=o;while(o<e.length&&e[o]!=="`"){if(e[o]==="\\"){o+=2;continue}if(e[o]==="$"&&e[o+1]==="{"){n(p,o),o+=2,s(!0),p=o;continue}o++}n(p,o),i.push({start:m,end:o+1,body:e.slice(m+1,o)}),o++,d="x";continue}if(l==="/"&&(d===""||oEe.test(d)||sEe.test(d))){let m=o++,p=!1;while(o<e.length&&e[o]!==`
+62 | `){let f=e[o];if(f==="\\"){o+=2;continue}if(f==="[")p=!0;else if(f==="]")p=!1;else if(f==="/"&&!p)break;o++}n(m+1,o),o++,d="x";continue}if(a){if(l==="{")c++;else if(l==="}"){if(c===0){o++;return}c--}}if(!/\s/u.test(l))d=(d+l).slice(-24);o++}};return s(!1),{code:t.join(""),strings:r,templates:i}}function iw(e,t){let r=e.strings.find((i)=>i.start>=t&&/^\s*$/u.test(e.code.slice(t,i.start)));return r===void 0?void 0:{value:r.value,end:r.end}}function P_(e){let t=eE(e),{code:r}=t,i=[];for(let o of r.matchAll(/(?<![\w$.])(import|export)\b(?!\s*[:(=])/gu)){let s=o[1],a=o.index+o[0].length,c=r.slice(a,a+4000);if(s==="import"){if(/^\s*$/u.test(r.slice(a,t.strings.find((f)=>f.start>=a)?.start??a))){let f=iw(t,a);if(f!==void 0){i.push({at:o.index,row:{path:f.value,kind:"import-statement"}});continue}}if(/^\s*type\b(?!\s*,|\s+from\b)/u.test(c))continue;let l=/^([^;]*?)\bfrom\b/su.exec(c);if(l===null)continue;let u=l[1],m=/^\s*(?:[\w$]+\s*,\s*)?\{([^}]*)\}\s*$/su.exec(u);if(m!==null&&m[1].trim()!==""&&m[1].split(",").map( | ... truncated 
+63 | `).slice(-6).join(" | ").slice(0,600)});try{e.rename(n,t.directory)}catch(d){if(e.remove(n),!e.exists(t.file))throw d}}function fj(e){let t=FEe(e.host,e.read(e.host.source));if(e.exists(t.file))return t.file;let r=`${t.directory}.lock`,i=sr.lock,n=e.now()+i.waitSeconds*1000;e.mkdir(D_(t.directory));for(;;){if(e.lock(r))try{if(!e.exists(t.file))jEe(e,t);return t.file}finally{e.remove(r)}if(e.exists(t.file))return t.file;let o=e.age(r);if(o!==void 0&&o>i.staleSeconds*1000){e.remove(r);continue}if(e.now()>n)throw zl("nativeLockTimeout",{seconds:i.waitSeconds});e.sleep(i.pollMilliseconds)}}function REe(e){try{return R_(e).isFile()}catch{return!1}}function hj(e=process.env){let t=Object.freeze({platform:process.platform,arch:process.arch,env:e,home:EEe(),source:BEe(new URL("../\uD83E\uDD80️.rs","file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%E2%9A%99%EF%B8%8Fruntime/%F0%9F%9F%A2%EF%B8%8Fnode/%F0%9F%A7%B2%EF%B8%8Fnative/%F0%9F%8F%97%EF%B8%8Faddon/%F0%9F%9F%A6%EF%B8 | ... truncated 
+64 | `)}catch{}}})}function I_(e=hj()){let t=e.host.env[sr.addon.environment.addon],r=t!==void 0&&t!==""?t:fj(e),i;try{i=kEe(import.meta.url)(r)}catch(o){throw zl("nativeLoadFailed",{file:r,reason:String(o.message).slice(0,400)})}let n=sr.primitives.filter((o)=>typeof i[o]!=="function");if(n.length>0)throw zl("nativeCoreIncomplete",{file:r,missing:n.join(", ")});return i}var sr;var iE=w(()=>{on();tE();sr=gd.definitions.Protocol.const});function Ka(e,t={}){return TypeError(wt(e,t))}function gj(e){let t=N_[e];if(t===void 0)throw Ka("nativeType",{type:e});return t}function DEe(e,t,r,i){let n=gj(t);if(n.kind==="bool")return r?1n:0n;if(n.kind==="int")return VEe(t,r);if(n.kind==="pointer"||n.kind==="string"){if(r===null||r===void 0)return 0n;if(typeof r==="string"&&n.kind==="string"){let o=Buffer.from(`${r}\x00`,"utf8");return i.push(o),e.addressOf(o)}if(typeof r==="number")return Number.isFinite(r)&&r>=0?BigInt.asUintN(64,BigInt(Math.trunc(r))):0n;if(typeof r==="bigint")return BigInt.asUintN(64,r);if(ArrayBuffer.isView
+ | ... truncated 
+RepoError: stale build.closure.source-differs {"path":"🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts","expectedSha256":"ffd49c0985745451d3594878764ffa7530288ec347b5c34a1ac6b6ab07602835","observedSha256":"88cc24fb11604397e4f9d6a041c1373c949f388f80b6e3cbe833c71917648742"}
+    key: "build.closure.source-differs",
+ values: {
+  path: "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts",
+  expectedSha256: "ffd49c0985745451d3594878764ffa7530288ec347b5c34a1ac6b6ab07602835",
+  observedSha256: "88cc24fb11604397e4f9d6a041c1373c949f388f80b6e3cbe833c71917648742",
+},
+   code: "stale"
+      at ec (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:64:126373)
+      at tQ (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:184:19086)
+      at FB (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:184:23196)
+      at async <anonymous> (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:184:1564306)
+
+> nx run workspace:deps-trunk:prototype
+
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+59 | `&&t[d]!=="\r")t[d]=" "},o=0,s=(a)=>{let c=0,d="";while(o<e.length){let l=e[o],u=e[o+1];if(l==="/"&&u==="/"){let m=e.indexOf(`
+60 | `,o),p=m<0?e.length:m;n(o,p),o=p;continue}if(l==="/"&&u==="*"){let m=e.indexOf("*/",o+2),p=m<0?e.length:m+2;n(o,p),o=p;continue}if(l==='"'||l==="'"){let m=o++;while(o<e.length&&e[o]!==l&&e[o]!==`
+61 | `){if(e[o]==="\\")o++;o++}r.push({start:m,end:o+1,value:e.slice(m+1,o)}),n(m+1,o),o++,d="x";continue}if(l==="`"){let m=o++,p=o;while(o<e.length&&e[o]!=="`"){if(e[o]==="\\"){o+=2;continue}if(e[o]==="$"&&e[o+1]==="{"){n(p,o),o+=2,s(!0),p=o;continue}o++}n(p,o),i.push({start:m,end:o+1,body:e.slice(m+1,o)}),o++,d="x";continue}if(l==="/"&&(d===""||oEe.test(d)||sEe.test(d))){let m=o++,p=!1;while(o<e.length&&e[o]!==`
+62 | `){let f=e[o];if(f==="\\"){o+=2;continue}if(f==="[")p=!0;else if(f==="]")p=!1;else if(f==="/"&&!p)break;o++}n(m+1,o),o++,d="x";continue}if(a){if(l==="{")c++;else if(l==="}"){if(c===0){o++;return}c--}}if(!/\s/u.test(l))d=(d+l).slice(-24);o++}};return s(!1),{code:t.join(""),strings:r,templates:i}}function iw(e,t){let r=e.strings.find((i)=>i.start>=t&&/^\s*$/u.test(e.code.slice(t,i.start)));return r===void 0?void 0:{value:r.value,end:r.end}}function P_(e){let t=eE(e),{code:r}=t,i=[];for(let o of r.matchAll(/(?<![\w$.])(import|export)\b(?!\s*[:(=])/gu)){let s=o[1],a=o.index+o[0].length,c=r.slice(a,a+4000);if(s==="import"){if(/^\s*$/u.test(r.slice(a,t.strings.find((f)=>f.start>=a)?.start??a))){let f=iw(t,a);if(f!==void 0){i.push({at:o.index,row:{path:f.value,kind:"import-statement"}});continue}}if(/^\s*type\b(?!\s*,|\s+from\b)/u.test(c))continue;let l=/^([^;]*?)\bfrom\b/su.exec(c);if(l===null)continue;let u=l[1],m=/^\s*(?:[\w$]+\s*,\s*)?\{([^}]*)\}\s*$/su.exec(u);if(m!==null&&m[1].trim()!==""&&m[1].split(",").map( | ... truncated 
+63 | `).slice(-6).join(" | ").slice(0,600)});try{e.rename(n,t.directory)}catch(d){if(e.remove(n),!e.exists(t.file))throw d}}function fj(e){let t=FEe(e.host,e.read(e.host.source));if(e.exists(t.file))return t.file;let r=`${t.directory}.lock`,i=sr.lock,n=e.now()+i.waitSeconds*1000;e.mkdir(D_(t.directory));for(;;){if(e.lock(r))try{if(!e.exists(t.file))jEe(e,t);return t.file}finally{e.remove(r)}if(e.exists(t.file))return t.file;let o=e.age(r);if(o!==void 0&&o>i.staleSeconds*1000){e.remove(r);continue}if(e.now()>n)throw zl("nativeLockTimeout",{seconds:i.waitSeconds});e.sleep(i.pollMilliseconds)}}function REe(e){try{return R_(e).isFile()}catch{return!1}}function hj(e=process.env){let t=Object.freeze({platform:process.platform,arch:process.arch,env:e,home:EEe(),source:BEe(new URL("../\uD83E\uDD80️.rs","file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%E2%9A%99%EF%B8%8Fruntime/%F0%9F%9F%A2%EF%B8%8Fnode/%F0%9F%A7%B2%EF%B8%8Fnative/%F0%9F%8F%97%EF%B8%8Faddon/%F0%9F%9F%A6%EF%B8 | ... truncated 
+64 | `)}catch{}}})}function I_(e=hj()){let t=e.host.env[sr.addon.environment.addon],r=t!==void 0&&t!==""?t:fj(e),i;try{i=kEe(import.meta.url)(r)}catch(o){throw zl("nativeLoadFailed",{file:r,reason:String(o.message).slice(0,400)})}let n=sr.primitives.filter((o)=>typeof i[o]!=="function");if(n.length>0)throw zl("nativeCoreIncomplete",{file:r,missing:n.join(", ")});return i}var sr;var iE=w(()=>{on();tE();sr=gd.definitions.Protocol.const});function Ka(e,t={}){return TypeError(wt(e,t))}function gj(e){let t=N_[e];if(t===void 0)throw Ka("nativeType",{type:e});return t}function DEe(e,t,r,i){let n=gj(t);if(n.kind==="bool")return r?1n:0n;if(n.kind==="int")return VEe(t,r);if(n.kind==="pointer"||n.kind==="string"){if(r===null||r===void 0)return 0n;if(typeof r==="string"&&n.kind==="string"){let o=Buffer.from(`${r}\x00`,"utf8");return i.push(o),e.addressOf(o)}if(typeof r==="number")return Number.isFinite(r)&&r>=0?BigInt.asUintN(64,BigInt(Math.trunc(r))):0n;if(typeof r==="bigint")return BigInt.asUintN(64,r);if(ArrayBuffer.isView
+ | ... truncated 
+RepoError: stale build.closure.source-differs {"path":"🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts","expectedSha256":"ffd49c0985745451d3594878764ffa7530288ec347b5c34a1ac6b6ab07602835","observedSha256":"88cc24fb11604397e4f9d6a041c1373c949f388f80b6e3cbe833c71917648742"}
+    key: "build.closure.source-differs",
+ values: {
+  path: "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts",
+  expectedSha256: "ffd49c0985745451d3594878764ffa7530288ec347b5c34a1ac6b6ab07602835",
+  observedSha256: "88cc24fb11604397e4f9d6a041c1373c949f388f80b6e3cbe833c71917648742",
+},
+   code: "stale"
+      at ec (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:64:126373)
+      at tQ (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:184:19086)
+      at FB (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:184:23196)
+      at async <anonymous> (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:184:1564306)
+
+> nx run workspace:deps-tools:prototype
+
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[repository:command] still running after 1130 s
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+59 | `&&t[d]!=="\r")t[d]=" "},o=0,s=(a)=>{let c=0,d="";while(o<e.length){let l=e[o],u=e[o+1];if(l==="/"&&u==="/"){let m=e.indexOf(`
+60 | `,o),p=m<0?e.length:m;n(o,p),o=p;continue}if(l==="/"&&u==="*"){let m=e.indexOf("*/",o+2),p=m<0?e.length:m+2;n(o,p),o=p;continue}if(l==='"'||l==="'"){let m=o++;while(o<e.length&&e[o]!==l&&e[o]!==`
+61 | `){if(e[o]==="\\")o++;o++}r.push({start:m,end:o+1,value:e.slice(m+1,o)}),n(m+1,o),o++,d="x";continue}if(l==="`"){let m=o++,p=o;while(o<e.length&&e[o]!=="`"){if(e[o]==="\\"){o+=2;continue}if(e[o]==="$"&&e[o+1]==="{"){n(p,o),o+=2,s(!0),p=o;continue}o++}n(p,o),i.push({start:m,end:o+1,body:e.slice(m+1,o)}),o++,d="x";continue}if(l==="/"&&(d===""||oEe.test(d)||sEe.test(d))){let m=o++,p=!1;while(o<e.length&&e[o]!==`
+62 | `){let f=e[o];if(f==="\\"){o+=2;continue}if(f==="[")p=!0;else if(f==="]")p=!1;else if(f==="/"&&!p)break;o++}n(m+1,o),o++,d="x";continue}if(a){if(l==="{")c++;else if(l==="}"){if(c===0){o++;return}c--}}if(!/\s/u.test(l))d=(d+l).slice(-24);o++}};return s(!1),{code:t.join(""),strings:r,templates:i}}function iw(e,t){let r=e.strings.find((i)=>i.start>=t&&/^\s*$/u.test(e.code.slice(t,i.start)));return r===void 0?void 0:{value:r.value,end:r.end}}function P_(e){let t=eE(e),{code:r}=t,i=[];for(let o of r.matchAll(/(?<![\w$.])(import|export)\b(?!\s*[:(=])/gu)){let s=o[1],a=o.index+o[0].length,c=r.slice(a,a+4000);if(s==="import"){if(/^\s*$/u.test(r.slice(a,t.strings.find((f)=>f.start>=a)?.start??a))){let f=iw(t,a);if(f!==void 0){i.push({at:o.index,row:{path:f.value,kind:"import-statement"}});continue}}if(/^\s*type\b(?!\s*,|\s+from\b)/u.test(c))continue;let l=/^([^;]*?)\bfrom\b/su.exec(c);if(l===null)continue;let u=l[1],m=/^\s*(?:[\w$]+\s*,\s*)?\{([^}]*)\}\s*$/su.exec(u);if(m!==null&&m[1].trim()!==""&&m[1].split(",").map( | ... truncated 
+63 | `).slice(-6).join(" | ").slice(0,600)});try{e.rename(n,t.directory)}catch(d){if(e.remove(n),!e.exists(t.file))throw d}}function fj(e){let t=FEe(e.host,e.read(e.host.source));if(e.exists(t.file))return t.file;let r=`${t.directory}.lock`,i=sr.lock,n=e.now()+i.waitSeconds*1000;e.mkdir(D_(t.directory));for(;;){if(e.lock(r))try{if(!e.exists(t.file))jEe(e,t);return t.file}finally{e.remove(r)}if(e.exists(t.file))return t.file;let o=e.age(r);if(o!==void 0&&o>i.staleSeconds*1000){e.remove(r);continue}if(e.now()>n)throw zl("nativeLockTimeout",{seconds:i.waitSeconds});e.sleep(i.pollMilliseconds)}}function REe(e){try{return R_(e).isFile()}catch{return!1}}function hj(e=process.env){let t=Object.freeze({platform:process.platform,arch:process.arch,env:e,home:EEe(),source:BEe(new URL("../\uD83E\uDD80️.rs","file:///Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%94%A8%EF%B8%8Fmodules/%E2%9A%99%EF%B8%8Fruntime/%F0%9F%9F%A2%EF%B8%8Fnode/%F0%9F%A7%B2%EF%B8%8Fnative/%F0%9F%8F%97%EF%B8%8Faddon/%F0%9F%9F%A6%EF%B8 | ... truncated 
+64 | `)}catch{}}})}function I_(e=hj()){let t=e.host.env[sr.addon.environment.addon],r=t!==void 0&&t!==""?t:fj(e),i;try{i=kEe(import.meta.url)(r)}catch(o){throw zl("nativeLoadFailed",{file:r,reason:String(o.message).slice(0,400)})}let n=sr.primitives.filter((o)=>typeof i[o]!=="function");if(n.length>0)throw zl("nativeCoreIncomplete",{file:r,missing:n.join(", ")});return i}var sr;var iE=w(()=>{on();tE();sr=gd.definitions.Protocol.const});function Ka(e,t={}){return TypeError(wt(e,t))}function gj(e){let t=N_[e];if(t===void 0)throw Ka("nativeType",{type:e});return t}function DEe(e,t,r,i){let n=gj(t);if(n.kind==="bool")return r?1n:0n;if(n.kind==="int")return VEe(t,r);if(n.kind==="pointer"||n.kind==="string"){if(r===null||r===void 0)return 0n;if(typeof r==="string"&&n.kind==="string"){let o=Buffer.from(`${r}\x00`,"utf8");return i.push(o),e.addressOf(o)}if(typeof r==="number")return Number.isFinite(r)&&r>=0?BigInt.asUintN(64,BigInt(Math.trunc(r))):0n;if(typeof r==="bigint")return BigInt.asUintN(64,r);if(ArrayBuffer.isView
+ | ... truncated 
+RepoError: stale build.closure.source-differs {"path":"🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts","expectedSha256":"ffd49c0985745451d3594878764ffa7530288ec347b5c34a1ac6b6ab07602835","observedSha256":"88cc24fb11604397e4f9d6a041c1373c949f388f80b6e3cbe833c71917648742"}
+    key: "build.closure.source-differs",
+ values: {
+  path: "🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts",
+  expectedSha256: "ffd49c0985745451d3594878764ffa7530288ec347b5c34a1ac6b6ab07602835",
+  observedSha256: "88cc24fb11604397e4f9d6a041c1373c949f388f80b6e3cbe833c71917648742",
+},
+   code: "stale"
+      at ec (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:64:126377)
+      at tQ (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:184:19086)
+      at FB (/Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:184:23196)
+      at /Users/ueli/Documents/semio/.cache/b/t/m/nx/6184766c3a255f4a39f67c911be52a5a4b909280499c11e719c85313f431671e/semio-authorizers.mjs:184:1564306
+      at processTicksAndRejections (unknown:7:39)
+
+
+
+ NX   Running target setup for project workspace and 29 tasks it depends on failed
+
+Tasks not run because their dependencies failed or --nx-bail=true:
+
+- workspace:setup:prototype
+- workspace:deps-cpp:prototype
+- workspace:deps-wasm:prototype
+- workspace:prepare:prototype
+
+Failed tasks:
+
+- @semio-tech/repo-lib:cpp-setup:prototype
+- @semio-tech/plugin-registry:generate:prototype
+- workspace:deps-build-tools:prototype
+- @semio-tech/framework-os-mcp-rs:build:prototype
+- workspace:deps-cargo:prototype
+- workspace:deps-trunk:prototype
+- workspace:deps-tools:prototype
+
+
+Output of 12 successful tasks were not shown. Run with --verbose or --output-style=static to see it.
+Hint: run the command with --verbose for more details.
+
+  Run duration:      16m 20s
+  Cache:             0/19 hit (0%)
+  Critical path:     13m 31s (2 tasks)
+  Recoverable time:  2m 48s (17% of the run)
+
+  Recommendation: Drastically reduce your run duration by sharing a cache across your team and CI → https://cloud.nx.app/get-started?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
+Internal error: Owned Nx invocation failed (130): nx run workspace:setup --parallel=2
+repository:command failed with exit code 1
+end 2026-11-14T19:37:23Z
+native_rc=1

@@ -23,6 +23,7 @@ export function createProcessWorkerV1(url,data,env,{spawn=fork,graceMilliseconds
  void gone.then(()=>Promise.allSettled([...pending])).then(()=>removeScratchDirectoryV1(spool));
  return{
   pid:child.pid,
+  send:message=>{try{return child.connected&&child.send(message);}catch{return false;}},
   on:(event,listener)=>{
    if(event==="message")child.on("message",message=>{
     if(message?.graphFile===undefined){listener(message);return;}
@@ -50,3 +51,19 @@ export const parentPort={postMessage:message=>{
  if(message?.type==="done"&&message.graph!==undefined&&spool){const{graph,...rest}=message,file=join(spool,"graph.json");writeFileSync(file,JSON.stringify(graph));process.send?.({...rest,graphFile:file});return;}
  process.send?.(message);
 }};
+
+const DATA_STRINGS_V1=Object.freeze(["code","root","entry"]);
+
+/** 🏷️ What the load script sends when it fails: message and stack as before, plus the data that names a refused place (`code`, `errno`, `root`, `entry`; the refusal of a `RepoError` keeps its own fields) that an error loses when it crosses the process boundary as text alone. */
+export function errorMessageV1(error){
+ const data={};
+ for(const name of DATA_STRINGS_V1)if(typeof error?.[name]==="string")data[name]=error[name];
+ if(Number.isInteger(error?.errno))data.errno=error.errno;
+ const refusal=error?.name==="RepoError"&&typeof error.code==="string"&&typeof error.key==="string"?{refusal:{code:error.code,key:error.key,values:{...error.values}}}:{};
+ return{message:String(error?.message??error),stack:String(error?.stack??""),...Object.keys(data).length?{data}:{},...refusal};
+}
+
+/** 🏷️ The error the service rejects with for a message of `errorMessageV1`: text and stack of the child, the data that names the refused place, and (for a `RepoError`) its refusal. */
+export function errorOfMessageV1(message){
+ return Object.assign(new Error(message.message),{stack:message.stack},message.data??{},message.refusal===undefined?{}:{name:"RepoError",...message.refusal});
+}

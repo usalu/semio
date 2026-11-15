@@ -176,6 +176,25 @@ class GlyphFallbackTest(unittest.TestCase):
                         distance = max(cKDTree(left).query(right)[0].max(), cKDTree(right).query(left)[0].max())
                         self.assertLess(distance, CASES["outline_distance"])
 
+    def test_parentheses_of_the_body_face_are_the_distinct_round_glyphs(self):
+        from fontTools.ttLib import TTFont
+        from manim import WHITE
+        from scipy.spatial import cKDTree
+        _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+
+        case = CASES["distinct_parentheses"]
+        run = _manim_module.body_text(case["text"], font_size=24, color=WHITE)
+        with TTFont(_WORKSPACE_ROOT / case["source"]) as font:
+            for index, character in enumerate(case["text"]):
+                if character not in case["characters"]:
+                    continue
+                with self.subTest(character=character):
+                    self.assertEqual(run.t2f[character], case["family"])
+                    expected = glyph_outline(font, character, Path(self.directory.name) / f"paren-{ord(character)}.svg")
+                    left, right = outline_points(run.chars[index]), outline_points(expected)
+                    distance = max(cKDTree(left).query(right)[0].max(), cKDTree(right).query(left)[0].max())
+                    self.assertLess(distance, CASES["outline_distance"])
+
     def test_outline_oracle_rejects_source_notdef_glyph(self):
         from fontTools.ttLib import TTFont
         from scipy.spatial import cKDTree

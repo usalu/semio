@@ -39,6 +39,20 @@
           },
           "output": {
             "type": "string"
+          },
+          "poster": {
+            "description": "The lesson card shows the poster of this chapter; the first chapter when absent.",
+            "type": "object",
+            "required": [
+              "chapter"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "chapter": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"
+              }
+            }
           }
         }
       }
@@ -99,6 +113,21 @@
           "minItems": 1,
           "items": {
             "$ref": "#/$defs/segment"
+          }
+        },
+        "poster": {
+          "description": "The moment of the chapter's poster frame: the end state of the segment (the last one when absent), or the state after the numbered Manim animation. A partial (clauses) segment requires an animation.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "segment": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "animation": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         }
       }

@@ -110,7 +110,7 @@ pub fn k_passive(wall: &RetainingWall) -> f64 {
 /// 🧱️ The coefficient behind the drawn pressure for the wall's regime: active, at rest, or increased active as the mean of both (DIN 4085 visual rule).
 pub fn k_driving(wall: &RetainingWall) -> f64 {
     let (ka, k0) = (k_active(wall), earth_pressure::k0(wall.backfill_phi_deg, wall.ocr, 0.0));
-    match wall.earth_pressure_mode.as_str() {
+    match wall.earth_pressure_mode {
         semio_s_artifact_norm_en1997_model::EarthPressureMode::AtRest => k0,
         semio_s_artifact_norm_en1997_model::EarthPressureMode::IncreasedActive => 0.5 * (ka + k0),
         _ => ka,

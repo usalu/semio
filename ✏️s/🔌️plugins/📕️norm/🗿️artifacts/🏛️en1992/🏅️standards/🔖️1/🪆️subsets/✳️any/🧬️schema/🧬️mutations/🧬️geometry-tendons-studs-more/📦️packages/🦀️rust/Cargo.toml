@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-s-artifact-norm-en1992-mut-geometry-tendons-studs-more"
+name = "semio-s-artifact-norm-en1992-mut-tendons-studs-more"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

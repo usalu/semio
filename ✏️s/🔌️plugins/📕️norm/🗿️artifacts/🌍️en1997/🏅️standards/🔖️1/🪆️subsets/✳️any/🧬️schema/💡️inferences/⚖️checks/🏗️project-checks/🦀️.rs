@@ -257,7 +257,7 @@ fn check_footings(
         let layer = layer_at(&doc.layers, footing.embedment).cloned().unwrap_or_else(|| SoilLayer {
             id: "default".into(), soil_type: semio_s_artifact_norm_en1997_model::SoilType::Sand, depth_top: 0.0, depth_bottom: 10.0,
             gamma: 18_000.0, gamma_prime: 10_000.0, phi_prime_deg: 30.0, cohesion_effective: 0.0, cohesion_undrained: 0.0,
-            oedometric_modulus: 30e6, poisson_ratio: 0.3, cpt_qc: 0.0, spt_n: 0.0,
+            oedometric_modulus: 30e6, poisson_ratio: 0.3, cpt_qc: 0.0, spt_n: 0.0, cpt_nkt: 0.0,
         });
         let overburden = layer.gamma * footing.embedment.max(0.5);
         let (phi_char, _phi_src) = part_2::characteristic_phi_deg(&layer, overburden);

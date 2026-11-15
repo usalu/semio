@@ -42,15 +42,15 @@ pub(crate) fn beam_extensions(report: &mut CheckReport, doc: &En1994Snapshot, be
     let b = &beam;
 
     let position = cat::span_position(b.support);
-    let ratio = cat::adjacent_span_ratio(&[b.span_m, b.neighbour_span_m()]);
+    let span_ratio = cat::adjacent_span_ratio(&[b.span_m, b.neighbour_span_m()]);
     let (pos_en, pos_de) = span_label(position);
     let mut le_check = head(annex, format!("en1994.5.4.1.2.le.{}", b.id), "1994-1-1", "5.4.1.2", bref(b, "support"), "Equivalent span L_e for the span position", "Ersatzstützweite L_e für die Feldlage")
-        .utilization(dim(if b.has_hogging() { 0.6 / ratio.max(1e-9) } else { 0.0 }), dim(1.0))
+        .utilization(dim(if b.has_hogging() { 0.6 / span_ratio.max(1e-9) } else { 0.0 }), dim(1.0))
         .explanation(lc(
-            format!("{pos_en}: L_e,sagging = {le:.2} m, L_e,hogging = {le_h:.2} m (Fig. 5.1); neighbouring span {:.2} m, span ratio {ratio:.2}.", b.neighbour_span_m()),
-            format!("{pos_de}: L_e,Feld = {le:.2} m, L_e,Stütze = {le_h:.2} m (Bild 5.1); Nachbarfeld {:.2} m, Feldlängenverhältnis {ratio:.2}.", b.neighbour_span_m()),
+            format!("{pos_en}: L_e,sagging = {le:.2} m, L_e,hogging = {le_h:.2} m (Fig. 5.1); neighbouring span {:.2} m, span ratio {span_ratio:.2}.", b.neighbour_span_m()),
+            format!("{pos_de}: L_e,Feld = {le:.2} m, L_e,Stütze = {le_h:.2} m (Bild 5.1); Nachbarfeld {:.2} m, Feldlängenverhältnis {span_ratio:.2}.", b.neighbour_span_m()),
         ));
-    if b.has_hogging() && ratio < 0.6 {
+    if b.has_hogging() && span_ratio < 0.6 {
         le_check = le_check.status(CheckStatus::Warning);
     }
     report.push(le_check.build());

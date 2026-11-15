@@ -1,0 +1,36 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-9888631afea4.log (lines after 1179)
+-- graph lines
+graph: 658 stale projects, 207 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 451
+graph: waiting for the fleet: 0 of 451 projects arrived
+graph: waiting for the fleet: 48 of 451 projects arrived
+-- last 30 lines when the try ended
+[repo] still working after 2780 s; last phase started: source.served
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2781 s
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2791 s
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2801 s
+[repo] still working after 2810 s; last phase started: source.served
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2811 s
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2821 s
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2831 s
+[repo] still working after 2840 s; last phase started: source.served
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2841 s
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2851 s
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2861 s
+[repo] still working after 2870 s; last phase started: source.served
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2871 s
+graph: waiting for the fleet: 48 of 451 projects arrived
+[repository:command] still running after 2881 s
+graph: nothing to wait for any longer: asked the fleet for 451 stale projects and received 48 within 1486 s, 403 remain and this machine can infer only 192; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-14T22:54:43.306Z graph-wanted-expired {"wanted":"451","arrived":"48","seconds":"1486","missing":"403","local":"192","heavy":""}
+[repository:command] still running after 2891 s
+[repo] still working after 2900 s; last phase started: source.served

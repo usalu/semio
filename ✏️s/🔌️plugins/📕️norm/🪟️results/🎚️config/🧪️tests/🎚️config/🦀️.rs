@@ -32,8 +32,11 @@ fn config_mutation_fixture_matches_serde_and_round_trips() {
         assert_eq!(next.selected_check_index, payload.index, "{}", case["id"]);
         assert_eq!(serde_json::to_value(next.selected_check_index).unwrap(), case["after"]);
         let backwards = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-        assert_eq!(backwards.len(), 1);
-        assert_eq!(apply_diff_cold(backwards[0].diff(&next).diff(), &next).unwrap(), base);
+        let unchanged = !outcome.messages().is_empty();
+        assert_eq!(backwards.len(), usize::from(!unchanged), "a no-op has nothing to undo");
+        if let Some(inverse) = backwards.first() {
+            assert_eq!(apply_diff_cold(inverse.diff(&next).diff(), &next).unwrap(), base);
+        }
         assert_eq!(NormResultsWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(NormResultsWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }

@@ -165,6 +165,39 @@ pub(super) fn check_fatigue_and_fire(document: &En1993Snapshot, annex: AnnexChoi
             }
         }
         report.push(b.build());
+
+        if let (Some(member), Some(section)) = (fire_member, fire_section) {
+            let rows = combine_member_actions(document, &member.id);
+            let n_ed = uls_rows(&rows).iter().map(|r| r.action.n).fold(0.0_f64, f64::max);
+            if n_ed > 0.0 {
+                let n_fi_ed = 0.65 * n_ed;
+                let n_b_fi = crate::clauses::fatigue_fire::n_b_fi_t_rd(chi_fi, section.area, ky, fy_fire, 1.0);
+                let mut nfi =
+                    CheckResult::assess(
+                        format!("en1993.1-2.nfi.{}", fire.id),
+                        "DIN EN 1993-1-2",
+                        ClauseId::new("EN 1993-1-2", "4", "4.2.3.2"),
+                        SubjectRef::new(&fire.id, &format!("fireExposures[id={}].designTemperature", fire.id), loc(&format!("Fire {}", fire.id), &format!("Brand {}", fire.id))),
+                        loc("Buckling resistance in fire", "Knickwiderstand im Brandfall"),
+                    )
+                    .annex(annex)
+                    .utilization(force_n(n_fi_ed), force_n(n_b_fi))
+                    .explanation(loc(
+                        &format!("N_fi,Ed=0.65·N_Ed={:.1} kN, N_b,fi,t,Rd={:.1} kN (χ_fi={:.3}, k_y,θ={:.3}, λ̄={:.2}).", n_fi_ed / 1000.0, n_b_fi / 1000.0, chi_fi, ky, lambda_member),
+                        &format!("N_fi,Ed=0,65·N_Ed={:.1} kN, N_b,fi,t,Rd={:.1} kN (χ_fi={:.3}, k_y,θ={:.3}, λ̄={:.2}).", n_fi_ed / 1000.0, n_b_fi / 1000.0, chi_fi, ky, lambda_member),
+                    ));
+                if !(n_fi_ed <= n_b_fi) {
+                    let k = if (n_fi_ed / n_b_fi).is_finite() { n_fi_ed / n_b_fi } else { 2.0 };
+                    nfi = nfi.remedy(Remedy::at_least(
+                        SubjectRef::new(&member.id, &format!("sections[id={}].area", section.id), loc("Section area", "Querschnittsfläche")),
+                        area_m2(section.area),
+                        area_m2(section.area * k),
+                        loc(&format!("Increase the section area to about {:.1} cm² (first estimate) or protect the member against fire.", section.area * k * 1e4), &format!("Querschnittsfläche auf etwa {:.1} cm² erhöhen (erste Schätzung) oder das Bauteil brandschutztechnisch bekleiden.", section.area * k * 1e4)),
+                    ));
+                }
+                report.push(nfi.build());
+            }
+        }
         super::special_parts_checks::check_stainless_fire(document, annex, fire, report);
     }
 }
@@ -297,39 +330,6 @@ pub(super) fn check_cold_formed_stainless_and_plated(document: &En1993Snapshot, 
             ));
         }
         report.push(b.build());
-
-        if let (Some(member), Some(section)) = (fire_member, fire_section) {
-            let rows = combine_member_actions(document, &member.id);
-            let n_ed = uls_rows(&rows).iter().map(|r| r.action.n).fold(0.0_f64, f64::max);
-            if n_ed > 0.0 {
-                let n_fi_ed = 0.65 * n_ed;
-                let n_b_fi = crate::clauses::fatigue_fire::n_b_fi_t_rd(chi_fi, section.area, ky, fy_fire, 1.0);
-                let mut nfi =
-                    CheckResult::assess(
-                        format!("en1993.1-2.nfi.{}", fire.id),
-                        "DIN EN 1993-1-2",
-                        ClauseId::new("EN 1993-1-2", "4", "4.2.3.2"),
-                        SubjectRef::new(&fire.id, &format!("fireExposures[id={}].designTemperature", fire.id), loc(&format!("Fire {}", fire.id), &format!("Brand {}", fire.id))),
-                        loc("Buckling resistance in fire", "Knickwiderstand im Brandfall"),
-                    )
-                    .annex(annex)
-                    .utilization(force_n(n_fi_ed), force_n(n_b_fi))
-                    .explanation(loc(
-                        &format!("N_fi,Ed=0.65·N_Ed={:.1} kN, N_b,fi,t,Rd={:.1} kN (χ_fi={:.3}, k_y,θ={:.3}, λ̄={:.2}).", n_fi_ed / 1000.0, n_b_fi / 1000.0, chi_fi, ky, lambda_member),
-                        &format!("N_fi,Ed=0,65·N_Ed={:.1} kN, N_b,fi,t,Rd={:.1} kN (χ_fi={:.3}, k_y,θ={:.3}, λ̄={:.2}).", n_fi_ed / 1000.0, n_b_fi / 1000.0, chi_fi, ky, lambda_member),
-                    ));
-                if !(n_fi_ed <= n_b_fi) {
-                    let k = if (n_fi_ed / n_b_fi).is_finite() { n_fi_ed / n_b_fi } else { 2.0 };
-                    nfi = nfi.remedy(Remedy::at_least(
-                        SubjectRef::new(&member.id, &format!("sections[id={}].area", section.id), loc("Section area", "Querschnittsfläche")),
-                        area_m2(section.area),
-                        area_m2(section.area * k),
-                        loc(&format!("Increase the section area to about {:.1} cm² (first estimate) or protect the member against fire.", section.area * k * 1e4), &format!("Querschnittsfläche auf etwa {:.1} cm² erhöhen (erste Schätzung) oder das Bauteil brandschutztechnisch bekleiden.", section.area * k * 1e4)),
-                    ));
-                }
-                report.push(nfi.build());
-            }
-        }
         super::special_parts_checks::check_plated(annex, params, panel, report);
     }
 }

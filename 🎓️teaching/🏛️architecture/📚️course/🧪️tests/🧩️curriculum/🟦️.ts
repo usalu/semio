@@ -28,6 +28,13 @@ describe("remaining architecture curriculum", () => {
     }
     if (curriculum.tasks[id]) expect(quiz!.tasks.map(task => task.id)).toEqual(curriculum.tasks[id]);
   });
+  for (const quiz of quizzes) it(`${quiz.id} shares no explanation between more than 5 items per language`, () => {
+    for (const language of ["en", "de"] as const) {
+      const counts = new Map<string, number>();
+      for (const task of quiz.tasks) for (const item of task.items) counts.set(item.explanation![language], (counts.get(item.explanation![language]) ?? 0) + 1);
+      expect([...counts].filter(([, count]) => count > 5).map(([text, count]) => `${language} ×${count}: ${text}`)).toEqual([]);
+    }
+  });
   for (const area of ["🏗️bim", "📐️parametric", "📊️excel", "🦗️grasshopper", "🎯️optimization"]) it(`holds ${area} to independent authored answers`, () => {
     const fixture = read(`🧫️fixtures/${area}/🔣️.json`) as { quiz: string; classifications: Record<string, Record<string, string>> };
     const quiz = quizzes.find(quiz => quiz.id === fixture.quiz);

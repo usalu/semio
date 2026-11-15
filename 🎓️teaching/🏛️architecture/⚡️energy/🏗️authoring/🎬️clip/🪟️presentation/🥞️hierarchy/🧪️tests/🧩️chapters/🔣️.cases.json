@@ -9,8 +9,8 @@
     "topics": 6,
     "clips": 26,
     "chapters": 47,
-    "canonical_sources": 126,
-    "segment_occurrences": 134,
+    "canonical_sources": 130,
+    "segment_occurrences": 138,
     "clause_selections": 8
   },
   "clips": [
@@ -21,6 +21,10 @@
         {
           "scene": "PhysicalFundamentals_FullSection",
           "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
             {
               "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
               "scene": "Beat1_Leistung"
@@ -65,16 +69,16 @@
           "scene": "Ventilation_01_WarumLueften",
           "segments": [
             {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
+            {
               "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
               "scene": "Beat1_Lueftungsbedarf"
             },
             {
               "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
               "scene": "Beat2_Lueftungsweg"
-            },
-            {
-              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
-              "scene": "Beat3_Fahrplan"
             }
           ]
         },
@@ -188,6 +192,10 @@
         {
           "scene": "Heating_01_Introduction",
           "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
             {
               "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
               "scene": "Beat1_DreiWegeDerWaerme"
@@ -373,6 +381,10 @@
           "scene": "Cooling_01_HeatingVsCooling",
           "segments": [
             {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
+            {
               "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py",
               "scene": "Beat1_WinterGains"
             },
@@ -516,6 +528,10 @@
         {
           "scene": "EnergyBalance_01_Energiebilanz",
           "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
             {
               "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py",
               "scene": "Beat1_Bilanzgrenze"

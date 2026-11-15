@@ -1,5 +1,5 @@
 /** 📕️ Vector PDF 1.7 writer: one page per {@link DrawingScene}, MediaBox = scene size in points (1 mm = 72/25.4 pt), paths as
- * m/l/c/h with fill/stroke/dash/cap/join, opacity through ExtGState, hatch fills as uncoloured tiling patterns, text in
+ * m/l/c/h with fill (even-odd, `f*`, the one staffage fill rule)/stroke/dash/cap/join, opacity through ExtGState, hatch fills as uncoloured tiling patterns, text in
  * Helvetica (standard 14, WinAnsiEncoding), one optional-content group per drawing layer. Uncompressed and deterministic
  * (no creation date, ID derived from the content). Browser-compatible, dependency-free.
  * <https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf> · <https://pdfa.org/resource/iso-32000-2/> */
@@ -186,11 +186,11 @@ function drawItem(document: Document, item: DrawingItem, k: number, height: numb
     parts.push(`${name} gs`);
   }
   if (item.fill) {
-    parts.push(`${rgb(item.fill.color)} rg`, path, "f");
+    parts.push(`${rgb(item.fill.color)} rg`, path, "f*");
     if (item.fill.pattern) {
       const name = patternObject(document, item.fill.pattern);
       used.patterns.add(item.fill.pattern);
-      parts.push("/CsP cs", `${darken(item.fill.color, 0.45)} ${name} scn`, path, "f");
+      parts.push("/CsP cs", `${darken(item.fill.color, 0.45)} ${name} scn`, path, "f*");
     }
   }
   if (item.stroke) {

@@ -10,6 +10,7 @@
    "kind": "external",
    "default": true,
    "module": "../🔧️tools/🧶️nx/🔌️backend/🟦️.ts",
+      "launch": "../🔧️tools/🧶️nx/🚀️launch/🟦️.ts",
    "driver": "../🔧️tools/🧶️nx/📐️conformance/🟦️.ts",
    "dependencyModel": "consumers",
    "plansScoped": true,
@@ -87,10 +88,10 @@
      "support": "native"
     },
     "single-flight": {
-     "support": "missing",
+     "support": "adapter",
      "note": {
-      "en": "Two Nx processes on one workspace do not coordinate: a cold task can run in both.",
-      "de": "Zwei Nx-Prozesse auf einem Workspace stimmen sich nicht ab: eine kalte Task kann in beiden laufen."
+      "en": "Nx alone runs a cold task in every process; the repository's loopback cache front claims the task hash at the shared cache server, so concurrent builds on one machine or in the fleet run it once and the others receive the result. Without a reachable cache server a cold task still runs in both.",
+      "de": "Nx allein führt eine kalte Task in jedem Prozess aus; die lokale Cache-Vorschaltung des Repositories beansprucht den Task-Hash beim gemeinsamen Cache-Server, sodass gleichzeitige Builds auf einer Maschine oder in der Flotte sie einmal ausführen und die übrigen das Ergebnis erhalten. Ohne erreichbaren Cache-Server läuft eine kalte Task weiterhin in beiden."
      }
     },
     "remote-cache": {

@@ -11,3 +11,5 @@ impl protocol::OpBinary for NormResultsWindowConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+dsl::original_pack_value_operation_receiving!(NormResultsWindowConfigMutation);

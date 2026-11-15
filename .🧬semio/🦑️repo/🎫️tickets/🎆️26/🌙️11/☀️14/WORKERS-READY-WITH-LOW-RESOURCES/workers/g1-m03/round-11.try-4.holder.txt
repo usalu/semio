@@ -1,0 +1,65 @@
+== holder observation during try 4, 2026-11-15T01:23:39Z
+-- processes of the run (process group 67448): pid ppid age cpu% rss, shortened arguments
+67448 67317 09:59 0.0 784  bash /Users/ueli/Documents/semio/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O14/WORKERS-READY-WITH-LOW-RESOURCES/native-bootstrap.sh 
+67467 67448 09:59 0.0 832  bash /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^TM-)M-oM-8M^Onative/M-pM^_M-%M->M-oM-8M^Obootstrap/M-pM^_M^PM^ZM-oM-8M^O
+67468 67448 09:59 0.0 208  tee /Users/ueli/Documents/semio/.cache/f/native-bootstrap.log
+67978 67467 09:22 0.4 85312  /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-p
+-- last lines of the log that are not the wait line
+[script] cache:entry · Verifying build tools
+[script] cache:entry · Verifying build tools
+[script] cache:entry · Verifying build tools
+[script] cache:entry · Preparing build tools
+[script] cache:entry · Preparing build tools
+[script] cache:entry · Preparing build tools
+[script] cache:entry · Preparing build tools
+[script] cache:entry · Preparing build tools
+[script] build:implementation-source · Reading the sources of the build implementation
+> repo "$SEMIO_NX_COMMAND_RUNNER" c33bdbae0baf0c33b0a4ecaa123008729204ea2cd8cb8031b6cf7ea2bbcd823f
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+-- all bun, nx, repo and cargo processes on the machine at 2026-11-15T01:23:49Z: pid ppid age cpu% rss KiB, arguments (runtime path removed)
+41996     1       53:11   0.0  61776 bun <wt>/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.ts repo service host run
+42029 41996       53:07   0.4 187248 bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex'),check=()=>{const wire=process.en
+67317     1       10:29   0.0   2240 bash <wt>/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m03/run-round-11b.sh
+67448 67317       10:09   0.0    784 bash <wt>/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O14/WORKERS-READY-WITH-LOW-RESOURCES/native-bootstrap.sh /Users/ueli/native-bootstrap-round-11-try-4.log
+67467 67448       10:09   0.0    832 bash <wt>/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^TM-)M-oM-8M^Onative/M-pM^_M-%M->M-oM-8M^Obootstrap/M-pM^_M^PM^ZM-oM-8M^O.sh setup
+67468 67448       10:09   0.0    208 tee <wt>/.cache/f/native-bootstrap.log
+67978 67467       09:32   0.9  85872 bun <wt>/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.ts repo run workspace:setup
+68661 67978       08:25   0.0 291632 bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex'),check=()=>{const wire=process.en
+68679 68661       08:23   0.3  37888 bun <wt>/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^OM-!M-oM-8M^Oresident/M-pM^_M^SM^\M-oM-8M^Ojournal/M-bM^LM-(M-oM-8M^Omain/M-pM^_M^_M-&M-oM-8M^O.ts --hos
+68680 68679       08:23   0.0   4720 <wt>/.cache/b/t/m/repo-watch/3c3435d32d55ecac/semio-repo-watch serve
+69101 68661       07:30   0.3 350560 bun <wt>/.cache/b/t/m/nx/f361e69a3af7506faabae904bfd2b9a7733182da89eb1e05603c0b1219575806/node_modules/nx/dist/bin/nx.js run workspace:setup --parallel=1
+73502 69101       02:46   0.3 555824 bun <wt>/.cache/b/t/m/nx/f361e69a3af7506faabae904bfd2b9a7733182da89eb1e05603c0b1219575806/node_modules/nx/dist/bin/run-executor.js
+73659 73502       02:36   0.1  40640 bun <wt>/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-bM^ZM-!M-oM-8M^Ocaching/M-pM^_M^ZM^@M-oM-8M^Obootstrap/M-pM^_M^TM^LM-oM-8M^Onx-plugin/M-pM^_M^SM-$M-oM-8M^Oarguments/M-pM^_M^SM^\M-oM-8M^
+73660 73659       02:35   0.0   2976 bun exec repo ./M-pM^_M^SM^\M-oM-8M^Oscript.ts repo tools setup all
+73661 73660       02:35   0.8 110480 bun ./M-pM^_M^SM^\M-oM-8M^Oscript.ts repo tools setup all
+73671 73661       02:35   0.0 421632 bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex'),check=()=>{const wire=process.en
+74449 74448       00:20   0.1   2192 bash <wt>/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m03/wait-try-11.sh
+74586 74580       00:00   0.0    656 sed -E s#/Users/ueli/Library/Caches/semio/runtimes/bun/[0-9a-f]+/bun#bun#; s#<wt>/#<wt>/#g
+95575     1    02:14:34   0.0    752 /bin/sh /Users/ueli/Library/Application Support/semio/fleet/entry/boot.sh run
+95591 95575    02:14:34   0.0  24176 bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs run
+95592 95591    02:14:33   3.5 439360 bun <wt>/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M-$M^]M-oM-8M^Oshared-worktree/M-pM^_M^TM^AM-oM-8M^Oreplica/M-pM^_M^[M^_M-oM-8M^Osupervisor/M-pM^_M^_M-&M-oM-8M^O.ts --boot-child run
+95671 95592    02:14:02   0.0  16848 bun <wt>/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^LM^PM-oM-8M^Oremote-execution/M-pM^_M^[M-0M-oM-8M^Osidecar/M-pM^_M^_M-&M-oM-8M^O.ts agent
+95672 95671    02:14:02   1.4  85504 bun <wt>/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^LM^PM-oM-8M^Oremote-execution/M-pM^_M^[M-0M-oM-8M^Osidecar/M-pM^_M^_M-&M-oM-8M^O.ts agent
+-- lock files of the dependency store
+    
+608 Nov 14 04:24 .
+160 Nov 14 00:59 ..
+96 Nov 14 00:59 .fseventsd
+0 Nov 14 00:59 .metadata_never_index
+96 Nov 14 04:19 bootstrap
+64 Nov 14 01:48 bun-bin
+54176 Nov 14 03:36 bun-cache
+64 Nov 14 01:48 bun-config
+64 Nov 14 01:48 bun-global
+64 Nov 14 01:48 bun-home
+122 Nov 14 00:59 dependencies.json
+96 Nov 14 04:24 dotnet
+1152 Nov 14 21:58 generation
+256 Nov 14 01:48 j
+128 Nov 14 04:24 nuget
+256 Nov 14 03:58 pointer
+160 Nov 14 20:23 python
+245 Nov 14 00:59 storage-events.jsonl
+64 Nov 14 03:36 tmp
+-- reading of the list above: the only process that works on the dependency tools is 73661 (repo tools setup all, the nested command of workspace:deps-build-tools) and it is the one that waits; nothing else on the machine touches the dependency store except its ancestors 67978 (repo run workspace:setup) -> 68661 -> 69101 (nx run workspace:setup --parallel=1) -> 73502 -> 73659. So the holder is most likely one of its own ancestors (not proven: the lease registry was not read).

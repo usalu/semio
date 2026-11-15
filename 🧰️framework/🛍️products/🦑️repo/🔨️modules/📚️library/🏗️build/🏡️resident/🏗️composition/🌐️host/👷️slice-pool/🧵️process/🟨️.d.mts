@@ -3,3 +3,5 @@ export const SLICE_SPOOL_VARIABLE_V1:string;
 export function createProcessWorkerV1(url:URL|string,data:unknown,env:Record<string,string|undefined>,options?:{spawn?:unknown;graceMilliseconds?:number;platform?:string}):{pid?:number;on(event:"message"|"error"|"exit",listener:(value:any)=>void):void;terminate():Promise<void>};
 export const workerData:any;
 export const parentPort:{postMessage(message:unknown):void};
+export function errorMessageV1(error:unknown):{message:string;stack:string;data?:Record<string,unknown>;refusal?:{code:string;key:string;values:Record<string,unknown>}};
+export function errorOfMessageV1(message:{message:string;stack?:string;data?:Record<string,unknown>;refusal?:{code:string;key:string;values:Record<string,unknown>}}):Error&Record<string,any>;

@@ -2026,13 +2026,13 @@ name = "semio-framework-replication-retained-field"
 version = "0.1.0"
 dependencies = [
  "semio-framework-mutation-diff",
- "semio-framework-replication-retained-field-preparation",
+ "semio-framework-replication-retained-field-prep",
  "semio-framework-value",
  "semio-framework-value-persistent",
 ]
 
 [[package]]
-name = "semio-framework-replication-retained-field-preparation"
+name = "semio-framework-replication-retained-field-prep"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-retained-clone",
@@ -2125,6 +2125,7 @@ dependencies = [
 name = "semio-framework-test-original-snapshot-owners"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-native-owned",
@@ -6869,6 +6870,7 @@ dependencies = [
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-surface",
+ "semio-plugin-document-media",
  "semio-plugin-instance-app",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
@@ -7472,6 +7474,7 @@ dependencies = [
 name = "semio-s-artifact-norm-en1992-diff"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-schema",
@@ -7512,11 +7515,13 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d-compute",
+ "semio-framework-action-bus",
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-job",
  "semio-framework-pack-json",
  "semio-framework-schema",
  "semio-framework-schema-registry",
@@ -7595,8 +7600,8 @@ dependencies = [
  "semio-s-artifact-norm-en1992-model",
  "semio-s-artifact-norm-en1992-mut-anchor-actions-identity",
  "semio-s-artifact-norm-en1992-mut-anchor-actions-loads",
- "semio-s-artifact-norm-en1992-mut-anchor-actions-resultants",
  "semio-s-artifact-norm-en1992-mut-anchor-lists-rows",
+ "semio-s-artifact-norm-en1992-mut-anchor-resultants",
  "semio-s-artifact-norm-en1992-mut-anchors",
  "semio-s-artifact-norm-en1992-mut-anchors-capacity",
  "semio-s-artifact-norm-en1992-mut-anchors-head",
@@ -7701,7 +7706,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-norm-en1992-mut-anchor-actions-resultants"
+name = "semio-s-artifact-norm-en1992-mut-anchor-lists-rows"
 version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
@@ -7716,7 +7721,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-norm-en1992-mut-anchor-lists-rows"
+name = "semio-s-artifact-norm-en1992-mut-anchor-resultants"
 version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
@@ -7823,6 +7828,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-norm-en1992-mut-fields-liquid-bridge"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-s-artifact-norm-en1992-diff",
+ "semio-s-artifact-norm-en1992-model",
+ "semio-ui-locale",
+ "serde",
+]
+
+[[package]]
 name = "semio-s-artifact-norm-en1992-mut-geometry-bar-fields"
 version = "0.1.0"
 dependencies = [
@@ -7833,7 +7853,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-s-artifact-norm-en1992-diff",
  "semio-s-artifact-norm-en1992-model",
- "semio-s-artifact-norm-en1992-mut-member-fields-liquid-bridge",
+ "semio-s-artifact-norm-en1992-mut-fields-liquid-bridge",
  "semio-ui-locale",
  "serde",
 ]
@@ -7864,22 +7884,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-s-artifact-norm-en1992-diff",
  "semio-s-artifact-norm-en1992-model",
- "semio-s-artifact-norm-en1992-mut-geometry-tendons-studs-more",
- "semio-ui-locale",
- "serde",
-]
-
-[[package]]
-name = "semio-s-artifact-norm-en1992-mut-geometry-tendons-studs-more"
-version = "0.1.0"
-dependencies = [
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-s-artifact-norm-en1992-diff",
- "semio-s-artifact-norm-en1992-model",
+ "semio-s-artifact-norm-en1992-mut-tendons-studs-more",
  "semio-ui-locale",
  "serde",
 ]
@@ -7940,22 +7945,7 @@ dependencies = [
  "semio-os-kernel",
  "semio-s-artifact-norm-en1992-diff",
  "semio-s-artifact-norm-en1992-model",
- "semio-s-artifact-norm-en1992-mut-member-fields-liquid-bridge",
- "semio-ui-locale",
- "serde",
-]
-
-[[package]]
-name = "semio-s-artifact-norm-en1992-mut-member-fields-liquid-bridge"
-version = "0.1.0"
-dependencies = [
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-os-kernel",
- "semio-s-artifact-norm-en1992-diff",
- "semio-s-artifact-norm-en1992-model",
+ "semio-s-artifact-norm-en1992-mut-fields-liquid-bridge",
  "semio-ui-locale",
  "serde",
 ]
@@ -8222,6 +8212,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-norm-en1992-mut-tendons-studs-more"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-s-artifact-norm-en1992-diff",
+ "semio-s-artifact-norm-en1992-model",
+ "semio-ui-locale",
+ "serde",
+]
+
+[[package]]
 name = "semio-s-artifact-norm-en1992-mutations"
 version = "0.1.0"
 dependencies = [
@@ -8241,8 +8246,8 @@ dependencies = [
  "semio-s-artifact-norm-en1992-model",
  "semio-s-artifact-norm-en1992-mut-anchor-actions-identity",
  "semio-s-artifact-norm-en1992-mut-anchor-actions-loads",
- "semio-s-artifact-norm-en1992-mut-anchor-actions-resultants",
  "semio-s-artifact-norm-en1992-mut-anchor-lists-rows",
+ "semio-s-artifact-norm-en1992-mut-anchor-resultants",
  "semio-s-artifact-norm-en1992-mut-anchors",
  "semio-s-artifact-norm-en1992-mut-anchors-capacity",
  "semio-s-artifact-norm-en1992-mut-anchors-head",
@@ -8371,10 +8376,12 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-2d-compute",
+ "semio-framework-action-bus",
  "semio-framework-async-macros",
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-job",
  "semio-framework-schema",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -8718,6 +8725,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-plugin-norm-compliance-core",
+ "semio-s-plugin-norm-design-case",
  "semio-s-plugin-norm-ndp",
  "semio-ui-locale",
  "serde",
@@ -8739,6 +8747,28 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-plugin-norm-ndp",
+ "semio-ui-locale",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-norm-design-case"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-diagnostic",
+ "semio-framework-dispatch-macros",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-s-plugin-norm-compliance-core",
  "semio-s-plugin-norm-ndp",
  "semio-ui-locale",
  "serde",

@@ -1,6 +1,10 @@
 import type { BuildGraphV1, BuildTargetV1, BuildProjectV1 } from "./🏗️build/🕸️graph/📋️model/🟦️.ts";
 /** 🕸️ Actual JavaScript projection exports retain dynamic graph DATA as unknown. */
 export function nxBuildDependencyImplementationV1():string;
+export function nxBuildDependencyImplementationChangesV1():readonly string[];
+export function nxBuildDependencyImplementationRevisionsV1():readonly Readonly<{path:string;sha256:string}>[];
+export function nxBuildDependencyImplementationChangesFromV1(revisions:readonly Readonly<{path:string;sha256:string}>[]):readonly string[];
+export function nxBuildDependencyImplementationProbeV1(options?:{timeoutMilliseconds?:number;maximumBytes?:number}):Readonly<{identity:string;revisions:readonly Readonly<{path:string;sha256:string}>[]}>;
 export function nxBuildEngineReferencesV1(source:string):readonly Readonly<{kind:"module"|"directory-url"|"file-url";specifier:string}>[];
 export function nxBuildEngineSourceFileV1(owner:string,specifier:string):string;
 export function nxBuildEngineWorkspacePackageFileV1(root:string,specifier:string):string|undefined;

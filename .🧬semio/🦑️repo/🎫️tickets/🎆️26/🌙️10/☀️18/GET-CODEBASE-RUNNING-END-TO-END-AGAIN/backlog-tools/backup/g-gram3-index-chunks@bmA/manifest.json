@@ -1,0 +1,52 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts": {
+  "file": "f000",
+  "before": "1ae64399a799c93d2cbc87710a011269d84bbe4f9a28aafc4be1dc0308d51a51",
+  "after": "8eaa679c4177bd60bc673367a4a590c0f98a7ebf9f156c6f8ef8bb0318745704"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs": {
+  "file": "f001",
+  "before": "5fbe6926cc1a45c16bfbad9cbe27474bc7549638cd015df1e2cabeb0c7c0b727",
+  "after": "53bc055f54e562d44ed9413b7aeb66cb532c1db857b7f8d9657541e2c529926d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/legacy.ts": {
+  "file": null,
+  "before": null,
+  "after": "26b27164af45b71bca6a0fc797a8943e87b3bb9ee7a8e3b14e76f245d6ed039b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "e4f6d6f658a28783cf58103a71fad30c1e14f553abaa77bb4214c8438cf3ec0c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "d73e1ae036079c2a5ad38ed1eb2a1f6c7d8fac04068df30493c4a1799fa33861"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🧱️index-chunks/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "11999671a904140085f9135735ee65fe49d460439b10489c863485176144cda0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🟨️.d.mts": {
+  "file": null,
+  "before": null,
+  "after": "aa510cbb14990fb65da20319a10e40449bbb362b64a04686a29b4b5e97a329d3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🟨️.mjs": {
+  "file": null,
+  "before": null,
+  "after": "4d009f13b1cf2f50ffee42f3b9aac505ee2407483b4c15b112b0c8574c442f98"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🧪️tests/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "af309f4a65a1b3c7dea3a42de9c6c0e697cb602591c8f4e004f00d05eed98d65"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧱️chunk-classes/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "222579ee1432e330703938591ffdbffe76f17575de28db3f561b679751d88507"
+ }
+}

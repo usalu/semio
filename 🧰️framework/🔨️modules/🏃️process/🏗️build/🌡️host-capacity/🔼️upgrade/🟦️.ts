@@ -114,7 +114,7 @@ export async function upgradeHostGrantV1(context:HostUpgradeContextV1):Promise<"
      if(at-lastProgress>=policy.wait.progressMilliseconds){
       lastProgress=at;
       const position=evaluation.decisions.findIndex(row=>row.id===request.id),before=evaluation.decisions.slice(0,position),spare=evaluation.headroomMegabytes-before.reduce((sum,row)=>sum+row.reservedMegabytes,0);
-      write(formatHostCapacityV1(language,"upgrading",{operation:request.operation,seconds:Math.round((at-started)/1000),from:state.reservedMegabytes,to:Math.min(asked.fixedMegabytes+asked.minimumJobs*request.perJobMegabytes,Math.max(0,host.totalMegabytes-evaluation.floorMegabytes)),reason:describeHostReasonV1(language,mine.reason as Exclude<HostReasonV1,"fits"|"reduced"|"override">),spare,floor:evaluation.floorMegabytes,running:grants.filter(row=>row.id!==request.id).length,ahead:position,behind:describeHostBlockersV1(language,hostBlockersV1(policy,grants,waiters,evaluation,request.id,at))}));
+      write(formatHostCapacityV1(language,"upgrading",{operation:request.operation,seconds:Math.round((at-started)/1000),from:state.reservedMegabytes,to:Math.min(asked.fixedMegabytes+asked.minimumJobs*request.perJobMegabytes,Math.max(0,host.totalMegabytes-evaluation.floorMegabytes)),reason:describeHostReasonV1(language,mine.reason as Exclude<HostReasonV1,"fits"|"reduced"|"override"|"shrunk"|"lent">),spare,floor:evaluation.floorMegabytes,running:grants.filter(row=>row.id!==request.id).length,ahead:position,behind:describeHostBlockersV1(language,hostBlockersV1(policy,grants,waiters,evaluation,request.id,at))}));
       progressAt=at;
      }
     }finally{ledger.releaseLock(directory,pid);}

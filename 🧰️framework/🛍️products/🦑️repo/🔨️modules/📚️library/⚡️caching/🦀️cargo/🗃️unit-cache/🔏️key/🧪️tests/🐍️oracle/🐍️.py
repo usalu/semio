@@ -106,6 +106,12 @@ def normalize(args, digests, root, policy):
         if argument.startswith("-Ldependency="):
             index += 1
             continue
+        if argument == "--diagnostic-width":
+            index += 2
+            continue
+        if argument.startswith("--diagnostic-width="):
+            index += 1
+            continue
         if argument == "--extern" or argument.startswith("--extern="):
             hit, value, index = take("--extern", argument, index)
             equals = value.find("=")

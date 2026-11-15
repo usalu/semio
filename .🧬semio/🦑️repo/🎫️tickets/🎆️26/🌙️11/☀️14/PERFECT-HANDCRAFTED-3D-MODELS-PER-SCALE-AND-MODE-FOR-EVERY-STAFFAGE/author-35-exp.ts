@@ -1,0 +1,23 @@
+import { evaluate } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+import { worldSolids } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
+import { exposedArea } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🧮️measures/🟦️.ts";
+import { entryOf, loadSource, merged } from "./volumes-lib.ts";
+const [spec, scaleS, id] = process.argv.slice(2) as string[];
+const { entry, asset } = entryOf(spec!);
+const sc = Number(scaleS);
+const m = merged(asset, loadSource(entry)!) as any;
+const st = evaluate(m, { kind: "pose", pose: m.presentation.defaultPose }, { kind: "scale", scale: { denominator: sc } });
+const L = (l: any) => worldSolids(m, st.bones as never, sc, l);
+const [b, t, s] = [L("body"), L("thermal"), L("structure")];
+const tgt = t.filter((w: any) => w.id === id);
+const feat = 0.15e-3 * sc;
+console.log("target", tgt.length, "alone", exposedArea(tgt, [], [], () => false, 0.02 * feat).toFixed(2));
+for (const [n, l] of [["body", b], ["thermal", t], ["structure", s]] as const) console.log("vs", n, exposedArea(tgt, l, [], (o: any) => o === tgt[0], 0.02 * feat).toFixed(2));
+const src = loadSource(entry)! as any;
+const own = src.volumes[scaleS].thermal.filter((x: any) => x.region === "lattice").map((x: any) => x.id);
+const ownW = t.filter((w: any) => own.includes(w.id));
+const set = new Set(ownW);
+const all = [...b, ...t, ...s];
+let tot = 0;
+for (const w of ownW) { const a = exposedArea([w], all, [], (o: any) => set.has(o), 0.02 * feat); tot += a; console.log(w.id.padEnd(28), a.toFixed(2)); }
+console.log("total", tot.toFixed(2), "region solids", own.length);

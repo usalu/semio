@@ -291,8 +291,9 @@ pub fn check_n2_performance(report: &mut CheckReport, annex: AnnexChoice, docume
     }
     let sd_factor = ndp_number("ndp.en1998.en3.chord-rotation.sd-factor", annex);
     let path = id_sel("assessments", &a.id);
-    for (state, label_en, label_de) in [("sd", "SD", "SD"), ("nc", "NC", "NC")] {
-        let probe = semio_s_artifact_norm_en1998_model::En1998Assessment { limit_state: state.into(), ..a.clone() };
+    for (limit_state, label_en, label_de) in [(semio_s_artifact_norm_en1998_model::LimitState::Sd, "SD", "SD"), (semio_s_artifact_norm_en1998_model::LimitState::Nc, "NC", "NC")] {
+        let state = limit_state.token();
+        let probe = semio_s_artifact_norm_en1998_model::En1998Assessment { limit_state, ..a.clone() };
         let capacity = chord_capacity(annex, &probe);
         let Some(theta) = part_3::chord_rotation_capacity_rad(state, capacity.yield_rad, capacity.ultimate_rad, sd_factor).filter(|t| *t > 0.0) else { continue };
         let a_g_state = gamma_i * a_g * part_3::limit_state_ag_factor(state, annex);

@@ -328,8 +328,12 @@ func (q ProvisionRequest) fetch(ctx context.Context, row Distribution, final str
 	}
 	defer os.RemoveAll(staging)
 	archive := filepath.Join(staging, row.Archive)
-	if err := q.download(ctx, row, link, base, archive); err != nil {
-		return err
+	store := fleetStoreDirectory(q.Root, q.Env)
+	if !fleetFetchInto(store, row, archive) {
+		if err := q.download(ctx, row, link, base, archive); err != nil {
+			return err
+		}
+		fleetPublish(store, row, archive)
 	}
 	executable := filepath.Join(staging, q.Runtime.ExecutableName())
 	digest, size, err := q.extract(row, archive, executable)

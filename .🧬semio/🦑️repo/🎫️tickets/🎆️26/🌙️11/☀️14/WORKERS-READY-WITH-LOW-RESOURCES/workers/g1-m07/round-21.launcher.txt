@@ -1,0 +1,35 @@
+## before try 1 2026-11-15T06:17:58Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## after try 1 2026-11-15T06:58:58Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## before try 2 2026-11-15T07:01:59Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## after try 2 2026-11-15T07:26:31Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## before try 3 2026-11-15T07:29:32Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## after try 3 2026-11-15T08:03:42Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+## before try 4 2026-11-15T08:03:44Z
+3496899 lrwxr-xr-x@ 1 ueli  staff  30 Nov 14 22:55 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+target inode 3496898 mtime 2026-11-14T22:55:52
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357

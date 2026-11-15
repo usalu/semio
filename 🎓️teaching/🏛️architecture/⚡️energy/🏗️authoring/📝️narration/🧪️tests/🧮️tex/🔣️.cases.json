@@ -1,0 +1,46 @@
+{
+  "segments": [
+    {"text": "Plain prose.", "segments": [["text", "Plain prose."]]},
+    {"text": "Die Differenz $\\Delta\\theta$, innen.", "segments": [["text", "Die Differenz "], ["math", "\\Delta\\theta"], ["text", ", innen."]]},
+    {"text": "$a$ und $b_{i}$", "segments": [["math", "a"], ["text", " und "], ["math", "b_{i}"]]},
+    {"text": "Preis 5 \\$ netto", "segments": [["text", "Preis 5 $ netto"]]},
+    {"text": "$\\frac{a}{b}$", "segments": [["math", "\\frac{a}{b}"]]}
+  ],
+  "segmentErrors": ["offen $a", "leer $$ hier", "$a$ $"],
+  "unicode": [
+    {"tex": "\\Delta\\theta", "expected": "Δθ"},
+    {"tex": "\\Delta\\theta = \\theta_i - \\theta_e", "expected": "Δθ = θ_i − θ_e"},
+    {"tex": "\\dot{Q}_{\\mathrm{V}}", "expected": "Q̇_V"},
+    {"tex": "\\dot{V}\\cdot n", "expected": "V̇ · n"},
+    {"tex": "\\Phi = U \\cdot A \\cdot \\Delta\\theta", "expected": "Φ = U · A · Δθ"},
+    {"tex": "0{,}34\\,\\mathrm{Wh/(m^3K)}", "expected": "0,34 Wh/(m³K)"},
+    {"tex": "\\frac{\\mathrm{W}}{\\mathrm{m^2\\,K}}", "expected": "W/(m² K)"},
+    {"tex": "\\frac{\\Phi}{\\Delta\\theta}", "expected": "Φ/(Δθ)"},
+    {"tex": "\\frac{a}{b}", "expected": "a/b"},
+    {"tex": "20\\,^\\circ\\mathrm{C}", "expected": "20 °C"},
+    {"tex": "\\mathrm{h^{-1}}", "expected": "h⁻¹"},
+    {"tex": "1\\,000\\,\\mathrm{kWh}", "expected": "1 000 kWh"},
+    {"tex": "g_\\perp", "expected": "g_⊥"},
+    {"tex": "R_{si}", "expected": "R_si"},
+    {"tex": "\\eta_{\\mathrm{WRG}}", "expected": "η_WRG"},
+    {"tex": "\\dot{Q}_{V,\\mathrm{lat}}", "expected": "Q̇_(V,lat)"},
+    {"tex": "x^n", "expected": "x^n"},
+    {"tex": "x = -5", "expected": "x = −5"},
+    {"tex": "\\sqrt{x+1}", "expected": "√(x + 1)"},
+    {"tex": "\\rho=1{,}2\\,\\mathrm{kg/m^3}", "expected": "ρ = 1,2 kg/m³"},
+    {"tex": "\\mathrm{kg\\cdot m}", "expected": "kg·m"}
+  ],
+  "plain": [
+    {"text": "Treiber ist die Temperaturdifferenz $\\Delta\\theta$, innen minus außen.", "expected": "Treiber ist die Temperaturdifferenz Δθ, innen minus außen."},
+    {"text": "Ohne Formel.", "expected": "Ohne Formel."}
+  ],
+  "thirdParty": [
+    {"tex": "\\Delta\\theta", "expected": "Δθ"},
+    {"tex": "\\Phi\\rho\\lambda\\eta\\psi", "expected": "Φρληψ"},
+    {"tex": "\\theta_i", "expected": "θ_i"},
+    {"tex": "\\dot{Q}", "expected": "Q̇"},
+    {"tex": "a \\pm b", "expected": "a ± b"},
+    {"tex": "x \\approx y", "expected": "x ≈ y"}
+  ],
+  "invalid": ["\\foo", "\\mathrm{kWh", "x_", "\\text{a\\b}", "a'", "\\frac{a}", "}"]
+}

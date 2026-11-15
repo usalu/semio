@@ -1,0 +1,13 @@
+{
+ "policy":{"retainMilliseconds":21600000,"maximumAgeMilliseconds":86400000,"maximumBytes":1000,"maximumEntries":4},
+ "cases":[
+  {"name":"young files are kept whatever the bounds say","files":[{"name":"a.json","bytes":900,"ageMilliseconds":1000},{"name":"b.json","bytes":900,"ageMilliseconds":2000}],"live":[],"remove":[]},
+  {"name":"files past the maximum age go, older ones and unreferenced first","files":[{"name":"old.json","bytes":10,"ageMilliseconds":90000000},{"name":"mid.json","bytes":10,"ageMilliseconds":30000000}],"live":[],"remove":["old.json"]},
+  {"name":"a live file is never removed even when old and over the bounds","files":[{"name":"live.json","bytes":2000,"ageMilliseconds":900000000},{"name":"dead.json","bytes":10,"ageMilliseconds":30000000}],"live":["live.json"],"remove":["dead.json"]},
+  {"name":"the byte bound removes the oldest unprotected files until the total fits","files":[{"name":"a.json","bytes":400,"ageMilliseconds":30000000},{"name":"b.json","bytes":400,"ageMilliseconds":40000000},{"name":"c.json","bytes":400,"ageMilliseconds":50000000},{"name":"fresh.json","bytes":100,"ageMilliseconds":10}],"live":[],"remove":["c.json"]},
+  {"name":"the entry bound removes the oldest unprotected files","files":[{"name":"a.json","bytes":1,"ageMilliseconds":30000000},{"name":"b.json","bytes":1,"ageMilliseconds":40000000},{"name":"c.json","bytes":1,"ageMilliseconds":50000000},{"name":"d.json","bytes":1,"ageMilliseconds":60000000},{"name":"e.json","bytes":1,"ageMilliseconds":70000000},{"name":"f.json","bytes":1,"ageMilliseconds":80000000}],"live":[],"remove":["f.json","e.json"]},
+  {"name":"bytes of protected files count toward the bound so unprotected ones give way first","files":[{"name":"young.json","bytes":900,"ageMilliseconds":5},{"name":"x.json","bytes":200,"ageMilliseconds":30000000}],"live":[],"remove":["x.json"]},
+  {"name":"leftover temporary files go after the retain window, other names are never touched","files":[{"name":"w.json.ab12cd34.tmp","bytes":5,"ageMilliseconds":30000000},{"name":"fresh.json.ab12cd34.tmp","bytes":5,"ageMilliseconds":5},{"name":"notes.txt","bytes":5,"ageMilliseconds":900000000}],"live":[],"remove":["w.json.ab12cd34.tmp"]},
+  {"name":"nothing to do on an empty directory","files":[],"live":[],"remove":[]}
+ ]
+}

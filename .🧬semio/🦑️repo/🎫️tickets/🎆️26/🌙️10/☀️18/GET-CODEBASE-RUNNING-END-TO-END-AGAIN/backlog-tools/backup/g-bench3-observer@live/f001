@@ -1,0 +1,2496 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Performance SLO Table and Bench",
+  "description": "The service level objectives of the build system (hot-cache latency, edit to rebuild, cache hit rate, graph, memory, concurrency), the probes that measure them on a disposable checkout copy behind the tool-neutral interface, and the report and regression comparison of `repo bench`; every build implementation is held to the same table.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "id": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+        "taskId": "^\\S+:\\S+$",
+        "nonce": "^[0-9a-z]{6,32}$",
+        "kinds": [
+          "cli-help",
+          "noop",
+          "edit",
+          "peer",
+          "graph",
+          "cache",
+          "concurrency"
+        ],
+        "order": [
+          "cli-help",
+          "noop",
+          "edit",
+          "peer",
+          "graph",
+          "cache",
+          "concurrency"
+        ],
+        "metrics": {
+          "cli-help": {
+            "plain": [
+              "wallMs"
+            ],
+            "memory": []
+          },
+          "noop": {
+            "plain": [
+              "wallMs",
+              "queueMs",
+              "graphMs",
+              "executeMs",
+              "executedActions",
+              "inferredProjects"
+            ],
+            "memory": [
+              "peakRssBytes"
+            ]
+          },
+          "edit": {
+            "plain": [
+              "startMs",
+              "greenMs",
+              "queueMs",
+              "graphMs",
+              "executeMs",
+              "executedActions",
+              "inferredProjects"
+            ],
+            "memory": [
+              "peakRssBytes"
+            ]
+          },
+          "peer": {
+            "plain": [
+              "wallMs",
+              "queueMs",
+              "graphMs",
+              "executeMs",
+              "executedActions",
+              "inferredProjects"
+            ],
+            "memory": [
+              "peakRssBytes"
+            ]
+          },
+          "graph": {
+            "plain": [
+              "wallMs"
+            ],
+            "memory": []
+          },
+          "cache": {
+            "plain": [
+              "hitRatio"
+            ],
+            "memory": []
+          },
+          "concurrency": {
+            "plain": [
+              "makespanMs",
+              "maxUnrelatedWaitMs",
+              "speedup"
+            ],
+            "memory": []
+          }
+        },
+        "units": {
+          "wallMs": "ms",
+          "startMs": "ms",
+          "greenMs": "ms",
+          "peakRssBytes": "bytes",
+          "hitRatio": "ratio",
+          "makespanMs": "ms",
+          "maxUnrelatedWaitMs": "ms",
+          "speedup": "ratio",
+          "queueMs": "ms",
+          "graphMs": "ms",
+          "executeMs": "ms",
+          "executedActions": "count",
+          "inferredProjects": "count"
+        },
+        "statistics": [
+          "min",
+          "p50",
+          "p95",
+          "p99",
+          "max",
+          "mean"
+        ],
+        "percentileMethod": "linear-inclusive",
+        "minimumSamples": {
+          "min": 1,
+          "p50": 3,
+          "p95": 20,
+          "p99": 100,
+          "max": 1,
+          "mean": 3
+        },
+        "loadPerCore": {
+          "quietBelow": 0.5,
+          "saturatedFrom": 1.5
+        },
+        "maximumRuns": 1000,
+        "maximumWarmup": 20,
+        "maximumPathLength": 255,
+        "maximumLines": 200000,
+        "maximumLogBytes": 268435456,
+        "memoryIntervalMilliseconds": 100,
+        "markers": {
+          "nx": [
+            "^> nx run "
+          ],
+          "bazel": [
+            "^(?:INFO: )?(?:Analyzing|Analyzed)\\b",
+            "^\\[\\d+ / \\d+\\]"
+          ],
+          "neutral": []
+        },
+        "scriptRow": "^\\[script\\] (\\{.*\\})$",
+        "defaultTolerance": {
+          "relative": 0.15,
+          "absolute": 25
+        },
+        "oneshotFlag": "--service=off",
+        "residentFlag": "--service=require",
+        "serviceOperation": "service",
+        "sources": [
+          "user-goal",
+          "cli-latency",
+          "graph-speed",
+          "hot-cache",
+          "conc-harness",
+          "provisional",
+          "boot-fast",
+          "product-budget"
+        ],
+        "reasons": [
+          "no-samples",
+          "too-few-samples",
+          "probe-failed",
+          "unavailable",
+          "not-cold",
+          "host-saturated",
+          "service-unavailable",
+          "unsupported",
+          "host-class",
+          "schema",
+          "start-unobserved"
+        ],
+        "statuses": [
+          "pass",
+          "warn",
+          "fail",
+          "unproven",
+          "recorded"
+        ],
+        "compareStatuses": [
+          "improved",
+          "same",
+          "regressed",
+          "inconclusive",
+          "incomparable",
+          "new",
+          "missing"
+        ],
+        "maximumObservedLineCharacters": 4096,
+        "phases": {
+          "initial": "boot",
+          "rules": [
+            {
+              "id": "queue-capacity",
+              "patterns": [
+                "^\\[capacity\\] waiting"
+              ]
+            },
+            {
+              "id": "queue-graph",
+              "patterns": [
+                "Waiting for access to",
+                "lease-queue",
+                "^graph: waiting for the graph build"
+              ]
+            },
+            {
+              "id": "verify",
+              "patterns": [
+                "generation-verify",
+                "Verifying graph facts",
+                "resource-directory-admission",
+                "lease-sweep",
+                "boot-recovery",
+                "repository-cache-charge"
+              ]
+            },
+            {
+              "id": "admission",
+              "patterns": [
+                "build:source-admission"
+              ]
+            },
+            {
+              "id": "graph",
+              "patterns": [
+                "build:(graph-plan|discover|projects|graph-phase)",
+                "^graph: ",
+                "Assembling the graph",
+                "Inferring projects"
+              ]
+            },
+            {
+              "id": "tool-setup",
+              "patterns": [
+                "^\\[bazel\\] ",
+                "^Analyzing",
+                "^Loading",
+                "^Computing main repo",
+                "^INFO: (Invocation ID|Analyzed)"
+              ]
+            },
+            {
+              "id": "execute",
+              "patterns": [
+                "^\\[\\d+ / \\d+\\]",
+                "^> nx run ",
+                "^INFO: From ",
+                "^\\$ nx "
+              ]
+            },
+            {
+              "id": "finish",
+              "patterns": [
+                "^INFO: (Elapsed time|Build completed)",
+                "Build Event Protocol",
+                "^Successfully ran",
+                "^NX +Successfully"
+              ]
+            }
+          ],
+          "metrics": {
+            "queueMs": [
+              "queue-capacity",
+              "queue-graph"
+            ],
+            "graphMs": [
+              "verify",
+              "admission",
+              "graph"
+            ],
+            "executeMs": [
+              "tool-setup",
+              "execute",
+              "finish"
+            ]
+          }
+        },
+        "observation": {
+          "graphRefreshing": "^graph: refreshing (\\d+) projects",
+          "graphInferring": "Inferring projects: \\d+ of (\\d+) projects",
+          "bazelProcesses": "^INFO: (\\d+) processes?: (.*?)\\.?$",
+          "bazelIdle": [
+            "^internal$",
+            "cache hit$"
+          ],
+          "nxTask": "^> nx run ",
+          "nxCached": "^> nx run .*\\[(local cache|remote cache|existing outputs match the cache)"
+        },
+        "history": {
+          "name": "^([0-9]{8}T[0-9]{6}Z)-(.+)\\.json$",
+          "prefix": "history:"
+        }
+      }
+    },
+    "Id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+    },
+    "TaskId": {
+      "type": "string",
+      "pattern": "^\\S+:\\S+$"
+    },
+    "Path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "LocalizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Tool": {
+      "enum": [
+        "nx",
+        "bazel"
+      ]
+    },
+    "SloTool": {
+      "enum": [
+        "nx",
+        "bazel",
+        "neutral"
+      ]
+    },
+    "Kind": {
+      "enum": [
+        "cli-help",
+        "noop",
+        "edit",
+        "peer",
+        "graph",
+        "cache",
+        "concurrency"
+      ]
+    },
+    "Lane": {
+      "enum": [
+        "oneshot",
+        "resident"
+      ]
+    },
+    "Metric": {
+      "enum": [
+        "wallMs",
+        "startMs",
+        "greenMs",
+        "peakRssBytes",
+        "hitRatio",
+        "makespanMs",
+        "maxUnrelatedWaitMs",
+        "speedup",
+        "queueMs",
+        "graphMs",
+        "executeMs",
+        "executedActions",
+        "inferredProjects"
+      ]
+    },
+    "Statistic": {
+      "enum": [
+        "min",
+        "p50",
+        "p95",
+        "p99",
+        "max",
+        "mean"
+      ]
+    },
+    "Direction": {
+      "enum": [
+        "lower",
+        "higher"
+      ]
+    },
+    "Unit": {
+      "enum": [
+        "ms",
+        "bytes",
+        "ratio",
+        "count"
+      ]
+    },
+    "Enforcement": {
+      "enum": [
+        "advisory",
+        "blocking"
+      ]
+    },
+    "Source": {
+      "enum": [
+        "user-goal",
+        "cli-latency",
+        "graph-speed",
+        "hot-cache",
+        "conc-harness",
+        "provisional",
+        "boot-fast",
+        "product-budget"
+      ]
+    },
+    "Language": {
+      "enum": [
+        "ts",
+        "rs",
+        "go",
+        "py"
+      ]
+    },
+    "EditOp": {
+      "enum": [
+        "comment",
+        "private-body",
+        "public-api"
+      ]
+    },
+    "Reason": {
+      "enum": [
+        "no-samples",
+        "too-few-samples",
+        "probe-failed",
+        "unavailable",
+        "not-cold",
+        "host-saturated",
+        "service-unavailable",
+        "unsupported",
+        "host-class",
+        "schema",
+        "start-unobserved"
+      ]
+    },
+    "Status": {
+      "enum": [
+        "pass",
+        "warn",
+        "fail",
+        "unproven",
+        "recorded"
+      ]
+    },
+    "CompareStatus": {
+      "enum": [
+        "improved",
+        "same",
+        "regressed",
+        "inconclusive",
+        "incomparable",
+        "new",
+        "missing"
+      ]
+    },
+    "LoadClass": {
+      "enum": [
+        "quiet",
+        "busy",
+        "saturated",
+        "unknown"
+      ]
+    },
+    "StartKind": {
+      "enum": [
+        "marker",
+        "first-output",
+        "exit"
+      ]
+    },
+    "EditUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "language",
+        "target",
+        "file",
+        "op",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "language": {
+          "$ref": "#/definitions/Language"
+        },
+        "target": {
+          "$ref": "#/definitions/TaskId"
+        },
+        "file": {
+          "$ref": "#/definitions/Path"
+        },
+        "op": {
+          "$ref": "#/definitions/EditOp"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        }
+      }
+    },
+    "Probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "title",
+        "runs",
+        "warmup"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "kind": {
+          "$ref": "#/definitions/Kind"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "lane": {
+          "$ref": "#/definitions/Lane"
+        },
+        "target": {
+          "$ref": "#/definitions/TaskId"
+        },
+        "unit": {
+          "$ref": "#/definitions/Id"
+        },
+        "workload": {
+          "$ref": "#/definitions/Id"
+        },
+        "sessions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "warmup": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "cold": {
+          "type": "boolean"
+        },
+        "memory": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Tolerance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relative",
+        "absolute"
+      ],
+      "properties": {
+        "relative": {
+          "type": "number",
+          "minimum": 0
+        },
+        "absolute": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Slo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "probe",
+        "metric",
+        "statistic",
+        "direction",
+        "goal",
+        "gate",
+        "tools",
+        "enforcement",
+        "tolerance",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "probe": {
+          "$ref": "#/definitions/Id"
+        },
+        "metric": {
+          "$ref": "#/definitions/Metric"
+        },
+        "statistic": {
+          "$ref": "#/definitions/Statistic"
+        },
+        "direction": {
+          "$ref": "#/definitions/Direction"
+        },
+        "goal": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gate": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tools": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/SloTool"
+          }
+        },
+        "enforcement": {
+          "$ref": "#/definitions/Enforcement"
+        },
+        "tolerance": {
+          "$ref": "#/definitions/Tolerance"
+        },
+        "source": {
+          "$ref": "#/definitions/Source"
+        }
+      }
+    },
+    "Labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "name",
+        "list",
+        "probes",
+        "slos",
+        "host",
+        "platform",
+        "cpus",
+        "memory",
+        "load",
+        "hostClass",
+        "probe",
+        "slo",
+        "tool",
+        "lane",
+        "oneshot",
+        "resident",
+        "neutral",
+        "metric",
+        "statistic",
+        "value",
+        "goal",
+        "gate",
+        "samples",
+        "status",
+        "reason",
+        "tolerance",
+        "enforcement",
+        "advisory",
+        "blocking",
+        "pass",
+        "warn",
+        "fail",
+        "unproven",
+        "recorded",
+        "improved",
+        "same",
+        "regressed",
+        "inconclusive",
+        "incomparable",
+        "new",
+        "missing",
+        "comparison",
+        "baseline",
+        "current",
+        "delta",
+        "relative",
+        "summary",
+        "series",
+        "quiet",
+        "busy",
+        "saturated",
+        "unknown",
+        "runs",
+        "warmup",
+        "kind",
+        "unit",
+        "source",
+        "progress",
+        "started",
+        "finished",
+        "startKinds",
+        "marker",
+        "first-output",
+        "exit",
+        "inflated",
+        "blockingFailed",
+        "blockingRegressed",
+        "notes",
+        "note-load",
+        "note-percentile",
+        "note-start",
+        "note-recorded",
+        "note-marks",
+        "cold",
+        "target",
+        "workload",
+        "sessions",
+        "file",
+        "language",
+        "edit",
+        "cache",
+        "graph",
+        "noop",
+        "cli-help",
+        "concurrency",
+        "nx",
+        "bazel",
+        "ms",
+        "bytes",
+        "ratio",
+        "wallMs",
+        "startMs",
+        "greenMs",
+        "peakRssBytes",
+        "hitRatio",
+        "makespanMs",
+        "maxUnrelatedWaitMs",
+        "speedup",
+        "no-samples",
+        "too-few-samples",
+        "probe-failed",
+        "unavailable",
+        "not-cold",
+        "host-saturated",
+        "service-unavailable",
+        "unsupported",
+        "host-class",
+        "schema",
+        "start-unobserved",
+        "queueMs",
+        "graphMs",
+        "executeMs",
+        "executedActions",
+        "inferredProjects",
+        "count",
+        "peer",
+        "overBudget",
+        "budget",
+        "history"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "name": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "list": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "probes": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "slos": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "host": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "platform": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "cpus": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "memory": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "load": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "hostClass": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "probe": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "slo": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "tool": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "lane": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "oneshot": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "resident": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "neutral": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "metric": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "statistic": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "value": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "goal": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "gate": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "samples": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "status": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "reason": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "tolerance": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "enforcement": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "advisory": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "blocking": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "pass": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "warn": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "fail": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "unproven": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "recorded": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "improved": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "same": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "regressed": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "inconclusive": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "incomparable": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "new": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "missing": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "comparison": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "baseline": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "current": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "delta": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "relative": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "summary": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "series": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "quiet": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "busy": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "saturated": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "unknown": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "runs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "warmup": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "kind": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "unit": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "source": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "progress": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "started": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "finished": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "startKinds": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "marker": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "first-output": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "exit": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "inflated": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "blockingFailed": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "blockingRegressed": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "notes": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "note-load": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "note-percentile": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "note-start": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "note-recorded": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "note-marks": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "cold": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "target": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "workload": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "sessions": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "file": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "language": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "edit": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "cache": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "graph": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "noop": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "cli-help": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "concurrency": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "nx": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "bazel": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "ms": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "bytes": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "ratio": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "wallMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "startMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "greenMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "peakRssBytes": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "hitRatio": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "makespanMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "maxUnrelatedWaitMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "speedup": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "no-samples": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "too-few-samples": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "probe-failed": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "unavailable": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "not-cold": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "host-saturated": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "service-unavailable": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "unsupported": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "host-class": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "schema": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "start-unobserved": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "queueMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "graphMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "executeMs": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "executedActions": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "inferredProjects": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "count": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "peer": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "overBudget": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "budget": {
+          "$ref": "#/definitions/LocalizedText"
+        },
+        "history": {
+          "$ref": "#/definitions/LocalizedText"
+        }
+      }
+    },
+    "SloSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "labels",
+        "units",
+        "probes",
+        "slos"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "labels": {
+          "$ref": "#/definitions/Labels"
+        },
+        "units": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/EditUnit"
+          }
+        },
+        "probes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Probe"
+          }
+        },
+        "slos": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Slo"
+          }
+        }
+      }
+    },
+    "Values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "wallMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "startMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "greenMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "peakRssBytes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "hitRatio": {
+          "type": "number",
+          "minimum": 0
+        },
+        "makespanMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxUnrelatedWaitMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "speedup": {
+          "type": "number",
+          "minimum": 0
+        },
+        "queueMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "graphMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "executeMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "executedActions": {
+          "type": "number",
+          "minimum": 0
+        },
+        "inferredProjects": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "ok",
+        "exit",
+        "values",
+        "startKind",
+        "loadPerCore"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "exit": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "values": {
+          "$ref": "#/definitions/Values"
+        },
+        "startKind": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/StartKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loadPerCore": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n",
+        "min",
+        "p50",
+        "p95",
+        "p99",
+        "max",
+        "mean"
+      ],
+      "properties": {
+        "n": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "min": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p50": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p95": {
+          "type": "number",
+          "minimum": 0
+        },
+        "p99": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "mean": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "StatsMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "wallMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "startMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "greenMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "peakRssBytes": {
+          "$ref": "#/definitions/Stats"
+        },
+        "hitRatio": {
+          "$ref": "#/definitions/Stats"
+        },
+        "makespanMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "maxUnrelatedWaitMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "speedup": {
+          "$ref": "#/definitions/Stats"
+        },
+        "queueMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "graphMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "executeMs": {
+          "$ref": "#/definitions/Stats"
+        },
+        "executedActions": {
+          "$ref": "#/definitions/Stats"
+        },
+        "inferredProjects": {
+          "$ref": "#/definitions/Stats"
+        }
+      }
+    },
+    "StartKinds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "marker",
+        "first-output",
+        "exit"
+      ],
+      "properties": {
+        "marker": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "first-output": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exit": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Series": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "probe",
+        "tool",
+        "lane",
+        "status",
+        "reason",
+        "samples",
+        "failed",
+        "stats",
+        "loadClass",
+        "startKinds"
+      ],
+      "properties": {
+        "probe": {
+          "$ref": "#/definitions/Id"
+        },
+        "tool": {
+          "$ref": "#/definitions/SloTool"
+        },
+        "lane": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Lane"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "unavailable"
+          ]
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Reason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Sample"
+          }
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stats": {
+          "$ref": "#/definitions/StatsMap"
+        },
+        "loadClass": {
+          "$ref": "#/definitions/LoadClass"
+        },
+        "startKinds": {
+          "$ref": "#/definitions/StartKinds"
+        }
+      }
+    },
+    "Host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "arch",
+        "cpus",
+        "memoryBytes",
+        "load1",
+        "loadPerCore",
+        "loadClass",
+        "hostClass"
+      ],
+      "properties": {
+        "platform": {
+          "type": "string",
+          "minLength": 1
+        },
+        "arch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cpus": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memoryBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "load1": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loadPerCore": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loadClass": {
+          "$ref": "#/definitions/LoadClass"
+        },
+        "hostClass": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slo",
+        "tool",
+        "probe",
+        "metric",
+        "statistic",
+        "direction",
+        "unit",
+        "value",
+        "goal",
+        "gate",
+        "n",
+        "status",
+        "reason",
+        "inflated",
+        "enforcement",
+        "loadClass"
+      ],
+      "properties": {
+        "slo": {
+          "$ref": "#/definitions/Id"
+        },
+        "tool": {
+          "$ref": "#/definitions/SloTool"
+        },
+        "probe": {
+          "$ref": "#/definitions/Id"
+        },
+        "metric": {
+          "$ref": "#/definitions/Metric"
+        },
+        "statistic": {
+          "$ref": "#/definitions/Statistic"
+        },
+        "direction": {
+          "$ref": "#/definitions/Direction"
+        },
+        "unit": {
+          "$ref": "#/definitions/Unit"
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "goal": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gate": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "$ref": "#/definitions/Status"
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Reason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inflated": {
+          "type": "boolean"
+        },
+        "enforcement": {
+          "$ref": "#/definitions/Enforcement"
+        },
+        "loadClass": {
+          "$ref": "#/definitions/LoadClass"
+        }
+      }
+    },
+    "Tally": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pass",
+        "warn",
+        "fail",
+        "unproven",
+        "recorded",
+        "blockingFailed"
+      ],
+      "properties": {
+        "pass": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warn": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fail": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unproven": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recorded": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockingFailed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CompareRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slo",
+        "tool",
+        "metric",
+        "statistic",
+        "direction",
+        "unit",
+        "base",
+        "current",
+        "delta",
+        "relative",
+        "toleranceRelative",
+        "toleranceAbsolute",
+        "status",
+        "enforcement",
+        "reason"
+      ],
+      "properties": {
+        "slo": {
+          "$ref": "#/definitions/Id"
+        },
+        "tool": {
+          "$ref": "#/definitions/SloTool"
+        },
+        "metric": {
+          "$ref": "#/definitions/Metric"
+        },
+        "statistic": {
+          "$ref": "#/definitions/Statistic"
+        },
+        "direction": {
+          "$ref": "#/definitions/Direction"
+        },
+        "unit": {
+          "$ref": "#/definitions/Unit"
+        },
+        "base": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "delta": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relative": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "toleranceRelative": {
+          "type": "number",
+          "minimum": 0
+        },
+        "toleranceAbsolute": {
+          "type": "number",
+          "minimum": 0
+        },
+        "status": {
+          "$ref": "#/definitions/CompareStatus"
+        },
+        "enforcement": {
+          "$ref": "#/definitions/Enforcement"
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Reason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CompareTally": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "improved",
+        "same",
+        "regressed",
+        "inconclusive",
+        "incomparable",
+        "new",
+        "missing",
+        "blockingRegressed"
+      ],
+      "properties": {
+        "improved": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "same": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "regressed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inconclusive": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "incomparable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missing": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blockingRegressed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "currentHostClass",
+        "baselineHostClass",
+        "rows",
+        "tally"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "currentHostClass": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baselineHostClass": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CompareRow"
+          }
+        },
+        "tally": {
+          "$ref": "#/definitions/CompareTally"
+        }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "startedAt",
+        "finishedAt",
+        "host",
+        "hostAfter",
+        "tools",
+        "runsOverride",
+        "series",
+        "rows",
+        "tally",
+        "comparison"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "bench-report"
+        },
+        "startedAt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "finishedAt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "host": {
+          "$ref": "#/definitions/Host"
+        },
+        "hostAfter": {
+          "$ref": "#/definitions/Host"
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Tool"
+          }
+        },
+        "runsOverride": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Series"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        },
+        "tally": {
+          "$ref": "#/definitions/Tally"
+        },
+        "comparison": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Comparison"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "percentiles",
+        "loads",
+        "judgements",
+        "comparisons",
+        "tallies",
+        "series",
+        "selection",
+        "mutations",
+        "markers",
+        "memory",
+        "observations",
+        "history"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "percentiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "values",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "expected": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "n",
+                  "min",
+                  "p50",
+                  "p95",
+                  "p99",
+                  "max",
+                  "mean"
+                ],
+                "properties": {
+                  "n": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "min": {
+                    "type": "number"
+                  },
+                  "p50": {
+                    "type": "number"
+                  },
+                  "p95": {
+                    "type": "number"
+                  },
+                  "p99": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  },
+                  "mean": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "loads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "perCore",
+              "class"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "perCore": {
+                "oneOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "class": {
+                "$ref": "#/definitions/LoadClass"
+              }
+            }
+          }
+        },
+        "judgements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "slo",
+              "series",
+              "row"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "slo": {
+                "$ref": "#/definitions/Slo"
+              },
+              "series": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/Series"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "row": {
+                "$ref": "#/definitions/Row"
+              }
+            }
+          }
+        },
+        "comparisons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "slos",
+              "current",
+              "baseline",
+              "comparison"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "slos": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Slo"
+                }
+              },
+              "current": {
+                "$ref": "#/definitions/Report"
+              },
+              "baseline": {
+                "$ref": "#/definitions/Report"
+              },
+              "comparison": {
+                "$ref": "#/definitions/Comparison"
+              }
+            }
+          }
+        },
+        "tallies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "rows",
+              "tally"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Row"
+                }
+              },
+              "tally": {
+                "$ref": "#/definitions/Tally"
+              }
+            }
+          }
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "input",
+              "series"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "input": {},
+              "series": {
+                "$ref": "#/definitions/Series"
+              }
+            }
+          }
+        },
+        "selection": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "set",
+              "ids",
+              "tools",
+              "pairs",
+              "error"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "set": {},
+              "ids": {},
+              "tools": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Tool"
+                }
+              },
+              "pairs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "error": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "mutations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "text",
+              "op",
+              "language",
+              "nonce",
+              "result"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string"
+              },
+              "op": {
+                "$ref": "#/definitions/EditOp"
+              },
+              "language": {
+                "$ref": "#/definitions/Language"
+              },
+              "nonce": {
+                "type": "string",
+                "minLength": 1
+              },
+              "result": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "markers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "tool",
+              "lines",
+              "first"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tool": {
+                "$ref": "#/definitions/SloTool"
+              },
+              "lines": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "first": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "memory": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "table",
+              "pid",
+              "system",
+              "rss"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "table": {
+                "type": "string"
+              },
+              "pid": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "system": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rss": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "lines",
+              "wallMs",
+              "phases",
+              "executed",
+              "inferred"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "lines": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "at",
+                    "line"
+                  ],
+                  "properties": {
+                    "at": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "line": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "wallMs": {
+                "type": "number",
+                "minimum": 0
+              },
+              "phases": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "executed": {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "inferred": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "startedAt",
+              "hostClass",
+              "fileName",
+              "files",
+              "before",
+              "latest"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "startedAt": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hostClass": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fileName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "before": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "latest": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

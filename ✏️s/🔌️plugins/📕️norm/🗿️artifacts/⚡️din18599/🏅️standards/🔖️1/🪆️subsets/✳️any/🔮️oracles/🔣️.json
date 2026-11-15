@@ -449,47 +449,47 @@
           ]
         },
         {
-          "mutationId": "change-zone-internal-gains-w-m2",
-          "sourceMutationDirectoryName": "🟧change-zone-internal-gains-w-m2",
-          "mutationDirectoryName": "🟧change-zone-internal-gains-w-m2",
+          "mutationId": "change-zone-internal-gains-wm2",
+          "sourceMutationDirectoryName": "🟧change-zone-internal-gains-wm2",
+          "mutationDirectoryName": "🟧change-zone-internal-gains-wm2",
           "scenarios": [
             {
               "id": "apply",
               "directoryName": "✅apply"
             },
             {
-              "id": "change-zone-internal-gains-w-m2-noop",
+              "id": "change-zone-internal-gains-wm2-noop",
               "directoryName": "🟰noop"
             },
             {
-              "id": "change-zone-internal-gains-w-m2-gone",
+              "id": "change-zone-internal-gains-wm2-gone",
               "directoryName": "❓gone"
             },
             {
-              "id": "change-zone-internal-gains-w-m2-rule",
+              "id": "change-zone-internal-gains-wm2-rule",
               "directoryName": "🚫rule"
             }
           ]
         },
         {
-          "mutationId": "change-zone-lighting-power-w-m2",
-          "sourceMutationDirectoryName": "🟨change-zone-lighting-power-w-m2",
-          "mutationDirectoryName": "🟨change-zone-lighting-power-w-m2",
+          "mutationId": "change-zone-lighting-power-wm2",
+          "sourceMutationDirectoryName": "🟨change-zone-lighting-power-wm2",
+          "mutationDirectoryName": "🟨change-zone-lighting-power-wm2",
           "scenarios": [
             {
               "id": "apply",
               "directoryName": "✅apply"
             },
             {
-              "id": "change-zone-lighting-power-w-m2-noop",
+              "id": "change-zone-lighting-power-wm2-noop",
               "directoryName": "🟰noop"
             },
             {
-              "id": "change-zone-lighting-power-w-m2-gone",
+              "id": "change-zone-lighting-power-wm2-gone",
               "directoryName": "❓gone"
             },
             {
-              "id": "change-zone-lighting-power-w-m2-rule",
+              "id": "change-zone-lighting-power-wm2-rule",
               "directoryName": "🚫rule"
             }
           ]
@@ -806,8 +806,8 @@
         "change-zone-volume-m3",
         "change-zone-theta-i-heat-c",
         "change-zone-theta-i-cool-c",
-        "change-zone-internal-gains-w-m2",
-        "change-zone-lighting-power-w-m2",
+        "change-zone-internal-gains-wm2",
+        "change-zone-lighting-power-wm2",
         "change-zone-thermal-mass",
         "insert-element",
         "remove-element",
@@ -1348,7 +1348,7 @@
           ]
         },
         {
-          "id": "change-zone-internal-gains-w-m2",
+          "id": "change-zone-internal-gains-wm2",
           "capability": "din18599-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1357,7 +1357,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-zone-internal-gains-w-m2",
+            "operation": "change-zone-internal-gains-wm2",
             "bridgeVersion": 1,
             "variant": "ChangeZoneInternalGainsWM2"
           },
@@ -1369,7 +1369,7 @@
           ]
         },
         {
-          "id": "change-zone-lighting-power-w-m2",
+          "id": "change-zone-lighting-power-wm2",
           "capability": "din18599-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1378,7 +1378,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-zone-lighting-power-w-m2",
+            "operation": "change-zone-lighting-power-wm2",
             "bridgeVersion": 1,
             "variant": "ChangeZoneLightingPowerWM2"
           },

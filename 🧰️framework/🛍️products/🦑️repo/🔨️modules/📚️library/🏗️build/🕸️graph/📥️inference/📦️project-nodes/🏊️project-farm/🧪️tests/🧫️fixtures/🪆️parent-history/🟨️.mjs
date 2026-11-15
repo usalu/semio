@@ -1,9 +1,12 @@
+import { mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as observation from "../../../../../../../../🏗️build/👁️observation/🟨️.mjs";
 import { libraryBootstrap } from "../../../../../🟨️.mjs";
 import { projectGeneratorContractsV1 } from "../../../../🟨️.mjs";
-import { openProjectFarmV1 } from "../../../🟨️.mjs";
+import { closeProjectFarmsV1, openProjectFarmV1 } from "../../../🟨️.mjs";
+import { farmGrantEnvironmentV1 } from "../🎟️grant/🟨️.mjs";
 
 /** 🧪️ A parent process of the farm with a history of its own: `history` reads a workspace file before its first project the way a graph child's command body does (the read joins its sealed authority, a fresh worker never makes it); `plain` reads only the generator contracts every parent hands its workers; `adopt` checks the authority hand-off inside one process. Prints one JSON line. */
 const mode = process.argv[2], root = (() => { let at = dirname(fileURLToPath(import.meta.url)); while (basename(at) !== "🧰️framework") at = dirname(at); return dirname(at); })();
@@ -18,10 +21,12 @@ if (mode === "adopt") {
   process.exit(0);
 }
 if (mode === "history") observation.observedFs.readFileSync(join(root, "package.json"));
-const lines = [], plan = JSON.stringify({ version: 1, id: "law", jobs: 1, cpu: 1, memoryMegabytes: 4096, fixedMegabytes: 0 }), job = name => ({ name, root: name, json: {}, native: false, pipeline: false, nativeRoot: name, selectedInputs: [], head: [], cacheKey: "0".repeat(24) });
-const contracts = projectGeneratorContractsV1(root), farm = openProjectFarmV1({ workspaceRoot: root, context: { registry: null }, contracts, projects: 100, commandInputs: null, projectsByRoot: new Map(), componentRoots: [], environment: { ...process.env, LANG: "en_US.UTF-8", SEMIO_GRAPH_WORKERS: "1", SEMIO_HOST_CAPACITY_PLAN: plan }, processed: () => 24, cores: 4, write: line => lines.push(line), launch: null, request: () => ({ granted: Promise.resolve(undefined), release: () => undefined }) });
+const lines = [], granted = mkdtempSync(join(realpathSync(tmpdir()), "farm-parent-")), job = name => ({ name, root: name, json: {}, native: false, pipeline: false, nativeRoot: name, selectedInputs: [], head: [], cacheKey: "0".repeat(24) });
+const contracts = projectGeneratorContractsV1(root), farm = openProjectFarmV1({ workspaceRoot: root, context: { registry: null }, contracts, projects: 100, commandInputs: null, projectsByRoot: new Map(), componentRoots: [], environment: { ...process.env, ...farmGrantEnvironmentV1(granted, "farm_parent_001"), SEMIO_GRAPH_WORKERS: "1" }, processed: () => 24, cores: 4, write: line => lines.push(line), launch: null, request: () => ({ granted: Promise.resolve(undefined), release: () => undefined }) });
 for (let index = 0; index < 24; index++) await farm.prepare(job("miss" + index));
 const ready = await new Promise(done => { farm.onReady(() => done(true)); const poll = setInterval(() => { if (lines.some(line => line.includes("differ from this process"))) { clearInterval(poll); done(false); } }, 50); poll.unref?.(); setTimeout(() => done(false), 120000).unref?.(); });
 await farm.close();
+await closeProjectFarmsV1();
+rmSync(granted, { recursive: true, force: true });
 console.log(JSON.stringify({ ready, refused: lines.filter(line => line.includes("differ from this process")) }));
 process.exit(0);

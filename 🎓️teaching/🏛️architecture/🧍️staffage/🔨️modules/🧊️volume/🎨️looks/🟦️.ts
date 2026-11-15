@@ -8,11 +8,11 @@
  *
  * @see ../../🎨️depiction/🖍️palette/🟦️.ts — `THEMES`, `toneColour`
  */
-import type { Slug, Text, VolumeSolid } from "../../../🧬️schema/🟦️.ts";
+import type { Slug, StructuralPart, Text, VolumeSolid } from "../../../🧬️schema/🟦️.ts";
 import type { Material, Variant } from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import type { View } from "../../🔗️contracts/🟦️.ts";
 import { type Theme, THEMES, toneColour, tx } from "../../🎨️depiction/🖍️palette/🟦️.ts";
-import { regionsOfSolid } from "../🧊️solids/🟦️.ts";
+import type { ListSolid } from "../🧊️solids/🟦️.ts";
 import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🔢️ The sRGB `#rrggbb` colour as linear `[r, g, b]`. */
@@ -41,19 +41,19 @@ export function materialOf(id: Slug, title: Text, paint: Paint, unlit = false): 
   return { id, title, baseColor: [r, g, b, paint.alpha], metallic: 0, roughness: 0.85, emissive: [0, 0, 0], alphaMode: paint.alpha < 1 ? "blend" : "opaque", doubleSided: paint.alpha < 1, unlit };
 }
 
-/** 🧩️ A surface: all solids that share bone, role, tone and thermal regions, so one base material paints them. */
-export type Surface = { readonly id: Slug; readonly bone: Slug; readonly role: VolumeSolid["role"]; readonly tone: number; readonly regions: readonly Slug[]; readonly solids: readonly Slug[] };
+/** 🧩️ A surface: all solids of one list that share bone, role, tone and binding (thermal region and layer, structural member and part), so one base material paints them. */
+export type Surface = { readonly id: Slug; readonly bone: Slug; readonly role: VolumeSolid["role"]; readonly tone: number; readonly regions: readonly Slug[]; readonly layer?: Slug; readonly member?: Slug; readonly part?: StructuralPart; readonly solids: readonly Slug[] };
 
 /** 🧊️ The surfaces of a set of solids in order of first use, `surface-1`, `surface-2`, …, and the surface of every solid id. */
-export function surfacesOf(solids: readonly VolumeSolid[]): { readonly surfaces: readonly Surface[]; readonly of: ReadonlyMap<Slug, Surface> } {
-  const byKey = new Map<string, { id: Slug; bone: Slug; role: VolumeSolid["role"]; tone: number; regions: readonly Slug[]; solids: Slug[] }>();
+export function surfacesOf(solids: readonly ListSolid[]): { readonly surfaces: readonly Surface[]; readonly of: ReadonlyMap<Slug, Surface> } {
+  const byKey = new Map<string, { id: Slug; bone: Slug; role: VolumeSolid["role"]; tone: number; regions: readonly Slug[]; layer?: Slug; member?: Slug; part?: StructuralPart; solids: Slug[] }>();
   const of = new Map<Slug, Surface>();
   for (const solid of solids) {
-    const regions = regionsOfSolid(solid);
-    const key = `${solid.bone}|${solid.role}|${solid.tone}|${regions.join("+")}`;
+    const regions = solid.region === undefined ? [] : [solid.region];
+    const key = `${solid.bone}|${solid.role}|${solid.tone}|${regions.join("+")}|${solid.layer ?? ""}|${solid.member ?? ""}|${solid.part ?? ""}`;
     let surface = byKey.get(key);
     if (surface === undefined) {
-      surface = { id: `surface-${byKey.size + 1}`, bone: solid.bone, role: solid.role, tone: solid.tone, regions, solids: [] };
+      surface = { id: `surface-${byKey.size + 1}`, bone: solid.bone, role: solid.role, tone: solid.tone, regions, ...(solid.layer === undefined ? {} : { layer: solid.layer }), ...(solid.member === undefined ? {} : { member: solid.member }), ...(solid.part === undefined ? {} : { part: solid.part }), solids: [] };
       byKey.set(key, surface);
     }
     surface.solids.push(solid.id);

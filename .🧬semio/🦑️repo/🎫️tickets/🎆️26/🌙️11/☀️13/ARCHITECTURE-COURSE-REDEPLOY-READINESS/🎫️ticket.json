@@ -1,0 +1,41 @@
+{
+  "title": "Architecture Course Redeploy Readiness",
+  "emoji": "🎓",
+  "status": "open",
+  "description": "Get the architecture course website and its proctor server running end to end and ready to be redeployed: bootstrap the host, run every course, renderer and proctor suite, build the site, run the dev stack and the end-to-end gate, and fix every defect found on the way.",
+  "summary": "Site and proctor build, pass unit tests, typecheck, check and the end-to-end gate in dev and release-rehearsal topologies (87 tests each); release site artifact staged (88 files). Fixed the e2e gate's browser install policy and Playwright scope, pet pick-up on the overview, the assignment PDF budget, FixedCommandPage storage demand, stale kernel tests, build-library type errors and the print test re-export edge. Docker image and release workflow remain Linux-only; legal notice content is an owner decision. See readiness-report.md.",
+  "goal": "🎯runningproducts",
+  "sessions": [
+    "cb13e02a-4b40-46c0-a58f-3f6e629e9b1c",
+    "f57655e0-af44-4287-9b2b-3e79ad7e8761"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-13 03:57:08",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get the architecture course website and its proctor server running end to end and ready to be redeployed: bootstrap the host, run every course, renderer and proctor suite, build the site, run the dev stack and the end-to-end gate, and fix every defect found on the way."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-13 14:26:26",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Site and proctor build, pass unit tests, typecheck, check and the end-to-end gate in dev and release-rehearsal topologies (87 tests each); release site artifact staged (88 files). Fixed the e2e gate's browser install policy and Playwright scope, pet pick-up on the overview, the assignment PDF budget, FixedCommandPage storage demand, stale kernel tests, build-library type errors and the print test re-export edge. Docker image and release workflow remain Linux-only; legal notice content is an owner decision. See readiness-report.md."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-13 14:27:24",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Close the remaining open defects before redeploy: pet-ladder spec flake, three failing launcher Go tests, print inference test failures, proctor open and preflight findings, stale lock entry, and run every deploy target that can run on this host."
+    }
+  ]
+}

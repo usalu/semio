@@ -15,7 +15,8 @@
       "name": "bootstrap",
       "path": "./🔁️bootstrap/🟨️.mjs",
       "needs": [
-        "coordinates"
+        "coordinates",
+        "stamps"
       ]
     },
     {
@@ -94,6 +95,7 @@
       "path": "./🧱️project-assembly/🟨️.mjs",
       "needs": [
         "coordinates",
+        "stamps",
         "bootstrap",
         "source-analyses",
         "target-policy",

@@ -191,7 +191,7 @@
       }
     },
     "elasticPartition": {
-      "description": "Sizes an image when it is created: the working set it must hold times the headroom factor, never more than the cap and half of what the host volume has free, never below the declared partition capacity; the created image's own receipt then pins the size.",
+      "description": "Sizes an image when it is created: the working set it must hold times the headroom factor, never more than the cap and half of what the host volume has free, never below the partition's own minimum (`minimumBytes`, the smallest image that still makes the partition useful, so a host with less free space than the declared capacity still gets an image that fits); the created image's own receipt then pins the size.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -200,6 +200,10 @@
         "hostFreeReservePercent",
         "alignBytes",
         "maximumBytes",
+        "minimumBytes",
+        "reclaimFloorBytes",
+        "reclaimRatioPercent",
+        "reclaimTightHostFreeBytes",
         "automatic",
         "pressureFreeBytes"
       ],
@@ -228,6 +232,30 @@
           "type": "integer",
           "minimum": 33554432,
           "maximum": 103080263680
+        },
+        "minimumBytes": {
+          "description": "The smallest image the partition is born with; it never exceeds the declared partition capacity and the maximum.",
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 103080263680
+        },
+        "reclaimFloorBytes": {
+          "description": "Raw fixed images never hand blocks freed inside them back to the host. A quiescent image is recreated when its host allocation exceeds the bytes used inside by at least this floor and by the ratio below.",
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 103080263680
+        },
+        "reclaimRatioPercent": {
+          "description": "Host allocation as a percentage of the bytes used inside from which the allocation counts as bloated (300 = three times).",
+          "type": "integer",
+          "minimum": 101,
+          "maximum": 10000
+        },
+        "reclaimTightHostFreeBytes": {
+          "description": "Free bytes of the host volume below which the floor is an eighth: a nearly full disk gets its bloat back early.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1099511627776
         },
         "automatic": {
           "description": "Whether a command that finds the image quiescent (nobody holds it, a non-waiting exclusive try succeeds) and still below its pressure floor recreates it at the elastic size; the graph, compiler and products images qualify (all hold only derived data; `repo run repo-cache-reset:cache-reset-<graph|rust|products>` is the on-demand step).",

@@ -7,7 +7,7 @@
     "role:artifact",
     "family:puzzle"
   ],
-  "namedInputs": {
+  "namedInputs": { "default": ["{projectRoot}/**/*", "sharedGlobals", { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🤖️generated\"" }],
     "nativeSources": [
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/**/*",

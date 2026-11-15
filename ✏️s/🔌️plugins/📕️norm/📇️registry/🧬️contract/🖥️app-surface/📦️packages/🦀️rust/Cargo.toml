@@ -43,6 +43,7 @@ semio-s-plugin-norm-app-surface-panels = { path = "../../🧾️panels/📦️pa
 semio-s-plugin-norm-app-surface-live-editor = { path = "../../🎛️live-editor/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-ui-contract-values = { path = "../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

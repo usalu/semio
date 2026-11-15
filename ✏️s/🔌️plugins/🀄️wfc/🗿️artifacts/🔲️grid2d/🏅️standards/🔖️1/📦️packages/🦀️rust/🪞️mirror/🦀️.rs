@@ -114,7 +114,7 @@ pub mod standards {
                 }
                 #[path = "."]
                 pub mod io {
-                    pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::standards::v1::subsets::any::io::*;
+                    pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::standards::v1::subsets::any::io::*;
                     #[path = "."]
                     pub mod text {
                         pub use semio_s_artifact_wfc_grid2d_snapshot::standards::v1::subsets::any::io::text::snapshot;
@@ -134,7 +134,7 @@ pub mod editor {
         pub use component::*;
         #[path = "."]
         pub mod window {
-            pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::window::*;
+            pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::window::*;
             #[cfg(test)]
             #[path = "../../../🪆️subsets/✳️any/✏️editor/🪟️window/🧪️tests/🔬️unit/🦀️.rs"]
             pub mod tests;
@@ -143,13 +143,13 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::modes::edit::*;
+                pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::modes::edit::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::modes::edit::windows::*;
+                    pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::modes::edit::windows::*;
                     #[path = "."]
                     pub mod preview {
-                        pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::modes::edit::windows::preview::*;
+                        pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::modes::edit::windows::preview::*;
                         #[cfg(test)]
                         #[path = "../../../🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
@@ -157,10 +157,10 @@ pub mod editor {
                 }
                 #[path = "."]
                 pub mod tools {
-                    pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::modes::edit::tools::*;
+                    pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::modes::edit::tools::*;
                     #[path = "."]
                     pub mod fill {
-                        pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::modes::edit::tools::fill::*;
+                        pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::modes::edit::tools::fill::*;
                         #[cfg(test)]
                         #[path = "../../../🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣fill/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
@@ -174,6 +174,6 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod grid2d {
-        pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::viewer::grid2d::*;
+        pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::viewer::grid2d::*;
     }
 }

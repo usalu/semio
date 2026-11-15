@@ -2470,6 +2470,17 @@
           ]
         },
         {
+          "mutationId": "change-foundation-pile-axial-load-n",
+          "sourceMutationDirectoryName": "✏️change-foundation-pile-axial-load-n",
+          "mutationDirectoryName": "✏️change-foundation-pile-axial-load-n",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
           "mutationId": "change-foundation-pile-head-fixed",
           "sourceMutationDirectoryName": "✏️change-foundation-pile-head-fixed",
           "mutationDirectoryName": "✏️change-foundation-pile-head-fixed",
@@ -2987,7 +2998,7 @@
           ]
         },
         {
-          "mutationId": "change-isolation-system-stiffness",
+          "mutationId": "change-isolation-system-stiffness-n-per-m",
           "sourceMutationDirectoryName": "📍️change-isolation-system-stiffness",
           "mutationDirectoryName": "📍️change-isolation-system-stiffness",
           "scenarios": [
@@ -2998,7 +3009,7 @@
           ]
         },
         {
-          "mutationId": "change-isolation-system-yield-disp-m",
+          "mutationId": "change-isolation-system-yield-displacement-m",
           "sourceMutationDirectoryName": "📍️change-isolation-system-yield-disp-m",
           "mutationDirectoryName": "📍️change-isolation-system-yield-disp-m",
           "scenarios": [
@@ -3075,7 +3086,7 @@
           ]
         },
         {
-          "mutationId": "change-pier-base-soil-vs-m-s",
+          "mutationId": "change-pier-base-soil-vs-ms",
           "sourceMutationDirectoryName": "📍️change-pier-base-soil-vs-m-s",
           "mutationDirectoryName": "📍️change-pier-base-soil-vs-m-s",
           "scenarios": [
@@ -3086,7 +3097,7 @@
           ]
         },
         {
-          "mutationId": "change-pier-base-soil-unit-weight-n-m3",
+          "mutationId": "change-pier-base-soil-unit-weight-nm3",
           "sourceMutationDirectoryName": "📍️change-pier-base-soil-unit-weight-n-m3",
           "mutationDirectoryName": "📍️change-pier-base-soil-unit-weight-n-m3",
           "scenarios": [
@@ -3229,7 +3240,7 @@
           ]
         },
         {
-          "mutationId": "change-critical-region-concrete-fcd",
+          "mutationId": "change-critical-region-concrete-design-strength-mpa",
           "sourceMutationDirectoryName": "📍️change-critical-region-concrete-fcd",
           "mutationDirectoryName": "📍️change-critical-region-concrete-fcd",
           "scenarios": [
@@ -3240,7 +3251,7 @@
           ]
         },
         {
-          "mutationId": "change-critical-region-steel-fyd",
+          "mutationId": "change-critical-region-steel-design-yield-mpa",
           "sourceMutationDirectoryName": "📍️change-critical-region-steel-fyd",
           "mutationDirectoryName": "📍️change-critical-region-steel-fyd",
           "scenarios": [
@@ -3251,7 +3262,7 @@
           ]
         },
         {
-          "mutationId": "change-critical-region-hoop-fywd",
+          "mutationId": "change-critical-region-hoop-design-yield-mpa",
           "sourceMutationDirectoryName": "📍️change-critical-region-hoop-fywd",
           "mutationDirectoryName": "📍️change-critical-region-hoop-fywd",
           "scenarios": [
@@ -3262,7 +3273,7 @@
           ]
         },
         {
-          "mutationId": "change-critical-region-long-steel-area",
+          "mutationId": "change-critical-region-longitudinal-steel-area-m2",
           "sourceMutationDirectoryName": "📍️change-critical-region-long-steel-area",
           "mutationDirectoryName": "📍️change-critical-region-long-steel-area",
           "scenarios": [
@@ -3273,7 +3284,7 @@
           ]
         },
         {
-          "mutationId": "change-critical-region-long-bar-dia",
+          "mutationId": "change-critical-region-longitudinal-bar-diameter-m",
           "sourceMutationDirectoryName": "📍️change-critical-region-long-bar-dia",
           "mutationDirectoryName": "📍️change-critical-region-long-bar-dia",
           "scenarios": [
@@ -3284,7 +3295,7 @@
           ]
         },
         {
-          "mutationId": "change-critical-region-long-bar-max",
+          "mutationId": "change-critical-region-longitudinal-bar-max-diameter-m",
           "sourceMutationDirectoryName": "📍️change-critical-region-long-bar-max",
           "mutationDirectoryName": "📍️change-critical-region-long-bar-max",
           "scenarios": [
@@ -3339,7 +3350,7 @@
           ]
         },
         {
-          "mutationId": "change-critical-region-restr-bar-count",
+          "mutationId": "change-critical-region-restrained-bar-count",
           "sourceMutationDirectoryName": "📍️change-critical-region-restr-bar-count",
           "mutationDirectoryName": "📍️change-critical-region-restr-bar-count",
           "scenarios": [
@@ -3350,7 +3361,7 @@
           ]
         },
         {
-          "mutationId": "change-critical-region-restr-bar-space",
+          "mutationId": "change-critical-region-restrained-bar-spacing-m",
           "sourceMutationDirectoryName": "📍️change-critical-region-restr-bar-space",
           "mutationDirectoryName": "📍️change-critical-region-restr-bar-space",
           "scenarios": [
@@ -4461,6 +4472,7 @@
         "change-foundation-pile-modulus-pa",
         "change-foundation-pile-ks-nm3",
         "change-foundation-pile-head-shear-n",
+        "change-foundation-pile-axial-load-n",
         "change-foundation-pile-head-fixed",
         "change-foundation-pile-iface-m",
         "change-foundation-pile-up-vs-ms",
@@ -4508,16 +4520,16 @@
         "change-isolation-system-bridge-id",
         "change-isolation-system-building-id",
         "change-isolation-system-strength-n",
-        "change-isolation-system-stiffness",
-        "change-isolation-system-yield-disp-m",
+        "change-isolation-system-stiffness-n-per-m",
+        "change-isolation-system-yield-displacement-m",
         "change-isolation-system-capacity-m",
         "insert-pier-base",
         "remove-pier-base",
         "change-pier-base-bridge-id",
         "change-pier-base-pier-id",
         "change-pier-base-radius-m",
-        "change-pier-base-soil-vs-m-s",
-        "change-pier-base-soil-unit-weight-n-m3",
+        "change-pier-base-soil-vs-ms",
+        "change-pier-base-soil-unit-weight-nm3",
         "change-pier-base-poisson-ratio",
         "insert-critical-region",
         "remove-critical-region",
@@ -4530,18 +4542,18 @@
         "change-critical-region-core-width-m",
         "change-critical-region-core-depth-m",
         "change-critical-region-axial-force-n",
-        "change-critical-region-concrete-fcd",
-        "change-critical-region-steel-fyd",
-        "change-critical-region-hoop-fywd",
-        "change-critical-region-long-steel-area",
-        "change-critical-region-long-bar-dia",
-        "change-critical-region-long-bar-max",
+        "change-critical-region-concrete-design-strength-mpa",
+        "change-critical-region-steel-design-yield-mpa",
+        "change-critical-region-hoop-design-yield-mpa",
+        "change-critical-region-longitudinal-steel-area-m2",
+        "change-critical-region-longitudinal-bar-diameter-m",
+        "change-critical-region-longitudinal-bar-max-diameter-m",
         "change-critical-region-hoop-diameter-m",
         "change-critical-region-hoop-spacing-m",
         "change-critical-region-hoop-legs-x",
         "change-critical-region-hoop-legs-y",
-        "change-critical-region-restr-bar-count",
-        "change-critical-region-restr-bar-space",
+        "change-critical-region-restrained-bar-count",
+        "change-critical-region-restrained-bar-spacing-m",
         "change-seismic-slope-circle-radius",
         "change-seismic-slope-circle-centre-z",
         "change-seismic-slope-circle-centre-x",
@@ -8774,6 +8786,27 @@
           ]
         },
         {
+          "id": "change-foundation-pile-axial-load-n",
+          "capability": "en1998-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-foundation-pile-axial-load-n",
+            "bridgeVersion": 1,
+            "variant": "ChangeFoundationPileAxialLoadN"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1998-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "change-foundation-pile-head-fixed",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -11483,7 +11516,7 @@
           ]
         },
         {
-          "id": "change-isolation-system-stiffness",
+          "id": "change-isolation-system-stiffness-n-per-m",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -11492,7 +11525,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-isolation-system-stiffness",
+            "operation": "change-isolation-system-stiffness-n-per-m",
             "bridgeVersion": 1,
             "variant": "ChangeIsolationSystemStiffness"
           },
@@ -11504,7 +11537,7 @@
           ]
         },
         {
-          "id": "change-isolation-system-yield-disp-m",
+          "id": "change-isolation-system-yield-displacement-m",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -11513,7 +11546,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-isolation-system-yield-disp-m",
+            "operation": "change-isolation-system-yield-displacement-m",
             "bridgeVersion": 1,
             "variant": "ChangeIsolationSystemYieldDispM"
           },
@@ -11651,7 +11684,7 @@
           ]
         },
         {
-          "id": "change-pier-base-soil-vs-m-s",
+          "id": "change-pier-base-soil-vs-ms",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -11660,7 +11693,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-pier-base-soil-vs-m-s",
+            "operation": "change-pier-base-soil-vs-ms",
             "bridgeVersion": 1,
             "variant": "ChangePierBaseSoilVsMS"
           },
@@ -11672,7 +11705,7 @@
           ]
         },
         {
-          "id": "change-pier-base-soil-unit-weight-n-m3",
+          "id": "change-pier-base-soil-unit-weight-nm3",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -11681,7 +11714,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-pier-base-soil-unit-weight-n-m3",
+            "operation": "change-pier-base-soil-unit-weight-nm3",
             "bridgeVersion": 1,
             "variant": "ChangePierBaseSoilUnitWeightNM3"
           },
@@ -11945,7 +11978,7 @@
           ]
         },
         {
-          "id": "change-critical-region-concrete-fcd",
+          "id": "change-critical-region-concrete-design-strength-mpa",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -11954,7 +11987,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-critical-region-concrete-fcd",
+            "operation": "change-critical-region-concrete-design-strength-mpa",
             "bridgeVersion": 1,
             "variant": "ChangeCriticalRegionConcreteFcd"
           },
@@ -11966,7 +11999,7 @@
           ]
         },
         {
-          "id": "change-critical-region-steel-fyd",
+          "id": "change-critical-region-steel-design-yield-mpa",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -11975,7 +12008,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-critical-region-steel-fyd",
+            "operation": "change-critical-region-steel-design-yield-mpa",
             "bridgeVersion": 1,
             "variant": "ChangeCriticalRegionSteelFyd"
           },
@@ -11987,7 +12020,7 @@
           ]
         },
         {
-          "id": "change-critical-region-hoop-fywd",
+          "id": "change-critical-region-hoop-design-yield-mpa",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -11996,7 +12029,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-critical-region-hoop-fywd",
+            "operation": "change-critical-region-hoop-design-yield-mpa",
             "bridgeVersion": 1,
             "variant": "ChangeCriticalRegionHoopFywd"
           },
@@ -12008,7 +12041,7 @@
           ]
         },
         {
-          "id": "change-critical-region-long-steel-area",
+          "id": "change-critical-region-longitudinal-steel-area-m2",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -12017,7 +12050,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-critical-region-long-steel-area",
+            "operation": "change-critical-region-longitudinal-steel-area-m2",
             "bridgeVersion": 1,
             "variant": "ChangeCriticalRegionLongSteelArea"
           },
@@ -12029,7 +12062,7 @@
           ]
         },
         {
-          "id": "change-critical-region-long-bar-dia",
+          "id": "change-critical-region-longitudinal-bar-diameter-m",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -12038,7 +12071,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-critical-region-long-bar-dia",
+            "operation": "change-critical-region-longitudinal-bar-diameter-m",
             "bridgeVersion": 1,
             "variant": "ChangeCriticalRegionLongBarDia"
           },
@@ -12050,7 +12083,7 @@
           ]
         },
         {
-          "id": "change-critical-region-long-bar-max",
+          "id": "change-critical-region-longitudinal-bar-max-diameter-m",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -12059,7 +12092,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-critical-region-long-bar-max",
+            "operation": "change-critical-region-longitudinal-bar-max-diameter-m",
             "bridgeVersion": 1,
             "variant": "ChangeCriticalRegionLongBarMax"
           },
@@ -12155,7 +12188,7 @@
           ]
         },
         {
-          "id": "change-critical-region-restr-bar-count",
+          "id": "change-critical-region-restrained-bar-count",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -12164,7 +12197,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-critical-region-restr-bar-count",
+            "operation": "change-critical-region-restrained-bar-count",
             "bridgeVersion": 1,
             "variant": "ChangeCriticalRegionRestrBarCount"
           },
@@ -12176,7 +12209,7 @@
           ]
         },
         {
-          "id": "change-critical-region-restr-bar-space",
+          "id": "change-critical-region-restrained-bar-spacing-m",
           "capability": "en1998-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -12185,7 +12218,7 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-critical-region-restr-bar-space",
+            "operation": "change-critical-region-restrained-bar-spacing-m",
             "bridgeVersion": 1,
             "variant": "ChangeCriticalRegionRestrBarSpace"
           },

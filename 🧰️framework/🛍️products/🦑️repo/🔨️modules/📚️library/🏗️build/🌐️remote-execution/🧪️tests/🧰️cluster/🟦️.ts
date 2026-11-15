@@ -1,12 +1,13 @@
 import {createHash} from "node:crypto";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import {mkdirSync,mkdtempSync,rmSync} from "node:fs";
+import {mkdirSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../🌐️remote-cache/🖥️server/🟦️.ts";
 import {connectGrpcV1,type GrpcClientV1} from "../../📡️wire/🚪️grpc/🟦️.ts";
 import {decodeProtobufV1,encodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from "../../📡️wire/📦️protobuf/🟦️.ts";
 import {httpRemoteExecutionContentV1,type RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
 import {startRemoteExecutionServerV1,type RemoteExecutionServerOptionsV1,type RemoteExecutionServerV1,type RemoteExecutionTokensV1} from "../../🖥️server/🟦️.ts";
+process.env.SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS="any";process.env.SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY="I-ACCEPT-THE-RISK";
 import {runRemoteExecutionWorkerV1,type RemoteExecutionWorkerEventV1,type RemoteExecutionWorkerOptionsV1} from "../../👷️worker/🟦️.ts";
 
 /** 🧰️ A complete in-process service for tests: a real cache server, the execution server with its scheduler and a gRPC client, plus any number of in-process workers. */
@@ -54,28 +55,15 @@ async function treeDigest(upload:(bytes:Uint8Array)=>Promise<ClusterDigestV1>,tr
  return build(root);
 }
 
-/** 🚀️ Starts the harness; `workers` in-process workers are started with the given options. */
-export async function startClusterV1(options:Readonly<{workers?:number;bind?:string;advertise?:string;worker?:Partial<RemoteExecutionWorkerOptionsV1>;tokens?:RemoteExecutionTokensV1;scheduler?:Partial<RemoteExecutionServerOptionsV1["scheduler"]>;server?:Partial<RemoteExecutionServerOptionsV1>;root?:string}>={}):Promise<ClusterV1>{
- const directory=mkdtempSync(join(options.root??testScratchRootV1("rexec-inhouse"),"cluster-")),events:string[]=[],workerEvents:string[]=[],stoppers:(()=>Promise<void>)[]=[];
- mkdirSync(directory,{recursive:true});
- const token=options.tokens?.write??options.tokens?.read;
- const bind=options.bind??"127.0.0.1",cache=await startRemoteCacheServerV1({directory:join(directory,"cache"),host:bind,port:0,maximumBytes:1<<30,maximumEntryBytes:1<<28,maximumAgeDays:30,defaultInstance:"main",tokens:{read:options.tokens?.read,write:options.tokens?.write}});
- const content=httpRemoteExecutionContentV1({endpoint:cache.url.replace("//0.0.0.0","//127.0.0.1"),token});
- const server=await startRemoteExecutionServerV1({host:bind,grpcPort:0,workerPort:0,content,cacheUrl:cache.url,advertise:options.advertise,tokens:options.tokens??{},maximumMessageBytes:1<<25,maximumBatchBytes:1<<22,
-  scheduler:{unmatchedSeconds:4,lingerSeconds:1,leaseSeconds:6,maximumAttempts:3,defaultActionSeconds:60,maximumQueued:1000,heartbeatSeconds:1,pollSeconds:2,sweepMilliseconds:250,...options.scheduler},
-  onEvent:event=>{events.push(`${event.stage} ${event.detail}`);},...options.server});
- const client=connectGrpcV1(server.grpcUrl),metadata:Record<string,string>=token?{authorization:`Bearer ${token}`}:{};
+/** 🧰️ The client side of the harness over a connected gRPC client: upload a blob, declare an action (inputs, command, platform) and execute it. */
+export function clientHelpersV1(client:GrpcClientV1,metadata:Record<string,string>):Pick<ClusterV1,"upload"|"action"|"execute">{
  const upload=async(bytes:Uint8Array):Promise<ClusterDigestV1>=>{
   const digest={hash:sha(bytes),size_bytes:bytes.length};
   if(bytes.length>0){const answer=await client.unary(`${NAMESPACE_V1}.ContentAddressableStorage/BatchUpdateBlobs`,{instance_name:"main",requests:[{digest,data:bytes}]},{metadata});if(answer.responses[0].status.code!==0)throw Error(answer.responses[0].status.message);}
   return digest;
  };
- const harness:ClusterV1={
-  directory,cache,server,client,content,events,workerEvents,upload,
-  startWorker:(extra={})=>{
-   const abort=new AbortController(),name=extra.name??`worker-${stoppers.length+1}`,done=runRemoteExecutionWorkerV1({scheduler:server.workerUrl,token:options.tokens?.worker,cacheToken:token,concurrency:2,directory:join(directory,"worker-"+name),sandbox:"auto",materialize:"clone",maximumBlobBytes:1<<30,inlineOutputBytes:4096,signal:abort.signal,name,onEvent:(event:RemoteExecutionWorkerEventV1)=>{workerEvents.push(`${name} ${event.stage} ${event.detail}`);},...options.worker,...extra});
-   const stop=async()=>{abort.abort();await done;};stoppers.push(stop);return {stop,done};
-  },
+ return {
+  upload,
   action:async spec=>{
    const input=await treeDigest(upload,spec.files??{}),command=await upload(encodeProtobufV1(REAPI_V1.command,{
     arguments:spec.arguments,environment_variables:Object.entries(spec.environment??{}).sort().map(([name,value])=>({name,value})),output_files:spec.outputFiles??[],output_directories:spec.outputDirectories??[],output_paths:spec.outputPaths??[],
@@ -92,6 +80,33 @@ export async function startClusterV1(options:Readonly<{workers?:number;bind?:str
    if(!response)throw Error("Execution ended without a response");
    return {stages,response,operation};
   },
+ };
+}
+
+/** 🔌️ Attaches the client side of the harness to a scheduler that runs in another process: the gRPC endpoint, the worker API and the cache of a service started by `🚀️serve.ts`. */
+export function attachClusterV1(urls:Readonly<{grpc:string;worker:string;cache:string;token?:string}>):Readonly<{client:GrpcClientV1;content:RemoteExecutionContentV1;worker:string;stop():void}&Pick<ClusterV1,"upload"|"action"|"execute">>{
+ const client=connectGrpcV1(urls.grpc),metadata:Record<string,string>=urls.token?{authorization:`Bearer ${urls.token}`}:{};
+ return {client,content:httpRemoteExecutionContentV1({endpoint:urls.cache.replace("//0.0.0.0","//127.0.0.1"),token:urls.token}),worker:urls.worker,...clientHelpersV1(client,metadata),stop:()=>{client.close();}};
+}
+
+/** 🚀️ Starts the harness; `workers` in-process workers are started with the given options. */
+export async function startClusterV1(options:Readonly<{workers?:number;bind?:string;advertise?:string;worker?:Partial<RemoteExecutionWorkerOptionsV1>;tokens?:RemoteExecutionTokensV1;scheduler?:Partial<RemoteExecutionServerOptionsV1["scheduler"]>;server?:Partial<RemoteExecutionServerOptionsV1>;root?:string}>={}):Promise<ClusterV1>{
+ const directory=mkdtempSync(join(options.root??testScratchRootV1("rexec-inhouse"),"cluster-")),events:string[]=[],workerEvents:string[]=[],stoppers:(()=>Promise<void>)[]=[];
+ mkdirSync(directory,{recursive:true});
+ const token=options.tokens?.write??options.tokens?.read;
+ const bind=options.bind??"127.0.0.1",cache=await startRemoteCacheServerV1({directory:join(directory,"cache"),host:bind,port:0,maximumBytes:1<<30,maximumEntryBytes:1<<28,maximumAgeDays:30,defaultInstance:"main",tokens:{read:options.tokens?.read,write:options.tokens?.write}});
+ const content=httpRemoteExecutionContentV1({endpoint:cache.url.replace("//0.0.0.0","//127.0.0.1"),token});
+ const server=await startRemoteExecutionServerV1({host:bind,grpcPort:0,workerPort:0,content,cacheUrl:cache.url,advertise:options.advertise,tokens:options.tokens??{},maximumMessageBytes:1<<25,maximumBatchBytes:1<<22,
+  scheduler:{unmatchedSeconds:4,lingerSeconds:1,leaseSeconds:6,maximumAttempts:3,defaultActionSeconds:60,maximumActionSeconds:600,maximumQueued:1000,heartbeatSeconds:1,pollSeconds:2,loadExpireSeconds:15,refusalCooldownSeconds:2,sweepMilliseconds:250,...options.scheduler},
+  onEvent:event=>{events.push(`${event.stage} ${event.detail}`);},...options.server});
+ const client=connectGrpcV1(server.grpcUrl),metadata:Record<string,string>=token?{authorization:`Bearer ${token}`}:{};
+ const {upload,action,execute}=clientHelpersV1(client,metadata);
+ const harness:ClusterV1={
+  directory,cache,server,client,content,events,workerEvents,upload,action,execute,
+  startWorker:(extra={})=>{
+   const abort=new AbortController(),name=extra.name??`worker-${stoppers.length+1}`,done=runRemoteExecutionWorkerV1({scheduler:server.workerUrl,token:options.tokens?.worker,cacheToken:token,concurrency:2,directory:join(directory,"worker-"+name),sandbox:"auto",actions:"any",unconfinedForTests:true,materialize:"clone",maximumBlobBytes:1<<30,inlineOutputBytes:4096,signal:abort.signal,name,onEvent:(event:RemoteExecutionWorkerEventV1)=>{workerEvents.push(`${name} ${event.stage} ${event.detail}`);},...options.worker,...extra});
+   const stop=async()=>{abort.abort();await done;};stoppers.push(stop);return {stop,done};
+  },
   stop:async()=>{
    for(const stop of stoppers)await stop().catch(()=>{});
    client.close();await server.stop().catch(()=>{});await cache.stop().catch(()=>{});
@@ -100,6 +115,13 @@ export async function startClusterV1(options:Readonly<{workers?:number;bind?:str
  };
  for(let index=0;index<(options.workers??0);index++)harness.startWorker({name:`worker-${index+1}`});
  return harness;
+}
+
+/** 🌡️ Writes the simulated host a worker process reads (`SEMIO_REMOTE_EXECUTION_HOST_VIEW`): a roomy idle machine unless overridden, so a loaded test machine never changes what a test proves. */
+export function writeHostViewV1(file:string,host:Partial<Record<string,unknown>>={},extra:Readonly<{grants?:readonly unknown[];waiters?:readonly unknown[]}>={}):string{
+ const sample={version:1,atMs:Date.now(),platform:process.platform==="win32"?"win32":process.platform==="linux"?"linux":"darwin",cores:8,totalMegabytes:65536,availableMegabytes:60000,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:0.5,openFiles:1000,openFilesMaximum:200000,attachedImages:0,...host};
+ mkdirSync(join(file,".."),{recursive:true});writeFileSync(file,JSON.stringify({host:sample,grants:extra.grants??[],waiters:extra.waiters??[]}));
+ return file;
 }
 
 /** ⏳️ Polls until the condition holds. */

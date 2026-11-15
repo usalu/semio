@@ -1,0 +1,1 @@
+\[\\?(mathrm|text)|\[(W|kWh|K|kW|m|h|kg|Wh|kJ|MWh|°C|%|€|W/|1/h|J|s|d|a|kKh|Kd|W/K)\]|\\left\[

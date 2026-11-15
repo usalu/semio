@@ -1,0 +1,200 @@
+Reading the project graph slice (741 s): facts 184320 of 219893.
+Reading the project graph slice (743 s): facts 211701 of 219893.
+Reading the project graph slice (745 s): facts 219893 of 219893.
+Reading the project graph slice (747 s): facts 219893 of 219893.
+Reading the project graph slice (749 s): facts 219893 of 219893.
+Reading the project graph slice (751 s): verification 1 of 3491.
+Reading the project graph slice (753 s): verification 1 of 3491.
+Reading the project graph slice (755 s): verification 1 of 3491.
+Reading the project graph slice (757 s): verification 1 of 3491.
+Reading the project graph slice (759 s): verification 1 of 3491.
+Reading the project graph slice (761 s): verification 1 of 3491.
+Reading the project graph slice (763 s): verification 1 of 3491.
+Reading the project graph slice (765 s): verification 1 of 3491.
+Reading the project graph slice (767 s): verification 3 of 3491.
+Reading the project graph slice (769 s): verification 7 of 3491.
+[repo] still working after 770 s; last phase started: door.script
+Reading the project graph slice (771 s): verification 7 of 3491.
+Reading the project graph slice (773 s): verification 10 of 3491.
+Reading the project graph slice (775 s): verification 12 of 3491.
+Reading the project graph slice (777 s): verification 14 of 3491.
+Reading the project graph slice (779 s): verification 14 of 3491.
+Reading the project graph slice (781 s): verification 14 of 3491.
+Reading the project graph slice (783 s): verification 14 of 3491.
+Reading the project graph slice (785 s): verification 15 of 3491.
+Reading the project graph slice (787 s): verification 18 of 3491.
+Reading the project graph slice (789 s): verification 28 of 3491.
+Reading the project graph slice (791 s): verification 140 of 3491.
+Reading the project graph slice (793 s): verification 229 of 3491.
+Reading the project graph slice (795 s): flush 1 of 1.
+Reading the project graph slice (797 s): verification 261 of 3491.
+Reading the project graph slice (799 s): verification 261 of 3491.
+[repo] still working after 800 s; last phase started: door.script
+Reading the project graph slice (801 s): verification 262 of 3491.
+Reading the project graph slice (803 s): verification 423 of 3491.
+Reading the project graph slice (805 s): flush 1 of 1.
+Reading the project graph slice (807 s): verification 541 of 3491.
+Reading the project graph slice (809 s): verification 541 of 3491.
+Reading the project graph slice (811 s): verification 547 of 3491.
+Reading the project graph slice (813 s): verification 584 of 3491.
+Reading the project graph slice (815 s): verification 584 of 3491.
+Reading the project graph slice (817 s): verification 585 of 3491.
+Reading the project graph slice (819 s): verification 585 of 3491.
+Reading the project graph slice (821 s): verification 585 of 3491.
+Reading the project graph slice (823 s): verification 597 of 3491.
+Reading the project graph slice (825 s): rederivation 175 of 175.
+Reading the project graph slice (827 s): verification 811 of 3491.
+Reading the project graph slice (829 s): verification 913 of 3491.
+[repo] still working after 830 s; last phase started: door.script
+Reading the project graph slice (831 s): verification 913 of 3491.
+Reading the project graph slice (833 s): verification 949 of 3491.
+Reading the project graph slice (835 s): verification 949 of 3491.
+Reading the project graph slice (837 s): verification 950 of 3491.
+Reading the project graph slice (839 s): verification 950 of 3491.
+Reading the project graph slice (841 s): verification 954 of 3491.
+Reading the project graph slice (843 s): verification 954 of 3491.
+Reading the project graph slice (845 s): verification 954 of 3491.
+Reading the project graph slice (847 s): verification 954 of 3491.
+Reading the project graph slice (849 s): verification 954 of 3491.
+Reading the project graph slice (851 s): verification 954 of 3491.
+Reading the project graph slice (853 s): verification 954 of 3491.
+Reading the project graph slice (855 s): verification 1057 of 3491.
+Reading the project graph slice (857 s): verification 1204 of 3491.
+Reading the project graph slice (859 s): verification 1332 of 3491.
+[repo] still working after 860 s; last phase started: door.script
+Reading the project graph slice (861 s): verification 1336 of 3491.
+Reading the project graph slice (863 s): flush 1 of 1.
+Reading the project graph slice (865 s): verification 1563 of 3491.
+Reading the project graph slice (867 s): verification 1577 of 3491.
+Reading the project graph slice (869 s): flush 1 of 1.
+Reading the project graph slice (871 s): verification 1890 of 3491.
+Reading the project graph slice (873 s): verification 1907 of 3491.
+Reading the project graph slice (875 s): verification 1920 of 3491.
+Reading the project graph slice (877 s): verification 1923 of 3491.
+Reading the project graph slice (879 s): rederivation 169 of 169.
+Reading the project graph slice (881 s): verification 2085 of 3491.
+Reading the project graph slice (883 s): flush 1 of 1.
+Reading the project graph slice (886 s): verification 2476 of 3491.
+Reading the project graph slice (888 s): flush 1 of 1.
+Reading the project graph slice (890 s): flush 1 of 1.
+[repo] still working after 890 s; last phase started: door.script
+Reading the project graph slice (892 s): flush 1 of 1.
+Reading the project graph slice (894 s): flush 1 of 1.
+Reading the project graph slice (896 s): flush 1 of 1.
+Reading the project graph slice (898 s): flush 1 of 1.
+Reading the project graph slice (900 s): flush 1 of 1.
+Reading the project graph slice (902 s): flush 1 of 1.
+Reading the project graph slice (904 s): flush 1 of 1.
+Reading the project graph slice (906 s): flush 1 of 1.
+Reading the project graph slice (908 s): flush 1 of 1.
+Reading the project graph slice (910 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 1, 0), @semio-tech/async-timer-rs (language:rust, 0, 0), @semio-tech/async-macros-rs (language:cargo, 0, 0).
+Reading the project graph slice (912 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 1, 0), @semio-tech/async-timer-rs (language:rust, 0, 0), @semio-tech/async-macros-rs (language:cargo, 0, 0).
+Reading the project graph slice (914 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 5, 0), @semio-tech/async-timer-rs (language:rust, 4, 0), @semio-tech/async-macros-rs (language:cargo, 4, 0).
+Reading the project graph slice (916 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 5, 0), @semio-tech/async-timer-rs (language:rust, 4, 0), @semio-tech/async-macros-rs (language:cargo, 4, 0).
+Reading the project graph slice (918 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 5, 0), @semio-tech/async-timer-rs (language:rust, 4, 0), @semio-tech/async-macros-rs (language:cargo, 4, 0).
+Reading the project graph slice (920 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 10, 0), @semio-tech/async-timer-rs (language:rust, 9, 0), @semio-tech/async-macros-rs (language:cargo, 9, 0).
+[repo] still working after 920 s; last phase started: door.script
+Reading the project graph slice (922 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 10, 0), @semio-tech/async-timer-rs (language:rust, 9, 0), @semio-tech/async-macros-rs (language:cargo, 9, 0).
+Reading the project graph slice (924 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 15, 0), @semio-tech/async-timer-rs (language:rust, 14, 0), @semio-tech/async-macros-rs (language:cargo, 14, 0).
+Reading the project graph slice (926 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 15, 0), @semio-tech/async-timer-rs (language:rust, 14, 0), @semio-tech/async-macros-rs (language:cargo, 14, 0).
+Reading the project graph slice (928 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 15, 0), @semio-tech/async-timer-rs (language:rust, 14, 0), @semio-tech/async-macros-rs (language:cargo, 14, 0).
+Reading the project graph slice (930 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 20, 0), @semio-tech/async-timer-rs (language:rust, 20, 0), @semio-tech/async-macros-rs (language:cargo, 19, 0).
+Reading the project graph slice (932 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 20, 0), @semio-tech/async-timer-rs (language:rust, 20, 0), @semio-tech/async-macros-rs (language:cargo, 19, 0).
+Reading the project graph slice (934 s): owners 0 of 703; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 25, 0), @semio-tech/async-timer-rs (language:rust, 25, 0), @semio-tech/async-macros-rs (language:cargo, 24, 0).
+Reading the project graph slice (936 s): owners 1 of 703.
+Reading the project graph slice (938 s): owners 8 of 703.
+Reading the project graph slice (940 s): owners 20 of 703; running (name, kind, seconds, rows): @semio-tech/compiler-syntax-rust-ts (project, 1, 0), @semio-tech/dispatch-macros-rs (language:cargo, 1, 0), @semio-tech/assets (project, 1, 0).
+Reading the project graph slice (942 s): owners 25 of 703.
+Reading the project graph slice (944 s): owners 28 of 703; running (name, kind, seconds, rows): @semio-tech/compiler-syntax-rust-ts (project, 5, 0), @semio-tech/assets (project, 4, 0), @semio-tech/font-noto-emoji-objects-regular-rs (language:cargo, 2, 0).
+Reading the project graph slice (946 s): owners 33 of 703.
+Reading the project graph slice (948 s): owners 37 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-record-model-rs (language:rust, 4, 0), @semio-tech/dsl-record-ownership-rs (language:rust, 4, 0), @semio-tech/dsl-notation-rs (language:rust, 4, 0).
+Reading the project graph slice (950 s): owners 41 of 703; running (name, kind, seconds, rows): @semio-tech/artifact-reference-borrow-rs (language:rust, 2, 0), @semio-tech/composition-admission-rs (language:rust, 2, 0), @semio-tech/browser-actor-import-test (project, 2, 0).
+[repo] still working after 950 s; last phase started: door.script
+Reading the project graph slice (952 s): owners 42 of 703.
+Reading the project graph slice (954 s): owners 43 of 703.
+Reading the project graph slice (956 s): owners 44 of 703; running (name, kind, seconds, rows): @semio-tech/artifact-reference-borrow-rs (language:rust, 7, 0), @semio-tech/composition-admission-rs (language:rust, 7, 0), @semio-tech/dsl-derive-rs (language:cargo, 7, 0).
+Reading the project graph slice (958 s): owners 44 of 703; running (name, kind, seconds, rows): @semio-tech/artifact-reference-borrow-rs (language:rust, 7, 0), @semio-tech/composition-admission-rs (language:rust, 7, 0), @semio-tech/dsl-derive-rs (language:cargo, 7, 0).
+Reading the project graph slice (960 s): owners 46 of 703; running (name, kind, seconds, rows): @semio-tech/dsl-derive-rs (language:cargo, 12, 0), @semio-tech/cargo-workspaces (language:typescript, 11, 0).
+Reading the project graph slice (962 s): owners 47 of 703.
+Reading the project graph slice (964 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (966 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (968 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (970 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (972 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (974 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (976 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (978 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (980 s): owners 47 of 703; running (name, kind, seconds, rows): .
+[repo] still working after 980 s; last phase started: door.script
+Reading the project graph slice (982 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (984 s): owners 47 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (986 s): owners 48 of 703.
+Reading the project graph slice (988 s): owners 48 of 703.
+Reading the project graph slice (990 s): owners 48 of 703.
+Reading the project graph slice (992 s): owners 48 of 703.
+Reading the project graph slice (994 s): owners 48 of 703.
+Reading the project graph slice (996 s): owners 48 of 703.
+Reading the project graph slice (998 s): owners 48 of 703.
+Reading the project graph slice (1000 s): owners 48 of 703.
+Reading the project graph slice (1002 s): owners 48 of 703.
+Reading the project graph slice (1004 s): owners 48 of 703.
+Reading the project graph slice (1006 s): owners 48 of 703.
+Reading the project graph slice (1008 s): owners 48 of 703.
+Reading the project graph slice (1010 s): owners 48 of 703.
+[repo] still working after 1010 s; last phase started: door.script
+Reading the project graph slice (1012 s): owners 48 of 703.
+Reading the project graph slice (1014 s): owners 48 of 703.
+Reading the project graph slice (1016 s): owners 48 of 703.
+Reading the project graph slice (1018 s): owners 48 of 703.
+Reading the project graph slice (1020 s): owners 48 of 703.
+Reading the project graph slice (1022 s): owners 48 of 703.
+Reading the project graph slice (1024 s): owners 48 of 703.
+Reading the project graph slice (1026 s): owners 48 of 703.
+Reading the project graph slice (1028 s): owners 48 of 703.
+Reading the project graph slice (1030 s): owners 48 of 703.
+Reading the project graph slice (1032 s): owners 48 of 703.
+Reading the project graph slice (1034 s): owners 48 of 703.
+Reading the project graph slice (1036 s): owners 48 of 703.
+Reading the project graph slice (1038 s): owners 48 of 703.
+Reading the project graph slice (1040 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 1, 0), @semio-tech/framework-async (project, 1, 0), @semio-tech/framework-async-rs (language:cargo, 1, 0).
+[repo] still working after 1040 s; last phase started: door.script
+Reading the project graph slice (1042 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 4, 0), @semio-tech/framework-async (project, 3, 0), @semio-tech/framework-async-rs (language:cargo, 3, 0).
+Reading the project graph slice (1044 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 6, 0), @semio-tech/framework-async (project, 5, 0), @semio-tech/framework-async-rs (language:cargo, 5, 0).
+Reading the project graph slice (1046 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 6, 0), @semio-tech/framework-async (project, 5, 0), @semio-tech/framework-async-rs (language:cargo, 5, 0).
+Reading the project graph slice (1048 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 6, 0), @semio-tech/framework-async (project, 5, 0), @semio-tech/framework-async-rs (language:cargo, 5, 0).
+Reading the project graph slice (1050 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 11, 0), @semio-tech/framework-async (project, 11, 0), @semio-tech/framework-async-rs (language:cargo, 11, 0).
+Reading the project graph slice (1052 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 11, 0), @semio-tech/framework-async (project, 11, 0), @semio-tech/framework-async-rs (language:cargo, 11, 0).
+Reading the project graph slice (1054 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 11, 0), @semio-tech/framework-async (project, 11, 0), @semio-tech/framework-async-rs (language:cargo, 11, 0).
+Reading the project graph slice (1056 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 16, 0), @semio-tech/framework-async (project, 16, 0), @semio-tech/framework-async-rs (language:cargo, 16, 0).
+Reading the project graph slice (1058 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 16, 0), @semio-tech/framework-async (project, 16, 0), @semio-tech/framework-async-rs (language:cargo, 16, 0).
+Reading the project graph slice (1060 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 16, 0), @semio-tech/framework-async (project, 16, 0), @semio-tech/framework-async-rs (language:cargo, 16, 0).
+Reading the project graph slice (1062 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 22, 0), @semio-tech/framework-async (project, 22, 0), @semio-tech/framework-async-rs (language:cargo, 22, 0).
+Reading the project graph slice (1064 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 22, 0), @semio-tech/framework-async (project, 22, 0), @semio-tech/framework-async-rs (language:cargo, 22, 0).
+Reading the project graph slice (1066 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 22, 0), @semio-tech/framework-async (project, 22, 0), @semio-tech/framework-async-rs (language:cargo, 22, 0).
+Reading the project graph slice (1068 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 28, 0), @semio-tech/framework-async (project, 28, 0), @semio-tech/framework-async-rs (language:cargo, 28, 0).
+Reading the project graph slice (1070 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 28, 0), @semio-tech/framework-async (project, 28, 0), @semio-tech/framework-async-rs (language:cargo, 28, 0).
+[repo] still working after 1070 s; last phase started: door.script
+Reading the project graph slice (1072 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 34, 0), @semio-tech/framework-async (project, 33, 0), @semio-tech/framework-async-rs (language:cargo, 33, 0).
+Reading the project graph slice (1074 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 34, 0), @semio-tech/framework-async (project, 33, 0), @semio-tech/framework-async-rs (language:cargo, 33, 0).
+Reading the project graph slice (1076 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 34, 0), @semio-tech/framework-async (project, 33, 0), @semio-tech/framework-async-rs (language:cargo, 33, 0).
+Reading the project graph slice (1078 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 39, 0), @semio-tech/framework-async (project, 38, 0), @semio-tech/framework-async-rs (language:cargo, 38, 0).
+Reading the project graph slice (1080 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 39, 0), @semio-tech/framework-async (project, 38, 0), @semio-tech/framework-async-rs (language:cargo, 38, 0).
+Reading the project graph slice (1082 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 44, 0), @semio-tech/framework-async (project, 44, 0), @semio-tech/framework-async-rs (language:cargo, 43, 0).
+Reading the project graph slice (1084 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 44, 0), @semio-tech/framework-async (project, 44, 0), @semio-tech/framework-async-rs (language:cargo, 43, 0).
+Reading the project graph slice (1086 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 44, 0), @semio-tech/framework-async (project, 44, 0), @semio-tech/framework-async-rs (language:cargo, 43, 0).
+Reading the project graph slice (1088 s): owners 48 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 49, 0), @semio-tech/framework-async (project, 49, 0), @semio-tech/framework-async-rs (language:cargo, 49, 0).
+Reading the project graph slice (1090 s): owners 49 of 703.
+Reading the project graph slice (1092 s): owners 49 of 703.
+Reading the project graph slice (1094 s): owners 49 of 703.
+Reading the project graph slice (1096 s): owners 49 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 57, 0), @semio-tech/framework-async (project, 56, 0), @semio-tech/framework-async-rs (language:cargo, 56, 0).
+Reading the project graph slice (1098 s): owners 50 of 703.
+[repo] still working after 1100 s; last phase started: door.script
+Reading the project graph slice (1100 s): owners 50 of 703.
+Reading the project graph slice (1102 s): owners 50 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 62, 0), @semio-tech/framework-async (project, 62, 0), @semio-tech/framework-async-rs (language:cargo, 62, 0).
+Reading the project graph slice (1104 s): owners 50 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 62, 0), @semio-tech/framework-async (project, 62, 0), @semio-tech/framework-async-rs (language:cargo, 62, 0).
+Reading the project graph slice (1106 s): owners 50 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 62, 0), @semio-tech/framework-async (project, 62, 0), @semio-tech/framework-async-rs (language:cargo, 62, 0).
+Reading the project graph slice (1108 s): owners 50 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 68, 0), @semio-tech/framework-async (project, 68, 0), @semio-tech/framework-async-rs (language:cargo, 67, 0).
+Reading the project graph slice (1110 s): owners 50 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 68, 0), @semio-tech/framework-async (project, 68, 0), @semio-tech/framework-async-rs (language:cargo, 67, 0).
+Reading the project graph slice (1112 s): owners 50 of 703; running (name, kind, seconds, rows): @semio-tech/framework (project, 68, 0), @semio-tech/framework-async (project, 68, 0), @semio-tech/framework-async-rs (language:cargo, 67, 0).
+end 2026-11-14T18:06:50Z
+native_rc=7

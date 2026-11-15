@@ -1,0 +1,89 @@
+\title{Fingerübung Heizen + Kühlen}
+\author{Architektur und Technologie}
+\date{}
+\SemioAssignmentSetup{course={Architektur und Technologie},duration={ca. 90 Minuten},submission={CSV-Datei und Grasshopper-Definition}}
+\SemioHeaderSetup{left={Architektur und Technologie},center={Fingerübung},right={Heizen + Kühlen}}
+\newcommand{\EnergyQuantity}{Größe}
+\newcommand{\EnergyValue}{Übungswert}
+\newcommand{\EnergyDecimal}{{,}}
+\newcommand{\EnergyPerformance}{\mathrm{JAZ}}
+\begin{document}
+\maketitle
+\section{Ein Tiny Home in Hannover}
+Entwickeln Sie in Rhino/Grasshopper ein kleines parametrisches Rechenmodell. Bestimmen Sie den Jahresheizwärmebedarf, den Strombedarf und die Heizenergiekosten. Erweitern Sie das Modell um die solare Kühllast zweier südorientierter Glasflächen und den dafür erforderlichen Durchmesser eines runden Zuluftkanals.
+
+\subsection{Geometrie des Übungsgebäudes}
+Das Haus ist ein eingeschossiger Quader mit Flachdach. Alle Maße sind vereinfachte thermische Bezugsmaße. Dach und Boden haben jeweils die Fläche $L\cdot B$, das Luftvolumen beträgt $L\cdot B\cdot h$. Die beiden Öffnungen liegen ausschließlich in der langen Südfassade; weitere Öffnungen gibt es nicht.
+\EnergyPlan{Schiebetür}{Fenster}{Südfassade; schematischer Grundriss, Öffnungshöhen als Beschriftung}
+\textbf{Modellgrenze.} Sämtliche Ergänzungen zu den Folien sind frei gesetzte \textbf{Übungsannahmen}: Geometrie, U-Werte, Luftwechsel, Heizgradstunden, g-Wert, Einstrahlung, Raumtemperatur und Luftkennwerte. Sie beschreiben weder das abgebildete reale Haus noch einen gemessenen Hannoveraner Klimadatensatz.
+
+\textbf{Aus den Folien übernommen:} Hannover, Luftwärmepumpe mit JAZ $3{,}0$, Strompreis $0{,}37$ EUR/kWh, normale Isolierverglasung ohne Sonnenschutzglas, Zuluft $18\,^\circ\mathrm{C}$ und maximale Luftgeschwindigkeit $2{,}5\,\mathrm{m/s}$.
+\clearpage
+\section{Heizen: Wärmebedarf und Kosten}
+\subsection{Rechenannahmen}
+\EnergyInputs
+Die Heizgradstunden $G_H$ enthalten für diese Übung bereits die über das Jahr aufsummierte positive Temperaturdifferenz zwischen innen und außen. Verwenden Sie sie direkt, ohne einen weiteren Temperaturfaktor. Alle Hüllflächen werden vereinfacht mit demselben $G_H$ bilanziert, auch der Boden. Der Luftwechsel enthält den gesamten winterlichen Luftaustausch; es gibt keine Wärmerückgewinnung.
+
+Solare und interne Wärmegewinne, Wärmebrücken, Speicherwirkung, Warmwasser, Verteilverluste und Hilfsstrom bleiben unberücksichtigt. Der berechnete Wert ist eine vereinfachte jährliche Heizwärmebilanz, kein normativer Bedarfsnachweis.
+\subsection{Arbeitsauftrag}
+\begin{enumerate}
+\item Ermitteln Sie die Glasfläche $A_g$, die opake Wandfläche $A_w$, Dach- und Bodenfläche sowie das beheizte Volumen $V$. Ziehen Sie Öffnungen nur von der Wandfläche ab.
+\item Berechnen Sie Transmissions- und Lüftungswärmeverlustkoeffizient in W/K:
+\[H_T=U_wA_w+U_rA_r+U_fA_f+U_gA_g,\qquad H_V=c_{\mathrm{air,vol}}\,nV.\]
+\item Bestimmen Sie Jahresheizwärmebedarf, spezifischen Bedarf bezogen auf die Bodenfläche, Wärmepumpenstrom und jährliche Kosten:
+\[Q_H=\frac{(H_T+H_V)G_H}{1000},\quad q_H=\frac{Q_H}{A_f},\quad E_{\mathrm{el}}=\frac{Q_H}{\EnergyPerformance},\quad C=E_{\mathrm{el}}p_{\mathrm{el}}.\]
+\item Variieren Sie die JAZ auf $4{,}0$. Welche Größen ändern sich, welche bleiben gleich? Begründen Sie dies in zwei Sätzen.
+\end{enumerate}
+\textbf{Einheiten:} $Q_H$ und $E_{\mathrm{el}}$ in kWh/a, $q_H$ in kWh/(m$^2$a), $C$ in EUR/a. Rechnen Sie intern ungerundet.
+\clearpage
+\section{Kühlen: Solarer Eintrag und Zuluftkanal}
+\subsection{Sommerlicher Auslegungsfall}
+Beide südorientierten Glasflächen werden gleichzeitig mit $I_S=600\,\mathrm{W/m^2}$ bestrahlt. Für die normale Isolierverglasung gilt als Übungswert $g=0{,}60$. Rechnen Sie mit der gesamten Öffnungsfläche als Glasfläche, ohne Rahmenanteil. Außenliegende Verschattung, Vordach und Sonnenschutz werden in diesem Rechenfall nicht angesetzt.
+
+Die Raumtemperatur beträgt $\theta_i=26\,^\circ\mathrm{C}$, die aktiv gekühlte Zuluft hat $\theta_s=18\,^\circ\mathrm{C}$. Setzen Sie $\rho=1{,}20\,\mathrm{kg/m^3}$ und $c_p=1005\,\mathrm{J/(kgK)}$ an. Die Luftgeschwindigkeit im runden Kanal darf $v_{\max}=2{,}5\,\mathrm{m/s}$ nicht überschreiten.
+\subsection{Arbeitsauftrag}
+\begin{enumerate}
+\item Berechnen Sie die solare Leistung für Schiebetür und Fenster getrennt und summieren Sie beide:
+\[\dot Q_{\mathrm{sol},j}=A_jgI_S,\qquad \dot Q_{\mathrm{sol}}=\sum_j\dot Q_{\mathrm{sol},j}.\]
+\item Leiten Sie aus der sensiblen Wärmebilanz den erforderlichen Zuluftvolumenstrom ab:
+\[\dot V=\frac{\dot Q_{\mathrm{sol}}}{\rho c_p(\theta_i-\theta_s)}.\]
+Geben Sie das Ergebnis in m$^3$/s und m$^3$/h an. Verwenden Sie den Faktor 3600 nur bei dieser Umrechnung.
+\item Dimensionieren Sie einen einzigen runden Hauptkanal für den gesamten Volumenstrom:
+\[A_{\mathrm{Kanal}}=\frac{\dot V}{v_{\max}},\qquad d_{\min}=\sqrt{\frac{4\dot V}{\pi v_{\max}}}.\]
+Wählen Sie aus den angebotenen Innendurchmessern 160, 200, 250, 315, 400, 450 und 500 mm den kleinsten zulässigen Wert. Prüfen Sie anschließend die tatsächliche Luftgeschwindigkeit mit dem gewählten Durchmesser.
+\item Wiederholen Sie den Fall mit einem äußeren Verschattungsfaktor $F_{\mathrm{sh}}=0{,}50$ als zusätzlichem Faktor im solaren Eintrag. Vergleichen Sie Kühllast, Volumenstrom und Mindestdurchmesser mit dem unverschatteten Fall.
+\end{enumerate}
+\textbf{Modellgrenze.} Berechnet wird nur die sensible solare Teillast durch diese zwei Öffnungen. Personen, Geräte, Transmission und Feuchte fehlen. Dies ist keine vollständige Kühllast- oder Lüftungsauslegung. Die Zuluft muss aktiv auf 18 Grad gekühlt werden; reine Außenluftlüftung garantiert diese Temperatur nicht.
+\clearpage
+\section{Umsetzung und Abgabe}
+\subsection{Rhino/Grasshopper}
+\begin{enumerate}
+\item Legen Sie Geometrie und Kennwerte als benannte Eingaben an. Strukturieren Sie die Definition in Geometrie, Heizbilanz, Wärmepumpe/Kosten, Solarbilanz, Luftstrom/Kanal und Export.
+\item Verbinden Sie alle Ergebnisse mit den Eingaben; vermeiden Sie fest eingetragene Ergebniswerte. Beschriften Sie die Ausgaben mit Größe und Einheit. Für den CSV-Export genügen native Komponenten oder ein kurzes Skript ohne Zusatz-Plug-in.
+\item Verhindern Sie Berechnungen mit JAZ $\leq0$, $\theta_i\leq\theta_s$, $v_{\max}\leq0$ oder negativen opaken Flächen. Zeigen Sie stattdessen eine verständliche Fehlermeldung.
+\item Prüfen Sie: Verdopplung des Strompreises verdoppelt nur die Kosten; $I_S=0$ ergibt solare Teillast und zugehörigen Volumenstrom null; größere JAZ senkt den Strombedarf, nicht den Wärmebedarf. Ein Kanal wird nur für positive Last ausgewählt.
+\end{enumerate}
+\subsection{CSV-Vertrag}
+Erstellen Sie eine UTF-8-Datei \texttt{heizen-kuehlen.csv} mit Semikolon als Trennzeichen, Dezimalpunkt und ohne Tausendertrennzeichen. Eine Zeile je Ergebnis und Variante. Die erste Zeile lautet:
+\begin{quote}\small\ttfamily variante;groesse;wert;einheit\end{quote}
+Verwenden Sie die Varianten \texttt{basis}, \texttt{jaz4} und \texttt{verschattet}. Für \texttt{basis} sind alle folgenden Größen abzugeben:
+\begin{center}\small
+\begin{tabular}{p{.60\linewidth}p{.28\linewidth}}
+\textbf{Größenkennung} & \textbf{Einheit}\\\hline
+\texttt{A\_g, A\_w, A\_r, A\_f} & \texttt{m2}\\
+\texttt{V} & \texttt{m3}\\
+\texttt{H\_T, H\_V} & \texttt{W/K}\\
+\texttt{Q\_H, E\_el} & \texttt{kWh/a}\\
+\texttt{q\_H} & \texttt{kWh/(m2*a)}\\
+\texttt{C} & \texttt{EUR/a}\\
+\texttt{Qdot\_door, Qdot\_window, Qdot\_sol} & \texttt{W}\\
+\texttt{Vdot\_s, Vdot\_h} & \texttt{m3/s}, \texttt{m3/h}\\
+\texttt{d\_min, d\_selected} & \texttt{mm}\\
+\texttt{v\_actual} & \texttt{m/s}\\\hline
+\end{tabular}\end{center}
+Für \texttt{jaz4}: \texttt{Q\_H, E\_el, C}. Für \texttt{verschattet}: die acht Kühlungsgrößen von \texttt{Qdot\_door} bis \texttt{v\_actual}. Runden Sie erst für den Export auf zwei Nachkommastellen; der ausgewählte Durchmesser bleibt ganzzahlig.
+
+\textbf{Abzugeben:} CSV, lauffähige \texttt{.gh}-Datei (gegebenenfalls mit zugehöriger \texttt{.3dm}) und eine Seite mit Rechenweg, Variantenvergleich und Modellgrenzen als PDF. Bewertet werden korrekte Bilanz und Einheiten, nachvollziehbare Parametrik, Eingabeprüfungen und vollständige Abgabe. Termin und Upload-Ort werden separat von der Lehrperson bekannt gegeben.
+
+\small\textit{Inhaltliche Grundlage: zwei bereitgestellte Vorlesungsfolien „Fingerübung Heizen + Kühlen“, Seiten 10 und 23, Nachhaltige Gebäudesysteme, Leibniz Universität Hannover. Eigenständige Neufassung mit ergänzten Übungsannahmen.}
+\end{document}

@@ -2,7 +2,7 @@
 
 use super::*;
 use super::part_1_4_1_5 as thin;
-use semio_s_plugin_norm_compliance::CheckStatus;
+use semio_s_plugin_norm_compliance::{CheckStatus, Quantity, QuantityKind};
 
 //#region 🔖️ComplianceHelpers
 

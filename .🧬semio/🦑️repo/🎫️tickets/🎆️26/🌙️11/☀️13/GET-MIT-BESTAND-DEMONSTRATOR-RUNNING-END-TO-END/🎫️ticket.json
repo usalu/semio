@@ -1,0 +1,23 @@
+{
+  "title": "Get Mit-Bestand Demonstrator Running End to End",
+  "emoji": "🧺️",
+  "status": "open",
+  "description": "Get the mit-bestand demonstrator (@semio-tech/mit-bestand-demonstrator) running as fast as possible on the shared repo: activate-prototype, serve on 6029, all eight panes boot, fix every blocker end to end including unrelated fundamental issues found on the way.",
+  "goal": "🎯runningdemonstrator",
+  "sessions": [
+    "0652876e-1287-4b76-9d6f-9569d81d8e90"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-13 04:56:42",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get the mit-bestand demonstrator (@semio-tech/mit-bestand-demonstrator) running as fast as possible on the shared repo: activate-prototype, serve on 6029, all eight panes boot, fix every blocker end to end including unrelated fundamental issues found on the way.",
+      "llm": "fable-5-2",
+      "effort": "medium"
+    }
+  ]
+}

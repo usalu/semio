@@ -16,9 +16,9 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
     semio_s_artifact_norm_contract::package_from_schema(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-use semio_s_plugin_norm_compliance::{NormError, QuantityKind};
+use semio_s_plugin_norm_compliance::NormError;
 use std::collections::{BTreeMap, BTreeSet};
-use semio_s_artifact_norm_vdi3805_model::VdiQuantityKind;
+use semio_s_artifact_norm_vdi3805_model::{Domain, SheetId, SHEET_ENTRIES};
 use semio_s_artifact_norm_vdi3805_model::EditionId;
 use semio_s_artifact_norm_vdi3805_model::SchemaStatus;
 use semio_s_artifact_norm_vdi3805_model::RecordFamilyId;
@@ -33,33 +33,6 @@ use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 /// 🌐️ Locale-tagged text — re-exported from `crate::document`, the single canonical definition
 /// shared across every norm artifact (kills this type's former duplicate here and in `iso16757`;
 /// see `crate::document`'s `🔖️LocalizedText` region for the full rationale).
-
-impl From<VdiQuantityKind> for QuantityKind {
-    fn from(value: VdiQuantityKind) -> Self {
-        match value {
-            VdiQuantityKind::Dimensionless => QuantityKind::Dimensionless,
-            VdiQuantityKind::Length => QuantityKind::Length,
-            VdiQuantityKind::Area => QuantityKind::Area,
-            VdiQuantityKind::Volume => QuantityKind::Volume,
-            VdiQuantityKind::Mass => QuantityKind::Mass,
-            VdiQuantityKind::Time => QuantityKind::Time,
-            VdiQuantityKind::Temperature => QuantityKind::Temperature,
-            VdiQuantityKind::Force => QuantityKind::Force,
-            VdiQuantityKind::Pressure => QuantityKind::Pressure,
-            VdiQuantityKind::Stress => QuantityKind::Stress,
-            VdiQuantityKind::Moment => QuantityKind::Moment,
-            VdiQuantityKind::Energy => QuantityKind::Energy,
-            VdiQuantityKind::Power => QuantityKind::Power,
-            VdiQuantityKind::ThermalConductivity => QuantityKind::ThermalConductivity,
-            VdiQuantityKind::ThermalResistance => QuantityKind::ThermalResistance,
-            VdiQuantityKind::HeatTransferCoefficient => QuantityKind::HeatTransferCoefficient,
-            VdiQuantityKind::AirPermeability => QuantityKind::AirPermeability,
-            VdiQuantityKind::VentilationRate => QuantityKind::VentilationRate,
-            VdiQuantityKind::Acceleration => QuantityKind::Acceleration,
-            VdiQuantityKind::Velocity => QuantityKind::Velocity,
-        }
-    }
-}
 
 /// 🔢️ Typed manufacturer value.
 #[derive(Clone, Debug, PartialEq, crate::value_derive::ToValue, crate::value_derive::FromValue)]

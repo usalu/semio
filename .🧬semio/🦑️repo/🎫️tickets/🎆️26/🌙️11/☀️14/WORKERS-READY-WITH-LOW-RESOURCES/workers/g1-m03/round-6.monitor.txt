@@ -1,0 +1,2 @@
+try 1 started pid=8329 2026-11-14T19:52:13Z log=/Users/ueli/native-bootstrap-round-6.log
+round 7 posted: runner stopped and one SIGINT to process group 8329 (try 1) 2026-11-14T20:08:27Z

@@ -1,5 +1,6 @@
 import {open} from "node:fs/promises";
 import {constants} from "node:fs";
+import {hostAvailableBytesV1} from "../../../🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {withArtifactDescriptorV1} from "../../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../🔒️leases/🟦️.ts";
 import {requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
@@ -7,7 +8,7 @@ import {captureOwnedCommandResultV1} from "../../../🎛️owned-execution/📥�
 import {startTelemetrySamplerV1} from "./⏱️sampling/🟦️.ts";
 export {startTelemetrySamplerV1} from "./⏱️sampling/🟦️.ts";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { cpus, freemem, totalmem } from "node:os";
+import { cpus, totalmem } from "node:os";
 import { dirname, join } from "node:path";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type { UnitRecordV1 } from "../🎟️admission/🟦️.ts";
@@ -69,7 +70,7 @@ export function memoryCountersV1(control:ResourceLeaseControl,platform:NodeJS.Pl
    const read=(path:string)=>withArtifactDescriptorV1(()=>open(path,constants.O_RDONLY|(constants.O_NOFOLLOW??0)),async handle=>{const bytes=Buffer.alloc(TELEMETRY_POLICY_V1.maximumOutputBytes+1);let used=0;while(used<bytes.length){checkResourceLeaseControl(actual);const row=await handle.read(bytes,used,bytes.length-used,used);if(row.bytesRead===0)break;used+=row.bytesRead;}checkResourceLeaseControl(actual);if(used>TELEMETRY_POLICY_V1.maximumOutputBytes)throw Error("Bounded telemetry counter file required");return bytes.subarray(0,used).toString("utf8");});
    return parseMemoryCountersV1(platform,await read("/proc/meminfo"),await read("/proc/vmstat"));
   }
-  return Object.freeze({availableBytes:freemem(),swapUsedBytes:null,swappedOutBytes:null});
+  return Object.freeze({availableBytes:hostAvailableBytesV1()??null,swapUsedBytes:null,swappedOutBytes:null});
  });
 }
 

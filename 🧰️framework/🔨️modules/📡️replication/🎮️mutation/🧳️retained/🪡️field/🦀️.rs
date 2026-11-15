@@ -23,7 +23,7 @@ pub use change::{RetainedFieldChange};
 pub use change::record::{RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldProjection, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field};
 use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementOutcome, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementPollExit, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::RetainedCloneStep;
-pub use semio_framework_replication_retained_field_preparation::{RetainedFieldPreparation,RetainedFieldProducer,RetainedFieldProducerContext};
+pub use semio_framework_replication_retained_field_prep::{RetainedFieldPreparation,RetainedFieldProducer,RetainedFieldProducerContext};
 
 
 /// ⏱️ Records the work a reported total still owes the shared effect, keeping every refusal.

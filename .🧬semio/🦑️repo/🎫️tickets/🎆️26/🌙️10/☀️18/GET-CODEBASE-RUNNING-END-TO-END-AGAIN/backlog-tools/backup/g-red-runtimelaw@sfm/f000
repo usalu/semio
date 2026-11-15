@@ -1,0 +1,2 @@
+/** 🏷️ Public `@semio-tech/framework/runtime/identity` entry: explicit re-exports of the module that owns each member. */
+export { isHostRuntimeCommandV1, isRuntimeBuiltinSpecifierV1, isRuntimeExecutableV1, runtimeAdapterNameV1, runtimeBuiltinNamesV1, runtimeCollectGarbageV1, runtimeCommandNameV1, runtimeCommandNamesV1, runtimeDetectKeyV1, runtimeExecutableForV1, runtimeExecutableV1, runtimeIdentityV1, runtimeIdsV1, runtimeKeyV1, runtimePackageCommandV1, runtimeProgramV1, runtimeSupportsV1, runtimeTypeEnvironmentV1 } from "../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";

@@ -1,0 +1,802 @@
+2026-11-15T05:52:58Z LAUNCHER BEFORE TRY 1
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T05:52:58Z TRY 1 START group 260 log /Users/ueli/native-bootstrap-round-23.log
+2026-11-15T05:52:58Z pressure_level=1 run_group_max_rss_kib=2352
+5704384 94452 94383 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+967952 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+584224   211 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.re
+2026-11-15T05:53Z NOTE try 1 (started 05:52:58Z) ended by me after about 10 s with one SIGINT: round 22 try 2 was stopped by my stall rule although its fleet wait line kept changing (`server last progressed S s ago`); my progress check read the last `graph:` line of the alphabetically last service log, not the newest one. Fixed (newest log); the series restarts as try 2.
+2026-11-15T05:53:28Z ACCESS LINES TRY 1: 0
+
+2026-11-15T05:53:37Z KEY LINES TRY 1: 0
+
+2026-11-15T05:53:37Z P12 PEAK TRY 1: no slice worker seen
+2026-11-15T05:53:37Z LAUNCHER AFTER TRY 1
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T05:53:37Z LAUNCHER during try 1: unchanged
+2026-11-15T05:53:37Z TRY 1 END native_rc=1 peak_rss_kib=5704384 run_peak_rss_kib=2352 stop=None fleet_refusal=False closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T05:53:37Z another error: one more try in 3 minutes to see whether it repeats
+2026-11-15T05:53:42Z LAUNCHER BEFORE TRY 2
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T05:53:42Z TRY 2 START group 841 log /Users/ueli/native-bootstrap-round-23-try-2.log
+2026-11-15T05:53:42Z pressure_level=1 run_group_max_rss_kib=2352
+2137920   650 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1042416 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+475504 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:54:12Z pressure_level=1 run_group_max_rss_kib=146832
+1373552  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1042928 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+489648 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:54:42Z pressure_level=1 run_group_max_rss_kib=147184
+2653104  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1044416 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+489728 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:55:12Z pressure_level=1 run_group_max_rss_kib=147744
+3204448  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1045728 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+485728 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:55:42Z pressure_level=1 run_group_max_rss_kib=148080
+3805280  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1046352 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+483472  1235     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T05:56:12Z pressure_level=1 run_group_max_rss_kib=148208
+3853296  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1046480 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+483744 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:56:37Z LAUNCHER BEFORE TRY 2
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T05:56:37Z LAUNCHER since the end of the previous try: unchanged
+2026-11-15T05:56:37Z TRY 2 START group 3082 log /Users/ueli/native-bootstrap-round-23-try-2.log
+2026-11-15T05:56:37Z pressure_level=1 run_group_max_rss_kib=2352
+3853296  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1046816 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+483808 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:56:42Z pressure_level=1 run_group_max_rss_kib=148224
+3853296  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1046944 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+483520  1235     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T05:57:07Z pressure_level=1 run_group_max_rss_kib=130672
+3853296  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1047072 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+483696 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:57:12Z pressure_level=1 run_group_max_rss_kib=148288
+3853296  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1047072 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+483712 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:57:37Z pressure_level=1 run_group_max_rss_kib=130912
+3853392  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1047152 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+483744 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:57:42Z pressure_level=1 run_group_max_rss_kib=148464
+3853392  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1047200 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+483792 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:58:08Z pressure_level=1 run_group_max_rss_kib=131280
+3853424  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1050080 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+486800 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:58:12Z pressure_level=1 run_group_max_rss_kib=148720
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1050128 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+486800 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:58:38Z pressure_level=1 run_group_max_rss_kib=131936
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1068064 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+486816 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:58:42Z pressure_level=1 run_group_max_rss_kib=149072
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1068192 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+486832 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:59:08Z pressure_level=1 run_group_max_rss_kib=131984
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1068304 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487200 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:59:12Z pressure_level=1 run_group_max_rss_kib=149056
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1068544 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487248 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:59:38Z pressure_level=1 run_group_max_rss_kib=132016
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1068608 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487472 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:59:42Z pressure_level=1 run_group_max_rss_kib=149056
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1068656 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487472 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:00:08Z pressure_level=1 run_group_max_rss_kib=132096
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1069104 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487168 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:00:12Z pressure_level=1 run_group_max_rss_kib=149072
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1069120 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487200 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:00:38Z pressure_level=1 run_group_max_rss_kib=132096
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1069520 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487504 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:00:42Z pressure_level=1 run_group_max_rss_kib=149088
+3853584  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1069520 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487504 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:01:09Z pressure_level=1 run_group_max_rss_kib=132368
+3905632  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1069712 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487568 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:01:13Z pressure_level=1 run_group_max_rss_kib=149088
+3953376  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1069760 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487568 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:01:39Z pressure_level=1 run_group_max_rss_kib=132448
+4568640  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1069872 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+486848 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:01:43Z pressure_level=1 run_group_max_rss_kib=149072
+4592624  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1069872 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+486848 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:02:09Z pressure_level=1 run_group_max_rss_kib=132432
+5090016  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1101648 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487344 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:02:13Z pressure_level=1 run_group_max_rss_kib=149088
+5090016  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1101792 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487408 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:02:39Z pressure_level=1 run_group_max_rss_kib=132432
+6584288  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1101824 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+487680 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:02:43Z pressure_level=1 run_group_max_rss_kib=148752
+8210160  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+656208 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+482928  1235     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T06:03:09Z pressure_level=1 run_group_max_rss_kib=59408
+8486960  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+647904 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+481552  1235     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T06:03:13Z pressure_level=1 run_group_max_rss_kib=52832
+9210592  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+447776 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+224816 43431 43430 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.321/ddbdf2b334e1/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-fable-5-2 --permission-prompt-tool=stdio --resume=4fc6af00-df13-45c6-8db
+2026-11-15T06:03:39Z pressure_level=1 run_group_max_rss_kib=50192
+9366352  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+398400 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+241968  9182  1338 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs
+2026-11-15T06:03:43Z pressure_level=1 run_group_max_rss_kib=41056
+7264928  1338  1242 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+212560 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+140544 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:04:09Z ACCESS LINES TRY 2: 0
+
+2026-11-15T06:04:13Z KEY LINES TRY 2: 19
+graph: the fleet did not deliver 10 too heavy project(s) (@semio-tech/framework-os-dev (about 23804 MB), @semio-tech/repo-lib (about 18374 MB), @semio-tech/framework-pack-json-rs (about 14658 MB), workspace (about 13840 MB), repo (about 13428 MB), @semio-tech/framework-plugin (about 8078 MB), and 4 more); this machine infers them itself, one at a time and alone after the others, each with up to about 8428 MB
+graph: refreshing 175 projects (generation 230)
+graph: plan stage inference starts (managed 2290 MB, resident 5116 MB)
+graph: waiting for memory headroom (1056 of 1024 MB reserved, 1 projects running): @semio-tech/framework needs 1056 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1056 of 1671 MB reserved, 1 projects running): @semio-tech/framework needs 1056 MB and has waited 6 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (3907 of 501 MB reserved, 1 projects running): @semio-tech/async-macros-rs needs 760 MB and has waited 10 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (3907 of 1541 MB reserved, 1 projects running): @semio-tech/async-macros-rs needs 760 MB and has waited 21 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (3907 of 26 MB reserved, 1 projects running): @semio-tech/framework-async-rs needs 760 MB and has waited 3 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/framework-async (project) grew by 2896 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: plan stage inference settled from 7654 to 9360 MB
+Graph: Plan-Stufe inference beruhigt von 7654 auf 9360 MB
+graph: waiting for memory headroom (3907 of 643 MB reserved, 1 projects running): @semio-tech/framework-async-rs needs 760 MB and has waited 22 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (7813 of 3096 MB reserved, 2 projects running): @semio-tech/2d-compute needs 3907 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/framework-2d-js (project) grew by 2301 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (3907 of 0 MB reserved, 1 projects running): @semio-tech/compute-ownership-runner needs 3907 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference (during inference) grew the plan by 5000 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: project @semio-tech/2d-compute (project) grew by 3156 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+2026-11-15T06:03:44.075Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:03:44.076Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:04:13Z PLAN TOO HEAVY TRY 2, 20 lines before and the line
+graph: waiting for memory headroom (3907 of 0 MB reserved, 1 projects running): @semio-tech/compute-ownership-runner needs 3907 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:48:1:0:%40semio-tech%2F2d-compute|project|0|0:waiting|3907|0|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 48 projects · 1 running, longest 0 s: @semio-tech/2d-compute (project, 0 s, 0 rows) · waiting for memory headroom (3907 of 0 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:5:175:1:0:%40semio-tech%2F2d-compute|project|0|0:waiting|3907|0|project","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 570 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[capacity] waiting 65s for exec: not enough free memory (need 1536 MB; -4483 MB spare above the 2048 MB floor, load 2.85; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 18720 MB), workspace:setup (quiet, 1 job(s), 52 MB), workspace:setup (quiet, 1 job(s), 47 MB)
+graph: plan stage inference (during inference) grew the plan by 5000 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: plan stop detail {"stage":"inference","operation":"inference","memory":{"rss":8702,"heapTotal":1171,"heapUsed":4235,"external":3055,"arrayBuffers":100},"heap":{"heapMb":4235.3,"extraMb":3055.3,"objectCount":26460079,"objectTypes":[{"type":"string","count":14351604},{"type":"Object","count":8201746},{"type":"Array","count":1702822},{"type":"WeakRef","count":101334},{"type":"Set","count":75357},{"type":"Structure","count":36659},{"type":"Cell Butterfly","count":28390},{"type":"Promise","count":24733}]},"resources":{},"recent":[{"atMs":534481,"heapUsed":2062,"external":1518,"arrayBuffers":308,"rss":8074,"operation":"inference/inference"},{"atMs":535123,"heapUsed":2038,"external":1504,"arrayBuffers":176,"rss":8021,"operation":"inference/inference"},{"atMs":535593,"heapUsed":2346,"external":1695,"arrayBuffers":126,"rss":8007,"operation":"inference/inference"},{"atMs":535988,"heapUsed":2628,"external":1988,"arrayBuffers":281,"rss":8020,"operation":"inference/inference"},{"atMs":536891,"heapUsed":2897,"external":2107,"arrayBuffers":201,"rss":8047,"operation":"inference/inference"},{"atMs":537450,"heapUsed":2807,"external":2071,"arrayBuffers":160,"rss":8047,"operation":"inference/inference"},{"atMs":538020,"heapUsed":2981,"external":2222,"arrayBuffers":179,"rss":8047,"operation":"inference/inference"},{"atMs":538415,"heapUsed":3192,"external":1964,"arrayBuffers":339,"rss":8054,"operation":"inference/inference"},{"atMs":539142,"heapUsed":3512,"external":2543,"arrayBuffers":100,
+graph: project @semio-tech/2d-compute (project) grew by 3156 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:48:2:0:%40semio-tech%2F2d-compute|project|0|0,%40semio-tech%2Fcompute-ownership-runner|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 48 projects · 2 running, longest 0 s: @semio-tech/2d-compute (project, 0 s, 0 rows), @semio-tech/compute-ownership-runner (project, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:5:175:2:0:%40semio-tech%2F2d-compute|project|0|0,%40semio-tech%2Fcompute-ownership-runner|project|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 580 s
+2026-11-15T06:03:44.075Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:04:13Z PLAN TOO HEAVY TRY 2, 20 lines before and the line
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:48:1:0:%40semio-tech%2F2d-compute|project|0|0:waiting|3907|0|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 48 projects · 1 running, longest 0 s: @semio-tech/2d-compute (project, 0 s, 0 rows) · waiting for memory headroom (3907 of 0 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:5:175:1:0:%40semio-tech%2F2d-compute|project|0|0:waiting|3907|0|project","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 570 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[capacity] waiting 65s for exec: not enough free memory (need 1536 MB; -4483 MB spare above the 2048 MB floor, load 2.85; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 18720 MB), workspace:setup (quiet, 1 job(s), 52 MB), workspace:setup (quiet, 1 job(s), 47 MB)
+graph: plan stage inference (during inference) grew the plan by 5000 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: plan stop detail {"stage":"inference","operation":"inference","memory":{"rss":8702,"heapTotal":1171,"heapUsed":4235,"external":3055,"arrayBuffers":100},"heap":{"heapMb":4235.3,"extraMb":3055.3,"objectCount":26460079,"objectTypes":[{"type":"string","count":14351604},{"type":"Object","count":8201746},{"type":"Array","count":1702822},{"type":"WeakRef","count":101334},{"type":"Set","count":75357},{"type":"Structure","count":36659},{"type":"Cell Butterfly","count":28390},{"type":"Promise","count":24733}]},"resources":{},"recent":[{"atMs":534481,"heapUsed":2062,"external":1518,"arrayBuffers":308,"rss":8074,"operation":"inference/inference"},{"atMs":535123,"heapUsed":2038,"external":1504,"arrayBuffers":176,"rss":8021,"operation":"inference/inference"},{"atMs":535593,"heapUsed":2346,"external":1695,"arrayBuffers":126,"rss":8007,"operation":"inference/inference"},{"atMs":535988,"heapUsed":2628,"external":1988,"arrayBuffers":281,"rss":8020,"operation":"inference/inference"},{"atMs":536891,"heapUsed":2897,"external":2107,"arrayBuffers":201,"rss":8047,"operation":"inference/inference"},{"atMs":537450,"heapUsed":2807,"external":2071,"arrayBuffers":160,"rss":8047,"operation":"inference/inference"},{"atMs":538020,"heapUsed":2981,"external":2222,"arrayBuffers":179,"rss":8047,"operation":"inference/inference"},{"atMs":538415,"heapUsed":3192,"external":1964,"arrayBuffers":339,"rss":8054,"operation":"inference/inference"},{"atMs":539142,"heapUsed":3512,"external":2543,"arrayBuffers":100,
+graph: project @semio-tech/2d-compute (project) grew by 3156 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:48:2:0:%40semio-tech%2F2d-compute|project|0|0,%40semio-tech%2Fcompute-ownership-runner|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 48 projects · 2 running, longest 0 s: @semio-tech/2d-compute (project, 0 s, 0 rows), @semio-tech/compute-ownership-runner (project, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:5:175:2:0:%40semio-tech%2F2d-compute|project|0|0,%40semio-tech%2Fcompute-ownership-runner|project|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 580 s
+2026-11-15T06:03:44.075Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:03:44.076Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:04:13Z P12 PEAK TRY 2: 2026-11-15T06:03:15Z pid=1338 rss=9144MB footprint=[bun [1338]: 64-bit    Footprint: 7190 MB (16384 bytes per page)] last=[graph: project @semio-tech/framework-async (project) grew by 2896 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heav]
+2026-11-15T06:04:13Z LAUNCHER AFTER TRY 2
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T06:04:13Z LAUNCHER during try 2: unchanged
+2026-11-15T06:04:13Z TRY 2 END native_rc=75 peak_rss_kib=9366352 run_peak_rss_kib=132448 stop=None fleet_refusal=True closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T06:04:13Z refusal, hard stop, stall, missing closure or moving sources: next try in 3 minutes
+2026-11-15T06:04:13Z ACCESS LINES TRY 2: 0
+
+2026-11-15T06:04:15Z KEY LINES TRY 2: 20
+graph: 175 stale projects, 0 taken from the fleet, 10 too heavy for this machine (@semio-tech/framework-os-dev (about 23804 MB), @semio-tech/repo-lib (about 18374 MB), @semio-tech/framework-pack-json-rs (about 14658 MB), workspace (about 13840 MB), repo (about 13428 MB), @semio-tech/framework-plugin (about 8078 MB), and 4 more; it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 175
+graph: the fleet did not deliver 10 too heavy project(s) (@semio-tech/framework-os-dev (about 23804 MB), @semio-tech/repo-lib (about 18374 MB), @semio-tech/framework-pack-json-rs (about 14658 MB), workspace (about 13840 MB), repo (about 13428 MB), @semio-tech/framework-plugin (about 8078 MB), and 4 more); this machine infers them itself, one at a time and alone after the others, each with up to about 8428 MB
+graph: refreshing 175 projects (generation 230)
+graph: plan stage inference starts (managed 2290 MB, resident 5116 MB)
+graph: waiting for memory headroom (1056 of 1024 MB reserved, 1 projects running): @semio-tech/framework needs 1056 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1056 of 1671 MB reserved, 1 projects running): @semio-tech/framework needs 1056 MB and has waited 6 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (3907 of 501 MB reserved, 1 projects running): @semio-tech/async-macros-rs needs 760 MB and has waited 10 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (3907 of 1541 MB reserved, 1 projects running): @semio-tech/async-macros-rs needs 760 MB and has waited 21 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (3907 of 26 MB reserved, 1 projects running): @semio-tech/framework-async-rs needs 760 MB and has waited 3 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/framework-async (project) grew by 2896 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: plan stage inference settled from 7654 to 9360 MB
+Graph: Plan-Stufe inference beruhigt von 7654 auf 9360 MB
+graph: waiting for memory headroom (3907 of 643 MB reserved, 1 projects running): @semio-tech/framework-async-rs needs 760 MB and has waited 22 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (7813 of 3096 MB reserved, 2 projects running): @semio-tech/2d-compute needs 3907 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/framework-2d-js (project) grew by 2301 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (3907 of 0 MB reserved, 1 projects running): @semio-tech/compute-ownership-runner needs 3907 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference (during inference) grew the plan by 5000 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: project @semio-tech/2d-compute (project) grew by 3156 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+2026-11-15T06:03:44.075Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:03:44.076Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:04:15Z PLAN TOO HEAVY TRY 2, 20 lines before and the line
+graph: waiting for memory headroom (3907 of 0 MB reserved, 1 projects running): @semio-tech/compute-ownership-runner needs 3907 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:48:1:0:%40semio-tech%2F2d-compute|project|0|0:waiting|3907|0|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 48 projects · 1 running, longest 0 s: @semio-tech/2d-compute (project, 0 s, 0 rows) · waiting for memory headroom (3907 of 0 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:5:175:1:0:%40semio-tech%2F2d-compute|project|0|0:waiting|3907|0|project","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 570 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[capacity] waiting 65s for exec: not enough free memory (need 1536 MB; -4483 MB spare above the 2048 MB floor, load 2.85; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 18720 MB), workspace:setup (quiet, 1 job(s), 52 MB), workspace:setup (quiet, 1 job(s), 47 MB)
+graph: plan stage inference (during inference) grew the plan by 5000 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: plan stop detail {"stage":"inference","operation":"inference","memory":{"rss":8702,"heapTotal":1171,"heapUsed":4235,"external":3055,"arrayBuffers":100},"heap":{"heapMb":4235.3,"extraMb":3055.3,"objectCount":26460079,"objectTypes":[{"type":"string","count":14351604},{"type":"Object","count":8201746},{"type":"Array","count":1702822},{"type":"WeakRef","count":101334},{"type":"Set","count":75357},{"type":"Structure","count":36659},{"type":"Cell Butterfly","count":28390},{"type":"Promise","count":24733}]},"resources":{},"recent":[{"atMs":534481,"heapUsed":2062,"external":1518,"arrayBuffers":308,"rss":8074,"operation":"inference/inference"},{"atMs":535123,"heapUsed":2038,"external":1504,"arrayBuffers":176,"rss":8021,"operation":"inference/inference"},{"atMs":535593,"heapUsed":2346,"external":1695,"arrayBuffers":126,"rss":8007,"operation":"inference/inference"},{"atMs":535988,"heapUsed":2628,"external":1988,"arrayBuffers":281,"rss":8020,"operation":"inference/inference"},{"atMs":536891,"heapUsed":2897,"external":2107,"arrayBuffers":201,"rss":8047,"operation":"inference/inference"},{"atMs":537450,"heapUsed":2807,"external":2071,"arrayBuffers":160,"rss":8047,"operation":"inference/inference"},{"atMs":538020,"heapUsed":2981,"external":2222,"arrayBuffers":179,"rss":8047,"operation":"inference/inference"},{"atMs":538415,"heapUsed":3192,"external":1964,"arrayBuffers":339,"rss":8054,"operation":"inference/inference"},{"atMs":539142,"heapUsed":3512,"external":2543,"arrayBuffers":100,
+graph: project @semio-tech/2d-compute (project) grew by 3156 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:48:2:0:%40semio-tech%2F2d-compute|project|0|0,%40semio-tech%2Fcompute-ownership-runner|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 48 projects · 2 running, longest 0 s: @semio-tech/2d-compute (project, 0 s, 0 rows), @semio-tech/compute-ownership-runner (project, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:5:175:2:0:%40semio-tech%2F2d-compute|project|0|0,%40semio-tech%2Fcompute-ownership-runner|project|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 580 s
+2026-11-15T06:03:44.075Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:04:15Z PLAN TOO HEAVY TRY 2, 20 lines before and the line
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:48:1:0:%40semio-tech%2F2d-compute|project|0|0:waiting|3907|0|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 48 projects · 1 running, longest 0 s: @semio-tech/2d-compute (project, 0 s, 0 rows) · waiting for memory headroom (3907 of 0 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:5:175:1:0:%40semio-tech%2F2d-compute|project|0|0:waiting|3907|0|project","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 570 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[capacity] waiting 65s for exec: not enough free memory (need 1536 MB; -4483 MB spare above the 2048 MB floor, load 2.85; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 18720 MB), workspace:setup (quiet, 1 job(s), 52 MB), workspace:setup (quiet, 1 job(s), 47 MB)
+graph: plan stage inference (during inference) grew the plan by 5000 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: plan stop detail {"stage":"inference","operation":"inference","memory":{"rss":8702,"heapTotal":1171,"heapUsed":4235,"external":3055,"arrayBuffers":100},"heap":{"heapMb":4235.3,"extraMb":3055.3,"objectCount":26460079,"objectTypes":[{"type":"string","count":14351604},{"type":"Object","count":8201746},{"type":"Array","count":1702822},{"type":"WeakRef","count":101334},{"type":"Set","count":75357},{"type":"Structure","count":36659},{"type":"Cell Butterfly","count":28390},{"type":"Promise","count":24733}]},"resources":{},"recent":[{"atMs":534481,"heapUsed":2062,"external":1518,"arrayBuffers":308,"rss":8074,"operation":"inference/inference"},{"atMs":535123,"heapUsed":2038,"external":1504,"arrayBuffers":176,"rss":8021,"operation":"inference/inference"},{"atMs":535593,"heapUsed":2346,"external":1695,"arrayBuffers":126,"rss":8007,"operation":"inference/inference"},{"atMs":535988,"heapUsed":2628,"external":1988,"arrayBuffers":281,"rss":8020,"operation":"inference/inference"},{"atMs":536891,"heapUsed":2897,"external":2107,"arrayBuffers":201,"rss":8047,"operation":"inference/inference"},{"atMs":537450,"heapUsed":2807,"external":2071,"arrayBuffers":160,"rss":8047,"operation":"inference/inference"},{"atMs":538020,"heapUsed":2981,"external":2222,"arrayBuffers":179,"rss":8047,"operation":"inference/inference"},{"atMs":538415,"heapUsed":3192,"external":1964,"arrayBuffers":339,"rss":8054,"operation":"inference/inference"},{"atMs":539142,"heapUsed":3512,"external":2543,"arrayBuffers":100,
+graph: project @semio-tech/2d-compute (project) grew by 3156 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:48:2:0:%40semio-tech%2F2d-compute|project|0|0,%40semio-tech%2Fcompute-ownership-runner|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 48 projects · 2 running, longest 0 s: @semio-tech/2d-compute (project, 0 s, 0 rows), @semio-tech/compute-ownership-runner (project, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:5:175:2:0:%40semio-tech%2F2d-compute|project|0|0,%40semio-tech%2Fcompute-ownership-runner|project|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 580 s
+2026-11-15T06:03:44.075Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:03:44.076Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10008,"limit":6553,"available":5097,"reserve":2048,"reason":"ceiling","worker":{"heapMb":3236.3,"extraMb":2681.2,"objectCount":10048967,"objectTypes":[{"type":"string","count":5685037},{"type":"Object","count":1745274},{"type":"Array","count":1067439},{"type":"WeakRef","count":100941},{"type":"Set","count":75288},{"type":"Structure","count":35635},{"type":"Cell Butterfly","count":28154},{"type":"Promise","count":24746}],"at":1794722602949}}
+2026-11-15T06:04:15Z P12 PEAK TRY 2: 2026-11-15T06:03:15Z pid=1338 rss=9144MB footprint=[bun [1338]: 64-bit    Footprint: 7190 MB (16384 bytes per page)] last=[graph: project @semio-tech/framework-async (project) grew by 2896 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heav]
+2026-11-15T06:04:15Z LAUNCHER AFTER TRY 2
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T06:04:15Z LAUNCHER during try 2: unchanged
+2026-11-15T06:04:15Z TRY 2 END native_rc=75 peak_rss_kib=9210592 run_peak_rss_kib=149088 stop=None fleet_refusal=True closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T06:04:15Z refusal, hard stop, stall, missing closure or moving sources: next try in 3 minutes
+2026-11-15T06:07:13Z LAUNCHER BEFORE TRY 3
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T06:07:13Z LAUNCHER since the end of the previous try: unchanged
+2026-11-15T06:07:13Z TRY 3 START group 11180 log /Users/ueli/native-bootstrap-round-23-try-3.log
+2026-11-15T06:07:13Z pressure_level=1 run_group_max_rss_kib=2352
+1072352 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+262880 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+223088 43249     1 /Applications/Claude.app/Contents/MacOS/Claude
+2026-11-15T06:07:15Z LAUNCHER BEFORE TRY 3
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T06:07:15Z LAUNCHER since the end of the previous try: unchanged
+2026-11-15T06:07:15Z TRY 3 START group 11423 log /Users/ueli/native-bootstrap-round-23-try-3.log
+2026-11-15T06:07:15Z pressure_level=1 run_group_max_rss_kib=2352
+1072400 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+512448 11388 11193 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo run repo-mcp:install
+263008 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:07:43Z pressure_level=1 run_group_max_rss_kib=502400
+1972768 11761 11753 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1072608 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+502400 11753 11193 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo dependencies sync --all
+2026-11-15T06:07:45Z pressure_level=1 run_group_max_rss_kib=357392
+1973552 11761 11753 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1072704 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+502400 11753 11193 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo dependencies sync --all
+2026-11-15T06:08:13Z pressure_level=1 run_group_max_rss_kib=502528
+2379776 11761 11753 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1076288 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+502528 11753 11193 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo dependencies sync --all
+2026-11-15T06:08:15Z pressure_level=1 run_group_max_rss_kib=357696
+2381088 11761 11753 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1076352 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+502528 11753 11193 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo dependencies sync --all
+2026-11-15T06:08:43Z pressure_level=1 run_group_max_rss_kib=502608
+2392624 11761 11753 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1236016 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+502608 11753 11193 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo dependencies sync --all
+2026-11-15T06:08:45Z pressure_level=1 run_group_max_rss_kib=358064
+2392896 11761 11753 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1235968 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+502608 11753 11193 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo dependencies sync --all
+2026-11-15T06:09:13Z pressure_level=1 run_group_max_rss_kib=503632
+3147952 11761 11753 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1236464 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+503632 11753 11193 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo dependencies sync --all
+2026-11-15T06:09:15Z pressure_level=1 run_group_max_rss_kib=358448
+1236464 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495664 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+380640 11897 11895 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node
+2026-11-15T06:09:43Z ACCESS LINES TRY 3: 2
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=1242 ppid=1235
+2026-11-15T06:09:45Z pressure_level=1 run_group_max_rss_kib=358752
+2179168 11897 11895 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1241552 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+494960 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:10:16Z pressure_level=1 run_group_max_rss_kib=358800
+2350368 11897 11895 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1241792 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495024 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:10:46Z pressure_level=1 run_group_max_rss_kib=359312
+2370288 11897 11895 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1241872 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495552 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:11:16Z pressure_level=1 run_group_max_rss_kib=361424
+2615968 11897 11895 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1243168 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495296 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:11:43Z KEY LINES TRY 3: 1
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+2026-11-15T06:11:43Z EPERM TRY 3, 10 lines before and the line
+[repo] still working after 890 s; last phase started: source.served
+[repository:command] still running after 890 s
+[repository:command] still running after 900 s
+[repository:command] still running after 910 s
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (10578 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=1242 ppid=1235
+2026-11-15T06:09:17.056Z shutdown access-denied
+2026-11-15T06:11:43Z SERVICE FAILURE TRY 3
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=1242 ppid=1235
+2026-11-15T06:09:17.056Z shutdown access-denied
+graph: plan answered, managed 106 MB, resident 132 MB (released 0 MB)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+repository:command failed with exit code 4
+2026-11-15T06:11:43Z EPERM TRY 3, 10 lines before and the line
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (10578 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=1242 ppid=1235
+2026-11-15T06:09:17.056Z shutdown access-denied
+graph: plan answered, managed 106 MB, resident 132 MB (released 0 MB)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:11:43Z P12 PEAK TRY 3: 2026-11-15T06:09:16Z pid=12952 rss=258MB footprint=[bun [12952]: 64-bit    Footprint: 84 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 207 MB (released 0 MB)]
+2026-11-15T06:11:43Z LAUNCHER AFTER TRY 3
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T06:11:43Z LAUNCHER during try 3: unchanged
+2026-11-15T06:11:43Z TRY 3 END native_rc=1 peak_rss_kib=3147952 run_peak_rss_kib=503632 stop=None fleet_refusal=False closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T06:11:43Z another error: one more try in 3 minutes to see whether it repeats
+2026-11-15T06:11:46Z ACCESS LINES TRY 3: 4
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=1242 ppid=1235
+2026-11-15T06:11:29.178Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=13960 ppid=13956
+2026-11-15T06:11:46Z KEY LINES TRY 3: 2
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+2026-11-15T06:11:29.178Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+2026-11-15T06:11:46Z EPERM TRY 3, 10 lines before and the line
+[repo] still working after 890 s; last phase started: source.served
+[repository:command] still running after 890 s
+[repository:command] still running after 900 s
+[repository:command] still running after 910 s
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (10578 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=1242 ppid=1235
+2026-11-15T06:09:17.056Z shutdown access-denied
+2026-11-15T06:11:46Z SERVICE FAILURE TRY 3
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=1242 ppid=1235
+2026-11-15T06:09:17.056Z shutdown access-denied
+graph: plan answered, managed 106 MB, resident 132 MB (released 0 MB)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+repository:command failed with exit code 4
+2026-11-15T06:11:46Z EPERM TRY 3, 10 lines before and the line
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (10578 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:09:17.055Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=1242 ppid=1235
+2026-11-15T06:09:17.056Z shutdown access-denied
+graph: plan answered, managed 106 MB, resident 132 MB (released 0 MB)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:11:46Z EPERM TRY 3, 10 lines before and the line
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (10130 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[repo] still working after 5 s; last phase started: source.served
+2026-11-15T06:11:29.178Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=13960 ppid=13956
+2026-11-15T06:11:29.178Z shutdown access-denied
+2026-11-15T06:11:46Z SERVICE FAILURE TRY 3
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[repo] still working after 5 s; last phase started: source.served
+2026-11-15T06:11:29.178Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=13960 ppid=13956
+2026-11-15T06:11:29.178Z shutdown access-denied
+graph: plan answered, managed 123 MB, resident 415 MB (released 0 MB)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:11:46Z EPERM TRY 3, 10 lines before and the line
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[repo] still working after 5 s; last phase started: source.served
+2026-11-15T06:11:29.178Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=13960 ppid=13956
+2026-11-15T06:11:29.178Z shutdown access-denied
+graph: plan answered, managed 123 MB, resident 415 MB (released 0 MB)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T06:11:46Z P12 PEAK TRY 3: 2026-11-15T06:09:16Z pid=12952 rss=258MB footprint=[bun [12952]: 64-bit    Footprint: 84 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 207 MB (released 0 MB)]
+2026-11-15T06:11:46Z LAUNCHER AFTER TRY 3
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T06:11:46Z LAUNCHER during try 3: unchanged
+2026-11-15T06:11:46Z TRY 3 END native_rc=1 peak_rss_kib=2615968 run_peak_rss_kib=361424 stop=None fleet_refusal=False closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T06:11:46Z another error: one more try in 3 minutes to see whether it repeats
+2026-11-15T06:14:44Z LAUNCHER BEFORE TRY 4
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T06:14:44Z LAUNCHER since the end of the previous try: unchanged
+2026-11-15T06:14:44Z TRY 4 START group 14749 log /Users/ueli/native-bootstrap-round-23-try-4.log
+2026-11-15T06:14:44Z pressure_level=1 run_group_max_rss_kib=2352
+1248256 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495280 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+409568 14059 14054 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node
+2026-11-15T06:14:46Z LAUNCHER BEFORE TRY 4
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T06:14:46Z LAUNCHER since the end of the previous try: unchanged
+2026-11-15T06:14:46Z TRY 4 START group 14976 log /Users/ueli/native-bootstrap-round-23-try-4.log
+2026-11-15T06:14:46Z pressure_level=1 run_group_max_rss_kib=2352
+1248256 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495280 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+491552 14957 14762 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo run repo-mcp:install
+2026-11-15T06:15:14Z pressure_level=1 run_group_max_rss_kib=137136
+1249168 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+736304 15476 15475 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node
+495712 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:15:16Z pressure_level=1 run_group_max_rss_kib=363024
+1249168 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+809840 15476 15475 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node
+495728 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:15:44Z pressure_level=1 run_group_max_rss_kib=137744
+2247792 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1249280 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495952 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:15:46Z pressure_level=1 run_group_max_rss_kib=133712
+2249440 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1249280 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495952 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:16:14Z pressure_level=1 run_group_max_rss_kib=138208
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1249296 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+496336 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:16:16Z pressure_level=1 run_group_max_rss_kib=134224
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1249328 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+496336 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:16:44Z pressure_level=1 run_group_max_rss_kib=138752
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1280416 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+496352 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:16:46Z pressure_level=1 run_group_max_rss_kib=134608
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1280416 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+496352 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:17:14Z pressure_level=1 run_group_max_rss_kib=138816
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1518304 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+496368 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:17:16Z pressure_level=1 run_group_max_rss_kib=134944
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1518736 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+496368 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:17:45Z pressure_level=1 run_group_max_rss_kib=138896
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1519792 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+498032 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:17:46Z pressure_level=1 run_group_max_rss_kib=134944
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1519792 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+498048 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:18:15Z pressure_level=1 run_group_max_rss_kib=138976
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1519920 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+498544 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:18:16Z pressure_level=1 run_group_max_rss_kib=135040
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1519872 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+498544 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:18:45Z pressure_level=1 run_group_max_rss_kib=139264
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1519872 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+498544 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:18:46Z pressure_level=1 run_group_max_rss_kib=135072
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1519872 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+498544 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:19:15Z pressure_level=1 run_group_max_rss_kib=139616
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1519968 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497504 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:19:16Z pressure_level=1 run_group_max_rss_kib=135296
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1519968 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497504 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:19:45Z pressure_level=1 run_group_max_rss_kib=139728
+2255088 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1525872 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497264 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:19:47Z pressure_level=1 run_group_max_rss_kib=135776
+2255088 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1525872 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497264 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:20:15Z pressure_level=1 run_group_max_rss_kib=140032
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1526000 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497296 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:20:17Z pressure_level=1 run_group_max_rss_kib=136176
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1526016 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497328 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:20:46Z pressure_level=1 run_group_max_rss_kib=140576
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1526976 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497856 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:20:47Z pressure_level=1 run_group_max_rss_kib=136672
+2255088 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1526976 93933 93932 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497872 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:21:16Z pressure_level=1 run_group_max_rss_kib=140768
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1065952 20953 20952 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497872 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:21:17Z pressure_level=1 run_group_max_rss_kib=136976
+2255136 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1066560 20953 20952 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+497872 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:21:46Z pressure_level=1 run_group_max_rss_kib=141040
+2255088 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1097376 20953 20952 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+503408 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:21:47Z pressure_level=1 run_group_max_rss_kib=136976
+2255088 15567 14059 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1097376 20953 20952 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+503408 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T06:23Z NOTE TWO RUNNERS ran side by side from 05:53Z (pids 235 and 827; the first one survived my kill of 05:53 because I killed the wrong pids), each starting its own bootstrap on the same log file names: tries 2, 3 and 4 of this round were run twice at once and their logs, sampler files and notes are mixed. Both runners and both try-4 process groups were stopped by me at 06:23Z (one SIGINT each). The measurements of round 23 tries 2 to 4 are therefore NOT valid; peak_rss 9.3 GB of the machine in the two 'TRY 2 END' lines is two services at once.

@@ -40,7 +40,9 @@
 //! (`403 x-semio-refusal: insecure-transport`), grants CORS — never with credentials — only to
 //! admitted origins (the site origin in production) and answers every preflight itself, cacheable
 //! for [`PREFLIGHT_MAX_AGE`] seconds so a quiz session does not double its `POST /commands` and
-//! `POST /queries` traffic. Inside it the framework's throttle spends the caller's token and counts
+//! `POST /queries` traffic, yet only after the throttle admitted it: a preflight spends its
+//! address's read allowance and a refused one is the throttle's `429`, granted like any answer.
+//! Inside the gate the framework's throttle spends the caller's token and counts
 //! the request in flight before anything else runs (`429`/`503` with `Retry-After`, the client
 //! address being the last `X-Forwarded-For` entry behind the trusted proxy and the peer otherwise);
 //! only then come the settling and the routes, whose bodies are capped and whose sockets are counted
@@ -100,7 +102,8 @@ pub const SETTLE_INTERVAL: Duration = Duration::from_millis(500);
 pub const DRAIN_BATCH: usize = 64;
 /// 🔁️ Drains per settle before the rest is left to the next one.
 pub const DRAIN_ROUNDS: usize = 64;
-/// ⏳️ How long a browser may cache a granted preflight, in seconds (Chromium's ceiling).
+/// ⏳️ How long a browser may cache a granted preflight, in seconds (Chromium's ceiling; Firefox
+/// would take a day, Safari 10 minutes): a quiz session asks once per route and origin.
 pub const PREFLIGHT_MAX_AGE: &str = "7200";
 /// 🚧️ The response header naming why the gate refused a request.
 pub const REFUSAL_HEADER: &str = "x-semio-refusal";
@@ -510,8 +513,9 @@ impl Proctor {
         }
         let log = server.state().store.read().await.clone();
         let settler = Settler { state: server.state().clone(), log, projector, tenant: course.id().to_string(), relaying: Arc::new(Flight::default()), folding: Arc::new(Flight::default()) };
-        let served = server.router().fallback(|method: Method, uri: Uri| async move { ServerError::NotFound(format!("{method} {}", uri.path())).into_response() }).layer(from_fn_with_state(settler.clone(), consistency));
-        let router = server.throttled(served).layer(from_fn_with_state(Arc::new(gate), gatekeeping));
+        let gate = Arc::new(gate);
+        let served = server.router().fallback(|method: Method, uri: Uri| async move { ServerError::NotFound(format!("{method} {}", uri.path())).into_response() }).layer(from_fn_with_state(settler.clone(), consistency)).layer(from_fn_with_state(Arc::clone(&gate), preflighting));
+        let router = server.throttled(served).layer(from_fn_with_state(gate, gatekeeping));
         Ok(Self { server, settler, router, course, admission })
     }
 
@@ -640,12 +644,19 @@ async fn gatekeeping(State(gate): State<Arc<Gate>>, request: Request, next: Next
         return response;
     }
     let origin = request.headers().get(header::ORIGIN).cloned();
-    if request.method() == Method::OPTIONS {
-        return preflight(origin.as_ref(), &gate.origins);
-    }
     let mut response = next.run(request).await;
     grant(response.headers_mut(), origin.as_ref(), &gate.origins);
     response
+}
+
+/// 🛫️ Answer a preflight from inside the throttle: it spends its address's read allowance like any
+/// other read and a refused one is the throttle's `429` (which the gate still grants), yet it never
+/// reaches the settling or the routes.
+async fn preflighting(State(gate): State<Arc<Gate>>, request: Request, next: Next) -> Response {
+    if request.method() != Method::OPTIONS {
+        return next.run(request).await;
+    }
+    preflight(request.headers().get(header::ORIGIN), &gate.origins)
 }
 
 /// ✈️ The answer to a CORS preflight: `204` with the grant, and — when the origin is admitted —

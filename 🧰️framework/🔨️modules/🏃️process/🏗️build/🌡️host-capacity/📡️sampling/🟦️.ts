@@ -1,4 +1,5 @@
-import {execFile} from "node:child_process";
+import {execFile,spawnSync} from "node:child_process";
+import {readFileSync} from "node:fs";
 import {readdir,readFile} from "node:fs/promises";
 import {cpus,freemem,loadavg,platform as osPlatform,totalmem} from "node:os";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
@@ -22,11 +23,11 @@ export type HostProbeV1=Readonly<{platform:HostSampleV1["platform"];run:HostComm
 /** 🗃️ A shared sample record: the sample plus the cumulative swap traffic counter its successor needs for a rate. */
 export type HostSampleRecordV1=Readonly<{host:HostSampleV1;swappedOutMegabytes:number|null;declared?:string}>;
 
-/** 🍎️ Parses macOS `vm_stat`, `sysctl vm.swapusage`, `sysctl kern.memorystatus_vm_pressure_level`, `sysctl kern.num_files kern.maxfiles` and `hdiutil info` text; available is what the kernel can hand out without compressing or swapping anything: free, file-backed and purgeable pages (Activity Monitor's "memory used" is everything else, the compressor included), never more than free, inactive and speculative pages; the compressor's physical pages are reported on their own, and the attached images are the `images` count of `hdiutil info`, or its `image-path` records. */
+/** 🍎️ Parses macOS `vm_stat`, `sysctl vm.swapusage`, `sysctl kern.memorystatus_vm_pressure_level`, `sysctl kern.num_files kern.maxfiles` and `hdiutil info` text; available is what the kernel can hand out without swapping, the notion of Linux `MemAvailable`: free pages plus the larger of the inactive and speculative pages and the file-backed and purgeable pages (the cache and the purgeable memory the kernel takes back first; the pages stored in the compressor are not counted), so an idle 16 GB Mac with a warm cache is not read as starved by its free pages (the former reading of free, file-backed and purgeable pages alone could stay under 5.8 GB and gave a worker a grant of 0 MB per project); the compressor's physical pages are reported on their own, and the attached images are the `images` count of `hdiutil info`, or its `image-path` records. */
 export function parseDarwinCountersV1(vmStat:string,swapUsage:string,pressureLevel:string,filesTable:string="",imageInfo:string|null=null):HostCountersV1{
  const page=Number(/page size of (\d+) bytes/u.exec(vmStat)?.[1]??LIMITS.defaultPageBytes),pages=(name:string)=>Number(new RegExp(`^${name}:\\s+(\\d+)\\.`,"mu").exec(vmStat)?.[1]??0),used=/used = ([\d.]+)([KMGT])/u.exec(swapUsage),level=Number(pressureLevel.trim());
- const settled=pages("Pages free")+pages("Pages inactive")+pages("Pages speculative"),reclaimable=/^File-backed pages:/mu.test(vmStat)?pages("Pages free")+pages("File-backed pages")+pages("Pages purgeable"):settled,compressed=/^Pages occupied by compressor:/mu.test(vmStat)?pages("Pages occupied by compressor")*page:null;
- return Object.freeze({availableBytes:Math.min(settled,reclaimable)*page,compressedBytes:compressed,constrainedBytes:null,swapUsedBytes:used?Math.round(Number(used[1])*SCALE[used[2]!]!*MEGABYTE):null,swappedOutBytes:(pages("Swapouts")+pages("Swapins"))*page,pressureLevel:level===4?"critical":level===2?"warn":level===1?"normal":null,stallPercent:null,...darwinFilesV1(filesTable),attachedImages:darwinImagesV1(imageInfo)});
+ const cooling=pages("Pages inactive")+pages("Pages speculative"),cache=/^File-backed pages:/mu.test(vmStat)?pages("File-backed pages")+pages("Pages purgeable"):0,available=pages("Pages free")+Math.max(cooling,cache),compressed=/^Pages occupied by compressor:/mu.test(vmStat)?pages("Pages occupied by compressor")*page:null;
+ return Object.freeze({availableBytes:available*page,compressedBytes:compressed,constrainedBytes:null,swapUsedBytes:used?Math.round(Number(used[1])*SCALE[used[2]!]!*MEGABYTE):null,swappedOutBytes:(pages("Swapouts")+pages("Swapins"))*page,pressureLevel:level===4?"critical":level===2?"warn":level===1?"normal":null,stallPercent:null,...darwinFilesV1(filesTable),attachedImages:darwinImagesV1(imageInfo)});
 }
 
 const wholeV1=(match:RegExpExecArray|null):number|null=>match?Number(match[1]):null;
@@ -140,7 +141,7 @@ export function parseWindowsCountersV1(text:string):HostCountersV1{
 
 const noticedV1=new WeakMap<object,Set<string>>(),standardErrorV1={};
 /** 📣️ Says once per process and sink, in every language, that this host is blind where the gate cannot learn or measure: nothing fails, so the line is the only signal. Never throws. */
-function noticeOnceV1(key:string,message:"treeUnobserved"|"footprintFallback"|"countersPartial",values:Readonly<Record<string,string|number|((language:"en"|"de")=>string)>>,notify?:(line:string)=>void):void{
+function noticeOnceV1(key:string,message:"treeUnobserved"|"footprintFallback"|"countersPartial"|"availableUnread",values:Readonly<Record<string,string|number|((language:"en"|"de")=>string)>>,notify?:(line:string)=>void):void{
  const sink=notify??standardErrorV1,seen=noticedV1.get(sink)??new Set<string>();noticedV1.set(sink,seen);
  if(seen.has(key))return;seen.add(key);
  try{for(const language of["en","de"] as const){const line=formatHostCapacityV1(language,message,Object.fromEntries(Object.entries(values).map(([name,value])=>[name,typeof value==="function"?value(language):value])));if(notify)notify(line);else process.stderr.write(line+"\n");}}catch{}
@@ -162,6 +163,35 @@ export async function readHostCountersV1(probe:HostProbeV1):Promise<HostCounters
  noticeOnceV1("countersPartial."+probe.platform,"countersPartial",{platform:probe.platform,reason:failure},probe.notify);
  return Object.freeze({availableBytes:freemem(),compressedBytes:null,constrainedBytes:null,swapUsedBytes:null,swappedOutBytes:null,pressureLevel:null,stallPercent:null,openFiles:null,openFilesMaximum:null,attachedImages:null,partial:true as const});
 }
+
+/** 🔌️ The ports of the one synchronous reader of the memory a host can still give out; every one defaults to the running machine. */
+export type HostAvailablePortsV1=Readonly<{platform?:NodeJS.Platform;read?:(path:string)=>string;run?:()=>string;free?:()=>number;total?:()=>number;environment?:Readonly<Record<string,string|undefined>>;now?:()=>number;notify?:(line:string)=>void}>;
+
+/** 🌡️ Makes the one reader of the memory this host can still give out in bytes, the single answer every build-system memory decision starts from (the capacity gate samples the same counters with `readHostCountersV1`): macOS parses `vm_stat` (free pages plus the larger of the inactive and speculative pages and the file-backed and purgeable pages: `os.freemem()` counts the free pages alone, 100 to 300 MB on a healthy 16 GB Mac that has 7 GB to give), Linux `MemAvailable` of `/proc/meminfo`, Windows the operating system's available physical memory (`os.freemem()` there), any other platform the same; a simulated host (`SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES`) never has more available than its total; an answer is reused for `Limits.availableAgeMilliseconds` and a source that cannot be read answers undefined (said once in every language), never a wrong number.
+ * @see ../🧬️schema/🔣️.json */
+export function createHostAvailableBytesV1(ports:HostAvailablePortsV1={}):()=>number|undefined{
+ const platform=ports.platform??osPlatform(),read=ports.read??((path:string)=>readFileSync(path,"utf8")),free=ports.free??freemem,total=ports.total??totalmem,environment=ports.environment??process.env,now=ports.now??(()=>performance.now());
+ const run=ports.run??((()=>{const result=spawnSync("vm_stat",[],{encoding:"utf8",timeout:LIMITS.availableCommandMilliseconds});if(result.error!==undefined||result.status!==0)throw result.error??Error("vm_stat exited with "+result.status);return result.stdout;}));
+ const source=():number|undefined=>{
+  if(platform==="linux")return parseLinuxCountersV1(read("/proc/meminfo"),"",null,null,null).availableBytes??undefined;
+  if(platform==="darwin"){const text=run();if(!/^Pages free:/mu.test(text))throw Error("vm_stat names no free pages");return parseDarwinCountersV1(text,"","").availableBytes??undefined;}
+  const bytes=free();return Number.isFinite(bytes)&&bytes>=0?bytes:undefined;
+ };
+ let at=-Infinity,value:number|undefined;
+ return()=>{
+  const time=now();if(time-at<LIMITS.availableAgeMilliseconds&&time>=at)return value;
+  at=time;value=undefined;
+  try{
+   const bytes=source();
+   if(bytes!==undefined&&Number.isFinite(bytes)&&bytes>=0)value=Math.min(bytes,hostProfileV1(environment,{totalMegabytes:Math.floor(total()/MEGABYTE),cores:1,declared:false}).totalMegabytes*MEGABYTE);
+   else noticeOnceV1("availableUnread."+platform,"availableUnread",{platform,reason:"no value"},ports.notify);
+  }catch(error){noticeOnceV1("availableUnread."+platform,"availableUnread",{platform,reason:String((error as Error)?.message??error).split("\\n")[0]!.slice(0,LIMITS.reasonCharacters)},ports.notify);}
+  return value;
+ };
+}
+
+/** 🌡️ The memory this host can still give out in bytes right now, undefined where no source reads (see `createHostAvailableBytesV1`). */
+export const hostAvailableBytesV1:()=>number|undefined=createHostAvailableBytesV1();
 
 /** 🪞️ Reads the simulated host size from the environment: `SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES` makes a larger host report that many megabytes in total (what is available stays what the real host has free, capped at that total: a busy 32 GB host stays busy), so that a 16 GB machine can be measured on a 32 GB one; an absent or malformed value means the real host. */
 export function simulatedHostTotalV1(environment:Readonly<Record<string,string|undefined>>):number|null{

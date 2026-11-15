@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-s-artifact-flow-flow-original-command-retirement-tests"
+name = "semio-s-artifact-flow-flow-command-retirement-tests"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Component crate of semio-s-artifact-flow-flow: original-command-retirement-tests"
+description = "Component crate of semio-s-artifact-flow-flow: command-retirement-tests"
 
 [package.metadata.semio]
 role = "library"

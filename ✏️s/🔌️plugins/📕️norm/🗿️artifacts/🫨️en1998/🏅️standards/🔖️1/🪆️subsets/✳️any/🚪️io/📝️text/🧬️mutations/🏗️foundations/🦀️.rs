@@ -57,6 +57,7 @@ use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_base_frictio
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_base_pore_pressure_pa::ChangeFoundationBasePorePressurePa;
 use semio_s_artifact_norm_en1998_mut_foundations::remove_foundation::RemoveFoundation;
 use semio_s_artifact_norm_en1998_mut_foundations::remove_retaining_wall::RemoveRetainingWall;
+use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_axial_load_n::ChangeFoundationPileAxialLoadN;
 
 /// ✍️ Prints `insert-foundation` as an op-text line.
 pub fn print_insert_foundation(p: &InsertFoundation) -> String {
@@ -583,7 +584,7 @@ pub fn print_change_retaining_wall_water_height_m(p: &ChangeRetainingWallWaterHe
 /// 📖 Parses the arguments of `change-retaining-wall-water-height-m`.
 pub fn parse_change_retaining_wall_water_height_m(args: &Args) -> Result<ChangeRetainingWallWaterHeightM, String> {
     let arg = |k: &str| required(args, "change-retaining-wall-water-height-m", k);
-    Ok(ChangeRetainingWallWaterHeightM { index: opt_index(args)?, new_water_height_m: dec_json(&arg("new-water-height-m")?)? })
+    Ok(ChangeRetainingWallWaterHeightM { index: dec_json(&arg("index")?)?, new_water_height_m: dec_json(&arg("new-water-height-m")?)? })
 }
 
 /// ✍️ Prints `change-retaining-wall-saturated-gamma` as an op-text line.
@@ -594,7 +595,7 @@ pub fn print_change_retaining_wall_saturated_gamma(p: &ChangeRetainingWallSatura
 /// 📖 Parses the arguments of `change-retaining-wall-saturated-gamma`.
 pub fn parse_change_retaining_wall_saturated_gamma(args: &Args) -> Result<ChangeRetainingWallSaturatedGamma, String> {
     let arg = |k: &str| required(args, "change-retaining-wall-saturated-gamma", k);
-    Ok(ChangeRetainingWallSaturatedGamma { index: opt_index(args)?, new_saturated_gamma: dec_json(&arg("new-saturated-gamma")?)? })
+    Ok(ChangeRetainingWallSaturatedGamma { index: dec_json(&arg("index")?)?, new_saturated_gamma: dec_json(&arg("new-saturated-gamma")?)? })
 }
 
 /// ✍️ Prints `change-retaining-wall-permeability-ms` as an op-text line.
@@ -605,7 +606,7 @@ pub fn print_change_retaining_wall_permeability_m_s(p: &ChangeRetainingWallPerme
 /// 📖 Parses the arguments of `change-retaining-wall-permeability-ms`.
 pub fn parse_change_retaining_wall_permeability_m_s(args: &Args) -> Result<ChangeRetainingWallPermeabilityMS, String> {
     let arg = |k: &str| required(args, "change-retaining-wall-permeability-ms", k);
-    Ok(ChangeRetainingWallPermeabilityMS { index: opt_index(args)?, new_permeability_m_s: dec_json(&arg("new-permeability-m-s")?)? })
+    Ok(ChangeRetainingWallPermeabilityMS { index: dec_json(&arg("index")?)?, new_permeability_m_s: dec_json(&arg("new-permeability-m-s")?)? })
 }
 
 /// ✍️ Prints `change-foundation-base-friction-deg` as an op-text line.
@@ -616,7 +617,7 @@ pub fn print_change_foundation_base_friction_deg(p: &ChangeFoundationBaseFrictio
 /// 📖 Parses the arguments of `change-foundation-base-friction-deg`.
 pub fn parse_change_foundation_base_friction_deg(args: &Args) -> Result<ChangeFoundationBaseFrictionDeg, String> {
     let arg = |k: &str| required(args, "change-foundation-base-friction-deg", k);
-    Ok(ChangeFoundationBaseFrictionDeg { index: opt_index(args)?, new_base_friction_angle_deg: dec_json(&arg("new-base-friction-angle-deg")?)? })
+    Ok(ChangeFoundationBaseFrictionDeg { index: dec_json(&arg("index")?)?, new_base_friction_angle_deg: dec_json(&arg("new-base-friction-angle-deg")?)? })
 }
 
 /// ✍️ Prints `change-foundation-base-pore-pressure-pa` as an op-text line.
@@ -627,7 +628,7 @@ pub fn print_change_foundation_base_pore_pressure_pa(p: &ChangeFoundationBasePor
 /// 📖 Parses the arguments of `change-foundation-base-pore-pressure-pa`.
 pub fn parse_change_foundation_base_pore_pressure_pa(args: &Args) -> Result<ChangeFoundationBasePorePressurePa, String> {
     let arg = |k: &str| required(args, "change-foundation-base-pore-pressure-pa", k);
-    Ok(ChangeFoundationBasePorePressurePa { index: opt_index(args)?, new_base_pore_pressure_pa: dec_json(&arg("new-base-pore-pressure-pa")?)? })
+    Ok(ChangeFoundationBasePorePressurePa { index: dec_json(&arg("index")?)?, new_base_pore_pressure_pa: dec_json(&arg("new-base-pore-pressure-pa")?)? })
 }
 
 /// ✍️ Prints `remove-foundation` as an op-text line.
@@ -650,4 +651,15 @@ pub fn print_remove_retaining_wall(p: &RemoveRetainingWall) -> String {
 pub fn parse_remove_retaining_wall(args: &Args) -> Result<RemoveRetainingWall, String> {
     let arg = |k: &str| required(args, "remove-retaining-wall", k);
     Ok(RemoveRetainingWall { id: dec_json(&arg("id")?)? })
+}
+
+/// ✍️ Prints `change-foundation-pile-axial-load-n` as an op-text line.
+pub fn print_change_foundation_pile_axial_load_n(p: &ChangeFoundationPileAxialLoadN) -> String {
+    format!("change-foundation-pile-axial-load-n id={} new-pile-axial-load-n={}", enc_json(&p.id), enc_json(&p.new_pile_axial_load_n))
+}
+
+/// 📖 Parses the arguments of `change-foundation-pile-axial-load-n`.
+pub fn parse_change_foundation_pile_axial_load_n(args: &Args) -> Result<ChangeFoundationPileAxialLoadN, String> {
+    let arg = |k: &str| required(args, "change-foundation-pile-axial-load-n", k);
+    Ok(ChangeFoundationPileAxialLoadN { id: dec_json(&arg("id")?)?, new_pile_axial_load_n: dec_json(&arg("new-pile-axial-load-n")?)? })
 }

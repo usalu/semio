@@ -63,6 +63,35 @@
       "names": [
         "lock"
       ]
+    },
+    "⚖️laws/📋️project.json": {
+      "ecosystem": "javascript",
+      "names": [
+        "lock"
+      ]
+    },
+    "🏗️build/🏡️resident/🕰️graph-hooks/🧬️schema/🔣️.json": {
+      "ecosystem": "javascript",
+      "names": [
+        "lock"
+      ]
+    },
+    "🏗️build/🕸️graph/🧮️derived-nodes/🧩️closure-kinds/🧭️row-paths/🟨️.mjs": {
+      "ecosystem": "javascript",
+      "names": [
+        "lock"
+      ]
+    },
+    "🏗️build/🗄️cas/🧬️schema/🔣️.json": {
+      "ecosystem": "javascript",
+      "names": []
+    },
+    "🏗️build/🪪️graph-state/🧬️schema/🔣️.json": {
+      "ecosystem": "javascript",
+      "names": [
+        "lock",
+        "scopeConfig"
+      ]
     }
   }
 }

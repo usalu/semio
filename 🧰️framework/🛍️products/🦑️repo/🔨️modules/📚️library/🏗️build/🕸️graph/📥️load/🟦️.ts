@@ -121,10 +121,17 @@ export function pendingOwnerRootsV1(message:string):string[]{
 }
 
 
-/** 🤝️ Adopts the crates a refused inference named into the registry before the graph is planned again: the registry consistency law's reconciler, scoped to exactly those roots, gives a crate that has a manifest but no row its row. Returns whether a row was added, so the caller plans once more only when something changed. */
+/** 👻️ The native roots whose Cargo manifest vanished while the graph was inferred (a refused project names the owner and the absent manifest), whatever wrapper carried the message across the worker farm. */
+export function vanishedOwnerRootsV1(message:string):string[]{
+  return [...new Set([...message.matchAll(/Build owner manifest absent: (.+?)\/Cargo\.toml \(required by/gu)].map(match=>match[1]!))];
+}
+
+/** 🤝️ Brings the registry in line with the roots a refused inference named before the graph is planned again: the registry consistency law's reconciler, scoped to exactly those roots, gives a crate that has a manifest but no row its row and drops the row of a crate whose manifest vanished. Returns whether a row changed, so the caller plans once more only when something changed; owner records persist, so the second plan only repeats what the vanished owner invalidated. */
 export function adoptPendingBuildOwnersV1(root:string,message:string):boolean{
-  const roots=pendingOwnerRootsV1(message);
-  return roots.length>0&&reconcileBuildOwnerRegistry(root,{scope:roots,write:true}).added.length>0;
+  const roots=[...pendingOwnerRootsV1(message),...vanishedOwnerRootsV1(message)];
+  if(roots.length===0)return false;
+  const result=reconcileBuildOwnerRegistry(root,{scope:roots,write:true});
+  return result.added.length>0||result.removed.length>0;
 }
 
 
@@ -182,7 +189,7 @@ async function loadBuildGraphUnpinnedV1(root:string,invocation:ScriptInvocation,
   if(!invocation)throw Error("Original build graph producer invocation required");
   if(options.selection.kind==="all"&&!options.baseline){
     const producer=await import("../📥️inference/🟨️.mjs"),registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));
-    const loadedAll=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??"fresh",closure:options.graph?.closure,lean:options.graph?.lean,externalInputs:options.graph?.externalInputs,pin:boundGenerationPinV1()}) as BuildGraphV1;
+    const loadedAll=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??"fresh",closure:options.graph?.closure,lean:options.graph?.lean,externalInputs:options.graph?.externalInputs,pin:boundGenerationPinV1()});
     options.onStats?.(loadedAll.stats);const graph=loadedAll.graph as BuildGraphV1;
     if(process.env.SEMIO_BUILD_GRAPH_VERIFY==="1"&&!options.graph?.closure&&!options.graph?.lean)requireEqualBuildGraphsV1(graph,await loadBuildGraphV1(root,invocation,phaseControl,{selection:options.selection,baseline:true}));
     checkScriptInvocation(invocation);return graph;

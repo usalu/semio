@@ -134,3 +134,33 @@ export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=
 
  return Object.freeze({hold,idle,list:live,resource});
 }
+
+const pause=(milliseconds,signal)=>new Promise((resolve,reject)=>{
+ if(signal?.aborted){reject(signal.reason??fail("Aborted","ABORT_ERR"));return;}
+ const onAbort=()=>{clearTimeout(timer);reject(signal.reason??fail("Aborted","ABORT_ERR"));},timer=setTimeout(()=>{signal?.removeEventListener("abort",onAbort);resolve();},milliseconds);
+ signal?.addEventListener("abort",onAbort,{once:true});
+});
+
+/**
+ * 🧲️ Attaches a reader to the live builder of its stale projects: the second reader of a machine neither builds nor prepares the projects beside the builder, it looks every `attachPollMilliseconds` (`look()` answers whether a live claim holds the custody against the reader and the newest generation), tells at once and then every notice interval that it is attached, tells each wave the builder publishes and at most every `attachRecheckMilliseconds` lets `recheck()` serve it from the generation published so far (any answer but undefined ends the attachment and is returned). It answers undefined as soon as nothing holds the custody against the reader any more, and when the custody cannot be looked at, so the caller builds or prepares as before: an attachment never fails a command, a cancellation is rethrown.
+ */
+export async function attachToBuilderV1({look,recheck,say=()=>{},signal,now=()=>Date.now(),sleep=pause,policy=P}){
+ const started=now();let previous,waves=0,noticed=-Infinity,checked=started;
+ for(;;){
+  aborted(signal);
+  let seen;
+  try{seen=await look();}catch(error){if(signal?.aborted)throw error;return undefined;}
+  if(!seen.held)return undefined;
+  const seconds=Math.round((now()-started)/1000);
+  if(seen.generation!==undefined&&previous!==undefined&&seen.generation>previous){
+   waves+=seen.generation-previous;noticed=now();say("attachedWave",{generation:seen.generation,waves,seconds});
+   if(now()-checked>=policy.attachRecheckMilliseconds){
+    checked=now();let served;
+    try{served=await recheck();}catch(error){if(signal?.aborted)throw error;}
+    if(served!==undefined){say("attachedServed",{generation:seen.generation,seconds});return served;}
+   }
+  }else if(now()-noticed>=policy.noticeMilliseconds){noticed=now();say("attached",{generation:seen.generation??-1,seconds});}
+  if(seen.generation!==undefined)previous=seen.generation;
+  await sleep(policy.attachPollMilliseconds,signal);
+ }
+}

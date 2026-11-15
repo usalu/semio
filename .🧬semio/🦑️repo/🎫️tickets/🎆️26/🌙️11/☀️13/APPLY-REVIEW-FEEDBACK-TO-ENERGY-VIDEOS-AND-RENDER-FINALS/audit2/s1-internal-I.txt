@@ -1,0 +1,27 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md:42:The first segment of `Cooling_01_HeatingVsCooling` is `🗺️roadmap` `Beat1_Fahrplan`, the Fahrplan of the whole video: six cards in chapter order (Heizen und Kühlen `Q̇_H, Q̇_C` → interne Lasten `Q̇_I` → Transmission `Q̇_T, Q̇_V`, with `Q̇_V` taken over from the ventilation video → solare Last `Q̇_S, F_C` → Auslegung `Q̇_C, V̇` → Sommerstrategie `Q_c`, handed to the energy balance). It is declared as data on the shared `🏗️authoring/🗺️roadmap` builder; keep its steps in sync with renamed chapters.
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:105:THETA_I = 20.0
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:111:LOSS_SHAPE = tuple((THETA_I - t) / (THETA_I - THETA_E[0]) for t in THETA_E)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:148:    deficit = np.array([THETA_I - t if (t := _catmull(THETA_E, x) + shift) < THETA_HG else 0.0 for x in xs])
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:503:        lvl["loss"].set_value(float(np.clip(lvl["k"].get_value() * (THETA_I - theta) / (THETA_I - THETA_E[0]), 0, 1)))
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:86:THETA_I = _example.THETA_I_WINTER_C
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:88:DESIGN_DT = THETA_I - THETA_E
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:666:        d_theta = lambda: THETA_I - theta_e.get_value()
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1629:            "en": "About 73 W/m² and 135 kWh/(m²·a): IWU type EFH_I with 1.78 W/(m²·K) transmission per m² of living area; a detached house has much envelope per m² of floor.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1630:            "de": "Rund 73 W/m² und 135 kWh/(m²·a): IWU-Typ EFH_I mit 1,78 W/(m²·K) Transmission je m² Wohnfläche; ein freistehendes Haus hat viel Hülle je m² Wohnfläche."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/README.md:47:The first segment of `Heating_01_Introduction` is `🗺️roadmap` `Beat1_Fahrplan`, the Fahrplan of the whole video: six cards in chapter order (Grundlagen `Φ, Δθ` → Wärmeleitung `U, λ, ψ` → Lüftung `Q̇_V`, taken over from the ventilation video → interne Gewinne `Q̇_I` → solare Gewinne `Q̇_S, g⊥, F_C` → Bilanz `Q_h`, handed to the energy balance). It is declared as data on the shared `🏗️authoring/🗺️roadmap` builder; keep its steps in sync with renamed chapters.
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:91:_THETA_I = _example.THETA_I_WINTER_C
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:558:            Rectangle(width=XL / 365 * 1.2, height=(_THETA_I - theta_e[d]) / (T_HI - T_LO) * YL, stroke_width=0,
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:566:            return float(sum(_THETA_I - theta_e[d] for d in heating_days if d + 1 <= day.get_value()))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:579:        gap_name = math_label(r"\theta_{\mathrm{i}} - \theta_{\mathrm{e}}", cp(d0 + 0.5, (_THETA_I + theta_e[d0]) / 2) + RIGHT * 0.9,
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:87:THETA_I, THETA_E = 20, 0
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:172:    ti = Text(tr(f"inside {THETA_I} °C", f"innen {THETA_I} °C"), font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:176:    dth = place_math(_dtheta_label(THETA_I - THETA_E), np.array([0.0, ti.get_bottom()[1], 0.0]), "center")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:521:        self.play(dt.animate.set_value(THETA_I - THETA_E), *_warmth(stage, 0.8), run_time=0.8)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1003:    return -0.95 + theta / THETA_I * 2.55
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1063:        q = PROFILE_U * (THETA_I - THETA_E)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1064:        theta_si = THETA_I - q * PROFILE_RSI
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1072:            Text(f"{THETA_I} °C", font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE).move_to(p(-3.5, _profile_y(THETA_I) - 0.28)),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1086:            math_label(r"R_{\mathrm{si}}", p(-0.62, _profile_y(THETA_I - 0.6 * (THETA_I - theta_si)) + 0.34), size=LABEL_FONT_SIZE, color=PASTEL_GREEN),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1768:        self.play(dt_t.animate.set_value(THETA_I - THETA_E), run_time=0.9)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1789:            dt_t.animate.set_value(2 * (THETA_I - THETA_E)),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1795:            dt_t.animate.set_value(THETA_I - THETA_E),

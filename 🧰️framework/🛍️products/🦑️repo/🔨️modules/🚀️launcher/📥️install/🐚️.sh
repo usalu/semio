@@ -267,26 +267,66 @@ ensure_go() {
   is_pinned_go "$GO" "$version" || fail "The Go toolchain $version is not usable at $GO." "Die Go-Toolchain $version ist unter $GO nicht benutzbar."
 }
 
-GO=""
-ensure_go
+mkdir -p "$destination"
+stamp_input="$(mktemp)"
+{
+  for source in "$module/🐹️.go" "$module"/*/🐹️.go; do
+    printf '%s\n' "${source#"$module"/}"
+    cat "$source"
+  done
+  printf 'flags=-trimpath -ldflags -s -w\nidentifier=tech.semio.repo\nlayout=2\n'
+} >"$stamp_input"
+stamp="$(sha256_of "$stamp_input")"
+rm -f "$stamp_input"
 
-work="$(mktemp -d)"
-mkdir -p "$work/cmd" "$destination"
-printf 'module github.com/usalu/semio/repo/launcher\n\ngo 1.25\n' >"$work/go.mod"
-index=0
-for source in "$module/🐹️.go" "$module"/*/🐹️.go; do
-  [ "$(basename "$(dirname "$source")")" = "📦️main" ] && continue
-  index=$((index + 1))
-  cp "$source" "$work/s$index.go"
-done
-cp "$module/📦️main/🐹️.go" "$work/cmd/main.go"
-
-(cd "$work" && GOWORK=off GOTOOLCHAIN=local CGO_ENABLED=0 "$GO" build -trimpath -ldflags "-s -w" -o "$work/repo" ./cmd) || fail "Building the launcher failed." "Das Bauen des Launchers ist fehlgeschlagen."
-rm -f "$destination/repo.new"
-cp "$work/repo" "$destination/repo.new"
-chmod 755 "$destination/repo.new"
-mv -f "$destination/repo.new" "$destination/repo"
-printf '[semio] Installed the repo launcher: %s/repo\n[semio] Repo-Launcher installiert: %s/repo\n' "$destination" "$destination" >&2
+if [ -x "$destination/repo" ] && [ "$(cat "$destination/repo.stamp" 2>/dev/null || true)" = "$stamp" ]; then
+  say "The repo launcher is current, nothing was replaced: $destination/repo" "Der Repo-Launcher ist aktuell, nichts wurde ersetzt: $destination/repo"
+else
+  GO=""
+  ensure_go
+  work="$(mktemp -d)"
+  mkdir -p "$work/cmd"
+  printf 'module github.com/usalu/semio/repo/launcher\n\ngo 1.25\n' >"$work/go.mod"
+  index=0
+  for source in "$module/🐹️.go" "$module"/*/🐹️.go; do
+    [ "$(basename "$(dirname "$source")")" = "📦️main" ] && continue
+    index=$((index + 1))
+    cp "$source" "$work/s$index.go"
+  done
+  cp "$module/📦️main/🐹️.go" "$work/cmd/main.go"
+  (cd "$work" && GOWORK=off GOTOOLCHAIN=local CGO_ENABLED=0 "$GO" build -trimpath -ldflags "-s -w" -o "$work/repo" ./cmd) || fail "Building the launcher failed." "Das Bauen des Launchers ist fehlgeschlagen."
+  if [ "$(uname -s)" = Darwin ] && command -v codesign >/dev/null 2>&1; then
+    codesign -s - --identifier tech.semio.repo --force "$work/repo" >/dev/null 2>&1 || true
+  fi
+  built="$(sha256_of "$work/repo")"
+  installed_before=""
+  [ ! -e "$destination/repo" ] || installed_before="$(sha256_of "$destination/repo")"
+  if [ "$built" = "$installed_before" ]; then
+    say "The repo launcher was rebuilt to the same bytes, nothing was replaced: $destination/repo" "Der Repo-Launcher wurde zu denselben Bytes gebaut, nichts wurde ersetzt: $destination/repo"
+  else
+    version_directory="$destination/versions/${built:0:16}"
+    if [ ! -x "$version_directory/repo" ]; then
+      mkdir -p "$version_directory"
+      cp "$work/repo" "$version_directory/repo.new"
+      chmod 755 "$version_directory/repo.new"
+      mv -f "$version_directory/repo.new" "$version_directory/repo"
+    fi
+    rm -f "$destination/repo.link.$$"
+    ln -s "versions/${built:0:16}/repo" "$destination/repo.link.$$"
+    mv -f "$destination/repo.link.$$" "$destination/repo"
+    printf '[semio] Installed the repo launcher: %s/repo\n[semio] Repo-Launcher installiert: %s/repo\n' "$destination" "$destination" >&2
+    if [ -n "$installed_before" ]; then
+      printf '[semio] The launcher changed: macOS asks once more for the file access consent of the launcher (a running service keeps its file until it stops).\n[semio] Der Launcher hat sich geändert: macOS fragt einmal erneut nach der Dateizugriffs-Erlaubnis des Launchers (ein laufender Dienst behält seine Datei, bis er endet).\n' >&2
+    fi
+    for old in $(ls -t "$destination/versions" 2>/dev/null | tail -n +4); do
+      case "$old" in
+      ????????????????) case "$old" in *[!0-9a-f]*) ;; *) rm -rf -- "$destination/versions/$old" ;; esac ;;
+      esac
+    done
+  fi
+  printf '%s' "$stamp" >"$destination/repo.stamp"
+  rm -rf -- "$work"
+fi
 case ":$PATH:" in
 *":$destination:"*) ;;
 *) printf '[semio] Add to PATH: %s\n[semio] Zum PATH hinzufügen: %s\n' "$destination" "$destination" >&2 ;;

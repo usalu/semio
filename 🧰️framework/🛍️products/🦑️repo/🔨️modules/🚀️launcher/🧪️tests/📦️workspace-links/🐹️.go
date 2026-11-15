@@ -257,7 +257,7 @@ func TestWorkspaceLinksColdImportAndConcurrentIdempotence(t *testing.T) {
 		t.Fatalf("registered test runtime required: present=%v error=%v", present, err)
 	}
 	script := filepath.Join(root, "cold.mjs")
-	if err := os.WriteFile(script, []byte(`import value from "@example/one";console.log(value);`), 0o644); err != nil {
+	if err := os.WriteFile(script, []byte(`import value from "@example/one";console.log(String(value));`), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	child := exec.Command(installed.Executable, script)

@@ -5,7 +5,6 @@
       "const": {
         "version": 1,
         "initialBytes": 67108864,
-        "admissionFreeBytes": 4294967296,
         "growVerb": "resize",
         "growSizeFlag": "-size",
         "growUnit": "m",

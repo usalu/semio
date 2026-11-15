@@ -1,0 +1,6 @@
+{
+  "at": "2026-11-14T17:55:31.123607+00:00",
+  "reason": "ROUND.md round 5 explicitly supersedes and interrupts earlier round",
+  "process_before": "31185 25959 31185 bash /Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f11/\u2600\ufe0f14/WORKERS-READY-WITH-LOW-RESOURCES/native-bootstrap.sh /Users/ueli/native-bootstrap-round-4-try-3.log",
+  "sigint_sent": true
+}

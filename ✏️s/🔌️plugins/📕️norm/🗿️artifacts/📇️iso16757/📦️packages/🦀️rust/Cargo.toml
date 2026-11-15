@@ -21,12 +21,13 @@ semio-framework-dsl = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-iso16757-editor = { workspace = true }
 semio-s-artifact-norm-iso16757-inferences = { workspace = true }
 semio-s-artifact-norm-iso16757-io = { workspace = true }
 semio-s-artifact-norm-iso16757-schema = { workspace = true }
-semio-s-artifact-norm-iso16757-model = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-iso16757-model = { workspace = true }
 
 [features]
 test-support = ["dep:serde", "semio-s-artifact-norm-iso16757-inferences/test-support", "semio-s-artifact-norm-iso16757-model/test-support", "semio-s-artifact-norm-iso16757-schema/test-support"]

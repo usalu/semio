@@ -675,7 +675,7 @@ where
     };
     for _ in 0..UNSCHEDULED_CATALOG_STEPS {
         if owners.constructor_is_complete() { return Ok(owners); }
-        let outcome = owners.constructor_demands(0).map_err(|error| (error, RetainedCloneProgress::default())).and_then(|demand| owners.admit_constructor_cold(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: demand.depth.max(1), ..Default::default() }));
+        let outcome = owners.constructor_demands(0).map_err(|error| (error, RetainedCloneProgress::default())).and_then(|demand| owners.admit_constructor_cold(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }));
         if let Err((error, _)) = outcome {
             close_unscheduled_catalog(owners);
             return Err(error);
@@ -832,24 +832,7 @@ where
     Mutation: ToValue + FromValue + self::Mutation<P>,
 {
     let ingress = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth.capacity_bytes, maximum_depth: birth.depth.max(1), ..Default::default() };
-    let mut owners = match source(ingress) {
-        Ok((owners, _)) => owners,
-        Err(refused) => {
-            let error = refused.error;
-            if let Some(owners) = refused.owners { close_unscheduled_catalog(owners); }
-            return Err(error);
-        }
-    };
-    for _ in 0..UNSCHEDULED_CATALOG_STEPS {
-        if owners.constructor_is_complete() { return Ok(owners); }
-        let outcome = owners.constructor_demands(0).map_err(|error| (error, RetainedCloneProgress::default())).and_then(|demand| owners.admit_constructor_cold(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: demand.capacity_bytes, maximum_depth: demand.depth.max(1), ..Default::default() }));
-        if let Err((error, _)) = outcome {
-            close_unscheduled_catalog(owners);
-            return Err(error);
-        }
-    }
-    close_unscheduled_catalog(owners);
-    Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "catalog constructor did not complete within its bounded ticket admission"))
+    complete_unscheduled_catalog(source(ingress))
 }
 
 /// 🗃️ Funds the framework's bounded catalog for a throwaway reduction store that no scheduler grants.

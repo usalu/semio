@@ -58,12 +58,12 @@ semio-s-artifact-norm-en1991-mut-special-vehicles = { workspace = true }
 semio-s-artifact-norm-en1991-mut-wind-bridges = { workspace = true }
 semio-s-artifact-norm-en1991-mut-wind-bridges-loading = { workspace = true }
 semio-s-artifact-norm-en1991-mut-dynamic-elements = { workspace = true }
-semio-s-artifact-norm-en1991-mut-dynamic-elements-response = { workspace = true }
+semio-s-artifact-norm-en1991-mut-dynamic-response = { workspace = true }
 semio-s-artifact-norm-en1991-mut-impact-actions = { workspace = true }
 semio-s-artifact-norm-en1991-mut-impact-actions-position = { workspace = true }
 semio-s-artifact-norm-en1991-mut-internal-explosions = { workspace = true }
 semio-s-artifact-norm-en1991-mut-thermal-sections = { workspace = true }
-semio-s-artifact-norm-en1991-mut-accidental-case-variants = { workspace = true }
+semio-s-artifact-norm-en1991-mut-case-variants = { workspace = true }
 semio-s-artifact-norm-en1991-mut-placements = { workspace = true }
 semio-s-artifact-norm-en1991-mut-bridge-lanes = { workspace = true }
 semio-s-artifact-norm-en1991-mut-construction-stages = { workspace = true }

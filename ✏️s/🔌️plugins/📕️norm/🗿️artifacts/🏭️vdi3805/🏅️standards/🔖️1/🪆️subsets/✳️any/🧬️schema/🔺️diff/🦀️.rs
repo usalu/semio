@@ -150,7 +150,15 @@ protocol::list_delta! {
     /// 🔑️ Positional keyed row delta of `catalog.products`; the key of a `crate::CatalogueProduct` row is `identity.article_number`.
     #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
-    pub Vdi3805ProductsRows { removal: Vdi3805ProductsRemoved, insertion: Vdi3805ProductsInserted, relocation: Vdi3805ProductsMoved, modification: Vdi3805ProductsModified, row: semio_s_artifact_norm_vdi3805_model::CatalogueProduct, patch: Vdi3805ProductsPatch, list: Vec<semio_s_artifact_norm_vdi3805_model::CatalogueProduct>, key: String = |row| row.identity.article_number.clone() }
+    pub Vdi3805ProductsRows { removal: Vdi3805ProductsRemoved, insertion: Vdi3805ProductsInserted, relocation: Vdi3805ProductsMoved, modification: Vdi3805ProductsModified, row: semio_s_artifact_norm_vdi3805_model::CatalogueProduct, patch: Vdi3805ProductsPatch, list: Vec<semio_s_artifact_norm_vdi3805_model::CatalogueProduct>, key: String = by Vdi3805ProductKeys }
+}
+
+/// 🔑️ Keys the foreign `CatalogueProduct` rows of their list delta by `identity.article_number`.
+pub(crate) struct Vdi3805ProductKeys;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_vdi3805_model::CatalogueProduct> for Vdi3805ProductKeys {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_vdi3805_model::CatalogueProduct) -> String { row.identity.article_number.clone() }
 }
 
 /// 🔑️ A `edition_profile` entry: its map key and value.
@@ -179,17 +187,17 @@ impl Vdi3805EditionProfileRows {
         self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
     }
 
-    fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::EditionProfileChoice>) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::EditionProfileChoice>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_s_artifact_norm_vdi3805_model::EditionProfileChoice>) -> Result<semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_s_artifact_norm_vdi3805_model::EditionProfileChoice>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
-            map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
+            map.cold_remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
         }
         for entry in &self.modified {
             let value = map.get_mut(&entry.key).ok_or_else(|| missing_target(format!("modified entry \"{}\"", entry.key)).at([entry.key.clone()]))?;
             *value = entry.value.clone();
         }
         for entry in &self.added {
-            if map.insert(entry.key.clone(), entry.value.clone()).is_some() {
+            if map.cold_insert(entry.key.clone(), entry.value.clone()).is_some() {
                 return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
             }
         }
@@ -219,7 +227,7 @@ impl Vdi3805EditionProfileRows {
         }
     }
 
-    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::EditionProfileChoice>) -> Self {
+    fn inverse_rows(&self, base: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_s_artifact_norm_vdi3805_model::EditionProfileChoice>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Vdi3805EditionProfileEntry { key: key.clone(), value: value.clone() })).collect(),
@@ -323,7 +331,7 @@ pub struct Vdi3805GeometryEntry {
 pub struct Vdi3805GeometryPatch {
     pub key: String,
     pub bbox: Option<semio_s_artifact_norm_vdi3805_model::BoundingBox>,
-    pub parameters: Option<std::collections::BTreeMap<String, f64>>,
+    pub parameters: Option<semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, f64>>,
     pub connections: Option<Vdi3805GeometryConnectionsRows>,
 }
 
@@ -383,13 +391,13 @@ impl Vdi3805GeometryRows {
         self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
     }
 
-    fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::ParametricGeometry>, capability: protocol::ApplyCapability) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::ParametricGeometry>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_s_artifact_norm_vdi3805_model::ParametricGeometry>, capability: protocol::ApplyCapability) -> Result<semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_s_artifact_norm_vdi3805_model::ParametricGeometry>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
-            map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
+            map.cold_remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
         }
         for entry in &self.added {
-            if map.insert(entry.key.clone(), entry.value.clone()).is_some() {
+            if map.cold_insert(entry.key.clone(), entry.value.clone()).is_some() {
                 return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
             }
         }
@@ -422,7 +430,7 @@ impl Vdi3805GeometryRows {
         }
     }
 
-    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::ParametricGeometry>) -> Self {
+    fn inverse_rows(&self, base: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_s_artifact_norm_vdi3805_model::ParametricGeometry>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Vdi3805GeometryEntry { key: key.clone(), value: value.clone() })).collect(),
@@ -490,17 +498,17 @@ impl Vdi3805CurvesRows {
         self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
     }
 
-    fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::CharacteristicCurve>) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::CharacteristicCurve>, protocol::MutationApplyError> {
+    fn apply_rows(&self, base: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_s_artifact_norm_vdi3805_model::CharacteristicCurve>) -> Result<semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_s_artifact_norm_vdi3805_model::CharacteristicCurve>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
-            map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
+            map.cold_remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
         }
         for patch in &self.modified {
             let value = map.get_mut(&patch.key).ok_or_else(|| missing_target(format!("modified entry \"{}\"", patch.key)).at([patch.key.clone()]))?;
             patch.apply_to_row(value)?;
         }
         for entry in &self.added {
-            if map.insert(entry.key.clone(), entry.value.clone()).is_some() {
+            if map.cold_insert(entry.key.clone(), entry.value.clone()).is_some() {
                 return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
             }
         }
@@ -532,7 +540,7 @@ impl Vdi3805CurvesRows {
         }
     }
 
-    fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_vdi3805_model::CharacteristicCurve>) -> Self {
+    fn inverse_rows(&self, base: &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_s_artifact_norm_vdi3805_model::CharacteristicCurve>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Vdi3805CurvesEntry { key: key.clone(), value: value.clone() })).collect(),
@@ -751,3 +759,9 @@ impl protocol::ColdDiffAlgebra<Vdi3805Snapshot> for Vdi3805Diff {
 /// 🍃️ The five handcrafted leaves of the `diff` schema facet.
 pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
+
+#[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+pub mod binary;

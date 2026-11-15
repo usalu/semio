@@ -1,0 +1,856 @@
+{
+  "graph": {
+    "version": 1,
+    "projects": {
+      "library": {
+        "name": "library",
+        "root": "library",
+        "targets": {
+          "build": {
+            "execution": {
+              "kind": "noop"
+            },
+            "cache": true
+          }
+        }
+      },
+      "app": {
+        "name": "app",
+        "root": "app",
+        "targets": {
+          "prepare": {
+            "execution": {
+              "kind": "noop"
+            }
+          },
+          "build": {
+            "execution": {
+              "kind": "command",
+              "command": "repo ./📜️script.ts build"
+            },
+            "dependsOn": [
+              "^build",
+              "prepare"
+            ],
+            "cache": true
+          },
+          "test": {
+            "execution": {
+              "kind": "noop"
+            },
+            "dependsOn": [
+              {
+                "target": "build",
+                "projects": "self",
+                "params": "forward"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "source": "app",
+        "target": "library",
+        "type": "static"
+      }
+    ]
+  },
+  "request": {
+    "tasks": [
+      "app:test"
+    ],
+    "args": [
+      "--seed=7"
+    ]
+  },
+  "expected": {
+    "selected": [
+      "app:test"
+    ],
+    "dependencies": {
+      "app:test": [
+        "app:build"
+      ],
+      "app:build": [
+        "app:prepare",
+        "library:build"
+      ],
+      "app:prepare": [],
+      "library:build": []
+    },
+    "args": {
+      "app:test": [
+        "--seed=7"
+      ],
+      "app:build": [
+        "--seed=7"
+      ],
+      "app:prepare": [],
+      "library:build": []
+    }
+  },
+  "sourceIdentity": {
+    "target": "target.txt",
+    "link": "source.txt",
+    "contents": [
+      "first",
+      "second"
+    ],
+    "directory": "tree",
+    "cycle": "loop"
+  },
+  "runtime": {
+    "sourceCases": [
+      {
+        "source": "first",
+        "output": "FIRST",
+        "executions": 1
+      },
+      {
+        "source": "second",
+        "output": "SECOND",
+        "executions": 2
+      }
+    ],
+    "nestedExecutions": 2,
+    "uncachedExecutions": 4,
+    "launchExecutions": 5,
+    "serviceExecutions": 6,
+    "continuousRefusals": [
+      {
+        "mode": "service-early",
+        "consumerStarted": false,
+        "error": "Continuous task exited before readiness"
+      },
+      {
+        "mode": "service-ended",
+        "consumerStarted": true,
+        "error": "Continuous task exited while required by selected tasks"
+      }
+    ],
+    "cancellation": {
+      "consumerMilliseconds": 1200,
+      "observationMilliseconds": 1500,
+      "parallelFailureMilliseconds": 100
+    }
+  },
+  "configuration": {
+    "target": {
+      "execution": {
+        "kind": "command",
+        "command": "printf prototype",
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype",
+          "RETAINED": "true"
+        },
+        "args": [
+          "authored"
+        ]
+      },
+      "outputs": [
+        "{projectRoot}/{options.env.SEMIO_BUILD_MODE}.txt"
+      ],
+      "cache": true,
+      "configurations": {
+        "release": {
+          "execution": {
+            "command": "printf release",
+            "env": {
+              "SEMIO_BUILD_MODE": "release"
+            },
+            "args": [
+              "configured"
+            ]
+          }
+        }
+      }
+    },
+    "expected": {
+      "command": "printf release",
+      "env": {
+        "SEMIO_BUILD_MODE": "release",
+        "RETAINED": "true"
+      },
+      "args": [
+        "configured"
+      ]
+    },
+    "rejected": [
+      {
+        "outputs": [
+          "different.txt"
+        ]
+      },
+      {
+        "inputs": [
+          "different.txt"
+        ]
+      },
+      {
+        "dependsOn": [
+          "prepare"
+        ]
+      },
+      {
+        "cache": false
+      },
+      {
+        "continuous": true
+      },
+      {
+        "execution": {
+          "kind": "noop"
+        }
+      },
+      {
+        "execution": {
+          "ownerArguments": true
+        }
+      },
+      {
+        "execution": {
+          "nativeOwnerCommand": {}
+        }
+      },
+      {
+        "execution": {
+          "outputs": [
+            "different.txt"
+          ]
+        }
+      },
+      {
+        "execution": {
+          "cache": false
+        }
+      },
+      {
+        "execution": {
+          "commands": [
+            "printf changed-form"
+          ]
+        }
+      }
+    ]
+  },
+  "controlWait": {
+    "originalBudgetMilliseconds": 200,
+    "resource": "bazel-snapshot-restore",
+    "progress": [
+      "publish",
+      "continuation"
+    ],
+    "consumerStarted": false
+  },
+  "moduleSetup": {
+    "receipt": {
+      "version": 1,
+      "identity": "0000000000000000000000000000000000000000000000000000000000000000",
+      "lockSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "blobs": [
+        "2222222222222222222222222222222222222222222222222222222222222222"
+      ]
+    },
+    "offlineError": "Pinned Bazel module setup is not prepared for the original offline invocation"
+  },
+  "birthRefusals": [
+    {
+      "id": "foreign-task",
+      "kind": "launch",
+      "change": "task",
+      "parameters": []
+    },
+    {
+      "id": "foreign-manifest",
+      "kind": "launch",
+      "change": "manifest",
+      "parameters": []
+    },
+    {
+      "id": "foreign-kind",
+      "kind": "action",
+      "parameters": []
+    },
+    {
+      "id": "foreign-output",
+      "kind": "launch",
+      "parameters": [
+        "/foreign-output"
+      ]
+    }
+  ],
+  "integrationPhases": [
+    "cache",
+    "nested",
+    "uncached",
+    "birth",
+    "services",
+    "refusals",
+    "cancellation",
+    "configuration",
+    "offline"
+  ],
+  "testDispatch": {
+    "cases": [
+      {
+        "arguments": [],
+        "phases": [
+          null,
+          "cache",
+          "nested",
+          "uncached",
+          "birth",
+          "services",
+          "refusals",
+          "cancellation",
+          "configuration",
+          "offline"
+        ]
+      },
+      {
+        "arguments": [
+          "cache"
+        ],
+        "phases": [
+          "cache"
+        ]
+      },
+      {
+        "arguments": [
+          "offline"
+        ],
+        "phases": [
+          "offline"
+        ]
+      }
+    ],
+    "rejected": [
+      [
+        "unknown"
+      ],
+      [
+        "cache",
+        "offline"
+      ],
+      [
+        "cache;run"
+      ],
+      [
+        "CACHE"
+      ],
+      [
+        ""
+      ]
+    ],
+    "maximumChildMilliseconds": 120000,
+    "dashboardParameter": {
+      "id": "phase",
+      "kind": "choice",
+      "locales": [
+        "en",
+        "de"
+      ]
+    }
+  },
+  "birthParameterGrants": {
+    "grants": [
+      [
+        "/owned/main/bin/service"
+      ],
+      [
+        "/owned/launch/bin/service"
+      ]
+    ],
+    "cases": [
+      {
+        "parameters": [
+          "/owned/main/bin/service"
+        ],
+        "accepted": true
+      },
+      {
+        "parameters": [
+          "/owned/launch/bin/service"
+        ],
+        "accepted": true
+      },
+      {
+        "parameters": [
+          "/foreign/bin/service"
+        ],
+        "accepted": false
+      },
+      {
+        "parameters": [],
+        "accepted": false
+      },
+      {
+        "parameters": [
+          "/owned/main/bin/service",
+          "/owned/launch/bin/service"
+        ],
+        "accepted": false
+      },
+      {
+        "parameters": [
+          "/owned/main/bin/service",
+          "/foreign/snapshot"
+        ],
+        "accepted": false
+      }
+    ]
+  },
+  "purposeVariants": [
+    {
+      "variant": "build",
+      "target": "fixture:build"
+    },
+    {
+      "variant": "serve",
+      "target": "fixture:serve"
+    },
+    {
+      "variant": "release",
+      "target": "fixture:defaults:release"
+    },
+    {
+      "variant": "offline",
+      "target": "fixture:offline"
+    },
+    {
+      "variant": "parity-nx",
+      "target": null
+    },
+    {
+      "variant": "parity-bazel",
+      "target": null
+    },
+    {
+      "variant": "cancel",
+      "target": "fixture:cancelled"
+    },
+    {
+      "variant": "parallel-failure",
+      "target": "fixture:parallel"
+    },
+    {
+      "variant": "refusal-early",
+      "target": "fixture:consumer"
+    },
+    {
+      "variant": "refusal-ended",
+      "target": "fixture:consumer"
+    }
+  ],
+  "cleanupOutcomes": [
+    {
+      "body": "resolve",
+      "cleanup": "resolve",
+      "expected": "body"
+    },
+    {
+      "body": "throw",
+      "cleanup": "resolve",
+      "expected": "body"
+    },
+    {
+      "body": "resolve",
+      "cleanup": "throw",
+      "expected": "cleanup"
+    },
+    {
+      "body": "throw",
+      "cleanup": "throw",
+      "expected": "body"
+    },
+    {
+      "body": "undefined",
+      "cleanup": "throw",
+      "expected": "body"
+    }
+  ],
+  "serviceCleanupCases": [
+    {
+      "body": "undefined",
+      "pid": "missing",
+      "outcome": "body",
+      "cleanupRefused": false,
+      "checks": 0
+    },
+    {
+      "body": "frozen",
+      "pid": "missing",
+      "outcome": "body",
+      "cleanupRefused": false,
+      "checks": 0
+    },
+    {
+      "body": "frozen",
+      "pid": "dead",
+      "outcome": "body",
+      "cleanupRefused": false,
+      "checks": 1
+    },
+    {
+      "body": "success",
+      "pid": "dead",
+      "outcome": "success",
+      "cleanupRefused": false,
+      "checks": 1
+    },
+    {
+      "body": "success",
+      "pid": "missing",
+      "outcome": "cleanup",
+      "cleanupRefused": true,
+      "checks": 0
+    },
+    {
+      "body": "success",
+      "pid": "live",
+      "outcome": "cleanup",
+      "cleanupRefused": true,
+      "checks": 1
+    },
+    {
+      "body": "frozen",
+      "pid": "unreadable",
+      "outcome": "body",
+      "cleanupRefused": true,
+      "checks": 0
+    }
+  ],
+  "ownerCommandBudgets": [
+    {
+      "kind": "root0",
+      "effects": 2
+    },
+    {
+      "kind": "finite",
+      "effects": 2
+    },
+    {
+      "kind": "cancelled",
+      "effects": 0
+    },
+    {
+      "kind": "expired",
+      "effects": 0
+    },
+    {
+      "kind": "fractional",
+      "effects": 0
+    }
+  ],
+  "ownerCommandBudgetCallers": [
+    "captured-planner",
+    "launch",
+    "build"
+  ],
+  "namedInputExpansion": {
+    "graph": {
+      "version": 1,
+      "projects": {
+        "app": {
+          "name": "app",
+          "root": "app",
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/source.ts"
+            ],
+            "consumer": [
+              "default"
+            ],
+            "cycleA": [
+              "cycleB"
+            ],
+            "cycleB": [
+              "cycleA"
+            ]
+          },
+          "targets": {}
+        },
+        "generator": {
+          "name": "generator",
+          "root": "generator",
+          "namedInputs": {
+            "default": [
+              "generatorSource"
+            ],
+            "generatorSource": [
+              "{projectRoot}/render.ts"
+            ]
+          },
+          "targets": {}
+        },
+        "library": {
+          "name": "library",
+          "root": "library",
+          "namedInputs": {
+            "default": [
+              "{projectRoot}/lib.ts"
+            ]
+          },
+          "targets": {}
+        }
+      },
+      "dependencies": [
+        {
+          "source": "app",
+          "target": "generator",
+          "type": "static"
+        },
+        {
+          "source": "app",
+          "target": "library",
+          "type": "static"
+        }
+      ],
+      "namedInputs": {
+        "shared": [
+          "{workspaceRoot}/shared.ts"
+        ]
+      }
+    },
+    "files": {
+      "app/source.ts": "app source\n",
+      "generator/render.ts": "generator first\n",
+      "library/lib.ts": "library source\n",
+      "shared.ts": "shared source\n",
+      "gen/api.ts": "generated output must not be adopted\n"
+    },
+    "mutation": {
+      "path": "generator/render.ts",
+      "after": "generator changed\n"
+    },
+    "cases": [
+      {
+        "id": "explicit-producer-array",
+        "inputs": [
+          "consumer",
+          {
+            "input": "default",
+            "projects": [
+              "generator"
+            ]
+          }
+        ],
+        "expected": [
+          "app/source.ts",
+          "generator/render.ts"
+        ]
+      },
+      {
+        "id": "explicit-producer-string",
+        "inputs": [
+          {
+            "input": "generatorSource",
+            "projects": "generator"
+          }
+        ],
+        "expected": [
+          "generator/render.ts"
+        ]
+      },
+      {
+        "id": "explicit-project-union",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "generator",
+              "library"
+            ]
+          }
+        ],
+        "expected": [
+          "generator/render.ts",
+          "library/lib.ts"
+        ]
+      },
+      {
+        "id": "self-named-object",
+        "inputs": [
+          {
+            "input": "consumer"
+          }
+        ],
+        "expected": [
+          "app/source.ts"
+        ]
+      },
+      {
+        "id": "same-project-name",
+        "inputs": [
+          {
+            "input": "consumer",
+            "projects": "app"
+          }
+        ],
+        "expected": [
+          "app/source.ts"
+        ]
+      },
+      {
+        "id": "caret-dependencies",
+        "inputs": [
+          "^default"
+        ],
+        "expected": [
+          "generator/render.ts",
+          "library/lib.ts"
+        ]
+      },
+      {
+        "id": "object-dependencies",
+        "inputs": [
+          {
+            "input": "default",
+            "dependencies": true
+          }
+        ],
+        "expected": [
+          "generator/render.ts",
+          "library/lib.ts"
+        ]
+      },
+      {
+        "id": "shared-named-input",
+        "inputs": [
+          {
+            "input": "shared",
+            "projects": [
+              "generator"
+            ]
+          }
+        ],
+        "expected": [
+          "shared.ts"
+        ]
+      },
+      {
+        "id": "explicit-project-dependencies-false",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "generator"
+            ],
+            "dependencies": false
+          }
+        ],
+        "expected": [
+          "generator/render.ts"
+        ]
+      },
+      {
+        "id": "runtime-preserved",
+        "inputs": [
+          "consumer",
+          {
+            "env": "SEMIO_BUILD_MODE"
+          },
+          {
+            "runtime": "bun --version"
+          }
+        ],
+        "expected": [
+          "app/source.ts",
+          {
+            "env": "SEMIO_BUILD_MODE"
+          },
+          {
+            "runtime": "bun --version"
+          }
+        ]
+      },
+      {
+        "id": "unknown-project",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "missing"
+            ]
+          }
+        ],
+        "error": "Unknown build input project"
+      },
+      {
+        "id": "unknown-explicit-name",
+        "inputs": [
+          {
+            "input": "missing",
+            "projects": [
+              "generator"
+            ]
+          }
+        ],
+        "error": "Unknown build input group"
+      },
+      {
+        "id": "unknown-caret-name",
+        "inputs": [
+          "^missing"
+        ],
+        "error": "Unknown build input group"
+      },
+      {
+        "id": "named-cycle",
+        "inputs": [
+          "cycleA"
+        ],
+        "error": "Build input group cycle"
+      },
+      {
+        "id": "empty-projects",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": []
+          }
+        ],
+        "error": "Closed build named input"
+      },
+      {
+        "id": "conflicting-selection",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "generator"
+            ],
+            "dependencies": true
+          }
+        ],
+        "error": "Closed build named input"
+      },
+      {
+        "id": "unknown-input-field",
+        "inputs": [
+          {
+            "input": "default",
+            "projects": [
+              "generator"
+            ],
+            "foreign": true
+          }
+        ],
+        "error": "Closed build named input"
+      },
+      {
+        "id": "nonboolean-dependencies",
+        "inputs": [
+          {
+            "input": "default",
+            "dependencies": "yes"
+          }
+        ],
+        "error": "Closed build named input"
+      }
+    ],
+    "overDepth": 129
+  }
+}

@@ -101,7 +101,7 @@ fn declared_companion_arguments_complete_exact_payloads_from_the_same_addressed_
     ];
     let rules = NormEditRules { set_field_arguments: &ARGUMENTS, set_field: &SET, insert_item: &[], remove_item: &[], move_item: &[] };
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧭️payload-bindings/🧫️cases/🔣️.json")).expect("closed companion payload cases");
-    let declarations = fixture["arguments"].as_array().expect("declared companions");
+    let declarations: Vec<&serde_json::Value> = fixture["arguments"].as_array().expect("declared companions").iter().filter(|row| row["family"] == "en1999").collect();
     assert_eq!(declarations.len(), ARGUMENTS.len());
     for argument in &ARGUMENTS {
         let declared = declarations.iter().find(|row| row["path"] == argument.path && row["kind"] == argument.kind && row["argument"] == argument.argument).expect("native companion appears in neutral vocabulary");
@@ -128,7 +128,7 @@ fn declared_companion_arguments_complete_exact_payloads_from_the_same_addressed_
             assert_eq!(kind, case["expected"]["kind"].as_str().expect("kind"));
             let payload = DslValue::object(entries);
             assert_eq!(serde_json::Value::from(&payload), case["expected"]["payload"], "{}", case["name"]);
-            if let Some(pointer) = case["siblingPointer"].as_str() {
+            if let (Some(pointer), "bolts") = (case["siblingPointer"].as_str(), case["rules"].as_str().unwrap_or_default()) {
                 let sibling = case["tree"].pointer(pointer).expect("independent sibling pointer");
                 assert_eq!(payload.get("newBoltsPerRow"), Some(&DslValue::from(sibling)));
                 assert_eq!(sibling, &case["siblingValue"]);

@@ -15,7 +15,9 @@
     { "name": "a usage refusal", "code": "usage", "key": "usage.verb", "values": { "verb": "agnostic" }, "exitCode": 2, "en": "usage: verify agnostic <path>", "de": "Aufruf: verify agnostic <Pfad>" },
     { "name": "a breach with numbers", "code": "breach", "key": "breach.count", "values": { "count": 3, "scope": "taxonomy" }, "exitCode": 1, "en": "3 breach(es) in taxonomy", "de": "3 Verstoß/Verstöße in taxonomy" },
     { "name": "a refusal without values", "code": "stale", "key": "stale", "values": {}, "exitCode": 1, "en": "The receipt is stale.", "de": "Die Quittung ist veraltet." },
-    { "name": "a cancellation by the developer", "code": "cancelled", "key": "cancelled.wait", "values": { "signal": "SIGINT" }, "exitCode": 130, "en": "Waiting was cancelled by SIGINT", "de": "Das Warten wurde durch SIGINT abgebrochen" }
+    { "name": "a cancellation by the developer", "code": "cancelled", "key": "cancelled.wait", "values": { "signal": "SIGINT" }, "exitCode": 130, "en": "Waiting was cancelled by SIGINT", "de": "Das Warten wurde durch SIGINT abgebrochen" },
+    { "name": "a request the fleet did not serve", "code": "unserved", "key": "stale", "values": {}, "exitCode": 75, "en": "The receipt is stale.", "de": "Die Quittung ist veraltet." },
+    { "name": "a machine without the file access consent", "code": "consent", "key": "stale", "values": {}, "exitCode": 4, "en": "The receipt is stale.", "de": "Die Quittung ist veraltet." }
   ],
   "wire": [
     { "name": "a valid wire form", "valid": true, "data": { "version": 1, "code": "usage", "key": "faults.usage.verb", "values": { "verb": "x" } } },

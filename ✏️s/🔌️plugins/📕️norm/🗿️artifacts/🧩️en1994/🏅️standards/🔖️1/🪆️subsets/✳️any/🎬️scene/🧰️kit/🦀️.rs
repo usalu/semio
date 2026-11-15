@@ -6,6 +6,8 @@ pub use scene::projection_kit::{self, base_id, loc, v3, add, mul, entity_ref, po
 use scene::projection::{Fragment, Part};
 use std::collections::BTreeSet;
 
+/// 🔩 Upper bound of the shear studs a beam drawing and its stud handles resolve.
+pub const MAX_STUDS_DRAWN: usize = 2000;
 pub const LAYER_MODE_BUCKLING: &str = "mode-buckling";
 pub const LAYER_MODE_LTB: &str = "mode-ltb";
 pub const LAYER_STEEL: &str = "steel";
@@ -309,7 +311,7 @@ fn owner_of(spec: &Spec) -> EntityRef {
 
 /// 🆔️ Every document entity in outliner order: the beams, the columns and the slabs; their sub-entities (`id:tag`) are projected with them.
 pub fn entities_of(document: &model::En1994Snapshot) -> Vec<EntityRef> {
-    let of = |collection: &'static str, ids: Vec<&str>| ENTITY_KINDS.iter().find(|k| k.collection == collection).into_iter().flat_map(|k| ids.into_iter().map(|id| entity_ref(k.scene_kind, id, collection))).collect::<Vec<_>>();
+    let of = |collection: &'static str, ids: Vec<&str>| ENTITY_KINDS.iter().find(|k| k.collection == collection).map_or_else(Vec::new, |k| ids.into_iter().map(|id| entity_ref(k.scene_kind, id, collection)).collect::<Vec<_>>());
     [of("beams", document.beams.iter().map(|e| e.id.as_str()).collect()), of("columns", document.columns.iter().map(|e| e.id.as_str()).collect()), of("slabs", document.slabs.iter().map(|e| e.id.as_str()).collect()), of("cases", document.cases.iter().filter(|e| declared(e)).map(|e| e.id.as_str()).collect())].concat()
 }
 

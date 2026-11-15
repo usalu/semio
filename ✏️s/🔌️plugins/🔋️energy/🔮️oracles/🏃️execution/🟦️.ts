@@ -1,7 +1,6 @@
 import { resolveTestLevel } from "@semio-tech/process/test-budget";
 import { existsSync, readFileSync } from "node:fs";
 import { delimiter, join, resolve } from "node:path";
-import { runCmd } from "@semio-tech/process/execution";
 import { runProbe } from "@semio-tech/process/execution";
 import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
 import { BundleScript } from "@semio-tech/process/routing";
@@ -26,14 +25,6 @@ export function runOraclePython(repoRoot: string, packageRoot: string, args: str
   env.PYTHONDONTWRITEBYTECODE = "1";
   Object.assign(env, pythonEnvironmentOfProjectV1(repoRoot, "energy-oracle").variables);
   return runRepositoryTestCommand("uv", ["run", "--locked", "--no-sync", "--project", packageRoot, "python", "-c", inline, ...args], { cwd: packageRoot, env, budgetMs });
-}
-
-export class DepsScript extends BundleScript {
-  run(): void {
-    const plan = pythonEnvironmentOfProjectV1(this.repoRoot, "energy-oracle"), env = { ...provisionedToolPathV1({ ...process.env, ...plan.variables }, this.repoRoot) };
-    runCmd("uv", [...plan.installArguments], { cwd: this.repoRoot, env });
-    runCmd("uv", [...plan.syncArguments], { cwd: this.repoRoot, env });
-  }
 }
 
 export class SetupScript extends BundleScript {

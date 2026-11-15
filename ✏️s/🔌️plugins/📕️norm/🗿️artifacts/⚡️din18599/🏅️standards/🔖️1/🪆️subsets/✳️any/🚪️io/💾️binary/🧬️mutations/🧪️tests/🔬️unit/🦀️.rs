@@ -1,4 +1,4 @@
-use crate::binary::mutations::*;
+use crate::binary::*;
 use semio_s_artifact_norm_din18599_mut_building::change_net_floor_area_m2;
 use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 

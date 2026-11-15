@@ -25,11 +25,11 @@ pub mod change_bridge_bearing_d_rd_m;
 pub mod change_bridge_permanent_gk_n;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_en1998_mut_bridges_towers_bridge_tower::{change_bridge_correlated_occupancy, change_tower_correlated_occupancy};
+pub use semio_s_artifact_norm_en1998_mut_towers_bridge_tower::{change_bridge_correlated_occupancy, change_tower_correlated_occupancy};
 
 pub use semio_s_artifact_norm_en1998_mut_bridges_towers_tower::{change_tower_height_m, change_tower_is_chimney, change_tower_m_rd_nm, change_tower_permanent_gk_n, change_tower_q_nominal, insert_tower, remove_tower};
 
-pub use semio_s_artifact_norm_en1998_mut_bridges_pier::{change_bridge_deck_ei_nm2, change_bridge_deck_length_m, change_bridge_pier_height_m, change_bridge_pier_moment_rd_nm, change_bridge_pier_shear_rd_n, change_tower_ei_nm2};
+pub use semio_s_artifact_norm_en1998_mut_bridges_pier::{change_bridge_importance_class, change_bridge_vertical_period_s, change_bridge_pier_cracked_inertia_ratio, change_bridge_deck_ei_nm2, change_bridge_deck_length_m, change_bridge_pier_height_m, change_bridge_pier_moment_rd_nm, change_bridge_pier_shear_rd_n, change_tower_ei_nm2};
 
 pub use semio_s_artifact_norm_en1998_mut_bridges_variables::{change_bridge_variable_category, change_bridge_variable_qk_n, insert_bridge_variable, remove_bridge_variable};
 

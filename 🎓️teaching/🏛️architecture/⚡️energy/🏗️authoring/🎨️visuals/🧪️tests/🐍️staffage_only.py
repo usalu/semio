@@ -7,6 +7,7 @@ import ast
 from functools import cache
 import importlib
 import json
+import os
 import re
 from pathlib import Path
 import unittest
@@ -689,10 +690,15 @@ class StaffageOnlyTest(unittest.TestCase):
                 self.assertNotIn(cast, manifest)
 
     def test_ad_hoc_staffage_assets_are_gone(self):
-        for folder in CASES["forbidden_paths"]:
+        skip, found = set(CASES["skip_folders"]), {folder: [] for folder in CASES["forbidden_paths"]}
+        for directory, folders, files in os.walk(ROOT):
+            folders[:] = [name for name in folders if name not in skip]
+            for name in (*folders, *files):
+                if name in found:
+                    found[name].append(Path(directory, name))
+        for folder, paths in found.items():
             with self.subTest(folder=folder):
-                found = [p for p in ROOT.rglob(folder) if not set(CASES["skip_folders"]) & set(p.parts)]
-                self.assertEqual(found, [])
+                self.assertEqual(paths, [])
 
 
 if __name__ == "__main__":

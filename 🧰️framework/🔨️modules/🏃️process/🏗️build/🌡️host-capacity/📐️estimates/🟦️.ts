@@ -39,6 +39,16 @@ function quantile(samples:readonly HostEstimateSampleV1[],weight:readonly number
  return value(rows[rows.length-1]!.sample);
 }
 
+/** 🛡️ The samples of one class that may govern its estimate: the single highest ratio is an outlier, and is left out, when it exceeds `outlierBasisPoints` of the second highest ratio (one run that held 25 times what its class usually holds sets nothing; several high runs are a heavy tail, not an outlier, and all stay). A class with fewer than two live samples keeps them, the trust blend with the prior limits a lone one. The weights follow the kept samples; a pure function that every language ports as written.
+ * @see ../🧪️tests/📐️estimates/🐍️oracle/🐍️.py */
+export function robustHostSamplesV1(policy:HostCapacityPolicyV1,samples:readonly HostEstimateSampleV1[],nowMs:number):Readonly<{samples:readonly HostEstimateSampleV1[];weight:number[]}>{
+ const weight=weights(policy,samples,nowMs),live=samples.map((sample,index)=>index).filter(index=>weight[index]!>0);
+ if(live.length<2)return Object.freeze({samples,weight});
+ const ranked=[...live].sort((left,right)=>samples[right]!.ratioBasisPoints-samples[left]!.ratioBasisPoints||samples[right]!.atMs-samples[left]!.atMs),top=ranked[0]!,next=ranked[1]!;
+ if(samples[top]!.ratioBasisPoints*DEFAULT_BASIS_POINTS<=samples[next]!.ratioBasisPoints*schema.definitions.Protocol.const.outlierBasisPoints)return Object.freeze({samples,weight});
+ return Object.freeze({samples:samples.filter((sample,index)=>index!==top),weight:weight.filter((row,index)=>index!==top)});
+}
+
 export {weights as hostSampleWeightsV1,quantile as hostSampleQuantileV1};
 
 /** 🧮️ Estimates a request from what its class learned: per class of the lineage the decayed quantile of the peak ratios plus a margin, blended with the class above by the share of trust the effective samples earn (full trust at `minimumSamples`); what a class borrows from the class above never exceeds the default, so an unknown class keeps the conservative 100 % and pooled evidence can only shave it, while a class's own evidence may rise above it; the answer stays between the authored bounds. The time to peak follows the same rule (quantile, margin, trust, an unknown class keeps `defaultRampMilliseconds`, what a class borrows never exceeds it) and stays between `memory.rampMilliseconds` and `maximumRampMilliseconds`, so the reservation of a run that peaks late is not forgotten after a minute. A class with enough samples whose median active time is under `quickMilliseconds` is a quick rebuild. */
@@ -46,7 +56,7 @@ export function estimateHostRatioV1(policy:HostCapacityPolicyV1,store:HostEstima
  const rules=policy.estimates;
  let ratio=DEFAULT_BASIS_POINTS,ramp=rules.defaultRampMilliseconds,learned=0,quick=false;
  for(const key of lineage){
-  const samples=store.classes[key]?.samples??[],weight=weights(policy,samples,nowMs),total=weight.reduce((sum,row)=>sum+row,0);
+  const {samples,weight}=robustHostSamplesV1(policy,store.classes[key]?.samples??[],nowMs),total=weight.reduce((sum,row)=>sum+row,0);
   if(samples.length===0||total===0){ratio=Math.min(DEFAULT_BASIS_POINTS,ratio);ramp=Math.min(rules.defaultRampMilliseconds,ramp);quick=false;continue;}
   const effective=total/UNIT,peak=round(quantile(samples,weight,"ratioBasisPoints",rules.quantileBasisPoints)*(DEFAULT_BASIS_POINTS+rules.marginBasisPoints)/DEFAULT_BASIS_POINTS),trust=Math.min(1,effective/rules.minimumSamples);
   const late=round(quantile(samples,weight,"peakAtMilliseconds",rules.quantileBasisPoints)*(DEFAULT_BASIS_POINTS+rules.marginBasisPoints)/DEFAULT_BASIS_POINTS);
@@ -111,7 +121,7 @@ export function learnableHostRunV1(status:HostRunStatusV1,peakRatioBasisPoints:n
 
 /** 🥇️ Who is served before the batch: a request the operation marks interactive, a process whose lease standing is interactive (a person at a terminal, the same class the lease queue serves first), or a class learned to be a quick rebuild; a stream of agent suites never delays them, and aging still keeps every batch request from starving. */
 export function hostRequestPriorityV1(base:HostRequestV1["priority"],standing:"interactive"|"agent"|"background"|undefined,estimate:HostEstimateV1):HostRequestV1["priority"]{
- return base==="interactive"||standing==="interactive"||estimate.quick?"interactive":"batch";
+ return base==="lent"?"lent":base==="interactive"||standing==="interactive"||estimate.quick?"interactive":"batch";
 }
 
 const storePath=(directory:string)=>join(directory,schema.definitions.Protocol.const.estimatesFile);

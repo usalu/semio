@@ -1,4 +1,4 @@
-use semio_s_artifact_norm_en1998_edit_rules::EDIT_RULES;
+use crate::EDIT_RULES;
 use semio_s_artifact_norm_en1998_mutations::*;
 use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

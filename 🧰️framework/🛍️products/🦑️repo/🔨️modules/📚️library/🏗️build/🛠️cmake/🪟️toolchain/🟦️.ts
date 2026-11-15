@@ -1,8 +1,9 @@
-import { realpathSync } from "node:fs";
-import { join } from "node:path";
+import { lstatSync, readlinkSync, realpathSync } from "node:fs";
+import { basename, join } from "node:path";
 import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { withCmakeInputsV1 } from "../📥️inputs/🟦️.ts";
 import { runCmakeOwnedStageV1 } from "../🎬️stage/🟦️.ts";
+import { refuseBuildV1 } from "../../📖️texts/🟦️.ts";
 
 /** 🧾️ Reads compiler command-file output without duplicate Windows variable names. */
 export function compilerEnvironmentFromOutput(output: string, base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
@@ -29,4 +30,32 @@ export async function windowsCompilerEnvironment(root: string, base: NodeJS.Proc
   delete environment.CMAKE_BUILD_PARALLEL_LEVEL;
   delete environment.CTEST_PARALLEL_LEVEL;
   return { environment, installation };
+}
+
+/** 🧰️ A compiler of the host: `command` is what a build invokes, because its file name selects the driver mode; `file` is the single-link regular file whose identity is pinned as a build input. */
+export type SystemCompilerV1 = Readonly<{ command: string; file: string }>;
+
+const toolchainBinaryDirectoriesV1: readonly string[] = Object.freeze(["Toolchains/XcodeDefault.xctoolchain/usr/bin", "usr/bin"]);
+
+/** 🍎️ Resolves a located compiler to the file to pin. A single-link file is its own identity. A hard-linked system shim (the macOS `/usr/bin/c++` has 78 links, one per Apple developer tool) is not copied and not pinned: the real toolchain binary behind it is, found exactly where `xcrun --find` looks, in the order `DEVELOPER_DIR`, the `xcode-select` selection, the Command Line Tools; the toolchain name, not the resolved `clang`, stays the command, because `clang` links C++ without its standard library.
+ * @see https://keith.github.io/xcode-man-pages/xcrun.1.html */
+export function systemCompilerV1(located: string, requested: string, environment: Readonly<Record<string, string | undefined>>, options: Readonly<{ platform?: NodeJS.Platform; selectionLink?: string; fallbackDirectory?: string }> = {}): SystemCompilerV1 {
+  const links = lstatSync(located).nlink;
+  if (links === 1) return Object.freeze({ command: located, file: located });
+  if ((options.platform ?? process.platform) === "darwin") {
+    const selected = (() => { try { return readlinkSync(options.selectionLink ?? "/var/db/xcode_select_link"); } catch { return undefined; } })();
+    for (const directory of [environment.DEVELOPER_DIR, selected, options.fallbackDirectory ?? "/Library/Developer/CommandLineTools"]) {
+      if (!directory) continue;
+      for (const relative of toolchainBinaryDirectoriesV1) {
+        const command = join(directory, relative, basename(requested));
+        try {
+          const file = realpathSync(command), row = lstatSync(file);
+          if (row.isFile() && row.nlink === 1) return Object.freeze({ command, file });
+        } catch {
+          continue;
+        }
+      }
+    }
+  }
+  throw refuseBuildV1("missing", "cmake.compiler-single-link-required", { compiler: located, links });
 }

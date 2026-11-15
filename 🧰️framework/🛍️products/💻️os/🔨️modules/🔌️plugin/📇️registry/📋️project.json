@@ -7,7 +7,8 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/{🎮️playground-session/🏃️execution/🟦️.ts,📦️packages/🟦️typescript/📜️script.ts}",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🎚️config/🟦️.ts",
-      "sharedGlobals"
+      "sharedGlobals",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated\"" }
     ],
     "reads": [
       "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/**/*",

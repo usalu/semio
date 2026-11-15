@@ -207,7 +207,7 @@ pub fn admit_original_construction_settled<O>(context:&mut StepContext<'_>,admis
         match status{
             OriginalConstructionStatus::Ready=>{admission.reset_step(context)?;return Ok(true)}
             OriginalConstructionStatus::Failed=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original construction failed; its complete causes remain in the admission").into()),
-            OriginalConstructionStatus::Pending=>if context.fuel_remaining()==fuel{return Ok(false)},
+            OriginalConstructionStatus::Pending=>if context.fuel_remaining()==fuel{{static N:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);if N.fetch_add(1,std::sync::atomic::Ordering::Relaxed)<40{eprintln!("[DEBUG] construction pending without fuel: captured={} binding={} source={} complete={} failed={}",admission.captured,admission.binding.is_some(),admission.source.is_some(),admission.complete,admission.is_failed());}}return Ok(false)},
         }
     }
 }

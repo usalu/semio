@@ -18,14 +18,14 @@ impl Puzzle2dIdentifierComparison {
     pub fn compare(&mut self, left: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, right: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, effect: &mut RetainedAllocationEffect<'_>) -> Result<(Option<std::cmp::Ordering>, RetainedCloneProgress), ValueError> {
         let grant = effect.grant();
         let window = BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: grant.maximum_copy_bytes.min(COMPARE_BYTES) };
-        let step = replied(effect, |effect, reply| self.cursor.compare_into(left, right, window, COMPARE_BYTES, effect, reply))?;
+        let step = replied(effect, |effect, reply, recover| if recover { self.cursor.recover_compare_into(left, right, window, COMPARE_BYTES, effect, reply) } else { self.cursor.compare_into(left, right, window, COMPARE_BYTES, effect, reply) })?;
         Ok((self.cursor.ordering(), step.progress()))
     }
 
     pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         let result = (|| -> Result<RetainedCloneStep, RetirementPollExit> {
             if self.cursor.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-            if !self.cursor.close_started() { return Ok(replied(effect, |effect, reply| self.cursor.begin_close_into(effect, reply))?); }
+            if !self.cursor.close_started() { return Ok(replied(effect, |effect, reply, recover| if recover { self.cursor.recover_begin_close_into(effect, reply) } else { self.cursor.begin_close_into(effect, reply) })?); }
             let body = effect.grant().maximum_copy_bytes;
             let step = RetirementPollExit::resume(RetainedCloneBinding::close_one(if self.cursor.left.is_some() { &mut self.cursor.left } else { &mut self.cursor.right }, body, effect))?;
             Ok(if self.cursor.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })

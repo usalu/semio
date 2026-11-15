@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:nx-single-flight:v1",
+  "title": "Nx Single-Flight",
+  "description": "🚦️ Fleet-wide single-flight for Nx task results. A local loopback front of the Nx remote cache sits between Nx's own HTTP client (which can neither send headers nor wait) and the cache server of the fleet: on a miss it claims the task hash at the server's claim table, waits for the holder's upload when another machine or another build on this machine holds the claim, takes over when the holder's lease lapses, and falls back to a plain miss (Nx computes locally) whenever the server is unreachable, refuses claims or the wait budget is spent. It never makes an answer wrong: the worst outcome is the duplicate work of today.",
+  "oneOf": [
+    { "$ref": "#/definitions/Policy" },
+    { "$ref": "#/definitions/FinishRequest" },
+    { "$ref": "#/definitions/FinishResponse" },
+    { "$ref": "#/definitions/Counters" }
+  ],
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "const": {
+        "version": 1,
+        "claimTtlMilliseconds": 30000,
+        "heartbeatMilliseconds": 10000,
+        "awaitSliceMilliseconds": 20000,
+        "waitBudgetMilliseconds": 600000,
+        "maximumHoldMilliseconds": 1800000,
+        "claimTimeoutMilliseconds": 3000,
+        "upstreamTimeoutMilliseconds": 120000,
+        "failureThreshold": 3,
+        "breakerMilliseconds": 30000,
+        "environment": {
+          "switch": "SEMIO_NX_FLIGHT",
+          "url": "SEMIO_NX_FLIGHT_URL",
+          "wait": "SEMIO_NX_FLIGHT_WAIT_SECONDS"
+        },
+        "finishPath": "/flight/finish"
+      }
+    },
+    "Hash": { "type": "string", "pattern": "^[a-z0-9_-]{1,128}$" },
+    "FinishRequest": {
+      "description": "Sent by the Nx executor of a task when its body ended: releases the task's claim at once and carries the slot id of the task (project, target, configuration and, only for platform-dependent tasks, platform) so the upload carries it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hash", "project", "target", "outcome"],
+      "properties": {
+        "hash": { "$ref": "#/definitions/Hash" },
+        "project": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "target": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "configuration": { "type": "string", "maxLength": 128 },
+        "guarded": { "type": "boolean" },
+        "slot": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "outcome": { "enum": ["succeeded", "failed"] }
+      }
+    },
+    "FinishResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": { "state": { "enum": ["released", "absent"] } }
+    },
+    "Counters": {
+      "description": "What one front did: `claimed` tasks it computes, `waited` tasks it waited for, `served` waits that ended in the holder's result, `taken` leases it took over, `duplicated` tasks it computed although another holder was alive (wait budget spent), `unclaimed` misses it let through because claims were unavailable.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hits", "misses", "claimed", "waited", "served", "taken", "duplicated", "unclaimed", "puts", "released", "guarded"],
+      "properties": {
+        "hits": { "type": "integer", "minimum": 0 },
+        "misses": { "type": "integer", "minimum": 0 },
+        "claimed": { "type": "integer", "minimum": 0 },
+        "waited": { "type": "integer", "minimum": 0 },
+        "served": { "type": "integer", "minimum": 0 },
+        "taken": { "type": "integer", "minimum": 0 },
+        "duplicated": { "type": "integer", "minimum": 0 },
+        "unclaimed": { "type": "integer", "minimum": 0 },
+        "puts": { "type": "integer", "minimum": 0 },
+        "released": { "type": "integer", "minimum": 0 },
+        "guarded": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Messages": {
+      "const": {
+        "waiting": {
+          "en": "Waiting for {holder} to finish task {key} instead of computing it twice.",
+          "de": "Warte darauf, dass {holder} die Task {key} fertigstellt, statt sie doppelt zu berechnen."
+        },
+        "served": {
+          "en": "Task {key} arrived from {holder}; nothing computed.",
+          "de": "Task {key} kam von {holder}; nichts berechnet."
+        },
+        "duplicated": {
+          "en": "Task {key} is still held by {holder} after {seconds} s; computing it here as well.",
+          "de": "Task {key} wird nach {seconds} s noch von {holder} gehalten; sie wird auch hier berechnet."
+        },
+        "unavailable": {
+          "en": "Single-flight is unavailable at {endpoint}; tasks run locally on a miss.",
+          "de": "Single-Flight ist bei {endpoint} nicht verfügbar; Tasks laufen bei einem Fehltreffer lokal."
+        }
+      }
+    }
+  }
+}

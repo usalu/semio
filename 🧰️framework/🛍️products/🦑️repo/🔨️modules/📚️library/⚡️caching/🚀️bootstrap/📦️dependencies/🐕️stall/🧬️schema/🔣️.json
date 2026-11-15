@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "description": "The stall rule of an installer child: it is terminated when none of the probed paths changed for stallMilliseconds; the probes are polled every pollMilliseconds. Bindings are the symbolic links the repository itself puts into a generation (two levels below node_modules), which Bun cannot reconcile on a rerun.",
+      "const": {
+        "version": 1,
+        "stallMilliseconds": 300000,
+        "pollMilliseconds": 5000,
+        "bindingDepth": 2,
+        "httpFailure": "\\b(GET|HEAD)\\s+(https?://[^\\s?#]+)[^\\s]*\\s+-\\s+([45][0-9]{2})\\b",
+        "maximumFailureCharacters": 300
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "events",
+        "stalledAtMilliseconds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "events": {
+          "description": "Ordered samples: at is the clock in ms, changed whether the probes changed since the previous sample.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "at",
+              "changed"
+            ],
+            "properties": {
+              "at": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "changed": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "stalledAtMilliseconds": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

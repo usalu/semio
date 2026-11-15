@@ -1,0 +1,45 @@
+try 1 started pid=15487 2026-11-15T02:23:11Z log=/Users/ueli/native-bootstrap-round-14.log
+try 1 (pid 15487) taken over by the round 15 runner 2026-11-15T02:33:41Z: level 2 is recorded, not a stop
+try 1 ended 2026-11-15T02:42:20Z native_rc=75 stopped=0 retry_wording=0 closure_missing=0 failed=[] other=[]
+try 1: next try after 180 s
+try 2 started pid=31717 2026-11-15T02:45:21Z log=/Users/ueli/native-bootstrap-round-14-try-2.log
+try 2 ended 2026-11-15T02:47:29Z native_rc=75 stopped=0 retry_wording=0 closure_missing=0 failed=[] other=[]
+try 2: next try after 180 s
+try 3 started pid=34309 2026-11-15T02:50:29Z log=/Users/ueli/native-bootstrap-round-14-try-3.log
+try 3 ended 2026-11-15T02:52:38Z native_rc=75 stopped=0 retry_wording=0 closure_missing=0 failed=[] other=[]
+try 3: next try after 180 s
+try 4 started pid=37461 2026-11-15T02:55:38Z log=/Users/ueli/native-bootstrap-round-14-try-4.log
+try 4 (pid 37461) taken over by the round 15 runner 2026-11-15T03:13:10Z: level 2 is recorded, not a stop
+round 16 posted 2026-11-15T03:13:13Z: the runner was replaced by run-round-16.sh under the running try 4 (not interrupted); step 0 (repo tools setup all) runs once before try 5
+try 4 ended 2026-11-15T03:22:18Z native_rc=75 stopped=0 retry_wording=0 closure_missing=0 failed=[] other=[]
+try 4: next try after 180 s
+step 0 (repo tools setup all) started pid=61729 2026-11-15T03:25:18Z
+round 17 posted 2026-11-15T03:32:26Z: round 16 plus two facts; nothing to change in the runner, the fresh series of at most 12 tries begins with try 5 (tries 5 to 16)
+step 0 ended 2026-11-15T03:52:06Z exit=1 wall=1607s sigint=0
+try 5 started pid=71943 2026-11-15T03:52:07Z log=/Users/ueli/native-bootstrap-round-14-try-5.log
+round 18 posted 2026-11-15T03:52:10Z: native_rc=4 no longer ends the series (three in a row do); the running runner still stops on it, so after a native_rc=4 this worker restarts it by hand with the new rule. Step 0 has not failed here with 'Complete acquired dependency retirement plan required'; it is still running.
+try 5 ended 2026-11-15T04:06:50Z native_rc=1 stopped=0 retry_wording=0 closure_missing=1 failed=[] other=[The resident service met an unexpected failure (); try again, the details under that reference are in the service log /var/folders/wg/5s85qzsj2pg6689nck2j3xbm00]
+try 5: next try after 180 s
+try 6 started pid=86080 2026-11-15T04:09:51Z log=/Users/ueli/native-bootstrap-round-14-try-6.log
+try 6 ended 2026-11-15T06:21:20Z native_rc=1 stopped=0 retry_wording=0 closure_missing=0 failed=[@semio-tech/framework-os-mcp-rs:build:prototype workspace:deps-build-tools:prototype workspace:deps-cargo:prototype ] other=[Internal error: Owned Nx invocation failed (130): nx run workspace:setup --parallel=1]
+try 6 other error (first time): comparison try after 180 s
+try 7 started pid=61158 2026-11-15T06:24:25Z log=/Users/ueli/native-bootstrap-round-14-try-7.log
+try 7 no new progress line for 15 minutes (last: [semio] workspace:setup|waiting for the fleet: 0 of 1203|restored from|) 2026-11-15T06:46:36Z; one SIGINT to process group 61158
+try 7 ended 2026-11-15T06:47:18Z native_rc=130 stopped=2 retry_wording=0 closure_missing=1 failed=[] other=[]
+try 7: next try after 180 s
+try 8 started pid=93525 2026-11-15T06:50:36Z log=/Users/ueli/native-bootstrap-round-14-try-8.log
+try 8 no new progress line for 15 minutes (last: [semio] Installing|waiting for the fleet: 0 of 1203|restored from|) 2026-11-15T07:06:15Z; one SIGINT to process group 93525
+try 8 ended 2026-11-15T07:06:55Z native_rc=130 stopped=2 retry_wording=0 closure_missing=0 failed=[] other=[]
+try 8: next try after 180 s
+try 9 started pid=13819 2026-11-15T07:09:55Z log=/Users/ueli/native-bootstrap-round-14-try-9.log
+try 9 ended 2026-11-15T07:26:16Z native_rc=75 stopped=0 retry_wording=0 closure_missing=0 failed=[] other=[]
+try 9: next try after 180 s
+try 10 started pid=38864 2026-11-15T07:29:17Z log=/Users/ueli/native-bootstrap-round-14-try-10.log
+try 10 ended 2026-11-15T07:37:59Z native_rc=75 stopped=0 retry_wording=0 closure_missing=0 failed=[] other=[]
+try 10: next try after 180 s
+try 11 started pid=51040 2026-11-15T07:41:00Z log=/Users/ueli/native-bootstrap-round-14-try-11.log
+try 11 ended 2026-11-15T07:51:14Z native_rc=1 stopped=0 retry_wording=0 closure_missing=0 failed=[] other=[]
+try 11 other error (first time): comparison try after 180 s
+try 12 started pid=65910 2026-11-15T07:54:15Z log=/Users/ueli/native-bootstrap-round-14-try-12.log
+try 12 ended 2026-11-15T07:59:56Z native_rc=1 stopped=0 retry_wording=0 closure_missing=0 failed=[] other=[]
+round ended 2026-11-15T07:59:56Z

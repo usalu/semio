@@ -119,7 +119,7 @@ pub(crate) fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
             product(input, layout, out, row);
         }
     }
-    for (key, row) in &d.geometry {
+    for (key, row) in d.geometry.iter() {
         if out.wants(key) {
             geometry(input, layout, out, key, row);
         }

@@ -1140,6 +1140,7 @@ dependencies = [
  "semio-framework-job-clock",
  "semio-framework-job-context",
  "semio-framework-job-failure",
+ "semio-framework-job-outcome",
  "semio-framework-job-payload",
  "semio-framework-job-return-budget",
  "semio-framework-job-return-escrow-publication",
@@ -2096,13 +2097,13 @@ name = "semio-framework-replication-retained-field"
 version = "0.1.0"
 dependencies = [
  "semio-framework-mutation-diff",
- "semio-framework-replication-retained-field-preparation",
+ "semio-framework-replication-retained-field-prep",
  "semio-framework-value",
  "semio-framework-value-persistent",
 ]
 
 [[package]]
-name = "semio-framework-replication-retained-field-preparation"
+name = "semio-framework-replication-retained-field-prep"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-retained-clone",
@@ -2195,6 +2196,7 @@ dependencies = [
 name = "semio-framework-test-original-snapshot-owners"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-native-owned",
@@ -5903,6 +5905,7 @@ dependencies = [
  "semio-plugin-instance-ladders",
  "semio-plugin-instance-stores",
  "semio-plugin-interaction",
+ "semio-plugin-job",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-peer",
@@ -6927,6 +6930,7 @@ dependencies = [
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-surface",
+ "semio-plugin-document-media",
  "semio-plugin-instance-app",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
@@ -7035,11 +7039,13 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-time-travel",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
  "semio-framework-value-retirement-queue",
+ "semio-framework-value-testing-admission",
  "semio-os-kernel",
  "semio-os-store-engine-replay",
  "semio-os-vcs",
@@ -7055,6 +7061,7 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-layout",
  "semio-ui-locale",
+ "serde_json",
 ]
 
 [[package]]
@@ -22398,6 +22405,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-ifc-2x3-base-descriptor",
  "semio-s-artifact-stdio-ifc-2x3-base-details",
+ "semio-s-artifact-stdio-ifc-2x3-base-inferences",
  "semio-s-artifact-stdio-ifc-2x3-base-model",
  "semio-s-artifact-stdio-ifc-2x3-base-mutations",
  "semio-s-artifact-stdio-txt",
@@ -22429,6 +22437,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-ifc-2x3-base-inferences"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-2x3-base-model",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-ifc-2x3-base-model"
 version = "0.1.0"
 dependencies = [
@@ -22450,6 +22473,7 @@ dependencies = [
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-ifc-declarations",
  "semio-s-artifact-stdio-ifc-geometry",
+ "semio-s-artifact-stdio-ifc2x3-catalog",
 ]
 
 [[package]]
@@ -22493,6 +22517,93 @@ dependencies = [
 [[package]]
 name = "semio-s-artifact-stdio-ifc-geometry-rings"
 version = "0.1.0"
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+ "semio-s-artifact-stdio-ifc2x3-catalog-entities-00",
+ "semio-s-artifact-stdio-ifc2x3-catalog-entities-01",
+ "semio-s-artifact-stdio-ifc2x3-catalog-entities-02",
+ "semio-s-artifact-stdio-ifc2x3-catalog-entities-03",
+ "semio-s-artifact-stdio-ifc2x3-catalog-entities-04",
+ "semio-s-artifact-stdio-ifc2x3-catalog-entities-05",
+ "semio-s-artifact-stdio-ifc2x3-catalog-entities-06",
+ "semio-s-artifact-stdio-ifc2x3-catalog-functions-00",
+ "semio-s-artifact-stdio-ifc2x3-catalog-rules-00",
+ "semio-s-artifact-stdio-ifc2x3-catalog-types-00",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-entities-00"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-entities-01"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-entities-02"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-entities-03"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-entities-04"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-entities-05"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-entities-06"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-functions-00"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-rules-00"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc2x3-catalog-types-00"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-ifc-declarations",
+]
 
 [[package]]
 name = "semio-s-artifact-stdio-json"

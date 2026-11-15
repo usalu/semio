@@ -1,0 +1,56 @@
+#!/bin/bash
+# 🛫 Runs one try of a round of the worker protocol on g1-m07: the native bootstrap in its own process group, a sample of the three largest processes every 30 s, and one SIGINT when a hard stop of round 2 is met. Usage: run-round.sh <round> [try]
+set -u
+round="$1"; try="${2:-1}"
+W="$(cd "$(dirname "$0")/../.." && pwd)"; M="$W/workers/g1-m07"
+suffix=""; [ "$try" -gt 1 ] && suffix="-try-$try"
+log="$HOME/native-bootstrap-round-$round$suffix.log"; samples="$M/round-$round$suffix.samples.txt"; monitor="$M/round-$round$suffix.monitor.txt"
+: > "$samples"; : > "$monitor"
+set -m
+bash "$W/native-bootstrap.sh" "$log" &
+pid=$!
+set +m
+echo "started pid=$pid at $(date -u +%Y-%m-%dT%H:%M:%SZ) log=$log" >> "$monitor"
+lastg=""; stopped=""; store=0; lastsig=""; same=0; peak=0; runpeak=0; twos=0; fours=0
+while kill -0 "$pid" 2>/dev/null; do
+  now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  top="$(ps -axo rss,pid,ppid,args | sort -nr | head -3 | cut -c1-600)"
+  for g in $(echo "$top" | awk '$4 ~ /(^|\/)git$/ {print $3}'); do
+    while [ -n "$g" ] && [ "$g" -gt 0 ]; do chain="$(ps -o pid,ppid,args -p "$g" | tail -n +2 | cut -c1-400)"; [ -z "$chain" ] && break; echo "git parent chain: $chain" >> "$samples"; g="$(echo "$chain" | awk '{print $2}')"; done
+  done
+  level="$(sysctl -n kern.memorystatus_vm_pressure_level 2>/dev/null || echo ?)"
+  run="$(ps -axo pgid,rss,command | awk -v g="$pid" '$1==g || /semio/ {print $2}' | sort -nr | head -1)"
+  { echo "## $now pressure_level=$level run_top_rss_kib=${run:-0}"; echo "$top"; } >> "$samples"
+  first="$(echo "$top" | head -1 | awk '{print $1}')"
+  [ "${first:-0}" -gt "$peak" ] && peak="$first"
+  [ "${run:-0}" -gt "$runpeak" ] && runpeak="$run"
+  if [ "$level" = "2" ]; then twos=$((twos+1)); else twos=0; fi
+  reason=""
+  [ "${run:-0}" -gt 8388608 ] && reason="process of the run above 8 GB resident (${run} KiB)"
+  if [ "$level" = "4" ]; then fours=$((fours+1)); else fours=0; fi
+  if echo "$clean" | tail -40 | grep -q 'Another process holds the dependency store'; then store=$((store+1)); else store=0; fi
+  if [ "$store" -ge 10 ]; then
+    reason="${reason:+$reason; }dependency store wait standing for 5 minutes"
+    { echo "## dependency store wait at $now"; echo "$clean" | grep 'Another process holds the dependency store' | tail -1; ps -axo pid,ppid,etime,command | grep -E 'bun|nx|repo' | grep -v grep | cut -c1-400; } > "$M/round-$round$suffix.store-wait.txt" 2>&1
+  fi
+  clean="$(sed $'s/\x1b\\[[0-9;]*m//g' "$log" 2>/dev/null | tr '\r' '\n')"
+  line="$(echo "$clean" | grep -nE 'Inferring projects: .* of [0-9]+ projects' | awk -F: '{l=$0; sub(/^[0-9]+:/,"",l); n=l; sub(/.* of /,"",n); sub(/ projects.*/,"",n); if (n+0>300) {print $1; exit}}')"
+  if [ -n "$line" ] && ! echo "$clean" | head -n "$line" | grep -qi 'fleet'; then reason="${reason:+$reason; }inference of more than 300 projects with no fleet line before it (log line $line)"; fi
+  sig="$(echo "$clean" | grep -avE 'still working after|still running after' | awk 'length>0' | tail -1 | sed -E 's/\([0-9]+ s\)//')"
+  hl="$(ls -t "$TMPDIR"/semio-repo/501/host-*.log 2>/dev/null | head -1)"; gsig="$(grep -a 'graph:' "$hl" 2>/dev/null | tail -1 | sed -E 's/[0-9]+/N/g' | cut -c1-80)$(grep -ac 'graph:' "$hl" 2>/dev/null)$(echo "$clean" | grep -ac 'graph:')"
+  if [ "$sig" = "$lastsig" ] && [ "$gsig" = "$lastg" ]; then same=$((same+1)); else same=0; lastsig="$sig"; lastg="$gsig"; fi
+  if [ "$same" -ge 30 ] && echo "$sig" | grep -q 'Reading the project graph slice'; then
+    reason="${reason:+$reason; }no new progress line for 15 minutes in the graph slice"
+    { echo "## stall at $now, last line: $sig"; l="$(ls -t "$TMPDIR"/semio-repo/501/host-*.log 2>/dev/null | head -1)"; echo "## last 60 lines of $l"; tail -60 "$l" | cut -c1-600; echo "## ps of the service and its children"; ps -axo pid,ppid,rss,etime,args | grep -E 'service host|slice|semio' | grep -v grep | cut -c1-400; } > "$M/round-$round$suffix.stall.txt" 2>&1
+  fi
+  if [ -n "$reason" ] && [ -z "$stopped" ]; then
+    stopped="$reason"; echo "HARD STOP at $now: $reason; sending one SIGINT to process group $pid" >> "$monitor"
+    kill -INT -- "-$pid" 2>/dev/null
+    sleep 60
+    echo "one minute after SIGINT: alive=$(kill -0 "$pid" 2>/dev/null && echo yes || echo no)" >> "$monitor"
+    break
+  fi
+  sleep 30
+done
+wait "$pid" 2>/dev/null
+echo "ended at $(date -u +%Y-%m-%dT%H:%M:%SZ) peak_rss_kib=$peak run_peak_rss_kib=$runpeak hard_stop=${stopped:-none}" >> "$monitor"

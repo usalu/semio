@@ -1,0 +1,37 @@
+import {BUN,createHash,existsSync,fleetInstallAcquireV1,join,lstatSync,machine,mb,mkdirSync,readFileSync,readdirSync,readlinkSync,run,scratch,seconds,serve,size,store,writeFileSync,type FleetInstallShapeV1} from "./proof-common.ts";
+const roots=["node_modules"],runtime={bun:"1.4.2",platform:"darwin" as const,arch:"arm64",recipeSha256:"d".repeat(64)};
+const manifest={name:"proof",version:"1.0.0",private:true,dependencies:{typescript:"5.9.3",vite:"7.1.5",react:"19.1.1","react-dom":"19.1.1",esbuild:"0.25.9",zod:"4.1.5","@types/node":"24.3.1"}};
+const bunfig='[install]\nlinker = "hoisted"\nglobalStore = false\n';
+const scanOf=(generation:string)=>async():Promise<FleetInstallShapeV1>=>{
+ const rows:string[]=[];let directories=0,files=0,links=0;
+ const walk=(path:string,relative:string)=>{for(const name of readdirSync(path).sort()){const child=join(path,name),facts=lstatSync(child),here=`${relative}/${name}`;if(facts.isSymbolicLink()){links++;rows.push(`l ${here} ${readlinkSync(child)}`);}else if(facts.isDirectory()){directories++;rows.push(`d ${here}`);walk(child,here);}else{files++;rows.push(`f ${here} ${facts.size} ${facts.mode&0o111}`);}}};
+ for(const root of roots){const path=join(generation,...root.split("/"));if(existsSync(path)){rows.push(`r ${root}`);directories++;walk(path,root);}}
+ return {entries:rows.length,directories,files,links,sha256:createHash("sha256").update(rows.join("\n")).digest("hex")};
+};
+const server=await serve(),remote={endpoint:server.url,instance:"main",token:"proof-write-token"};
+const A=machine("A"),B=machine("B");
+const prepare=(m:{root:string})=>{const generation=join(m.root,"generation");mkdirSync(generation,{recursive:true});writeFileSync(join(generation,"package.json"),JSON.stringify(manifest,null,1));writeFileSync(join(generation,"bunfig.toml"),bunfig);return generation;};
+const request=(m:ReturnType<typeof machine>,generation:string)=>({context:m.context(remote),projectionSha256:createHash("sha256").update(JSON.stringify(manifest)).digest("hex"),runtime,directory:generation,roots,check:()=>{},scan:scanOf(generation),remove:async(path:string)=>{(await import("node:fs")).rmSync(path,{recursive:true,force:true});},installed:()=>"e".repeat(64)});
+const report:Record<string,unknown>={};
+const generationA=prepare(A),cacheA=join(A.home,"bun-cache");
+let started=performance.now();
+const acquiredA=await fleetInstallAcquireV1(request(A,generationA));
+report.firstMachineAcquire={restored:acquiredA.restored};
+started=performance.now();
+const installA=await run([BUN,"install"],generationA,{HOME:A.home,BUN_INSTALL_CACHE_DIR:cacheA});
+report.firstMachineInstall={code:installA.code,seconds:seconds(performance.now()-started),nodeModulesMB:mb(size(join(generationA,"node_modules"))),bunCacheMB:mb(size(cacheA)),internetBytesApproxMB:mb(size(cacheA))};
+started=performance.now();
+report.firstMachinePublished=await acquiredA.publish();await acquiredA.release();report.publishSeconds=seconds(performance.now()-started);
+const archive=readdirSync(join(store,"v1","fleet","install")).filter(name=>name.endsWith(".tar.gz"));
+report.archiveMB=mb(size(join(store,"v1","fleet","install",archive[0]!)));
+const generationB=prepare(B),cacheB=join(B.home,"bun-cache");
+started=performance.now();
+const acquiredB=await fleetInstallAcquireV1(request(B,generationB));
+report.secondMachine={restored:acquiredB.restored,seconds:seconds(performance.now()-started),nodeModulesMB:mb(size(join(generationB,"node_modules"))),bunCacheMB:mb(size(cacheB)),shapeEqualsFirst:JSON.stringify(await scanOf(generationA)())===JSON.stringify(await scanOf(generationB)())};
+writeFileSync(join(generationB,"bun.lock"),readFileSync(join(generationA,"bun.lock")));
+const frozen=await run([BUN,"install","--frozen-lockfile"],generationB,{HOME:B.home,BUN_INSTALL_CACHE_DIR:cacheB,BUN_CONFIG_REGISTRY:"http://127.0.0.1:9/",BUN_CONFIG_NO_CLEAR_TERMINAL_ON_RELOAD:"1"});
+report.secondMachineBunFrozenInstallAgainstDeadRegistry={code:frozen.code,output:(frozen.out+frozen.err).trim().split("\n").slice(-3)};
+const tsc=await run([join(generationB,"node_modules",".bin","tsc"),"--version"],generationB);report.restoredTypescriptRuns={code:tsc.code,out:tsc.out.trim()};
+const esbuild=await run([join(generationB,"node_modules",".bin","esbuild"),"--version"],generationB);report.restoredEsbuildNativeBinaryRuns={code:esbuild.code,out:esbuild.out.trim()};
+await server.stop();
+console.log(JSON.stringify(report,null,1));

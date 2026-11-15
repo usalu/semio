@@ -109,12 +109,12 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
       | change-zone-theta-i-cool-c-noop | 🟥change-zone-theta-i-cool-c | 🟰noop  |
       | change-zone-theta-i-cool-c-gone | 🟥change-zone-theta-i-cool-c | ❓gone  |
       | change-zone-theta-i-cool-c-rule | 🟥change-zone-theta-i-cool-c | 🚫rule  |
-      | change-zone-internal-gains-w-m2-noop | 🟧change-zone-internal-gains-w-m2 | 🟰noop  |
-      | change-zone-internal-gains-w-m2-gone | 🟧change-zone-internal-gains-w-m2 | ❓gone  |
-      | change-zone-internal-gains-w-m2-rule | 🟧change-zone-internal-gains-w-m2 | 🚫rule  |
-      | change-zone-lighting-power-w-m2-noop | 🟨change-zone-lighting-power-w-m2 | 🟰noop  |
-      | change-zone-lighting-power-w-m2-gone | 🟨change-zone-lighting-power-w-m2 | ❓gone  |
-      | change-zone-lighting-power-w-m2-rule | 🟨change-zone-lighting-power-w-m2 | 🚫rule  |
+      | change-zone-internal-gains-wm2-noop | 🟧change-zone-internal-gains-wm2 | 🟰noop  |
+      | change-zone-internal-gains-wm2-gone | 🟧change-zone-internal-gains-wm2 | ❓gone  |
+      | change-zone-internal-gains-wm2-rule | 🟧change-zone-internal-gains-wm2 | 🚫rule  |
+      | change-zone-lighting-power-wm2-noop | 🟨change-zone-lighting-power-wm2 | 🟰noop  |
+      | change-zone-lighting-power-wm2-gone | 🟨change-zone-lighting-power-wm2 | ❓gone  |
+      | change-zone-lighting-power-wm2-rule | 🟨change-zone-lighting-power-wm2 | 🚫rule  |
       | insert-element-dupe           | 🆕insert-element | ⛔dupe  |
       | remove-element-gone           | 🚮remove-element | ❓gone  |
       | change-element-label-en-noop  | 🟩change-element-label-en | 🟰noop  |
@@ -165,12 +165,12 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
       | change-zone-theta-i-cool-c-noop | 🟥change-zone-theta-i-cool-c | 🟰noop  |
       | change-zone-theta-i-cool-c-gone | 🟥change-zone-theta-i-cool-c | ❓gone  |
       | change-zone-theta-i-cool-c-rule | 🟥change-zone-theta-i-cool-c | 🚫rule  |
-      | change-zone-internal-gains-w-m2-noop | 🟧change-zone-internal-gains-w-m2 | 🟰noop  |
-      | change-zone-internal-gains-w-m2-gone | 🟧change-zone-internal-gains-w-m2 | ❓gone  |
-      | change-zone-internal-gains-w-m2-rule | 🟧change-zone-internal-gains-w-m2 | 🚫rule  |
-      | change-zone-lighting-power-w-m2-noop | 🟨change-zone-lighting-power-w-m2 | 🟰noop  |
-      | change-zone-lighting-power-w-m2-gone | 🟨change-zone-lighting-power-w-m2 | ❓gone  |
-      | change-zone-lighting-power-w-m2-rule | 🟨change-zone-lighting-power-w-m2 | 🚫rule  |
+      | change-zone-internal-gains-wm2-noop | 🟧change-zone-internal-gains-wm2 | 🟰noop  |
+      | change-zone-internal-gains-wm2-gone | 🟧change-zone-internal-gains-wm2 | ❓gone  |
+      | change-zone-internal-gains-wm2-rule | 🟧change-zone-internal-gains-wm2 | 🚫rule  |
+      | change-zone-lighting-power-wm2-noop | 🟨change-zone-lighting-power-wm2 | 🟰noop  |
+      | change-zone-lighting-power-wm2-gone | 🟨change-zone-lighting-power-wm2 | ❓gone  |
+      | change-zone-lighting-power-wm2-rule | 🟨change-zone-lighting-power-wm2 | 🚫rule  |
       | insert-element-dupe           | 🆕insert-element | ⛔dupe  |
       | remove-element-gone           | 🚮remove-element | ❓gone  |
       | change-element-label-en-noop  | 🟩change-element-label-en | 🟰noop  |
@@ -221,12 +221,12 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
       | change-zone-theta-i-cool-c-noop | 🟥change-zone-theta-i-cool-c | 🟰noop  |
       | change-zone-theta-i-cool-c-gone | 🟥change-zone-theta-i-cool-c | ❓gone  |
       | change-zone-theta-i-cool-c-rule | 🟥change-zone-theta-i-cool-c | 🚫rule  |
-      | change-zone-internal-gains-w-m2-noop | 🟧change-zone-internal-gains-w-m2 | 🟰noop  |
-      | change-zone-internal-gains-w-m2-gone | 🟧change-zone-internal-gains-w-m2 | ❓gone  |
-      | change-zone-internal-gains-w-m2-rule | 🟧change-zone-internal-gains-w-m2 | 🚫rule  |
-      | change-zone-lighting-power-w-m2-noop | 🟨change-zone-lighting-power-w-m2 | 🟰noop  |
-      | change-zone-lighting-power-w-m2-gone | 🟨change-zone-lighting-power-w-m2 | ❓gone  |
-      | change-zone-lighting-power-w-m2-rule | 🟨change-zone-lighting-power-w-m2 | 🚫rule  |
+      | change-zone-internal-gains-wm2-noop | 🟧change-zone-internal-gains-wm2 | 🟰noop  |
+      | change-zone-internal-gains-wm2-gone | 🟧change-zone-internal-gains-wm2 | ❓gone  |
+      | change-zone-internal-gains-wm2-rule | 🟧change-zone-internal-gains-wm2 | 🚫rule  |
+      | change-zone-lighting-power-wm2-noop | 🟨change-zone-lighting-power-wm2 | 🟰noop  |
+      | change-zone-lighting-power-wm2-gone | 🟨change-zone-lighting-power-wm2 | ❓gone  |
+      | change-zone-lighting-power-wm2-rule | 🟨change-zone-lighting-power-wm2 | 🚫rule  |
       | insert-element-dupe           | 🆕insert-element | ⛔dupe  |
       | remove-element-gone           | 🚮remove-element | ❓gone  |
       | change-element-label-en-noop  | 🟩change-element-label-en | 🟰noop  |
@@ -277,12 +277,12 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
       | change-zone-theta-i-cool-c-noop | 🟥change-zone-theta-i-cool-c | 🟰noop  |
       | change-zone-theta-i-cool-c-gone | 🟥change-zone-theta-i-cool-c | ❓gone  |
       | change-zone-theta-i-cool-c-rule | 🟥change-zone-theta-i-cool-c | 🚫rule  |
-      | change-zone-internal-gains-w-m2-noop | 🟧change-zone-internal-gains-w-m2 | 🟰noop  |
-      | change-zone-internal-gains-w-m2-gone | 🟧change-zone-internal-gains-w-m2 | ❓gone  |
-      | change-zone-internal-gains-w-m2-rule | 🟧change-zone-internal-gains-w-m2 | 🚫rule  |
-      | change-zone-lighting-power-w-m2-noop | 🟨change-zone-lighting-power-w-m2 | 🟰noop  |
-      | change-zone-lighting-power-w-m2-gone | 🟨change-zone-lighting-power-w-m2 | ❓gone  |
-      | change-zone-lighting-power-w-m2-rule | 🟨change-zone-lighting-power-w-m2 | 🚫rule  |
+      | change-zone-internal-gains-wm2-noop | 🟧change-zone-internal-gains-wm2 | 🟰noop  |
+      | change-zone-internal-gains-wm2-gone | 🟧change-zone-internal-gains-wm2 | ❓gone  |
+      | change-zone-internal-gains-wm2-rule | 🟧change-zone-internal-gains-wm2 | 🚫rule  |
+      | change-zone-lighting-power-wm2-noop | 🟨change-zone-lighting-power-wm2 | 🟰noop  |
+      | change-zone-lighting-power-wm2-gone | 🟨change-zone-lighting-power-wm2 | ❓gone  |
+      | change-zone-lighting-power-wm2-rule | 🟨change-zone-lighting-power-wm2 | 🚫rule  |
       | insert-element-dupe           | 🆕insert-element | ⛔dupe  |
       | remove-element-gone           | 🚮remove-element | ❓gone  |
       | change-element-label-en-noop  | 🟩change-element-label-en | 🟰noop  |
@@ -327,8 +327,8 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
       | change-zone-volume-m3         | 🟤change-zone-volume-m3 | ✅apply  |
       | change-zone-theta-i-heat-c    | 🔴change-zone-theta-i-heat-c | ✅apply  |
       | change-zone-theta-i-cool-c    | 🟥change-zone-theta-i-cool-c | ✅apply  |
-      | change-zone-internal-gains-w-m2 | 🟧change-zone-internal-gains-w-m2 | ✅apply  |
-      | change-zone-lighting-power-w-m2 | 🟨change-zone-lighting-power-w-m2 | ✅apply  |
+      | change-zone-internal-gains-wm2 | 🟧change-zone-internal-gains-wm2 | ✅apply  |
+      | change-zone-lighting-power-wm2 | 🟨change-zone-lighting-power-wm2 | ✅apply  |
       | change-zone-thermal-mass | 🧊change-zone-thermal-mass | ✅apply  |
       | change-zone-thermal-mass | 🧊change-zone-thermal-mass | ✅apply  |
       | insert-element                | 🆕insert-element | ✅apply  |
@@ -383,8 +383,8 @@ Feature: Apply every typed DIN V 18599 mutation against an independent Python im
       | change-zone-volume-m3         | 🟤change-zone-volume-m3 | ✅apply  |
       | change-zone-theta-i-heat-c    | 🔴change-zone-theta-i-heat-c | ✅apply  |
       | change-zone-theta-i-cool-c    | 🟥change-zone-theta-i-cool-c | ✅apply  |
-      | change-zone-internal-gains-w-m2 | 🟧change-zone-internal-gains-w-m2 | ✅apply  |
-      | change-zone-lighting-power-w-m2 | 🟨change-zone-lighting-power-w-m2 | ✅apply  |
+      | change-zone-internal-gains-wm2 | 🟧change-zone-internal-gains-wm2 | ✅apply  |
+      | change-zone-lighting-power-wm2 | 🟨change-zone-lighting-power-wm2 | ✅apply  |
       | change-zone-thermal-mass | 🧊change-zone-thermal-mass | ✅apply  |
       | change-zone-thermal-mass | 🧊change-zone-thermal-mass | ✅apply  |
       | insert-element                | 🆕insert-element | ✅apply  |

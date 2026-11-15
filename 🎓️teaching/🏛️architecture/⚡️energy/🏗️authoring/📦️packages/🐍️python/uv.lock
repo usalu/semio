@@ -716,6 +716,12 @@ wheels = [
 ]
 
 [[package]]
+name = "pylatexenc"
+version = "2.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/ab/34ec41718af73c00119d0351b7a2531d2ebddb51833a36448fc7b862be60/pylatexenc-2.10.tar.gz", hash = "sha256:3dd8fd84eb46dc30bee1e23eaab8d8fb5a7f507347b23e5f38ad9675c84f40d3", size = 162597, upload-time = "2021-04-06T07:56:07.854Z" }
+
+[[package]]
 name = "pymupdf"
 version = "2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1101,6 +1107,7 @@ test = [
     { name = "pillow" },
     { name = "psychrolib" },
     { name = "pyet" },
+    { name = "pylatexenc" },
     { name = "pymupdf" },
     { name = "pythermalcomfort" },
     { name = "reportlab" },
@@ -1132,6 +1139,7 @@ test = [
     { name = "pillow", specifier = "==13.0.0" },
     { name = "psychrolib", specifier = "==2.5.0" },
     { name = "pyet", specifier = "==1.5.0" },
+    { name = "pylatexenc", specifier = "==2.10" },
     { name = "pymupdf", specifier = "==2.1" },
     { name = "pythermalcomfort", specifier = "==4.8.0" },
     { name = "reportlab", specifier = "==5.1.0" },

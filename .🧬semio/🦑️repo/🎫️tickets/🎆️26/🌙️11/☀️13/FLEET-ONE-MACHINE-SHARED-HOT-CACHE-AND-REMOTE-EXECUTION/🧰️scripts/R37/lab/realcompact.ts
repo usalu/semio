@@ -1,0 +1,10 @@
+import {readFileSync,readdirSync,mkdirSync} from "node:fs";
+import {join} from "node:path";
+const overlay=process.env.R5_OVERLAY!;
+const L="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
+const mod=await import(join(overlay,L,"🏗️build/📥️inputs/🟨️.mjs")) as any;
+const inputs=["{workspaceRoot}/bunfig.toml","{workspaceRoot}/tsconfig.json","{workspaceRoot}/rustfmt.toml","{workspaceRoot}/"+L+"/⚡️caching/🦀️cargo/📜️script.ts"];
+const out=mod.compactSourceInputs(inputs,overlay,".");
+const dir=join(overlay,".cache/b/g/m/build-input-closures");
+const leaves=readdirSync(dir).map(f=>JSON.parse(readFileSync(join(dir,f),"utf8")).files as string[]);
+console.log(JSON.stringify({out:out.map((x:any)=>typeof x==="string"?x.replace(overlay,""):{env:String(x.env).slice(0,30)}),files:leaves.flat().map(f=>f.replace(L+"/",""))}));

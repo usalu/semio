@@ -1,0 +1,383 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Read oracle",
+  "description": "🔭️ The tool independent request and report of the read oracle (which workspace files a command reads beyond its declared inputs) and the EN/DE texts of its document.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "messages",
+    "windows"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "messages": {
+      "$ref": "#/definitions/Messages"
+    },
+    "windows": {
+      "$ref": "#/definitions/WindowsPlan"
+    }
+  },
+  "definitions": {
+    "Language": {
+      "type": "string",
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "Path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!(?:.*/)?\\.\\.(?:/|$)).+$"
+    },
+    "RelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!(?:.*/)?\\.\\.(?:/|$))[^/\\\\:][^\\\\:]*$"
+    },
+    "Backend": {
+      "type": "string",
+      "enum": [
+        "seatbelt",
+        "landlock",
+        "mirror"
+      ]
+    },
+    "Strength": {
+      "type": "string",
+      "enum": [
+        "kernel-enforced",
+        "output-equivalence"
+      ]
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "language",
+        "root",
+        "cwd",
+        "allowed",
+        "ambient",
+        "names",
+        "command",
+        "environment",
+        "rounds",
+        "timeoutMs",
+        "backend",
+        "compare"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "language": {
+          "$ref": "#/definitions/Language"
+        },
+        "root": {
+          "$ref": "#/definitions/Path"
+        },
+        "cwd": {
+          "type": "string",
+          "maxLength": 1024
+        },
+        "allowed": {
+          "type": "array",
+          "maxItems": 200000,
+          "items": {
+            "$ref": "#/definitions/RelativePath"
+          }
+        },
+        "ambient": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/definitions/RelativePath"
+          }
+        },
+        "names": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": "^[^/\\\\]+$"
+          }
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        },
+        "rounds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 21600000
+        },
+        "backend": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "seatbelt",
+            "landlock",
+            "mirror"
+          ]
+        },
+        "compare": {
+          "type": "string",
+          "enum": [
+            "output",
+            "exit"
+          ]
+        },
+        "maxProfiles": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        }
+      }
+    },
+    "Round": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "round",
+        "backend",
+        "exit",
+        "seconds",
+        "denied",
+        "notes",
+        "tail"
+      ],
+      "properties": {
+        "round": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "backend": {
+          "$ref": "#/definitions/Backend"
+        },
+        "exit": {
+          "type": "integer"
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "denied": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tail": {
+          "type": "string"
+        }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "backend",
+        "strength",
+        "allowed",
+        "learned",
+        "rounds",
+        "passed",
+        "clean"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "backend": {
+          "$ref": "#/definitions/Backend"
+        },
+        "strength": {
+          "$ref": "#/definitions/Strength"
+        },
+        "allowed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "learned": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rounds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Round"
+          }
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "clean": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1200
+        }
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "round",
+        "fallback",
+        "unavailable",
+        "memory",
+        "cancelled",
+        "profiles",
+        "clean",
+        "dirty",
+        "usage",
+        "traceMissing",
+        "outputDiffers",
+        "batchCommand"
+      ],
+      "properties": {
+        "round": {
+          "$ref": "#/definitions/Text"
+        },
+        "fallback": {
+          "$ref": "#/definitions/Text"
+        },
+        "unavailable": {
+          "$ref": "#/definitions/Text"
+        },
+        "memory": {
+          "$ref": "#/definitions/Text"
+        },
+        "cancelled": {
+          "$ref": "#/definitions/Text"
+        },
+        "profiles": {
+          "$ref": "#/definitions/Text"
+        },
+        "clean": {
+          "$ref": "#/definitions/Text"
+        },
+        "dirty": {
+          "$ref": "#/definitions/Text"
+        },
+        "usage": {
+          "$ref": "#/definitions/Text"
+        },
+        "traceMissing": {
+          "$ref": "#/definitions/Text"
+        },
+        "outputDiffers": {
+          "$ref": "#/definitions/Text"
+        },
+        "batchCommand": {
+          "$ref": "#/definitions/Text"
+        }
+      }
+    },
+    "WindowsPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "options"
+      ],
+      "properties": {
+        "summary": {
+          "$ref": "#/definitions/Text"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "strength",
+              "userland",
+              "text"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "strength": {
+                "type": "string",
+                "enum": [
+                  "read-trace",
+                  "enforcement",
+                  "output-equivalence",
+                  "partial-trace"
+                ]
+              },
+              "userland": {
+                "type": "boolean"
+              },
+              "text": {
+                "$ref": "#/definitions/Text"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

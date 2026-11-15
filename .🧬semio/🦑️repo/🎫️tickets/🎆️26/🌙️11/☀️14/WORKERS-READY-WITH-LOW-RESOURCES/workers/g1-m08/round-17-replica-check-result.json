@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-15T03:41:32.371045+00:00",
+  "status_rc": 0,
+  "own_rows": [
+    "g1-m08 macos 2s 1/0 cp:2s on 97445096cc0a 181/12/1488 880/2882|1083/6901 ok"
+  ],
+  "own_ok": true,
+  "log": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f11/\u2600\ufe0f14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-17-replica-status-before.txt"
+}

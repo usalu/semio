@@ -2,13 +2,25 @@ import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,realpathSync,rmSync,utimesSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join,relative,resolve,sep} from "node:path";
 import {acquireResourceLease} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {collectGarbageSingleFlightV1,reclaimUnitStorageV1} from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import componentSchema from "../🧬️schema/🔣️.json";
 import {UNIT_POLICY_V1 as policy,collectUnitsV1,leaseDirectoryOfStoreV1,measureUnitsV1,planUnitsV1,profileLeasePortV1,profileLeaseResourceV1,unitProfilesV1,unitTextV1,type BuildUnitV1,type ProfileLeasePortV1} from "../🟦️.ts";
 
+const checkout=resolve(import.meta.dir).split(sep+"🧰️framework")[0]!;
+/** 🛡️ A test never reaches the store of the real checkout: refuses (loudly) any path inside it. */
+const outsideCheckout=(path:string):string=>{const real=realpathSync(path);if(!relative(checkout,real).startsWith(".."))throw Error(`A test reached the live repository checkout ${checkout} through ${real}; give it a private workspace outside the checkout`);return path;};
+/** 🏠️ A private per-test workspace outside the checkout (the first temporary location that lies outside it, since the runner may place TMPDIR inside the checkout) with its own `.cache/b` store and lease directory. */
+const privateWorkspace=(prefix:string):Readonly<{root:string;store:string;leases:string}>=>{
+ for(const base of [tmpdir(),"/tmp"]){
+  if(!existsSync(base)||!relative(checkout,realpathSync(base)).startsWith(".."))continue;
+  const root=mkdtempSync(join(realpathSync(base),prefix)),store=join(root,".cache/b/r/m"),leases=join(root,".cache/b/l/m/data");
+  mkdirSync(leases,{recursive:true});mkdirSync(store,{recursive:true});outsideCheckout(store);return Object.freeze({root,store,leases});
+ }
+ throw Error(`No temporary directory outside the checkout ${checkout} exists for a private test workspace`);
+};
 const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(componentSchema,"units.json");
 const policyUnitStamp="units.stamp",hour=3600000,python=(rows:readonly unknown[]):unknown[]=>{const run=Bun.spawnSync(["python3","-I",join(import.meta.dir,"🐍️.py"),join(import.meta.dir,"../🧬️schema/🔣️.json")],{stdin:new TextEncoder().encode(JSON.stringify(rows))});expect(run.exitCode,new TextDecoder().decode(run.stderr)).toBe(0);return JSON.parse(new TextDecoder().decode(run.stdout));};
 
@@ -84,9 +96,9 @@ test("a profile that compilers hold loses only superseded units idle for the bus
 
 test("a real compiler lock keeps its unit, a real exclusive build lease makes a profile busy, a free one is taken without waiting and released",async()=>{
  if(!["darwin","linux"].includes(process.platform))return;
- const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,".cache/b/r/m"),leases=join(root,".cache/b/l/m/data");
+ const {root,store,leases}=privateWorkspace("units-"),nowhere=privateWorkspace("nowhere-");rmSync(join(nowhere.root,".cache"),{recursive:true,force:true});
  try{
-  mkdirSync(leases,{recursive:true});mkdirSync(store,{recursive:true});expect(leaseDirectoryOfStoreV1(store)).toBe(leases);expect(leaseDirectoryOfStoreV1(join(tmpdir(),"nowhere-"+process.pid))).toBeUndefined();
+  expect(leaseDirectoryOfStoreV1(store)).toBe(leases);expect(leaseDirectoryOfStoreV1(join(nowhere.root,"store"))).toBeUndefined();
   const held=unit(store,"b/p/prototype","serde","a1",65536,50),free=unit(store,"b/p/prototype","serde","a2",65536,45);unit(store,"b/p/prototype","serde","a3",65536,40);unit(store,"b/p/prototype","serde","a4",65536,39);unit(store,"b/p/prototype","serde","a5",65536,38);
   const holder=Bun.spawn(["python3","-I","-c","import fcntl,sys,time;f=open(sys.argv[1],'r+');fcntl.flock(f,fcntl.LOCK_EX);print('locked',flush=True);time.sleep(60)",join(held,".lock")],{stdout:"pipe"});
   try{
@@ -99,12 +111,12 @@ test("a real compiler lock keeps its unit, a real exclusive build lease makes a 
    const probe=await port(profile);expect(probe).not.toBe("busy");if(probe!=="busy")probe.release();
    expect(readdirSync(join(store,"b/p/prototype/build/serde")).sort()).toEqual(["a1","a4","a5"]);
   }finally{holder.kill();}
-  expect(await profileLeasePortV1(join(tmpdir(),"nowhere-"+process.pid))(unitProfilesV1(store)[0]!)).toBe("busy");
- }finally{rmSync(root,{recursive:true,force:true});}
+  expect(await profileLeasePortV1(join(nowhere.root,"store"))(unitProfilesV1(store)[0]!)).toBe("busy");
+ }finally{rmSync(root,{recursive:true,force:true});rmSync(nowhere.root,{recursive:true,force:true});}
 },60000);
 
 test("the single-flight collector removes superseded build units of the image beside incremental sessions, at most once per unit interval unless the image is under pressure, and the reclaim before a build frees units too",async()=>{
- const root=mkdtempSync(join(realpathSync(tmpdir()),"units-")),store=join(root,"m"),cache=join(store,"u");
+ const {root,store}=privateWorkspace("units-"),cache=join(store,"u");
  try{
   mkdirSync(join(cache,"locks"),{recursive:true});
   const old=[unit(store,"b/p/prototype","serde","a1",65536,60),unit(store,"b/p/prototype","serde","a2",65536,55),unit(store,"b/p/prototype","serde","a3",65536,50)],keep=[unit(store,"b/p/prototype","serde","a4",65536,30),unit(store,"b/p/prototype","serde","a5",65536,29)];

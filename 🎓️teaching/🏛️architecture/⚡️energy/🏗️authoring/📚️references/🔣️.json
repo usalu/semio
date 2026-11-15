@@ -1,0 +1,525 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "din-4108-2", "kind": "standard", "designation": "DIN 4108-2", "edition": "2026-05",
+      "title": {"de": "Wärmeschutz und Energie-Einsparung in Gebäuden – Teil 2: Wärmeschutz – Anforderungen, Berechnungsverfahren und Hinweise für Planung und Ausführung", "en": "Thermal insulation and energy saving in buildings – Part 2: Thermal insulation – Requirements, calculation methods and guidance for design and construction"},
+      "status": "current", "url": "https://www.dinmedia.de/en/standard/din-4108-2/401017482", "verified": "2026-11-13",
+      "note": "Published 2026-05, replaces DIN 4108-2:2013-02; the GModG paragraph 14 still names 2013-02 (checked on gesetze-im-internet.de). Section 8 is the summer heat protection chapter of both editions; table numbers are not cited because the 2026-05 text was not readable.",
+      "locators": {
+        "abschn8": {"de": "Abschn. 8 – Sommerlicher Wärmeschutz", "en": "Sec. 8 – summer heat protection"},
+        "fc": {"de": "Abschn. 8 – Sonnenschutzvorrichtung", "en": "Sec. 8 – sun-protection device"}
+      }
+    },
+    {
+      "id": "din-4108-2-2013", "kind": "standard", "designation": "DIN 4108-2", "edition": "2013-02",
+      "title": {"de": "Wärmeschutz und Energie-Einsparung in Gebäuden – Teil 2: Mindestanforderungen an den Wärmeschutz", "en": "Thermal insulation and energy saving in buildings – Part 2: Minimum requirements to thermal insulation"},
+      "status": "superseded", "successor": "din-4108-2", "url": "https://www.gesetze-im-internet.de/geg/__14.html", "verified": "2026-11-13",
+      "note": "Superseded by 2026-05, but still the edition the GModG names in paragraph 14 (summer heat protection).",
+      "locators": {
+        "abschn8": {"de": "Abschn. 8 – Sommerlicher Wärmeschutz", "en": "Sec. 8 – summer heat protection"}
+      }
+    },
+    {
+      "id": "din-4108-beiblatt-2", "kind": "standard", "designation": "DIN 4108 Beiblatt 2", "edition": "2019-06",
+      "title": {"de": "Wärmeschutz und Energie-Einsparung in Gebäuden – Wärmebrücken – Planungs- und Ausführungsbeispiele", "en": "Thermal protection and energy economy in buildings – Thermal bridges – Examples for planning and design"},
+      "status": "current", "url": "https://www.dinmedia.de/en/technical-rule/din-4108-beiblatt-2/305990077", "verified": "2026-11-13",
+      "note": "A Berichtigung 1:2025-02 exists; a 2023 date seen on a secondary page could not be confirmed.",
+      "locators": {
+        "waermebruecken": {"de": "Wärmebrücken", "en": "thermal bridges"}
+      }
+    },
+    {
+      "id": "din-v-4108-6", "kind": "standard", "designation": "DIN V 4108-6", "edition": "2003-06",
+      "title": {"de": "Wärmeschutz und Energie-Einsparung in Gebäuden – Berechnung des Jahres-Heizwärme- und des Jahres-Heizenergiebedarfs", "en": "Thermal protection and energy economy in buildings – Calculation of annual heat and annual energy use"},
+      "status": "withdrawn", "successor": "din-ts-18599", "role": {"de": "Symbolik", "en": "notation"}, "shownWithoutStatus": true,
+      "url": "https://www.dinmedia.de/en/pre-standard/din-v-4108-6/63939447", "verified": "2026-11-13",
+      "note": "Withdrawn; DIN names DIN/TS 18599-12:2021-04 as replacement and recommends the DIN V 18599 series. Kept on screen for the symbol notation (Q_h, Q_l, Q_g, eta) and the heating-period method. Clause numbers could not be checked against the withdrawn text, so only keyword locators are cited.",
+      "locators": {
+        "symbole": {"de": "Symbole und Einheiten", "en": "symbols and units"},
+        "heizperiode": {"de": "Heizperiodenverfahren", "en": "heating-period method"},
+        "bilanz": {"de": "Wärmebilanz Heizwärmebedarf", "en": "heat balance, heating demand"},
+        "transmission": {"de": "Transmissionswärmeverluste", "en": "transmission heat losses"},
+        "lueftung": {"de": "Lüftungswärmeverluste", "en": "ventilation heat losses"},
+        "solar": {"de": "Solare Wärmegewinne", "en": "solar heat gains"},
+        "intern": {"de": "Interne Wärmegewinne", "en": "internal heat gains"},
+        "ausnutzung": {"de": "Ausnutzungsgrad", "en": "utilisation factor"},
+        "verluste": {"de": "Transmissions- und Lüftungswärmeverluste", "en": "transmission and ventilation heat losses"},
+        "gewinne": {"de": "Wärmegewinne und Ausnutzungsgrad", "en": "heat gains and utilisation factor"},
+        "klima": {"de": "Klimadaten, Gradtagzahlen", "en": "climate data, degree days"},
+        "fensterflaeche": {"de": "Fensterflächen und Gesamtenergiedurchlassgrad", "en": "window areas and total solar energy transmittance"},
+        "gradtag": {"de": "Gradtagzahlfaktor", "en": "degree-day factor"}
+      }
+    },
+    {
+      "id": "din-v-4701-10", "kind": "standard", "designation": "DIN V 4701-10", "edition": "2003-08",
+      "title": {"de": "Energetische Bewertung heiz- und raumlufttechnischer Anlagen – Heizung, Trinkwassererwärmung, Lüftung", "en": "Energy efficiency of heating and ventilation systems in buildings – Heating, domestic hot water, ventilation"},
+      "status": "withdrawn", "successor": "din-ts-18599-5", "role": {"de": "Anlagenaufwandszahl", "en": "system expenditure factor"},
+      "url": "https://dinmedia.de/en/pre-standard/din-v-4701-10/64443135", "verified": "2026-11-13",
+      "note": "Withdrawn; DIN recommends DIN V 18599-5, -6, -8 (now DIN/TS 18599 series).",
+      "locators": {
+        "aufwandszahl": {"de": "Anlagenaufwandszahl", "en": "system expenditure factor"}
+      }
+    },
+    {
+      "id": "din-ts-18599", "kind": "standard", "designation": "DIN/TS 18599", "edition": "2025-10",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Berechnung des Nutz-, End- und Primärenergiebedarfs für Heizung, Kühlung, Lüftung, Trinkwarmwasser und Beleuchtung", "en": "Energy efficiency of buildings – Calculation of the net, final and primary energy demand for heating, cooling, ventilation, domestic hot water and lighting"},
+      "status": "current", "url": "https://www.dinmedia.de/en/pre-standard/din-ts-18599-1/389750965", "verified": "2026-11-13",
+      "note": "Series of pre-standards (Vornormen) published 2025-10; DIN states the DIN/TS series replaced the DIN V 18599 series of 2018-09. Series level entry; parts below.",
+      "locators": {}
+    },
+    {
+      "id": "din-ts-18599-1", "kind": "standard", "designation": "DIN/TS 18599-1", "edition": "2025-10",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Teil 1: Allgemeine Bilanzierungsverfahren, Begriffe, Zonierung und Bewertung der Energieträger", "en": "Energy efficiency of buildings – Part 1: General balancing procedures, terms and definitions, zoning and evaluation of energy sources"},
+      "status": "current", "url": "https://www.dinmedia.de/en/pre-standard/din-ts-18599-1/389750965", "verified": "2026-11-13",
+      "note": "Replaces DIN V 18599-1:2018-09 (DIN Media).",
+      "locators": {
+        "begriffe": {"de": "Begriffe", "en": "terms and definitions"},
+        "energiearten": {"de": "Begriffe · Endenergie · Primärenergie", "en": "terms · final energy · primary energy"},
+        "endenergie": {"de": "Endenergie", "en": "final energy"},
+        "primaerenergie": {"de": "Primärenergie", "en": "primary energy"},
+        "energietraeger": {"de": "Bewertung der Energieträger", "en": "evaluation of energy sources"},
+        "bilanz": {"de": "Bilanzierungsverfahren", "en": "balancing procedure"}
+      }
+    },
+    {
+      "id": "din-ts-18599-2", "kind": "standard", "designation": "DIN/TS 18599-2", "edition": "2025-10",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Teil 2: Nutzenergiebedarf für Heizen und Kühlen von Gebäudezonen", "en": "Energy efficiency of buildings – Part 2: Net energy demand for heating and cooling of building zones"},
+      "status": "current", "url": "https://www.dinmedia.de/en/pre-standard/din-ts-18599-2/389744117", "verified": "2026-11-13",
+      "note": "Replaces DIN V 18599-2:2018-09 (DIN Media).",
+      "locators": {
+        "nutzenergie": {"de": "Nutzenergiebedarf Heizen und Kühlen", "en": "net energy demand for heating and cooling"},
+        "intern": {"de": "interne Wärmequellen", "en": "internal heat sources"}
+      }
+    },
+    {
+      "id": "din-ts-18599-5", "kind": "standard", "designation": "DIN/TS 18599-5", "edition": "2025-10",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Teil 5: Endenergiebedarf von Heizsystemen", "en": "Energy efficiency of buildings – Part 5: Final energy demand of heating systems"},
+      "status": "current", "url": "https://www.dinmedia.de/en/pre-standard/din-ts-18599-5/389786380", "verified": "2026-11-13",
+      "note": "Replaces DIN V 18599-5:2018-09; clause numbers of the 2018 edition are not cited.",
+      "locators": {
+        "uebergabe": {"de": "Übergabe · Verteilung · Speicherung", "en": "emission · distribution · storage"},
+        "erzeuger": {"de": "Wärmepumpen · Heizkessel", "en": "heat pumps · boilers"},
+        "aufwandszahl": {"de": "Anlagenaufwandszahl", "en": "system expenditure factor"}
+      }
+    },
+    {
+      "id": "din-ts-18599-10", "kind": "standard", "designation": "DIN/TS 18599-10", "edition": "2025-10",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Teil 10: Nutzungsrandbedingungen, Klimadaten", "en": "Energy efficiency of buildings – Part 10: Boundary conditions of use, climatic data"},
+      "status": "current", "url": "https://www.dinmedia.de/en/pre-standard/din-ts-18599-10/389788970", "verified": "2026-11-13",
+      "note": "Replaces DIN V 18599-10:2018-09 (DIN Media); the usage profiles table is cited by keyword only.",
+      "locators": {
+        "nutzungsprofile": {"de": "Nutzungsrandbedingungen, Nutzungsprofile", "en": "boundary conditions of use, usage profiles"},
+        "intern": {"de": "Nutzungsrandbedingungen, interne Wärmequellen", "en": "boundary conditions of use, internal heat sources"}
+      }
+    },
+    {
+      "id": "din-v-18599", "kind": "standard", "designation": "DIN V 18599", "edition": "2018-09",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Berechnung des Nutz-, End- und Primärenergiebedarfs für Heizung, Kühlung, Lüftung, Trinkwarmwasser und Beleuchtung", "en": "Energy efficiency of buildings – Calculation of the net, final and primary energy demand for heating, cooling, ventilation, domestic hot water and lighting"},
+      "status": "superseded", "successor": "din-ts-18599", "role": {"de": "Rechenverfahren nach GModG § 20", "en": "calculation method named in GModG paragraph 20"},
+      "url": "https://www.gesetze-im-internet.de/geg/__20.html", "verified": "2026-11-13",
+      "note": "Superseded by DIN/TS 18599:2025-10, but still the edition GModG paragraph 20 names (Abs. 1: DIN V 18599:2018-09).",
+      "locators": {}
+    },
+    {
+      "id": "din-v-18599-1", "kind": "standard", "designation": "DIN V 18599-1", "edition": "2018-09",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Teil 1: Allgemeine Bilanzierungsverfahren, Begriffe, Zonierung und Bewertung der Energieträger", "en": "Energy efficiency of buildings – Part 1: General balancing procedures, terms and definitions, zoning and evaluation of energy sources"},
+      "status": "superseded", "successor": "din-ts-18599-1", "role": {"de": "in GModG § 20 genannt", "en": "named in GModG paragraph 20"},
+      "url": "https://www.gesetze-im-internet.de/geg/__20.html", "verified": "2026-11-13",
+      "note": "Superseded by DIN/TS 18599-1:2025-10; GModG paragraph 20 (Abs. 4, 5) still names this edition.",
+      "locators": {}
+    },
+    {
+      "id": "din-v-18599-2", "kind": "standard", "designation": "DIN V 18599-2", "edition": "2018-09",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Teil 2: Nutzenergiebedarf für Heizen und Kühlen von Gebäudezonen", "en": "Energy efficiency of buildings – Part 2: Net energy demand for heating and cooling of building zones"},
+      "status": "superseded", "successor": "din-ts-18599-2", "role": {"de": "in GModG § 20 genannt", "en": "named in GModG paragraph 20"},
+      "url": "https://www.gesetze-im-internet.de/geg/__20.html", "verified": "2026-11-13",
+      "note": "Superseded by DIN/TS 18599-2:2025-10; GModG paragraph 20 (Abs. 6) still names this edition.",
+      "locators": {}
+    },
+    {
+      "id": "din-v-18599-10", "kind": "standard", "designation": "DIN V 18599-10", "edition": "2018-09",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Teil 10: Nutzungsrandbedingungen, Klimadaten", "en": "Energy efficiency of buildings – Part 10: Boundary conditions of use, climatic data"},
+      "status": "superseded", "successor": "din-ts-18599-10", "role": {"de": "in GModG § 20 genannt", "en": "named in GModG paragraph 20"},
+      "url": "https://www.gesetze-im-internet.de/geg/__20.html", "verified": "2026-11-13",
+      "note": "Superseded by DIN/TS 18599-10:2025-10 (DIN Media); GModG paragraph 20 (Abs. 2) still names this edition.",
+      "locators": {}
+    },
+    {
+      "id": "din-en-12831-1", "kind": "standard", "designation": "DIN EN 12831-1", "edition": "2017-09",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Verfahren zur Berechnung der Norm-Heizlast – Teil 1: Raumheizlast, Modul M3-3", "en": "Energy performance of buildings – Method for calculation of the design heat load – Part 1: Space heating load, Module M3-3"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-en-12831-1/261292587", "verified": "2026-11-13",
+      "note": "Replaces DIN EN 12831:2003-08. National annex: DIN/TS 12831-1:2020-04.",
+      "locators": {
+        "heizlast": {"de": "Raumheizlast", "en": "space heating load"},
+        "abschn6": {"de": "Abschn. 6 – ausführliches Verfahren", "en": "Sec. 6 – detailed method"},
+        "lueftung": {"de": "Lüftungswärmeverlust", "en": "ventilation heat loss"}
+      }
+    },
+    {
+      "id": "din-ts-12831-1", "kind": "standard", "designation": "DIN/TS 12831-1", "edition": "2020-04",
+      "title": {"de": "Verfahren zur Berechnung der Raumheizlast – Teil 1: Nationale Ergänzungen", "en": "Method for calculation of the room heat load – Part 1: National addition"},
+      "status": "current", "url": "https://www.dinmedia.de/de/vornorm/din-ts-12831-1/316645651", "verified": "2026-11-13",
+      "note": "National addition (Vornorm) to the 2017-09 edition of EN 12831-1; replaces the Beiblätter 1 to 3.",
+      "locators": {}
+    },
+    {
+      "id": "din-en-iso-13789", "kind": "standard", "designation": "DIN EN ISO 13789", "edition": "2018-04",
+      "title": {"de": "Wärmetechnisches Verhalten von Gebäuden – Transmissions- und Lüftungswärmetransferkoeffizient – Berechnungsverfahren", "en": "Thermal performance of buildings – Transmission and ventilation heat transfer coefficients – Calculation method"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-en-iso-13789/259116312", "verified": "2026-11-13",
+      "note": "Replaces DIN EN ISO 13789:2008-04; a 2017-10 edition does not exist (audit correction).",
+      "locators": {
+        "transmission": {"de": "Transmissionswärmetransferkoeffizient", "en": "transmission heat transfer coefficient"}
+      }
+    },
+    {
+      "id": "din-en-iso-6946", "kind": "standard", "designation": "DIN EN ISO 6946", "edition": "2018-03",
+      "title": {"de": "Bauteile – Wärmedurchlasswiderstand und Wärmedurchgangskoeffizient – Berechnungsverfahren", "en": "Building components and building elements – Thermal resistance and thermal transmittance – Calculation methods"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-en-iso-6946/255315365", "verified": "2026-11-13",
+      "note": "Berichtigung 1:2023-04 exists. Table numbers are not cited (not verifiable); the surface resistances are cited by keyword.",
+      "locators": {
+        "uwert": {"de": "Wärmedurchgangskoeffizient U", "en": "thermal transmittance U"},
+        "rse": {"de": "Wärmeübergangswiderstände innen und außen", "en": "interior and exterior surface resistances"},
+        "luftschicht": {"de": "Wärmedurchlasswiderstand von Luftschichten", "en": "thermal resistance of air layers"}
+      }
+    },
+    {
+      "id": "din-en-iso-13786", "kind": "standard", "designation": "DIN EN ISO 13786", "edition": "2018-04",
+      "title": {"de": "Wärmetechnisches Verhalten von Bauteilen – Dynamisch-thermische Kenngrößen – Berechnungsverfahren", "en": "Thermal performance of building components – Dynamic thermal characteristics – Calculation methods"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-en-iso-13786/255912584", "verified": "2026-11-13",
+      "note": "Replaces DIN EN ISO 13786:2008-04.",
+      "locators": {
+        "kapazitaet": {"de": "wirksame Wärmekapazität", "en": "effective heat capacity"}
+      }
+    },
+    {
+      "id": "din-en-410", "kind": "standard", "designation": "DIN EN 410", "edition": "2011-04",
+      "title": {"de": "Glas im Bauwesen – Bestimmung der lichttechnischen und strahlungsphysikalischen Kenngrößen von Verglasungen", "en": "Glass in building – Determination of luminous and solar characteristics of glazing"},
+      "status": "current", "url": "https://www.dinmedia.de/de/standard/din-en-410/138424295", "verified": "2026-11-13",
+      "note": "Replaces DIN EN 410:1998-12.",
+      "locators": {
+        "g": {"de": "Gesamtenergiedurchlassgrad g", "en": "total solar energy transmittance g"}
+      }
+    },
+    {
+      "id": "din-en-673", "kind": "standard", "designation": "DIN EN 673", "edition": "2025-01",
+      "title": {"de": "Glas im Bauwesen – Bestimmung des Wärmedurchgangskoeffizienten (U-Wert) – Berechnungsverfahren", "en": "Glass in building – Determination of thermal transmittance (U value) – Calculation method"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-en-673/385544906", "verified": "2026-11-13",
+      "note": "Replaces DIN EN 673:2011-04 (German version of EN 673:2024); an amendment draft prA1:2026 exists.",
+      "locators": {}
+    },
+    {
+      "id": "din-en-14825", "kind": "standard", "designation": "DIN EN 14825", "edition": "2023-10",
+      "title": {"de": "Luftkonditionierer, Flüssigkeitskühlsätze und Wärmepumpen mit elektrisch angetriebenen Verdichtern – Prüfung und Leistungsbemessung unter Teillastbedingungen und Berechnung der jahreszeitbedingten Leistungszahl", "en": "Air conditioners, liquid chilling packages and heat pumps with electrically driven compressors – Testing and rating at part load conditions and calculation of seasonal performance"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-en-14825/343036621", "verified": "2026-11-13",
+      "note": "Replaces DIN EN 14825:2019-07; defines SCOP and SEER.",
+      "locators": {
+        "scop": {"de": "SCOP (jahreszeitbedingte Leistungszahl)", "en": "SCOP (seasonal coefficient of performance)"}
+      }
+    },
+    {
+      "id": "din-en-14511-2", "kind": "standard", "designation": "DIN EN 14511-2", "edition": "2023-08",
+      "title": {"de": "Luftkonditionierer, Flüssigkeitskühlsätze und Wärmepumpen mit elektrisch angetriebenen Verdichtern für die Raumbeheizung und -kühlung und Prozesskühler – Teil 2: Prüfbedingungen", "en": "Air conditioners, liquid chilling packages and heat pumps for space heating and cooling and process chillers, with electrically driven compressors – Part 2: Test conditions"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-en-14511-2/349069586", "verified": "2026-11-13",
+      "note": "Edition 2023-08 taken from the replacement notes of the DIN pages of parts 1 and 2; part 1 is DIN EN 14511-1:2023-08.",
+      "locators": {
+        "cop": {"de": "Leistungszahl COP", "en": "coefficient of performance COP"}
+      }
+    },
+    {
+      "id": "din-en-16798-1", "kind": "standard", "designation": "DIN EN 16798-1", "edition": "2022-03",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Lüftung von Gebäuden – Teil 1: Eingangsparameter für das Innenraumklima zur Auslegung und Bewertung der Energieeffizienz von Gebäuden", "en": "Energy performance of buildings – Ventilation for buildings – Part 1: Indoor environmental input parameters for design and assessment of energy performance of buildings"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-en-16798-1/349622591", "verified": "2026-11-13",
+      "note": "Replaces DIN EN 16798-1:2021-04. Annex B (informative) holds the design criteria and categories; table numbers are not cited.",
+      "locators": {
+        "kategorien": {"de": "Anh. B – Kategorien der Raumluftqualität", "en": "Annex B – indoor air quality categories"}
+      }
+    },
+    {
+      "id": "din-en-16798-3", "kind": "standard", "designation": "DIN EN 16798-3", "edition": "2026-10",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Lüftung von Gebäuden – Teil 3: Lüftung von Nichtwohngebäuden – Leistungsanforderungen an Lüftungs- und Klimaanlagen und Raumkühlsysteme (Module M5-1, M5-4)", "en": "Energy performance of buildings – Ventilation for buildings – Part 3: Ventilation for non-residential buildings – Performance requirements for ventilation and room-conditioning systems (Modules M5-1, M5-4)"},
+      "status": "current", "url": "https://www.dinmedia.de/en/standard/din-en-16798-3/390958579", "verified": "2026-11-13",
+      "note": "Published 2026-10 (German version of EN 16798-3:2025), replaces the withdrawn DIN EN 16798-3:2017-11.",
+      "locators": {}
+    },
+    {
+      "id": "din-en-16798-7", "kind": "standard", "designation": "DIN EN 16798-7", "edition": "2017-11",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Lüftung von Gebäuden – Teil 7: Berechnungsmethoden zur Bestimmung der Luftvolumenströme in Gebäuden einschließlich Infiltration (Modul M5-5)", "en": "Energy performance of buildings – Ventilation for buildings – Part 7: Calculation methods for the determination of air flow rates in buildings including infiltration (Module M5-5)"},
+      "status": "current", "url": "https://www.dinmedia.de/en/standard/din-en-16798-7/258797864", "verified": "2026-11-13",
+      "note": "Replaces DIN EN 15242:2007-09; the discharge coefficient 0.6 on screen is an assumption, not a clause value.",
+      "locators": {
+        "luftvolumenstrom": {"de": "Luftvolumenströme, Fensteröffnung", "en": "air flow rates, window openings"}
+      }
+    },
+    {
+      "id": "din-en-308", "kind": "standard", "designation": "DIN EN 308", "edition": "2022-04",
+      "title": {"de": "Wärmeaustauscher – Prüfverfahren zur Bestimmung der Leistungskriterien von Luft/Luft- und Luft/Abgas-Wärmerückgewinnungsanlagen", "en": "Heat exchangers – Test procedures for establishing performance of air to air heat recovery components"},
+      "status": "current", "url": "https://www.din.de/en/wdc-beuth:din21:353762417", "verified": "2026-11-13",
+      "note": "Edition 2022-04 replaces EN 308:1997; German title taken from the 1997 edition.",
+      "locators": {
+        "rueckwaermzahl": {"de": "Rückwärmzahl", "en": "temperature ratio of heat recovery"}
+      }
+    },
+    {
+      "id": "din-1946-4", "kind": "standard", "designation": "DIN 1946-4", "edition": "2018-09",
+      "title": {"de": "Raumlufttechnik – Teil 4: Raumlufttechnische Anlagen in Gebäuden und Räumen des Gesundheitswesens", "en": "Ventilation and air conditioning – Part 4: Ventilation in buildings and rooms used in health care"},
+      "status": "current", "url": "https://www.din.de/en/wdc-beuth:din21:294438653", "verified": "2026-11-13",
+      "note": "An amendment A1 (2025-11) was reported but could not be confirmed.",
+      "locators": {
+        "op": {"de": "Operationsräume", "en": "operating rooms"}
+      }
+    },
+    {
+      "id": "din-1946-6", "kind": "standard", "designation": "DIN 1946-6", "edition": "2019-12",
+      "title": {"de": "Raumlufttechnik – Teil 6: Lüftung von Wohnungen – Allgemeine Anforderungen, Anforderungen an die Auslegung, Ausführung, Inbetriebnahme und Instandhaltung", "en": "Ventilation and air conditioning – Part 6: Ventilation for dwellings – General requirements, requirements for design, construction, commissioning and maintenance"},
+      "status": "current", "url": "https://www.din.de/de/mitwirken/normenausschuesse/nhrs/veroeffentlichungen/wdc-beuth:din21:383907328/toc-3571455/download", "verified": "2026-11-13",
+      "note": "Edition verified indirectly: DIN 1946-6 Beiblatt 1:2025-06 names 2019-12 as its base. A 2022-09 edition claimed on a forum could not be confirmed.",
+      "locators": {
+        "lueftungskonzept": {"de": "Lüftungskonzept", "en": "ventilation concept"},
+        "nutzerunabhaengig": {"de": "nutzerunabhängige Lüftung", "en": "user-independent ventilation"}
+      }
+    },
+    {
+      "id": "din-1946-7", "kind": "standard", "designation": "DIN 1946-7", "edition": "2022-08",
+      "title": {"de": "Raumlufttechnik – Teil 7: Raumlufttechnische Anlagen in Laboratorien", "en": "Ventilation and air conditioning – Part 7: Ventilation systems in laboratories"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-1946-7/355461283", "verified": "2026-11-13",
+      "note": "Replaces DIN 1946-7:2009-07.",
+      "locators": {}
+    },
+    {
+      "id": "din-18032-1", "kind": "standard", "designation": "DIN 18032-1", "edition": "2014-11",
+      "title": {"de": "Sporthallen – Hallen und Räume für Sport und Mehrzwecknutzung – Teil 1: Grundsätze für die Planung", "en": "Sports halls – Halls and rooms for sports and multi-purpose use – Part 1: Planning principles"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-18032-1/222157679", "verified": "2026-11-13",
+      "note": "Replaces DIN 18032-1:2003-09; a new draft (2026) exists.",
+      "locators": {}
+    },
+    {
+      "id": "din-18380", "kind": "standard", "designation": "DIN 18380", "edition": "2019-09",
+      "title": {"de": "VOB Vergabe- und Vertragsordnung für Bauleistungen – Teil C: Allgemeine Technische Vertragsbedingungen für Bauleistungen (ATV) – Heizanlagen und zentrale Wassererwärmungsanlagen", "en": "German construction contract procedures (VOB) – Part C: General technical specifications for building works – Heating systems and central water heating systems"},
+      "status": "current", "url": "https://www.dinmedia.de/de/norm/din-18380/310840113", "verified": "2026-11-13",
+      "note": "Latest edition found is 2019-09 (replaces 2016-09); no 2023 edition found. Current status not confirmed on the DIN page itself.",
+      "locators": {
+        "abgleich": {"de": "Hydraulischer Abgleich", "en": "hydraulic balancing"}
+      }
+    },
+    {
+      "id": "din-51603-1", "kind": "standard", "designation": "DIN 51603-1", "edition": "2024-11",
+      "title": {"de": "Flüssige Brennstoffe – Heizöle – Teil 1: Heizöl EL, Mindestanforderungen", "en": "Liquid fuels – Fuel oils – Part 1: Fuel oils EL, minimum requirements"},
+      "status": "current", "url": "https://www.dinmedia.de/en/standard/din-51603-1/382208921", "verified": "2026-11-13",
+      "note": "Replaces DIN 51603-1:2020-09.",
+      "locators": {
+        "heizwert": {"de": "Heizwert", "en": "net calorific value"}
+      }
+    },
+    {
+      "id": "vdi-4650-1", "kind": "guideline", "designation": "VDI 4650 Blatt 1", "edition": "2024-02",
+      "title": {"de": "Berechnung der Jahresarbeitszahl von Wärmepumpenanlagen – Elektro-Wärmepumpen zur Raumheizung und Trinkwassererwärmung", "en": "Calculation of the seasonal coefficient of performance of heat pumps – Electric heat pumps for space heating and domestic hot water"},
+      "status": "current", "url": "https://vdi.de/en/home/vdi-standards/details/vdi-4650-blatt-1-calculation-of-the-seasonal-coefficient-of-performance-of-heat-pumps-electric-heat-pumps-for-space-heating-and-domestic-hot-water", "verified": "2026-11-13",
+      "note": "The term Jahresarbeitszahl (JAZ) is the guideline title; SCOP belongs to DIN EN 14825.",
+      "locators": {
+        "jaz": {"de": "Jahresarbeitszahl (JAZ)", "en": "seasonal coefficient of performance (JAZ)"}
+      }
+    },
+    {
+      "id": "vdi-2078", "kind": "guideline", "designation": "VDI 2078", "edition": "2015-06",
+      "title": {"de": "Berechnung der thermischen Lasten und Raumtemperaturen – Auslegung Kühllast und Jahressimulation", "en": "Calculation of thermal loads and room temperatures – Design cooling load and annual simulation"},
+      "status": "current", "url": "https://vdi.de/en/home/vdi-standards/details/vdi-2078-calculation-of-thermal-loads-and-room-temperatures-design-cooling-load-and-annual-simulation", "verified": "2026-11-13",
+      "note": "2015-06 is the current edition; no revision date was found (a claim of a revision in 2027 was removed from the screens). Locators are keywords, not clause numbers.",
+      "locators": {
+        "kuehllast": {"de": "Kühllast", "en": "cooling load"},
+        "solar": {"de": "Kühllast (Solarstrahlung)", "en": "cooling load (solar radiation)"},
+        "innere": {"de": "innere Wärmequellen", "en": "internal heat sources"},
+        "personen": {"de": "innere Wärmequellen (Personen)", "en": "internal heat sources (people)"},
+        "geraete": {"de": "innere Wärmequellen (Geräte, Beleuchtung)", "en": "internal heat sources (equipment, lighting)"},
+        "opak": {"de": "Kühllast opake Bauteile", "en": "cooling load, opaque components"},
+        "aussenluft": {"de": "Kühllast Außenluft", "en": "cooling load, outdoor air"},
+        "zuluft": {"de": "Kühllast (Zuluftstrom)", "en": "cooling load (supply air flow)"}
+      }
+    },
+    {
+      "id": "vdi-4645", "kind": "guideline", "designation": "VDI 4645", "edition": "2023-04",
+      "title": {"de": "Heizungsanlagen mit Wärmepumpen in Ein- und Mehrfamilienhäusern – Planung, Errichtung, Betrieb", "en": "Heating systems with heat pumps in single and multi family houses – Planning, construction, operation"},
+      "status": "current", "url": "https://www.dinmedia.de/de/technische-regel/vdi-4645/364873293", "verified": "2026-11-13",
+      "note": "2023-04 replaces 2018-03; a newer draft or Blatt 2:2026-01 (training) was seen, no newer main edition confirmed.",
+      "locators": {}
+    },
+    {
+      "id": "vdi-6022-1", "kind": "guideline", "designation": "VDI 6022 Blatt 1", "edition": "2018-01",
+      "title": {"de": "Raumlufttechnik, Raumluftqualität – Hygieneanforderungen an Raumlufttechnische Anlagen und Geräte (VDI-Lüftungsregeln)", "en": "Ventilation and indoor-air quality – Hygiene requirements for ventilation and air-conditioning systems and units (VDI Ventilation Code of Practice)"},
+      "status": "current", "url": "https://vdi.de/richtlinien/details/vdi-6022-blatt-1-ventilation-and-indoor-air-quality-hygiene-requirements-for-ventilation-and-air-conditioning-systems-and-units-vdi-ventilation-code-of-practice-1", "verified": "2026-11-13",
+      "note": "Berichtigung 2023-04 exists.",
+      "locators": {
+        "hygiene": {"de": "Hygieneanforderungen an RLT-Anlagen", "en": "hygiene requirements for ventilation systems"}
+      }
+    },
+    {
+      "id": "vdi-3807-1", "kind": "guideline", "designation": "VDI 3807 Blatt 1", "edition": "2013-06",
+      "title": {"de": "Verbrauchskennwerte für Gebäude – Grundlagen", "en": "Characteristic consumption values for buildings – Fundamentals"},
+      "status": "current", "url": "https://vdi.de/en/home/vdi-standards/details/vdi-3807-blatt-1-verbrauchskennwerte-fuer-gebaeude-grundlagen", "verified": "2026-11-13",
+      "note": "Replaces VDI 3807 Blatt 1:2007-03. The G20/15 reference temperature locator could not be read and is cited as keyword.",
+      "locators": {
+        "gradtag": {"de": "Witterungsbereinigung, Gradtage", "en": "weather correction, degree days"}
+      }
+    },
+    {
+      "id": "vdi-2052-1", "kind": "guideline", "designation": "VDI 2052 Blatt 1", "edition": "2017-04",
+      "title": {"de": "Raumlufttechnik – Küchen (VDI-Lüftungsregeln)", "en": "Air conditioning – Kitchens (VDI Ventilation Code of Practice)"},
+      "status": "current", "url": "https://vdi.de/richtlinien/details/vdi-2052-blatt-1-air-conditioning-kitchens-vdi-ventilation-code-of-practice", "verified": "2026-11-13",
+      "note": "Replaces VDI 2052:2006-04.",
+      "locators": {}
+    },
+    {
+      "id": "vdi-2087", "kind": "guideline", "designation": "VDI 2087", "edition": "2006-12",
+      "title": {"de": "Luftleitungen – Betriebs- und Konstruktionsgrundlagen", "en": "Air ducts – Operating and construction fundamentals"},
+      "status": "current", "url": "https://vdi.de/en/home/vdi-standards/details/vdi-2087-air-ducts-operating-and-construction-fundamentals", "verified": "2026-11-13",
+      "note": "Berichtigung 2008-04 exists; German title translated from the official English title.",
+      "locators": {}
+    },
+    {
+      "id": "iso-14644-4", "kind": "standard", "designation": "ISO 14644-4", "edition": "2022",
+      "title": {"de": "Reinräume und zugehörige Reinraumbereiche – Teil 4: Planung, Ausführung und Erst-Inbetriebnahme", "en": "Cleanrooms and associated controlled environments – Part 4: Design, construction and start-up"},
+      "status": "current", "url": "https://www.dinmedia.de/en/standard/iso-14644-4/362298406", "verified": "2026-11-13",
+      "locators": {}
+    },
+    {
+      "id": "iso-7730", "kind": "standard", "designation": "ISO 7730", "edition": "2025",
+      "title": {"de": "Ergonomie der thermischen Umgebung – Analytische Bestimmung und Interpretation der thermischen Behaglichkeit durch Berechnung des PMV- und PPD-Indexes und der lokalen thermischen Behaglichkeit", "en": "Ergonomics of the thermal environment – Analytical determination and interpretation of thermal comfort using calculation of the PMV and PPD indices and local thermal comfort criteria"},
+      "status": "current", "url": "https://www.iso.org/standard/85803.html", "verified": "2026-11-13",
+      "note": "Fourth edition 2025-09, withdraws ISO 7730:2005.",
+      "locators": {
+        "met": {"de": "metabolische Rate (met)", "en": "metabolic rate (met)"}
+      }
+    },
+    {
+      "id": "iso-8996", "kind": "standard", "designation": "ISO 8996", "edition": "2021",
+      "title": {"de": "Ergonomie der thermischen Umgebung – Bestimmung der metabolischen Rate", "en": "Ergonomics of the thermal environment – Determination of metabolic rate"},
+      "status": "current", "url": "https://www.iso.org/standard/74443.html", "verified": "2026-11-13",
+      "note": "Third edition, December 2021.",
+      "locators": {}
+    },
+    {
+      "id": "iso-52016-1", "kind": "standard", "designation": "ISO 52016-1", "edition": "2017",
+      "title": {"de": "Energetische Bewertung von Gebäuden – Energiebedarf für Heizung und Kühlung, Innentemperaturen und fühlbare und latente Heiz- und Kühllasten – Teil 1: Berechnungsverfahren", "en": "Energy performance of buildings – Energy needs for heating and cooling, internal temperatures and sensible and latent heat loads – Part 1: Calculation procedures"},
+      "status": "current", "url": "https://www.iso.org/standard/65696.html", "verified": "2026-11-13",
+      "note": "Reviewed and confirmed 2022 (ISO page). Source of the F_sh notation that the videos do not use.",
+      "locators": {}
+    },
+    {
+      "id": "gmodg", "kind": "law", "designation": "GModG", "version": "2026-07-29",
+      "full": {"de": "GModG (Stand 2026-07-29)", "en": "GModG (as of 2026-07-29)"},
+      "aliases": ["GEG"],
+      "title": {"de": "Gesetz zur Einsparung von Energie und zur Modernisierung der Wärmeversorgung in Gebäuden (Gebäudemodernisierungsgesetz – GModG)", "en": "Act on saving energy and modernising heat supply in buildings (Building Modernisation Act – GModG, formerly Building Energy Act GEG)"},
+      "status": "current", "url": "https://www.gesetze-im-internet.de/geg/BJNR172810020.html", "verified": "2026-11-13",
+      "note": "Official source gesetze-im-internet.de (path /geg/) shows the title renamed by Art. 1 Nr. 1 of the act of 2026-07-23, BGBl. 2026 I Nr. 226, in force 2026-07-29. Paragraph headings checked in the table of contents: 14, 15, 16, 20, 22, 60c, 71 (weggefallen), 79 to 82, 84, 86, 87, Anlagen 1, 4, 10. The current text of paragraph 14 still names DIN 4108-2:2013-02 and paragraph 20 still names DIN V 18599:2018-09.",
+      "locators": {
+        "p14": {"de": "§ 14 Sommerlicher Wärmeschutz", "en": "§ 14 summer heat protection"},
+        "p15": {"de": "§ 15 Gesamtenergiebedarf, Anlage 1", "en": "§ 15 overall energy demand, Annex 1"},
+        "p15-20": {"de": "§ 15 Gesamtenergiebedarf · § 20 Jahres-Primärenergiebedarf", "en": "§ 15 overall energy demand · § 20 annual primary energy demand"},
+        "p15-16": {"de": "§ 15 Gesamtenergiebedarf · § 16 Baulicher Wärmeschutz · Anlage 1", "en": "§ 15 overall energy demand · § 16 building envelope · Annex 1"},
+        "p20": {"de": "§ 20 Jahres-Primärenergiebedarf Wohngebäude", "en": "§ 20 annual primary energy demand, residential"},
+        "p20-22": {"de": "§ 20 Jahres-Primärenergiebedarf · § 22 Primärenergiefaktoren · Anlage 4", "en": "§ 20 annual primary energy demand · § 22 primary energy factors · Annex 4"},
+        "p22": {"de": "§ 22 Primärenergiefaktoren, Anlage 4", "en": "§ 22 primary energy factors, Annex 4"},
+        "p71": {"de": "§ 15 Gesamtenergiebedarf · § 16 Baulicher Wärmeschutz · Anlage 1 · § 71 entfallen", "en": "§ 15 overall energy demand · § 16 building envelope · Annex 1 · § 71 repealed"},
+        "p60c": {"de": "§ 60c Hydraulischer Abgleich", "en": "§ 60c hydraulic balancing"},
+        "p79-82": {"de": "§§ 79–82 Energieausweise", "en": "§§ 79–82 energy certificates"},
+        "p86": {"de": "§ 86 Energieeffizienzklasse · Anlage 10", "en": "§ 86 energy efficiency class · Annex 10"},
+        "p84-87": {"de": "§ 84 Empfehlungen · § 87 Pflichtangaben in Immobilienanzeigen", "en": "§ 84 recommendations · § 87 mandatory data in property advertisements"}
+      }
+    },
+    {
+      "id": "bohne-2026", "kind": "book", "designation": "Bohne/Bohne", "year": 2026, "editionNumber": 13,
+      "authors": ["Bohne, D.", "Bohne, M."],
+      "title": {"de": "Gebäudetechnik – Technischer Ausbau und nachhaltige Gebäudesysteme", "en": "Gebäudetechnik – Technischer Ausbau und nachhaltige Gebäudesysteme"},
+      "publisher": "Springer Vieweg", "place": "Heidelberg", "isbn": "978-3-658-51570-6",
+      "status": "current", "url": "https://www.baunetzwissen.de/gebaeudetechnik/tipps/buecher/technischer-ausbau-von-gebaeuden-4347729", "verified": "2026-11-13",
+      "note": "13th updated edition, 2026 (ISBN of the print edition); title as given by the publisher listing on Baunetzwissen.",
+      "locators": {}
+    },
+    {
+      "id": "willems-2024", "kind": "book", "designation": "Willems/Schild/Stricker", "year": 2024, "editionNumber": 8,
+      "authors": ["Willems, W. M.", "Schild, K.", "Stricker, D."],
+      "title": {"de": "Formeln und Tabellen Bauphysik: Wärmeschutz – Feuchteschutz – Klima – Akustik – Brandschutz", "en": "Formeln und Tabellen Bauphysik: Wärmeschutz – Feuchteschutz – Klima – Akustik – Brandschutz"},
+      "publisher": "Springer Vieweg", "place": "Wiesbaden", "isbn": "978-3-658-44973-5", "doi": "10.1007/978-3-658-44974-2",
+      "status": "current", "url": "https://www.jpc.de/jpcng/books/detail/-/art/wolfgang-m-willems-formeln-und-tabellen-bauphysik/hnum/11834083", "verified": "2026-11-13",
+      "note": "8th edition, 2024-08-31. The ISBN 978-3-658-44973-5 belongs to Formeln und Tabellen Bauphysik (print); 978-3-658-44971-1 belongs to Praxisbeispiele Bauphysik. The audit mixed the two books up.",
+      "locators": {}
+    },
+    {
+      "id": "maas-1995", "kind": "thesis", "designation": "Maas", "year": 1995, "authors": ["Maas, A."],
+      "title": {"de": "Experimentelle Quantifizierung des Luftwechsels bei Fensterlüftung", "en": "Experimentelle Quantifizierung des Luftwechsels bei Fensterlüftung"},
+      "citeAs": {"de": "Maas (1995), Diss. Univ. Kassel", "en": "Maas (1995), doctoral thesis Univ. Kassel"},
+      "institution": "Universität Gesamthochschule Kassel",
+      "status": "current", "url": "https://www.uni-kassel.de/fb6/bpy/de/forschung/abgeschlprojekte/pdfs/maas_diss.pdf", "verified": "2026-11-13",
+      "note": "Dissertation submitted 1995-06-27. Chapter 8 Luftwechsel und Lüftungswärmeverluste in der Heizzeit, p. 73-81; p. 74 gives 0.56 to 1.38 1/h for a permanently tilted window.",
+      "locators": {
+        "kap8": {"de": "Kap. 8.2, S. 74 – Kippfenster", "en": "ch. 8.2, p. 74 – tilted window"}
+      }
+    },
+    {
+      "id": "pettenkofer-1858", "kind": "book", "designation": "Pettenkofer", "year": 1858, "editionNumber": 1,
+      "authors": ["Pettenkofer, M. v."],
+      "title": {"de": "Ueber den Luftwechsel in Wohngebäuden", "en": "Ueber den Luftwechsel in Wohngebäuden"},
+      "citeAs": {"de": "Pettenkofer (1858)", "en": "Pettenkofer (1858)"},
+      "publisher": "Cotta", "place": "München",
+      "status": "current", "url": "https://lessing.ub.uni-duesseldorf.de/download/pdf/2385693.pdf", "verified": "2026-11-13",
+      "note": "Title page: München, Cotta, 1858 (one bibliography says Braunschweig).",
+      "locators": {
+        "co2": {"de": "Grenzwert nach Pettenkofer (1000 ppm CO₂)", "en": "Pettenkofer limit (1000 ppm CO₂)"}
+      }
+    },
+    {
+      "id": "adhoc-ag-2008", "kind": "article", "designation": "Ad-hoc-AG Innenraumrichtwerte", "year": 2008, "authors": ["Ad-hoc-Arbeitsgruppe Innenraumrichtwerte des Umweltbundesamtes und der Obersten Landesgesundheitsbehörden"],
+      "citeAs": {"de": "Bundesgesundheitsbl. 51 (2008) 1358–1369", "en": "Bundesgesundheitsbl. 51 (2008) 1358–1369"},
+      "title": {"de": "Gesundheitliche Bewertung von Kohlendioxid in der Innenraumluft", "en": "Gesundheitliche Bewertung von Kohlendioxid in der Innenraumluft"},
+      "journal": "Bundesgesundheitsblatt – Gesundheitsforschung – Gesundheitsschutz", "volume": 51, "pages": "1358–1369", "doi": "10.1007/s00103-008-0707-2",
+      "status": "current", "url": "https://link.springer.com/content/pdf/10.1007/s00103-008-0707-2.pdf", "verified": "2026-11-13",
+      "note": "Published 2008-11-29; the 1000 ppm value is the hygienic guide value of this article.",
+      "locators": {}
+    },
+    {
+      "id": "iwu-typologie-2015", "kind": "dataset", "designation": "IWU Wohngebäudetypologie", "year": 2015, "editionNumber": 2, "authors": ["Loga, T.", "Stein, B.", "Diefenbach, N.", "Born, R."],
+      "title": {"de": "Deutsche Wohngebäudetypologie – Beispielhafte Maßnahmen zur Verbesserung der Energieeffizienz von typischen Wohngebäuden", "en": "Deutsche Wohngebäudetypologie – Beispielhafte Maßnahmen zur Verbesserung der Energieeffizienz von typischen Wohngebäuden"},
+      "citeAs": {"de": "IWU Wohngebäudetypologie (2015)", "en": "IWU residential building typology (2015)"},
+      "publisher": "Institut Wohnen und Umwelt (IWU)", "place": "Darmstadt", "isbn": "978-3-941140-47-9",
+      "status": "current", "url": "https://iwu.de/fileadmin/publikationen/gebaeudebestand/episcope/2015_IWU_LogaEtAl_Deutsche-Wohngebäudetypologie.pdf", "verified": "2026-11-13",
+      "note": "2nd extended edition of 2015-02-10 (TABULA, EPISCOPE); no later edition found.",
+      "locators": {}
+    },
+    {
+      "id": "sunikka-galvin-2012", "kind": "article", "designation": "Sunikka-Blank/Galvin", "year": 2012, "authors": ["Sunikka-Blank, M.", "Galvin, R."],
+      "citeAs": {"de": "Sunikka-Blank, Galvin (2012), Build. Res. Inf. 40(3)", "en": "Sunikka-Blank, Galvin (2012), Build. Res. Inf. 40(3)"},
+      "title": {"de": "Introducing the prebound effect: the gap between performance and actual energy consumption", "en": "Introducing the prebound effect: the gap between performance and actual energy consumption"},
+      "journal": "Building Research & Information", "volume": 40, "pages": "260–273", "doi": "10.1080/09613218.2012.690952",
+      "status": "current", "url": "https://structurae.net/en/literature/journal-article/introducing-the-prebound-effect-the-gap-between-performance-and-actual-energy-consumption", "verified": "2026-11-13",
+      "note": "Volume 40, issue 3, pp. 260-273 (2012), DOI 10.1080/09613218.2012.690952 (structurae and publisher listing).",
+      "locators": {}
+    },
+    {
+      "id": "sdes-bilan-2023", "kind": "dataset", "designation": "SDES", "year": 2023, "authors": ["Service des données et études statistiques (SDES)"],
+      "citeAs": {"de": "SDES, Bilan énergétique de la France pour 2023", "en": "SDES, Bilan énergétique de la France pour 2023"},
+      "title": {"de": "Bilan énergétique de la France pour 2023", "en": "Energy balance of France for 2023"},
+      "publisher": "Ministère de la Transition écologique", "place": "Paris",
+      "status": "current", "url": "https://www.statistiques.developpement-durable.gouv.fr/bilan-energetique-de-la-france-pour-2023", "verified": "2026-11-13",
+      "note": "Official SDES page, published 2025-04-10; the primary and final energy figures of the quiz were not re-read against the tables.",
+      "locators": {}
+    },
+    {
+      "id": "fraunhofer-ise-pv-fakten", "kind": "dataset", "designation": "Fraunhofer ISE", "year": 2026, "authors": ["Fraunhofer ISE"],
+      "citeAs": {"de": "Fraunhofer ISE, Aktuelle Fakten zur Photovoltaik in Deutschland", "en": "Fraunhofer ISE, Recent Facts about Photovoltaics in Germany"},
+      "title": {"de": "Aktuelle Fakten zur Photovoltaik in Deutschland", "en": "Recent Facts about Photovoltaics in Germany"},
+      "publisher": "Fraunhofer-Institut für Solare Energiesysteme ISE", "place": "Freiburg",
+      "status": "current", "url": "https://www.ise.fraunhofer.de/de/veroeffentlichungen/studien/aktuelle-fakten-zur-photovoltaik-in-deutschland.html", "verified": "2026-11-13",
+      "note": "Living document, version of 2026-05-05 on the publisher page; the yield value of the quiz was not re-read in the PDF.",
+      "locators": {}
+    },
+    {
+      "id": "dwd-try-2017", "kind": "dataset", "designation": "DWD TRY", "year": 2017, "authors": ["Deutscher Wetterdienst (DWD)"],
+      "citeAs": {"de": "DWD TRY 2017", "en": "DWD TRY 2017"},
+      "title": {"de": "Testreferenzjahre (TRY) 2017", "en": "Test reference years (TRY) 2017"},
+      "publisher": "Deutscher Wetterdienst", "place": "Offenbach",
+      "status": "current", "url": "https://www.baulinks.de/webplugin/2017/0983.php4", "verified": "2026-11-13",
+      "note": "Hourly test reference years 2017, funded by BBSR (Zukunft Bau); the page of the DWD itself could not be retrieved.",
+      "locators": {}
+    }
+  ]
+}

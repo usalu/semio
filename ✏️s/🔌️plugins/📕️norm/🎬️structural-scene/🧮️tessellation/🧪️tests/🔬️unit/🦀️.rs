@@ -232,9 +232,10 @@ fn points_and_weld_runs_follow_their_own_geometry() {
     let run = |pitch| FastenerGeometry { kind: FastenerKind::WeldRun { throat: 0.004, weld: WeldKind::Fillet, path: path.clone(), pitch }, axis: Segment3 { from: Vec3::ZERO, to: at(1.0, 1.0, 0.0) }, diameter: 0.01, head: HeadShape::None, pattern: None, hole_clearance: None };
     let seam = fastener_mesh(&run(None), TOL, Lod::Lod2).unwrap();
     let a = 0.004 * 2f64.sqrt();
-    assert!(rel(seam.volume(), 2.0 * 0.5 * a * a) < 1e-6);
+    let f32_bound = f64::from(f32::EPSILON) * 2.0 / 0.004;
+    assert!(rel(seam.volume(), 2.0 * 0.5 * a * a) < f32_bound, "{} {}", seam.volume(), 2.0 * 0.5 * a * a);
     let chain = fastener_mesh(&run(Some(WeldPitch { length: 0.2, gap: 0.2 })), TOL, Lod::Lod2).unwrap();
-    assert!(rel(chain.volume(), 6.0 * 0.2 * 0.5 * a * a) < 1e-6);
+    assert!(rel(chain.volume(), 6.0 * 0.2 * 0.5 * a * a) < f32_bound, "{} {}", chain.volume(), 6.0 * 0.2 * 0.5 * a * a);
 }
 
 #[test]
@@ -297,7 +298,8 @@ fn shells_plates_and_silos_have_pappus_volumes() {
     let m = shell_mesh(&shell, TOL, Lod::Lod3).unwrap();
     let n = segments(5.01, TAU, TOL, Lod::Lod3) as f64;
     let exact = TAU * 5.0 * 0.02 * 10.0 * (TAU / n).sin() / (TAU / n);
-    assert!(rel(m.volume(), exact) < 1e-6 && m.is_watertight(), "{} {exact}", m.volume());
+    let f32_bound = f64::from(f32::EPSILON) * 5.01 / 0.02;
+    assert!(rel(m.volume(), exact) < f32_bound && m.is_watertight(), "{} {exact}", m.volume());
     let silo = shell_mesh(&silo_shell(3.0, 8.0, 3.0, 0.3, 1.5, 0.01), TOL, Lod::Lod2).unwrap();
     assert!(silo.is_watertight() && silo.aabb().min.z < -2.9 && silo.aabb().max.z > 9.4);
     let plate = PlateGeometry {

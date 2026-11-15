@@ -1,6 +1,7 @@
 {
   "version": 1,
   "files": [
+    "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/🛂️allocation/🧬️schema/🔣️.json",
     "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",
     "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json",
     "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql",

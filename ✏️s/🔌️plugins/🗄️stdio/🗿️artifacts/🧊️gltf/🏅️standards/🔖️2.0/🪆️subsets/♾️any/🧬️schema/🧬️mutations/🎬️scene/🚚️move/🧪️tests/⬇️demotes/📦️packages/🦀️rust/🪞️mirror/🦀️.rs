@@ -51,7 +51,7 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod remove_required_extension {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::remove_required_extension::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::remove_required_extension::*;
                             #[cfg(test)]
                             #[path = "../../../../../../../✅️required/➖️remove/🧪️tests/🔬️t042/🦀️.rs"]
                             pub mod case_t042;
@@ -61,7 +61,7 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod remove_used_extension {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::remove_used_extension::*;
                             #[cfg(test)]
                             #[path = "../../../../../../../📣️used/➖️remove/🧪️tests/🔬️t057/🦀️.rs"]
                             pub mod case_t057;

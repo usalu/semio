@@ -554,9 +554,9 @@
               "filled": true,
               "tone": 0.62,
               "kind": "rect",
-              "x": -0.1995,
+              "x": -0.15,
               "y": 0,
-              "w": 0.4,
+              "w": 0.3,
               "h": 0.2,
               "region": "base-concrete",
               "material": "concrete"
@@ -918,9 +918,9 @@
               "filled": true,
               "tone": 0.62,
               "kind": "rect",
-              "x": -0.2,
+              "x": -0.15,
               "y": 0,
-              "w": 0.4,
+              "w": 0.3,
               "h": 0.2,
               "region": "base-concrete",
               "material": "concrete"
@@ -1758,9 +1758,9 @@
               "filled": true,
               "tone": 0.62,
               "kind": "rect",
-              "x": -0.2,
+              "x": -0.15,
               "y": 0,
-              "w": 0.4,
+              "w": 0.3,
               "h": 0.2,
               "r": 0.01,
               "region": "base-concrete",
@@ -3303,9 +3303,9 @@
               "filled": true,
               "tone": 0.62,
               "kind": "rect",
-              "x": -0.2,
+              "x": -0.15,
               "y": 0,
-              "w": 0.4,
+              "w": 0.3,
               "h": 0.2,
               "r": 0.01,
               "penMm": 0.35,
@@ -3322,11 +3322,11 @@
               "kind": "poly",
               "points": [
                 [
-                  -0.2,
+                  -0.15,
                   0.15
                 ],
                 [
-                  0.2,
+                  0.15,
                   0.15
                 ]
               ],
@@ -4741,7 +4741,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "aluminium-anodised",
-          "areaM2": 0.6,
+          "areaM2": 1.12,
           "characteristicLengthM": 0.05,
           "geometry": "cylinder",
           "skyViewFactor": 0.6,
@@ -4774,7 +4774,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "concrete",
-          "areaM2": 0.4,
+          "areaM2": 0.52,
           "characteristicLengthM": 0.3,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -4837,692 +4837,2061 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "base-block",
-          "kind": "box",
-          "bone": "base",
-          "material": "concrete",
-          "role": "body",
-          "tone": 0.62,
-          "region": "base-concrete",
-          "size": [0.4, 0.2, 0.4],
-          "cornerRadius": 0.01,
-          "transform": {
-            "translation": [0.0, 0.1, 0.0]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "base-block",
+            "kind": "box",
+            "bone": "base",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.4, 0.2, 0.3],
+            "cornerRadius": 0.01,
+            "transform": {
+              "translation": [0.0, 0.1, 0.0]
+            }
+          },
+          {
+            "id": "base-plate",
+            "kind": "box",
+            "bone": "base",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.28, 0.015, 0.28],
+            "cornerRadius": 0.002,
+            "transform": {
+              "translation": [0.0, 0.2075, 0.0]
+            }
+          },
+          {
+            "id": "base-socket",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[0.215, 0], [0.215, 0.045], [0.3, 0.035], [0.3, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "mast",
+            "kind": "capsule",
+            "bone": "mast",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [2.15, 0, 0],
+            "r0": 0.026,
+            "r1": 0.021
+          },
+          {
+            "id": "mast-knuckle",
+            "kind": "ellipsoid",
+            "bone": "mast",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.04, 0.04, 0.04]
+          },
+          {
+            "id": "mast-tilt-collar",
+            "kind": "revolve",
+            "bone": "mast",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "profile": [[0, 0.034], [0.11, 0.034]],
+            "axis": [1, 0, 0],
+            "origin": [0.82, 0, 0]
+          },
+          {
+            "id": "mast-crank-a",
+            "kind": "capsule",
+            "bone": "mast",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "p0": [1.18, 0.021, 0],
+            "p1": [1.18, 0.075, 0],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "mast-crank-b",
+            "kind": "capsule",
+            "bone": "mast",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "p0": [1.18, 0.075, 0],
+            "p1": [1.14, 0.095, 0],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "mast-crank-knob",
+            "kind": "ellipsoid",
+            "bone": "mast",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.012, 0.012, 0.012],
+            "transform": {
+              "translation": [1.135, 0.097, 0]
+            }
+          },
+          {
+            "id": "crown-hub",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.06, 0], [-0.06, 0.04], [-0.04, 0.045], [0.06, 0.045], [0.08, 0.04], [0.08, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "crown-finial",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "profile": [[0.08, 0], [0.08, 0.012], [0.1, 0.012], [0.1075, 0.009], [0.115, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "runner-collar",
+            "kind": "revolve",
+            "bone": "runner",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.04, 0], [-0.04, 0.035], [0.04, 0.035], [0.04, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "stretch-right",
+            "kind": "capsule",
+            "bone": "stretch-right",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [0.55, 0, 0],
+            "r0": 0.006,
+            "r1": 0.006,
+            "slender": true
+          },
+          {
+            "id": "stretch-left",
+            "kind": "capsule",
+            "bone": "stretch-left",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [0.55, 0, 0],
+            "r0": 0.006,
+            "r1": 0.006,
+            "slender": true
+          },
+          {
+            "id": "rib-right-rod",
+            "kind": "capsule",
+            "bone": "rib-right",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.011,
+            "r1": 0.007
+          },
+          {
+            "id": "rib-right-tip",
+            "kind": "ellipsoid",
+            "bone": "rib-right",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.013, 0.013, 0.013],
+            "transform": {
+              "translation": [1.23743, 0, 0]
+            }
+          },
+          {
+            "id": "rib-b-rod",
+            "kind": "capsule",
+            "bone": "rib-b",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.011,
+            "r1": 0.007
+          },
+          {
+            "id": "rib-b-tip",
+            "kind": "ellipsoid",
+            "bone": "rib-b",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.013, 0.013, 0.013],
+            "transform": {
+              "translation": [1.23743, 0, 0]
+            }
+          },
+          {
+            "id": "rib-c-rod",
+            "kind": "capsule",
+            "bone": "rib-c",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.011,
+            "r1": 0.007
+          },
+          {
+            "id": "rib-c-tip",
+            "kind": "ellipsoid",
+            "bone": "rib-c",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.013, 0.013, 0.013],
+            "transform": {
+              "translation": [1.23743, 0, 0]
+            }
+          },
+          {
+            "id": "rib-d-rod",
+            "kind": "capsule",
+            "bone": "rib-d",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.011,
+            "r1": 0.007
+          },
+          {
+            "id": "rib-d-tip",
+            "kind": "ellipsoid",
+            "bone": "rib-d",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.013, 0.013, 0.013],
+            "transform": {
+              "translation": [1.23743, 0, 0]
+            }
+          },
+          {
+            "id": "rib-left-rod",
+            "kind": "capsule",
+            "bone": "rib-left",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.011,
+            "r1": 0.007
+          },
+          {
+            "id": "rib-left-tip",
+            "kind": "ellipsoid",
+            "bone": "rib-left",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.013, 0.013, 0.013],
+            "transform": {
+              "translation": [1.23743, 0, 0]
+            }
+          },
+          {
+            "id": "rib-f-rod",
+            "kind": "capsule",
+            "bone": "rib-f",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.011,
+            "r1": 0.007
+          },
+          {
+            "id": "rib-f-tip",
+            "kind": "ellipsoid",
+            "bone": "rib-f",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.013, 0.013, 0.013],
+            "transform": {
+              "translation": [1.23743, 0, 0]
+            }
+          },
+          {
+            "id": "rib-g-rod",
+            "kind": "capsule",
+            "bone": "rib-g",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.011,
+            "r1": 0.007
+          },
+          {
+            "id": "rib-g-tip",
+            "kind": "ellipsoid",
+            "bone": "rib-g",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.013, 0.013, 0.013],
+            "transform": {
+              "translation": [1.23743, 0, 0]
+            }
+          },
+          {
+            "id": "rib-h-rod",
+            "kind": "capsule",
+            "bone": "rib-h",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.011,
+            "r1": 0.007
+          },
+          {
+            "id": "rib-h-tip",
+            "kind": "ellipsoid",
+            "bone": "rib-h",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.6,
+            "radii": [0.013, 0.013, 0.013],
+            "transform": {
+              "translation": [1.23743, 0, 0]
+            }
+          },
+          {
+            "id": "canopy",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "polyester-canvas",
+            "role": "body",
+            "tone": 0.8,
+            "profile": [
+              [0.0, 0.0],
+              [0.00167, 0.07011],
+              [-0.00054, 0.14337],
+              [-0.00643, 0.21923],
+              [-0.0158, 0.29714],
+              [-0.02844, 0.37656],
+              [-0.04416, 0.45695],
+              [-0.06275, 0.53775],
+              [-0.08401, 0.61842],
+              [-0.10775, 0.69842],
+              [-0.13375, 0.7772],
+              [-0.16181, 0.85421],
+              [-0.19175, 0.92891],
+              [-0.22335, 1.00075],
+              [-0.25641, 1.06918],
+              [-0.29073, 1.13367],
+              [-0.32611, 1.19366],
+              [-0.32611, 1.2937],
+              [-0.32661, 1.2937],
+              [-0.32661, 1.19366],
+              [-0.29123, 1.13367],
+              [-0.25691, 1.06918],
+              [-0.22385, 1.00075],
+              [-0.19225, 0.92891],
+              [-0.16231, 0.85421],
+              [-0.13425, 0.7772],
+              [-0.10825, 0.69842],
+              [-0.08451, 0.61842],
+              [-0.06325, 0.53775],
+              [-0.04466, 0.45695],
+              [-0.02894, 0.37656],
+              [-0.0163, 0.29714],
+              [-0.00693, 0.21923],
+              [-0.00104, 0.14337],
+              [0.00117, 0.07011],
+              [-0.0005, 0.0],
+              [0.0, 0.0]
+            ],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
           }
-        },
-        {
-          "id": "base-plate",
-          "kind": "box",
-          "bone": "base",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "size": [0.28, 0.015, 0.28],
-          "cornerRadius": 0.002,
-          "transform": {
-            "translation": [0.0, 0.2075, 0.0]
+        ],
+        "thermal": [
+          {
+            "id": "th-base-block",
+            "of": "base-block",
+            "region": "base-concrete",
+            "layer": "concrete"
+          },
+          {
+            "id": "th-canopy-top",
+            "of": "canopy",
+            "region": "canopy-top",
+            "layer": "cloth-top",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-canopy-underside",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "polyester-canvas",
+            "role": "body",
+            "tone": 0.8,
+            "region": "canopy-underside",
+            "layer": "cloth-under",
+            "profile": [
+              [-0.0011, 0.0],
+              [0.00057, 0.07011],
+              [-0.00164, 0.14337],
+              [-0.00753, 0.21923],
+              [-0.0169, 0.29714],
+              [-0.02954, 0.37656],
+              [-0.04526, 0.45695],
+              [-0.06385, 0.53775],
+              [-0.08511, 0.61842],
+              [-0.10885, 0.69842],
+              [-0.13485, 0.7772],
+              [-0.16291, 0.85421],
+              [-0.19285, 0.92891],
+              [-0.22445, 1.00075],
+              [-0.25751, 1.06918],
+              [-0.29183, 1.13367],
+              [-0.32721, 1.19366],
+              [-0.32721, 1.2937],
+              [-0.32771, 1.2937],
+              [-0.32771, 1.19366],
+              [-0.29233, 1.13367],
+              [-0.25801, 1.06918],
+              [-0.22495, 1.00075],
+              [-0.19335, 0.92891],
+              [-0.16341, 0.85421],
+              [-0.13535, 0.7772],
+              [-0.10935, 0.69842],
+              [-0.08561, 0.61842],
+              [-0.06435, 0.53775],
+              [-0.04576, 0.45695],
+              [-0.03004, 0.37656],
+              [-0.0174, 0.29714],
+              [-0.00803, 0.21923],
+              [-0.00214, 0.14337],
+              [7e-05, 0.07011],
+              [-0.0016, 0.0],
+              [-0.0011, 0.0]
+            ],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "sectionFaces": ["+v"]
+          },
+          {
+            "id": "th-base-plate",
+            "of": "base-plate",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-base-socket",
+            "of": "base-socket",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-mast",
+            "of": "mast",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-mast-knuckle",
+            "of": "mast-knuckle",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-mast-tilt-collar",
+            "of": "mast-tilt-collar",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-mast-crank-a",
+            "of": "mast-crank-a",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-mast-crank-b",
+            "of": "mast-crank-b",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-mast-crank-knob",
+            "of": "mast-crank-knob",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-crown-hub",
+            "of": "crown-hub",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-crown-finial",
+            "of": "crown-finial",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-runner-collar",
+            "of": "runner-collar",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-stretch-right",
+            "of": "stretch-right",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-stretch-left",
+            "of": "stretch-left",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-right-rod",
+            "of": "rib-right-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-right-tip",
+            "of": "rib-right-tip",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-b-rod",
+            "of": "rib-b-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-b-tip",
+            "of": "rib-b-tip",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-c-rod",
+            "of": "rib-c-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-c-tip",
+            "of": "rib-c-tip",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-d-rod",
+            "of": "rib-d-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-d-tip",
+            "of": "rib-d-tip",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-left-rod",
+            "of": "rib-left-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-left-tip",
+            "of": "rib-left-tip",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-f-rod",
+            "of": "rib-f-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-f-tip",
+            "of": "rib-f-tip",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-g-rod",
+            "of": "rib-g-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-g-tip",
+            "of": "rib-g-tip",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-h-rod",
+            "of": "rib-h-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-h-tip",
+            "of": "rib-h-tip",
+            "region": "frame-alu",
+            "layer": "tube"
           }
-        },
-        {
-          "id": "base-socket",
-          "kind": "revolve",
-          "bone": "base",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.3,
-          "region": "frame-alu",
-          "profile": [[0.0, 0.0], [0.0, 0.045], [0.085, 0.035], [0.085, 0.0]],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [0.0, 0.215, 0.0]
+        ],
+        "structure": [
+          {
+            "id": "member-base",
+            "of": "base-block",
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "member-mast",
+            "kind": "revolve",
+            "bone": "mast",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.15,
+            "member": "mast",
+            "part": "member",
+            "profile": [[0, 0.0245], [2.15, 0.0195], [2.15, 0.0175], [0, 0.0225], [0, 0.0245]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "member-stretch-right",
+            "of": "stretch-right",
+            "member": "stretch-right",
+            "part": "member"
+          },
+          {
+            "id": "member-stretch-left",
+            "of": "stretch-left",
+            "member": "stretch-left",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-right",
+            "of": "rib-right-rod",
+            "member": "rib-right",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-b",
+            "of": "rib-b-rod",
+            "member": "rib-b",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-c",
+            "of": "rib-c-rod",
+            "member": "rib-c",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-d",
+            "of": "rib-d-rod",
+            "member": "rib-d",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-left",
+            "of": "rib-left-rod",
+            "member": "rib-left",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-f",
+            "of": "rib-f-rod",
+            "member": "rib-f",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-g",
+            "of": "rib-g-rod",
+            "member": "rib-g",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-h",
+            "of": "rib-h-rod",
+            "member": "rib-h",
+            "part": "member"
+          },
+          {
+            "id": "joint-knuckle",
+            "of": "mast-knuckle",
+            "member": "mast",
+            "part": "joint"
+          },
+          {
+            "id": "joint-crown-hub",
+            "of": "crown-hub",
+            "member": "crown",
+            "part": "joint"
+          },
+          {
+            "id": "joint-runner",
+            "of": "runner-collar",
+            "member": "runner",
+            "part": "joint"
+          },
+          {
+            "id": "joint-collar",
+            "of": "mast-tilt-collar",
+            "member": "mast",
+            "part": "joint"
+          },
+          {
+            "id": "mass-base",
+            "kind": "ellipsoid",
+            "bone": "base",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.2,
+            "member": "base",
+            "part": "mass",
+            "radii": [0.15, 0.08, 0.1],
+            "transform": {
+              "translation": [0, 0.1, 0]
+            }
+          },
+          {
+            "id": "support-socket-pad",
+            "kind": "box",
+            "bone": "base",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.1,
+            "member": "base",
+            "part": "support",
+            "size": [0.4, 0.0075, 0.3],
+            "transform": {
+              "translation": [0.0, 0.00375, 0.0]
+            },
+            "tags": ["socket"],
+            "anchor": "socket"
           }
-        },
-        {
-          "id": "mast-knuckle",
-          "kind": "ellipsoid",
-          "bone": "mast",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "radii": [0.04, 0.04, 0.04]
-        },
-        {
-          "id": "mast",
-          "kind": "capsule",
-          "bone": "mast",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.45,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [2.15, 0.0, 0.0],
-          "r0": 0.026,
-          "r1": 0.021
-        },
-        {
-          "id": "mast-tilt-collar",
-          "kind": "revolve",
-          "bone": "mast",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.25,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "profile": [[0.0, 0.0], [0.0, 0.03], [0.004, 0.034], [0.106, 0.034], [0.11, 0.03], [0.11, 0.0]],
-          "axis": [1, 0, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [0.82, 0.0, 0.0]
+        ],
+        "decisions": [
+          {
+            "en": "Own 1:50 model of the market parasol in the open-still pose: concrete block 0.4 x 0.3 x 0.2 m with 10 mm edge radius, aluminium plate and tapered socket cone, the 2.15 m tapering mast tube (52 to 42 mm) with the hinge ball, the tilt collar and the bent crank with its knob, the crown hub with finial, the sliding runner collar with two 12 mm stretchers, eight 1.24 m tapering ribs (22 to 14 mm) with ball tips that follow the bone poses (the rig lays them at the foreshortened azimuths the elevation needs), and the canopy as a 0.5 mm thin shell of revolution of the drawn dome (the 2D declares it revolved about the mast) with the flat 0.1 m hem skirt. The fabric lies above the straight ribs as drawn; sag between ribs is not modelled because the rig's rib azimuths are not equally spaced, so panel seams would not follow the ribs.",
+            "de": "Eigenes 1:50-Modell des Marktschirms in der Pose open-still: Betonblock 0,4 x 0,3 x 0,2 m mit 10 mm Kantenradius, Aluminiumplatte und verjüngter Hülsenkegel, das 2,15 m lange verjüngte Mastrohr (52 auf 42 mm) mit Gelenkkugel, Neigungskragen und gebogener Kurbel mit Knauf, die Schirmkrone mit Spitze, der Läuferring mit zwei 12-mm-Spreizen, acht 1,24 m lange verjüngte Speichen (22 auf 14 mm) mit Kugelspitzen, die den Knochenposen folgen (die Rig legt sie in die verkürzten Azimute, die der Aufriss braucht), und der Schirm als 0,5 mm dünne Rotationsschale der gezeichneten Wölbung (das 2D erklärt sie als um den Mast gedreht) mit dem flachen 0,1 m breiten Saumrand. Der Stoff liegt wie gezeichnet über den geraden Speichen; ein Durchhang zwischen den Speichen ist nicht modelliert, weil die Speichenazimute der Rig nicht gleich verteilt sind und Bahnnähte den Speichen nicht folgen würden."
+          },
+          {
+            "en": "Thermal by reference: the canopy-top region is the shell with its underside declared a section face, the hidden canopy-underside region the same shell with the top declared a section face (one fabric sheet, two sides), frame-alu all aluminium parts, base-concrete the block (its bottom is the footing contact and counts no area).",
+            "de": "Thermik als Verweis: die Region canopy-top ist die Schale mit als Schnittfläche erklärter Unterseite, die verdeckte Region canopy-underside dieselbe Schale mit erklärter Oberseite (ein Stoffblatt, zwei Seiten), frame-alu alle Aluminiumteile, base-concrete der Block (seine Unterseite ist der Fundamentkontakt und zählt keine Fläche)."
+          },
+          {
+            "en": "Structure: the concrete block (57.6 kg) as member with a compact mass ellipsoid, the mast as a real 2 mm hollow tube 1.5 mm inside the skin, the eight ribs and the two stretchers as members, hinge ball, crown hub, runner and tilt collar as joints, and the 0.4 x 0.3 m fixed block under the base as the support of the anchor socket.",
+            "de": "Tragwerk: der Betonblock (57,6 kg) als Stab mit kompaktem Massenellipsoid, der Mast als echtes 2-mm-Hohlrohr 1,5 mm innerhalb der Haut, die acht Speichen und die zwei Spreizen als Stäbe, Gelenkkugel, Krone, Läufer und Neigungskragen als Gelenke, und der Festblock 0,4 x 0,3 m unter dem Fuß als Auflager des Ankers socket."
           }
-        },
-        {
-          "id": "mast-crank-1",
-          "kind": "capsule",
-          "bone": "mast",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "frame-alu",
-          "maxDenominator": 50,
-          "p0": [1.18, 0.021, 0.0],
-          "p1": [1.18, 0.075, 0.0],
-          "r0": 0.004,
-          "r1": 0.004
-        },
-        {
-          "id": "mast-crank-2",
-          "kind": "capsule",
-          "bone": "mast",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "frame-alu",
-          "maxDenominator": 50,
-          "p0": [1.18, 0.075, 0.0],
-          "p1": [1.14, 0.095, 0.0],
-          "r0": 0.004,
-          "r1": 0.004
-        },
-        {
-          "id": "mast-crank-knob",
-          "kind": "ellipsoid",
-          "bone": "mast",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "frame-alu",
-          "maxDenominator": 50,
-          "radii": [0.012, 0.012, 0.012],
-          "transform": {
-            "translation": [1.135, 0.097, 0.0]
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "base-block",
+            "kind": "box",
+            "bone": "base",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.4, 0.2, 0.3],
+            "cornerRadius": 0.01,
+            "transform": {
+              "translation": [0.0, 0.1, 0.0]
+            }
+          },
+          {
+            "id": "base-plate",
+            "kind": "box",
+            "bone": "base",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.28, 0.015, 0.28],
+            "transform": {
+              "translation": [0.0, 0.2075, 0.0]
+            }
+          },
+          {
+            "id": "base-socket",
+            "kind": "revolve",
+            "bone": "base",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[0.215, 0], [0.215, 0.045], [0.3, 0.035], [0.3, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "mast",
+            "kind": "capsule",
+            "bone": "mast",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [2.15, 0, 0],
+            "r0": 0.026,
+            "r1": 0.021
+          },
+          {
+            "id": "crown-hub",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.045, 0], [-0.045, 0.07], [0.05, 0.07], [0.05, 0.0125], [0.111, 0.0125], [0.111, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "runner-collar",
+            "kind": "revolve",
+            "bone": "runner",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.04, 0], [-0.04, 0.035], [0.04, 0.035], [0.04, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "stretch-right",
+            "kind": "capsule",
+            "bone": "stretch-right",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [0.55, 0, 0],
+            "r0": 0.0075,
+            "r1": 0.0075,
+            "slender": true
+          },
+          {
+            "id": "stretch-left",
+            "kind": "capsule",
+            "bone": "stretch-left",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [0.55, 0, 0],
+            "r0": 0.0075,
+            "r1": 0.0075,
+            "slender": true
+          },
+          {
+            "id": "rib-right-rod",
+            "kind": "capsule",
+            "bone": "rib-right",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "rib-b-rod",
+            "kind": "capsule",
+            "bone": "rib-b",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "rib-c-rod",
+            "kind": "capsule",
+            "bone": "rib-c",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "rib-d-rod",
+            "kind": "capsule",
+            "bone": "rib-d",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "rib-left-rod",
+            "kind": "capsule",
+            "bone": "rib-left",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "rib-f-rod",
+            "kind": "capsule",
+            "bone": "rib-f",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "rib-g-rod",
+            "kind": "capsule",
+            "bone": "rib-g",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "rib-h-rod",
+            "kind": "capsule",
+            "bone": "rib-h",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.009,
+            "r1": 0.009
+          },
+          {
+            "id": "canopy",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "polyester-canvas",
+            "role": "body",
+            "tone": 0.8,
+            "profile": [
+              [0.0, 0.0],
+              [0.0008, 0.11372],
+              [-0.00803, 0.23466],
+              [-0.02566, 0.36058],
+              [-0.05126, 0.48925],
+              [-0.08401, 0.61842],
+              [-0.12309, 0.74587],
+              [-0.16766, 0.86935],
+              [-0.2169, 0.98663],
+              [-0.26999, 1.09548],
+              [-0.32611, 1.19366],
+              [-0.32611, 1.2937],
+              [-0.32711, 1.2937],
+              [-0.32711, 1.19366],
+              [-0.27099, 1.09548],
+              [-0.2179, 0.98663],
+              [-0.16866, 0.86935],
+              [-0.12409, 0.74587],
+              [-0.08501, 0.61842],
+              [-0.05226, 0.48925],
+              [-0.02666, 0.36058],
+              [-0.00903, 0.23466],
+              [-0.0002, 0.11372],
+              [-0.001, 0.0],
+              [0.0, 0.0]
+            ],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
           }
-        },
-        {
-          "id": "crown-hub",
-          "kind": "revolve",
-          "bone": "crown",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "profile": [[0.0, 0.0], [0.0, 0.03], [0.006, 0.041], [0.016, 0.045], [0.124, 0.045], [0.134, 0.041], [0.14, 0.03], [0.14, 0.0]],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [0.0, -0.06, 0.0]
+        ],
+        "thermal": [
+          {
+            "id": "th-base-block",
+            "of": "base-block",
+            "region": "base-concrete",
+            "layer": "concrete"
+          },
+          {
+            "id": "th-canopy-top",
+            "of": "canopy",
+            "region": "canopy-top",
+            "layer": "cloth-top",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-canopy-underside",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "polyester-canvas",
+            "role": "body",
+            "tone": 0.8,
+            "region": "canopy-underside",
+            "layer": "cloth-under",
+            "profile": [
+              [-0.0016, 0.0],
+              [-0.0008, 0.11372],
+              [-0.00963, 0.23466],
+              [-0.02726, 0.36058],
+              [-0.05286, 0.48925],
+              [-0.08561, 0.61842],
+              [-0.12469, 0.74587],
+              [-0.16926, 0.86935],
+              [-0.2185, 0.98663],
+              [-0.27159, 1.09548],
+              [-0.32771, 1.19366],
+              [-0.32771, 1.2937],
+              [-0.32871, 1.2937],
+              [-0.32871, 1.19366],
+              [-0.27259, 1.09548],
+              [-0.2195, 0.98663],
+              [-0.17026, 0.86935],
+              [-0.12569, 0.74587],
+              [-0.08661, 0.61842],
+              [-0.05386, 0.48925],
+              [-0.02826, 0.36058],
+              [-0.01063, 0.23466],
+              [-0.0018, 0.11372],
+              [-0.0026, 0.0],
+              [-0.0016, 0.0]
+            ],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "sectionFaces": ["+v"]
+          },
+          {
+            "id": "th-base-plate",
+            "of": "base-plate",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-base-socket",
+            "of": "base-socket",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-mast",
+            "of": "mast",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-crown-hub",
+            "of": "crown-hub",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-runner-collar",
+            "of": "runner-collar",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-stretch-right",
+            "of": "stretch-right",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-stretch-left",
+            "of": "stretch-left",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-right-rod",
+            "of": "rib-right-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-b-rod",
+            "of": "rib-b-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-c-rod",
+            "of": "rib-c-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-d-rod",
+            "of": "rib-d-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-left-rod",
+            "of": "rib-left-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-f-rod",
+            "of": "rib-f-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-g-rod",
+            "of": "rib-g-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-h-rod",
+            "of": "rib-h-rod",
+            "region": "frame-alu",
+            "layer": "tube"
           }
-        },
-        {
-          "id": "crown-finial",
-          "kind": "revolve",
-          "bone": "crown",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.3,
-          "region": "frame-alu",
-          "profile": [[0.0, 0.0], [0.0, 0.012], [0.02, 0.012], [0.0245, 0.009], [0.0285, 0.005], [0.0313, 0.0]],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [0.0, 0.08, 0.0]
+        ],
+        "structure": [
+          {
+            "id": "member-base",
+            "of": "base-block",
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "member-mast",
+            "of": "mast",
+            "member": "mast",
+            "part": "member"
+          },
+          {
+            "id": "member-stretch-right",
+            "of": "stretch-right",
+            "member": "stretch-right",
+            "part": "member"
+          },
+          {
+            "id": "member-stretch-left",
+            "of": "stretch-left",
+            "member": "stretch-left",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-right",
+            "of": "rib-right-rod",
+            "member": "rib-right",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-b",
+            "of": "rib-b-rod",
+            "member": "rib-b",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-c",
+            "of": "rib-c-rod",
+            "member": "rib-c",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-d",
+            "of": "rib-d-rod",
+            "member": "rib-d",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-left",
+            "of": "rib-left-rod",
+            "member": "rib-left",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-f",
+            "of": "rib-f-rod",
+            "member": "rib-f",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-g",
+            "of": "rib-g-rod",
+            "member": "rib-g",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-h",
+            "of": "rib-h-rod",
+            "member": "rib-h",
+            "part": "member"
+          },
+          {
+            "id": "joint-crown-hub",
+            "of": "crown-hub",
+            "member": "crown",
+            "part": "joint"
+          },
+          {
+            "id": "joint-runner",
+            "of": "runner-collar",
+            "member": "runner",
+            "part": "joint"
+          },
+          {
+            "id": "mass-base",
+            "kind": "ellipsoid",
+            "bone": "base",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.2,
+            "member": "base",
+            "part": "mass",
+            "radii": [0.15, 0.08, 0.1],
+            "transform": {
+              "translation": [0, 0.1, 0]
+            }
+          },
+          {
+            "id": "support-socket-pad",
+            "kind": "box",
+            "bone": "base",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.1,
+            "member": "base",
+            "part": "support",
+            "size": [0.4, 0.015, 0.3],
+            "transform": {
+              "translation": [0.0, 0.0075, 0.0]
+            },
+            "tags": ["socket"],
+            "anchor": "socket"
           }
-        },
-        {
-          "id": "runner-collar",
-          "kind": "revolve",
-          "bone": "runner",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "profile": [[0.0, 0.0], [0.0, 0.03], [0.01, 0.035], [0.07, 0.035], [0.08, 0.03], [0.08, 0.0]],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [0.0, -0.04044, 0.0]
+        ],
+        "decisions": [
+          {
+            "en": "Own 1:100 model against the 1:100 drawings: block, one socket cone, the mast as a 50 to 42 mm tapering capsule, a 0.095 m crown hub with finial, the runner collar and two 15 mm stretchers, eight 18 mm ribs, the plate again (15 mm) and the canopy as a 1 mm shell of revolution (ten arch segments) with its hem skirt; plate, hinge ball, tilt collar, crank, finial and the rib ball tips are merged into the mast and ribs (all below 15 mm or 2 x 15 mm).",
+            "de": "Eigenes 1:100-Modell gegen die 1:100-Zeichnungen: Block, ein Hülsenkegel, der Mast als 50 auf 42 mm verjüngte Kapsel, eine Krone von 0,095 m mit Spitze, der Läuferring und zwei 15-mm-Spreizen, acht 18-mm-Speichen, die Platte (15 mm) und der Schirm als 1-mm-Rotationsschale (zehn Bogensegmente) mit Saumrand; Platte, Gelenkkugel, Neigungskragen, Kurbel, Spitze und die Kugelspitzen der Speichen sind in Mast und Speichen aufgegangen (alle unter 15 mm oder 2 x 15 mm)."
+          },
+          {
+            "en": "Thermal by reference as at 1:50; structure: block with mass, mast, ribs and stretchers as members, crown hub and runner as joints, and a 15 mm fixed block as support.",
+            "de": "Thermik als Verweis wie bei 1:50; Tragwerk: Block mit Masse, Mast, Speichen und Spreizen als Stäbe, Krone und Läufer als Gelenke und ein 15-mm-Festblock als Auflager."
           }
-        },
-        {
-          "id": "stretch-right",
-          "kind": "capsule",
-          "bone": "stretch-right",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.4,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [0.55, 0.0, 0.0],
-          "r0": 0.006,
-          "r1": 0.006
-        },
-        {
-          "id": "stretch-left",
-          "kind": "capsule",
-          "bone": "stretch-left",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.4,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [0.55, 0.0, 0.0],
-          "r0": 0.006,
-          "r1": 0.006
-        },
-        {
-          "id": "rib-right-rod",
-          "kind": "capsule",
-          "bone": "rib-right",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [1.23743, 0.0, 0.0],
-          "r0": 0.011,
-          "r1": 0.007
-        },
-        {
-          "id": "rib-right-tip",
-          "kind": "ellipsoid",
-          "bone": "rib-right",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "radii": [0.013, 0.013, 0.013],
-          "transform": {
-            "translation": [1.23743, 0.0, 0.0]
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "base-block",
+            "kind": "box",
+            "bone": "base",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.4, 0.2, 0.3],
+            "transform": {
+              "translation": [0.0, 0.1, 0.0]
+            }
+          },
+          {
+            "id": "mast",
+            "kind": "capsule",
+            "bone": "mast",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [2.15, 0, 0],
+            "r0": 0.03,
+            "r1": 0.025
+          },
+          {
+            "id": "crown-hub",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "profile": [[-0.045, 0], [-0.045, 0.07], [0.045, 0.07], [0.045, 0.015], [0.111, 0.015], [0.111, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
+          },
+          {
+            "id": "stretch-right",
+            "kind": "capsule",
+            "bone": "stretch-right",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [0.55, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "stretch-left",
+            "kind": "capsule",
+            "bone": "stretch-left",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [0.55, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "rib-right-rod",
+            "kind": "capsule",
+            "bone": "rib-right",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "rib-b-rod",
+            "kind": "capsule",
+            "bone": "rib-b",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "rib-c-rod",
+            "kind": "capsule",
+            "bone": "rib-c",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "rib-d-rod",
+            "kind": "capsule",
+            "bone": "rib-d",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "rib-left-rod",
+            "kind": "capsule",
+            "bone": "rib-left",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "rib-f-rod",
+            "kind": "capsule",
+            "bone": "rib-f",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "rib-g-rod",
+            "kind": "capsule",
+            "bone": "rib-g",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "rib-h-rod",
+            "kind": "capsule",
+            "bone": "rib-h",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.015,
+            "r1": 0.015
+          },
+          {
+            "id": "canopy",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "polyester-canvas",
+            "role": "body",
+            "tone": 0.8,
+            "profile": [
+              [0.0, 0.0],
+              [-0.00407, 0.19368],
+              [-0.03335, 0.40328],
+              [-0.08401, 0.61842],
+              [-0.15224, 0.82877],
+              [-0.23421, 1.02396],
+              [-0.32611, 1.19366],
+              [-0.32611, 1.2937],
+              [-0.32911, 1.2937],
+              [-0.32911, 1.19366],
+              [-0.23721, 1.02396],
+              [-0.15524, 0.82877],
+              [-0.08701, 0.61842],
+              [-0.03635, 0.40328],
+              [-0.00707, 0.19368],
+              [-0.003, 0.0],
+              [0.0, 0.0]
+            ],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
           }
-        },
-        {
-          "id": "panel-right",
-          "kind": "revolve",
-          "bone": "rib-right",
-          "material": "polyester-canvas",
-          "role": "body",
-          "tone": 0.82,
-          "regions": ["canopy-top", "canopy-underside"],
-          "profile": [
-            [0.0, 0.0],
-            [0.00136, 0.09421],
-            [-0.00407, 0.19368],
-            [-0.0158, 0.29714],
-            [-0.03335, 0.40328],
-            [-0.05625, 0.5108],
-            [-0.08401, 0.61842],
-            [-0.11617, 0.72485],
-            [-0.15224, 0.82878],
-            [-0.19175, 0.92892],
-            [-0.23422, 1.02398],
-            [-0.27916, 1.11266],
-            [-0.32611, 1.19368],
-            [-0.35926, 1.28464],
-            [-0.02089, 0.04612]
-          ],
-          "axis": [-0.263541, 0.964648, 0],
-          "origin": [0, 0, 0],
-          "sweepRad": 0.78125,
-          "transform": {
-            "rotation": [0.03785, -0.138542, -0.0, 0.989633]
+        ],
+        "thermal": [
+          {
+            "id": "th-base-block",
+            "of": "base-block",
+            "region": "base-concrete",
+            "layer": "concrete"
+          },
+          {
+            "id": "th-canopy-top",
+            "of": "canopy",
+            "region": "canopy-top",
+            "layer": "cloth-top",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-canopy-underside",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "polyester-canvas",
+            "role": "body",
+            "tone": 0.8,
+            "region": "canopy-underside",
+            "layer": "cloth-under",
+            "profile": [
+              [-0.0036, 0.0],
+              [-0.00767, 0.19368],
+              [-0.03695, 0.40328],
+              [-0.08761, 0.61842],
+              [-0.15584, 0.82877],
+              [-0.23781, 1.02396],
+              [-0.32971, 1.19366],
+              [-0.32971, 1.2937],
+              [-0.33271, 1.2937],
+              [-0.33271, 1.19366],
+              [-0.24081, 1.02396],
+              [-0.15884, 0.82877],
+              [-0.09061, 0.61842],
+              [-0.03995, 0.40328],
+              [-0.01067, 0.19368],
+              [-0.0066, 0.0],
+              [-0.0036, 0.0]
+            ],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "sectionFaces": ["+v"]
+          },
+          {
+            "id": "th-mast",
+            "of": "mast",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-crown-hub",
+            "of": "crown-hub",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-stretch-right",
+            "of": "stretch-right",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-stretch-left",
+            "of": "stretch-left",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-right-rod",
+            "of": "rib-right-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-b-rod",
+            "of": "rib-b-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-c-rod",
+            "of": "rib-c-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-d-rod",
+            "of": "rib-d-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-left-rod",
+            "of": "rib-left-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-f-rod",
+            "of": "rib-f-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-g-rod",
+            "of": "rib-g-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-h-rod",
+            "of": "rib-h-rod",
+            "region": "frame-alu",
+            "layer": "tube"
           }
-        },
-        {
-          "id": "rib-h-rod",
-          "kind": "capsule",
-          "bone": "rib-h",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [1.23743, 0.0, 0.0],
-          "r0": 0.011,
-          "r1": 0.007
-        },
-        {
-          "id": "rib-h-tip",
-          "kind": "ellipsoid",
-          "bone": "rib-h",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "radii": [0.013, 0.013, 0.013],
-          "transform": {
-            "translation": [1.23743, 0.0, 0.0]
+        ],
+        "structure": [
+          {
+            "id": "member-base",
+            "of": "base-block",
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "member-mast",
+            "of": "mast",
+            "member": "mast",
+            "part": "member"
+          },
+          {
+            "id": "member-stretch-right",
+            "of": "stretch-right",
+            "member": "stretch-right",
+            "part": "member"
+          },
+          {
+            "id": "member-stretch-left",
+            "of": "stretch-left",
+            "member": "stretch-left",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-right",
+            "of": "rib-right-rod",
+            "member": "rib-right",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-b",
+            "of": "rib-b-rod",
+            "member": "rib-b",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-c",
+            "of": "rib-c-rod",
+            "member": "rib-c",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-d",
+            "of": "rib-d-rod",
+            "member": "rib-d",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-left",
+            "of": "rib-left-rod",
+            "member": "rib-left",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-f",
+            "of": "rib-f-rod",
+            "member": "rib-f",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-g",
+            "of": "rib-g-rod",
+            "member": "rib-g",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-h",
+            "of": "rib-h-rod",
+            "member": "rib-h",
+            "part": "member"
+          },
+          {
+            "id": "mass-base",
+            "kind": "ellipsoid",
+            "bone": "base",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.2,
+            "member": "base",
+            "part": "mass",
+            "radii": [0.15, 0.08, 0.1],
+            "transform": {
+              "translation": [0, 0.1, 0]
+            }
+          },
+          {
+            "id": "support-socket-pad",
+            "kind": "box",
+            "bone": "base",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.1,
+            "member": "base",
+            "part": "support",
+            "size": [0.4, 0.03, 0.3],
+            "transform": {
+              "translation": [0.0, 0.015, 0.0]
+            },
+            "tags": ["socket"],
+            "anchor": "socket"
           }
-        },
-        {
-          "id": "panel-h",
-          "kind": "revolve",
-          "bone": "rib-h",
-          "material": "polyester-canvas",
-          "role": "body",
-          "tone": 0.82,
-          "regions": ["canopy-top", "canopy-underside"],
-          "profile": [
-            [0.0, 0.0],
-            [0.00136, 0.09421],
-            [-0.00407, 0.19368],
-            [-0.0158, 0.29714],
-            [-0.03335, 0.40328],
-            [-0.05625, 0.5108],
-            [-0.08401, 0.61842],
-            [-0.11617, 0.72485],
-            [-0.15224, 0.82878],
-            [-0.19175, 0.92892],
-            [-0.23422, 1.02398],
-            [-0.27916, 1.11266],
-            [-0.32611, 1.19368],
-            [-0.35926, 1.28464],
-            [-0.02089, 0.04612]
-          ],
-          "axis": [-0.263545, 0.951798, 0.156922],
-          "origin": [0, 0, 0],
-          "sweepRad": 0.70272,
-          "transform": {
-            "rotation": [0.054228, -0.195845, -0.032289, 0.978602]
+        ],
+        "decisions": [
+          {
+            "en": "Own 1:200 model: block, a 60 to 50 mm mast, a 70 mm crown hub with finial, 30 mm stretchers, eight 30 mm ribs (the feature; the drawn member line is 18 mm) and the canopy as a 3 mm shell of revolution on six arch segments with the hem skirt; socket, runner, plate and all fittings are merged.",
+            "de": "Eigenes 1:200-Modell: Block, ein Mast von 60 auf 50 mm, eine 70-mm-Krone mit Spitze, 30-mm-Spreizen, acht 30-mm-Speichen (das Merkmal; die gezeichnete Linie ist 18 mm) und der Schirm als 3-mm-Rotationsschale auf sechs Bogensegmenten mit Saumrand; Hülse, Läufer, Platte und alle Beschläge sind zusammengefasst."
+          },
+          {
+            "en": "Thermal by reference; structure: block with mass, mast, ribs, stretchers and a 30 mm fixed block.",
+            "de": "Thermik als Verweis; Tragwerk: Block mit Masse, Mast, Speichen, Spreizen und ein 30-mm-Festblock."
           }
-        },
-        {
-          "id": "rib-b-rod",
-          "kind": "capsule",
-          "bone": "rib-b",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [1.23743, 0.0, 0.0],
-          "r0": 0.011,
-          "r1": 0.007
-        },
-        {
-          "id": "rib-b-tip",
-          "kind": "ellipsoid",
-          "bone": "rib-b",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "radii": [0.013, 0.013, 0.013],
-          "transform": {
-            "translation": [1.23743, 0.0, 0.0]
+        ]
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "body": [
+          {
+            "id": "base-block",
+            "kind": "box",
+            "bone": "base",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.6,
+            "size": [0.4, 0.2, 0.3],
+            "transform": {
+              "translation": [0.0, 0.1, 0.0]
+            }
+          },
+          {
+            "id": "mast",
+            "kind": "capsule",
+            "bone": "mast",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0, 0, 0],
+            "p1": [2.2, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375
+          },
+          {
+            "id": "rib-right-rod",
+            "kind": "capsule",
+            "bone": "rib-right",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0.3, 0, 0],
+            "p1": [1.0, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375
+          },
+          {
+            "id": "rib-left-rod",
+            "kind": "capsule",
+            "bone": "rib-left",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "p0": [0.3, 0, 0],
+            "p1": [1.0, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375
+          },
+          {
+            "id": "canopy",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "polyester-canvas",
+            "role": "body",
+            "tone": 0.8,
+            "profile": [
+              [0.0, 0.0],
+              [-0.0158, 0.29714],
+              [-0.08401, 0.61842],
+              [-0.19175, 0.92891],
+              [-0.32611, 1.19366],
+              [-0.32611, 1.2937],
+              [-0.33611, 1.2937],
+              [-0.33611, 1.19366],
+              [-0.20175, 0.92891],
+              [-0.09401, 0.61842],
+              [-0.0258, 0.29714],
+              [-0.01, 0.0],
+              [0.0, 0.0]
+            ],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0]
           }
-        },
-        {
-          "id": "panel-b",
-          "kind": "revolve",
-          "bone": "rib-b",
-          "material": "polyester-canvas",
-          "role": "body",
-          "tone": 0.82,
-          "regions": ["canopy-top", "canopy-underside"],
-          "profile": [
-            [0.0, 0.0],
-            [0.00136, 0.09421],
-            [-0.00407, 0.19368],
-            [-0.0158, 0.29714],
-            [-0.03335, 0.40328],
-            [-0.05625, 0.5108],
-            [-0.08401, 0.61842],
-            [-0.11617, 0.72485],
-            [-0.15224, 0.82878],
-            [-0.19175, 0.92892],
-            [-0.23422, 1.02398],
-            [-0.27916, 1.11266],
-            [-0.32611, 1.19368],
-            [-0.35926, 1.28464],
-            [-0.02089, 0.04612]
-          ],
-          "axis": [-0.263546, 0.900715, -0.345335],
-          "origin": [0, 0, 0],
-          "sweepRad": 0.90298,
-          "transform": {
-            "rotation": [0.064311, -0.219792, 0.084269, 0.96977]
+        ],
+        "thermal": [
+          {
+            "id": "th-base-block",
+            "of": "base-block",
+            "region": "base-concrete",
+            "layer": "concrete"
+          },
+          {
+            "id": "th-canopy-top",
+            "of": "canopy",
+            "region": "canopy-top",
+            "layer": "cloth-top",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-canopy-underside",
+            "kind": "revolve",
+            "bone": "crown",
+            "material": "polyester-canvas",
+            "role": "body",
+            "tone": 0.8,
+            "region": "canopy-underside",
+            "layer": "cloth-under",
+            "profile": [
+              [-0.0106, 0.0],
+              [-0.0264, 0.29714],
+              [-0.09461, 0.61842],
+              [-0.20235, 0.92891],
+              [-0.33671, 1.19366],
+              [-0.33671, 1.2937],
+              [-0.34671, 1.2937],
+              [-0.34671, 1.19366],
+              [-0.21235, 0.92891],
+              [-0.10461, 0.61842],
+              [-0.0364, 0.29714],
+              [-0.0206, 0.0],
+              [-0.0106, 0.0]
+            ],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "sectionFaces": ["+v"]
+          },
+          {
+            "id": "th-mast",
+            "of": "mast",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-right-rod",
+            "of": "rib-right-rod",
+            "region": "frame-alu",
+            "layer": "tube"
+          },
+          {
+            "id": "th-rib-left-rod",
+            "of": "rib-left-rod",
+            "region": "frame-alu",
+            "layer": "tube"
           }
-        },
-        {
-          "id": "rib-g-rod",
-          "kind": "capsule",
-          "bone": "rib-g",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [1.23743, 0.0, 0.0],
-          "r0": 0.011,
-          "r1": 0.007
-        },
-        {
-          "id": "rib-g-tip",
-          "kind": "ellipsoid",
-          "bone": "rib-g",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "radii": [0.013, 0.013, 0.013],
-          "transform": {
-            "translation": [1.23743, 0.0, 0.0]
+        ],
+        "structure": [
+          {
+            "id": "member-base",
+            "of": "base-block",
+            "member": "base",
+            "part": "member"
+          },
+          {
+            "id": "member-mast",
+            "of": "mast",
+            "member": "mast",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-right",
+            "of": "rib-right-rod",
+            "member": "rib-right",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-left",
+            "of": "rib-left-rod",
+            "member": "rib-left",
+            "part": "member"
+          },
+          {
+            "id": "member-rib-b",
+            "kind": "capsule",
+            "bone": "rib-b",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "member": "rib-b",
+            "part": "member",
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375,
+            "slender": false
+          },
+          {
+            "id": "member-rib-c",
+            "kind": "capsule",
+            "bone": "rib-c",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "member": "rib-c",
+            "part": "member",
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375,
+            "slender": false
+          },
+          {
+            "id": "member-rib-d",
+            "kind": "capsule",
+            "bone": "rib-d",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "member": "rib-d",
+            "part": "member",
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375,
+            "slender": false
+          },
+          {
+            "id": "member-rib-f",
+            "kind": "capsule",
+            "bone": "rib-f",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "member": "rib-f",
+            "part": "member",
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375,
+            "slender": false
+          },
+          {
+            "id": "member-rib-g",
+            "kind": "capsule",
+            "bone": "rib-g",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "member": "rib-g",
+            "part": "member",
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375,
+            "slender": false
+          },
+          {
+            "id": "member-rib-h",
+            "kind": "capsule",
+            "bone": "rib-h",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.6,
+            "member": "rib-h",
+            "part": "member",
+            "p0": [0, 0, 0],
+            "p1": [1.23743, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375,
+            "slender": false
+          },
+          {
+            "id": "member-stretch-right",
+            "kind": "capsule",
+            "bone": "stretch-right",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.15,
+            "member": "stretch-right",
+            "part": "member",
+            "p0": [0, 0, 0],
+            "p1": [0.55, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375
+          },
+          {
+            "id": "member-stretch-left",
+            "kind": "capsule",
+            "bone": "stretch-left",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.15,
+            "member": "stretch-left",
+            "part": "member",
+            "p0": [0, 0, 0],
+            "p1": [0.55, 0, 0],
+            "r0": 0.0375,
+            "r1": 0.0375
+          },
+          {
+            "id": "mass-base",
+            "kind": "ellipsoid",
+            "bone": "base",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.2,
+            "member": "base",
+            "part": "mass",
+            "radii": [0.15, 0.08, 0.1],
+            "transform": {
+              "translation": [0, 0.1, 0]
+            }
+          },
+          {
+            "id": "support-socket-pad",
+            "kind": "box",
+            "bone": "base",
+            "material": "concrete",
+            "role": "detail",
+            "tone": 0.1,
+            "member": "base",
+            "part": "support",
+            "size": [0.4, 0.075, 0.3],
+            "transform": {
+              "translation": [0.0, 0.0375, 0.0]
+            },
+            "tags": ["socket"],
+            "anchor": "socket"
           }
-        },
-        {
-          "id": "panel-g",
-          "kind": "revolve",
-          "bone": "rib-g",
-          "material": "polyester-canvas",
-          "role": "body",
-          "tone": 0.82,
-          "regions": ["canopy-top", "canopy-underside"],
-          "profile": [
-            [0.0, 0.0],
-            [0.00136, 0.09421],
-            [-0.00407, 0.19368],
-            [-0.0158, 0.29714],
-            [-0.03335, 0.40328],
-            [-0.05625, 0.5108],
-            [-0.08401, 0.61842],
-            [-0.11617, 0.72485],
-            [-0.15224, 0.82878],
-            [-0.19175, 0.92892],
-            [-0.23422, 1.02398],
-            [-0.27916, 1.11266],
-            [-0.32611, 1.19368],
-            [-0.35926, 1.28464],
-            [-0.02089, 0.04612]
-          ],
-          "axis": [-0.26355, 0.588603, 0.764257],
-          "origin": [0, 0, 0],
-          "sweepRad": 0.82445,
-          "transform": {
-            "rotation": [0.053645, -0.119809, -0.155563, 0.979065]
+        ],
+        "decisions": [
+          {
+            "en": "Own 1:500 model: block, a 75 mm mast and the canopy as a 10 mm shell of revolution on four arch segments with the hem skirt; the two ribs the drawing names are 75 mm solids (kept 0.3 to 1.0 m so they stay under the 10 mm shell), the other ribs, hub, stretchers and fittings are below the 75 mm feature and live only in the structure list.",
+            "de": "Eigenes 1:500-Modell: Block, ein 75-mm-Mast und der Schirm als 10-mm-Rotationsschale auf vier Bogensegmenten mit Saumrand; die zwei in der Zeichnung genannten Speichen sind 75-mm-Körper (von 0,3 bis 1,0 m, damit sie unter der 10-mm-Schale bleiben), die übrigen Speichen, Krone, Spreizen und Beschläge liegen unter dem 75-mm-Merkmal und stehen nur in der Tragwerksliste."
+          },
+          {
+            "en": "Thermal: block, mast and the shell (top and hidden underside as section-face split); structure: block with mass, mast, eight 75 mm ribs and two stretchers as members, and a 75 mm fixed block.",
+            "de": "Thermik: Block, Mast und die Schale (Oberseite und verdeckte Unterseite als Schnittflächenteilung); Tragwerk: Block mit Masse, Mast, acht 75-mm-Speichen und zwei Spreizen als Stäbe und ein 75-mm-Festblock."
           }
-        },
-        {
-          "id": "rib-left-rod",
-          "kind": "capsule",
-          "bone": "rib-left",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [1.23743, 0.0, 0.0],
-          "r0": 0.011,
-          "r1": 0.007
-        },
-        {
-          "id": "rib-left-tip",
-          "kind": "ellipsoid",
-          "bone": "rib-left",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "radii": [0.013, 0.013, 0.013],
-          "transform": {
-            "translation": [1.23743, 0.0, 0.0]
-          }
-        },
-        {
-          "id": "panel-left",
-          "kind": "revolve",
-          "bone": "rib-left",
-          "material": "polyester-canvas",
-          "role": "body",
-          "tone": 0.82,
-          "regions": ["canopy-top", "canopy-underside"],
-          "profile": [
-            [0.0, 0.0],
-            [0.00136, 0.09421],
-            [-0.00407, 0.19368],
-            [-0.0158, 0.29714],
-            [-0.03335, 0.40328],
-            [-0.05625, 0.5108],
-            [-0.08401, 0.61842],
-            [-0.11617, 0.72485],
-            [-0.15224, 0.82878],
-            [-0.19175, 0.92892],
-            [-0.23422, 1.02398],
-            [-0.27916, 1.11266],
-            [-0.32611, 1.19368],
-            [-0.35926, 1.28464],
-            [-0.02089, 0.04612]
-          ],
-          "axis": [-0.263541, -0.964648, 0],
-          "origin": [0, 0, 0],
-          "sweepRad": 0.78125,
-          "transform": {
-            "rotation": [0.03785, 0.138542, -0.0, 0.989633]
-          }
-        },
-        {
-          "id": "rib-f-rod",
-          "kind": "capsule",
-          "bone": "rib-f",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [1.23743, 0.0, 0.0],
-          "r0": 0.011,
-          "r1": 0.007
-        },
-        {
-          "id": "rib-f-tip",
-          "kind": "ellipsoid",
-          "bone": "rib-f",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "radii": [0.013, 0.013, 0.013],
-          "transform": {
-            "translation": [1.23743, 0.0, 0.0]
-          }
-        },
-        {
-          "id": "panel-f",
-          "kind": "revolve",
-          "bone": "rib-f",
-          "material": "polyester-canvas",
-          "role": "body",
-          "tone": 0.82,
-          "regions": ["canopy-top", "canopy-underside"],
-          "profile": [
-            [0.0, 0.0],
-            [0.00136, 0.09421],
-            [-0.00407, 0.19368],
-            [-0.0158, 0.29714],
-            [-0.03335, 0.40328],
-            [-0.05625, 0.5108],
-            [-0.08401, 0.61842],
-            [-0.11617, 0.72485],
-            [-0.15224, 0.82878],
-            [-0.19175, 0.92892],
-            [-0.23422, 1.02398],
-            [-0.27916, 1.11266],
-            [-0.32611, 1.19368],
-            [-0.35926, 1.28464],
-            [-0.02089, 0.04612]
-          ],
-          "axis": [-0.263546, -0.900715, 0.345335],
-          "origin": [0, 0, 0],
-          "sweepRad": 0.90298,
-          "transform": {
-            "rotation": [0.064311, 0.219792, -0.084269, 0.96977]
-          }
-        },
-        {
-          "id": "rib-d-rod",
-          "kind": "capsule",
-          "bone": "rib-d",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [1.23743, 0.0, 0.0],
-          "r0": 0.011,
-          "r1": 0.007
-        },
-        {
-          "id": "rib-d-tip",
-          "kind": "ellipsoid",
-          "bone": "rib-d",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "radii": [0.013, 0.013, 0.013],
-          "transform": {
-            "translation": [1.23743, 0.0, 0.0]
-          }
-        },
-        {
-          "id": "panel-d",
-          "kind": "revolve",
-          "bone": "rib-d",
-          "material": "polyester-canvas",
-          "role": "body",
-          "tone": 0.82,
-          "regions": ["canopy-top", "canopy-underside"],
-          "profile": [
-            [0.0, 0.0],
-            [0.00136, 0.09421],
-            [-0.00407, 0.19368],
-            [-0.0158, 0.29714],
-            [-0.03335, 0.40328],
-            [-0.05625, 0.5108],
-            [-0.08401, 0.61842],
-            [-0.11617, 0.72485],
-            [-0.15224, 0.82878],
-            [-0.19175, 0.92892],
-            [-0.23422, 1.02398],
-            [-0.27916, 1.11266],
-            [-0.32611, 1.19368],
-            [-0.35926, 1.28464],
-            [-0.02089, 0.04612]
-          ],
-          "axis": [-0.263545, -0.951798, -0.156922],
-          "origin": [0, 0, 0],
-          "sweepRad": 0.70272,
-          "transform": {
-            "rotation": [0.054228, 0.195845, 0.032289, 0.978602]
-          }
-        },
-        {
-          "id": "rib-c-rod",
-          "kind": "capsule",
-          "bone": "rib-c",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.35,
-          "region": "frame-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [1.23743, 0.0, 0.0],
-          "r0": 0.011,
-          "r1": 0.007
-        },
-        {
-          "id": "rib-c-tip",
-          "kind": "ellipsoid",
-          "bone": "rib-c",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "frame-alu",
-          "maxDenominator": 100,
-          "radii": [0.013, 0.013, 0.013],
-          "transform": {
-            "translation": [1.23743, 0.0, 0.0]
-          }
-        },
-        {
-          "id": "panel-c",
-          "kind": "revolve",
-          "bone": "rib-c",
-          "material": "polyester-canvas",
-          "role": "body",
-          "tone": 0.82,
-          "regions": ["canopy-top", "canopy-underside"],
-          "profile": [
-            [0.0, 0.0],
-            [0.00136, 0.09421],
-            [-0.00407, 0.19368],
-            [-0.0158, 0.29714],
-            [-0.03335, 0.40328],
-            [-0.05625, 0.5108],
-            [-0.08401, 0.61842],
-            [-0.11617, 0.72485],
-            [-0.15224, 0.82878],
-            [-0.19175, 0.92892],
-            [-0.23422, 1.02398],
-            [-0.27916, 1.11266],
-            [-0.32611, 1.19368],
-            [-0.35926, 1.28464],
-            [-0.02089, 0.04612]
-          ],
-          "axis": [-0.26355, -0.588603, -0.764257],
-          "origin": [0, 0, 0],
-          "sweepRad": 0.82445,
-          "transform": {
-            "rotation": [0.053645, 0.119809, 0.155563, 0.979065]
-          }
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The rig rests with all eight ribs collinear along the x axis (the open umbrella exists only through the pose offsets), so a canopy bound to the ribs cannot look open at rest. The eight canopy gores are therefore authored in the open pose (open-still): each is a sector of a surface of revolution about the vertical mast axis, with the lens profile of the 1:50 elevation tilted by the 15.28 degree rib droop, written into the frame of its own rib through the inverse of the open-pose rib frame. In open-still and tilted-to-sun they form the closed cone (bounding box 2.568 x 2.461 x 2.564 m against 2.6 x 2.46 x 2.6 m); in the furled pose they fold with their ribs. The rest bounding box and the rest silhouettes do not describe this asset and miss the gates (see the report).",
-          "de": "Das Rig ruht mit allen acht Rippen kollinear auf der x-Achse (der geöffnete Schirm entsteht nur durch die Posen-Offsets), ein an die Rippen gebundenes Dach kann in Ruhe daher nicht geöffnet aussehen. Die acht Dachbahnen sind deshalb in der geöffneten Pose (open-still) modelliert: jede ist ein Sektor einer Rotationsfläche um die senkrechte Mastachse mit dem Linsenprofil der Ansicht 1:50, um das Rippengefälle von 15,28 Grad gekippt und über die Umkehrung des Rippenrahmens der offenen Pose in den Rahmen der eigenen Rippe geschrieben. In open-still und tilted-to-sun bilden sie den geschlossenen Kegel (Hüllquader 2,568 x 2,461 x 2,564 m gegen 2,6 x 2,46 x 2,6 m); in der gefalteten Pose falten sie mit ihren Rippen. Der Hüllquader und die Silhouetten in Ruhe beschreiben dieses Asset nicht und verfehlen die Schranken (siehe Bericht)."
-        },
-        {
-          "en": "The gores take the angular half-gap to both neighbouring ribs (the ribs are not equally spaced: gaps of 32, 46, 46 and 56 degrees), overlap by 1 degree, and are filled lens volumes of 8 mm underside thickness so that the ribs stay visible beneath the fabric; the scalloped hem is replaced by a 0.1 m flare to the drawn hem radius of 1.334 m. Only the two stretchers that have bones are modelled; the other six are not.",
-          "de": "Die Bahnen übernehmen den halben Winkelabstand zu beiden Nachbarrippen (die Rippen stehen nicht gleichmässig: Abstände von 32, 46, 46 und 56 Grad), überlappen um 1 Grad und sind gefüllte Linsenkörper mit 8 mm Unterseitendicke, damit die Rippen unter dem Stoff sichtbar bleiben; der Bogensaum ist durch einen 0,1 m breiten Ausstellsaum auf den gezeichneten Saumradius 1,334 m ersetzt. Nur die zwei Spreizen mit Knochen sind modelliert, die übrigen sechs nicht."
-        },
-        {
-          "en": "Base block, plate and socket, the mast with ball joint, tilt collar and crank, the crown hub with finial and the runner collar are revolves, boxes and capsules as drawn.",
-          "de": "Betonfuss, Platte und Hülse, der Mast mit Kugelgelenk, Kippmuffe und Kurbel, Kronennabe mit Spitze und Läuferhülse sind Revolve, Quader und Kapseln wie gezeichnet."
-        }
-      ]
+        ]
+      }
     },
     "presentation": {
       "defaultPose": "open-still",

@@ -1,13 +1,15 @@
 import {afterAll,describe,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {createHash} from "node:crypto";
-import {appendFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {appendFileSync,chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {requireTestToolV1} from "../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import {storeBlobV1 as storeReadOnlyBlobV1,largeBlobBytesV1 as readOnlyThresholdV1} from "../🟦️.ts";
+import {expiredHorizonV1,expiredTombstoneV1,repairBlobV1,tombstoneLifetimeMillisecondsV1} from "../🟦️.ts";
 import {appendEventsV1,blobPathV1,reclaimStagingV1,readEventSpansV1,streamMembersV1,foldEventsV1,formatHlcV1,listOriginsV1,mergeClockV1,parseHlcV1,readEventsV1,readHeadV1,readNewestSnapshotV1,requireEventV1,requireOriginIdV1,storePathsV1,tickClockV1,winsV1,writeBlobV1,writeSnapshotV1,type FleetEventV1,type FleetManifestEntryV1} from "../🟦️.ts";
 
 type Clock={ms:number;counter:number};
@@ -79,7 +81,7 @@ describe("journal store",()=>{
 
  test("store paths and blob paths are fixed",()=>{
   const paths=storePathsV1("/s"),hash=sha("x");
-  expect(paths).toEqual({root:join("/s","v1"),origins:join("/s","v1","origins"),blobs:join("/s","v1","blobs"),tmp:join("/s","v1","tmp"),snapshots:join("/s","v1","snapshots")});
+  expect(paths).toEqual({root:join("/s","v1"),origins:join("/s","v1","origins"),blobs:join("/s","v1","blobs"),tmp:join("/s","v1","tmp"),snapshots:join("/s","v1","snapshots"),heads:join("/s","v1","heads")});
   expect(blobPathV1("/s",hash)).toBe(join(paths.blobs,hash.slice(0,2),hash));
   expect(()=>blobPathV1("/s","ABC")).toThrow();
  });
@@ -94,6 +96,17 @@ describe("journal store",()=>{
   expect(readdirSync(storePathsV1(store).tmp)).toEqual([]);
   await expect(writeBlobV1(store,"alpha",sha("other"),source)).rejects.toThrow();
   expect(readdirSync(storePathsV1(store).tmp)).toEqual([]);
+ });
+
+ test("a read-only source still publishes",async()=>{
+  const root=temporary(),source=join(root,"readonly.txt");
+  writeFileSync(source,"pack");
+  chmodSync(source,0o444);
+  const hash=sha("pack"),store=join(root,"store");
+  expect(await writeBlobV1(store,"alpha",hash,source)).toBe(true);
+  expect(readFileSync(blobPathV1(store,hash),"utf8")).toBe("pack");
+  expect(statSync(source).mode&0o777).toBe(0o444);
+  if(process.platform!=="win32")expect(statSync(blobPathV1(store,hash)).mode&0o777).toBe(0o644);
  });
 
  test("append and read round trip with cursor resume",async()=>{
@@ -320,4 +333,59 @@ describe("staging files that a killed process left in the store",()=>{
   expect(await reclaimStagingV1(store,{olderThanMilliseconds:3_600_000,now:Date.now()+2*3_600_000})).toEqual({files:2,bytes:8});
   expect(readdirSync(tmp)).toEqual([".nfs00ff"]);
  });
+});
+
+describe("blob repair and tombstone lifetime",()=>{
+ test("a blob that does not hash to its name is replaced from a source with the right bytes, an intact blob is left alone and a wrong source writes nothing",async()=>{
+  const store=join(temporary(),"store"),source=join(temporary(),"source.txt");
+  writeFileSync(source,"right bytes");
+  const name=sha("right bytes"),target=blobPathV1(store,name);
+  expect(await writeBlobV1(store,"alpha",name,source)).toBe(true);
+  expect(await repairBlobV1(store,"alpha",name,source)).toBe("intact");
+  writeFileSync(target,"rotten bytes");
+  expect(await repairBlobV1(store,"alpha",name,source)).toBe("repaired");
+  expect(readFileSync(target,"utf8")).toBe("right bytes");
+  rmSync(target);
+  expect(await repairBlobV1(store,"alpha",name,source)).toBe("repaired");
+  expect(readFileSync(target,"utf8")).toBe("right bytes");
+  writeFileSync(target,"rotten again");
+  const wrong=join(temporary(),"wrong.txt");writeFileSync(wrong,"other bytes");
+  expect(await repairBlobV1(store,"alpha",name,wrong)).toBe("unstable");
+  expect(readFileSync(target,"utf8")).toBe("rotten again");
+  expect(readdirSync(storePathsV1(store).tmp)).toEqual([]);
+ });
+
+ test("a snapshot leaves out the deletes older than the lifetime and keeps younger deletes and every live entry",async()=>{
+  const store=join(temporary(),"store"),day=86_400_000,now=1_790_000_000_000,manifest=new Map<string,FleetManifestEntryV1>();
+  const remove=(age:number):FleetManifestEntryV1=>({hlc:formatHlcV1({ms:now-age,counter:0},"alpha"),operation:"delete"});
+  manifest.set("old-gone.txt",remove(100*day));
+  manifest.set("recent-gone.txt",remove(10*day));
+  foldEventsV1(manifest,[put("alpha",now-200*day,0,"old-live.txt"),put("alpha",now-day,0,"new-live.txt")]);
+  const at=formatHlcV1({ms:now,counter:0},"alpha");
+  expect(expiredTombstoneV1(manifest.get("old-gone.txt")!,at)).toBe(true);
+  expect(expiredTombstoneV1(manifest.get("recent-gone.txt")!,at)).toBe(false);
+  expect(expiredTombstoneV1(manifest.get("old-live.txt")!,at)).toBe(false);
+  expect(tombstoneLifetimeMillisecondsV1).toBe(90*day);
+  expect(expiredHorizonV1(manifest.get("old-live.txt")!.hlc,at)).toBe(true);
+  expect(expiredHorizonV1(manifest.get("new-live.txt")!.hlc,at)).toBe(false);
+  await writeSnapshotV1(store,"alpha",at,manifest,{});
+  const read=await readNewestSnapshotV1(store);
+  expect([...read!.manifest.keys()].sort()).toEqual(["new-live.txt","old-live.txt","recent-gone.txt"]);
+ });
+});
+
+test("a read-only file above the clone threshold is published: the clone is made writable for the copy pass and the blob is stored with its sha256 (a 4 GiB git pack was refused with EACCES six times a second)",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"journal-readonly-"));
+ try{
+  const store=join(root,"store"),source=join(root,"big.pack");
+  mkdirSync(join(store,"v1","tmp"),{recursive:true});mkdirSync(join(store,"v1","blobs"),{recursive:true});
+  writeFileSync(source,"pack");
+  const size=readOnlyThresholdV1+4096,handle=await import("node:fs/promises").then(module=>module.open(source,"r+"));await handle.truncate(size);await handle.close();
+  chmodSync(source,0o444);
+  const stored=await storeReadOnlyBlobV1(store,"g1-server",source,{});
+  expect(stored.stable).toBe(true);expect(stored.bytes).toBe(size);
+  const hash=createHash("sha256");hash.update("pack");hash.update(Buffer.alloc(size-4));
+  expect(stored.sha256).toBe(hash.digest("hex"));
+  expect(existsSync(blobPathV1(store,stored.sha256))).toBe(true);
+ }finally{chmodSync(join(root,"big.pack"),0o644);rmSync(root,{recursive:true,force:true});}
 });

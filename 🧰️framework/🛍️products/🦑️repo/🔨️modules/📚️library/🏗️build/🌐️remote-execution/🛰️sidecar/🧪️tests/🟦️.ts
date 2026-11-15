@@ -1,0 +1,128 @@
+import {afterEach,expect,test} from "bun:test";
+import {mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {createServer} from "node:net";
+import {join} from "node:path";
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
+import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import {startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../../🌐️remote-cache/🖥️server/🟦️.ts";
+import {publishFleetCacheFactsV1} from "../../../🌐️remote-cache/🛰️fleet/📣️publication/🟦️.ts";
+import {fleetHeadersV1,fleetSignedFetchV1,readFleetOriginKeyV1,syncFleetIdentityV1} from "../../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
+import {createSealedFetchV1} from "../../../🌐️remote-cache/🔐️sealed/🟦️.ts";
+import {refreshFleetCacheFactsV1,remoteCacheFetchV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
+import {readRemoteExecutionFleetFactsV1} from "../../🚢️status/🟦️.ts";
+import {connectGrpcV1,GRPC_CODES_V1} from "../../📡️wire/🚪️grpc/🟦️.ts";
+import {eventuallyV1,NAMESPACE_V1,writeHostViewV1} from "../../🧪️tests/🧰️cluster/🟦️.ts";
+import {remoteExecutionPortsV1,remoteExecutionWorkerApiV1} from "../🟦️.ts";
+
+import topology from "../../../../../🤝️shared-worktree/🗺️topology/🔣️.json" with {type:"json"};
+const bun=registeredToolExecutableV1("bun"),sidecar=join(import.meta.dir,"..","🟦️.ts"),scratch:string[]=[],children:ReturnType<typeof Bun.spawn>[]=[];
+let cache:RemoteCacheServerV1|undefined;
+afterEach(async()=>{for(const child of children.splice(0))child.kill("SIGKILL");await cache?.stop().catch(()=>{});cache=undefined;for(const path of scratch.splice(0))rmSync(path,{recursive:true,force:true});});
+const freePort=async():Promise<number>=>{
+ for(;;){
+  const port=21000+Math.floor(Math.random()*20000);
+  if(await new Promise<boolean>(done=>{const server=createServer();server.once("error",()=>{done(false);});server.listen(port,"0.0.0.0",()=>{server.close(()=>{done(true);});});}))return port;
+ }
+};
+
+test("the scheduler role publishes its endpoint, serves only signed requests on the fleet interface; the agent role finds it through the facts, joins with its own signature, reports its load, and a forged or unsigned caller is refused; both leave in order",async()=>{
+ const directory=mkdtempSync(join(testScratchRootV1("rexec-sidecar"),"s-"));scratch.push(directory);
+ const worktree=join(directory,"worktree"),member=join(directory,"member"),store=join(directory,"store");
+ for(const [root,origin] of[[worktree,"g1-server"],[member,"g1-m09"]] as const){mkdirSync(join(root,".cache","f"),{recursive:true});mkdirSync(join(store,"v1","origins",origin),{recursive:true});writeFileSync(join(root,".cache","f","machine.json"),JSON.stringify({version:1,originId:origin,groupId:"g1",storeRoot:store,key:"0".repeat(32)}));expect((await syncFleetIdentityV1({root})).error).toBeUndefined();}
+ cache=await startRemoteCacheServerV1({directory:join(directory,"cache"),host:"127.0.0.1",port:0,maximumBytes:1<<30,maximumEntryBytes:1<<28,maximumAgeDays:30,defaultInstance:"main",tokens:{},fleet:{storeRoot:store,group:"g1",networks:["127.0.0.0/8"],registryTtlMilliseconds:200}});
+ await publishFleetCacheFactsV1({admin:{role:"admin",originId:"g1-server"},storeRoot:store,directory:join(directory,"cache-data"),group:"g1",instance:"main",port:Number(new URL(cache.url).port),endpoints:[cache.url]});
+ for(const root of[worktree,member])expect((await refreshFleetCacheFactsV1({root,force:true})).state).toBe("updated");
+ const ports=[await freePort(),await freePort()],environment={...process.env,SEMIO_FLEET_ROOT:worktree,SEMIO_WORKSPACE_ROOT:worktree,SEMIO_FLEET_ORIGIN:"g1-server",SEMIO_FLEET_GROUP:"g1",SEMIO_FLEET_STORE_ROOT:store,SEMIO_FLEET_NETWORK:"127.0.0.0/8",SEMIO_REMOTE_EXECUTION_PORTS:ports.join(","),SEMIO_REMOTE_EXECUTION_HOST_VIEW:writeHostViewV1(join(directory,"view.json"))};
+ expect(remoteExecutionPortsV1(environment)).toEqual({grpc:ports[0]!,worker:ports[1]!});
+ const factsPath=join(store,"v1","fleet","cache.json"),execution=():{endpoint:string}|undefined=>(JSON.parse(readFileSync(factsPath,"utf8")) as {execution?:{endpoint:string}}).execution;
+ const scheduler=Bun.spawn([bun,sidecar,"scheduler"],{stdout:"ignore",stderr:"ignore",cwd:directory,env:environment});children.push(scheduler);
+ await eventuallyV1(()=>execution()!==undefined,30000,"the scheduler must publish its endpoint");
+ expect(execution()!.endpoint).toMatch(new RegExp(`^http://[A-Za-z0-9.-]+:${ports[0]}$`,"u"));
+ expect(readFileSync(factsPath,"utf8").toLowerCase(),"the facts carry no secret").not.toContain("token");
+ const api=remoteExecutionWorkerApiV1(execution()!.endpoint,ports[1]!),anonymous=await fetch(`${api}/v1/fleet/load`);expect(anonymous.status,"the load table needs a signature").toBe(401);
+ expect((await fetch(`${api}/v1/fleet/load`,{headers:{authorization:"Bearer "+"A".repeat(43)}})).status,"a bearer token is no credential").toBe(401);
+ const grpc=connectGrpcV1(execution()!.endpoint);
+ try{await grpc.unary(`${NAMESPACE_V1}.Capabilities/GetCapabilities`,{});throw Error("an unsigned gRPC call must fail");}catch(error){expect((error as {code:number}).code).toBe(GRPC_CODES_V1.UNAUTHENTICATED);}finally{grpc.close();}
+ await refreshFleetCacheFactsV1({root:member,force:true});
+ const agentEnvironment={...environment,SEMIO_FLEET_ROOT:member,SEMIO_WORKSPACE_ROOT:member,SEMIO_FLEET_ORIGIN:"g1-m09"};
+ const agent=Bun.spawn([bun,sidecar,"agent"],{stdout:"ignore",stderr:"ignore",cwd:directory,env:agentEnvironment});children.push(agent);
+ const signed=remoteCacheFetchV1({SEMIO_WORKSPACE_ROOT:member},{root:member,audience:"execution",roleOf:()=>"submit"});
+ const load=async():Promise<any>=>(await signed(`${api}/v1/fleet/load`)).json();
+ await eventuallyV1(async()=>(await load()).machines.some((row:any)=>row.origin==="g1-m09"&&row.worker.state==="idle"),40000,"the agent must join and report");
+ const machine=(await load()).machines.find((row:any)=>row.origin==="g1-m09");
+ expect(machine).toMatchObject({platform:{os:expect.any(String)},worker:{confinement:expect.stringMatching(/full|none/u),network:expect.stringMatching(/denied|unenforced/u)}});
+ const facts=await readRemoteExecutionFleetFactsV1({root:member,environment:{SEMIO_REMOTE_EXECUTION_PORTS:ports.join(",")}});
+ expect(facts?.machines.some(row=>row.origin==="g1-m09"),"`repo fleet status` reads the table with the signed scheme through the published facts").toBe(true);
+ const forged=JSON.parse(JSON.stringify(machine));forged.origin="g1-server";delete forged.ageSeconds;
+ const lie=await signed(`${api}/v1/fleet/load`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(forged)});
+ expect([400,403],"a report that names another origin than the signer is refused").toContain(lie.status);
+ const rpc=(content?:string)=>connectGrpcV1(execution()!.endpoint,{sign:(method,hash)=>fleetHeadersV1(member,"submit","execution","POST",`http://x/${method}`,content??hash)});
+ const honest=rpc();try{expect((await honest.unary(`${NAMESPACE_V1}.Capabilities/GetCapabilities`,{})).execution_capabilities.exec_enabled).toBe(true);}finally{honest.close();}
+ const swapped=rpc("a".repeat(64));try{await swapped.unary(`${NAMESPACE_V1}.Capabilities/GetCapabilities`,{});throw Error("messages differing from the signed hash must be refused");}catch(error){expect((error as {code:number}).code,"signed hash of other messages").toBe(GRPC_CODES_V1.UNAUTHENTICATED);}finally{swapped.close();}
+ scheduler.kill("SIGKILL");await scheduler.exited;await Bun.sleep(3000);
+ const restarted=Bun.spawn([bun,sidecar,"scheduler"],{stdout:"ignore",stderr:"ignore",cwd:directory,env:environment});children.push(restarted);
+ await eventuallyV1(async()=>{try{return (await load()).machines.some((row:any)=>row.origin==="g1-m09"&&row.worker.state==="idle");}catch{return false;}},60000,"after a scheduler restart the agent's worker registers again by itself (no 403 loop on its old id)");
+ expect(agent.exitCode,"the agent did not restart").toBeNull();
+ agent.kill("SIGTERM");expect(await agent.exited).toBe(0);
+ await eventuallyV1(async()=>!(await load()).machines.some((row:any)=>row.origin==="g1-m09"&&row.worker.state!=="absent"),20000,"the agent must leave the scheduler");
+ restarted.kill("SIGTERM");expect(await restarted.exited).toBe(0);
+ expect(execution(),"a scheduler that stops in order withdraws its endpoint").toBeUndefined();
+},120000);
+
+test("an agent whose lease nobody renews leaves by itself, and one whose lease is renewed stays",async()=>{
+ const directory=mkdtempSync(join(testScratchRootV1("rexec-sidecar"),"p-"));scratch.push(directory);
+ const lease=join(directory,"agent.lease"),write=():void=>writeFileSync(lease,JSON.stringify({version:1,pid:process.pid,wallMs:Date.now()}));
+ write();
+ const agent=Bun.spawn([bun,sidecar,"agent"],{stdout:"ignore",stderr:"pipe",cwd:directory,env:{...process.env,SEMIO_FLEET_ROOT:directory,SEMIO_WORKSPACE_ROOT:directory,SEMIO_FLEET_SIDECAR_LEASE:lease,SEMIO_FLEET_SIDECAR_LEASE_MS:"4000"}});children.push(agent);
+ for(let round=0;round<6;round++){await Bun.sleep(1000);write();}
+ expect(agent.exitCode,"a renewed lease keeps the agent").toBeNull();
+ const result=await Promise.race([agent.exited,Bun.sleep(30000).then(()=>"alive")]);
+ expect(result,"the agent ends within seconds of the last renewal").toBe(0);
+});
+
+test("the cache role is a supervised server of the current code: it binds the fleet interface only, trusts the registered origins, is the only publisher of the facts and keeps its index in the local state",async()=>{
+ const directory=mkdtempSync(join(testScratchRootV1("rexec-sidecar"),"c-"));scratch.push(directory);
+ const worktree=join(directory,"worktree"),member=join(directory,"member"),store=join(directory,"store");
+ for(const [root,origin] of[[worktree,"g1-server"],[member,"g1-m09"]] as const){mkdirSync(join(root,".cache","f"),{recursive:true});mkdirSync(join(store,"v1","origins",origin),{recursive:true});writeFileSync(join(root,".cache","f","machine.json"),JSON.stringify({version:1,originId:origin,groupId:"g1",storeRoot:store,key:"0".repeat(32)}));expect((await syncFleetIdentityV1({root})).error).toBeUndefined();}
+ const port=await freePort(),environment={...process.env,SEMIO_FLEET_ROOT:worktree,SEMIO_WORKSPACE_ROOT:worktree,SEMIO_FLEET_NETWORK:"127.0.0.0/8",SEMIO_REMOTE_CACHE_FLEET_PORT:String(port)};
+ const factsPath=join(store,"v1","fleet","cache.json"),child=Bun.spawn([bun,sidecar,"cache"],{stdout:"ignore",stderr:"ignore",cwd:directory,env:environment});children.push(child);
+ await eventuallyV1(()=>{try{return JSON.parse(readFileSync(factsPath,"utf8")).publisher.port===port;}catch{return false;}},30000,"the cache sidecar must publish the facts");
+ const facts=JSON.parse(readFileSync(factsPath,"utf8"));
+ expect(facts.publisher.directory).toBe(join(worktree,".cache","f","cache-server"));expect(facts.cache.endpoints).toEqual([`http://127.0.0.1:${port}`]);expect(readFileSync(factsPath,"utf8").toLowerCase()).not.toContain("token");
+ expect((await fetch(`http://127.0.0.1:${port}/status`)).status,"unsigned").toBe(401);
+ await refreshFleetCacheFactsV1({root:member,force:true});
+ const signed=remoteCacheFetchV1({SEMIO_WORKSPACE_ROOT:member},{root:member});
+ let status=0;for(let wait=0;wait<60&&status!==200;wait++){status=(await signed(`http://127.0.0.1:${port}/status`)).status;if(status!==200)await Bun.sleep(100);}
+ expect(status,"a registered member of the group store").toBe(200);
+ const claim=await signed(`http://127.0.0.1:${port}/main/claim/nx/abc123`,{method:"POST",body:JSON.stringify({owner:"live-1",ttlMilliseconds:30000})});
+ expect(claim.status,"the claim routes exist in the current code").toBe(200);
+ const document=await (await signed(`http://127.0.0.1:${port}/status`)).json() as {claims:{active:number};fleet:{origins:Record<string,number>}};
+ expect(document.claims.active).toBe(1);
+ const slot=await signed(`http://127.0.0.1:${port}/main/v1/slots`,{method:"POST",body:JSON.stringify({entries:[{kind:"nx",key:"abc123",slot:"a".repeat(64)}]})});
+ expect(slot.status,"the slot route exists and answers a signed claim").toBe(200);
+ child.kill("SIGTERM");expect(await child.exited).toBe(0);
+},120000);
+
+test("the cache role takes its port and the hosts it advertises from the topology row of its group, serves a peer group's reader and writes no address of its own into the code",async()=>{
+ const directory=mkdtempSync(join(testScratchRootV1("rexec-sidecar"),"t-"));scratch.push(directory);
+ const worktree=join(directory,"worktree"),peerWorktree=join(directory,"peer"),store=join(directory,"store"),peerStore=join(directory,"peer-store"),port=await freePort();
+ const row=(group:any)=>group.id==="g1"?{...group,ports:{...group.ports,cache:port},nfs:{...group.nfs,export:"/srv/semio-store"},server:{...group.server,platform:"linux",advertise:["localhost"]},peers:{...group.peers,g2:peerStore}}:group;
+ const folder=join(worktree,"🧰️framework","🛍️products","🦑️repo","🔨️modules","🤝️shared-worktree","🗺️topology");mkdirSync(folder,{recursive:true});
+ writeFileSync(join(folder,"🔣️.json"),JSON.stringify({...topology,groups:topology.groups.map(row)}));
+ for(const [root,origin,group,where] of[[worktree,"g1-server","g1",store],[peerWorktree,"g2-m01","g2",peerStore]] as const){mkdirSync(join(root,".cache","f"),{recursive:true});mkdirSync(join(where,"v1","origins",origin),{recursive:true});writeFileSync(join(root,".cache","f","machine.json"),JSON.stringify({version:1,originId:origin,groupId:group,storeRoot:where,key:"0".repeat(32)}));expect((await syncFleetIdentityV1({root})).error).toBeUndefined();}
+ const environment={...process.env,SEMIO_FLEET_ROOT:worktree,SEMIO_WORKSPACE_ROOT:worktree,SEMIO_FLEET_NETWORK:"127.0.0.0/8"};
+ delete (environment as Record<string,string|undefined>).SEMIO_REMOTE_CACHE_FLEET_PORT;
+ const factsPath=join(store,"v1","fleet","cache.json"),child=Bun.spawn([bun,sidecar,"cache"],{stdout:"ignore",stderr:"ignore",cwd:directory,env:environment});children.push(child);
+ await eventuallyV1(()=>{try{return JSON.parse(readFileSync(factsPath,"utf8")).publisher.port===port;}catch{return false;}},30000,"the cache sidecar must publish the facts on the port of the topology");
+ const facts=JSON.parse(readFileSync(factsPath,"utf8")) as {cache:{endpoints:string[];transport?:string}};
+ expect(facts.cache.endpoints).toEqual([`http://127.0.0.1:${port}`,`http://localhost:${port}`]);
+ const stranger=await fetch(`http://127.0.0.1:${port}/status`);expect(stranger.status).toBe(401);
+ await Bun.sleep(1200);
+ const hash="a".repeat(64),plain=fleetSignedFetchV1({root:peerWorktree,audience:"cache"}),reader=fleetSignedFetchV1({root:peerWorktree,audience:"cache",fetch:createSealedFetchV1({group:"g1",serverKey:()=>readFleetOriginKeyV1([store],"g1-server")})});
+ expect(facts.cache.transport,"the group's policy for its own machines is published").toBe("trusted-lan");
+ let status=0;for(let wait=0;wait<60&&status!==404;wait++){status=(await reader(`http://127.0.0.1:${port}/main/cas/${hash}`)).status;if(status!==404)await Bun.sleep(100);}
+ expect(status,"a machine of the peer group, known only through the mounted peer store, may read inside the sealed exchange").toBe(404);
+ expect((await plain(`http://127.0.0.1:${port}/main/cas/${hash}`)).status,"and not outside it").toBe(403);
+ expect((await reader(`http://127.0.0.1:${port}/main/cas/${hash}`,{method:"PUT",body:"x"})).status,"but not write").toBe(403);
+ child.kill("SIGTERM");expect(await child.exited).toBe(0);
+},120000);

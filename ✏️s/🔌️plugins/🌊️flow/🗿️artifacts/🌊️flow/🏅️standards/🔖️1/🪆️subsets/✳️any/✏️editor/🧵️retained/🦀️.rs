@@ -4,7 +4,7 @@ use semio_framework_job::{close_original_effect_step, InteractiveJobCloseStep, O
 use semio_framework_value::{retained_clone::{retained_clone_grant_admits, OriginalEffectReply, OriginalEffectReplyComplete, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::controlled::ControlledRetirement, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetireOwned, RetirementDemand, ValueError};
 
 /// 🔁️ Reads a settled close poll as a grant-shaped outcome; a suspended effect keeps its state and retries next turn.
-pub(crate) fn poll_outcome(poll: OriginalRetirementPoll) -> RetainedWorkOutcome {
+pub fn poll_outcome(poll: OriginalRetirementPoll) -> RetainedWorkOutcome {
     match poll {
         RetainedWorkPoll::Pending { work } => RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work },
         RetainedWorkPoll::Complete(turn) => RetainedWorkOutcome { result: turn.result.map_err(|failure| failure.into_value_error()), work: turn.work },
@@ -12,7 +12,7 @@ pub(crate) fn poll_outcome(poll: OriginalRetirementPoll) -> RetainedWorkOutcome 
 }
 
 /// 🧹️ Funds one close step of an owner ladder through the close turn's own effect.
-pub(crate) fn close_with_effect(cx: &mut StepContext<'_>, demand: RetirementDemand, close: impl FnOnce(RetainedCloneGrant, &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+pub fn close_with_effect(cx: &mut StepContext<'_>, demand: RetirementDemand, close: impl FnOnce(RetainedCloneGrant, &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
     close_original_effect_step(cx, demand, |effect| -> OriginalRetirementPoll {
         let grant = effect.grant();
         let turn = close(grant, effect);
@@ -21,7 +21,7 @@ pub(crate) fn close_with_effect(cx: &mut StepContext<'_>, demand: RetirementDema
 }
 
 /// 🫴️ Runs one quoted effect-shaped step inside one original effect; the turn is charged exactly the work it performed.
-pub(crate) fn effected(cx: &mut StepContext<'_>, demand: RetirementDemand, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>) -> Result<bool, OriginalTurnFailure> {
+pub fn effected(cx: &mut StepContext<'_>, demand: RetirementDemand, run: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>) -> Result<bool, OriginalTurnFailure> {
     if cx.should_yield() || !retained_clone_grant_admits(cx.retained_grant(), demand) {
         return Ok(false);
     }
@@ -38,7 +38,7 @@ pub(crate) fn effected(cx: &mut StepContext<'_>, demand: RetirementDemand, run: 
 }
 
 /// 🪢️ Runs one reply-shaped callee and returns its recorded result; `None` means the callee suspended and must be recovered next turn.
-pub(crate) fn replied<E>(effect: &mut RetainedAllocationEffect<'_>, action: impl for<'r> FnOnce(&mut RetainedAllocationEffect<'_>, OriginalEffectReply<'r, RetainedCloneStep, E>) -> Result<OriginalEffectReplyComplete<'r, RetainedCloneStep, E>, ValueError>) -> Result<Option<Result<RetainedCloneStep, E>>, ValueError> {
+pub fn replied<E>(effect: &mut RetainedAllocationEffect<'_>, action: impl for<'r> FnOnce(&mut RetainedAllocationEffect<'_>, OriginalEffectReply<'r, RetainedCloneStep, E>) -> Result<OriginalEffectReplyComplete<'r, RetainedCloneStep, E>, ValueError>) -> Result<Option<Result<RetainedCloneStep, E>>, ValueError> {
     let mut slot = None;
     let reply = OriginalEffectReply::borrow(&mut slot)?;
     action(&mut *effect, reply)?;
@@ -46,7 +46,7 @@ pub(crate) fn replied<E>(effect: &mut RetainedAllocationEffect<'_>, action: impl
 }
 
 /// 🪪️ Admits one owner into its close ladder; a vacant begin is zero progress.
-pub(crate) fn begin_close_owner<T: RetireOwned>(close: &mut RetainedCloneClose, slot: &mut Option<T>, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+pub fn begin_close_owner<T: RetireOwned>(close: &mut RetainedCloneClose, slot: &mut Option<T>, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
     let turn = close.begin_granted(slot, effect);
     RetainedWorkOutcome { result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))), work: turn.work }
 }
@@ -83,13 +83,25 @@ impl Retirement {
             }
             return poll;
         }
-        let step = if self.pending.is_empty() {
-            RetainedCloneStep::Complete(RetainedCloneProgress::default())
+        let result = if self.pending.is_empty() {
+            Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+        } else if effect.remaining_work_units().is_ok_and(|remaining| remaining == 0) {
+            Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()))
         } else {
-            self.owner = Some(ControlledRetirement::retain(std::mem::take(&mut self.pending)));
-            RetainedCloneStep::Progress(RetainedCloneProgress::default())
+            match effect.performed(1) {
+                Ok(true) => {
+                    self.owner = Some(ControlledRetirement::retain(std::mem::take(&mut self.pending)));
+                    Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                }
+                Ok(false) => Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())),
+                Err(error) => Err(error.into()),
+            }
         };
-        RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(step), work: 0 })
+        RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work: effect.performed_work() })
+    }
+
+    pub fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        Ok(RetirementDemand { copy_bytes: self.copy_byte_demand()?, capacity_bytes: self.capacity_byte_demand(body)?, release_bytes: self.release_byte_demand()?, depth: self.depth_demand()? })
     }
 
     pub fn copy_byte_demand(&self) -> Result<usize, ValueError> {

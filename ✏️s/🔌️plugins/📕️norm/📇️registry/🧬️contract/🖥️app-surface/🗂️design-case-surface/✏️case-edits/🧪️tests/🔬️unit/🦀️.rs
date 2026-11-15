@@ -160,6 +160,7 @@ fn the_properties_tree_lists_declared_unset_inputs_as_empty_rows_without_touchin
 
 #[test]
 fn edits_become_the_actions_the_browser_binds() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let rows = [row("c1")];
     let insert = insert_case_edit::<Toy>(&rows, "T-01", 1).expect("insert");
     assert!(edit_args(&insert).is_ok() && edit_args(&remove_case_edit(&rows, 0).expect("remove")).is_ok() && edit_args(&clear_input_edit("c1", "b", true)).is_ok());

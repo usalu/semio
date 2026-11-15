@@ -1,11 +1,12 @@
 import{refuseBuildV1}from"./🏗️build/📖️texts/🟦️.ts";
+import {remoteGuardInputsV1} from "./🏗️build/🧮️task-model/🛡️remote-guard/🟦️.ts";
 import {nxTaskArgumentsSourceIdentityV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import {readFileSync,existsSync,lstatSync,realpathSync} from "node:fs";
 import {join,resolve,relative,dirname,isAbsolute,sep} from "node:path";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import {createRequire} from "node:module";
-import {nxBuildDependencySourceIdentityV1,nxBuildDependencySourceChangesV1,nxEngineNamedInputV1 as engineNamedInput,nxEngineNativeNamedInputV1 as engineNativeNamedInput} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs";
+import {nxBuildDependencySourceIdentityV1,nxBuildDependencySourceChangesV1,nxBuildDependencySourceRevisionsV1,nxBuildDependencySourceChangesFromV1,nxBuildDependencySourceProbeV1,nxEngineNamedInputV1 as engineNamedInput,nxEngineNativeNamedInputV1 as engineNativeNamedInput} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs";
 import {nxEngineUnkeyedPrefixesV1,splitNxEngineFilesV1,nxEngineFamilyV1,nxEnginePolicyV1,nxEngineSpawnOnlyV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts";
 import {withNxBuildGraphPublicationV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs";
 import { isRuntimeBuiltinSpecifierV1, runtimeIdsV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
@@ -14,6 +15,12 @@ import { isRuntimeBuiltinSpecifierV1, runtimeIdsV1 } from "../../../../📦️pa
 export function nxBuildDependencyImplementationV1(){nxTaskArgumentsSourceIdentityV1();return nxBuildDependencySourceIdentityV1();}
 /** 👁️ Retains the exact admitted Source projection while identifying physical dependency changes before a mutable child starts. */
 export function nxBuildDependencyImplementationChangesV1(){return nxBuildDependencySourceChangesV1();}
+/** 🧾️ The revisions of the exact admitted projection Source, as rows a fresh process reports. */
+export function nxBuildDependencyImplementationRevisionsV1(){return nxBuildDependencySourceRevisionsV1();}
+/** 👁️ Identifies which of the given revisions no longer equal the physical dependency Source. */
+export function nxBuildDependencyImplementationChangesFromV1(revisions){return nxBuildDependencySourceChangesFromV1(revisions);}
+/** 🌱️ Lets a fresh process evaluate the current projection and report its identity and revisions. */
+export function nxBuildDependencyImplementationProbeV1(options){return nxBuildDependencySourceProbeV1(options);}
 
 
 /** 🔎️ Classifies exact literal module and URL references as portable source facts. */
@@ -51,7 +58,7 @@ export function nxBuildEngineClosureV1(policy=nxEnginePolicyV1()){
   const admit=(owner,specifier)=>{
    if(specifier.startsWith(".")){
     const candidate=nxBuildEngineSourceFileV1(owner,specifier);if(relative(root,candidate).startsWith(".."))throw Error("Private Nx engine source outside workspace");pending.push(candidate);
-   }else if(!specifier.includes(":")&&!isRuntimeBuiltinSpecifierV1(specifier)){const workspaceFile=nxBuildEngineWorkspacePackageFileV1(root,specifier);if(workspaceFile)pending.push(workspaceFile);else packages.add(specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0]);}
+   }else if(!specifier.includes(":")&&!isRuntimeBuiltinSpecifierV1(specifier)){const workspaceFile=nxBuildEngineWorkspacePackageFileV1(root,specifier);if(workspaceFile)pending.push(workspaceFile);else{const name=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0];if(!name)throw Error(`Private Nx engine import names no package: ${JSON.stringify(specifier)} from ${owner}`);packages.add(name);}}
   };
   while(pending.length){
    const reference=pending.pop(),path=reference.startsWith("file:")?fileURLToPath(reference):reference;if(files.has(path))continue;files.add(path);const source=readFileSync(path,"utf8");if(path.endsWith(".json"))continue;
@@ -86,13 +93,14 @@ const graphPublication=(workspaceRoot,environment,body)=>withNxBuildGraphPublica
 
 
 const cachePolicyPath="./⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",cacheablePrefixes=["rust","products"].map(id=>"{workspaceRoot}/"+JSON.parse(readFileSync(new URL(cachePolicyPath,import.meta.url),"utf8")).partitions[id].directory+"/m/");
-/** 🎟️ Admits an output list to the Nx task cache only when every positive output lies in the rust or the products cache partition, the two stores whose custody the cache hook can hold; a declared output elsewhere (generated sources inside the workspace) is never restored by Nx. */
-export function nxOutputsCacheableV1(outputs){return outputs.every(output=>typeof output!=="string"||output.startsWith("!")||cacheablePrefixes.some(prefix=>output.startsWith(prefix)));}
+/** 🎟️ Admits an output list to the Nx task cache only when every positive output lies in the rust or the products cache partition, the two stores whose custody the cache hook can hold, or the small store receipt of the task (`{projectRoot}/.🧾️store/<target>.json`), whose content travels through the fleet content store and is verified after every hit; a declared output elsewhere (generated sources inside the workspace) is never restored by Nx. */
+const receiptOutput=/^\{projectRoot\}\/\.🧾️store\/[A-Za-z0-9][A-Za-z0-9._-]{0,127}\.json$/u;
+export function nxOutputsCacheableV1(outputs){return outputs.every(output=>typeof output!=="string"||output.startsWith("!")||receiptOutput.test(output)||cacheablePrefixes.some(prefix=>output.startsWith(prefix)));}
 
 /** 🔌️ Projects only portable process execution onto Nx's internal executor contract. */
-export function projectBuildTargetForNxV1(target){
+export function projectBuildTargetForNxV1(target,name=""){
  const {execution,configurations,...properties}=target,{kind,ownerArguments,program,...declared}=execution,native=declared.nativeOwnerCommand!==undefined,options=program===undefined?declared:{...declared,command:"'"+program.replaceAll("'","'\\''")+"'"};
- const result={...properties,executor:kind==="noop"?"nx:noop":ownerArguments?"@semio-tech/repo-lib:owner-command":"@semio-tech/repo-lib:command",...(kind==="noop"?{}:{options,inputs:[...properties.inputs??["default","^default"],native?engineNativeNamedInput:engineNamedInput]}),...(properties.cache!==false&&properties.outputs&&!nxOutputsCacheableV1(properties.outputs)?{cache:false}:{})};
+ const result={...properties,executor:kind==="noop"?"nx:noop":ownerArguments?"@semio-tech/repo-lib:owner-command":"@semio-tech/repo-lib:command",...(kind==="noop"?{}:{options,inputs:[...properties.inputs??["default","^default"],...remoteGuardInputsV1(name),native?engineNativeNamedInput:engineNamedInput]}),...(properties.cache!==false&&properties.outputs&&!nxOutputsCacheableV1(properties.outputs)?{cache:false}:{})};
  if(configurations)result.configurations=Object.fromEntries(Object.entries(configurations).map(([name,configuration])=>{const {execution,...properties}=configuration;return[name,{...properties,...execution,...(options.env||execution?.env?{env:{...options.env,...execution?.env}}:{})}];}));
  return result;
 }
@@ -100,7 +108,7 @@ export function projectBuildTargetForNxV1(target){
 /** 📽️ Projects one portable publication without discovering implementation-specific projects. */
 export function projectBuildGraphForNxV1(graph){
  if([engineNamedInput,engineNativeNamedInput].some(name=>Object.hasOwn(graph.namedInputs??{},name)||Object.values(graph.projects).some(project=>Object.hasOwn(project.namedInputs??{},name))))throw Error("Private engine named input is reserved");
- const engine=nxBuildEngineInputsV1(),engineNative=nxBuildEngineInputsV1("native"),known=new Set(Object.keys(graph.projects)),present=names=>Array.isArray(names)?names.filter(name=>typeof name!=="string"||/[*!:,]/u.test(name)||known.has(name)):names,projects=Object.fromEntries(Object.entries(graph.projects).map(([name,project])=>[name,{...project,...(project.implicitDependencies===undefined?{}:{implicitDependencies:present(project.implicitDependencies)}),namedInputs:{...graph.namedInputs,...project.namedInputs,[engineNamedInput]:engine,[engineNativeNamedInput]:engineNative},targets:Object.fromEntries(Object.entries(project.targets).map(([name,target])=>[name,projectBuildTargetForNxV1(target)]))}]));
+ const engine=nxBuildEngineInputsV1(),engineNative=nxBuildEngineInputsV1("native"),known=new Set(Object.keys(graph.projects)),present=names=>Array.isArray(names)?names.filter(name=>typeof name!=="string"||/[*!:,]/u.test(name)||known.has(name)):names,projects=Object.fromEntries(Object.entries(graph.projects).map(([name,project])=>[name,{...project,...(project.implicitDependencies===undefined?{}:{implicitDependencies:present(project.implicitDependencies)}),namedInputs:{...graph.namedInputs,...project.namedInputs,[engineNamedInput]:engine,[engineNativeNamedInput]:engineNative},targets:Object.fromEntries(Object.entries(project.targets).map(([name,target])=>[name,projectBuildTargetForNxV1(target,name)]))}]));
  return {projects:shareNxProjectInputsV1(liftNxNamedInputReferencesV1(projects)),externalNodes:graph.externalNodes??{}};
 }
 

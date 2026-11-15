@@ -79,10 +79,10 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-theta-i-cool-c/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-internal-gains-w-m2/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-internal-gains-wm2/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-lighting-power-w-m2/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-lighting-power-wm2/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-zone-thermal-mass/schema.json"

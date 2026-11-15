@@ -3,10 +3,9 @@ import { receiveScriptProcessInvocation } from "../../../../../../🧰️framewo
 /** 🔮️ Energy oracle package command router. */
 import { ScriptRouter } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { DepsScript, EmitScript, EpJsonScript, NativeScript, RunScript, SetupScript, StatusScript, TestScript } from "../../🏃️execution/🟦️.ts";
+import { EmitScript, EpJsonScript, NativeScript, RunScript, SetupScript, StatusScript, TestScript } from "../../🏃️execution/🟦️.ts";
 
 const router = new ScriptRouter(import.meta.dir)
-  .register("deps", DepsScript)
   .register("setup", SetupScript)
   .register("status", StatusScript)
   .register("run", RunScript)

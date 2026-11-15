@@ -1,0 +1,14 @@
+import {buildFleetV1,disposeFleetV1,generateV1,performV1,rngV1,settleV1} from "./🌪️harness.ts";
+const fleet=await buildFleetV1(3),rng=rngV1(Number(process.argv[2]??7));
+try{
+ for(let step=0;step<150;step++){const op=generateV1(rng,fleet,"hostile",true);await performV1(fleet,op);}
+ await settleV1(fleet,30000);
+ for(const who of fleet.machines){
+  const r=who.replica!;let used=0,stray=0;
+  for(let id=0;id<r.book.count;id++){
+   const inManifest=r.manifest.live(id),inFiles=r.files.live(id),queued=r.queue.hasId(id);
+   if(inManifest||inFiles||queued)used++;else stray++;
+  }
+  console.log(who.name,"ids",r.book.count,"used",used,"stray",stray);
+ }
+}finally{await disposeFleetV1(fleet);}

@@ -179,7 +179,7 @@ class PresentationContractTest(unittest.TestCase):
         events = []
         output_root = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"])
 
-        def concatenate(clips, output, list_path):
+        def concatenate(clips, output, list_path, **kwargs):
             events.append("concat")
             output.parent.mkdir(parents=True, exist_ok=True)
             output.write_bytes(b"raw-content" * 200)
@@ -203,6 +203,7 @@ class PresentationContractTest(unittest.TestCase):
                 self.assertIn("presentation", state)
             return original_write(path, state)
 
+        self.enterContext(patch.object(importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🖼️posters.🐍️"), "prepare", return_value={}))
         with tempfile.TemporaryDirectory(dir=output_root) as directory:
             chapter = Path(directory) / "preview" / "de" / "speaker" / "1" / "v" / (video["chapters"][0]["scene"] + ".mp4")
             chapter.parent.mkdir(parents=True, exist_ok=True)
@@ -213,6 +214,7 @@ class PresentationContractTest(unittest.TestCase):
                     patch.object(runtime, "reusable_clip", side_effect=lambda clip, state: "presentation" not in state and ("video" not in state or events[:1] == ["concat"])), \
                     patch.object(runtime, "execute_jobs", return_value=({}, {})), \
                     patch.object(runtime, "concat_videos", side_effect=concatenate), \
+                    patch.object(runtime, "publish_export", return_value={}), \
                     patch.object(runtime, "render_presentation", side_effect=present) as envelope, \
                     patch.object(runtime, "_write_state", side_effect=publish):
                 result = runtime.compose_videos([video["id"]], profile="preview", language="de", audience="speaker", output_root=Path(directory))
@@ -227,6 +229,7 @@ class PresentationNativeTest(unittest.TestCase):
         cls.runtime = importlib.import_module(MODULE + ".⚙️runtime.🐍️")
         output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"])
         output.mkdir(parents=True, exist_ok=True)
+        cls.enterClassContext(importlib.import_module(MODULE + ".🪟️presentation.🖼️posters.🧪️tests.🧰️synthetic.🐍️").captured())
         cls.directory = tempfile.TemporaryDirectory(dir=output)
         cls.output = Path(cls.directory.name)
         cls.settings = {"audience": "speaker", "profile": "preview", "resolution": "320,180", "fps": 4, "language": "de"}
@@ -422,7 +425,8 @@ class PresentationNativeTest(unittest.TestCase):
         self.assertEqual([event["type"] for event in press["browser"]["pointer_events"]], ["pointerdown"])
         self.assertEqual([event["type"] for event in release["browser"]["pointer_events"]], ["pointerup", "click"])
         self.assertTrue(all(event["target"] == "PhysicalFundamentals_FullSection:fullscreen"
-                            for frame in (press, release) for event in frame["browser"]["pointer_events"]))
+                            for frame in (press, release) for event in frame["browser"]["pointer_events"]),
+                        [press["browser"]["pointer_events"], release["browser"]["pointer_events"], press["browser"]["cursor"], release["browser"]["cursor"]])
         self.assertEqual(press["browser"]["content_camera"]["progress"], 0)
         window = next(window for window in press["browser"]["windows"] if window["id"] == "PhysicalFundamentals_FullSection")
         self.assertTrue(window["control_in_title_chip"])

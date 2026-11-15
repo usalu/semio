@@ -6,7 +6,7 @@
  * @see ../🎞️frame/🟦️.ts */
 import type { Slug } from "../../🧬️schema/🟦️.ts";
 import type { V3 } from "../../🧮️math/🟦️.ts";
-import type { Frame, Scene } from "../🧬️contract/🟦️.ts";
+import { inScene, type Frame, type Scene } from "../🧬️contract/🟦️.ts";
 import * as portable from "../../🧮️math/🎯️portable/🟦️.ts";
 
 /** 🧲️ What the camera target follows. */
@@ -35,6 +35,7 @@ export function followPoint(scene: Scene, frame: Frame, follow: ViewerFollow, ou
   }
   let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity;
   for (const p of scene.primitives) {
+    if (!inScene(p, frame.sceneIndex)) continue;
     const w = positions(p.index);
     for (let i = 0; i < p.vertexCount; i++) {
       const x = w[i * 3]!, y = w[i * 3 + 1]!, z = w[i * 3 + 2]!;

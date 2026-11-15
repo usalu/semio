@@ -13,6 +13,7 @@ import bootstrapSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 export const component = "bootstrap";
 let LIBRARY_ROOT, LIBRARY_URL, RUNTIME_COMPONENT_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, INSTALLATION_IDENTITY_MODULE, INSTALLATION_IDENTITY_SCHEMA, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, SOURCE_INPUT_MODULE, COMMAND_INPUT_MODULE, PROJECT_INPUT_MODULE, BUILD_MODE_MODULE, readPhysicalSource;
 export let libraryBootstrap;
+let stamps;
 
 /** 📖️ Loads a captured image through the roots its ComputedImportSites row declares; otherwise evicts Bun's canonical module entry and retains Node's revision-specific ESM identity. */
 export async function importRevision(source, revision) {
@@ -59,6 +60,7 @@ export const loaded = {
 
 /** 🔌️ Binds the shared coordinates and starts the asynchronous helper load of this revision. */
 export function wire(registry) {
+  stamps = registry.stamps;
   ({ LIBRARY_ROOT, LIBRARY_URL, RUNTIME_COMPONENT_MODULE, NATIVE_HOST_MODULE, COMPONENT_DEPLOYMENT_MODULE, INSTALLATION_IDENTITY_MODULE, INSTALLATION_IDENTITY_SCHEMA, BROWSER_SESSION_MODULE, PLAYGROUND_COMPOSITION_MODULE, SOURCE_INPUT_MODULE, COMMAND_INPUT_MODULE, PROJECT_INPUT_MODULE, BUILD_MODE_MODULE, readPhysicalSource } = registry.coordinates);
   loaded.commandInputHash = createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, COMMAND_INPUT_MODULE))).digest("hex");
   libraryBootstrap = Promise.resolve().then(()=>{requireCurrentSourceInventoryV1();requireCurrentObservationV1();return (loadedCommandInputs.sourceHash === loaded.commandInputHash ? Promise.resolve(loadedCommandInputs) : importRevision(new URL(`./${COMMAND_INPUT_MODULE}`, LIBRARY_URL), loaded.commandInputHash));}).then((commandInputs) => {
@@ -100,5 +102,5 @@ export function wire(registry) {
     loaded.declaredBrowserSessionEnginesV1 = browser.declaredBrowserSessionEnginesV1;
     const composition = await importRevision(new URL(PLAYGROUND_COMPOSITION_MODULE, LIBRARY_URL), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, PLAYGROUND_COMPOSITION_MODULE))).digest("hex"));
     loaded.playgroundCompositionPathV1 = composition.playgroundCompositionPathV1;
-  });
+  }).then(() => stamps.settleConformanceStampsV1({ libraryRoot: LIBRARY_ROOT }).catch(() => undefined));
 }

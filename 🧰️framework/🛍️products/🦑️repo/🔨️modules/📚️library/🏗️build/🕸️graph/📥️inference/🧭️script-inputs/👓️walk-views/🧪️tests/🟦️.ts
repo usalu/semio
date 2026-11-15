@@ -1,7 +1,8 @@
 /** 👓 Contract: a project holds a command walk through the view of the closure recipe it reads it with. A target's own closure (target-sources, generic-target) drops every scheduling file, a Rust command's closure (native-command, native-target) keeps the native-build modules; so the derived fact such a project holds stays equal after an edit that only moves files its view leaves out (a peer edit of scheduling code leaves product owners verified), and changes as soon as its view's roster or compiled modules move (an edit that changes a command's inputs still re-infers). A recipe the policy does not name (closure-of, the test discovery) keeps holding the whole walk. The real walk, the real `resolve` and the real `deriveClosureFactV1` run under the real observation layer on a tiny workspace; an independent Python model (reading the scheduling table itself) states every verdict and roster, and esbuild's bundle graph states the whole roster. */
 import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
 import {spawnSync} from "node:child_process";
-import {mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {createHash} from "node:crypto";
+import {mkdirSync,mkdtempSync,realpathSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {createRequire} from "node:module";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
@@ -71,6 +72,25 @@ test("a target's own closure holds the walk through the scheduling view and the 
   const roster=(fresh.whole.values.values().next().value as string[]).filter(path=>typeof path==="string").map(path=>path.replace("{workspaceRoot}/","")).sort();
   expect(roster,mutation.name).toEqual(model.rosters[index]!);expect(roster,mutation.name).toEqual(await esbuildRoster(root));
  }
+});
+
+test("an unrelated edit leaves the held answers valid: files the remote cache gains or loses in a command roster move neither the scheduling nor the native answer, a keyed file moves both, and the answers equal an independent digest",()=>{
+ const library="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/",cache=library+"🏗️build/🌐️remote-cache/",checkout=join(import.meta.dir,"../../../../../../../../../../../"),name=(path:string)=>"{workspaceRoot}/"+path;
+ const domain=table.domains.find(row=>row.id==="remote-cache")!;
+ expect(domain.prefixes).toEqual([cache]);
+ for(const port of domain.ports){expect(port.startsWith(cache),port).toBe(true);expect(statSync(join(checkout,port)).isFile(),port).toBe(true);}
+ const bootstrap=name(library+"⚡️caching/🚀️bootstrap/📜️script.ts"),route=name(cache+"🧶️nx/🟦️.ts"),added=name(cache+"⌨️command/🟦️.ts"),keyed=name(library+"🏗️build/📥️source/🔏️closure/🟦️.ts");
+ const answer=(roster:string[],view?:string)=>views.walkViewAnswerV1(roster,roster,[],view);
+ const independent=(roster:string[],view:string)=>{const prefixes=view==="scheduling"?[...new Set(table.domains.flatMap(row=>row.prefixes))]:[...new Set(table.domains.flatMap(row=>row.prefixes))].filter(prefix=>!table.domains.flatMap(row=>(row as {nativeKeyed?:string[]}).nativeKeyed??[]).some(row=>row.startsWith(prefix)||prefix.startsWith(row))),kept=roster.filter(path=>!prefixes.some(prefix=>path.slice("{workspaceRoot}/".length).startsWith(prefix)));return createHash("sha256").update(JSON.stringify([view,kept,kept,[],[]])).digest("hex");};
+ const before=[bootstrap,route,keyed],grown=[bootstrap,route,added,keyed],shrunk=[bootstrap,keyed],moved=[bootstrap,route,keyed,name(library+"🏗️build/🕸️graph/📜️contract/🟦️.ts")];
+ for(const view of ["scheduling","native"]){
+  expect(views.walkViewPrefixesV1(view)).toContain(cache);
+  expect(answer(grown,view),view+": a module the remote cache gains").toBe(answer(before,view));
+  expect(answer(shrunk,view),view+": a module the remote cache loses").toBe(answer(before,view));
+  expect(answer(moved,view),view+": a keyed module").not.toBe(answer(before,view));
+  expect(answer(before,view)).toBe(independent(before,view));expect(answer(moved,view)).toBe(independent(moved,view));
+ }
+ expect(answer(grown),"the whole walk still names every file").not.toBe(answer(before));
 });
 
 test("a walk question naming a view the policy does not carry is refused",async()=>{

@@ -1,0 +1,4 @@
+\be_\{?\\?(mathrm\{)?[A-Za-z]
+\be_(P|g|E|p)\b
+Anlagenaufwand
+system expenditure|plant expenditure|Aufwandszahl

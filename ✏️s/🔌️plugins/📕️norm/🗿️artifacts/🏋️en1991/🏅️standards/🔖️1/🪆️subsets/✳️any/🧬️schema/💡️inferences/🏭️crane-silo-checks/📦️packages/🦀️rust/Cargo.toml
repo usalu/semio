@@ -17,5 +17,6 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-s-artifact-norm-en1991-checks = { workspace = true }
+semio-s-artifact-norm-en1991-inferences-rail-silo = { workspace = true }
 semio-s-artifact-norm-en1991-model = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }

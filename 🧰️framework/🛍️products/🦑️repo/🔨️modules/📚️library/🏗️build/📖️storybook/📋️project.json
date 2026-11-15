@@ -425,7 +425,7 @@
       },
       "cache": false,
       "outputs": [
-        "{workspaceRoot}/.🧾️store/build-storybook.json"
+        "{projectRoot}/.🧾️store/build-storybook.json"
       ],
       "inputs": [
         "{workspaceRoot}/.storybook/**/*",

@@ -1,0 +1,200 @@
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:859712","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:859776","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:859840","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:859904","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:859968","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860032","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860096","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860160","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860224","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860288","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860352","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860416","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860480","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860544","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860608","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860672","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860736","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860800","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860864","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860928","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:860992","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861056","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861120","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861184","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861248","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861312","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861376","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861440","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861504","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861568","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861632","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861696","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861760","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861824","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861888","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861952","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862016","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862080","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862144","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862208","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862272","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862336","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862400","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862464","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862528","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862592","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862656","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862720","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862784","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862848","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862912","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862976","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863040","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863104","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863168","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863232","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863296","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863360","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863424","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863488","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863552","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863616","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863680","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863744","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863808","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863872","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863936","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864000","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864064","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864128","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864192","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864256","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864320","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864384","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864448","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864512","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864576","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864640","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864704","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864768","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864832","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864896","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864960","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865024","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865088","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865152","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865216","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865280","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865344","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865408","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865472","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865536","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865600","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865664","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865728","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865792","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865856","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865920","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865984","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866048","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866112","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866176","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866240","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866304","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866368","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866432","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866496","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866560","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866624","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866688","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866752","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866816","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866880","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:866944","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867008","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867072","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867136","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867200","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867264","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867328","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867392","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867456","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867520","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867584","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867648","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:867712","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 160 s
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+[semio] workspace:setup…
+[capacity] run: sized at 46% of the default from 3 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 512 MB reserved (10635 MB available, 1981 MB floor)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+Planning 1 targets.
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+[repo] still working after 5 s; last phase started: door.script
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s).
+[repo] still working after 10 s; last phase started: door.script
+Reading the project graph slice (10 s): files 0 of 0.
+Reading the project graph slice (12 s): files 1196 of 1196.
+Reading the project graph slice (14 s): facts 57344 of 201617.
+Reading the project graph slice (16 s): facts 143360 of 201617.
+Reading the project graph slice (18 s): facts 155648 of 201617.
+[repo] still working after 20 s; last phase started: door.script
+Reading the project graph slice (20 s): facts 201617 of 201617.
+Reading the project graph slice (22 s): verification 0 of 2338.
+Reading the project graph slice (24 s): verification 1 of 2338.
+Reading the project graph slice (26 s): verification 7 of 2338.
+Reading the project graph slice (28 s): verification 79 of 2338.
+Reading the project graph slice (30 s): flush 1 of 1.
+Reading the project graph slice (32 s): verification 504 of 2338.
+Reading the project graph slice (34 s): flush 1 of 1.
+Reading the project graph slice (36 s): flush 1 of 1.
+Reading the project graph slice (38 s): flush 1 of 1.
+Reading the project graph slice (40 s): flush 1 of 1.
+Reading the project graph slice (42 s): flush 1 of 1.
+Reading the project graph slice (44 s): flush 1 of 1.
+Reading the project graph slice (46 s): flush 1 of 1.
+Reading the project graph slice (48 s): flush 1 of 1.
+[repo] still working after 50 s; last phase started: door.script
+Reading the project graph slice (50 s): flush 1 of 1.
+Reading the project graph slice (52 s): flush 1 of 1.
+Reading the project graph slice (54 s): flush 1 of 1.
+Reading the project graph slice (56 s): flush 1 of 1.
+Reading the project graph slice (58 s): flush 1 of 1.
+Reading the project graph slice (60 s): flush 1 of 1.
+Reading the project graph slice (62 s): flush 1 of 1.
+Reading the project graph slice (64 s): flush 1 of 1.
+Reading the project graph slice (66 s): flush 1 of 1.
+Reading the project graph slice (68 s): flush 1 of 1.
+Reading the project graph slice (70 s): flush 1 of 1.
+Reading the project graph slice (72 s): flush 1 of 1.
+Reading the project graph slice (74 s): flush 1 of 1.
+Reading the project graph slice (76 s): flush 1 of 1.
+Reading the project graph slice (78 s): flush 1 of 1.
+[repo] still working after 80 s; last phase started: door.script
+Reading the project graph slice (80 s): flush 1 of 1.
+Reading the project graph slice (82 s): flush 1 of 1.
+Reading the project graph slice (84 s): flush 1 of 1.
+Reading the project graph slice (86 s): flush 1 of 1.
+Reading the project graph slice (88 s): flush 1 of 1.
+Reading the project graph slice (90 s): flush 1 of 1.
+Reading the project graph slice (92 s): flush 1 of 1.
+Reading the project graph slice (94 s): flush 1 of 1.
+Reading the project graph slice (96 s): flush 1 of 1.
+Reading the project graph slice (98 s): flush 1 of 1.
+Reading the project graph slice (100 s): flush 1 of 1.
+Reading the project graph slice (102 s): flush 1 of 1.
+Reading the project graph slice (104 s): flush 1 of 1.
+Reading the project graph slice (106 s): flush 1 of 1.
+Reading the project graph slice (108 s): flush 1 of 1.
+[repo] still working after 110 s; last phase started: door.script
+Reading the project graph slice (110 s): flush 1 of 1.
+Reading the project graph slice (112 s): flush 1 of 1.
+Reading the project graph slice (114 s): flush 1 of 1.
+Reading the project graph slice (116 s): flush 1 of 1.
+end 2026-11-15T12:39:03Z
+native_rc=7

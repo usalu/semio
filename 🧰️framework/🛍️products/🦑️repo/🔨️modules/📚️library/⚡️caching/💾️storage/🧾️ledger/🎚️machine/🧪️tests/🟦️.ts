@@ -107,7 +107,7 @@ test("laws: quotas add up, nothing under its fair share is cut, planning converg
   if(plan.stores.reduce((sum,row)=>sum+Math.max(row.demandBytes,declared.stores.find(store=>store.id===row.id)!.floorBytes),0)<=plan.effectiveTotalBytes)expect(plan.evictBytes+plan.blockedBytes,label+" fits").toBe(0);
   const after=planMachineBudgetV1({...input,hostFreeBytes:plan.pressureBytes>0?declared.hostFreeFloorBytes:input.hostFreeBytes,uses:input.uses.map(use=>{const row=plan.stores.find(candidate=>candidate.id===use.id)!;return{...use,usedBytes:use.usedBytes-row.evictBytes,evictableBytes:use.evictableBytes===null?null:use.evictableBytes-row.evictBytes};})});
   expect(after.evictBytes,label+" converges once the host is relieved").toBe(0);
-  expect(after.blockedBytes,label+" blocked never grows").toBeLessThanOrEqual(plan.blockedBytes);
+  expect(after.blockedBytes,label+" blocked never grows beyond the one byte per store the largest-remainder split may move").toBeLessThanOrEqual(plan.blockedBytes+plan.stores.length);
   const larger=planMachineBudgetV1({...input,totalBytes:input.totalBytes+4*GIB});
   expect(larger.evictBytes+larger.blockedBytes,label+" monotone").toBeLessThanOrEqual(plan.evictBytes+plan.blockedBytes);
  }
@@ -130,4 +130,12 @@ test("the report reads the same in English and German and names what must go and
  expect(en.join("\n")).toContain("kept by holders or owners");expect(de.join("\n")).toContain("von Haltern oder Verwaltern behalten");
  expect(en.join("\n")).toContain("below its free-space floor");expect(de.join("\n")).toContain("Untergrenze");
  for(const line of[...en,...de])expect(line).not.toMatch(/\{[a-z]+\}/u);
+});
+
+test("the machine footprint counts the host allocation of an image, never less than the bytes used inside it",()=>{
+ const base:MachineUseV1[]=[{id:"rust",usedBytes:3*GIB,envelopeBytes:45*GIB,evictableBytes:null},{id:"loose",usedBytes:GIB,envelopeBytes:null,evictableBytes:null}];
+ const plan=(uses:readonly MachineUseV1[])=>planMachineBudgetV1({totalBytes:declared.defaultTotalBytes,hostFreeBytes:null,uses},declared);
+ expect(plan(base).footprintBytes).toBe(46*GIB);
+ expect(plan(base.map(use=>use.id==="rust"?{...use,allocatedBytes:24*GIB}:use)).footprintBytes).toBe(25*GIB);
+ expect(plan(base.map(use=>use.id==="rust"?{...use,allocatedBytes:GIB}:use)).footprintBytes).toBe(4*GIB);
 });

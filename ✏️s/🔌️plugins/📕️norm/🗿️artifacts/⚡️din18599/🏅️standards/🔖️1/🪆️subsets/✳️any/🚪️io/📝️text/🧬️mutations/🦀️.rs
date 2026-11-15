@@ -6,11 +6,11 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
+use crate::Din18599Mutation;
 use semio_s_artifact_norm_din18599_mut_building::{change_attachment, change_automation_class, change_building_category, change_delta_u_wb, change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class};
 use semio_s_artifact_norm_din18599_mut_zoning::{change_element_u, update_climate};
 use semio_s_artifact_norm_din18599_mut_zone_rows::{insert_zone, remove_zone, change_zone_label_en, change_zone_label_de, change_zone_usage_profile, change_zone_occupants};
-use semio_s_artifact_norm_din18599_mut_zone_fields::{change_zone_area_m2, change_zone_volume_m3, change_zone_theta_i_heat_c, change_zone_theta_i_cool_c, change_zone_internal_gains_w_m2, change_zone_lighting_power_w_m2, change_zone_thermal_mass};
+use semio_s_artifact_norm_din18599_mut_zone_fields::{change_zone_area_m2, change_zone_volume_m3, change_zone_theta_i_heat_c, change_zone_theta_i_cool_c, change_zone_internal_gains_wm2, change_zone_lighting_power_wm2, change_zone_thermal_mass};
 use semio_s_artifact_norm_din18599_mut_element_rows::{insert_element, remove_element, change_element_label_en, change_element_label_de, change_element_kind, change_element_zone_id};
 use semio_s_artifact_norm_din18599_mut_element_fields::{change_element_area_m2, change_element_orientation_deg, change_element_tilt_deg, change_element_g_value, change_element_fc, change_element_adjacency};
 use semio_s_artifact_norm_din18599_mut_systems::{update_cooling, specify_dhw_system, specify_heating_system, update_lighting, update_renewables, update_ventilation};
@@ -279,9 +279,9 @@ pub fn din18599_mutation_from_dsl(dsl: Din18599MutationDsl) -> Din18599Mutation 
         Din18599MutationDsl::ChangeZoneVolumeM3 { zone_id, new_volume_m3 } => Din18599Mutation::ChangeZoneVolumeM3(change_zone_volume_m3::ChangeZoneVolumeM3 { zone_id, new_volume_m3 }),
         Din18599MutationDsl::ChangeZoneThetaIHeatC { zone_id, new_theta_i_heat_c } => Din18599Mutation::ChangeZoneThetaIHeatC(change_zone_theta_i_heat_c::ChangeZoneThetaIHeatC { zone_id, new_theta_i_heat_c }),
         Din18599MutationDsl::ChangeZoneThetaICoolC { zone_id, new_theta_i_cool_c } => Din18599Mutation::ChangeZoneThetaICoolC(change_zone_theta_i_cool_c::ChangeZoneThetaICoolC { zone_id, new_theta_i_cool_c }),
-        Din18599MutationDsl::ChangeZoneInternalGainsWM2 { zone_id, new_internal_gains_w_m2 } => Din18599Mutation::ChangeZoneInternalGainsWM2(change_zone_internal_gains_w_m2::ChangeZoneInternalGainsWM2 { zone_id, new_internal_gains_w_m2 }),
+        Din18599MutationDsl::ChangeZoneInternalGainsWM2 { zone_id, new_internal_gains_w_m2 } => Din18599Mutation::ChangeZoneInternalGainsWM2(change_zone_internal_gains_wm2::ChangeZoneInternalGainsWM2 { zone_id, new_internal_gains_w_m2 }),
         Din18599MutationDsl::ChangeZoneThermalMass { zone_id, new_thermal_mass_class, new_c_wirk_wh_m2k } => Din18599Mutation::ChangeZoneThermalMass(change_zone_thermal_mass::ChangeZoneThermalMass { zone_id, new_thermal_mass_class, new_c_wirk_wh_m2k }),
-        Din18599MutationDsl::ChangeZoneLightingPowerWM2 { zone_id, new_lighting_power_w_m2 } => Din18599Mutation::ChangeZoneLightingPowerWM2(change_zone_lighting_power_w_m2::ChangeZoneLightingPowerWM2 { zone_id, new_lighting_power_w_m2 }),
+        Din18599MutationDsl::ChangeZoneLightingPowerWM2 { zone_id, new_lighting_power_w_m2 } => Din18599Mutation::ChangeZoneLightingPowerWM2(change_zone_lighting_power_wm2::ChangeZoneLightingPowerWM2 { zone_id, new_lighting_power_w_m2 }),
         Din18599MutationDsl::InsertElement { index, element } => Din18599Mutation::InsertElement(insert_element::InsertElement { index, element }),
         Din18599MutationDsl::RemoveElement { id } => Din18599Mutation::RemoveElement(remove_element::RemoveElement { id }),
         Din18599MutationDsl::ChangeElementLabelEn { element_id, new_label_en } => Din18599Mutation::ChangeElementLabelEn(change_element_label_en::ChangeElementLabelEn { element_id, new_label_en }),
@@ -316,8 +316,8 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::mutations::*;
-use semio_s_artifact_norm_din18599_mutations::*;
+use crate::text::*;
+use crate::*;
 use semio_s_artifact_norm_din18599_diff::Din18599Diff;
 use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 use semio_s_artifact_norm_din18599_mut_building::change_building_category;
@@ -342,7 +342,7 @@ pub fn decode_din18599_mutation_json(text: &str) -> Result<Din18599Mutation, Str
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use crate::mutations::mutations_codec::*;
+pub use crate::text::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

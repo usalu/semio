@@ -256,6 +256,7 @@ message En1998Foundation {
   double pile_moment_rd_nm = 30;
   double base_friction_angle_deg = 31;
   double base_pore_pressure_pa = 32;
+  double pile_axial_load_n = 33;
 }
 message En1998RetainingWall {
   string id = 1;

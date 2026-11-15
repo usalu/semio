@@ -1,0 +1,121 @@
+service log at start: /var/folders/gd/byw98s3s0p95zhdpzyv769740000gn/T/semio-repo/501/host-d7505b87cee1.log (line 2430 on)
+closure entries before: 41895
+2026-11-15T06:52:51Z pid=59585 rss=123MB footprint=[bun [59585]: 64-bit    Footprint: 172 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:52:56Z pid=59585 rss=173MB footprint=[bun [59585]: 64-bit    Footprint: 182 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:01Z pid=59585 rss=231MB footprint=[bun [59585]: 64-bit    Footprint: 143 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:07Z pid=59585 rss=217MB footprint=[bun [59585]: 64-bit    Footprint: 156 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:12Z pid=59585 rss=181MB footprint=[bun [59585]: 64-bit    Footprint: 182 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:17Z pid=59585 rss=114MB footprint=[bun [59585]: 64-bit    Footprint: 223 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:22Z pid=59585 rss=106MB footprint=[bun [59585]: 64-bit    Footprint: 237 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:27Z pid=59585 rss=55MB footprint=[bun [59585]: 64-bit    Footprint: 235 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:32Z pid=59585 rss=74MB footprint=[bun [59585]: 64-bit    Footprint: 236 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:37Z pid=59585 rss=44MB footprint=[bun [59585]: 64-bit    Footprint: 238 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:42Z pid=59585 rss=64MB footprint=[bun [59585]: 64-bit    Footprint: 237 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:47Z pid=59585 rss=64MB footprint=[bun [59585]: 64-bit    Footprint: 246 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:53Z pid=59585 rss=49MB footprint=[bun [59585]: 64-bit    Footprint: 245 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:53:58Z pid=59585 rss=103MB footprint=[bun [59585]: 64-bit    Footprint: 246 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (48 s, generation 223 was the newest when it queued)]
+2026-11-15T06:54:03Z pid=62203 rss=193MB footprint=[bun [62203]: 64-bit    Footprint: 154 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (55 s, generation 223 was the newest when it queued)]
+2026-11-15T06:54:08Z no slice worker
+2026-11-15T06:54:13Z no slice worker
+2026-11-15T06:54:18Z no slice worker
+2026-11-15T06:54:23Z no slice worker
+2026-11-15T06:54:28Z no slice worker
+2026-11-15T06:54:33Z no slice worker
+2026-11-15T06:54:38Z no slice worker
+2026-11-15T06:54:43Z no slice worker
+2026-11-15T06:54:49Z no slice worker
+2026-11-15T06:54:54Z no slice worker
+2026-11-15T06:54:59Z no slice worker
+2026-11-15T06:55:04Z no slice worker
+2026-11-15T06:55:09Z no slice worker
+2026-11-15T06:55:14Z no slice worker
+2026-11-15T06:55:19Z no slice worker
+2026-11-15T06:55:24Z no slice worker
+2026-11-15T06:55:29Z no slice worker
+2026-11-15T06:55:34Z no slice worker
+2026-11-15T06:55:39Z no slice worker
+2026-11-15T06:55:44Z no slice worker
+2026-11-15T06:55:50Z no slice worker
+2026-11-15T06:55:55Z no slice worker
+2026-11-15T06:56:00Z no slice worker
+2026-11-15T06:56:05Z no slice worker
+2026-11-15T06:56:10Z no slice worker
+2026-11-15T06:56:15Z no slice worker
+2026-11-15T06:56:20Z no slice worker
+2026-11-15T06:56:25Z no slice worker
+2026-11-15T06:56:30Z no slice worker
+2026-11-15T06:56:35Z no slice worker
+2026-11-15T06:56:41Z no slice worker
+2026-11-15T06:56:46Z no slice worker
+2026-11-15T06:56:51Z no slice worker
+2026-11-15T06:56:56Z no slice worker
+2026-11-15T06:57:01Z no slice worker
+2026-11-15T06:57:06Z no slice worker
+2026-11-15T06:57:11Z no slice worker
+2026-11-15T06:57:16Z no slice worker
+2026-11-15T06:57:21Z no slice worker
+2026-11-15T06:57:26Z pid=67321 rss=260MB footprint=[bun [67321]: 64-bit    Footprint: 163 MB (16384 bytes per page)] last=[graph: plan answered, managed 111 MB, resident 149 MB (released 0 MB)]
+2026-11-15T06:57:31Z pid=67321 rss=125MB footprint=[bun [67321]: 64-bit    Footprint: 243 MB (16384 bytes per page)] last=[graph: plan answered, managed 111 MB, resident 149 MB (released 0 MB)]
+2026-11-15T06:57:36Z pid=67321 rss=119MB footprint=[bun [67321]: 64-bit    Footprint: 256 MB (16384 bytes per page)] last=[graph: plan answered, managed 111 MB, resident 149 MB (released 0 MB)]
+2026-11-15T06:57:41Z pid=67321 rss=334MB footprint=[bun [67321]: 64-bit    Footprint: 364 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 133 MB, resident 322 MB)]
+2026-11-15T06:57:47Z pid=67321 rss=507MB footprint=[bun [67321]: 64-bit    Footprint: 506 MB (16384 bytes per page)] last=[]
+2026-11-15T06:57:52Z pid=67321 rss=481MB footprint=[bun [67321]: 64-bit    Footprint: 548 MB (16384 bytes per page)] last=[]
+2026-11-15T06:57:57Z pid=67321 rss=521MB footprint=[bun [67321]: 64-bit    Footprint: 621 MB (16384 bytes per page)] last=[]
+2026-11-15T06:58:02Z pid=67321 rss=829MB footprint=[bun [67321]: 64-bit    Footprint: 696 MB (16384 bytes per page)] last=[]
+2026-11-15T06:58:07Z pid=67321 rss=781MB footprint=[bun [67321]: 64-bit    Footprint: 715 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (966 of 729 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 966 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, ot]
+2026-11-15T06:58:12Z pid=67321 rss=649MB footprint=[bun [67321]: 64-bit    Footprint: 1826 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (966 of 729 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 966 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, ot]
+2026-11-15T06:58:17Z pid=67321 rss=754MB footprint=[bun [67321]: 64-bit    Footprint: 2429 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1457 of 842 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 966 MB and has waited 7 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, o]
+2026-11-15T06:58:23Z pid=67321 rss=196MB footprint=[bun [67321]: 64-bit    Footprint: 2918 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2016 of 842 MB reserved, 1 projects running): @semio-tech/mit-bestand-bericht needs 966 MB and has waited 13 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, ]
+2026-11-15T06:58:28Z pid=67321 rss=1212MB footprint=[bun [67321]: 64-bit    Footprint: 3822 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1092 of 0 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted]
+2026-11-15T06:58:33Z pid=67321 rss=1595MB footprint=[bun [67321]: 64-bit    Footprint: 4703 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1092 of 0 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted]
+2026-11-15T06:58:38Z pid=67321 rss=1474MB footprint=[bun [67321]: 64-bit    Footprint: 4697 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1092 of 0 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted]
+2026-11-15T06:58:43Z pid=67321 rss=4230MB footprint=[bun [67321]: 64-bit    Footprint: 4808 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1092 of 0 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted]
+2026-11-15T06:58:48Z pid=67321 rss=2916MB footprint=[bun [67321]: 64-bit    Footprint: 5680 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1092 of 0 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted]
+2026-11-15T06:58:53Z pid=67321 rss=98MB footprint=[bun [67321]: 64-bit    Footprint: 5762 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1092 of 0 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted]
+2026-11-15T06:58:58Z pid=67321 rss=1822MB footprint=[bun [67321]: 64-bit    Footprint: 3095 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1092 of 0 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted]
+2026-11-15T06:59:04Z pid=67321 rss=1659MB footprint=[bun [67321]: 64-bit    Footprint: 1325 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (4217 of 2574 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 39 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T06:59:09Z pid=67321 rss=1343MB footprint=[bun [67321]: 64-bit    Footprint: 1355 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (4217 of 4233 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 44 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T06:59:14Z pid=67321 rss=1936MB footprint=[bun [67321]: 64-bit    Footprint: 1948 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (4217 of 4433 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 49 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T06:59:19Z pid=67321 rss=1242MB footprint=[bun [67321]: 64-bit    Footprint: 3754 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (4217 of 2964 MB reserved, 1 projects running): @semio-tech/mit-bestand-demonstrator needs 966 MB and has waited 55 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T06:59:24Z pid=67321 rss=3370MB footprint=[bun [67321]: 64-bit    Footprint: 3103 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T06:59:29Z pid=67321 rss=543MB footprint=[bun [67321]: 64-bit    Footprint: 4433 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T06:59:34Z pid=67321 rss=719MB footprint=[bun [67321]: 64-bit    Footprint: 4813 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T06:59:40Z pid=67321 rss=979MB footprint=[bun [67321]: 64-bit    Footprint: 4908 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T06:59:45Z pid=67321 rss=1353MB footprint=[bun [67321]: 64-bit    Footprint: 4942 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T06:59:50Z pid=67321 rss=555MB footprint=[bun [67321]: 64-bit    Footprint: 5477 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T06:59:55Z pid=67321 rss=639MB footprint=[bun [67321]: 64-bit    Footprint: 5558 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:00Z pid=67321 rss=472MB footprint=[bun [67321]: 64-bit    Footprint: 5449 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:06Z pid=67321 rss=428MB footprint=[bun [67321]: 64-bit    Footprint: 5529 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:11Z pid=67321 rss=229MB footprint=[bun [67321]: 64-bit    Footprint: 5416 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:16Z pid=67321 rss=108MB footprint=[bun [67321]: 64-bit    Footprint: 5706 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:22Z pid=67321 rss=211MB footprint=[bun [67321]: 64-bit    Footprint: 5589 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:28Z pid=67321 rss=1673MB footprint=[bun [67321]: 64-bit    Footprint: 5548 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:34Z pid=67321 rss=1220MB footprint=[bun [67321]: 64-bit    Footprint: 6179 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:39Z pid=67321 rss=1026MB footprint=[bun [67321]: 64-bit    Footprint: 6595 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:44Z pid=67321 rss=174MB footprint=[bun [67321]: 64-bit    Footprint: 6999 MB (16384 bytes per page)] last=[graph: project @semio-tech/mit-bestand-bericht (project) grew by 4217 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too ]
+2026-11-15T07:00:49Z pid=67321 rss=101MB footprint=[bun [67321]: 64-bit    Footprint: 7623 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 6613 auf 6990 MB]
+2026-11-15T07:00:55Z no slice worker
+2026-11-15T07:01:00Z no slice worker
+2026-11-15T07:01:05Z no slice worker
+2026-11-15T07:01:10Z no slice worker
+2026-11-15T07:01:15Z no slice worker
+2026-11-15T07:01:20Z no slice worker
+2026-11-15T07:01:25Z no slice worker
+2026-11-15T07:01:30Z no slice worker
+2026-11-15T07:01:35Z no slice worker
+2026-11-15T07:01:40Z no slice worker
+2026-11-15T07:01:45Z no slice worker
+2026-11-15T07:01:50Z no slice worker
+2026-11-15T07:01:55Z no slice worker
+2026-11-15T07:02:01Z no slice worker
+2026-11-15T07:02:06Z no slice worker
+2026-11-15T07:02:11Z no slice worker
+2026-11-15T07:02:16Z no slice worker
+2026-11-15T07:02:21Z no slice worker
+2026-11-15T07:02:26Z no slice worker
+2026-11-15T07:02:31Z no slice worker
+2026-11-15T07:02:36Z no slice worker
+2026-11-15T07:02:41Z pid=76509 rss=222MB footprint=[bun [76509]: 64-bit    Footprint: 68 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:46Z no slice worker
+2026-11-15T07:02:51Z no slice worker
+closure entries after: 41898

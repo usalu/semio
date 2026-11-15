@@ -1,0 +1,1369 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "sill-plate",
+     "kind": "box",
+     "bone": "sill",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.3,
+      0.05,
+      0.9
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       -0.025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "jamb-left",
+     "kind": "box",
+     "bone": "sill",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.3,
+      1.2,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       0.6,
+       0.425
+      ]
+     }
+    },
+    {
+     "id": "jamb-right",
+     "kind": "box",
+     "bone": "sill",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.3,
+      1.2,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       0.6,
+       -0.425
+      ]
+     }
+    },
+    {
+     "id": "stile-left",
+     "kind": "box",
+     "bone": "sash",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      1.2,
+      0.09,
+      0.045
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.0,
+       0.3775
+      ]
+     }
+    },
+    {
+     "id": "stile-right",
+     "kind": "box",
+     "bone": "sash",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      1.2,
+      0.09,
+      0.045
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.0,
+       -0.3775
+      ]
+     }
+    },
+    {
+     "id": "rail-bottom",
+     "kind": "extrude",
+     "bone": "sash",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0,
+       0.045
+      ],
+      [
+       0.0,
+       -0.045
+      ],
+      [
+       0.06,
+       -0.045
+      ],
+      [
+       0.06,
+       -0.013
+      ],
+      [
+       0.045,
+       -0.013
+      ],
+      [
+       0.045,
+       0.013
+      ],
+      [
+       0.06,
+       0.013
+      ],
+      [
+       0.06,
+       0.045
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.355,
+     "to": 0.355
+    },
+    {
+     "id": "rail-top",
+     "kind": "extrude",
+     "bone": "sash",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       1.2,
+       0.045
+      ],
+      [
+       1.2,
+       -0.045
+      ],
+      [
+       1.14,
+       -0.045
+      ],
+      [
+       1.14,
+       -0.013
+      ],
+      [
+       1.155,
+       -0.013
+      ],
+      [
+       1.155,
+       0.013
+      ],
+      [
+       1.14,
+       0.013
+      ],
+      [
+       1.14,
+       0.045
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.355,
+     "to": 0.355
+    },
+    {
+     "id": "spacer-bottom",
+     "kind": "box",
+     "bone": "sash",
+     "material": "edge-zone",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.015,
+      0.024,
+      0.71
+     ],
+     "transform": {
+      "translation": [
+       0.0525,
+       0.0,
+       0.0
+      ]
+     },
+     "slender": true
+    },
+    {
+     "id": "spacer-top",
+     "kind": "box",
+     "bone": "sash",
+     "material": "edge-zone",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.015,
+      0.024,
+      0.71
+     ],
+     "transform": {
+      "translation": [
+       1.1475,
+       0.0,
+       0.0
+      ]
+     },
+     "slender": true
+    },
+    {
+     "id": "pane",
+     "kind": "box",
+     "bone": "sash",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.85,
+     "size": [
+      1.08,
+      0.024,
+      0.71
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hinge-barrel",
+     "kind": "revolve",
+     "bone": "sash",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0,
+       0.02
+      ],
+      [
+       0.08,
+       0.02
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.26
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.6
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-stile-left",
+     "of": "stile-left",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-stile-right",
+     "of": "stile-right",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-rail-bottom",
+     "of": "rail-bottom",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-rail-top",
+     "of": "rail-top",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-jamb-left",
+     "of": "jamb-left",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-jamb-right",
+     "of": "jamb-right",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-sill-plate",
+     "of": "sill-plate",
+     "region": "frame-sill"
+    },
+    {
+     "id": "th-centre-pane-inner",
+     "kind": "box",
+     "bone": "sash",
+     "material": "glass",
+     "role": "body",
+     "tone": 0.85,
+     "size": [
+      0.95,
+      0.004,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.01,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w",
+      "+v"
+     ],
+     "region": "pane-glass",
+     "layer": "pane-inner"
+    },
+    {
+     "id": "th-centre-cavity",
+     "kind": "box",
+     "bone": "sash",
+     "material": "glass-unit-cavity",
+     "role": "body",
+     "tone": 0.95,
+     "size": [
+      0.95,
+      0.016,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.0,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ],
+     "region": "pane-glass",
+     "layer": "cavity"
+    },
+    {
+     "id": "th-centre-pane-outer",
+     "kind": "box",
+     "bone": "sash",
+     "material": "glass",
+     "role": "body",
+     "tone": 0.85,
+     "size": [
+      0.95,
+      0.004,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       -0.01,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ],
+     "region": "pane-glass",
+     "layer": "pane-outer"
+    },
+    {
+     "id": "th-edge-pane-inner",
+     "kind": "extrude",
+     "bone": "sash",
+     "material": "glass",
+     "role": "body",
+     "tone": 0.85,
+     "profile": [
+      [
+       -0.355,
+       0.06
+      ],
+      [
+       0.355,
+       0.06
+      ],
+      [
+       0.355,
+       1.14
+      ],
+      [
+       -0.355,
+       1.14
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.29,
+        0.125
+       ],
+       [
+        -0.29,
+        1.075
+       ],
+       [
+        0.29,
+        1.075
+       ],
+       [
+        0.29,
+        0.125
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.008,
+     "to": 0.012,
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ],
+     "region": "pane-edge",
+     "layer": "pane-inner"
+    },
+    {
+     "id": "th-edge-edge-body",
+     "kind": "extrude",
+     "bone": "sash",
+     "material": "edge-zone",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.355,
+       0.06
+      ],
+      [
+       0.355,
+       0.06
+      ],
+      [
+       0.355,
+       1.14
+      ],
+      [
+       -0.355,
+       1.14
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.29,
+        0.125
+       ],
+       [
+        -0.29,
+        1.075
+       ],
+       [
+        0.29,
+        1.075
+       ],
+       [
+        0.29,
+        0.125
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.008,
+     "to": 0.008,
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ],
+     "region": "pane-edge",
+     "layer": "edge-body"
+    },
+    {
+     "id": "th-edge-pane-outer",
+     "kind": "extrude",
+     "bone": "sash",
+     "material": "glass",
+     "role": "body",
+     "tone": 0.85,
+     "profile": [
+      [
+       -0.355,
+       0.06
+      ],
+      [
+       0.355,
+       0.06
+      ],
+      [
+       0.355,
+       1.14
+      ],
+      [
+       -0.355,
+       1.14
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.29,
+        0.125
+       ],
+       [
+        -0.29,
+        1.075
+       ],
+       [
+        0.29,
+        1.075
+       ],
+       [
+        0.29,
+        0.125
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.012,
+     "to": -0.008,
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ],
+     "region": "pane-edge",
+     "layer": "pane-outer"
+    },
+    {
+     "id": "th-spacer-bottom",
+     "of": "spacer-bottom",
+     "region": "pane-edge",
+     "layer": "edge-body",
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-spacer-top",
+     "of": "spacer-top",
+     "region": "pane-edge",
+     "layer": "edge-body",
+     "sectionFaces": [
+      "-w",
+      "+w"
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-stile-left",
+     "of": "stile-left",
+     "member": "sash",
+     "part": "member"
+    },
+    {
+     "id": "m-stile-right",
+     "of": "stile-right",
+     "member": "sash",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-bottom",
+     "of": "rail-bottom",
+     "member": "sash",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-top",
+     "of": "rail-top",
+     "member": "sash",
+     "part": "member"
+    },
+    {
+     "id": "m-sill-plate",
+     "of": "sill-plate",
+     "member": "sill",
+     "part": "member"
+    },
+    {
+     "id": "m-jamb-left",
+     "of": "jamb-left",
+     "member": "sill",
+     "part": "member"
+    },
+    {
+     "id": "m-jamb-right",
+     "of": "jamb-right",
+     "member": "sill",
+     "part": "member"
+    },
+    {
+     "id": "j-hinge-barrel",
+     "of": "hinge-barrel",
+     "member": "sash",
+     "part": "joint"
+    },
+    {
+     "id": "support-hinge",
+     "kind": "revolve",
+     "bone": "sash",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       0,
+       0.01
+      ],
+      [
+       0.68,
+       0.01
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.34
+     ],
+     "member": "sash",
+     "part": "support",
+     "anchor": "hinge",
+     "slender": true
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the tilt-and-turn sash as built, in its default closed pose. Blend frame: a 50 mm sill plate and two 50 mm jambs, all 300 mm deep. Sash: two stiles 90 x 45 mm (the 2D draws them 45 mm across the glass), a bottom and a top rail 60 x 90 mm with the 26 mm glass rebate cut into the inner face, the warm-edge spacer bars lying in the rebates, the 24 mm insulating unit as one glazing solid (the cavity is no body, the plan and elevation draw the unit filled between the lites) and two steel hinge barrels of 40 mm at the bottom axis. The head stay is not drawn at any scale and not modelled.",
+     "de": "K\u00f6rper: der Kippfl\u00fcgel wie gebaut, in seiner Standardpose geschlossen. Blendrahmen: ein Sockelbrett 50 mm und zwei Pfosten 50 mm, alle 300 mm tief. Fl\u00fcgel: zwei Stiele 90 x 45 mm (die 2D zeichnet sie 45 mm quer zum Glas), ein unterer und ein oberer Riegel 60 x 90 mm mit dem Glasfalz 26 mm an der Innenseite, die Abstandhalterst\u00e4be der warmen Kante im Falz, die Isolierglaseinheit 24 mm als ein Glask\u00f6rper (der Zwischenraum ist kein K\u00f6rper, Grundriss und Ansicht zeichnen die Einheit zwischen den Scheiben gef\u00fcllt) und zwei Stahlscharniert\u00f6pfe 40 mm an der unteren Achse. Der obere St\u00fctzarm ist in keinem Ma\u00dfstab gezeichnet und nicht modelliert."
+    },
+    {
+     "en": "Thermal: timber members and the sill reference the body (single layer regions); the glass centre is three real stacked slabs (inner 4 mm, argon cavity 16 mm, outer 4 mm; the outer slab is the exposed one), the edge-of-glass zone is the same stack as a 65 mm frame (extruded ring) with the spacer bars as its edge body; layer slabs keep their real thickness (C20), their rims are section faces.",
+     "de": "Thermik: Holzteile und Sockelbrett verweisen auf den K\u00f6rper (einlagige Regionen); die Glasmitte besteht aus drei echten gestapelten Platten (innen 4 mm, Argonraum 16 mm, au\u00dfen 4 mm; die \u00e4u\u00dfere Platte ist die freie), die Glasrandzone ist derselbe Stapel als 65-mm-Rahmen (extrudierter Ring) mit den Abstandhalterst\u00e4ben als Randk\u00f6rper; die Schichtplatten behalten ihre wahre Dicke (C20), ihre R\u00e4nder sind Schnittfl\u00e4chen."
+    },
+    {
+     "en": "Structure: stiles and rails as the sash members (the real profiles, not the equivalent 90 x 90 mm section), sill plate and jambs as the members of the sill bone, the hinge barrels as joints, the support of the hinge anchor as a 20 mm steel pin through the whole bottom axis (it contains the section plane z = 0).",
+     "de": "Tragwerk: Stiele und Riegel als St\u00e4be des Fl\u00fcgels (die wahren Profile, nicht der Ersatzquerschnitt 90 x 90 mm), Sockelbrett und Pfosten als St\u00e4be des Sockelknochens, die Scharniert\u00f6pfe als Gelenke, das Auflager des Gelenkankers als Stahlbolzen 20 mm durch die ganze untere Achse (er enth\u00e4lt die Schnittebene z = 0)."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "sill-plate",
+     "kind": "box",
+     "bone": "sill",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.3,
+      0.05,
+      0.9
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       -0.025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "jamb-left",
+     "kind": "box",
+     "bone": "sill",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.3,
+      1.2,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       0.6,
+       0.425
+      ]
+     }
+    },
+    {
+     "id": "jamb-right",
+     "kind": "box",
+     "bone": "sill",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.3,
+      1.2,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       0.6,
+       -0.425
+      ]
+     }
+    },
+    {
+     "id": "stile-left",
+     "kind": "box",
+     "bone": "sash",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      1.2,
+      0.09,
+      0.045
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.0,
+       0.3775
+      ]
+     }
+    },
+    {
+     "id": "stile-right",
+     "kind": "box",
+     "bone": "sash",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      1.2,
+      0.09,
+      0.045
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.0,
+       -0.3775
+      ]
+     }
+    },
+    {
+     "id": "rail-bottom",
+     "kind": "box",
+     "bone": "sash",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.06,
+      0.09,
+      0.71
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "rail-top",
+     "kind": "box",
+     "bone": "sash",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.06,
+      0.09,
+      0.71
+     ],
+     "transform": {
+      "translation": [
+       1.17,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "pane",
+     "kind": "box",
+     "bone": "sash",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.85,
+     "size": [
+      1.08,
+      0.024,
+      0.71
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hinge-barrel",
+     "kind": "revolve",
+     "bone": "sash",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.25,
+     "profile": [
+      [
+       0,
+       0.02
+      ],
+      [
+       0.08,
+       0.02
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.26
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.6
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-stile-left",
+     "of": "stile-left",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-stile-right",
+     "of": "stile-right",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-rail-bottom",
+     "of": "rail-bottom",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-rail-top",
+     "of": "rail-top",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-jamb-left",
+     "of": "jamb-left",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-jamb-right",
+     "of": "jamb-right",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-sill-plate",
+     "of": "sill-plate",
+     "region": "frame-sill"
+    },
+    {
+     "id": "th-pane-centre",
+     "kind": "box",
+     "bone": "sash",
+     "material": "glass",
+     "role": "body",
+     "tone": 0.85,
+     "size": [
+      0.95,
+      0.024,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.0,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w",
+      "+v"
+     ],
+     "region": "pane-glass"
+    },
+    {
+     "id": "th-pane-edge",
+     "kind": "extrude",
+     "bone": "sash",
+     "material": "edge-zone",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.355,
+       0.06
+      ],
+      [
+       0.355,
+       0.06
+      ],
+      [
+       0.355,
+       1.14
+      ],
+      [
+       -0.355,
+       1.14
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.29,
+        0.125
+       ],
+       [
+        -0.29,
+        1.075
+       ],
+       [
+        0.29,
+        1.075
+       ],
+       [
+        0.29,
+        0.125
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.012,
+     "to": 0.012,
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w",
+      "+v"
+     ],
+     "region": "pane-edge"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-stile-left",
+     "of": "stile-left",
+     "member": "sash",
+     "part": "member"
+    },
+    {
+     "id": "m-stile-right",
+     "of": "stile-right",
+     "member": "sash",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-bottom",
+     "of": "rail-bottom",
+     "member": "sash",
+     "part": "member"
+    },
+    {
+     "id": "m-rail-top",
+     "of": "rail-top",
+     "member": "sash",
+     "part": "member"
+    },
+    {
+     "id": "m-sill-plate",
+     "of": "sill-plate",
+     "member": "sill",
+     "part": "member"
+    },
+    {
+     "id": "m-jamb-left",
+     "of": "jamb-left",
+     "member": "sill",
+     "part": "member"
+    },
+    {
+     "id": "m-jamb-right",
+     "of": "jamb-right",
+     "member": "sill",
+     "part": "member"
+    },
+    {
+     "id": "j-hinge-barrel",
+     "of": "hinge-barrel",
+     "member": "sash",
+     "part": "joint"
+    },
+    {
+     "id": "support-hinge",
+     "kind": "revolve",
+     "bone": "sash",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       0,
+       0.0175
+      ],
+      [
+       0.68,
+       0.0175
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.34
+     ],
+     "member": "sash",
+     "part": "support",
+     "anchor": "hinge"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the same window at 1:100: the glass rebates and spacer bars are merged into the rails (plain 60 x 90 mm blocks), the unit is one 24 mm glazing slab; stiles, sill plate, jambs and the two hinge barrels as at 1:50.",
+     "de": "K\u00f6rper: dasselbe Fenster bei 1:100: Glasfalze und Abstandhalter sind in die Riegel \u00fcbergegangen (einfache Bl\u00f6cke 60 x 90 mm), die Einheit ist eine Glasplatte 24 mm; Stiele, Sockelbrett, Pfosten und die zwei Scharniert\u00f6pfe wie bei 1:50."
+    },
+    {
+     "en": "Thermal: the layers are merged at this scale; glass centre and edge zone are one 24 mm slab and one 24 mm ring each (their rims and the interior face are section faces, so the outer face is the exposed one).",
+     "de": "Thermik: die Schichten sind in diesem Ma\u00dfstab zusammengefasst; Glasmitte und Randzone sind je eine Platte und ein Ring von 24 mm (ihre R\u00e4nder und die Innenseite sind Schnittfl\u00e4chen, die freie Fl\u00e4che ist die Au\u00dfenseite)."
+    },
+    {
+     "en": "Structure: the same members and the hinge joint as at 1:50, the support pin 35 mm.",
+     "de": "Tragwerk: dieselben St\u00e4be und das Scharniergelenk wie bei 1:50, der Auflagerbolzen 35 mm."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "sill-plate",
+     "kind": "box",
+     "bone": "sill",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.3,
+      0.05,
+      0.9
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       -0.025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "jamb-left",
+     "kind": "box",
+     "bone": "sill",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.3,
+      1.2,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       0.6,
+       0.425
+      ]
+     }
+    },
+    {
+     "id": "jamb-right",
+     "kind": "box",
+     "bone": "sill",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.3,
+      1.2,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       0.6,
+       -0.425
+      ]
+     }
+    },
+    {
+     "id": "sash-frame",
+     "kind": "extrude",
+     "bone": "sash",
+     "material": "timber",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.4,
+       0.0
+      ],
+      [
+       0.4,
+       0.0
+      ],
+      [
+       0.4,
+       1.2
+      ],
+      [
+       -0.4,
+       1.2
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.34,
+        0.06
+       ],
+       [
+        -0.34,
+        1.14
+       ],
+       [
+        0.34,
+        1.14
+       ],
+       [
+        0.34,
+        0.06
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.045,
+     "to": 0.045
+    },
+    {
+     "id": "pane",
+     "kind": "box",
+     "bone": "sash",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.85,
+     "size": [
+      1.08,
+      0.024,
+      0.68
+     ],
+     "transform": {
+      "translation": [
+       0.6,
+       0.0,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-sash-frame",
+     "of": "sash-frame",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-jamb-left",
+     "of": "jamb-left",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-jamb-right",
+     "of": "jamb-right",
+     "region": "frame-timber"
+    },
+    {
+     "id": "th-sill-plate",
+     "of": "sill-plate",
+     "region": "frame-sill"
+    },
+    {
+     "id": "th-pane",
+     "of": "pane",
+     "region": "pane-glass",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w",
+      "+v"
+     ]
+    },
+    {
+     "id": "th-pane-edge",
+     "of": "pane",
+     "region": "pane-edge",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-sash-frame",
+     "of": "sash-frame",
+     "member": "sash",
+     "part": "member"
+    },
+    {
+     "id": "m-sill-plate",
+     "of": "sill-plate",
+     "member": "sill",
+     "part": "member"
+    },
+    {
+     "id": "m-jamb-left",
+     "of": "jamb-left",
+     "member": "sill",
+     "part": "member"
+    },
+    {
+     "id": "m-jamb-right",
+     "of": "jamb-right",
+     "member": "sill",
+     "part": "member"
+    },
+    {
+     "id": "support-hinge",
+     "kind": "box",
+     "bone": "sash",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.04,
+      0.04,
+      0.8
+     ],
+     "member": "sash",
+     "part": "support",
+     "anchor": "hinge",
+     "slender": true
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the sash is one frame ring (stiles 60 mm, rails 60 mm, 90 mm deep) with the 24 mm glazing slab inside it (the 2D draws the pane 680 mm wide inside the 800 mm frame); sill plate and jambs as before. Hinges, spacer bars and rebates are below the 30 mm feature and merged.",
+     "de": "K\u00f6rper: der Fl\u00fcgel ist ein Rahmenring (Stiele 60 mm, Riegel 60 mm, 90 mm tief) mit der Glasplatte 24 mm darin (die 2D zeichnet die Scheibe 680 mm breit im 800-mm-Rahmen); Sockelbrett und Pfosten wie zuvor. Scharniere, Abstandhalter und Falze liegen unter dem Merkmal von 30 mm und sind zusammengefasst."
+    },
+    {
+     "en": "Thermal: references to the body; the glass slab carries its rims and interior face as section faces, the edge zone references the same slab with all faces as section faces (only the total area is compared at this scale).",
+     "de": "Thermik: Verweise auf den K\u00f6rper; die Glasplatte tr\u00e4gt R\u00e4nder und Innenseite als Schnittfl\u00e4chen, die Randzone verweist auf dieselbe Platte mit allen Fl\u00e4chen als Schnittfl\u00e4chen (in diesem Ma\u00dfstab wird nur die Gesamtfl\u00e4che verglichen)."
+    },
+    {
+     "en": "Structure: the sash ring, sill plate and jambs as members, the support as a 40 mm steel block along the hinge axis.",
+     "de": "Tragwerk: der Fl\u00fcgelring, Sockelbrett und Pfosten als St\u00e4be, das Auflager als Stahlblock 40 mm entlang der Gelenkachse."
+    }
+   ]
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

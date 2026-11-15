@@ -1,0 +1,39 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-6feebb05efe3.log (lines after 163)
+-- lines with: waiting for the fleet|taken from the fleet|inferred here|refreshing [0-9]+ projects|asking the host for|stale facts
+graph: 703 stale projects, 58 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 645
+graph: waiting for the fleet: 0 of 645 projects arrived
+graph: waiting for the fleet: 77 of 645 projects arrived
+graph: waiting for the fleet: 125 of 645 projects arrived
+graph: waiting for the fleet: 173 of 645 projects arrived
+graph: waiting for the fleet: 221 of 645 projects arrived
+-- last 30 lines when the try ended
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1700 s
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1710 s
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1720 s
+[repo] still working after 1730 s; last phase started: source.served
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1730 s
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1740 s
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1750 s
+[repo] still working after 1760 s; last phase started: source.served
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1760 s
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1770 s
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1780 s
+[repo] still working after 1790 s; last phase started: source.served
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1790 s
+graph: waiting for the fleet: 221 of 645 projects arrived
+[repository:command] still running after 1800 s
+graph: nothing to wait for any longer: asked the fleet for 645 stale projects and received 221 within 1498 s, 424 remain and this machine can infer only 192; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-14T18:27:16.966Z graph-wanted-expired {"wanted":"645","arrived":"221","seconds":"1498","missing":"424","local":"192"}
+[repository:command] still running after 1810 s
+[repo] still working after 1820 s; last phase started: source.served
+[repository:command] still running after 1820 s

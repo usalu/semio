@@ -24,7 +24,7 @@ impl Pose {
 
     /// 🧭️ The world direction of the object axis `axis` (0 width, 1 height, 2 depth).
     pub fn dir(axis: usize) -> Vec3 {
-        [Vec3::Y, Vec3::Z, Vec3::X][axis]
+        [Vec3::Y, Vec3::Z, Vec3::X][axis].clone()
     }
 }
 
@@ -72,7 +72,7 @@ impl Layout {
     pub fn of(document: &Iso16757Snapshot, placements: &[Placement]) -> Self {
         let mut layout = Self::default();
         let mut cursor = 0.0;
-        for (id, object) in &document.geometry.objects {
+        for (id, object) in document.geometry.objects.iter() {
             let bounds = extent(document, object);
             let pose = match placements.iter().find(|p| &p.entity_id == id) {
                 Some(p) => Pose { origin: p.origin.clone() },

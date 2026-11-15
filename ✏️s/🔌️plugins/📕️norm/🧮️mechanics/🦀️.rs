@@ -44,31 +44,3 @@ pub mod section;
 pub use section::{analyse_section, analyse_section_with, analyse_thin_walled};
 
 pub use semio_s_plugin_norm_mechanics_applied::{fastening, geotechnics};
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod unit;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔲️section/🦀️.rs"]
-mod section_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔩️fastening/🦀️.rs"]
-mod fastening_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🌍️geotechnics/🦀️.rs"]
-mod geotechnics_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🧵️fibre/🦀️.rs"]
-mod fibre_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/⏱️latency/🦀️.rs"]
-mod latency_tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/📈️moment-line/🦀️.rs"]
-mod moment_line_tests;

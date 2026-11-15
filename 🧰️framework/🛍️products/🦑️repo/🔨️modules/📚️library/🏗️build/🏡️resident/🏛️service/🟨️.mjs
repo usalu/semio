@@ -196,7 +196,7 @@ export function createResidentServiceV1(options){
     else if(reason?.code==="revoked")await refuse(connection,frame.id,"capability","revoked",{},"never");
     else await send(connection,{t:"result",id:frame.id,exit:130,signal:"SIGINT",served:"query",timing:roundTiming({...timing,totalMs:performance.now()-received})});
    }else{
-    const failure=failureRefusalV1(error,{log,logPath:runtime.log,retry:"never"});
+    const failure=failureRefusalV1(error,{log,logPath:runtime.log,retry:"never",root:process.cwd()});
     await refuse(connection,frame.id,failure.code,failure.key,failure.fields,failure.retry);
    }
   }finally{

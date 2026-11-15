@@ -1,5 +1,5 @@
 import {lstat,mkdir,open,readdir,readFile,rename,stat,unlink,writeFile} from "node:fs/promises";
-import {join} from "node:path";
+import {basename,join} from "node:path";
 import type {FileHandle} from "node:fs/promises";
 import {compactCasShardV1,foldCasShardV1,openCasShardViewV1,type CasShardViewV1} from "../📒️ledger/🟦️.ts";
 import {casPinDirectoryV1,readCasPinsV1} from "../📌️pins/🟦️.ts";
@@ -10,7 +10,7 @@ import {createCasPlannerV1,type CasPlanTotalsV1,type CasReasonV1} from "./🧮�
 export {casCutV1,createCasPlannerV1} from "./🧮️plan.ts";
 export type {CasCutV1,CasPlanTotalsV1,CasReasonV1} from "./🧮️plan.ts";
 
-/** 📂️ One loose-file area outside the store: independent cache files below `directory` (for example the host's graph memo or a workspace's build-input closures) whose bytes count against the host cap. `id` names the policy bounds it falls under. */
+/** 📂️ One loose-file area outside the store: independent cache files below `directory` (for example the host's graph memo or a workspace's build-input closures) whose bytes count against the host cap. `id` names the policy bounds it falls under; a file named `<sha256>.json` is protected while a live holder pins that digest (the build-input closures the loaded graph generation references). */
 export type CasAreaSourceV1=Readonly<{id:string;directory:string;skip?:RegExp}>;
 /** 📣️ Progress of one collection. */
 export type CasProgressV1=Readonly<{stage:"scan"|"evict"|"compact";entries:number;usedBytes:number;freedBytes:number}>;
@@ -31,7 +31,8 @@ const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(er
 const sorted=(names:string[]):string[]=>names.sort((left,right)=>left<right?-1:left>right?1:0);
 const TEMPORARY=/(^\.)|(\.tmp$)/u;
 
-type Entry={area:string;path:string;size:number;access:number;protectedEntry:boolean;shard?:string;hash?:string};
+type Entry={area:string;path:string;size:number;access:number;protectedEntry:boolean;shard?:string;hash?:string;pin?:string};
+const pinOfFileV1=(path:string):string|undefined=>{const name=basename(path);return /^[0-9a-f]{64}\.json$/u.test(name)?name.slice(0,64):undefined;};
 
 const fullDisk=(error:unknown):boolean=>["ENOSPC","EDQUOT"].includes((error as NodeJS.ErrnoException)?.code??"");
 const withoutLock=async():Promise<void>=>undefined;
@@ -85,7 +86,8 @@ async function* entries(options:CasCollectOptionsV1,policy:CasPolicyV1,pins:Read
  for(const area of options.areas??[]){
   for await(const file of walk(area.directory,area.skip??TEMPORARY,options.signal)){
    const access=Math.max(file.mtimeMs,file.atimeMs);
-   yield{area:area.id,path:file.path,size:file.size,access,protectedEntry:nowMs-access<policy.minAgeMs};
+   const pin=pinOfFileV1(file.path);
+   yield{area:area.id,path:file.path,size:file.size,access,protectedEntry:nowMs-access<policy.minAgeMs||(pin!==undefined&&pins.has(pin)),pin};
   }
  }
 }
@@ -136,7 +138,7 @@ export async function collectCasV1(options:CasCollectOptionsV1):Promise<CasColle
     await options.beforeEvict?.(entry.path);
     await view?.refresh();const stamp=(await stat(casPinDirectoryV1(options.root)).catch(()=>undefined))?.mtimeMs??0;if(stamp!==pinStamp){pinStamp=stamp;pins=await readCasPinsV1(options.root,now());}const fresh=entry.hash?Math.max((await lstat(entry.path).catch(()=>undefined))?.mtimeMs??-1,view?.latest(entry.hash)??0):(await lstat(entry.path).catch(()=>undefined))?.atimeMs??-1;
     if(fresh<0)continue;
-    if(fresh>entry.access||fresh>=started||(entry.hash&&pins.has(entry.hash))){skipped++;continue;}
+    if(fresh>entry.access||fresh>=started||((entry.hash??entry.pin)!==undefined&&pins.has((entry.hash??entry.pin)!))){skipped++;continue;}
     try{await unlink(entry.path);evicted++;freed+=entry.size;used-=entry.size;byReason[reason]++;}
     catch(error){const code=(error as NodeJS.ErrnoException).code;if(code==="ENOENT")continue;if(code==="EBUSY"||code==="EPERM"||code==="EACCES"){busy++;continue;}throw error;}
     if(evicted%policy.checkEvery===0)await report("evict");

@@ -71,7 +71,12 @@ describe("Python", () => {
       expect({path, packages: text.includes("--all-packages"), planned: text.includes("pythonEnvironmentOfProjectV1")}).toEqual({path, packages: false, planned: true});
     }
     const builder = read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts");
-    expect({system: builder.includes("--no-managed-python") || builder.includes("UV_NO_MANAGED_PYTHON"), downloads: builder.includes('UV_PYTHON_DOWNLOADS:"never"')}).toEqual({system: false, downloads: false});
+    expect({system: builder.includes("--no-managed-python") || builder.includes("UV_NO_MANAGED_PYTHON"), downloads: builder.includes('UV_PYTHON_DOWNLOADS:"never"')}).toEqual({system: false, downloads: true});
+    for (const path of ["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/⌨️command/🟦️.ts"]) {
+      const text = read(path);
+      expect({path, pinnedFetch: text.includes("provisionInterpretersV1"), uvDownload: /\["python",\s*"install"/u.test(text) || text.includes('"python","install"')}).toEqual({path, pinnedFetch: true, uvDownload: false});
+    }
+    expect(read("✏️s/🔌️plugins/🔋️energy/🔮️oracles/🏃️execution/🟦️.ts")).not.toMatch(/"python",\s*"install"|installArguments/u);
   });
 });
 

@@ -1,0 +1,53 @@
+Replica g1-m08 of group g1, store /Volumes/semio-store: reachable
+Synchronization: on
+Daemon: running (pid 36520)
+284183 files tracked; queued: 10 incoming, ? outgoing; 27 overwritten files kept in .cache/f/lost
+Recurring failures of kind refused: 2 times, last 61 s ago.
+Recurring failures of kind loop-blocked-restart: 12 times, last 522 s ago.
+Sidecar build-agent: running (process 36735, 0 restart(s), 82 s in this state, last exit -).
+Sidecar build-scheduler: off on this machine (process -, 0 restart(s), 112 s in this state, last exit -).
+Sidecar build-cache: off on this machine (process -, 0 restart(s), 112 s in this state, last exit -).
+Journal: 12.84 MiB in 14 segments of 10 origins.
+Newest snapshot by g1-m08: 1499s old, 90.49 MiB.
+Reclaimable now: 4 journal segments (4.89 MiB).
+Last compaction 63659s ago: 861 blobs (27.00 GiB) removed; 88 blobs (129.23 MiB) were still too young.
+Git state: shared (stage and commits replicate); stage tree 5c75c44d73137807925a4f37dfbb0a95529a546e.
+Background tiers, last pass (cost, duty cycle of one core): hot 30 ms 8%, directory sweep 386 ms 10%, file sweep 1248 ms 1.3%, tree walk -, git view 34803 ms 5%.
+Latency over the last 5 publishes and 67 applies: publish p50 516 ms, p95 755 ms; apply p50 422 ms, p95 6447 ms.
+g1-m01: 1 events (398 B) behind, last event 1s ago
+g1-m02: 1 events (398 B) behind, last event 1s ago
+g1-m03: 0 events (0 B) behind, last event 107s ago
+g1-m04: 0 events (0 B) behind, last event 152s ago
+g1-m05: 0 events (0 B) behind, last event 4507s ago
+g1-m06: 0 events (0 B) behind, last event 8700s ago
+g1-m07: 1 events (405 B) behind, last event 2s ago
+g1-m08: 0 events (0 B) behind, last event 1s ago
+g1-m10: 0 events (0 B) behind, last event 198s ago
+g1-server: 0 events (0 B) behind, last event 195s ago
+Fleet: origin platform age lag (origins behind/queued) basis (cp:s = compared at its checkpoint taken s seconds ago, now = compared as it is now) sync code view (modified/deleted/untracked) latency (publish p50/p95 ms | apply p50/p95 ms) verdict
+  g1-m01 macos 0s 1/0 cp:0s on 97445096cc0a 175/10/1390 200/1576|292/3526 diverged
+  g1-m02 macos 0s 1/0 cp:0s on 97445096cc0a 175/10/1388 162/3245|275/4785 diverged
+  g1-m03 macos 0s 1/0 cp:0s on 97445096cc0a 175/10/1389 35/42|277/3233 diverged
+  g1-m04 linux 1s 1/0 cp:1s on 97445096cc0a 175/10/1387 -/-|422/4371 diverged
+  g1-m05 windows 0s 3/0 cp:0s on 97445096cc0a - -/-|3889/13997 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m06 macos 1s 1/0 cp:1s on 97445096cc0a 175/10/1387 -/-|257/2828 ok
+  g1-m07 macos 0s 0/0 cp:0s on 97445096cc0a 175/10/1389 265/4194|294/4863 diverged
+  g1-m08 macos 2s 1/0 cp:2s on 97445096cc0a 175/10/1387 516/755|422/6447 diverged
+  g1-m10 macos 3s 1/0 cp:3s on 97445096cc0a 175/10/1473 -/-|457/3524 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-server macos 0s 0/0 cp:0s on 97445096cc0a 175/10/1387 -/-|274/6178 ok
+  warning: g1-m04 runs git 2.55.0, other machines run another version
+  warning: the volume of g1-m04 behaves differently from most (case=sensitive normalisation=sensitive); the view is pinned, so this is a capability difference, not a divergence
+  warning: g1-m06 runs git 2.50.1, other machines run another version
+  warning: g1-m01 cannot resolve HEAD of its repository while the fleet has one (config-unreadable); its daemon repairs the shared git files from the store, a git client shows nothing until it has
+  warning: g1-m02 cannot resolve HEAD of its repository while the fleet has one (config-unreadable); its daemon repairs the shared git files from the store, a git client shows nothing until it has
+  warning: g1-m07 cannot resolve HEAD of its repository while the fleet has one (config-unreadable); its daemon repairs the shared git files from the store, a git client shows nothing until it has
+  g1-m01 differs in view.digest at a common checkpoint: #23=9d04,#127=d855,#153=72c0 instead of #23=30bf,#127=633c,#153=0847 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m02 differs in view.digest at a common checkpoint: #153=cfec instead of #153=0847 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m03 differs in view.digest at a common checkpoint: #76=9958,#237=de76 instead of #76=254a,#237=be51 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m04 differs in view.digest at a common checkpoint: #16=10f3,#52=859d,#86=80bb,#114=258f,#121=fd52,#147=0531,#163=760f,#218=4182,#23 instead of #16=3c62,#52=aeaa,#86=2bba,#114=e01c,#121=4d8b,#147=d775,#163=a765,#218=19d1,#23 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m08 differs in indexTree at a common checkpoint: - instead of 5c75c44d73137807925a4f37dfbb0a95529a546e (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m08 differs in view.digest at a common checkpoint: #36=0063 instead of #36=3fce (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m01 differs in head.commit at a common checkpoint: - instead of 5ececaa78b9265fd72b4f7e8f411afac3c9e1df1 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m02 differs in head.commit at a common checkpoint: - instead of 5ececaa78b9265fd72b4f7e8f411afac3c9e1df1 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m07 differs in head.commit at a common checkpoint: - instead of 5ececaa78b9265fd72b4f7e8f411afac3c9e1df1 (#n = bucket n of 256 of the paths, value = its digest)
+The fleet is not in agreement (10 origins; fresh and checkpoint age mean within 60 s; lagging is not wrong, only not yet comparable).

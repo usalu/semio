@@ -1,0 +1,89 @@
+\title{Finger Exercise: Heating + Cooling}
+\author{Architecture and Technology}
+\date{}
+\SemioAssignmentSetup{course={Architecture and Technology},duration={about 90 minutes},submission={CSV file and Grasshopper definition}}
+\SemioHeaderSetup{left={Architecture and Technology},center={Finger Exercise},right={Heating + Cooling}}
+\newcommand{\EnergyQuantity}{Quantity}
+\newcommand{\EnergyValue}{Exercise value}
+\newcommand{\EnergyDecimal}{.}
+\newcommand{\EnergyPerformance}{\mathrm{SPF}}
+\begin{document}
+\maketitle
+\section{A Tiny Home in Hannover}
+Develop a small parametric calculation model in Rhino/Grasshopper. Determine annual space-heating demand, heat-pump electricity consumption and heating costs. Extend the model to calculate the solar cooling load of two south-facing glazed openings and the diameter of a circular supply-air duct needed to remove that load.
+
+\subsection{Exercise building geometry}
+The house is a single-storey rectangular box with a flat roof. All dimensions are simplified thermal reference dimensions. Roof and floor each have area $L\cdot B$; air volume is $L\cdot B\cdot h$. The two openings are exclusively in the long south facade. There are no other openings.
+\EnergyPlan{Sliding door}{Window}{South facade; schematic plan with opening heights in labels}
+\textbf{Model boundary.} Every addition to the slides is an explicitly chosen \textbf{exercise assumption}: geometry, U-values, air change rate, heating degree hours, solar factor, irradiance, room temperature and air properties. These values represent neither the photographed real building nor a measured Hannover climate dataset.
+
+\textbf{Retained from the slides:} Hannover, an air-source heat pump with seasonal performance factor $\EnergyPerformance=3.0$, electricity at $0.37$ EUR/kWh, ordinary insulating glazing without solar-control glass, supply air at $18\,^\circ\mathrm{C}$ and maximum air speed $2.5\,\mathrm{m/s}$.
+\clearpage
+\section{Heating: Demand and Cost}
+\subsection{Calculation assumptions}
+\EnergyInputs
+For this exercise, heating degree hours $G_H$ already sum the positive indoor-outdoor temperature difference over the year. Use this input directly, without another temperature factor. Apply the same $G_H$ to every envelope surface, including the floor. The air change rate includes all winter air exchange; there is no heat recovery.
+
+Disregard solar and internal heat gains, thermal bridges, thermal storage, domestic hot water, distribution losses and auxiliary electricity. The result is a simplified annual heating balance, not a regulatory energy assessment.
+\subsection{Tasks}
+\begin{enumerate}
+\item Calculate total glazing area $A_g$, opaque wall area $A_w$, roof and floor areas, and heated volume $V$. Subtract the openings only from the wall area.
+\item Calculate transmission and ventilation heat-loss coefficients in W/K:
+\[H_T=U_wA_w+U_rA_r+U_fA_f+U_gA_g,\qquad H_V=c_{\mathrm{air,vol}}\,nV.\]
+\item Determine annual heating demand, demand per unit floor area, heat-pump electricity consumption and annual cost:
+\[Q_H=\frac{(H_T+H_V)G_H}{1000},\quad q_H=\frac{Q_H}{A_f},\quad E_{\mathrm{el}}=\frac{Q_H}{\EnergyPerformance},\quad C=E_{\mathrm{el}}p_{\mathrm{el}}.\]
+\item Change the seasonal performance factor to $4.0$. Which quantities change and which stay constant? Explain in two sentences.
+\end{enumerate}
+\textbf{Units:} $Q_H$ and $E_{\mathrm{el}}$ in kWh/a, $q_H$ in kWh/(m$^2$a), $C$ in EUR/a. Keep intermediate calculations unrounded.
+\clearpage
+\section{Cooling: Solar Gain and Supply-Air Duct}
+\subsection{Summer design case}
+Both south-facing glazed openings receive $I_S=600\,\mathrm{W/m^2}$ simultaneously. Use an exercise solar factor of $g=0.60$ for the ordinary insulating glazing. Treat the entire opening as glass, with no frame allowance. Disregard external shading, canopies and solar protection in this base case.
+
+Room temperature is $\theta_i=26\,^\circ\mathrm{C}$; actively cooled supply air has $\theta_s=18\,^\circ\mathrm{C}$. Use $\rho=1.20\,\mathrm{kg/m^3}$ and $c_p=1005\,\mathrm{J/(kgK)}$. Air speed in the circular duct must not exceed $v_{\max}=2.5\,\mathrm{m/s}$.
+\subsection{Tasks}
+\begin{enumerate}
+\item Calculate the solar heat gain through the sliding door and window separately, then sum them:
+\[\dot Q_{\mathrm{sol},j}=A_jgI_S,\qquad \dot Q_{\mathrm{sol}}=\sum_j\dot Q_{\mathrm{sol},j}.\]
+\item Use the sensible heat balance to calculate the required supply-air volume flow:
+\[\dot V=\frac{\dot Q_{\mathrm{sol}}}{\rho c_p(\theta_i-\theta_s)}.\]
+Report the result in m$^3$/s and m$^3$/h. Apply the factor 3600 only for this unit conversion.
+\item Size one circular main duct carrying the entire flow:
+\[A_{\mathrm{duct}}=\frac{\dot V}{v_{\max}},\qquad d_{\min}=\sqrt{\frac{4\dot V}{\pi v_{\max}}}.\]
+Select the smallest sufficient internal diameter from 160, 200, 250, 315, 400, 450 and 500 mm. Then verify actual air speed with the selected diameter.
+\item Repeat with an external shading factor $F_{\mathrm{sh}}=0.50$ multiplying the solar gain. Compare cooling load, volume flow and minimum diameter with the unshaded base case.
+\end{enumerate}
+\textbf{Model boundary.} This is only the sensible solar load through these two openings. Occupants, equipment, transmission and moisture are excluded. It is not a complete cooling-load or ventilation design. Supply air must be actively cooled to 18 degrees; outdoor-air ventilation alone does not guarantee this temperature.
+\clearpage
+\section{Implementation and Submission}
+\subsection{Rhino/Grasshopper}
+\begin{enumerate}
+\item Create named inputs for geometry and properties. Organize the definition into geometry, heating balance, heat pump/cost, solar balance, airflow/duct and export.
+\item Connect every result to its inputs; do not enter calculated answers as constants. Label outputs with quantities and units. Native components or a short script without an additional plug-in are sufficient for CSV export.
+\item Prevent calculations with $\EnergyPerformance\leq0$, $\theta_i\leq\theta_s$, $v_{\max}\leq0$ or negative opaque areas. Display a meaningful input error instead.
+\item Check that doubling the electricity price doubles only cost; $I_S=0$ produces zero solar load and associated airflow; higher SPF reduces electricity consumption without changing heat demand. Select a duct only for a positive load.
+\end{enumerate}
+\subsection{CSV contract}
+Create a UTF-8 file named \texttt{heizen-kuehlen.csv}, with semicolon separators, a decimal point and no thousands separators. Use one row per result and variant. The first row must be:
+\begin{quote}\small\ttfamily variante;groesse;wert;einheit\end{quote}
+Use the variant identifiers \texttt{basis}, \texttt{jaz4} and \texttt{verschattet}. Include all the following results for \texttt{basis}:
+\begin{center}\small
+\begin{tabular}{p{.60\linewidth}p{.28\linewidth}}
+\textbf{Quantity identifier} & \textbf{Unit}\\\hline
+\texttt{A\_g, A\_w, A\_r, A\_f} & \texttt{m2}\\
+\texttt{V} & \texttt{m3}\\
+\texttt{H\_T, H\_V} & \texttt{W/K}\\
+\texttt{Q\_H, E\_el} & \texttt{kWh/a}\\
+\texttt{q\_H} & \texttt{kWh/(m2*a)}\\
+\texttt{C} & \texttt{EUR/a}\\
+\texttt{Qdot\_door, Qdot\_window, Qdot\_sol} & \texttt{W}\\
+\texttt{Vdot\_s, Vdot\_h} & \texttt{m3/s}, \texttt{m3/h}\\
+\texttt{d\_min, d\_selected} & \texttt{mm}\\
+\texttt{v\_actual} & \texttt{m/s}\\\hline
+\end{tabular}\end{center}
+For \texttt{jaz4}, include \texttt{Q\_H, E\_el, C}. For \texttt{verschattet}, include the eight cooling quantities from \texttt{Qdot\_door} through \texttt{v\_actual}. Round only on export to two decimal places; retain an integer for the selected diameter.
+
+\textbf{Submit:} the CSV, an executable \texttt{.gh} definition (and any referenced \texttt{.3dm}), plus a one-page PDF explaining the calculation, variant comparison and model boundaries. Assessment considers correct balances and units, traceable parametric relationships, input validation and complete deliverables. The instructor will announce the deadline and upload destination separately.
+
+\small\textit{Content basis: two supplied lecture slides entitled “Fingerübung Heizen + Kühlen”, pages 10 and 23, Nachhaltige Gebäudesysteme, Leibniz Universität Hannover. Independently rewritten with additional exercise assumptions.}
+\end{document}

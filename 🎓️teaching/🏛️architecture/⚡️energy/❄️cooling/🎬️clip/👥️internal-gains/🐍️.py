@@ -58,15 +58,14 @@ swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 SAFE_BOTTOM = _manim_module.SAFE_BOTTOM
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 unit_text = _manim_module.unit_text
 load_vo_timing = _manim_module.load_vo_timing
 
-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
-set_vo_language("de")
+# 🗣️ Measured clause durations live in vo_timing.json.
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -93,6 +92,10 @@ def _din_ref(text: str):
 
 #region Shared helpers
 
+OFFICE_WORKPLACES, PERSON_W, DEVICE_W, DEVICE_USAGE, LUMINAIRE_W = 10, 120.0, 60.0, 0.7, 40.0
+Q_PEOPLE = OFFICE_WORKPLACES * PERSON_W
+Q_DEVICES = OFFICE_WORKPLACES * DEVICE_W * DEVICE_USAGE
+Q_LIGHTS = OFFICE_WORKPLACES * LUMINAIRE_W
 _CAST = "cooling-internal-gains-"
 _SHARED = {"desk": "shared-desk", "lamp": "shared-lamp-summer"}
 _DESK_TOP_M = 0.72
@@ -196,19 +199,20 @@ class Beat1_OfficeRoom(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("The enclosed environment", "Die umschlossene Umgebung"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-2078", "innere")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
         facade = house_section(np.array([0.0, -0.55, 0.0]))["group"]
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "facade"))
         self.play(FadeIn(facade), run_time=1.4)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "facade"))
         self.play(facade.animate.scale(1.35).move_to(DOWN * 0.15), run_time=2.0)
-        hold_for(self, self.NARRATION, "facade", used=3.4 + 0.35)
+        hold_for(self, self.NARRATION, "facade", used=2.0 + 0.35)
 
         room = room_section(np.array([0.0, -0.2, 0.0]), w=6.6, h=2.5)
         insulation_box = SurroundingRectangle(room["shell"], buff=_theme_module.UI_SPACING, corner_radius=0, color=P_ORANGE,
@@ -251,26 +255,26 @@ class Beat2_HumanFactor(Scene):
          "Heat leaves as radiation, convection, and respiration — both sensible and latent.",
          "Wärme geht als Strahlung, Konvektion und Atmung ab — fühlbar und latent."),
         ("anchor",
-         "A single seated adult emits about one hundred twenty watts.",
-         "Eine sitzende Person gibt etwa einhundertzwanzig Watt ab."),
+         r"A single seated adult emits about $120\,\mathrm{W}$, sensible and latent heat together.",
+         r"Eine sitzende Person gibt etwa $120\,\mathrm{W}$ ab, fühlbare und latente Wärme zusammen."),
         ("activities",
          "How much heat the body emits depends on activity — it rises from sleeping to desk work, walking and high-performance sport.",
          "Wie viel Wärme der Körper abgibt, hängt von der Aktivität ab — sie steigt vom Schlafen über Büroarbeit und Gehen bis zum Hochleistungssport."),
         ("activity_scale",
-         "On one watt scale: about seventy watts asleep, one hundred twenty at the desk, three hundred walking, up to nine hundred in sport.",
-         "Auf einer Watt-Skala: rund siebzig Watt im Schlaf, hundertzwanzig am Schreibtisch, dreihundert beim Gehen, bis neunhundert beim Sport."),
+         r"On one watt scale: about $70\,\mathrm{W}$ asleep, $120\,\mathrm{W}$ at the desk, $300\,\mathrm{W}$ walking, up to $900\,\mathrm{W}$ in sport.",
+         r"Auf einer Watt-Skala: rund $70\,\mathrm{W}$ im Schlaf, $120\,\mathrm{W}$ am Schreibtisch, $300\,\mathrm{W}$ beim Gehen, bis $900\,\mathrm{W}$ beim Sport."),
         ("formula",
-         "We calculate Q-dot Personen as n times the specific emission q-dot p, in watts.",
-         "Wir berechnen Q-Punkt Personen als n mal die spezifische Abgabe q-Punkt p, in Watt."),
+         r"The heat flow $\Phi$ of the people, as a load on the room, is $\dot{Q}_{\mathrm{i,p}}=n\cdot\dot{q}_{\mathrm{p}}$: the number of people times the specific emission per person, in $\mathrm{W}$.",
+         r"Der Wärmestrom $\Phi$ der Personen, als Last am Raum, ist $\dot{Q}_{\mathrm{i,p}}=n\cdot\dot{q}_{\mathrm{p}}$: Personenzahl mal spezifische Abgabe je Person, in $\mathrm{W}$."),
         ("n",
-         "n is the number of occupants in the room.",
-         "n ist die Anzahl der Personen im Raum."),
+         r"$n$ is the number of occupants in the room.",
+         r"$n$ ist die Anzahl der Personen im Raum."),
         ("qp",
-         "q-dot p is roughly one hundred twenty watts per person at desk work.",
-         "q-Punkt p liegt bei etwa einhundertzwanzig Watt pro Person bei Büroarbeit."),
+         r"$\dot{q}_{\mathrm{p}}$ is roughly $120\,\mathrm{W}$ per person at desk work.",
+         r"$\dot{q}_{\mathrm{p}}$ liegt bei etwa $120\,\mathrm{W}$ pro Person bei Büroarbeit."),
         ("scale",
-         "Fifty people times one hundred twenty watts is six thousand watts, continuously.",
-         "Fünfzig Personen mal einhundertzwanzig Watt sind dauerhaft sechstausend Watt."),
+         r"Fifty people times $120\,\mathrm{W}$ is $6000\,\mathrm{W}$, continuously.",
+         r"Fünfzig Personen mal $120\,\mathrm{W}$ sind dauerhaft $6000\,\mathrm{W}$."),
     ]
 
     def construct(self):
@@ -278,18 +282,18 @@ class Beat2_HumanFactor(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Human metabolic heat", "Menschliche Stoffwechselwärme"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-2078", "personen")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
         room = room_section(np.array([-0.9, 0.0, 0.0]), w=6.6, h=3.4)
         seated = _seated(room, -1.55)
         office_setup = seated["group"]
         self.add(room["air"])
         self.play(FadeIn(room["shell"]), FadeIn(room["glass"]), FadeIn(office_setup), run_time=1.6)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.6)
 
         chest = seated["chest"]
         head, head_top = seated["head"], seated["head_top"]
@@ -432,9 +436,9 @@ class Beat2_HumanFactor(Scene):
         self.play(scale_assembly.animate.scale(0.82).shift(UP * 1.75), run_time=0.8)
 
         row, box, items = math_panel([
-            ("qp_tot", r"\dot{Q}_{\text{Pers}}", P_ORANGE), (None, "=", P_WHITE),
+            ("qp_tot", r"\dot{Q}_{\mathrm{i,p}}", P_ORANGE), (None, "=", P_WHITE),
             ("n", "n", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("qp", r"\dot{q}_{p}", P_ORANGE), (None, r"\;[\mathrm{W}]", P_PRIMARY),
+            ("qp", r"\dot{q}_{\mathrm{p}}", P_ORANGE), (None, r"\quad\dot{Q},\dot{q}\;\text{in}\;\mathrm{W}", P_PRIMARY),
         ])
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         self.play(FadeIn(row), Create(box), run_time=1.2)
@@ -511,6 +515,9 @@ class Beat2_HumanFactor(Scene):
             size=LABEL_FONT_SIZE, color=P_CYAN, edge="left",
         )
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "scale"))
+        hall_sum = math_label(
+            rf"\dot{{Q}}_{{\mathrm{{i,p}}}} = {label_number(len(grid_icons))} \cdot 120\,\mathrm{{W}} = {label_number(len(grid_icons) * 120)}\,\mathrm{{W}}",
+            np.array([0.0, 2.45, 0.0]), size=BODY_FONT_SIZE, color=P_ORANGE)
         self.play(FadeOut(single_label), Create(hall_outline), Create(tier_lines), run_time=0.8)
         self.add(n_hall_read)
         self.play(
@@ -529,7 +536,7 @@ class Beat2_HumanFactor(Scene):
         def hall_heat(rt):
             return [ripples(hall_heat_at, r_max=0.32, rings=2, color=P_ORANGE, cycles=max(1.0, rt / 1.3))]
 
-        self.play(*hall_heat(2.4), hall_outline.animate.set_fill(P_RED, opacity=0.18), FadeIn(hall_anchor),
+        self.play(*hall_heat(2.4), hall_outline.animate.set_fill(P_RED, opacity=0.18), FadeIn(hall_anchor), FadeIn(hall_sum),
                   run_time=2.4)
         hold_for(self, self.NARRATION, "scale", during=hall_heat)
 
@@ -547,26 +554,26 @@ class Beat3_DevicesLighting(Scene):
          "Every laptop, server rack and light fixture converts electrical power straight into heat.",
          "Jedes Notebook, jedes Serverrack und jede Leuchte wandelt elektrische Leistung direkt in Wärme um."),
         ("devices",
-         "Plug loads follow Q-dot Geräte equals the sum of P el times the usage factor f N, in watts.",
-         "Steckerlasten: Q-Punkt Geräte gleich Summe aus P el mal Nutzungsfaktor f N, in Watt."),
+         r"Plug loads follow $\dot{Q}_{\mathrm{i,e}}=\sum P_{\mathrm{el}}\cdot f_{\mathrm{N}}$: the electrical power times the usage factor, summed over all devices, in $\mathrm{W}$.",
+         r"Steckerlasten: $\dot{Q}_{\mathrm{i,e}}=\sum P_{\mathrm{el}}\cdot f_{\mathrm{N}}$, elektrische Leistung mal Nutzungsfaktor, summiert über alle Geräte, in $\mathrm{W}$."),
         ("pel",
-         "P el is the electrical power drawn by each device.",
-         "P el ist die elektrische Leistung jedes Geräts."),
+         r"$P_{\mathrm{el}}$ is the electrical power drawn by each device.",
+         r"$P_{\mathrm{el}}$ ist die elektrische Leistung jedes Geräts."),
         ("fn",
-         "f N accounts for the fact that not every device runs at once.",
-         "f N berücksichtigt, dass nicht jedes Gerät gleichzeitig läuft."),
+         r"$f_{\mathrm{N}}$ accounts for the fact that not every device runs at once.",
+         r"$f_{\mathrm{N}}$ berücksichtigt, dass nicht jedes Gerät gleichzeitig läuft."),
         ("fn_usage",
-         "The usage sets f N: in an office about seven of ten devices run, in a server room all of them, in a meeting room only three.",
-         "Die Nutzung bestimmt f N: im Büro laufen etwa sieben von zehn Geräten, im Serverraum alle, im Besprechungsraum nur drei."),
+         r"The usage sets $f_{\mathrm{N}}$: in an office about seven of ten devices run, in a server room all of them, in a meeting room only three.",
+         r"Die Nutzung bestimmt $f_{\mathrm{N}}$: im Büro laufen etwa sieben von zehn Geräten, im Serverraum alle, im Besprechungsraum nur drei."),
         ("lights",
-         "Ceiling lighting adds Q-dot Licht equals the sum of P Licht times the coincidence factor f g, in watts.",
-         "Deckenlicht: Q-Punkt Licht gleich Summe aus P Licht mal Gleichzeitigkeit f g, in Watt."),
+         r"Ceiling lighting adds $\dot{Q}_{\mathrm{i,l}}=\sum P_{\mathrm{light}}\cdot f_{\mathrm{g}}$: installed power times the coincidence factor, in $\mathrm{W}$.",
+         r"Deckenlicht: $\dot{Q}_{\mathrm{i,l}}=\sum P_{\mathrm{Licht}}\cdot f_{\mathrm{g}}$, installierte Leistung mal Gleichzeitigkeitsfaktor, in $\mathrm{W}$."),
         ("pl",
-         "P Licht is the installed electrical power of the luminaires.",
-         "P Licht ist die installierte elektrische Leistung der Leuchten."),
+         r"$P_{\mathrm{light}}$ is the installed electrical power of the luminaires.",
+         r"$P_{\mathrm{Licht}}$ ist die installierte elektrische Leistung der Leuchten."),
         ("fg",
-         "f g is the coincidence factor — the share of luminaires that actually run at the same time.",
-         "f g ist der Gleichzeitigkeitsfaktor — der Anteil der gleichzeitig betriebenen Leuchten."),
+         r"$f_{\mathrm{g}}$ is the coincidence factor — the share of luminaires that actually run at the same time.",
+         r"$f_{\mathrm{g}}$ ist der Gleichzeitigkeitsfaktor — der Anteil der gleichzeitig betriebenen Leuchten."),
         ("outro",
          "Together, devices and lights bake the room from the inside out.",
          "Zusammen heizen Geräte und Licht den Raum von innen heraus auf."),
@@ -576,12 +583,11 @@ class Beat3_DevicesLighting(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Equipment, plug loads and lighting", "Geräte, Steckerlasten und Beleuchtung"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-2078", "geraete")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
         room = room_section(np.array([0.0, 0.25, 0.0]), w=8.6, h=2.6)
         unit = room["h"] / 2.5
@@ -598,8 +604,9 @@ class Beat3_DevicesLighting(Scene):
         self.play(FadeIn(room["shell"]), FadeIn(room["glass"]), run_time=0.8)
         self.play(LaggedStart(FadeIn(desk), FadeIn(laptop, shift=DOWN * 0.15), FadeIn(server_rack, shift=DOWN * 0.15),
                               lag_ratio=0.35), run_time=1.4)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 0.8 + 1.4)
 
-        plug_y = room["y_f"] + 0.12
+        plug_y =room["y_f"] + 0.12
         cables = [smooth_path([np.array([room["x_r"] - 0.05, plug_y, 0.0]), np.array([0.0, plug_y, 0.0]),
                                np.array([-1.9, plug_y, 0.0]), np.array([laptop_at[0], desk_y + 0.02, 0.0])]),
                   smooth_path([np.array([room["x_r"] - 0.05, plug_y, 0.0]), np.array([3.4, plug_y, 0.0]),
@@ -621,10 +628,10 @@ class Beat3_DevicesLighting(Scene):
         cables[:] = [cl.copy() for cl in cable_lines]
 
         row_d, box_d, items_d = math_panel([
-            ("qg", r"\dot{Q}_{\text{Geräte}}", P_CYAN), (None, "=", P_WHITE),
-            (None, r"\Sigma", P_WHITE),
-            ("pel", r"P_{el}", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("fn", r"f_{N}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_PRIMARY),
+            ("qg", r"\dot{Q}_{\mathrm{i,e}}", P_CYAN), (None, "=", P_WHITE),
+            (None, r"\sum", P_WHITE),
+            ("pel", r"P_{\mathrm{el}}", P_CYAN), (None, r"\cdot", P_WHITE),
+            ("fn", r"f_{\mathrm{N}}", P_YELLOW), (None, r"\quad\dot{Q},P\;\text{in}\;\mathrm{W}", P_PRIMARY),
         ])
         self.play(FadeIn(row_d), Create(box_d), *device_heat(1.1), run_time=1.1)
         hold_for(self, self.NARRATION, "devices", during=device_heat)
@@ -654,7 +661,7 @@ class Beat3_DevicesLighting(Scene):
                 icons.add(_figure("laptop-closed", unit=LAPTOP_GRID_METRE, at=(cx - 1.1 + c * 0.55, 0.72 - r * 0.6), moving=False))
             trk = ValueTracker(0.0)
             read = math_readout(
-                lambda trk=trk: rf"f_{{N}} = {label_number(trk.get_value(), 1)}",
+                lambda trk=trk: rf"f_{{\mathrm{{N}}}} = {label_number(trk.get_value(), 1)}",
                 np.array([cx, -0.30, 0.0]), size=BODY_FONT_SIZE, color=color, edge="center",
             )
             usage_groups.add(VGroup(frame, label, icons))
@@ -715,10 +722,10 @@ class Beat3_DevicesLighting(Scene):
         bulbs[:] = [rays_l[0].get_start(), rays_r[0].get_start()]
 
         row_l, box_l, items_l = math_panel([
-            ("ql", r"\dot{Q}_{\text{Licht}}", P_YELLOW), (None, "=", P_WHITE),
-            (None, r"\Sigma", P_WHITE),
-            ("pl", r"P_{\text{Licht}}", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("fg", r"f_{g}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_PRIMARY),
+            ("ql", r"\dot{Q}_{\mathrm{i,l}}", P_YELLOW), (None, "=", P_WHITE),
+            (None, r"\sum", P_WHITE),
+            ("pl", tr(r"P_{\mathrm{light}}", r"P_{\mathrm{Licht}}"), P_CYAN), (None, r"\cdot", P_WHITE),
+            ("fg", r"f_{\mathrm{g}}", P_YELLOW), (None, r"\quad\dot{Q},P\;\text{in}\;\mathrm{W}", P_PRIMARY),
         ])
         self.play(FadeIn(row_l), Create(box_l), *light_heat(1.1), run_time=1.1)
         hold_for(self, self.NARRATION, "lights", during=light_heat)
@@ -730,7 +737,7 @@ class Beat3_DevicesLighting(Scene):
             if key == "fg":
                 fg_tr = ValueTracker(1.0)
                 fg_read = math_readout(
-                    lambda: rf"f_{{g}} = {label_number(fg_tr.get_value(), 1)}",
+                    lambda: rf"f_{{\mathrm{{g}}}} = {label_number(fg_tr.get_value(), 1)}",
                     lambda: fixtures.get_center() + DOWN * 0.95,
                     size=BODY_FONT_SIZE, color=P_YELLOW, edge="center",
                 )
@@ -763,32 +770,31 @@ class Beat3_DevicesLighting(Scene):
 class Beat4_CumulativeLoad(Scene):
     NARRATION = [
         ("intro",
-         "In building physics we sum every internal source into one cooling load, Q-dot internal.",
-         "In der Bauphysik summieren wir alle internen Quellen zur Kühllast Q-Punkt intern."),
+         r"In building physics we sum every internal source into one internal load $\dot{Q}_{\mathrm{i}}$.",
+         r"In der Bauphysik summieren wir alle internen Quellen zur internen Last $\dot{Q}_{\mathrm{i}}$."),
         ("sources",
-         "People, plug loads and lighting are the three terms on the right-hand side.",
-         "Personen, Steckerlasten und Beleuchtung sind die drei Terme auf der rechten Seite."),
+         "People, plug loads and lighting are the three terms on the right-hand side; here for a small office with ten workplaces.",
+         "Personen, Steckerlasten und Beleuchtung sind die drei Terme auf der rechten Seite; hier für ein kleines Büro mit zehn Arbeitsplätzen."),
         ("formula",
-         "Q-dot i equals Q-dot Personen plus Q-dot Geräte plus Q-dot Licht, all in watts.",
-         "Q-Punkt i gleich Q-Punkt Personen plus Q-Punkt Geräte plus Q-Punkt Licht, alles in Watt."),
+         r"$\dot{Q}_{\mathrm{i}}=\dot{Q}_{\mathrm{i,p}}+\dot{Q}_{\mathrm{i,e}}+\dot{Q}_{\mathrm{i,l}}$, all in $\mathrm{W}$: $1200\,\mathrm{W}+420\,\mathrm{W}+400\,\mathrm{W}=2020\,\mathrm{W}$.",
+         r"$\dot{Q}_{\mathrm{i}}=\dot{Q}_{\mathrm{i,p}}+\dot{Q}_{\mathrm{i,e}}+\dot{Q}_{\mathrm{i,l}}$, alles in $\mathrm{W}$: $1200\,\mathrm{W}+420\,\mathrm{W}+400\,\mathrm{W}=2020\,\mathrm{W}$."),
         ("qi",
-         "Q-dot i is the total internal cooling load the system must remove.",
-         "Q-Punkt i ist die gesamte interne Kühllast, die das System abführen muss."),
+         r"$\dot{Q}_{\mathrm{i}}$ is the total internal load the cooling technology must remove.",
+         r"$\dot{Q}_{\mathrm{i}}$ ist die gesamte interne Last, die die Kühltechnik abführen muss."),
         ("outro",
-         "On a hot summer day the cooling system must remove this internal heat on top — even with blinds drawn.",
-         "An einem heißen Sommertag muss die Kühlung diese interne Wärme zusätzlich abführen — selbst bei geschlossenen Jalousien."),
+         r"On a hot summer day this is one summand of the cooling load $\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{i}}$ — it stays even with blinds drawn.",
+         r"An einem heißen Sommertag ist das ein Summand der Kühllast $\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{i}}$ — er bleibt selbst bei geschlossenen Jalousien."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Sum of the internal gains", "Summe der internen Gewinne"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-2078", "innere")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
         def mini_person(center=ORIGIN):
             return _figure("standing", unit=CARD_METRE, at=(0.0, 0.0)).move_to(center)
@@ -806,7 +812,7 @@ class Beat4_CumulativeLoad(Scene):
                                  title_depth=depth, color=color).move_to(center)
             label.move_to([frame.get_left()[0] + _theme_module.UI_SPACING + label.width / 2,
                            frame.get_top()[1] - depth / 2, 0])
-            term_t = math_label(term, size=BODY_FONT_SIZE, color=P_WHITE)
+            term_t = math_label(term, size=LABEL_FONT_SIZE + 2, color=P_WHITE)
             term_t.next_to(frame.get_bottom(), UP, buff=0.14)
             icon.move_to((label.get_bottom() + term_t.get_top()) / 2)
             return VGroup(frame, label, icon, term_t)
@@ -814,18 +820,19 @@ class Beat4_CumulativeLoad(Scene):
         c_p = LEFT * 3.8 + UP * 0.85
         c_e = ORIGIN + UP * 0.85
         c_l = RIGHT * 3.8 + UP * 0.85
-        card_p = source_card(mini_person(), tr("People", "Personen"), r"\dot{Q}_{\text{Pers}}", P_ORANGE, c_p)
-        card_e = source_card(mini_laptop(), tr("Equipment", "Geräte"), r"\dot{Q}_{\text{Geräte}}", P_CYAN, c_e)
-        card_l = source_card(mini_lamp(), tr("Lighting", "Beleuchtung"), r"\dot{Q}_{\text{Licht}}", P_YELLOW, c_l)
+        card_p = source_card(mini_person(), tr("People", "Personen"), rf"\dot{{Q}}_{{\mathrm{{i,p}}}}={label_number(Q_PEOPLE)}\,\mathrm{{W}}", P_ORANGE, c_p)
+        card_e = source_card(mini_laptop(), tr("Equipment", "Geräte"), rf"\dot{{Q}}_{{\mathrm{{i,e}}}}={label_number(Q_DEVICES)}\,\mathrm{{W}}", P_CYAN, c_e)
+        card_l = source_card(mini_lamp(), tr("Lighting", "Beleuchtung"), rf"\dot{{Q}}_{{\mathrm{{i,l}}}}={label_number(Q_LIGHTS)}\,\mathrm{{W}}", P_YELLOW, c_l)
         plus_1 = Text("+", font_size=FORMULA_FONT_SIZE, color=P_WHITE).move_to((c_p + c_e) / 2)
         plus_2 = Text("+", font_size=FORMULA_FONT_SIZE, color=P_WHITE).move_to((c_e + c_l) / 2)
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "sources"))
         self.play(
             LaggedStart(FadeIn(card_p), FadeIn(card_e), FadeIn(card_l), lag_ratio=0.2),
             run_time=1.3,
         )
         self.play(FadeIn(plus_1), FadeIn(plus_2), run_time=0.5)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.3 + 0.5)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "sources"))
 
         def card_heat(rt):
             spots = [card_p[2].get_center() + UP * 0.08, card_e[2].get_center() + UP * 0.05]
@@ -841,13 +848,18 @@ class Beat4_CumulativeLoad(Scene):
         )
 
         row, box, items = math_panel([
-            ("qi", r"\dot{Q}_{i}", P_CYAN), (None, "=", P_WHITE),
-            ("pers", r"\dot{Q}_{\text{Pers}}", P_ORANGE), (None, "+", P_WHITE),
-            ("ger", r"\dot{Q}_{\text{Geräte}}", P_CYAN), (None, "+", P_WHITE),
-            ("licht", r"\dot{Q}_{\text{Licht}}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_PRIMARY),
+            ("qi", r"\dot{Q}_{\mathrm{i}}", P_CYAN), (None, "=", P_WHITE),
+            ("pers", r"\dot{Q}_{\mathrm{i,p}}", P_ORANGE), (None, "+", P_WHITE),
+            ("ger", r"\dot{Q}_{\mathrm{i,e}}", P_CYAN), (None, "+", P_WHITE),
+            ("licht", r"\dot{Q}_{\mathrm{i,l}}", P_YELLOW), (None, r"\quad\dot{Q}\;\text{in}\;\mathrm{W}", P_PRIMARY),
         ])
+        numbers = math_label(
+            rf"\dot{{Q}}_{{\mathrm{{i}}}} = {label_number(Q_PEOPLE)}\,\mathrm{{W}} + {label_number(Q_DEVICES)}\,\mathrm{{W}} + {label_number(Q_LIGHTS)}\,\mathrm{{W}} = {label_number(Q_PEOPLE + Q_DEVICES + Q_LIGHTS)}\,\mathrm{{W}}",
+            np.array([0.0, -1.0, 0.0]), size=BODY_FONT_SIZE, color=P_CYAN)
+        total = math_label(r"\dot{Q}_{\mathrm{C}} = \dot{Q}_{\mathrm{T}} + \dot{Q}_{\mathrm{V}} + \dot{Q}_{\mathrm{S}} + \dot{Q}_{\mathrm{i}}",
+                           np.array([0.0, -1.0, 0.0]), size=BODY_FONT_SIZE, color=P_WHITE)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
-        self.play(FadeIn(row), Create(box), run_time=1.2)
+        self.play(FadeIn(row), Create(box), FadeIn(numbers), run_time=1.2)
         hold_for(self, self.NARRATION, "formula", during=card_heat)
 
         card_of = {"pers": card_p, "ger": card_e, "licht": card_l}
@@ -864,7 +876,9 @@ class Beat4_CumulativeLoad(Scene):
             self.play(FadeOut(ring), run_time=0.22)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
-        hold_for(self, self.NARRATION, "outro", during=card_heat)
+        self.play(FadeOut(numbers), FadeIn(total), run_time=0.5)
+        self.play(Indicate(total, color=P_CYAN), run_time=0.6)
+        hold_for(self, self.NARRATION, "outro", used=1.1, during=card_heat)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
@@ -877,8 +891,8 @@ class Beat4_CumulativeLoad(Scene):
 class Beat5_Mitigation(Scene):
     NARRATION = [
         ("intro",
-         "Smart design cuts the load before the chiller must remove it.",
-         "Intelligentes Design senkt die Last, bevor die Kälteanlage sie abführen muss."),
+         "Smart design cuts the load before the cooling technology must remove it.",
+         "Intelligentes Design senkt die Last, bevor die Kühltechnik sie abführen muss."),
         ("high",
          "High plug and lighting loads first heat the office interior.",
          "Hohe Stecker- und Lichtlasten heizen zuerst den Büroraum."),
@@ -886,20 +900,19 @@ class Beat5_Mitigation(Scene):
          "Controls dim lights to thirty percent and plug loads to forty percent.",
          "Steuerung dimmt Licht auf dreißig und Steckerlasten auf vierzig Prozent."),
         ("outro",
-         "Less internal heat gain means a smaller cooling load.",
-         "Weniger interne Wärmegewinne bedeuten eine kleinere Kühllast."),
+         r"Less internal heat gain means a smaller internal load $\dot{Q}_{\mathrm{i}}$ and so a smaller cooling load $\dot{Q}_{\mathrm{C}}$.",
+         r"Weniger interne Wärmegewinne bedeuten eine kleinere interne Last $\dot{Q}_{\mathrm{i}}$ und damit eine kleinere Kühllast $\dot{Q}_{\mathrm{C}}$."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Mitigation & smart design", "Minderung & intelligentes Design"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-2078", "innere")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
-        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
         C_HEAT_HOT = P_RED
         C_COOL = P_CYAN
@@ -973,8 +986,9 @@ class Beat5_Mitigation(Scene):
             FadeIn(light_lbl),
             run_time=0.9,
         )
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.0 + 1.0 + 0.9)
 
-        light_on = ValueTracker(1.0)
+        light_on =ValueTracker(1.0)
         plug_on = ValueTracker(1.0)
         heat_spots = {"laptop": laptop_heat, "person": seated["chest"]}
 

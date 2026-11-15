@@ -107,3 +107,94 @@ func TestWorkspaceManaged(t *testing.T) {
 		})
 	}
 }
+
+func TestWorkspaceDetached(t *testing.T) {
+	var rows []struct {
+		ID, Mutation string
+		Accepted     bool
+	}
+	readFixture(t, workspaceLinksBase+"🧫️fixtures/🔌️detached.json", &rows)
+	registry := loadRegistry(t)
+	for _, row := range rows {
+		t.Run(row.ID, func(t *testing.T) {
+			root, policy := launcherSandbox(t), workspaceLinksPolicy(t)
+			contract, err := readWorkspaceManagedContract(root, policy)
+			if err != nil {
+				t.Fatal(err)
+			}
+			prefix := strings.Repeat("a", contract.prefixUnits)
+			store, name := contract.generationRoot, contract.rootEndpoint
+			switch row.Mutation {
+			case "foreign-store":
+				store = filepath.Join(root, "foreign")
+			case "wrong-name":
+				name = "elsewhere"
+			case "wrong-generation":
+				prefix = strings.Repeat("z", contract.prefixUnits)
+			case "other-store-depth":
+				store = filepath.Join(store, "deeper")
+			}
+			target := filepath.Join(store, prefix, name)
+			endpoint := filepath.Join(root, policy.Directory)
+			link := target
+			if row.Mutation == "relative" {
+				if link, err = filepath.Rel(filepath.Dir(endpoint), target); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := createWorkspaceDirectoryLink(link, endpoint); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := os.Stat(endpoint); !os.IsNotExist(err) {
+				t.Fatalf("store is attached: %v", err)
+			}
+			classification, err := ClassifyWorkspaceNamespace(root, policy)
+			if (err == nil) != row.Accepted {
+				t.Fatalf("accepted=%v error=%v", row.Accepted, err)
+			}
+			if row.Accepted {
+				if classification.Kind != "detached" || classification.Authority || classification.Readiness || classification.ContentObserved {
+					t.Fatalf("classification attested authority: %+v", classification)
+				}
+				if err := PrepareWorkspacePackageLinks(context.Background(), root, policy); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				var failure Failure
+				if !asFailure(err, &failure) || failure.ID != "namespaceDangling" {
+					t.Fatalf("refusal without remedy: %v", err)
+				}
+				for _, language := range registry.Languages {
+					text := registry.Say(language, failure.ID, failure.Values)
+					if !strings.Contains(text, endpoint) || !strings.Contains(text, "repo dependencies sync --all") || strings.Contains(text, "{") {
+						t.Fatalf("%s refusal does not name the remedy: %s", language, text)
+					}
+				}
+				if err := PrepareWorkspacePackageLinks(context.Background(), root, policy); err == nil {
+					t.Fatal("foreign dangling namespace accepted")
+				}
+			}
+			kept, err := os.Readlink(endpoint)
+			if err != nil || kept != link {
+				t.Fatalf("dangling link was mutated: %q %v", kept, err)
+			}
+		})
+	}
+}
+
+func TestWorkspaceDetachedHandsOverToTheImplementation(t *testing.T) {
+	setup, sandbox, policy := seededHost(t, map[string]string{"SEMIO_LANGUAGE": "en"}, true), launcherSandbox(t), workspaceLinksPolicy(t)
+	contract, err := readWorkspaceManagedContract(sandbox, policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := createWorkspaceDirectoryLink(filepath.Join(contract.generationRoot, strings.Repeat("b", contract.prefixUnits), contract.rootEndpoint), filepath.Join(sandbox, policy.Directory)); err != nil {
+		t.Fatal(err)
+	}
+	setup.host.Prepare = func(ctx context.Context, _ string) error { return PrepareWorkspacePackageLinks(ctx, sandbox, policy) }
+	handedOff := false
+	setup.host.HandOff = func(string, []string, []string) error { handedOff = true; return nil }
+	if code := setup.host.Execute(context.Background(), setup.root, "build", []string{"--help"}); code != 0 || !handedOff {
+		t.Fatalf("detached store blocked the implementation: code=%d notices=%q", code, setup.log.err)
+	}
+}

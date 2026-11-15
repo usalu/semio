@@ -1,0 +1,4 @@
+started pid=88518 at 2026-11-14T19:09:35Z log=/Users/ueli/native-bootstrap-round-5-try-5.log
+HARD STOP at 2026-11-14T19:17:37Z: memory pressure level 4; sending one SIGINT to process group 88518
+one minute after SIGINT: alive=no
+ended at 2026-11-14T19:18:37Z peak_rss_kib=6100336 run_peak_rss_kib=6111072 hard_stop=memory pressure level 4

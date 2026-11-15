@@ -23,6 +23,7 @@
     "capacity",
     "leases",
     "fleet",
+    "scheduler",
     "service",
     "remote-execution",
     "doctor",

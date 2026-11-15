@@ -1,0 +1,577 @@
+{
+  "cases": [
+    {
+      "id": "mac-mini-g1-server",
+      "listing": [
+        {
+          "name": ".fseventsd",
+          "kind": "directory"
+        },
+        {
+          "name": ".metadata_never_index",
+          "kind": "file"
+        },
+        {
+          "name": "bootstrap",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-bin",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-cache",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-config",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-global",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-home",
+          "kind": "directory"
+        },
+        {
+          "name": "dependencies.json",
+          "kind": "file"
+        },
+        {
+          "name": "generation",
+          "kind": "directory"
+        },
+        {
+          "name": "j",
+          "kind": "directory"
+        },
+        {
+          "name": "pointer",
+          "kind": "directory"
+        },
+        {
+          "name": "storage-events.jsonl",
+          "kind": "file"
+        },
+        {
+          "name": "tmp",
+          "kind": "directory"
+        }
+      ],
+      "accepted": true,
+      "refusal": null
+    },
+    {
+      "id": "worker-report-run-8",
+      "listing": [
+        {
+          "name": ".fseventsd",
+          "kind": "directory"
+        },
+        {
+          "name": ".metadata_never_index",
+          "kind": "file"
+        },
+        {
+          "name": "bootstrap",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-bin",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-cache",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-config",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-global",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-home",
+          "kind": "directory"
+        },
+        {
+          "name": "dependencies.json",
+          "kind": "file"
+        },
+        {
+          "name": "dotnet",
+          "kind": "directory"
+        },
+        {
+          "name": "generation",
+          "kind": "directory"
+        },
+        {
+          "name": "j",
+          "kind": "directory"
+        },
+        {
+          "name": "nuget",
+          "kind": "directory"
+        },
+        {
+          "name": "pointer",
+          "kind": "directory"
+        },
+        {
+          "name": "python",
+          "kind": "directory"
+        },
+        {
+          "name": "storage-events.jsonl",
+          "kind": "file"
+        },
+        {
+          "name": "tmp",
+          "kind": "directory"
+        }
+      ],
+      "accepted": true,
+      "refusal": null
+    },
+    {
+      "id": "bazel-module-cache",
+      "listing": [
+        {
+          "name": ".fseventsd",
+          "kind": "directory"
+        },
+        {
+          "name": ".metadata_never_index",
+          "kind": "file"
+        },
+        {
+          "name": "bazel",
+          "kind": "directory"
+        },
+        {
+          "name": "bootstrap",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-bin",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-cache",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-config",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-global",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-home",
+          "kind": "directory"
+        },
+        {
+          "name": "dependencies.json",
+          "kind": "file"
+        },
+        {
+          "name": "dotnet",
+          "kind": "directory"
+        },
+        {
+          "name": "generation",
+          "kind": "directory"
+        },
+        {
+          "name": "j",
+          "kind": "directory"
+        },
+        {
+          "name": "nuget",
+          "kind": "directory"
+        },
+        {
+          "name": "pointer",
+          "kind": "directory"
+        },
+        {
+          "name": "python",
+          "kind": "directory"
+        },
+        {
+          "name": "storage-events.jsonl",
+          "kind": "file"
+        },
+        {
+          "name": "tmp",
+          "kind": "directory"
+        }
+      ],
+      "accepted": true,
+      "refusal": null
+    },
+    {
+      "id": "foreign-directory",
+      "listing": [
+        {
+          "name": ".fseventsd",
+          "kind": "directory"
+        },
+        {
+          "name": ".metadata_never_index",
+          "kind": "file"
+        },
+        {
+          "name": "bootstrap",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-bin",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-cache",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-config",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-global",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-home",
+          "kind": "directory"
+        },
+        {
+          "name": "dependencies.json",
+          "kind": "file"
+        },
+        {
+          "name": "foreign",
+          "kind": "directory"
+        },
+        {
+          "name": "generation",
+          "kind": "directory"
+        },
+        {
+          "name": "j",
+          "kind": "directory"
+        },
+        {
+          "name": "pointer",
+          "kind": "directory"
+        },
+        {
+          "name": "storage-events.jsonl",
+          "kind": "file"
+        },
+        {
+          "name": "tmp",
+          "kind": "directory"
+        }
+      ],
+      "accepted": false,
+      "refusal": "Closed current dependency image roles required"
+    },
+    {
+      "id": "generation-is-a-file",
+      "listing": [
+        {
+          "name": ".fseventsd",
+          "kind": "directory"
+        },
+        {
+          "name": ".metadata_never_index",
+          "kind": "file"
+        },
+        {
+          "name": "bootstrap",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-bin",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-cache",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-config",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-global",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-home",
+          "kind": "directory"
+        },
+        {
+          "name": "dependencies.json",
+          "kind": "file"
+        },
+        {
+          "name": "generation",
+          "kind": "file"
+        },
+        {
+          "name": "j",
+          "kind": "directory"
+        },
+        {
+          "name": "pointer",
+          "kind": "directory"
+        },
+        {
+          "name": "storage-events.jsonl",
+          "kind": "file"
+        },
+        {
+          "name": "tmp",
+          "kind": "directory"
+        }
+      ],
+      "accepted": false,
+      "refusal": "Physical current dependency image role required"
+    },
+    {
+      "id": "over-maximum",
+      "listing": [
+        {
+          "name": "role-00",
+          "kind": "directory"
+        },
+        {
+          "name": "role-01",
+          "kind": "directory"
+        },
+        {
+          "name": "role-02",
+          "kind": "directory"
+        },
+        {
+          "name": "role-03",
+          "kind": "directory"
+        },
+        {
+          "name": "role-04",
+          "kind": "directory"
+        },
+        {
+          "name": "role-05",
+          "kind": "directory"
+        },
+        {
+          "name": "role-06",
+          "kind": "directory"
+        },
+        {
+          "name": "role-07",
+          "kind": "directory"
+        },
+        {
+          "name": "role-08",
+          "kind": "directory"
+        },
+        {
+          "name": "role-09",
+          "kind": "directory"
+        },
+        {
+          "name": "role-10",
+          "kind": "directory"
+        },
+        {
+          "name": "role-11",
+          "kind": "directory"
+        },
+        {
+          "name": "role-12",
+          "kind": "directory"
+        },
+        {
+          "name": "role-13",
+          "kind": "directory"
+        },
+        {
+          "name": "role-14",
+          "kind": "directory"
+        },
+        {
+          "name": "role-15",
+          "kind": "directory"
+        },
+        {
+          "name": "role-16",
+          "kind": "directory"
+        },
+        {
+          "name": "role-17",
+          "kind": "directory"
+        },
+        {
+          "name": "role-18",
+          "kind": "directory"
+        },
+        {
+          "name": "role-19",
+          "kind": "directory"
+        },
+        {
+          "name": "role-20",
+          "kind": "directory"
+        },
+        {
+          "name": "role-21",
+          "kind": "directory"
+        },
+        {
+          "name": "role-22",
+          "kind": "directory"
+        },
+        {
+          "name": "role-23",
+          "kind": "directory"
+        },
+        {
+          "name": "role-24",
+          "kind": "directory"
+        },
+        {
+          "name": "role-25",
+          "kind": "directory"
+        },
+        {
+          "name": "role-26",
+          "kind": "directory"
+        },
+        {
+          "name": "role-27",
+          "kind": "directory"
+        },
+        {
+          "name": "role-28",
+          "kind": "directory"
+        },
+        {
+          "name": "role-29",
+          "kind": "directory"
+        },
+        {
+          "name": "role-30",
+          "kind": "directory"
+        },
+        {
+          "name": "role-31",
+          "kind": "directory"
+        },
+        {
+          "name": "role-32",
+          "kind": "directory"
+        },
+        {
+          "name": "role-33",
+          "kind": "directory"
+        },
+        {
+          "name": "role-34",
+          "kind": "directory"
+        },
+        {
+          "name": "role-35",
+          "kind": "directory"
+        },
+        {
+          "name": "role-36",
+          "kind": "directory"
+        },
+        {
+          "name": "role-37",
+          "kind": "directory"
+        },
+        {
+          "name": "role-38",
+          "kind": "directory"
+        },
+        {
+          "name": "role-39",
+          "kind": "directory"
+        }
+      ],
+      "accepted": false,
+      "refusal": "Bounded complete dependency directory required"
+    },
+    {
+      "id": "missing-generation-container",
+      "listing": [
+        {
+          "name": ".fseventsd",
+          "kind": "directory"
+        },
+        {
+          "name": ".metadata_never_index",
+          "kind": "file"
+        },
+        {
+          "name": "bootstrap",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-bin",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-cache",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-config",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-global",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-home",
+          "kind": "directory"
+        },
+        {
+          "name": "dependencies.json",
+          "kind": "file"
+        },
+        {
+          "name": "generation",
+          "kind": "directory"
+        },
+        {
+          "name": "pointer",
+          "kind": "directory"
+        },
+        {
+          "name": "storage-events.jsonl",
+          "kind": "file"
+        },
+        {
+          "name": "tmp",
+          "kind": "directory"
+        }
+      ],
+      "accepted": false,
+      "refusal": "Closed current dependency image roles required"
+    }
+  ]
+}

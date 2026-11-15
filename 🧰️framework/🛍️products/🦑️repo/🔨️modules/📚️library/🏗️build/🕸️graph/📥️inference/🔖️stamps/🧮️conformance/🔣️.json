@@ -1,0 +1,25 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "version": 1,
+  "providers": {
+    "input-precision": {
+      "entries": ["🏗️build/📥️inputs/🎯️precision/🟦️.ts"],
+      "schemas": ["🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json"],
+      "fixtures": {
+        "main": "🏗️build/📥️inputs/🎯️precision/🧪️tests/🔣️.json",
+        "dialects": "🏗️build/📥️inputs/🎯️precision/🧪️tests/🔣️glob-dialects/🔣️.json",
+        "router": "🏗️build/📥️inputs/🎯️precision/🧪️tests/🛤️router/🔣️.json"
+      },
+      "runner": "input-precision"
+    },
+    "package-managers": {
+      "entries": ["⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts", "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts", "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📖️formats/🟦️.ts", "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🟦️.ts", "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/🟦️.ts", "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/🟦️.ts", "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/🟦️.ts", "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/🟦️.ts", "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/🟦️.ts"],
+      "schemas": ["⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/🔣️.json"],
+      "fixtures": {
+        "roles": "🏗️build/📥️inputs/🎯️precision/🧪️tests/🔌️manager-files/🔣️.json",
+        "policy": "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔣️policy.json"
+      },
+      "runner": "package-managers"
+    }
+  }
+}

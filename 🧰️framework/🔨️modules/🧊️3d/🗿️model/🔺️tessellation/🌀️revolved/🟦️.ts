@@ -4,7 +4,7 @@ import type { CapsuleSolid, EllipsoidSolid, Operation, Quality, RevolveSolid, Ve
 import { TAU, add, cross, mul, normalize, sub, length, type V3 } from "../../🧮️math/🟦️.ts";
 import { Pace, silentOperation } from "../../⏱️operation/🟦️.ts";
 import { CREASE_COS, MeshBuilder, gridSurface, type Geometry } from "../🧱️builder/🟦️.ts";
-import { signedArea, triangulatePolygon } from "../🔺️polygon/🟦️.ts";
+import { ringFault, signedArea, triangulatePolygon } from "../🔺️polygon/🟦️.ts";
 import { circleSegments } from "../📏️segments/🟦️.ts";
 import * as portable from "../../🧮️math/🎯️portable/🟦️.ts";
 
@@ -103,7 +103,9 @@ export function tessellateCapsule(solid: CapsuleSolid, quality: Quality, operati
   return builder.build();
 }
 
-/** 🛤️ The profile as the tessellator walks it: radial clamped at zero, consecutive duplicates dropped, a first point equal to the last closing a loop, and for open profiles the end points projected onto the axis (the flat end discs). Orientation is not applied. */
+/** 🛤️ The profile as the tessellator walks it: radial clamped at zero, consecutive duplicates dropped, a first point equal to the last (and at least three distinct points) closing a loop, and for open profiles the end points projected onto the axis (the flat end discs). Orientation is not applied.
+ *
+ * THE CLOSING RULE (normative, design amendment A4 made explicit): a profile is *closed* only by repeating its first point as its last point; the solid is then the body enclosed by that loop and the axis is not involved, so a shell, a tube wall, a bead or a torus is a loop. An *open* profile is always closed through the axis: its end points are dropped perpendicularly onto the axis and the solid is everything between the polyline and the axis, so a profile that stays off the axis at both ends and is not repeated gives a filled body, never a shell. {@link revolveClosure} flags that trap. */
 export function revolveOutline(profile: readonly Vec2[]): { points: Vec2[]; loop: boolean } {
   const eps = 1e-12;
   const points: Vec2[] = [];
@@ -119,6 +121,28 @@ export function revolveOutline(profile: readonly Vec2[]): { points: Vec2[]; loop
     if (points[points.length - 1]![1] > eps) points.push([points[points.length - 1]![0], 0]);
   }
   return { points, loop };
+}
+
+/** 🪤️ What the closing rule does to a profile: `loop` (first point repeated, nothing implied), `onAxis` the ends of an open profile reach the axis (nothing implied beyond the flat end discs), `shell` an open profile whose both ends stay off the axis (at least 2 % of its largest radius) while the straight chord from its last to its first point closes it into a simple polygon of non-zero area: the author drew a loop and forgot to repeat the first point, so the implied closure through the axis fills the hollow (`filledAreaM2` is the area between the profile and the axis, `loopAreaM2` the area of the loop that was probably meant); `axis` any other open profile (a cylinder, cone, disc or lens written with its ends off the axis). */
+export type RevolveClosure = { readonly kind: "loop" | "onAxis" | "shell" | "axis"; readonly filledAreaM2: number; readonly loopAreaM2: number };
+
+/** 🪤️ Classifies how a profile is closed, see {@link RevolveClosure}; the validators turn `shell` into the finding `revolve-implied-closure`. */
+export function revolveClosure(profile: readonly Vec2[]): RevolveClosure {
+  const { points, loop } = revolveOutline(profile);
+  if (loop) return { kind: "loop", filledAreaM2: 0, loopAreaM2: Math.abs(signedArea(points)) };
+  const eps = 1e-12;
+  const raw: Vec2[] = [];
+  for (const p of profile) {
+    const last = raw[raw.length - 1];
+    if (!last || portable.hypot(p[0] - last[0], p[1] - last[1]) > eps) raw.push([p[0], Math.max(0, p[1])]);
+  }
+  if (raw.length < 2) return { kind: "onAxis", filledAreaM2: 0, loopAreaM2: 0 };
+  const first = raw[0]!, last = raw[raw.length - 1]!;
+  const reach = Math.max(...raw.map((p) => p[1]), 1e-9);
+  const filledAreaM2 = Math.abs(signedArea(points));
+  if (first[1] <= 0.02 * reach || last[1] <= 0.02 * reach) return { kind: "onAxis", filledAreaM2, loopAreaM2: 0 };
+  const loopAreaM2 = raw.length >= 3 && !ringFault(raw, true) ? Math.abs(signedArea(raw)) : 0;
+  return { kind: loopAreaM2 > 0 ? "shell" : "axis", filledAreaM2, loopAreaM2 };
 }
 
 export function tessellateRevolve(solid: RevolveSolid, quality: Quality, operation: Operation = silentOperation): Geometry {

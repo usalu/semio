@@ -13,8 +13,31 @@
   },
   "winter": {
     "indoorC": 20,
-    "outdoorDesignC": 0,
-    "groundDeltaK": 10
+    "outdoorC": 0,
+    "groundDeltaK": 10,
+    "outdoorHumidityGKg": 3.0,
+    "indoorHumidityGKg": 7.3
+  },
+  "design": {
+    "outdoorC": -12,
+    "groundDeltaK": 10,
+    "referenceId": "din-ts-12831-1"
+  },
+  "glazing": {
+    "gPerp": 0.60,
+    "directTransmission": 0.50,
+    "secondaryInward": 0.10,
+    "reflected": 0.20,
+    "secondaryOutward": 0.20,
+    "frameFactorFF": 0.70,
+    "incidenceFW": 0.90,
+    "shadingFSWinter": 0.80,
+    "sunProtectionFCBlind": 0.15,
+    "sunProtectionFCNone": 1.0,
+    "windowWidthM": 1.2,
+    "windowHeightM": 1.6,
+    "winterIrradianceWM2": 400,
+    "clearSkyIrradianceWM2": 500
   },
   "summer": {
     "indoorC": 26,
@@ -31,7 +54,8 @@
   ],
   "season": {
     "heatingDays": 212,
-    "degreeDaysKdPerA": 3500
+    "degreeDaysKdPerA": 3500,
+    "heatingLimitC": 15
   },
   "gains": {
     "solarKWhPerA": 3000,

@@ -1,10 +1,11 @@
-import{lstatSync,readFileSync}from"node:fs";
-import{dirname}from"node:path";
+import{closeSync,constants,existsSync,fsyncSync,lstatSync,openSync,readFileSync,readdirSync,renameSync,rmSync,writeFileSync}from"node:fs";
+import{dirname,isAbsolute,join,relative,resolve,sep}from"node:path";
 import{captureOwnedCommandV1}from"../../../../../🎛️owned-execution/🟦️.ts";
 import{isOwnedChildLostErrorV1}from"../../../../../🎛️owned-execution/🏁️settlement/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../🔒️leases/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json" with{type:"json"};
+import mountDirectorySchema from"../📋️contract/📂️mount/🧬️schema/🔣️.json" with{type:"json"};
 const protocol=schema.definitions.ImageProtocol.const.bootSession,pattern=new RegExp(schema.definitions.BootSession.pattern,"u"),readPolicy=schema.definitions.BootSessionRead.const;
 let primed:string|undefined,priming:Promise<string>|undefined;
 
@@ -33,3 +34,63 @@ export function readNativeImageAncestryV1(directory:string):readonly string[]{
 
 /** 🧷️ Requires the exact published ancestor inode chain without rewriting publication DATA. */
 export function requireNativeImageAncestryBindingV1(value:unknown):void{if(validateJsonSchemaSubset(schema.definitions.AncestryBinding,value,schema).length)throw Error("Closed Native ancestry binding required");const row=value as Readonly<{published:readonly string[];current:readonly string[]}>;if(row.published.length!==row.current.length||row.published.some((ino,index)=>ino!==row.current[index]))throw Error("Original Native image ancestry changed");}
+
+const same=(left:readonly string[],right:readonly string[]):boolean=>left.length===right.length&&left.every((ino,index)=>ino===right[index]);
+
+/** 🚚️ Re-binds the published ancestor chain of one detached image after `movedFrom` (the image directory or one of its ancestors) was renamed to `movedTo` on the same volume: the backing file and the underlying mount directory must be the published inodes (a copy or a foreign image refuses), the published chain must be exactly the chain of the old location, the old location must no longer reach the image, and only then the receipt is replaced atomically with the current chain. @see ../../🧬️schema/🔣️.json */
+export function rebindNativeImageAncestryV1(input:Readonly<{directory:string;movedFrom:string;movedTo:string}>):Readonly<{status:"rebound"|"current";published:readonly string[];current:readonly string[]}>{
+ if(validateJsonSchemaSubset(schema.definitions.AncestryRelocation,input,schema).length)throw Error("Closed Native ancestry relocation required");
+ const{directory,movedFrom,movedTo}=input,inner=relative(movedTo,directory),names=schema.definitions.ImageProtocol.const;
+ if(resolve(directory)!==directory||resolve(movedFrom)!==movedFrom||resolve(movedTo)!==movedTo||movedFrom===movedTo||inner.startsWith("..")||isAbsolute(inner))throw Error("Exact Native ancestry relocation scope required");
+ const receipt=join(directory,"image.json"),image=join(directory,"fixed.dmg"),root=join(directory,"m"),temporary=receipt+schema.definitions.AncestryRebindProtocol.const.temporarySuffix,folder=lstatSync(directory,{bigint:true}),record=lstatSync(receipt,{bigint:true});
+ if(!folder.isDirectory()||!record.isFile()||record.nlink!==1n||record.size>BigInt(schema.definitions.AncestryRebindProtocol.const.maximumReceiptBytes)||existsSync(join(directory,names.publicationDirectory)))throw Error("Settled Native image publication required");
+ const authored:unknown=JSON.parse(readFileSync(receipt,"utf8"));
+ if(validateJsonSchemaSubset(schema.definitions.ImageReceipt,authored,schema,[mountDirectorySchema]).length)throw Error("Closed Native image receipt required");
+ const published=authored as Readonly<{ino:number;size:number;ancestry:readonly string[];mountDirectory:Readonly<{ino:string;mode:number}>}>,backing=lstatSync(image,{bigint:true}),mount=lstatSync(root,{bigint:true});
+ if(!backing.isFile()||backing.nlink!==1n||backing.dev!==folder.dev||backing.ino!==BigInt(published.ino)||backing.size!==BigInt(published.size))throw Error("Original Native image backing required");
+ if(!mount.isDirectory()||mount.dev!==folder.dev||String(mount.ino)!==published.mountDirectory.ino||Number(mount.mode)!==published.mountDirectory.mode||readdirSync(root).length)throw Error("Detached original Native image root required");
+ const current=readNativeImageAncestryV1(directory);
+ if(same(published.ancestry,current))return Object.freeze({status:"current",published:Object.freeze([...published.ancestry]),current});
+ const previous=[...current.slice(0,inner===""?0:inner.split(sep).length),...readNativeImageAncestryV1(movedFrom)];
+ if(!same(published.ancestry,previous))throw Error("Original Native image ancestry required");
+ let former:ReturnType<typeof lstatSync>|undefined;
+ try{former=lstatSync(join(movedFrom,inner),{bigint:true});}catch(error){if(!["ENOENT","ENOTDIR"].includes(String((error as{code?:unknown}).code)))throw error;}
+ if(former&&former.dev===folder.dev&&former.ino===folder.ino)throw Error("Verified Native image move required");
+ rmSync(temporary,{force:true});
+ const bytes=Buffer.from(JSON.stringify({...(authored as object),ancestry:current})+"\n"),descriptor=openSync(temporary,constants.O_WRONLY|constants.O_CREAT|constants.O_EXCL|(constants.O_NOFOLLOW??0),0o600);
+ try{writeFileSync(descriptor,bytes);fsyncSync(descriptor);}finally{closeSync(descriptor);}
+ const after=lstatSync(image,{bigint:true}),kept=lstatSync(receipt,{bigint:true});
+ if(after.ino!==backing.ino||after.size!==backing.size||kept.ino!==record.ino||kept.mtimeNs!==record.mtimeNs||!same(readNativeImageAncestryV1(directory),current)){rmSync(temporary,{force:true});throw Error("Native image changed during ancestry rebinding");}
+ renameSync(temporary,receipt);
+ if(process.platform!=="win32"){const parent=openSync(directory,constants.O_RDONLY|(constants.O_DIRECTORY??0));try{fsyncSync(parent);}finally{closeSync(parent);}}
+ return Object.freeze({status:"rebound",published:Object.freeze([...published.ancestry]),current});
+}
+
+/** 🪧️ Records beside moved images where their directory tree came from: `directory` (an ancestor of every moved image directory, inside `movedTo`) receives the hint that `admitNativeImageRelocationV1` reads; the hint grants nothing by itself. @see ../../🧬️schema/🔣️.json */
+export function recordNativeImageRelocationV1(input:Readonly<{directory:string;movedFrom:string;movedTo:string}>):void{
+ if(validateJsonSchemaSubset(schema.definitions.AncestryRelocation,input,schema).length)throw Error("Closed Native ancestry relocation required");
+ const{directory,movedFrom,movedTo}=input,inner=relative(movedTo,directory),policy=schema.definitions.AncestryRebindProtocol.const,hint=join(directory,policy.hintName),temporary=hint+policy.temporarySuffix;
+ if(resolve(directory)!==directory||resolve(movedFrom)!==movedFrom||resolve(movedTo)!==movedTo||movedFrom===movedTo||inner.startsWith("..")||isAbsolute(inner)||!lstatSync(directory).isDirectory())throw Error("Exact Native ancestry relocation scope required");
+ const bytes=Buffer.from(JSON.stringify({version:1,movedFrom,movedTo})+"\n");
+ if(bytes.length>policy.maximumHintBytes)throw Error("Finite Native relocation hint required");
+ rmSync(temporary,{force:true});writeFileSync(temporary,bytes,{flag:"wx",mode:0o600});renameSync(temporary,hint);
+}
+
+/** 🩹️ Lets an image that was moved with its directory tree bind again before it is inspected: only when its published chain differs from the current one and the nearest ancestor holds a relocation hint, the exact re-binding runs; every refusal leaves the receipt as it is, so the inspection that follows refuses as before. */
+export function admitNativeImageRelocationV1(directory:string):void{
+ try{
+  const policy=schema.definitions.AncestryRebindProtocol.const,authored=JSON.parse(readFileSync(join(directory,"image.json"),"utf8"))as{ancestry?:unknown};
+  if(!Array.isArray(authored.ancestry)||same(authored.ancestry as string[],readNativeImageAncestryV1(directory)))return;
+  for(let path=dirname(directory),steps=0;steps<protocol.maximumAncestors;path=dirname(path),steps++){
+   const hint=join(path,policy.hintName);
+   if(existsSync(hint)){
+    const row:unknown=lstatSync(hint).size<=policy.maximumHintBytes?JSON.parse(readFileSync(hint,"utf8")):undefined;
+    if(validateJsonSchemaSubset(schema.definitions.AncestryRelocationHint,row,schema).length)return;
+    const{movedFrom,movedTo}=row as{movedFrom:string;movedTo:string};
+    rebindNativeImageAncestryV1({directory,movedFrom,movedTo});
+    return;
+   }
+   if(dirname(path)===path)return;
+  }
+ }catch{}
+}

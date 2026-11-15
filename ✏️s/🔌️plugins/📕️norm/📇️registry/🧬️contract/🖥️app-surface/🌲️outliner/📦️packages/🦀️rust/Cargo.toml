@@ -31,4 +31,5 @@ semio-s-plugin-norm-app-surface-live-core = { workspace = true }
 semio-s-plugin-norm-app-surface-interaction-topology = { workspace = true }
 
 [dev-dependencies]
+semio-ui-contract-values = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

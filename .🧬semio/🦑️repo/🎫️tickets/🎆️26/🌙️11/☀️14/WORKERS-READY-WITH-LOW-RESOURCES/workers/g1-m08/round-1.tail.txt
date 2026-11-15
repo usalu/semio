@@ -1,0 +1,200 @@
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:sdk-derivative-recheck","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:sdk-derivative-recheck","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:sdk-derivative-recheck","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:sdk-derivative-recheck","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:sdk-derivative-recheck","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:sdk-derivative-recheck","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:sdk-derivative-recheck","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:sdk-derivative-recheck","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:sdk-derivative-recheck","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tool integrity
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[repo] still working after 3380 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[repository:command] still running after 90 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] repository:command · Verifying build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] repository:command · Preparing build tools
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"native:existing-journal:read:233:0","mode":"shared","elapsedMs":0}}
+[repository:command] still running after 100 s
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"nx:received-graph","stage":"running","activity":{"resource":"native:existing-journal:read:1130:0","mode":"shared","elapsedMs":0}}
+[repository:command] still running after 110 s
+[repo] still working after 3410 s; last phase started: source.served
+[repository:command] still running after 120 s
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"nx:graph-publication","stage":"running","activity":{"resource":"native:existing-journal:read:1130:0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"nx:graph-publication","stage":"running","activity":{"resource":"native:existing-journal:read:1130:0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"nx:graph-publication","stage":"running","activity":{"resource":"nx:graph-inventory","mode":"shared","elapsedMs":0}}
+[NX v23.2.0 Daemon Server] - 2026-11-14T12:15:45.313Z - Wrote project graph cache to /Users/ueli/Documents/semio/.cache/b/n/m/nx/graphs/4d195242d672f26de65c/092ff20dcc8b75853dac/project-graph.json
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx-sdk-derived-namespace:/Users/ueli/Documents/semio/.cache/b/t/m/nx/4d195242d672f26de65c930d3360e45559b11ce946d05b2e6d6b46751252e18b","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Preparing build tools
+[repository:command] still running after 130 s
+
+ NX   Running target setup for project workspace and 29 tasks it depends on:
+
+
+[repository:command] still running after 140 s
+✔  nx run @semio-tech/ui-rs:generate:prototype
+
+> nx run workspace:deps-js-all:prototype
+
+✔  nx run @semio-tech/framework-schema:generate:prototype
+(node:69599) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `bun --trace-warnings ...` to show where the warning was created)
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"resource-retirement-inventory:128","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"claim-retirement-scan:128","mode":"exclusive","elapsedMs":51}}
+✔  nx run @semio-tech/ui-styling-tokens:generate:prototype
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"resource-directory-admission:v1","mode":"shared","elapsedMs":0}}
+✔  nx run @semio-tech/assets:build:prototype
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[repo] still working after 3440 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+[script] {"owner":"repository:build","command":"cache:entry","stage":"running","activity":{"resource":"nx:source-verification","mode":"shared","elapsedMs":0}}
+[script] cache:entry · Verifying build tools
+end 2026-11-14T12:16:12Z
+native_rc=1

@@ -32,7 +32,7 @@ test("Recording by phase, the estimate by phase, the re-sizing at a boundary and
  expect(fixture.resizeCases.filter(item=>item.expect).length,"vectors reach resizes").toBeGreaterThan(40);
 });
 
-test("Law: the recorded night replayed as a stream (a quarter of the runs build the graph): the TypeScript asks exactly what the Python model asks, a run served by coverage asks at least 30 % less, and the memory used above reservations, build included, does not grow",()=>{
+test("Law: the recorded night replayed as a stream (a quarter of the runs build the graph): the TypeScript asks exactly what the Python model asks, a run served by coverage asks at least 30 % less, and the memory used above reservations, does not grow on runs served by coverage (a rebuild books at most its share and grows through the gate)",()=>{
  let old=emptyHostEstimateStoreV1(),split=emptyHostEstimateStoreV1();
  const asks={old:[] as number[],split:[] as number[]},estimates:HostPhaseEstimateV1[]=[],capacity=14336,need=(value:HostRequestV1,jobs:number)=>value.fixedMegabytes+jobs*value.perJobMegabytes;
  for(const step of fixture.replay){
@@ -57,8 +57,9 @@ test("Law: the recorded night replayed as a stream (a quarter of the runs build 
   return total;
  };
  expect(fixture.replay.some(step=>step.rebuild)&&fixture.replay.some(step=>!step.rebuild)).toBe(true);
- const sum=(split:boolean)=>fixture.replay.reduce((total,_,index)=>index>=100?total+above(index,split):total,0);
- expect(sum(true),"memory used above the reservations, build included, does not grow").toBeLessThanOrEqual(sum(false));
+ const sum=(split:boolean)=>fixture.replay.reduce((total,_,index)=>index>=100?total+above(index,split):total,0),share=Math.floor(capacity*policy.estimates.rebuildShareBasisPoints/10000);
+ const beyond=fixture.replay.reduce((total,step,index)=>index<100?total:total+(step.phased.phases as HostPhaseSegmentV1[]).filter(row=>row.phase==="rebuild").reduce((rows,row)=>rows+Math.max(0,row.peakMegabytes-share)*row.activeMilliseconds/1000,0),0);
+ expect(sum(true),"memory used above the reservations, build included, does not grow beyond what a rebuild may book").toBeLessThanOrEqual(sum(false)+beyond);
 });
 
 test("Law: a run without phases is recorded and estimated exactly as before, so the phase split equals the single-class bound when the phases coincide",()=>{
@@ -149,4 +150,30 @@ test("The phase vocabulary of the schema is the vocabulary of the code, and the 
  expect(schema.definitions.Phase.enum).toEqual(["assembly","plan","rebuild","execution"]);
  expect(schema.definitions.Estimates.required).toEqual(expect.arrayContaining(["phaseReferenceMegabytes","rebuildShareBasisPoints","maximumRebuildSlots"]));
  expect(schema.definitions.Messages.const.en.phased).toContain("{phase}");expect(schema.definitions.Messages.const.de.phased).toContain("{phase}");
+});
+
+test("Law: a rebuild that once held 25 times the usual size does not govern the reservation of later runs, exactly as the Python oracle, and the slots follow the robust size",()=>{
+ for(const item of fixture.outliers)expect(estimateHostPhaseV1(policy,item.store as HostEstimateStoreV1,"rebuild",item.prior,item.nowMs),item.name).toEqual(item.expect);
+ const incident=fixture.outliers[0]!,calm={version:1 as const,classes:{"phase:rebuild":{samples:[incident.store.classes["phase:rebuild"]!.samples[1]!]}}};
+ expect(estimateHostPhaseV1(policy,incident.store as HostEstimateStoreV1,"rebuild",incident.prior,incident.nowMs)).toEqual(estimateHostPhaseV1(policy,calm as HostEstimateStoreV1,"rebuild",incident.prior,incident.nowMs));
+ expect(estimateHostPhaseV1(policy,incident.store as HostEstimateStoreV1,"rebuild",incident.prior,incident.nowMs)!.megabytes,"far below the 22 380 MB that starved the farm").toBeLessThan(4096);
+ expect(hostRebuildSlotsV1(policy,incident.store as HostEstimateStoreV1,32768,4096,incident.nowMs),"the machine of the incident gets its computers back").toBeGreaterThan(1);
+});
+
+test("A learned rebuild size above the rebuild share of the host never books more than that share, so an overcounted tree reading cannot starve the host",()=>{
+ const capacity=14336,share=Math.floor(capacity*policy.estimates.rebuildShareBasisPoints/10000),poisoned={megabytes:11634,rampMilliseconds:60000},estimate={...estimateHostPhasesV1(policy,emptyHostEstimateStoreV1(),["show"],request,1),phases:{execution:{megabytes:1024,rampMilliseconds:60000},rebuild:poisoned}} as HostPhaseEstimateV1;
+ const change=createHostPhaseResizerV1(policy,request,estimate,capacity)("rebuild",{jobs:1,reservedMegabytes:512,activeMilliseconds:0});
+ expect(11634).toBeGreaterThan(share);expect(change?.reservedMegabytes).toBe(share);
+ expect(createHostPhaseResizerV1(policy,request,estimate,capacity)("rebuild",{jobs:1,reservedMegabytes:share,activeMilliseconds:0})).toBeUndefined();
+});
+
+test("A rebuild read above the memory the host has above its floor is clamped to it when learned, equal to the Python oracle, so a thrashing tree reading cannot teach a booking above the host",()=>{
+ for(const item of fixture.clampCases){
+  let store=emptyHostEstimateStoreV1();
+  for(const step of item.history)store=recordHostPhasesV1(policy,store,step.lineage,step.operation,step.defaultMegabytes,step.run as never);
+  expect(store,item.name).toEqual(item.expect as HostEstimateStoreV1);
+  const learned=estimateHostPhaseV1(policy,store,"rebuild",policy.estimates.rebuildPriorMegabytes,item.nowMs);
+  expect(learned?.megabytes,item.name).toBe(item.rebuild.megabytes);
+  expect(learned!.megabytes,item.name).toBeLessThanOrEqual(Math.round(item.ceilingMegabytes*(1+policy.estimates.marginBasisPoints/10000))+1);
+ }
 });

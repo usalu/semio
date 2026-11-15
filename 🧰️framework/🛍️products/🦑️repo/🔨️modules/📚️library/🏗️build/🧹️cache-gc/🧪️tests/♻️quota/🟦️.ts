@@ -31,3 +31,19 @@ test("the collector enforces the optional cache's own limit even with ample free
  expect(await reclaimGraphOptionalV1("/w",ledger,false,"en",fake(target+GIB,cancelled,{...over,cancelled:true}))).toEndWith("\n"+(await import("../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts")).cacheTextV1("en","error.cancelled"));
  expect(cancelled).not.toContain("closures");expect(cancelled.slice(-2)).toEqual(["close","release"]);
 });
+
+test("the collector never creates an image: with no graph image it reports that in both languages and opens nothing, takes no lease",async()=>{
+ const log:string[]=[];
+ const ports={...fake(target,log,over),exists:()=>false};
+ expect(await reclaimGraphOptionalV1("/w",ledger,false,"en",ports)).toContain("never creates an image");
+ expect(await reclaimGraphOptionalV1("/w",ledger,false,"de",ports)).toContain("legt nie ein Image an");
+ expect(log).toEqual([]);
+});
+
+test("the closure stores are reported and collected before the free-space check, in English and German",async()=>{
+ const stores={stores:1,entries:915,layers:21820,values:4828,kept:41679,bytes:8698851949,graceMilliseconds:3600000,cancelled:false};
+ for(const[language,dryRun,expected]of[["en",true,"Would remove 915 superseded closure entries, 21820 unreferenced layers and 4828 unreferenced values (8296 MB) of 1 closure stores; they leave after a grace of 60 minutes"],["de",false,"915 ersetzte Closure-Einträge, 21820 unreferenzierte Schichten und 4828 unreferenzierte Werte (8296 MB) aus 1 Closure-Speichern entfernt; 41679 Einträge bleiben"]]as const){
+  const log:string[]=[],text=await reclaimGraphOptionalV1("/w",ledger,dryRun,language,{...fake(target+GIB,log,over),closureStores:async(_image,flag)=>{log.push("stores:"+flag);return stores;}});
+  expect(text).toContain(expected);expect(log).toContain("stores:"+dryRun);
+ }
+});

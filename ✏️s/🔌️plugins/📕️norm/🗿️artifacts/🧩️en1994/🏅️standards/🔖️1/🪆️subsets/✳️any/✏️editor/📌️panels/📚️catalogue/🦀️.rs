@@ -4,7 +4,7 @@ use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, Catalogue
 use semio_s_artifact_norm_en1994_checks::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_artifact_norm_en1994_checks::{part_1_1, part_en1990};
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
-use semio_s_artifact_norm_en1994_model::{CompositeBeam, Stud};
+use semio_s_artifact_norm_en1994_model::{ActionKind, CompositeBeam, Stud};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin::PanelGroup;
 use semio_plugin::PanelTabDefinition;
@@ -59,12 +59,12 @@ fn partial_factors_gamma() -> CatalogueTable {
 }
 
 fn psi_factors_table() -> CatalogueTable {
-    let rows_spec: &[(&str, &str, &str, &str)] = &[
-        ("permanent", "permanent", "Permanent", "Ständig"),
-        ("imposed-B", "imposed", "Imposed B (office)", "Nutzlast B (Büro)"),
-        ("imposed-C", "imposed", "Imposed C (assembly)", "Nutzlast C (Versammlung)"),
-        ("snow", "snow", "Snow", "Schnee"),
-        ("wind", "wind", "Wind", "Wind"),
+    let rows_spec: &[(&str, ActionKind, &str, &str)] = &[
+        ("permanent", ActionKind::Permanent, "Permanent", "Ständig"),
+        ("imposed-B", ActionKind::Imposed, "Imposed B (office)", "Nutzlast B (Büro)"),
+        ("imposed-C", ActionKind::Imposed, "Imposed C (assembly)", "Nutzlast C (Versammlung)"),
+        ("snow", ActionKind::Snow, "Snow", "Schnee"),
+        ("wind", ActionKind::Wind, "Wind", "Wind"),
     ];
     CatalogueTable {
         id: "en1990-psi-factors",
@@ -80,12 +80,12 @@ fn psi_factors_table() -> CatalogueTable {
         rows: rows_spec
             .iter()
             .map(|(id, kind, en, de)| {
-                let cat = if *kind == "imposed" {
+                let cat = if *kind == ActionKind::Imposed {
                     if id.ends_with('C') { "C" } else { "B" }
                 } else {
                     ""
                 };
-                let (p0, p1, p2) = part_en1990::psi_factors(kind, cat);
+                let (p0, p1, p2) = part_en1990::psi_factors(*kind, cat);
                 CatalogueRow {
                     id: (*id).into(),
                     cells: vec![

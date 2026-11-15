@@ -1,0 +1,2 @@
+started pid=24388 at 2026-11-14T21:55:50Z log=/Users/ueli/native-bootstrap-round-8.log
+ended at 2026-11-14T22:22:34Z peak_rss_kib=4944704 run_peak_rss_kib=4944704 hard_stop=none

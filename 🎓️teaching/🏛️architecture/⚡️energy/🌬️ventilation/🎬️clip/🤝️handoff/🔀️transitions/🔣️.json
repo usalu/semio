@@ -363,6 +363,96 @@
       }
     },
     {
+      "id": "ventilation.handoff.summary.lat-rho",
+      "intent": "abstraction",
+      "source": {
+        "entity": "ventilation.handoff.summary.card-rho-symbol",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "ventilation.handoff.summary.lat-rho",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": true,
+      "timing": {
+        "duration": 1.8,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "ventilation.handoff.summary.lat-r0",
+      "intent": "abstraction",
+      "source": {
+        "entity": "ventilation.handoff.summary.card-r0-symbol",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "ventilation.handoff.summary.lat-r0",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": true,
+      "timing": {
+        "duration": 1.8,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
       "id": "ventilation.handoff.summary.wrg-eta",
       "intent": "abstraction",
       "source": {

@@ -1,0 +1,200 @@
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864896","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864960","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865024","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865088","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865152","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865216","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865280","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865344","mode":"exclusive","elapsedMs":0}}
+[DATA] Store dependency concurrency {"version":1,"purpose":"dependency-concurrency-event","event":"kept","count":6}
+Kept 6 superseded dependency generation(s) that are pinned, recent or the rollback target.
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+[semio] workspace:setup…
+[capacity] run: sized at 46% of the default from 3 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 2048 MB reserved (6707 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+Loading the project graph of 440cffa5563d.
+Planning 1 targets.
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+[repo] still working after 5 s; last phase started: door.script
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s): files 0 of 0.
+[repo] still working after 10 s; last phase started: door.script
+Reading the project graph slice (10 s): doubt 460986 of 460986.
+Reading the project graph slice (12 s): facts 40960 of 202854.
+Reading the project graph slice (14 s): facts 202854 of 202854.
+Reading the project graph slice (16 s): verification 1 of 1769.
+Reading the project graph slice (18 s): verification 25 of 1769.
+[repo] still working after 20 s; last phase started: door.script
+Reading the project graph slice (20 s): verification 255 of 1769.
+Reading the project graph slice (22 s): flush 1 of 1.
+Reading the project graph slice (24 s): flush 1 of 1.
+Reading the project graph slice (26 s): flush 1 of 1.
+Reading the project graph slice (28 s): flush 1 of 1.
+Reading the project graph slice (30 s): rederivation 256 of 256.
+Reading the project graph slice (32 s): flush 1 of 1.
+Reading the project graph slice (34 s): flush 1 of 1.
+Reading the project graph slice (36 s): flush 1 of 1.
+Reading the project graph slice (38 s): flush 1 of 1.
+Reading the project graph slice (40 s): flush 1 of 1.
+Reading the project graph slice (42 s): flush 1 of 1.
+Reading the project graph slice (44 s): flush 1 of 1.
+Reading the project graph slice (46 s): flush 1 of 1.
+Reading the project graph slice (48 s): flush 1 of 1.
+[repo] still working after 50 s; last phase started: door.script
+Reading the project graph slice (50 s): flush 1 of 1.
+Reading the project graph slice (52 s): flush 1 of 1.
+Reading the project graph slice (54 s): flush 1 of 1.
+Reading the project graph slice (56 s): flush 1 of 1.
+Reading the project graph slice (58 s): flush 1 of 1.
+Reading the project graph slice (60 s): flush 1 of 1.
+Reading the project graph slice (62 s): flush 1 of 1.
+Reading the project graph slice (64 s): flush 1 of 1.
+Reading the project graph slice (66 s): flush 1 of 1.
+Reading the project graph slice (68 s): flush 1 of 1.
+Reading the project graph slice (70 s): flush 1 of 1.
+Reading the project graph slice (72 s): flush 1 of 1.
+Reading the project graph slice (74 s): flush 1 of 1.
+Reading the project graph slice (76 s): flush 1 of 1.
+Reading the project graph slice (78 s): flush 1 of 1.
+[repo] still working after 80 s; last phase started: door.script
+Reading the project graph slice (80 s): flush 1 of 1.
+Reading the project graph slice (82 s): flush 1 of 1.
+Reading the project graph slice (84 s): flush 1 of 1.
+Reading the project graph slice (86 s): flush 1 of 1.
+Reading the project graph slice (88 s): flush 1 of 1.
+Reading the project graph slice (90 s): flush 1 of 1.
+Reading the project graph slice (92 s): flush 1 of 1.
+Reading the project graph slice (94 s): flush 1 of 1.
+Reading the project graph slice (96 s): flush 1 of 1.
+Reading the project graph slice (98 s): flush 1 of 1.
+Reading the project graph slice (100 s): flush 1 of 1.
+Reading the project graph slice (102 s): flush 1 of 1.
+Reading the project graph slice (104 s): flush 1 of 1.
+Reading the project graph slice (106 s): flush 1 of 1.
+Reading the project graph slice (108 s): flush 1 of 1.
+[repo] still working after 110 s; last phase started: door.script
+Reading the project graph slice (110 s): flush 1 of 1.
+Reading the project graph slice (112 s): flush 1 of 1.
+Reading the project graph slice (114 s): flush 1 of 1.
+Reading the project graph slice (116 s): flush 1 of 1.
+Reading the project graph slice (118 s): flush 1 of 1.
+Reading the project graph slice (120 s): flush 1 of 1.
+Reading the project graph slice (122 s): flush 1 of 1.
+Reading the project graph slice (124 s): flush 1 of 1.
+Reading the project graph slice (126 s): flush 1 of 1.
+Reading the project graph slice (128 s): flush 1 of 1.
+Reading the project graph slice (130 s): flush 1 of 1.
+Reading the project graph slice (132 s): flush 1 of 1.
+Reading the project graph slice (134 s): flush 1 of 1.
+Reading the project graph slice (136 s): flush 1 of 1.
+Reading the project graph slice (138 s): flush 1 of 1.
+[repo] still working after 140 s; last phase started: door.script
+Reading the project graph slice (140 s): flush 1 of 1.
+Reading the project graph slice (142 s): flush 1 of 1.
+Reading the project graph slice (144 s): flush 1 of 1.
+Reading the project graph slice (146 s): flush 1 of 1.
+Reading the project graph slice (148 s): flush 1 of 1.
+Reading the project graph slice (150 s): flush 1 of 1.
+Reading the project graph slice (152 s): flush 1 of 1.
+Reading the project graph slice (154 s): flush 1 of 1.
+Reading the project graph slice (156 s): flush 1 of 1.
+Reading the project graph slice (158 s): flush 1 of 1.
+Reading the project graph slice (160 s): flush 1 of 1.
+Reading the project graph slice (162 s): flush 1 of 1.
+Reading the project graph slice (164 s): flush 1 of 1.
+Reading the project graph slice (166 s): flush 1 of 1.
+Reading the project graph slice (168 s): flush 1 of 1.
+[repo] still working after 170 s; last phase started: door.script
+Reading the project graph slice (170 s): flush 1 of 1.
+Reading the project graph slice (172 s): flush 1 of 1.
+Reading the project graph slice (174 s): flush 1 of 1.
+Reading the project graph slice (176 s): flush 1 of 1.
+Reading the project graph slice (178 s): flush 1 of 1.
+Reading the project graph slice (180 s): flush 1 of 1.
+Reading the project graph slice (182 s): flush 1 of 1.
+Reading the project graph slice (184 s): flush 1 of 1.
+Reading the project graph slice (186 s): flush 1 of 1.
+Reading the project graph slice (188 s): flush 1 of 1.
+Reading the project graph slice (190 s): flush 1 of 1.
+Reading the project graph slice (192 s): flush 1 of 1.
+Reading the project graph slice (194 s): flush 1 of 1.
+Reading the project graph slice (196 s): flush 1 of 1.
+Reading the project graph slice (198 s): flush 1 of 1.
+[repo] still working after 200 s; last phase started: door.script
+Reading the project graph slice (200 s): flush 1 of 1.
+Reading the project graph slice (202 s): flush 1 of 1.
+Reading the project graph slice (204 s): flush 1 of 1.
+Reading the project graph slice (206 s): flush 1 of 1.
+Reading the project graph slice (208 s): flush 1 of 1.
+Reading the project graph slice (210 s): flush 1 of 1.
+Reading the project graph slice (212 s): flush 1 of 1.
+Reading the project graph slice (214 s): flush 1 of 1.
+Reading the project graph slice (216 s): flush 1 of 1.
+Reading the project graph slice (218 s): flush 1 of 1.
+Reading the project graph slice (220 s): flush 1 of 1.
+Reading the project graph slice (222 s): flush 1 of 1.
+Reading the project graph slice (224 s): flush 1 of 1.
+Reading the project graph slice (226 s): flush 1 of 1.
+Reading the project graph slice (228 s): flush 1 of 1.
+[repo] still working after 230 s; last phase started: door.script
+Reading the project graph slice (230 s): flush 1 of 1.
+Reading the project graph slice (232 s): flush 1 of 1.
+Reading the project graph slice (234 s): flush 1 of 1.
+Reading the project graph slice (236 s): flush 1 of 1.
+Reading the project graph slice (238 s): flush 1 of 1.
+Reading the project graph slice (240 s): flush 1 of 1.
+Reading the project graph slice (242 s): flush 1 of 1.
+Reading the project graph slice (244 s): flush 1 of 1.
+Reading the project graph slice (246 s): flush 1 of 1.
+Reading the project graph slice (248 s): flush 1 of 1.
+Reading the project graph slice (250 s): flush 1 of 1.
+Reading the project graph slice (252 s): flush 1 of 1.
+Reading the project graph slice (254 s): flush 1 of 1.
+Reading the project graph slice (256 s): flush 1 of 1.
+Reading the project graph slice (258 s): flush 1 of 1.
+[repo] still working after 260 s; last phase started: door.script
+Reading the project graph slice (260 s): flush 1 of 1.
+Reading the project graph slice (262 s): flush 1 of 1.
+Reading the project graph slice (264 s): flush 1 of 1.
+Reading the project graph slice (266 s): flush 1 of 1.
+Reading the project graph slice (268 s): flush 1 of 1.
+Reading the project graph slice (270 s): flush 1 of 1.
+Reading the project graph slice (272 s): flush 1 of 1.
+Reading the project graph slice (274 s): flush 1 of 1.
+Reading the project graph slice (276 s): flush 1 of 1.
+Reading the project graph slice (278 s): flush 1 of 1.
+Reading the project graph slice (280 s): flush 1 of 1.
+Reading the project graph slice (282 s): flush 1 of 1.
+Reading the project graph slice (284 s): flush 1 of 1.
+Reading the project graph slice (286 s): flush 1 of 1.
+Reading the project graph slice (288 s): flush 1 of 1.
+[repo] still working after 290 s; last phase started: door.script
+Reading the project graph slice (290 s): flush 1 of 1.
+Reading the project graph slice (292 s): flush 1 of 1.
+Reading the project graph slice (294 s): flush 1 of 1.
+Reading the project graph slice (296 s): flush 1 of 1.
+Reading the project graph slice (298 s): flush 1 of 1.
+Reading the project graph slice (300 s): flush 1 of 1.
+Reading the project graph slice (302 s): flush 1 of 1.
+Reading the project graph slice (304 s): flush 1 of 1.
+Reading the project graph slice (306 s): flush 1 of 1.
+Reading the project graph slice (308 s): flush 1 of 1.
+Reading the project graph slice (310 s): flush 1 of 1.
+Reading the project graph slice (312 s): flush 1 of 1.
+Reading the project graph slice (314 s): flush 1 of 1.
+Reading the project graph slice (316 s): flush 1 of 1.
+Reading the project graph slice (318 s): flush 1 of 1.
+[repo] still working after 320 s; last phase started: door.script
+Reading the project graph slice (320 s): flush 1 of 1.
+Reading the project graph slice (322 s): flush 1 of 1.
+Reading the project graph slice (324 s): flush 1 of 1.
+Reading the project graph slice (326 s): flush 1 of 1.
+Reading the project graph slice (328 s): flush 1 of 1.
+Reading the project graph slice (330 s): flush 1 of 1.
+Reading the project graph slice (332 s): flush 1 of 1.
+The project graph could not be read on this machine: it can infer only 192 of the stale projects, the fleet was asked for 509 and delivered 0 within 300 s, 509 are still missing. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-14T17:17:52Z
+native_rc=75

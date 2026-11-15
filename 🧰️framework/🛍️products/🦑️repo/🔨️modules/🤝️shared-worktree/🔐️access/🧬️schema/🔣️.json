@@ -1,0 +1,52 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/access/v1",
+ "title": "Shared worktree access record: the replica of one origin reports that it cannot read its worktree",
+ "definitions": {
+  "Record": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "originId",
+    "state",
+    "wallMs",
+    "worktree",
+    "platform",
+    "error"
+   ],
+   "properties": {
+    "version": {
+     "type": "integer",
+     "const": 1
+    },
+    "originId": {
+     "type": "string",
+     "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+    },
+    "state": {
+     "type": "string",
+     "enum": [
+      "denied",
+      "waiting-for-consent"
+     ]
+    },
+    "wallMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "worktree": {
+     "type": "string",
+     "minLength": 1
+    },
+    "platform": {
+     "type": "string",
+     "minLength": 1
+    },
+    "error": {
+     "type": "string"
+    }
+   }
+  }
+ }
+}

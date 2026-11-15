@@ -3,15 +3,16 @@
   "title": "Native Toolchain Fixture",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "roots", "environments", "identities", "tools", "links", "publisher", "messages"],
+  "required": ["version", "roots", "environments", "identities", "tools", "interpreters", "links", "publisher", "messages"],
   "properties": {
     "version": {"const": 1},
     "roots": {"type": "array", "minItems": 2, "items": {"$ref": "#/definitions/Roots"}},
     "environments": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Environment"}},
     "identities": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Identity"}},
     "tools": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Tool"}},
+    "interpreters": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Interpreter"}},
     "links": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Link"}},
-    "publisher": {"type": "object", "additionalProperties": false, "required": ["cmake", "ninja", "go", "uv"], "properties": {"cmake": {"$ref": "#/definitions/Listing"}, "ninja": {"$ref": "#/definitions/Listing"}, "go": {"$ref": "#/definitions/Listing"}, "uv": {"$ref": "#/definitions/Listing"}}},
+    "publisher": {"type": "object", "additionalProperties": false, "required": ["cmake", "ninja", "go", "uv", "cpython"], "properties": {"cpython": {"$ref": "#/definitions/Listing"}, "cmake": {"$ref": "#/definitions/Listing"}, "ninja": {"$ref": "#/definitions/Listing"}, "go": {"$ref": "#/definitions/Listing"}, "uv": {"$ref": "#/definitions/Listing"}}},
     "messages": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Message"}}
   },
   "definitions": {
@@ -20,8 +21,9 @@
     "Environment": {"type": "object", "additionalProperties": false, "required": ["name", "project", "host", "roots", "manifest", "lock"], "properties": {"name": {"type": "string", "minLength": 1}, "project": {"type": "string", "minLength": 1}, "host": {"type": "string", "minLength": 1}, "roots": {"$ref": "#/definitions/Roots"}, "manifest": {"$ref": "#/definitions/Sha256"}, "lock": {"$ref": "#/definitions/Sha256"}}},
     "Identity": {"type": "object", "additionalProperties": false, "required": ["name", "kind", "host", "environment"], "properties": {"name": {"type": "string", "minLength": 1}, "kind": {"enum": ["python", "dotnet", "cmake", "go"]}, "host": {"type": "string", "minLength": 1}, "project": {"type": "string", "minLength": 1}, "environment": {"type": "object", "additionalProperties": {"type": "string"}}}},
     "Tool": {"type": "object", "additionalProperties": false, "required": ["name", "tool", "host", "root"], "properties": {"name": {"type": "string", "minLength": 1}, "tool": {"enum": ["cmake", "ninja", "go", "uv"]}, "host": {"type": "string", "minLength": 1}, "root": {"type": "string", "minLength": 1}}},
+    "Interpreter": {"type": "object", "additionalProperties": false, "required": ["name", "series", "host", "root"], "properties": {"name": {"type": "string", "minLength": 1}, "series": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"}, "host": {"type": "string", "minLength": 1}, "root": {"type": "string", "minLength": 1}}},
     "Link": {"type": "object", "additionalProperties": false, "required": ["name", "path", "target"], "properties": {"name": {"type": "string", "minLength": 1}, "path": {"type": "string", "minLength": 1}, "target": {"type": "string", "minLength": 1}}},
-    "Listing": {"type": "object", "additionalProperties": false, "required": ["source", "lines"], "properties": {"source": {"type": "string", "minLength": 1}, "lines": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-f0-9]{64}  [A-Za-z0-9._-]+$"}}}},
+    "Listing": {"type": "object", "additionalProperties": false, "required": ["source", "lines"], "properties": {"source": {"type": "string", "minLength": 1}, "lines": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-f0-9]{64}  [A-Za-z0-9._+-]+$"}}}},
     "Message": {"type": "object", "additionalProperties": false, "required": ["name", "key", "values", "environment"], "properties": {"name": {"type": "string", "minLength": 1}, "key": {"type": "string", "minLength": 1}, "values": {"type": "object", "additionalProperties": {"type": "string"}}, "environment": {"type": "object", "additionalProperties": {"type": "string"}}}}
   }
 }

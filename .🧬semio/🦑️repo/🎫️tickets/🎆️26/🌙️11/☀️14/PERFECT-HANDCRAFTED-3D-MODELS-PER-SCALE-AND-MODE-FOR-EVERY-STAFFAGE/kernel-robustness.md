@@ -1,0 +1,37 @@
+# Kernel robustness: silent geometry traps fixed at the root (kernel2)
+
+Kernel `🧰️framework/🔨️modules/🧊️3d/🗿️model` (README section "Solid semantics that were silent traps"), staffage `🎓️teaching/🏛️architecture/🧍️staffage`. Scan result: `kernel-traps.md` (re-run at the end, `kernel2-scan.ts end`).
+
+## 1. Revolve closing rule (decision)
+- First point equal to last point (at least three distinct points) = closed loop: the solid is the body enclosed by the loop, the axis plays no part (shell, wall, bead, ring, torus).
+- Any other profile is open and is always closed through the axis (end points dropped perpendicularly onto it): the solid is everything between polyline and axis. An open profile off the axis at both ends is a filled body, never a shell.
+- Finding `revolve-implied-closure` (kernel validateModel warning; staffage `volume-revolve-implied-closure`): open profile, both end points farther than 2 % of the largest radius from the axis, and the straight chord last to first closes it into a simple polygon of non-zero area. Never fires for two-point cylinders or profiles reaching the axis; "start or end on the axis" is the explicit way to mean the filled body. API `revolveClosure(profile) -> { kind: loop|onAxis|shell|axis, filledAreaM2, loopAreaM2 }`.
+- Text: kernel schema (RevolveSolid), twin, README; staffage schema (3 copies), twin, README.
+- Tests `🧪️tests/🪤️traps`: classes against fixture; shapely area of both polygons; trimesh volume of the tessellation equals Pappus of the axis-closed polygon (the filled body is real); the looped profile gives 0.19 of the filled volume.
+- Fact from the scan: street-lamp, pendant-lamp, person-with-umbrella carry shells whose two end points share an axial coordinate, so the two closing discs coincide (pinch vertex / kernel `self-intersection` error); same trap.
+
+## 2. Loft orientation (cause fixed)
+- Cause: ring direction was one global flip taken from `dot(overall travel, first tangent)`. A path whose first tangent opposes the overall travel (hooked nozzle, arch listed from the top down, author-37) flipped every ring: negative volume. Mixed section `rotation` handedness was wrong too (the 2-section-length test passed only by luck).
+- Fix (`loftFrames`): per section `turn = sign(dot(frame z, local tangent))`, so every ring runs CCW about the local tangent; caps use the end tangents. Result: outward CCW triangles for any section order, bend or rotation handedness; a cap-off loft is an open tube with outward faces.
+- Guard: fixture cases `🧵️loft` (nozzle first-tangent-up/net-down, reversed, arch from the top down; positive volume asserted by the existing suite) and `🧫️fixtures/🩻️integrity` (every solid kind plus 8 loft orientation cases; signed volume > 0, trimesh watertight / winding / volume / containment probes).
+- `loft-fold` (warning; staffage `volume-loft-fold`): consecutive sections whose rings are not entirely behind the next section plane / in front of the previous one (path turns back or bends tighter than the section).
+
+## 3. Extrude taperTo
+- Text everywhere: `taperTo = [scale at from, scale at to]` about the area centroid of the outer ring (the staffage text said "about the origin of its plane", which the kernel never did; corrected), never a scale along u and v; `[1, 0]` pyramid with apex at `to`; `[0.5, 0.5]` is no taper.
+- Findings: `taper-uniform` (equal factors not 1: exactly what the u/v misreading of author 23 gives, a prism = "collapsed to a box"), `taper-degenerate` (both 0, or a factor in (0, 0.001)); staffage `volume-taper-uniform`, `volume-taper-degenerate`. A degenerate face from an intended apex is not flagged.
+
+## 4. Closedness and outward normals (kernel query)
+- `meshIntegrity(positions, indices)`: triangles, degenerate, welded vertices, open / non-manifold / inconsistent edges, pinch vertices, components, `closed`, `oriented`, `manifold` (closed 2-manifold), signed volume, area. `outwardNormals`, `outwardOrientation(…, { openWinding })` (normals + closed + oriented volume), `solidIntegrity(solid, quality)`.
+- Orientation: consistent winding by a walk over manifold edges; closed pieces turned by the sign of their volume; open pieces keep the tessellator's outward winding (turned with `openWinding: -1` for a left-handed frame). Uses one mesh only, so exactly touching solids are judged one by one.
+- Oracle: trimesh (`is_watertight`, `is_winding_consistent`, `is_volume`, signed volume, area, `contains` probes along every claimed outward normal) and shapely, through the pinned `geometry` group of the staffage uv project (registered in `🔮️oracles/🔣️.json`, helper `🧪️tests/🧰️support/🐍️oracle`). 94 integrity tests, 24 trap tests.
+- Live validator, swap 13 (log in `schema-api.md`): `exposedArea` uses `outwardOrientation` instead of the triangle winding, `isClosed` is the kernel closedness, `orientationOf` exported. Prepared in a full scratch copy of `🧊️volumes`, 86 `volumes-rules` tests green there, base checksum verified, one atomic rename. New suite `🧪️tests/🧿️exposed-normals` (trimesh): inside-out cube half covered by another, touching cubes, open loft skin lying exactly on a solid cylinder, same in a left-handed frame, open skin half inside a box; it fails on the old module (3 of 7) and passes on the new.
+
+## 5. Scan of the catalog
+`kernel-traps.md` (script `kernel2-scan.ts`, 49013 own solids of 125 catalog assets with volumes and 150 sources). End result: 585 findings in 40 assets: revolve-implied-closure 173, self-intersecting-loft-sections 332 (mostly joints of humans), kernel-refuses-solid 35 (self-intersecting profile; `tessellate` would throw), loft-caps-missing 30, taper-uniform 15 (small-leaved-lime lobes `taperTo [0.1, 0.1]`), negative volumes 0 (after the loft fix), non-manifold/open 0 after separating them into the kernel-refuses and caps-missing rows. The `start` run (573 findings, 38 assets) was taken before the catalog moved on; the difference is authors' concurrent edits.
+- Many revolve hits are plausible intentional solids (a chamfered casing written with both ends off the axis); the finding is advisory: reach the axis to mean solid, repeat the first point to mean shell.
+
+## Decisions and caveats
+- `volumeTrapIssues(asset)` (staffage `🧊️volume`) is exported but NOT yet in `validateAsset`, since that would turn 40 assets red mid-flight (`Issue` has no severity); add it to `validateAsset` once `kernel-traps.md` is empty. The kernel reports the same traps as warnings of `validateModel` today (they do not stop `tessellate`).
+- Digests: none changed (GLB/FBX fixtures untouched, full 🧊️3d suites green under bun and node: 809 passed, 1 skipped each). Re-recorded: nothing. Added: loft fixture cases `nozzle-first-tangent-up-net-travel-down`, `nozzle-reversed`, `arch-from-the-top-down`, fixtures `🩻️integrity`, `🪤️traps` (generator `kernel2-fixture.py`).
+- Concurrent, not mine: staffage `🧊️volumes-rules` banded-path p95 tests (3) and `asset-validation` "accepts the sample figure" (sample fixture volumes-bones at 1:500) were red in the last live run after others changed the silhouette module and the sample fixture; the rules I touched are green. The viewer cancellation test times out (5 s) only under load average 28; green with `--testTimeout`.
+- Authors should rewrite: revolve shells as loops; reversed paths no longer need workarounds (author-37's "list the sections from the landing point" is obsolete); taperTo as [at from, at to].

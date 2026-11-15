@@ -1,0 +1,1 @@
+{"at": "2026-11-15T00:51:48.321672+00:00", "graph_jobs": {"tech.semio.repo.service.feb920c10166": {"list_line": "-\t4\ttech.semio.repo.service.feb920c10166", "rc": 0, "selected_lines": ["\tstate = not running", "\tprogram = /Users/ueli/.local/share/semio/launcher/bin/repo", "\truns = 1", "\tlast exit code = 4", "\t\tstate = active", "\t\tstate = active"]}}}

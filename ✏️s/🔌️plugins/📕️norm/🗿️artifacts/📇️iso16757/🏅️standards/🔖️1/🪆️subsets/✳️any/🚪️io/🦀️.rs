@@ -107,8 +107,7 @@ pub mod binary;
 
 pub use semio_s_artifact_norm_iso16757_io_text as text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_norm_iso16757_model::sqlite;
 
 pub mod derived_construction {
     use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
@@ -220,4 +219,4 @@ semio_plugin::derive_artifact_facets!(
     composer: Iso16757Composer,
 );
 
-pub use mutation_bridge::*;
+pub use semio_s_artifact_norm_iso16757_mutations::mutation_bridge::*;

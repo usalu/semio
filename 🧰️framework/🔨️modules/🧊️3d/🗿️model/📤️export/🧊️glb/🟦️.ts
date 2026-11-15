@@ -10,10 +10,11 @@
  * @see https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_variants
  * @see https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_animation_pointer
  */
-import type { Animation, Channel, Material, ModelDocument, Node, Operation, Primitive, Text } from "../../🧬️schema/🟦️.ts";
+import type { Animation, Channel, Material, ModelDocument, Node, Operation, Primitive, Slug, Text } from "../../🧬️schema/🟦️.ts";
 import { poseModel, sampleMaterials } from "../../🦴️mechanism/🟦️.ts";
 import type { PoseSelector } from "../../🦴️mechanism/🟦️.ts";
 import { qNormalize } from "../../🧮️math/🟦️.ts";
+import { selectScene } from "../../🎞️scenes/🟦️.ts";
 import { Pace } from "../../⏱️operation/🟦️.ts";
 import { BufferBuilder, BufferTarget, ComponentType, packGlb } from "./🧱️buffer/🟦️.ts";
 import type { ElementType } from "./🧱️buffer/🟦️.ts";
@@ -21,8 +22,8 @@ import * as portable from "../../🧮️math/🎯️portable/🟦️.ts";
 
 export type { PoseSelector } from "../../🦴️mechanism/🟦️.ts";
 
-/** ⚙️ What one encoding includes: an optional static pose baked into node TRS, the clips, the variants. */
-export type GlbOptions = { readonly pose?: PoseSelector; readonly animations: boolean; readonly variants: boolean };
+/** ⚙️ What one encoding includes: an optional static pose baked into node TRS, the clips, the variants, and optionally one model scene (default: every scene as one glTF scene, the first is the default scene). */
+export type GlbOptions = { readonly pose?: PoseSelector; readonly animations: boolean; readonly variants: boolean; readonly scene?: Slug };
 
 const GENERATOR = "semio.model glb/v1";
 const MODES = { triangles: 4, lines: 1 } as const;
@@ -162,7 +163,7 @@ function primitiveJson(primitive: Primitive, jointCount: number | undefined, mat
 const POINTERS = { baseColor: "pbrMetallicRoughness/baseColorFactor", emissive: "emissiveFactor" } as const;
 const PATH_TYPE: Record<string, [string, ElementType]> = { translation: ["translation", "VEC3"], rotation: ["rotation", "VEC4"], scale: ["scale", "VEC3"], baseColor: ["baseColor", "VEC4"], emissive: ["emissive", "VEC3"] };
 
-function animationJson(animation: Animation, nodes: Map<string, number>, materials: Map<string, number>, buffer: BufferBuilder, pace: Pace): Json {
+function animationJson(animation: Animation, known: ReadonlySet<string>, instances: readonly Map<string, number>[], materials: Map<string, number>, buffer: BufferBuilder, pace: Pace): Json {
   const samplers: Json[] = [];
   const channels: Json[] = [];
   animation.channels.forEach((channel: Channel, c) => {
@@ -172,28 +173,40 @@ function animationJson(animation: Animation, nodes: Map<string, number>, materia
     const width = type === "VEC4" ? 4 : 3;
     if (channel.values.length !== channel.times.length * width) throw new Error(`${where}: ${channel.times.length} keys of ${type} need ${channel.times.length * width} values`);
     for (let i = 0; i < channel.times.length; i += 1) if (pace.tick(), !(channel.times[i]! >= 0) || (i > 0 && !(channel.times[i]! > channel.times[i - 1]!))) throw new Error(`${where}: times must be non-negative and strictly increasing`);
+    if ("node" in target && !known.has(target.node)) throw new Error(`unknown node ${target.node}`);
+    const targets = "node" in target ? instances.flatMap((nodes) => (nodes.has(target.node) ? [nodes.get(target.node)!] : [])) : [];
+    if ("node" in target && targets.length === 0) return;
     let values: readonly number[] = channel.values;
     if (target.path === "rotation") values = Array.from({ length: channel.times.length }, (_, k) => unit(channel.values.slice(k * 4, k * 4 + 4))).flat();
+    const sampler = samplers.length;
     samplers.push({
       input: buffer.add(channel.times, ComponentType.Float, "SCALAR", { bounds: true }),
       output: buffer.add(values, ComponentType.Float, type),
       interpolation: channel.interpolation === "step" ? "STEP" : "LINEAR",
     });
-    if ("node" in target) channels.push({ sampler: c, target: { node: lookup(nodes, target.node, "node"), path: target.path } });
-    else channels.push({ sampler: c, target: { path: "pointer", extensions: { KHR_animation_pointer: { pointer: `/materials/${lookup(materials, target.material, "material")}/${POINTERS[target.path]}` } } } });
+    if ("node" in target) for (const node of targets) channels.push({ sampler, target: { node, path: target.path } });
+    else channels.push({ sampler, target: { path: "pointer", extensions: { KHR_animation_pointer: { pointer: `/materials/${lookup(materials, target.material, "material")}/${POINTERS[target.path]}` } } } });
   });
   return { name: animation.id, samplers, channels, extras: { title: title(animation.title), durationS: animation.durationS, loop: animation.loop, events: animation.events.map((event) => ({ t: event.t, id: event.id })) } };
 }
 
-/** 🏺️ Encodes a resolved {@link ModelDocument} as GLB bytes; throws on procedural documents, dangling references and cancellation (`CancelledError`, polled between phases and every few thousand values inside any accessor, no bytes are produced). */
-export function encodeGlb(document: ModelDocument, options: GlbOptions, operation: Operation): Uint8Array {
+/** 🏺️ Encodes a resolved {@link ModelDocument} as GLB bytes; throws on procedural documents, dangling references and cancellation (`CancelledError`, polled between phases and every few thousand values inside any accessor, no bytes are produced).
+ *
+ * A document without scenes becomes one glTF scene of all its nodes. With model scenes every scene becomes one glTF scene (`scene` = the first); with `options.scene` only that scene and only the meshes, skins and clip channels it needs are written (unknown scene: `UnknownSceneError`): glTF has one parent per node, so the nodes a scene needs (its mesh nodes, their ancestors, the joints of their skins) are written once per scene they serve (same name), while meshes, accessors, materials, variants, skin inverse-bind matrices and animation samplers are shared; an animation channel is repeated for every copy of its node. */
+export function encodeGlb(whole: ModelDocument, options: GlbOptions, operation: Operation): Uint8Array {
+  const document = options.scene === undefined ? whole : selectScene(whole, options.scene);
   if (document.solids.length > 0) throw new Error(`document ${document.id} is procedural (${document.solids.length} solids): tessellate it before encoding`);
   const pace = new Pace(operation);
   const step = (fraction: number): void => pace.step(fraction);
   step(0);
+  const explicit = document.scenes !== undefined && document.scenes.length > 0;
+  const chosen = explicit ? document.scenes! : [];
+  const instances: { readonly name: string; readonly extras: Json; readonly document: ModelDocument }[] = explicit
+    ? chosen.map((scene) => ({ name: scene.id, extras: { title: title(scene.title), nodes: [...scene.nodes], ...(scene.tags === undefined ? {} : { tags: [...scene.tags] }) }, document: selectScene(document, scene.id) }))
+    : [{ name: document.id, extras: { title: title(document.title) }, document }];
   const posed = options.pose === undefined || options.pose === null ? undefined : poseModel(document, options.pose);
   const colors = typeof options.pose === "object" && options.pose !== null ? sampleMaterials(document, options.pose.animation, options.pose.timeS) : {};
-  const nodeIndex = indexOf(document.nodes, "node");
+  indexOf(document.nodes, "node");
   const meshIndex = indexOf(document.meshes, "mesh");
   const skinIndex = indexOf(document.skins, "skin");
   const materials = document.materials.map((material): Material => {
@@ -203,21 +216,13 @@ export function encodeGlb(document: ModelDocument, options: GlbOptions, operatio
   const materialIndex = indexOf(materials, "material");
   const buffer = new BufferBuilder(pace);
 
-  const children = new Map<number, number[]>();
-  const roots: number[] = [];
-  document.nodes.forEach((node, i) => {
-    pace.tick();
-    if (node.parent === null || (node.skin !== undefined && node.mesh !== undefined)) roots.push(i);
-    else children.set(lookup(nodeIndex, node.parent, "parent node"), [...(children.get(lookup(nodeIndex, node.parent, "parent node")) ?? []), i]);
-  });
-  step(0.02);
-
   const skinnedMeshes = new Map<string, number>();
   for (const node of document.nodes) {
     if (node.mesh === undefined || node.skin === undefined) continue;
     const count = document.skins[lookup(skinIndex, node.skin, "skin")]!.joints.length;
     skinnedMeshes.set(node.mesh, Math.min(count, skinnedMeshes.get(node.mesh) ?? count));
   }
+  step(0.02);
 
   const totalPrimitives = document.meshes.reduce((n, mesh) => n + mesh.primitives.length, 0);
   let done = 0;
@@ -229,13 +234,35 @@ export function encodeGlb(document: ModelDocument, options: GlbOptions, operatio
     }),
   }));
 
-  const gltfSkins = document.skins.map((skin) => {
-    step(0.72);
-    if (skin.inverseBind.length !== skin.joints.length) throw new Error(`skin ${skin.id}: ${skin.joints.length} joints need as many inverse bind matrices, got ${skin.inverseBind.length}`);
-    return { name: skin.id, joints: skin.joints.map((joint) => lookup(nodeIndex, joint, "joint node")), inverseBindMatrices: buffer.add(skin.inverseBind.flat(), ComponentType.Float, "MAT4") };
-  });
-
-  const gltfNodes = document.nodes.map((node, i) => nodeJson(node, posed?.local[node.id] ?? node, meshIndex, skinIndex, children.get(i)));
+  const inverseBind = new Map<string, number>();
+  const gltfSkins: Json[] = [];
+  const gltfNodes: Json[] = [];
+  const instanceNodes: Map<string, number>[] = [];
+  const sceneRoots: number[][] = [];
+  for (const instance of instances) {
+    const nodes = instance.document.nodes;
+    const first = gltfNodes.length;
+    const ids = new Map<string, number>(nodes.map((node, i) => [node.id, first + i]));
+    const local = new Map(nodes.map((node, i) => [node.id, i]));
+    const children = new Map<number, number[]>();
+    const roots: number[] = [];
+    nodes.forEach((node, i) => {
+      pace.tick();
+      if (node.parent === null || (node.skin !== undefined && node.mesh !== undefined)) roots.push(first + i);
+      else children.set(lookup(local, node.parent, "parent node"), [...(children.get(lookup(local, node.parent, "parent node")) ?? []), first + i]);
+    });
+    const skinsHere = new Map<string, number>();
+    for (const skin of instance.document.skins) {
+      step(0.72);
+      if (skin.inverseBind.length !== skin.joints.length) throw new Error(`skin ${skin.id}: ${skin.joints.length} joints need as many inverse bind matrices, got ${skin.inverseBind.length}`);
+      if (!inverseBind.has(skin.id)) inverseBind.set(skin.id, buffer.add(skin.inverseBind.flat(), ComponentType.Float, "MAT4"));
+      skinsHere.set(skin.id, gltfSkins.length);
+      gltfSkins.push({ name: skin.id, joints: skin.joints.map((joint) => lookup(ids, joint, "joint node")), inverseBindMatrices: inverseBind.get(skin.id)! });
+    }
+    nodes.forEach((node, i) => gltfNodes.push(nodeJson(node, posed?.local[node.id] ?? node, meshIndex, skinsHere, children.get(i))));
+    instanceNodes.push(ids);
+    sceneRoots.push(roots);
+  }
   step(0.78);
 
   const used = new Set<string>();
@@ -261,16 +288,17 @@ export function encodeGlb(document: ModelDocument, options: GlbOptions, operatio
     );
   }
 
+  const known = new Set(document.nodes.map((node) => node.id));
   const gltfAnimations: Json[] = [];
   if (options.animations)
     for (const animation of document.animations) {
       step(0.8 + (0.18 * gltfAnimations.length) / Math.max(1, document.animations.length));
-      gltfAnimations.push(animationJson(animation, nodeIndex, materialIndex, buffer, pace));
+      gltfAnimations.push(animationJson(animation, known, instanceNodes, materialIndex, buffer, pace));
       if (animation.channels.some((channel) => "material" in channel.target)) used.add("KHR_animation_pointer");
     }
 
   const asset: Json = { version: "2.0", generator: GENERATOR, extras: { schema: document.version, id: document.id, title: title(document.title), ...(document.provenance === undefined ? {} : { provenance: JSON.parse(JSON.stringify(document.provenance)) }) } };
-  const json: Json = { asset, scene: 0, scenes: [{ name: document.id, nodes: roots, extras: { title: title(document.title) } }] };
+  const json: Json = { asset, scene: 0, scenes: instances.map((instance, i) => ({ name: instance.name, nodes: sceneRoots[i], extras: instance.extras })) };
   if (used.size > 0) json.extensionsUsed = [...used].sort();
   if (Object.keys(extensions).length > 0) json.extensions = extensions;
   if (gltfNodes.length > 0) json.nodes = gltfNodes;

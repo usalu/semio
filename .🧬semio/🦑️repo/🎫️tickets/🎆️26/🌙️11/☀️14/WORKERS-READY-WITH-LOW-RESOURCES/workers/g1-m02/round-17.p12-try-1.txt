@@ -1,0 +1,14 @@
+service log: /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-79a74804a430.log
+closure entries before: 42537
+2026-11-15T03:47:42Z no slice worker
+2026-11-15T03:47:47Z no slice worker
+2026-11-15T03:47:52Z no slice worker
+2026-11-15T03:47:57Z no slice worker
+2026-11-15T03:48:02Z no slice worker
+2026-11-15T03:48:07Z no slice worker
+2026-11-15T03:48:12Z no slice worker
+2026-11-15T03:48:17Z no slice worker
+2026-11-15T03:48:22Z pid=23539 rss=278MB footprint=[bun [23539]: 64-bit    Footprint: 90 MB (16384 bytes per page)] last=[graph: plan answered, managed 105 MB, resident 378 MB (released 0 MB)]
+2026-11-15T03:48:27Z pid=23661 rss=213MB footprint=[bun [23661]: 64-bit    Footprint: 67 MB (16384 bytes per page)] last=[graph: plan answered, managed 105 MB, resident 378 MB (released 0 MB)]
+2026-11-15T03:48:32Z no slice worker
+closure entries after: 42537

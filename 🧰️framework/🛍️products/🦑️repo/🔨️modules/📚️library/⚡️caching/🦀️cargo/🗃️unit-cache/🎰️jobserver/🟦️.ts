@@ -1,6 +1,7 @@
 import {spawnSync} from "node:child_process";
 import {randomBytes} from "node:crypto";
-import {mkdirSync,renameSync,rmSync,statSync} from "node:fs";
+import {closeSync,mkdirSync,mkdtempSync,openSync,renameSync,rmSync,statSync,writeSync} from "node:fs";
+import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
@@ -80,11 +81,28 @@ export function closedPoolEnvironmentV1(environment:Environment,empty:string|und
 }
 
 /** 🧾️ What one child process gets: the descriptors to inherit under their own numbers and the environment changes. */
-export type JobserverPlanV1=Readonly<{endpoint:JobserverEndpointV1;descriptors:readonly number[];environment:Readonly<Record<string,string>>}>;
+export type JobserverPlanV1=Readonly<{endpoint:JobserverEndpointV1;descriptors:readonly number[];environment:Readonly<Record<string,string>>;release?:()=>void}>;
 
-/** 🗺️ Decides how a child shares the pool of its parent. A pipe pair that is open is handed on under the same numbers; a fifo, a semaphore or no pool needs nothing (the variables are inherited); a pool that cannot be reached is replaced by an empty one, so the child runs serially instead of inventing parallelism. Never consumes a token: the child works on the implicit slot of the process that started it, exactly like a recipe of GNU make. */
-export function jobserverPlanV1(environment:Environment,options:Readonly<{platform?:NodeJS.Platform;isFifo?:(path:string)=>boolean;empty?:(root:string|undefined)=>string|undefined}>={}):JobserverPlanV1{
+/** 🪫️ The tokens a compiler gets in a pool of its own when its parent admitted one job: rustc on a pool without free tokens (Cargo `-j1` hands the compiler none beside its implicit slot) runs serially, and its job-token helper thread then stalls the process for 15 to 50 seconds in one run of six (measured on a 1.6 s crate: 4.5 s serial, 1.7 s with three tokens; one token still stalled, two and three never did). */
+export const STARVED_POOL_TOKENS_V1=3;
+
+/** 🍬️ A named pipe that holds `tokens` job tokens until `release` runs; `undefined` where none can be made. */
+export function privatePoolV1(tokens:number,directory:string=tmpdir()):Readonly<{path:string;release:()=>void}>|undefined{
+ const folder=mkdtempSync(join(directory,"semio-jobs-")),path=join(folder,"pool");let handle:number|undefined;
+ const release=()=>{if(handle!==undefined)try{closeSync(handle);}catch{}rmSync(folder,{recursive:true,force:true});};
+ try{
+  if(spawnSync("mkfifo",["-m","600",path],{stdio:"ignore"}).status!==0)throw Error("mkfifo");
+  handle=openSync(path,"r+");writeSync(handle,"+".repeat(tokens));return{path,release};
+ }catch{release();return undefined;}
+}
+
+/** 🗺️ Decides how a child shares the pool of its parent. A pipe pair that is open is handed on under the same numbers; a fifo, a semaphore or no pool needs nothing (the variables are inherited); a pool that cannot be reached is replaced by an empty one, so the child runs serially instead of inventing parallelism; a child of a one-job admission (`SEMIO_COMPILER_PARALLELISM=1`) gets a private pool of {@link STARVED_POOL_TOKENS_V1} tokens that `release` removes. Never consumes a token: the child works on the implicit slot of the process that started it, exactly like a recipe of GNU make. */
+export function jobserverPlanV1(environment:Environment,options:Readonly<{platform?:NodeJS.Platform;isFifo?:(path:string)=>boolean;empty?:(root:string|undefined)=>string|undefined;pool?:(tokens:number)=>Readonly<{path:string;release:()=>void}>|undefined}>={}):JobserverPlanV1{
  const platform=options.platform??process.platform,endpoint=jobserverEndpointV1(environment,platform,options.isFifo);
+ if(platform!=="win32"&&endpoint.kind!=="none"&&Number(environment.SEMIO_COMPILER_PARALLELISM)===1){
+  const pool=(options.pool??privatePoolV1)(STARVED_POOL_TOKENS_V1);
+  if(pool)return{endpoint:{kind:"fifo",path:pool.path},descriptors:[],environment:closedPoolEnvironmentV1(environment,pool.path),release:pool.release};
+ }
  if(endpoint.kind==="pipe")return{endpoint,descriptors:Object.freeze([...new Set([endpoint.read,endpoint.write])]),environment:{}};
  if(endpoint.kind==="closed")return{endpoint,descriptors:[],environment:closedPoolEnvironmentV1(environment,(options.empty??(root=>emptyPoolV1(root,platform)))(environment.SEMIO_UNIT_CACHE_ROOT))};
  return{endpoint,descriptors:[],environment:{}};

@@ -309,7 +309,7 @@ impl RasterMutationCandidateAuthority {
             }
             RasterMutation::ChangeLayerLocked(value)=>{
                 if !admit_clone(cx,size_of::<bool>(),0,0){return Ok(false);}
-                semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_locked::validate_target(value,RasterLayerLocator::node_at(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?).map_err(|code| code.as_str())?;
+                semio_s_artifact_raster_raster_mutations_layer_props::change_layer_locked::validate_target(value,RasterLayerLocator::node_at(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?).map_err(|code| code.as_str())?;
                 let (RasterLayerNode::Pixel {locked,..}|RasterLayerNode::Group {locked,..}|RasterLayerNode::Adjustment {locked,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?;
                 *locked=value.locked;
                 record_clone(cx,size_of::<bool>(),0,0)?;
@@ -368,7 +368,7 @@ impl RasterMutationCandidateAuthority {
                 record_clone(cx,2*size_of::<Option<u32>>(),0,0)?;
             }
             RasterMutation::ChangeLayerAdjustmentParameter(value) => {
-                semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_adjustment_parameter::validate_target(value,RasterLayerLocator::node_at(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?).map_err(|code| code.as_str())?;
+                semio_s_artifact_raster_raster_mutations_layer_props::change_layer_adjustment_parameter::validate_target(value,RasterLayerLocator::node_at(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?).map_err(|code| code.as_str())?;
                 let RasterLayerNode::Adjustment {params,..}=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-adjustment-target");};
                 if value.value.is_some() && params.page_required_for_insert(&value.parameter) {
                     let page=RasterOwnedMap::<semio_framework_value::DslValue>::conservative_page_credit_bytes();if !admit_clone(cx,page,page,0) {return Ok(false);}
@@ -380,7 +380,7 @@ impl RasterMutationCandidateAuthority {
             }
             RasterMutation::ChangeLayerTransform(value)=>{
                 if !admit_clone(cx,size_of::<RasterTransform>(),0,0){return Ok(false);}
-                semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::validate_target(value,RasterLayerLocator::node_at(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?).map_err(|code| code.as_str())?;
+                semio_s_artifact_raster_raster_mutations_layer_props::change_layer_transform::validate_target(value,RasterLayerLocator::node_at(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")?).map_err(|code| code.as_str())?;
                 let (RasterLayerNode::Pixel {transform,..}|RasterLayerNode::Group {transform,..})=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-transform-target");};
                 *transform=value.transform.clone();
                 record_clone(cx,size_of::<RasterTransform>(),0,0)?;

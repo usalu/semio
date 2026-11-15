@@ -1,4 +1,4 @@
-//! 📍️ `change-critical-region-steel-fyd` mutation leaf.
+//! 📍️ `change-critical-region-steel-design-yield-mpa` mutation leaf.
 
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
@@ -17,7 +17,7 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeCriticalRegionStee
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "critical-region-steel-design-yield-mpa",
-        kind: "change-critical-region-steel-fyd",
+        kind: "change-critical-region-steel-design-yield-mpa",
         record: "ChangeCriticalRegionSteelDesignYieldMpa",
     };
 

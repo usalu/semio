@@ -213,6 +213,15 @@ fn the_u_value_vectors_agree_with_the_independent_iso_6946_oracle() {
     }
 }
 
+#[test]
+fn the_cross_check_minimum_temperature_factor_follows_the_room_climate() {
+    for case in cross_checks()["fRsiMinimum"].as_array().expect("fRsiMinimum") {
+        let name = case["id"].as_str().expect("id");
+        let minimum = checks::f_rsi_minimum(case["tIntC"].as_f64().expect("tIntC"), case["rhInt"].as_f64().expect("rhInt"));
+        assert!((minimum - case["fRsiMinimum"].as_f64().expect("fRsiMinimum")).abs() <= 1e-12, "{name}: f_Rsi,min {minimum}");
+    }
+}
+
 fn cross_checks() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🔣️.json")).expect("cross-check vectors")
 }
@@ -263,7 +272,7 @@ fn the_cross_check_temperature_factor_uses_the_standard_surface_resistance() {
     for case in vectors["fRsi"].as_array().expect("fRsi") {
         let name = case["id"].as_str().expect("id");
         let element = model::EnvelopeElement { id: name.into(), kind: "wall".into(), zone_id: String::new(), orientation_deg: 0.0, inclination_deg: 90.0, adjacent: "exterior".into(), area_m2: 10.0, delta_u_g: 0.0, delta_u_f: 0.0, delta_u_r: 0.0, layers: stack_of(case) };
-        let result = checks::part_2::check_f_rsi(&element);
+        let result = checks::part_2::check_f_rsi(&element, checks::MOULD_T_INT_C, checks::MOULD_RH_INT);
         assert!((result.computed.value - case["fRsi"].as_f64().expect("fRsi")).abs() <= 1e-12, "{name}: f_Rsi {}", result.computed.value);
         assert_eq!(result.status == norm::CheckStatus::Pass, case["passes"].as_bool().expect("passes"), "{name}");
     }

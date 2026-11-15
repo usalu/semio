@@ -119,10 +119,15 @@
         "leaseSeconds",
         "maximumAttempts",
         "defaultActionSeconds",
+        "maximumActionSeconds",
         "maximumQueued",
+        "maximumWorkers",
+        "maximumRequestBytes",
         "maximumMessageBytes",
         "maximumBatchBytes",
-        "defaultInstance"
+        "defaultInstance",
+        "loadExpireSeconds",
+        "refusalCooldownSeconds"
       ],
       "properties": {
         "host": {
@@ -170,10 +175,28 @@
           "minimum": 1,
           "maximum": 604800
         },
+        "maximumActionSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400,
+          "description": "The longest an action may run; a longer timeout in a request is cut to it."
+        },
         "maximumQueued": {
           "type": "integer",
           "minimum": 1,
           "maximum": 10000000
+        },
+        "maximumWorkers": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "description": "How many workers may be registered at once."
+        },
+        "maximumRequestBytes": {
+          "type": "integer",
+          "minimum": 65536,
+          "maximum": 1073741824,
+          "description": "The largest body the worker API accepts."
         },
         "maximumMessageBytes": {
           "type": "integer",
@@ -188,6 +211,16 @@
         "defaultInstance": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "loadExpireSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "refusalCooldownSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
         }
       }
     },
@@ -203,9 +236,36 @@
         "materialize",
         "maximumBlobBytes",
         "sandbox",
-        "inlineOutputBytes"
+        "inlineOutputBytes",
+        "loadIntervalSeconds",
+        "network",
+        "confinement",
+        "actions",
+        "disk"
       ],
       "properties": {
+        "disk": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reserveGigabytes",
+            "perActionGigabytes"
+          ],
+          "properties": {
+            "reserveGigabytes": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100000,
+              "description": "Free space of the volume of the work directory that stays untouched for the machine itself: the worker's blob cache (256 MiB), swap, the replica and the owner's own builds. A worker takes no action below this plus one action."
+            },
+            "perActionGigabytes": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100000,
+              "description": "The worst case one action adds to the volume: the largest compiler outputs measured are 140 MB, written beside a temporary copy and the dependency file. The worker runs one action at once for every such share of free space above the reserve, at most its concurrency."
+            }
+          }
+        },
         "concurrency": {
           "type": "integer",
           "minimum": 0,
@@ -249,6 +309,33 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 1048576
+        },
+        "loadIntervalSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300
+        },
+        "network": {
+          "enum": [
+            "deny",
+            "allow"
+          ],
+          "description": "`deny`: every action runs without network (a strategy that cannot enforce it is reported as `unenforced`); `allow`: actions may use the network."
+        },
+        "confinement": {
+          "enum": [
+            "required",
+            "best-effort"
+          ],
+          "description": "`required`: a worker whose host has no confining sandbox refuses to start; `best-effort`: it starts with the private input root alone and reports `confinement: none`."
+        },
+        "actions": {
+          "enum": [
+            "rustc",
+            "any",
+            "none"
+          ],
+          "description": "Which actions the worker runs. `rustc`: only the declared rustc unit of the offload, with arguments and environment from a closed allow-list (the default, and the only choice an unconfined worker accepts besides `none`); `any`: every command, refused at start on a worker without a confining sandbox; `none`: no action."
         }
       }
     },
@@ -289,9 +376,28 @@
         "properties",
         "concurrency",
         "sandbox",
-        "runtime"
+        "runtime",
+        "origin",
+        "capacity",
+        "confinement",
+        "network"
       ],
       "properties": {
+        "resumed": {
+          "description": "The tasks a worker is still running when it joins again after the scheduler lost its state (a restart): the scheduler adopts them instead of running the same actions a second time.",
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["task", "instance", "action"],
+            "properties": {
+              "task": { "type": "string", "pattern": "^[0-9a-f-]{36}\\.[0-9]{1,3}$" },
+              "instance": { "type": "string", "maxLength": 64 },
+              "action": { "type": "object", "additionalProperties": false, "required": ["hash", "size"], "properties": { "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }, "size": { "type": "integer", "minimum": 0 } } }
+            }
+          }
+        },
         "version": {
           "const": 1
         },
@@ -329,6 +435,34 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 64
+        },
+        "origin": {
+          "$ref": "#/definitions/Origin"
+        },
+        "capacity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cores",
+            "memoryMegabytes"
+          ],
+          "properties": {
+            "cores": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            },
+            "memoryMegabytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "confinement": {
+          "$ref": "#/definitions/Confinement"
+        },
+        "network": {
+          "$ref": "#/definitions/NetworkPolicy"
         }
       }
     },
@@ -559,7 +693,8 @@
           "enum": [
             "completed",
             "failed",
-            "cancelled"
+            "cancelled",
+            "refused"
           ]
         },
         "status": {
@@ -570,6 +705,16 @@
             {
               "type": "string",
               "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "refusal": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Refusal"
             },
             {
               "type": "null"
@@ -589,7 +734,9 @@
         "failed",
         "cancelled",
         "retried",
-        "deduplicated"
+        "deduplicated",
+        "refused",
+        "offloadRejected"
       ],
       "properties": {
         "queued": {
@@ -623,6 +770,14 @@
         "deduplicated": {
           "type": "integer",
           "minimum": 0
+        },
+        "refused": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offloadRejected": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -639,7 +794,13 @@
         "running",
         "sandbox",
         "lastSeenSeconds",
-        "draining"
+        "draining",
+        "origin",
+        "confinement",
+        "network",
+        "headroom",
+        "offloadedIn",
+        "refused"
       ],
       "properties": {
         "id": {
@@ -687,6 +848,26 @@
         },
         "draining": {
           "type": "boolean"
+        },
+        "origin": {
+          "$ref": "#/definitions/Origin"
+        },
+        "confinement": {
+          "$ref": "#/definitions/Confinement"
+        },
+        "network": {
+          "$ref": "#/definitions/NetworkPolicy"
+        },
+        "headroom": {
+          "type": "boolean"
+        },
+        "offloadedIn": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refused": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -1006,6 +1187,583 @@
         }
       },
       "description": "The bilingual messages of the command; there is no default language."
+    },
+    "Origin": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+      "description": "The origin id of a machine of the fleet (for example g1-m03)."
+    },
+    "Pressure": {
+      "enum": [
+        "normal",
+        "warn",
+        "critical"
+      ],
+      "description": "The pressure level of the host capacity sample."
+    },
+    "Confinement": {
+      "enum": [
+        "full",
+        "none"
+      ],
+      "description": "Whether the sandbox of a worker confines the file system of an action (`none` for the private input root alone)."
+    },
+    "NetworkPolicy": {
+      "enum": [
+        "denied",
+        "unenforced",
+        "allowed"
+      ],
+      "description": "What a worker does about the network of an action: `denied` (the sandbox cuts it), `unenforced` (denial is asked for but the strategy cannot enforce it), `allowed` (the policy lets actions use it)."
+    },
+    "PlatformIdentity": {
+      "description": "The platform key of a machine: operating system, architecture and the build id of its Rust toolchain (the first 16 hex digits of the sha256 of `rustc -vV`); units are shared and offloaded only between equal keys.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "os",
+        "arch",
+        "toolchain",
+        "target"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "os": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "arch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "toolchain": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "MachineCounters": {
+      "description": "Counters of the rustc wrapper and unit cache of one machine, read from `.cache/f/build-counters.json` (zeros when absent).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit",
+        "offload"
+      ],
+      "properties": {
+        "unit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "localHit",
+            "remoteHit",
+            "miss",
+            "stored"
+          ],
+          "properties": {
+            "localHit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "remoteHit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "miss": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "stored": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "skipped": {
+              "description": "Units that skipped the fleet cache lookup because the cache was unreachable or refused the credential (counted, never silent).",
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "offload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "out",
+            "refused",
+            "fellBack"
+          ],
+          "properties": {
+            "out": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "refused": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fellBack": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "WorkerState": {
+      "description": "What the build worker of a machine does right now.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "concurrency",
+        "running",
+        "sandbox",
+        "confinement",
+        "network"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "absent",
+            "idle",
+            "busy",
+            "refusing"
+          ]
+        },
+        "concurrency": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 512
+        },
+        "running": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 512
+        },
+        "sandbox": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Sandbox"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confinement": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Confinement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "network": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/NetworkPolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "why": {
+          "$ref": "#/definitions/WorkerWhy"
+        }
+      }
+    },
+    "WorkerWhy": {
+      "description": "Why a worker is absent: a closed reason code and the same sentence in English and German.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "en",
+        "de"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "starting",
+            "no-scheduler",
+            "scheduler-unreachable",
+            "identity-unregistered",
+            "no-toolchain",
+            "provisioning",
+            "sandbox-unavailable",
+            "disk-full",
+            "policy-off",
+            "not-registered",
+            "no-headroom",
+            "failed"
+          ]
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        }
+      }
+    },
+    "LoadReport": {
+      "description": "What every machine sends to the scheduler every few seconds: who it is, its platform key, capacity, running and queued work, the pressure level of the host capacity sample, free memory, load, its own admission verdict (`headroom`) and its wall clock.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "origin",
+        "platform",
+        "capacity",
+        "running",
+        "queued",
+        "pressure",
+        "freeMegabytes",
+        "load",
+        "headroom",
+        "wallMs",
+        "worker",
+        "counters"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "origin": {
+          "$ref": "#/definitions/Origin"
+        },
+        "platform": {
+          "$ref": "#/definitions/PlatformIdentity"
+        },
+        "capacity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cores",
+            "memoryMegabytes"
+          ],
+          "properties": {
+            "cores": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            },
+            "memoryMegabytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "running": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "queued": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "pressure": {
+          "$ref": "#/definitions/Pressure"
+        },
+        "freeMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "load": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "headroom": {
+          "type": "boolean"
+        },
+        "wallMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "worker": {
+          "$ref": "#/definitions/WorkerState"
+        },
+        "counters": {
+          "$ref": "#/definitions/MachineCounters"
+        }
+      }
+    },
+    "LoadRow": {
+      "description": "One machine of the live table.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "platform",
+        "capacity",
+        "running",
+        "queued",
+        "pressure",
+        "freeMegabytes",
+        "load",
+        "headroom",
+        "ageSeconds",
+        "worker",
+        "offloadedIn",
+        "offloadedOut",
+        "refused",
+        "counters"
+      ],
+      "properties": {
+        "origin": {
+          "$ref": "#/definitions/Origin"
+        },
+        "platform": {
+          "$ref": "#/definitions/PlatformIdentity"
+        },
+        "capacity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cores",
+            "memoryMegabytes"
+          ],
+          "properties": {
+            "cores": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4096
+            },
+            "memoryMegabytes": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "running": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "queued": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "pressure": {
+          "$ref": "#/definitions/Pressure"
+        },
+        "freeMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "load": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "headroom": {
+          "type": "boolean"
+        },
+        "ageSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "worker": {
+          "$ref": "#/definitions/WorkerState"
+        },
+        "offloadedIn": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offloadedOut": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "refused": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "counters": {
+          "$ref": "#/definitions/MachineCounters"
+        }
+      }
+    },
+    "TaskRow": {
+      "description": "One action the scheduler holds: queued or executing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "action",
+        "stage",
+        "worker",
+        "requester",
+        "elapsedSeconds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "action": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{12}$"
+        },
+        "stage": {
+          "enum": [
+            "QUEUED",
+            "EXECUTING"
+          ]
+        },
+        "worker": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requester": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Origin"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "elapsedSeconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "FleetLoad": {
+      "description": "What `GET /v1/fleet/load` answers: the live table of the fleet.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "service",
+        "wallMs",
+        "expireSeconds",
+        "machines",
+        "tasks",
+        "queued",
+        "executing",
+        "counters"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "service": {
+          "const": "semio-remote-execution"
+        },
+        "wallMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expireSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "machines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LoadRow"
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskRow"
+          }
+        },
+        "queued": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "executing": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "counters": {
+          "$ref": "#/definitions/Counter"
+        }
+      }
+    },
+    "Refusal": {
+      "enum": [
+        "memory",
+        "swap",
+        "swap-activity",
+        "pressure-critical",
+        "pressure-warn",
+        "files",
+        "attaches",
+        "load",
+        "queue-order",
+        "ramp",
+        "quiet-limit",
+        "slots",
+        "disk",
+        "not-ready",
+        "draining"
+      ],
+      "description": "Why a worker's own admission refused an action."
     }
   }
 }

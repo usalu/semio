@@ -22,8 +22,16 @@ Feature: The batch export of the 3D models
 
   Scenario: A run resumes
     Given a finished run
-    When it runs again, with a damaged file, with force and with another scale
-    Then nothing is rewritten, only the damaged file and the ZIP are rewritten, everything is rewritten, everything is rewritten
+    When it runs again, with a damaged file, with a damaged ZIP and with force
+    Then nothing is rewritten, only the damaged file is rewritten, only the ZIP is rewritten, everything is rewritten
+
+  Scenario: A run never deletes the files of another scale
+    Given a run with scale 50 and then a run with scale 100 into the same directory
+    Then the 1:50 files survive byte for byte, the manifest lists both scales, a full run adds the missing scales, and a changed asset rewrites only the selected scales
+
+  Scenario: An asset without an authored scale is listed
+    Given a catalog with an asset whose four scales are unavailable
+    Then the run lists it as not exported and naming it is refused
 
   Scenario: A run is cancellable
     Given a running batch

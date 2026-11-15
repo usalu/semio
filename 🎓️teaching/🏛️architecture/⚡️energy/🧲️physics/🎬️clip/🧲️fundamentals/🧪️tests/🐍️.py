@@ -5,9 +5,11 @@ from __future__ import annotations
 import ast
 import importlib
 import json
+import os
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
 
@@ -193,9 +195,9 @@ class Boiling(unittest.TestCase):
         duration = float(catalog_clip(case["catalog"], case["clip"])["durationS"])
         self.assertEqual(boil, case["boil_start_s"])
         self.assertLess(boil, duration)
-        VISUALS.set_vo_language("de")
-        budget = max(VISUALS.narration_seconds(narration(CASES["beat1"]["scene"]), case["clause"]),
-                     VISUALS.subtitle_read_seconds(narration(CASES["beat1"]["scene"]), case["clause"]))
+        with mock.patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": "de"}):
+            budget = max(VISUALS.narration_seconds(narration(CASES["beat1"]["scene"]), case["clause"]),
+                         VISUALS.subtitle_read_seconds(narration(CASES["beat1"]["scene"]), case["clause"]))
         self.assertLess(boil / rate, budget)
         self.assertLessEqual(duration / rate, budget)
         self.assertGreater(boil / rate, 0.0)

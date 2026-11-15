@@ -1,5 +1,5 @@
 /** 🔗️ The kernel return input page, content, builder binding and evidence tests. */
-import { loadContentInputAuthorityFixture, loadContentInputBuilderDocument, loadContentInputBuilderFixture, loadContentInputReleaseDocument, loadContentInputReleaseFixture, loadContentInputPayloadDocument, loadContentInputPayloadFixture } from "@semio-tech/framework-kernel/testing/fixtures";
+import { loadContentInputAuthorityFixture, loadContentInputBuilderDocument, loadContentInputBuilderFixture, loadContentInputReleaseDocument, loadContentInputReleaseFixture, loadContentInputPayloadDocument, loadContentInputPayloadFixture } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
 import { OwnedKernelReturnContent } from "@semio-tech/framework-kernel/return/content/input";
 import type { ShardClientSettlementTestKit } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { CapturedReturnHelpers } from "../🛠️captured-return-helpers/🟦️.ts";

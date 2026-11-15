@@ -1,0 +1,24 @@
+# Result: boot that cannot be bricked, admission of new code, bounded blocked loop (2026-11-13) — LANDED
+
+Landing: `1113-landings.md` (08:48Z, 15 files, rebased onto the compaction landing). Kit and patch scripts: `🧰️scripts/1113-boot/kit/`. Operator text: README section "Boot that cannot be bricked", contract section "Boot stage, fallback code and admission".
+
+## Built
+1. **Supervised boot (`🔁️replica/📜️script.ts`, Node built-ins only).** `run` starts the daemon as a child process of the worktree code. Non-zero exit before `started` or within 60 s = early failure, then: (a) newest intact sealed snapshot not in `history.json` `refused`, (b) snapshot from `<store>/v1/bootstrap/code/<digest>/` (ranked by fresh attestations, fetched with per-file sha256 check, sealed locally), (c) revert-rejected worktree code as last resort. Failing snapshots are recorded as refused. Exit 0 and 75 (lock held, origin taken) are final; a ready daemon failing later is not replaced; a daemon waiting for macOS consent is not killed; not ready after 15 min is killed. Limits via `SEMIO_FLEET_BOOT_*`.
+2. **Store snapshots.** Healthy daemons (10 min, no recent failure) publish their sealed snapshot (`sealed.json` = schema `SealedCode`, written last, tmp dir + rename), prune to 4 plus attested digests (`publishCodeSnapshotV1`, `pruneStoreCodeV1`, `listStoreCodeV1`).
+3. **Stage copy.** `join`/`seed` and healthy daemons install `.cache/f/boot/stage.ts` + `stage.json`; the worktree entry prefers a hash-verified copy. Existing service definitions are unchanged.
+4. **Fallback visibility and return.** Attestation `fallback:{guard:"code-fallback",source,reason}`, fleet warning, `status` code line, `beat.json`. Daemon returns to worktree code via the normal path (also when digest is identical, after 5 min).
+5. **Admission (goal 2).** New attester hook `admit`: switch only if another origin attests the digest, a store snapshot of it exists, or every changed code file was last published by this origin (`authoredCodeV1`). Otherwise `pending: waiting: …`, re-asked each heartbeat; each arriving file changes the digest and restarts the decision. Self-check gap closed: `dryOpenReplicaV1` (full `openReplicaV1` on a state mirror) and `smokeBootV1` (seed, open, close, `runV1` to first attestation in a scratch worktree/store); timeout 180 s.
+6. **Blocked loop (goal 3).** Watchdog thread writes `beat.json` each second; `status` shows "busy, N s" instead of "not running"; lock not stolen while the beat is fresh; lag over 60 s recorded as failure `loop-blocked` (health.json, attestation); supervisor kills a loop blocked 15 min, forwards SIGTERM and kills after 20 s grace; child ends itself if the supervisor dies. `yieldingV1` slices clash settling and event parsing. Measured (20k–60k files): seed/publish/join/follow/apply/open/checkpoint max lag under 90 ms; the earlier 4.8 s was a test artefact. Remaining sync spots: `foldedDirectories` build (~0.6 s at 273k files).
+
+## Proofs (all in `🔁️replica/🧪️tests/🛟️boot.ts` unless noted)
+- throws in state open, import errors (syntax, missing module), snapshot refused for good, no local snapshot + store snapshot (attested preferred, tampered skipped), store unreachable + local snapshot, store unreachable + nothing (bounded, exit 1), revert rule, busy exit 75, never-ready and consent wait, late failure not replaced, SIGTERM when blocked and when healthy, orphan child, copy delegation (valid, tampered, torn).
+- Mixed module = the incident: real module copy with `adopt` renamed in tiers: `self-check` fails (state mirror, and smoke without state), `run` falls back to the sealed snapshot, attests `code-fallback`, status shows snapshot/run.
+- Admission with two real replicas (own, foreign, partial, attested, store snapshot); attester waits and restarts only after grant; fallback return; status busy + lock; healthy daemon seals, installs copy, publishes.
+- `🛡️resilience/🧪️tests`: store snapshot hashes vs language-agnostic fixture, Python oracle (hashlib) recomputes them, prune, install, beat, yield.
+- Full suite: 27 files green on copy and on live.
+
+## Live result
+Daemon restarted through the self-check at 08:49Z onto code 37dde6043d2e (supervisor pid 99887, child 99888), `beat.json` phase run, attestation age under 10 s and advancing, sealed snapshot and stage copy present.
+
+## Not verified
+Linux systemd and Windows task entry (not run; unit/task definitions unchanged, exit 0/75 semantics assumed); a service definition whose `📜️script.ts` itself has a syntax error is not recoverable; fallback guard cannot appear in attestations of machines on the old 229b… snapshot (old code) — they get it after their next restart; store publication on live not yet observed (needs 10 min uptime); real NFS stall; the failure cases were not tried on the live daemon.

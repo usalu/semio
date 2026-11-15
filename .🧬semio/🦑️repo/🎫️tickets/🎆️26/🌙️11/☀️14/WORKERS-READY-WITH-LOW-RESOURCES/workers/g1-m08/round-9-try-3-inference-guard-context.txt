@@ -1,0 +1,18 @@
+[capacity] waiting 99s for exec: memory pressure is critical (need 1536 MB; -9877 MB spare above the 2048 MB floor, load 6.48; 2 running, 0 ahead); behind the host itself (nothing of ours)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:192:1:5:%40semio-tech%2Fframework-rs|language%3Acargo|5|0:waiting|441|0|","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 192 projects · 1 running, longest 5 s: @semio-tech/framework-rs (language:cargo, 5 s, 0 rows) · waiting for memory headroom (441 of 0 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:48:658:1:5:%40semio-tech%2Fframework-rs|language%3Acargo|5|0:waiting|441|0|","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+graph: waiting for memory headroom (441 of -312 MB reserved, 1 projects running)
+[repository:command] still running after 3511 s
+[capacity] waiting 106s for exec: the host is swapping out too fast (need 1536 MB; -11921 MB spare above the 2048 MB floor, load 8.48; 2 running, 0 ahead); behind the host itself (nothing of ours)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:192:1:10:%40semio-tech%2Fframework-rs|language%3Acargo|10|0:waiting|441|0|","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 192 projects · 1 running, longest 10 s: @semio-tech/framework-rs (language:cargo, 10 s, 0 rows) · waiting for memory headroom (441 of 0 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:48:658:1:10:%40semio-tech%2Fframework-rs|language%3Acargo|10|0:waiting|441|0|","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+graph: waiting for memory headroom (441 of -312 MB reserved, 1 projects running)
+graph: project @semio-tech/framework-rs (language:cargo) grew by 1768 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[capacity] waiting 112s for exec: not enough free memory (need 1536 MB; -11921 MB spare above the 2048 MB floor, load 7.88; 2 running, 0 ahead); behind graph-plan (running, 1 job(s), 26208 MB), workspace:setup (quiet, 1 job(s), 49 MB)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:192:1:15:%40semio-tech%2Fframework-rs|language%3Acargo|15|0:stopped|1768|1756|language%3Acargo","mode":"shared","elapsedMs":0}}

@@ -181,5 +181,5 @@ fn append_demand<T>(target:&PagedList<T,{usize::MAX}>,extent:usize)->Result<Reti
 
 fn close_demand<T>(target:&PagedList<T,{usize::MAX}>)->Result<RetirementDemand,ValueError>{
  if !target.is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<T>(),depth:target.next_pop_depth_demand().map_err(ValueError::from)?,..Default::default()})}
- Ok(RetirementDemand{release_bytes:target.next_release_allocation_bytes().map_err(ValueError::from)?,depth:target.next_release_depth_demand().map_err(ValueError::from)?,..Default::default()})
+ Ok(RetirementDemand{copy_bytes:target.next_release_copy_byte_demand().map_err(ValueError::from)?,release_bytes:target.next_release_allocation_bytes().map_err(ValueError::from)?,depth:target.next_release_depth_demand().map_err(ValueError::from)?,..Default::default()})
 }

@@ -1,0 +1,221 @@
+== before try 1 2026-11-15T02:23:10Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 1 2026-11-15T02:42:20Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 2 2026-11-15T02:47:28Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 3 2026-11-15T02:52:38Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 4 2026-11-15T03:22:18Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 5 2026-11-15T04:06:50Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 6 2026-11-15T06:21:19Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 7 2026-11-15T06:47:17Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 8 2026-11-15T07:06:54Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 9 2026-11-15T07:26:13Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 10 2026-11-15T07:37:59Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 11 2026-11-15T07:51:13Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  
+== after try 12 2026-11-15T07:59:56Z
+2811848 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 20:35 /Users/ueli/.local/bin/repo
+2817021 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 20:56 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+mtime /Users/ueli/.local/share/semio/launcher/bin/repo: 2026-11-14T20:56:38Z (UTC printed via TZ)
+mtime /Users/ueli/.local/bin/repo: 2026-11-14T20:35:40Z (UTC printed via TZ)
+codesign launcher:
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+/Users/ueli/.local/share/semio/launcher/:       
+total       
+drwxr-xr-x 96 Nov 12 02:41 .  
+drwxr-xr-x 192 Nov 12 02:48 ..  
+drwxr-xr-x 160 Nov 14 20:56 bin  

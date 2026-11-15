@@ -2,6 +2,7 @@
 //! the Annex D k_n factors, the fatigue S–N line with the damage of a member and the three serviceability combinations of a member. Every diagram has a table twin; markers bind to checks and to document leaves.
 
 extern crate semio_s_artifact_norm_en1990_checks as checks;
+extern crate semio_s_artifact_norm_en1990_inferences as inferences;
 extern crate semio_s_artifact_norm_en1990_model as model;
 extern crate semio_s_artifact_norm_en1990_scene_combinations as combinations;
 extern crate semio_s_artifact_norm_en1990_scene_kit as kit;
@@ -162,10 +163,10 @@ fn psi_chart(document: &En1990Snapshot) -> Option<Diagram2d> {
                 label: loc(&format!("{symbol} {} = {value:.2}", entry.label_en), &format!("{symbol} {} = {value:.2}", entry.label_de)),
                 ring: rect(x + 0.05, 0.0, x + 0.95, value.max(0.005)),
                 fill: Fill { tone, opacity: 0.8 },
-                hatch: (!entry.verified).then_some(Hatch::Dots),
+                hatch: (!entry.verified()).then_some(Hatch::Dots),
             });
         }
-        notes.push(DiagramNote { id: format!("category-{i}"), at: p(x0 + 1.5, -0.08), text: loc(entry.label_en, entry.label_de), tone: if entry.verified { Tone::Neutral } else { Tone::Warning } });
+        notes.push(DiagramNote { id: format!("category-{i}"), at: p(x0 + 1.5, -0.08), text: loc(entry.label_en, entry.label_de), tone: if entry.verified() { Tone::Neutral } else { Tone::Warning } });
         for (column, value) in table.iter_mut().zip([i as f64, row.psi_0, row.psi_1, row.psi_2]) {
             column.push(value);
         }

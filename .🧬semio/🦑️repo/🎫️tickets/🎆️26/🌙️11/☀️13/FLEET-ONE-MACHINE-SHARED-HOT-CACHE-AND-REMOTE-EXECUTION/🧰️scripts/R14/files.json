@@ -1,0 +1,56 @@
+{
+ "files": [
+  [
+   "schema.json",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json"
+  ],
+  [
+   "wanted.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts"
+  ],
+  [
+   "read.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts"
+  ],
+  [
+   "server.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts"
+  ],
+  [
+   "cost.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts"
+  ],
+  [
+   "t-main.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🟦️.ts"
+  ],
+  [
+   "t-read.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/📖️read/🟦️.ts"
+  ],
+  [
+   "t-server.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🛠️server/🟦️.ts"
+  ],
+  [
+   "t-priority.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🛠️server/💰️priority/🟦️.ts"
+  ],
+  [
+   "t-cost.ts",
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🧪️tests/🟦️.ts"
+  ]
+ ],
+ "baseline": {
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json": "6290f77eb9f04f4778c26530dc38834c5c0e89e3f31be3ca0451140d038eb7d3",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts": "2132239018677a7c509bc4cb564ddd09c6ca93794033475aafbf6f9e9696aee0",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts": "1932655004ef1b2e966f432caa5ccd807ecf124fe9cdf2b818b1e4c1cab113e4",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts": "0bf7f41441083ef136c798b88e499f763d4cde4c22f5db53b811141f8c48ee96",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts": "ee8cf02989986701c3ac0ce3fd612d9c133c7e0a369ba42547a71a2a082f95e1",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🟦️.ts": "236026c4d4aad3ad21274644e7ee66d2fcf81de3da435c29a544d0164bd58b9d",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/📖️read/🟦️.ts": "20a449d6e10f8fca7d2b0e78bd880815095c58448b9086063c0eac7d83db85f8",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🛠️server/🟦️.ts": "86cf42ef4856bc9440224180b564faef090aaaa44abf084d399a76cf608d57de",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🛠️server/💰️priority/🟦️.ts": "471f7219bec3a6542d12ddd688280595dc908883ef681eb1b5c1cd0f7759c7a4",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🧪️tests/🟦️.ts": "9a23ad400bdd84359bdab4178068d4698b73d2006435effb6fc0b5d3f3ede65d"
+ }
+}

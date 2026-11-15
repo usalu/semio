@@ -1,4 +1,4 @@
-//! ↩️ `change-critical-region-steel-fyd` inverse: restores the previous `steel_design_yield_mpa`.
+//! ↩️ `change-critical-region-steel-design-yield-mpa` inverse: restores the previous `steel_design_yield_mpa`.
 
 use crate::change_critical_region_steel_fyd::ChangeCriticalRegionSteelDesignYieldMpa;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

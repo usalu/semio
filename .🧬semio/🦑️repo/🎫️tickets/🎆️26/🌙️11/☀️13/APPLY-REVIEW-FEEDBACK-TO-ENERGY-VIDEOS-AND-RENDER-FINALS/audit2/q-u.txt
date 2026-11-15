@@ -1,0 +1,1 @@
+(U_\{?\\?(mathrm\{)?(Wand|wall|roof|Dach|window|Fenster|floor|Boden|tot|T|i|ges)\}?\}?|U\s*=\s*0[.,]\d+|U\s*=\s*1[.,]\d+|0[.,]242|0[.,]24\s*W|0\{,\}24|0,24|0\.24\b|\\\\,?\\mathrm\{W/\(m)[^\n]{0,15}?(=|≈)\s*\d[.,]\d+

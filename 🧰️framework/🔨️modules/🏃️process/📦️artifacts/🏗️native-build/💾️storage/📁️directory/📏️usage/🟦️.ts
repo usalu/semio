@@ -1,5 +1,5 @@
 import{lstat as statEntry,readdir as listEntries}from"node:fs/promises";
-import{lstatSync,readFileSync,readdirSync,renameSync,writeFileSync}from"node:fs";
+import{existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,renameSync,writeFileSync}from"node:fs";
 import{dirname,join,resolve}from"node:path";
 import{nativeDirectoryProtocolV1}from"../📋️contract/🟦️.ts";
 
@@ -140,14 +140,18 @@ const registry=new Map<string,NativeDirectoryUsageV1>();
 /** 🗂️ Returns the process-wide usage cell of a partition root, so the capacity meter and every space query share one measurement and one cache. */
 export function nativeDirectoryUsageV1(root:string,maximumPhysicalBytes:number):NativeDirectoryUsageV1{
  const key=resolve(root);let cell=registry.get(key);
- if(!cell){cell=createNativeDirectoryUsageV1({root:key,maximumEntries:nativeDirectoryEntryBoundV1(maximumPhysicalBytes),record:nativeDirectoryUsageFileV1(join(dirname(key),protocol.usage.recordFile))});registry.set(key,cell);}
+ if(!cell){cell=createNativeDirectoryUsageV1({root:key,maximumEntries:nativeDirectoryEntryBoundV1(maximumPhysicalBytes),record:nativeDirectoryUsageFileV1(nativeDirectoryUsageRecordPathV1(key))});registry.set(key,cell);}
  return cell;
 }
 
-/** 📒️ The usage record of one partition as a small JSON file beside its volume root, replaced atomically: any process that measures leaves it for every later status. */
+/** 📍️ Where the usage record of a partition root lives: in a directory of its own beside the volume root, so a replaced record changes that directory alone and never the modification time of an ancestor of the partition, which path fences of the contents compare exactly. */
+export const nativeDirectoryUsageRecordPathV1=(root:string):string=>join(dirname(resolve(root)),protocol.usage.recordDirectory,protocol.usage.recordFile);
+
+/** 📒️ The usage record of one partition as a small JSON file in its own directory, replaced atomically: any process that measures leaves it for every later status. */
 export function nativeDirectoryUsageFileV1(file:string):NativeDirectoryUsageRecordV1{
+ const directory=dirname(file);
  return Object.freeze({
   read:()=>{const value=JSON.parse(readFileSync(file,"utf8")) as {bytes?:unknown;atMs?:unknown};return Number.isSafeInteger(value.bytes)&&Number.isSafeInteger(value.atMs)?{bytes:value.bytes as number,atMs:value.atMs as number}:undefined;},
-  write:(bytes,atMs)=>{const temporary=file+"."+process.pid+".tmp";writeFileSync(temporary,JSON.stringify({bytes,atMs}));renameSync(temporary,file);}
+  write:(bytes,atMs)=>{if(!existsSync(directory))mkdirSync(directory,{recursive:true});const temporary=file+"."+process.pid+".tmp";writeFileSync(temporary,JSON.stringify({bytes,atMs}));renameSync(temporary,file);}
  });
 }

@@ -1,6 +1,6 @@
 //! 📐️ Part 2 of the ISO 16757 snapshot: the space classification, ports, bounding box, geometry nodes and objects, surfaces and the geometry catalogue. See [`super`].
 
-use std::collections::BTreeMap;
+use super::catalogue_core::IdMap;
 
 #[path = "🧊️solid-volume/🦀️.rs"]
 pub mod solid;
@@ -84,11 +84,11 @@ pub struct PrimitiveKind {
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(tag = "node", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(tag = "node", rename_all = "camelCase")]
-#[dsl(retire_with="crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_catalogue_geometry")]
+#[dsl(retire_with="crate::retire_decoded_catalogue_geometry")]
 pub enum GeometryNode {
     Primitive {
         kind: String,
-        parameters: BTreeMap<String, f64>,
+        parameters: IdMap<f64>,
     },
     Transform {
         translation: [f64; 3],
@@ -131,7 +131,7 @@ pub struct GeometryObject {
     pub spaces: Vec<SpaceEnvelope>,
     pub surfaces: Vec<SurfaceDefinition>,
     pub ports: Vec<PortDefinition>,
-    pub parameter_bindings: BTreeMap<String, String>,
+    pub parameter_bindings: IdMap<String>,
 }
 
 /// 📦️ Space envelope with kind.
@@ -169,7 +169,7 @@ pub struct SurfaceDefinition {
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct GeometryCatalogue {
-    pub objects: BTreeMap<String, GeometryObject>,
+    pub objects: IdMap<GeometryObject>,
     #[dsl(table)]
     pub primitive_registry: Vec<PrimitiveKind>,
 }

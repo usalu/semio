@@ -15,7 +15,7 @@ import { magnitude } from "../../🏗️structure/📽️projection/🟦️.ts";
 import type { LookSpec, Paint } from "../🎨️looks/🟦️.ts";
 import { arcPaint, arrowPaint, massPaint, type ArcKind, type ArrowKind } from "../🏗️structure/🟦️.ts";
 import { toNeutral, pseudoToNeutral } from "../🧭️frame/🟦️.ts";
-import { HIDDEN, arcGlyph, arcPatch, arrowGlyph, arrowPatch, emitterGlyph, emitterPatch, massGlyph, slugOf } from "../🪧️glyphs/🟦️.ts";
+import { type GlyphSizing, HIDDEN, arcGlyph, arcPatch, arrowGlyph, arrowPatch, emitterGlyph, emitterPatch, massGlyph, paperSizing, slugOf } from "../🪧️glyphs/🟦️.ts";
 import { placementsOf, type Placement } from "../🦴️skeleton/🟦️.ts";
 import { emitterPaint } from "../🌡️thermal/🟦️.ts";
 
@@ -56,11 +56,12 @@ export type FrameLooks = {
 };
 
 /** ⚙️ What {@link frameDataOf} needs besides the instant: the asset, the wanted views, the theme of the analytic views, the metres per paper millimetre `mm` of the scale, the paper length of the longest force arrow, the looks and the slot registry. */
-export type FrameSetup = { readonly asset: Asset; readonly views: readonly View[]; readonly theme: Theme; readonly mm: number; readonly longestMm: number; readonly looks: FrameLooks; readonly slots: Slots };
+export type FrameSetup = { readonly asset: Asset; readonly views: readonly View[]; readonly theme: Theme; readonly mm: number; readonly longestMm: number; readonly looks: FrameLooks; readonly slots: Slots; readonly sizing?: GlyphSizing };
 
 /** 🦋 The {@link FrameData} of an evaluated instant and its analyses. */
 export function frameDataOf(setup: FrameSetup, state: EvaluatedState, analytic: Analytic): FrameData {
   const { asset, views, theme, mm, longestMm, looks, slots } = setup;
+  const sizing = setup.sizing ?? paperSizing(mm);
   const wantsForces = views.includes("forces");
   const wantsMoments = views.includes("moments");
   const locals = placementsOf(asset, Object.fromEntries(Object.entries(state.bones).map(([id, b]) => [id, b.frame])));
@@ -91,7 +92,7 @@ export function frameDataOf(setup: FrameSetup, state: EvaluatedState, analytic: 
         slots.add(`arrow-${id}`, { kind: "arrow", material: `glyph-arrow-${item.kind}`, detail: item.kind });
         const f = toNeutral([item.force.x, item.force.y, item.force.z]);
         const mag = magnitude(item.force);
-        put(arrowPatch(id, mag < 1e-9 ? null : toNeutral([item.at.x, item.at.y, item.at.z]), f, mag < 1e-9 ? 0 : arrowLengthMm(mag, max, longestMm), mm));
+        put(arrowPatch(id, mag < 1e-9 ? null : toNeutral([item.at.x, item.at.y, item.at.z]), f, mag < 1e-9 ? 0 : Math.min(arrowLengthMm(mag, max, longestMm) * mm, sizing.arrowCapM), sizing.unit));
       }
       slots.add("centre-of-mass", { kind: "mass", material: "glyph-mass", detail: "mass" });
       put({ "centre-of-mass": { translation: toNeutral([result.centreOfMass.x, result.centreOfMass.y, result.centreOfMass.z]), scale: [1, 1, 1] } });
@@ -104,7 +105,7 @@ export function frameDataOf(setup: FrameSetup, state: EvaluatedState, analytic: 
         slots.add(`arc-${id}`, { kind: "arc", material: `glyph-arc-${arc.kind}`, detail: arc.kind });
         const total = magnitude(arc.m);
         const shown = total >= Math.max(1e-9, max * MOMENT_MIN_SHOWN);
-        put(arcPatch(id, shown ? toNeutral([arc.at.x, arc.at.y, arc.at.z]) : null, pseudoToNeutral([arc.m.x, arc.m.y, arc.m.z]), shown ? momentRadiusMm(total, max) * mm : 0));
+        put(arcPatch(id, shown ? toNeutral([arc.at.x, arc.at.y, arc.at.z]) : null, pseudoToNeutral([arc.m.x, arc.m.y, arc.m.z]), shown ? Math.min(momentRadiusMm(total, max) * mm, sizing.arcCapM) : 0));
       }
     }
   }
@@ -113,7 +114,7 @@ export function frameDataOf(setup: FrameSetup, state: EvaluatedState, analytic: 
     if (glyphs.has(root)) continue;
     const s = slots.map.get(root)!;
     const id = root.slice(root.indexOf("-") + 1);
-    if (s.kind === "arrow") put(arrowPatch(id, null, [0, 1, 0], 0, mm));
+    if (s.kind === "arrow") put(arrowPatch(id, null, [0, 1, 0], 0, sizing.unit));
     else if (s.kind === "arc") put(arcPatch(id, null, [0, 1, 0], 0));
     else if (s.kind === "emitter") put(emitterPatch(id, null, [0, 1, 0]));
   }
@@ -121,10 +122,10 @@ export function frameDataOf(setup: FrameSetup, state: EvaluatedState, analytic: 
 }
 
 /** 🐝 The nodes and solids of the glyph of slot `root` placed by the patches of one instant (`glyphs` of its {@link FrameData}; a glyph without a patch is hidden), with the sizes of the scale `mm` (metres per paper millimetre). */
-export function glyphOf(root: Slug, slot: Slot, mm: number, glyphs: ReadonlyMap<Slug, TransformPatch>): { readonly nodes: Node[]; readonly solids: Solid[] } {
+export function glyphOf(root: Slug, slot: Slot, sizing: GlyphSizing, glyphs: ReadonlyMap<Slug, TransformPatch>): { readonly nodes: Node[]; readonly solids: Solid[] } {
   const id = root.slice(root.indexOf("-") + 1);
   const at: TransformPatch = glyphs.get(root) ?? { scale: HIDDEN };
-  const made = slot.kind === "arrow" ? arrowGlyph(id, slot.material, mm, at) : slot.kind === "arc" ? arcGlyph(id, slot.material, at) : slot.kind === "mass" ? massGlyph(slot.material, mm, at) : emitterGlyph(id.replace(/^emitter-/u, ""), slot.material, mm, at);
+  const made = slot.kind === "arrow" ? arrowGlyph(id, slot.material, sizing.unit, at) : slot.kind === "arc" ? arcGlyph(id, slot.material, at) : slot.kind === "mass" ? massGlyph(slot.material, sizing.massRadiusM, at) : emitterGlyph(id.replace(/^emitter-/u, ""), slot.material, sizing.plumeM, at);
   const nodes = made.nodes.map((node) => {
     const sub = glyphs.get(node.id);
     return sub === undefined || node.id === root ? node : { ...node, translation: sub.translation ?? node.translation, rotation: sub.rotation ?? node.rotation, scale: sub.scale ?? node.scale };

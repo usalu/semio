@@ -1,4 +1,5 @@
 import { availableParallelism } from "node:os";
+import {fleetMirrorTransportEnvironmentV1} from "../../⚡️caching/🚀️bootstrap/🛰️fleet-fetch/🪞️mirror/🟦️.ts";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 import { playwrightBrowsersPathV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 
@@ -39,6 +40,7 @@ export function repoToolCacheEnv(repoRoot: string, extra: NodeJS.ProcessEnv = pr
   const env = { ...extra };
   env.GOCACHE ??= repoCacheDirectory(repoRoot, "go");
   env.PLAYWRIGHT_BROWSERS_PATH ??= repoPlaywrightBrowsersPath(repoRoot);
+  for (const [name, value] of Object.entries(fleetMirrorTransportEnvironmentV1("playwright", env, {...env, SEMIO_WORKSPACE_ROOT: env.SEMIO_WORKSPACE_ROOT ?? repoRoot}))) env[name] ??= value;
   return env;
 }
 

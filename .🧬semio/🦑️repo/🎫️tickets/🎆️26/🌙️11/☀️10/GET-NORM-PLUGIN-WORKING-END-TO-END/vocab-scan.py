@@ -1,5 +1,9 @@
 import os,re,sys
-root="/home/deck/semio"
+import subprocess
+from pathlib import Path
+T = Path(__file__).resolve().parent
+R = Path(subprocess.check_output(['git', '-C', str(T), 'rev-parse', '--show-toplevel'], text=True).strip())
+root=str(R)
 roots=["✏️s","🧰️framework","🌎️hub","♻️mit-bestand","🏢️semio-tech","👴️leutwiler","🎓️teaching"]
 skip={"node_modules","target","dist","build","out","bin","obj","__pycache__","storybook-static","🎫️tickets","⚡️cache","🤖️generated","🗑️generated"}
 hi=[("SetSnapshot",re.compile("SetSnapshot")),("NoMutation",re.compile("NoMutation")),("CollectionMutation<...>",re.compile(r"CollectionMutation(<|::)"))]

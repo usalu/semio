@@ -1,7 +1,9 @@
 import {spawn} from "node:child_process";
-import {textV1,type LanguageCatalogV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
-import catalog from "./📖️texts/🔣️.json" with {type:"json"};
+import {defineCatalogV1,textV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
+import catalogDocument from "./📖️texts/🔣️.json" with {type:"json"};
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+
+const catalog=defineCatalogV1(catalogDocument);
 
 /** 📏️ The authored constants of the limiter, read from the schema they are written first in. */
 export const JOB_LIMIT_RULES_V1=schema.definitions.Rules.const;
@@ -52,12 +54,12 @@ export function jobBreachLearnedPeakV1(outcome:Pick<JobOutcomeV1,"kind"|"limitMe
 
 /** 🗣️ Renders the typed failure in one named language; no language is a default. */
 export function renderJobOutcomeV1(outcome:JobOutcomeV1,job:string,language:"en"|"de"):string|undefined{
- return outcome.kind==="memory-exceeded"?textV1(catalog as LanguageCatalogV1,"memory-exceeded",language,{job,limit:outcome.limitMegabytes,peak:outcome.peakMegabytes,enforcement:outcome.enforcement}):undefined;
+ return outcome.kind==="memory-exceeded"?textV1(catalog,"memory-exceeded",language,{job,limit:outcome.limitMegabytes,peak:outcome.peakMegabytes,enforcement:outcome.enforcement}):undefined;
 }
 
 /** 🗣️ Renders the notice that a hard limit fell back to the watchdog. */
 export function renderEnforcementFallbackV1(job:string,limitMegabytes:number,language:"en"|"de"):string{
- return textV1(catalog as LanguageCatalogV1,"enforcement-fallback",language,{job,limit:limitMegabytes});
+ return textV1(catalog,"enforcement-fallback",language,{job,limit:limitMegabytes});
 }
 
 /** 🏃️ What to run under a limit. */
@@ -94,8 +96,10 @@ export async function runLimitedJobV1(job:LimitedJobV1):Promise<JobOutcomeV1>{
 
 /** 🎭️ A limiter that never enforces anything: it reports a scripted peak and breach, so every consumer is tested without a kernel; a breach is raised when the scripted peak reaches the limit. */
 export function createFakeJobLimiterV1(script:Readonly<{peakMegabytes:number}>):JobLimiterV1{
- return Object.freeze({enforcement:"fake" as const,async create(policy){
+ const limiter:JobLimiterV1={enforcement:"fake",async create(policy){
   const callbacks:((breach:JobBreachV1)=>void)[]=[],over=script.peakMegabytes>=policy.memoryMegabytes;
-  return Object.freeze({enforcement:"fake" as const,async attach(){if(over)queueMicrotask(()=>callbacks.forEach(callback=>callback({peakMegabytes:script.peakMegabytes,limitMegabytes:policy.memoryMegabytes})));},onBreach(callback){callbacks.push(callback);},async usage(){return{rssMegabytes:script.peakMegabytes,peakMegabytes:script.peakMegabytes};},async release(){return{peakMegabytes:script.peakMegabytes,breached:over};}});
- }});
+  const handle:LimitHandleV1={enforcement:"fake",async attach(){if(over)queueMicrotask(()=>callbacks.forEach(callback=>callback({peakMegabytes:script.peakMegabytes,limitMegabytes:policy.memoryMegabytes})));},onBreach(callback){callbacks.push(callback);},async usage(){return{rssMegabytes:script.peakMegabytes,peakMegabytes:script.peakMegabytes};},async release(){return{peakMegabytes:script.peakMegabytes,breached:over};}};
+  return Object.freeze(handle);
+ }};
+ return Object.freeze(limiter);
 }

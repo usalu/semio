@@ -18,6 +18,8 @@ import {putCasObjectSyncV1} from "../🗃️store/🔁️sync/🟦️.ts";
 import {casLedgerShardV1,foldCasShardV1,openCasShardViewV1} from "../📒️ledger/🟦️.ts";
 import {isRepoErrorV1,renderRepoErrorV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import {casRootV1,createCasStoreV1} from "../🗃️store/🟦️.ts";
+import {casPinClosuresV1} from "../📂️areas/🟦️.ts";
+import {releaseCasPinsV1} from "../📌️pins/🟦️.ts";
 import {casUsageV1} from "../🗃️store/📏️usage/🟦️.ts";
 import {CAS_MESSAGES_V1,CAS_POLICY_V1,casTextV1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
 
@@ -180,6 +182,21 @@ test("loose areas count against the host cap: closures and memo files age out an
  expect(remaining).toEqual([records[2]!,records[3]!]);expect(result.byReason.area).toBe(3);
  const host=await collectCasV1({root,policy:{...policy,capBytes:4*MIB},now:()=>clock.value,areas:[{id:"graph-memo",directory:memo},{id:"build-input-closures",directory:closures}],externalBytes:2*MIB});
  expect(host.byReason.host).toBeGreaterThan(0);expect(statSync(bystander).isFile()).toBe(true);
+});
+
+test("build-input closures a live process pins survive an aged-out collection of their area, and fall to it once the pin is released",async()=>{
+ const root=scratch("pinned-closures"),closures=scratch("pinned-closure-files"),home=scratch("pinned-home"),day=86_400_000,environment={HOME:home,SEMIO_CAS_ROOT:root};
+ const digests=["a","b","c"].map(name=>sha("closure-"+name)),paths=digests.map(digest=>{const path=join(closures,digest+".json");writeFileSync(path,Buffer.alloc(1024,1));const at=new Date(Date.now()-9*day);utimesSync(path,at,at);return path;});
+ const policy:CasPolicyV1={...CAS_POLICY_V1,capBytes:100*MIB,minAgeMs:30_000,areas:[{id:"build-input-closures",capBytes:null,maxAgeMs:7*day}]},areas=[{id:"build-input-closures",directory:closures}];
+ const alive=()=>paths.map(path=>existsSync(path));
+ await casPinClosuresV1([digests[0]!],environment);
+ const pinned=await collectCasV1({root,policy,areas});
+ expect(alive()).toEqual([true,false,false]);expect(pinned.byReason.age).toBe(2);expect(pinned.totals.protectedBytes).toBe(1024);
+ await releaseCasPinsV1(root,"graph-closures."+process.pid);
+ const released=await collectCasV1({root,policy,areas});
+ expect(alive()).toEqual([false,false,false]);expect(released.byReason.age).toBe(1);
+ await casPinClosuresV1([digests[0]!],{});
+ expect(existsSync(join(root,"v1","p","graph-closures."+process.pid+".json"))).toBe(false);
 });
 
 test("a pin made while the collector runs protects the object at once", async()=>{

@@ -2,13 +2,14 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { LanguageTextErrorV1, bindCatalogV1 } from "../../📖️catalog/🟦️.ts";
 import { CargoLockRefusedV1 } from "../../../../🦀️cargo-workspace/🔒️lock/🟦️.ts";
-import { PROGRESS_LEVELS_V1, createCliSinkV1, emitProgressV1, progressV1, renderProgressV1, reportBoundaryErrorV1, reportRepoErrorV1, sayV1, withProgressSinkV1, type ProgressEventV1, type ProgressLevelV1 } from "../🟦️.ts";
+import { PROGRESS_LEVELS_V1, createCliSinkV1, emitProgressV1, faultMessageV1, progressV1, renderProgressV1, reportBoundaryErrorV1, reportRepoErrorV1, sayV1, withProgressSinkV1, type ProgressEventV1, type ProgressLevelV1 } from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import corpus from "./🔣️.json" with { type: "json" };
 import { isRepoErrorV1 } from "../../🚨️error/🟦️.ts";
 import { OwnedCommandFailure, isOwnedCommandFailureV1, ownedCommandExitCodeV1, runOwnedCommand } from "../../../../🎛️owned-execution/🟦️.ts";
 import outcomeSchema from "../../../../🎛️owned-execution/📪️outcome/🧬️schema/🔣️.json" with { type: "json" };
 import { refuseProcessV1 } from "../../../../📖️texts/🟦️.ts";
+import { ScriptProcessInterruptedV1 } from "../../../../🛑️interruption/🟦️.ts";
 
 type EventRow = Readonly<{ name: string; key: string; values: Readonly<Record<string, string | number>>; level: ProgressLevelV1; en: string; de: string }>;
 
@@ -147,3 +148,24 @@ for (const row of corpus.boundary as unknown as readonly BoundaryRow[]) {
     }
   });
 }
+
+test("a SIGINT-cancelled script exits 130 at the boundary without an internal error, while the same message from a plain fault stays an internal error", () => {
+  for (const language of ["en", "de"] as const) {
+    const lines: string[] = [];
+    const statuses: number[] = [];
+    const options = { environment: { SEMIO_LANGUAGE: language }, osLanguages: () => [], write: (line: string) => lines.push(line), setExitCode: (code: number) => statuses.push(code) };
+    reportBoundaryErrorV1(new ScriptProcessInterruptedV1(), options);
+    expect(lines).toEqual([]);
+    expect(statuses).toEqual([130]);
+    reportBoundaryErrorV1(new Error("Original Script process interrupted"), options);
+    expect(lines.join("\n")).toMatch(/Internal error|Interner Fehler/u);
+    expect(statuses).toEqual([130, 1]);
+    lines.length = 0;
+    statuses.length = 0;
+  }
+});
+
+test("an aggregated fault names every fault it holds, nested ones included", () => {
+  expect(faultMessageV1(new AggregateError([new Error("body"), new AggregateError([new Error("drain"), "cleanup"], "settle")], "failed"))).toBe("failed: body; settle: drain; cleanup");
+  expect(faultMessageV1(new Error("plain"))).toBe("plain");
+});

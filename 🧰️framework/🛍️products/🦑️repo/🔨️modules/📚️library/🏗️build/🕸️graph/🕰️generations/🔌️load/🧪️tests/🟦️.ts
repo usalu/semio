@@ -412,6 +412,115 @@ for(const row of fixture.attempts)test("shared to builder answers: "+row.id,asyn
  }finally{clean(dir);}
 },60000);
 
+test("a build input closure that no longer exists is a miss: the generation is invalidated, rebuilt cold and the load still answers the graph, and a closure that stays missing fails",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir);
+  const cold=(await loadGenerationGraphV1(mock.host)).graph as any,expand=mock.host.expand.bind(mock.host);let missing=2;
+  mock.host.expand=async(projects:Record<string,unknown>)=>{if(missing-->0)throw Object.assign(Error("ENOENT: no such file or directory, lstat 'build-input-closures/k.json'"),{code:"ENOENT",missingClosure:"k"});return expand(projects);};
+  mock.events.length=0;const healed=await loadGenerationGraphV1(mock.host);
+  expect(mock.events).toEqual(["shared","builder:wait","builder:held","builder:released","builder:wait","builder:held","builder:released"]);
+  expect(healed.stats.ownersReinferred).toBeGreaterThan(0);expect(shape(healed.graph)).toEqual(shape(cold));expect(shape(healed.graph)).toEqual(pythonGraph(dir));
+  mock.host.expand=async()=>{throw Object.assign(Error("ENOENT"),{code:"ENOENT",missingClosure:"k"});};
+  await expect(loadGenerationGraphV1(mock.host)).rejects.toThrow("closure-missing");
+  mock.host.expand=async()=>{throw Error("other failure");};
+  await expect(loadGenerationGraphV1(mock.host)).rejects.toThrow("other failure");
+ }finally{clean(dir);}
+},120000);
+
+const KEY_V1="d".repeat(64);
+const typed=(projects:string[])=>Object.assign(Error("closure-missing:"+KEY_V1+" build-input-closures leaf is not on this machine"),{code:"closure-missing",missingClosure:KEY_V1,missingNamespace:"build-input-closures",missingProjects:projects});
+
+test("a leaf that is absent in the request is settled by the host: the owners that name it are asked of the fleet first and derived again once, the graph completes and no failure is an ENOENT",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir);
+  const cold=(await loadGenerationGraphV1(mock.host)).graph as any,expand=mock.host.expand.bind(mock.host),settled:unknown[]=[],asked:any[]=[];let missing=2;
+  mock.host.expand=async(projects:Record<string,unknown>)=>{if(missing-->0)throw typed(["p1","p2","ghost"]);return expand(projects);};
+  (mock.host as any).settleClosure=async(input:unknown)=>{settled.push(input);return"re-derived";};
+  (mock.host as any).fleetRead=async(request:unknown)=>{asked.push(request);};
+  mock.events.length=0;const healed=await loadGenerationGraphV1(mock.host);
+  expect(settled).toEqual([{key:KEY_V1,namespace:"build-input-closures",projects:["p1","p2"]}]);
+  expect(asked.map(request=>[request.dirty,Object.keys(request.roots)])).toEqual([[["p1","p2"],["p1","p2"]],[["p1","p2"],["p1","p2"]]]);
+  expect(healed.stats.ownersReinferred).toBeGreaterThan(0);expect(shape(healed.graph)).toEqual(shape(cold));expect(shape(healed.graph)).toEqual(pythonGraph(dir));
+ }finally{clean(dir);}
+},120000);
+
+test("a leaf the host refetched needs no invalidation and no re-derivation: the graph is served again from the same generation",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir);
+  const cold=(await loadGenerationGraphV1(mock.host)).graph as any,expand=mock.host.expand.bind(mock.host);let missing=1;
+  mock.host.expand=async(projects:Record<string,unknown>)=>{if(missing-->0)throw typed(["p1"]);return expand(projects);};
+  (mock.host as any).settleClosure=async()=>"refetched";
+  const healed=await loadGenerationGraphV1(mock.host);
+  expect(healed.stats.ownersReinferred).toBe(0);expect(shape(healed.graph)).toEqual(shape(cold));
+ }finally{clean(dir);}
+},120000);
+
+test("a leaf that cannot be obtained or re-derived ends after the bounded rounds with the typed closure-missing failure, never an ENOENT",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir);
+  await loadGenerationGraphV1(mock.host);
+  mock.host.expand=async()=>{throw typed(["p1"]);};(mock.host as any).settleClosure=async()=>"re-derived";
+  const failure=await loadGenerationGraphV1(mock.host).catch(error=>error);
+  expect(failure.code).toBe("closure-missing");expect(failure.message).not.toContain("ENOENT");expect(failure.missingClosure).toBe(KEY_V1);
+  mock.host.expand=async()=>{throw Object.assign(Error("ENOENT: lstat 'build-input-closures/"+KEY_V1+".json'"),{code:"ENOENT"});};
+  const raw=await loadGenerationGraphV1(mock.host).catch(error=>error);
+  expect(raw.code).toBe("closure-missing");expect(raw.message).not.toContain("ENOENT:");
+ }finally{clean(dir);}
+},120000);
+
+test("a restored generation that names a leaf nobody holds is completed in the same request: the host settles each such leaf once and the generation is invalidated so exactly the records that name it are derived again",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir),settled:unknown[]=[];
+  (mock.host as any).exchange={upload:false,restore:async()=>({status:"restored",generation:1,owners:6,documents:3,bytes:10,ageSeconds:5,stale:1,closures:{named:3,sent:0,fetched:2,missing:[{key:KEY_V1,namespace:"build-input-closures",projects:["p1","p4"]}]}}),ahead:async()=>false,publish:async()=>({status:"current"}),leaf:async()=>undefined};
+  (mock.host as any).settleClosure=async(input:unknown)=>{settled.push(input);return"re-derived";};
+  const result=await loadGenerationGraphV1(mock.host);
+  expect(settled).toEqual([{key:KEY_V1,namespace:"build-input-closures",projects:["p1","p4"]}]);
+  expect(shape(result.graph)).toEqual(pythonGraph(dir));
+ }finally{clean(dir);}
+},120000);
+
+test("a missing closure leaf is recognised by its tag, by its message after a boundary dropped the properties, and through causes; other failures are not",async()=>{
+ const{missingClosureOfV1}=await import("../🟨️.mjs"),key="a".repeat(64);
+ expect(missingClosureOfV1(Object.assign(Error("x"),{missingClosure:key}))).toBe(key);
+ expect(missingClosureOfV1(Error("ENOENT: no such file or directory, lstat '/w/.cache/b/g/m/build-input-closures/"+key+".json'"))).toBe(key);
+ expect(missingClosureOfV1(Error("ENOENT: closure-missing:"+key+" build-lock-closures leaf is not on this machine"))).toBe(key);
+ expect(missingClosureOfV1(Object.assign(Error("wrapped"),{cause:Error("ENOENT: lstat 'build-lock-closures/"+key+".json'")}))).toBe(key);
+ expect(missingClosureOfV1(Error("EACCES: lstat 'build-input-closures/"+key+".json'"))).toBeUndefined();
+ expect(missingClosureOfV1(Error("Error"))).toBeUndefined();
+});
+
+test("a failure that lost its properties on the way (message only) still heals through the repair rounds",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir);
+  const cold=(await loadGenerationGraphV1(mock.host)).graph as any,expand=mock.host.expand.bind(mock.host);let stale=true;const repaired:string[]=[];
+  mock.host.expand=async(projects:Record<string,unknown>)=>{if(stale)throw Error("ENOENT: no such file or directory, lstat '/w/.cache/b/g/m/build-input-closures/"+"d".repeat(64)+".json'");return expand(projects);};
+  (mock.host as any).repairClosure=async(key:string)=>{repaired.push(key);stale=false;return 1;};
+  const healed=await loadGenerationGraphV1(mock.host);
+  expect(repaired).toEqual(["d".repeat(64)]);expect(shape(healed.graph)).toEqual(shape(cold));
+ }finally{clean(dir);}
+},120000);
+
+test("a closure leaf that stays missing after the cold rebuild is repaired at its source: the records that still name it are removed through the host, then the load answers; without a repair it fails after a bounded number of rebuilds",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(6));const mock=createMockHost(dir);
+  const cold=(await loadGenerationGraphV1(mock.host)).graph as any,expand=mock.host.expand.bind(mock.host);let stale=true;const repaired:string[]=[];
+  mock.host.expand=async(projects:Record<string,unknown>)=>{if(stale)throw Object.assign(Error("ENOENT: no such file or directory, lstat 'build-input-closures/"+"b".repeat(64)+".json'"),{code:"ENOENT",missingClosure:"b".repeat(64)});return expand(projects);};
+  (mock.host as any).repairClosure=async(key:string)=>{repaired.push(key);stale=false;return 1;};
+  mock.events.length=0;const healed=await loadGenerationGraphV1(mock.host);
+  expect(repaired).toEqual(["b".repeat(64)]);expect(shape(healed.graph)).toEqual(shape(cold));
+  stale=true;let calls=0;(mock.host as any).repairClosure=async()=>{calls++;return 0;};
+  await expect(loadGenerationGraphV1(mock.host)).rejects.toThrow("closure-missing");
+  expect(calls).toBe(2);
+ }finally{clean(dir);}
+},120000);
+
 test("a load returns its graph with the stats of what it verified and reinferred: a cold build computes owners, a warm load verifies facts and computes none",async()=>{
  const dir=scratch();
  try{

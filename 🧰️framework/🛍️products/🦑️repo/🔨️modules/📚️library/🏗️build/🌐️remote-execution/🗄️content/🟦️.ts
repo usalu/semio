@@ -16,7 +16,7 @@ export interface RemoteExecutionContentV1{
 export class RemoteExecutionContentErrorV1 extends Error{constructor(readonly code:number,message:string){super(message);}}
 
 /** ⚙️ How to reach the shared store over its HTTP protocol (`/<instance>/cas/<sha256>`, `/<instance>/ac/<sha256>`, bearer token). */
-export type RemoteExecutionHttpContentOptionsV1=Readonly<{endpoint:string;token?:string|undefined;concurrency?:number;timeoutSeconds?:number;retries?:number}>;
+export type RemoteExecutionHttpContentOptionsV1=Readonly<{endpoint:string;token?:string|undefined;fetch?:typeof fetch;concurrency?:number;timeoutSeconds?:number;retries?:number}>;
 
 const EMPTY="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",INSTANCE=/^[a-z0-9][a-z0-9._-]{0,63}$/u,TRANSIENT=new Set([408,429,500,502,503,504]);
 
@@ -36,7 +36,7 @@ export function httpRemoteExecutionContentV1(options:RemoteExecutionHttpContentO
   let last:unknown;
   for(let attempt=0;attempt<=(retry?retries:0);attempt++){
    try{
-    const response=await fetch(target,{method,...init,headers:{...headers(),...(init.headers as Record<string,string>|undefined)},signal:signal?AbortSignal.any([signal,AbortSignal.timeout(timeout)]):AbortSignal.timeout(timeout)});
+    const response=await(options.fetch??fetch)(target,{method,...init,headers:{...headers(),...(init.headers as Record<string,string>|undefined)},signal:signal?AbortSignal.any([signal,AbortSignal.timeout(timeout)]):AbortSignal.timeout(timeout)});
     if(TRANSIENT.has(response.status)&&attempt<retries){await response.body?.cancel();await runtimeSleepV1(50*2**attempt);continue;}
     return response;
    }catch(error){

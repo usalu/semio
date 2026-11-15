@@ -6,6 +6,7 @@ import { refuseDiskFullV1 } from "../../💽️disk/🟦️.ts";
 import { writeDiagnosticLineV1 } from "../../📤️output/🟦️.ts";
 import { isOwnedCommandFailureV1, ownedCommandExitCodeV1, type OwnedCommandFailure } from "../../../🎛️owned-execution/📪️outcome/🟦️.ts";
 import { refuseProcessV1 } from "../../../📖️texts/🟦️.ts";
+import { SCRIPT_INTERRUPTED_EXIT_CODE_V1, isScriptProcessInterruptedV1 } from "../../../🛑️interruption/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🏷️ The severity of one progress event; every level goes to the diagnostic stream, because the result stream carries only the command result. */
@@ -80,10 +81,13 @@ const isBilingualRefusalV1 = (value: unknown): value is BilingualRefusalV1 => {
   return typeof value === "object" && row !== null && row.name === "CargoLockRefused" && typeof row.texts === "object" && row.texts !== null;
 };
 
+/** 🪆️ The message of a fault with the messages of the faults it aggregates, so a settlement that failed for several reasons names each of them instead of only its own summary. */
+export const faultMessageV1 = (error: unknown): string => error instanceof AggregateError ? `${error.message}: ${error.errors.map(faultMessageV1).join("; ")}` : error instanceof Error ? error.message : String(error);
+
 /** 🧯️ Turns anything that is not a typed refusal into a refusal that keeps the original message and never the stack: an expired resource loan is classified as such, a full disk (`ENOSPC`, `database or disk is full`) becomes the typed disk refusal that names the partition, its free bytes and the command that frees space, and only the rest is an internal fault. */
 export const refuseInternalV1 = (error: unknown): RepoErrorV1 => error instanceof Error && error.name === "ResourceLoanDeadlineExhausted"
   ? refuseProcessV1("failed", "execution.loan-expired", { label: "repo", message: error.message }, { cause: error })
-  : refuseDiskFullV1(error) ?? refuseProcessV1("failed", "error.internal", { message: error instanceof Error ? error.message : String(error) }, { cause: error });
+  : refuseDiskFullV1(error) ?? refuseProcessV1("failed", "error.internal", { message: faultMessageV1(error) }, { cause: error });
 
 /** 🚪️ Reports a refusal at the CLI boundary: a `RepoErrorV1` is rendered in the resolved language to the standard error and sets the exit status of its class; a failed child command is rendered as a refusal and passes on its own exit status; anything else is not handled and answers `false`. */
 export function reportRepoErrorV1(error: unknown, options: RefusalOptionsV1 = {}): boolean {
@@ -103,7 +107,11 @@ export function reportRepoErrorV1(error: unknown, options: RefusalOptionsV1 = {}
   return true;
 }
 
-/** 🛡️ Reports any error at a CLI boundary: typed refusals render as themselves, every other error renders as the localized internal error with exit status 1, so no runtime source excerpt or stack ever reaches the terminal. */
+/** 🛡️ Reports any error at a CLI boundary: a user cancellation (SIGINT) of a script process is not a fault and exits with 130 silently, typed refusals render as themselves, every other error renders as the localized internal error with exit status 1, so no runtime source excerpt or stack ever reaches the terminal. */
 export function reportBoundaryErrorV1(error: unknown, options: RefusalOptionsV1 = {}): void {
+  if (isScriptProcessInterruptedV1(error)) {
+    (options.setExitCode ?? ((code) => { process.exitCode = code; }))(SCRIPT_INTERRUPTED_EXIT_CODE_V1);
+    return;
+  }
   if (!reportRepoErrorV1(error, options)) reportRepoErrorV1(refuseInternalV1(error), options);
 }

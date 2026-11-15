@@ -2,8 +2,8 @@
 
 Ventilation is explained once, season-neutral, in ``tutorial/energy/demand/2_ventilation``. This module plugs the
 winter into it with one short reminder: the airflow V · n (Lüftung Kapitel 2), c_Luft and Δθ = 20 K (Kapitel 3) give
-the ventilation loss Φ_V = V · n · c_Luft · Δθ ≈ 1500 W, which stands next to the transmission loss Φ_T ≈ 2300 W of Modul 2; a heat
-exchanger (Kapitel 5) leaves Φ_V · (1 − η_WRG) ≈ 300 W. Every shown quantity counts up from 0 and every result is
+the ventilation load Q̇_V = V · n · c_Luft · Δθ ≈ 1500 W, which stands next to the transmission load Q̇_T ≈ 2300 W of Modul 2; a heat
+exchanger (Kapitel 5) leaves Q̇_V · (1 − η_WRG) ≈ 300 W. Every shown quantity counts up from 0 and every result is
 read from the drawn bar.
 """
 
@@ -59,15 +59,14 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 
 # 🗣️ Timing follows German captions (reading floor in hold_for).
-set_vo_language("de")
 
 # 🏔️ Persistent topic title — written once on Beat1.
 TITLE_DE = "Modul 3: Lüftung im Winter"
@@ -79,7 +78,7 @@ def _din_ref(text: str):
 
     Same size, colour, opacity and corner as ``_din_ref`` in ``1_introduction/scene_1.py`` and
     ``2_conduction/scene_2.py`` so every module footnotes its norm identically. The winter ventilation loss is the
-    chain of DIN EN 12831-1 (Φ_V = V · n · c_Luft · Δθ).
+    chain of DIN EN 12831-1 (Q̇_V = V · n · c_Luft · Δθ).
     """
     ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
@@ -97,15 +96,17 @@ def _streams(streams, rt: float, *, speed: float = 0.8, waves: int = 3):
 
 #region Running example
 # 🧮 One house, one set of numbers. V, n and V̇ come from the Lüftung video (Kapitel 2), c_Luft and Δθ from Kapitel 3,
-# η_WRG from Kapitel 5; Φ_T is the transmission loss of Modul 2 (``6_final_calculation/scene_6.py``).
-RHO_AIR, CP_AIR = 1.2, 1005.0
-C_LUFT = round(RHO_AIR * CP_AIR / 3600.0, 2)
-V_NET, N_RATE, D_THETA = 440.0, 0.5, 20.0
-V_DOT = V_NET * N_RATE
-PHI_V = round(V_DOT * C_LUFT * D_THETA, -2)
-PHI_T = 2300.0
-ETA_WRG = 0.8
+# η_WRG from Kapitel 5; Q̇_T is the transmission load of Modul 2. All values come from the shared running example.
+_example = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📏️running-example.🐍️")
+C_LUFT = _example.C_LUFT_WH_M3_K
+V_NET, N_RATE, D_THETA = _example.V_NET_M3, _example.N_AIR_PER_H, _example.D_THETA_WINTER_K
+V_DOT = _example.V_DOT_M3_H
+Q_V_W = _example.PHI_V_W
+Q_T_W = _example.PHI_T_W
+ETA_WRG = _example.ETA_WRG
 VENT_BLUE = semio_color("secondary")
+UNIT_C = r"\frac{\mathrm{Wh}}{\mathrm{m^{3}\,K}}"
+UNIT_V_DOT = r"\frac{\mathrm{m^{3}}}{\mathrm{h}}"
 #endregion
 
 
@@ -139,24 +140,24 @@ def _segment(x: float, bottom, height, color: str, *, width: float = 1.3, opacit
 
 #region Beat1 – Ventilation in winter
 class Beat1_LueftungImWinter(Scene):
-    """🌬️ Φ_V = V · n · c_Luft · Δθ ≈ 1500 W next to Φ_T ≈ 2300 W, then ·(1 − η_WRG) ≈ 300 W."""
+    """🌬️ Q̇_V = V · n · c_Luft · Δθ ≈ 1500 W next to Q̇_T ≈ 2300 W, then ·(1 − η_WRG) ≈ 300 W."""
 
     NARRATION = [
         ("intro",
          "In winter the house loses heat on two paths: through the envelope and with the air that ventilation exchanges.",
          "Im Winter verliert das Haus Wärme auf zwei Wegen: durch die Hülle und mit der Luft, die die Lüftung austauscht."),
         ("formula",
-         "From the ventilation video we know the ventilation loss: Phi V equals V times n times c Luft times delta theta.",
-         "Aus dem Lüftungsvideo kennen wir den Lüftungsverlust: Phi-V gleich V mal n mal c-Luft mal Delta-Theta."),
+         r"The ventilation heat flow $\Phi$, as a load at the room, is $\dot{Q}_{\mathrm{V}} = V \cdot n \cdot c_{\mathrm{Luft}} \cdot \Delta\theta$.",
+         r"Der Lüftungswärmestrom $\Phi$, als Last am Raum, ist $\dot{Q}_{\mathrm{V}} = V \cdot n \cdot c_{\mathrm{Luft}} \cdot \Delta\theta$."),
         ("recap",
-         "A short reminder: 220 cubic metres per hour, 0.34 watt-hours per cubic metre and kelvin, and 20 kelvin in winter — about 1500 watts.",
-         "Kurz zur Erinnerung: 220 Kubikmeter pro Stunde, 0,34 Wh pro Kubikmeter und Kelvin und im Winter 20 Kelvin — rund 1500 Watt."),
+         r"A short reminder: $\dot{V} = V \cdot n = 220\,\mathrm{m^{3}/h}$, $c_{\mathrm{Luft}} = 0.34\,\mathrm{Wh/(m^{3}K)}$ and $\Delta\theta = 20\,\mathrm{K}$ in winter — about $1500\,\mathrm{W}$.",
+         r"Kurz zur Erinnerung: $\dot{V} = V \cdot n = 220\,\mathrm{m^{3}/h}$, $c_{\mathrm{Luft}} = 0{,}34\,\mathrm{Wh/(m^{3}K)}$ und im Winter $\Delta\theta = 20\,\mathrm{K}$ — rund $1500\,\mathrm{W}$."),
         ("bars",
-         "Next to the transmission loss of about 2300 watts from module 2, ventilation adds 1500 watts: the total loss is 3800 watts.",
-         "Neben dem Transmissionsverlust von rund 2300 Watt aus Modul 2 kommen 1500 Watt Lüftung hinzu: Der Gesamtverlust beträgt 3800 Watt."),
+         r"Next to the transmission load $\dot{Q}_{\mathrm{T}} \approx 2300\,\mathrm{W}$ from module 2, ventilation adds $\dot{Q}_{\mathrm{V}} \approx 1500\,\mathrm{W}$: together $3800\,\mathrm{W}$.",
+         r"Neben der Transmissionslast $\dot{Q}_{\mathrm{T}} \approx 2300\,\mathrm{W}$ aus Modul 2 kommt $\dot{Q}_{\mathrm{V}} \approx 1500\,\mathrm{W}$ Lüftung hinzu: zusammen $3800\,\mathrm{W}$."),
         ("wrg",
-         "With heat recovery of 0.8 from chapter 5 only 300 watts remain.",
-         "Mit Wärmerückgewinnung von 0,8 aus Kapitel 5 bleiben nur 300 Watt."),
+         r"With heat recovery $\eta_{\mathrm{WRG}} = 0.8$ from chapter 5 only $300\,\mathrm{W}$ remain.",
+         r"Mit Wärmerückgewinnung $\eta_{\mathrm{WRG}} = 0{,}8$ aus Kapitel 5 bleiben nur $300\,\mathrm{W}$."),
         ("link",
          "Purge or tilted window and the system comparison stay in the ventilation video.",
          "Stoß- oder Kipplüftung und der Anlagenvergleich bleiben im Lüftungsvideo."),
@@ -168,7 +169,7 @@ class Beat1_LueftungImWinter(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Ventilation loss in winter", "Lüftungsverlust im Winter"))
-        din = _din_ref("DIN EN 12831-1")
+        din = _din_ref(_references.cite("din-en-12831-1"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -212,7 +213,7 @@ class Beat1_LueftungImWinter(Scene):
         #region formula
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
         parts = [
-            ("phi", r"\Phi_{\mathrm{V}}", PASTEL_WHITE), (None, "=", None),
+            ("phi", r"\dot{Q}_{\mathrm{V}}", PASTEL_WHITE), (None, "=", None),
             ("v", "V", PASTEL_ORANGE), (None, r"\cdot", None), ("n", "n", PASTEL_CYAN), (None, r"\cdot", None),
             ("c", r"c_{\mathrm{Luft}}", PASTEL_GREEN), (None, r"\cdot", None), ("dt", r"\Delta\theta", PASTEL_YELLOW),
         ]
@@ -223,8 +224,8 @@ class Beat1_LueftungImWinter(Scene):
 
         #region factor cards
         specs = [
-            ("vn", r"V \cdot n", tr("Volume flow", "Volumenstrom"), V_DOT, 0, r"\mathrm{m^{3}/h}", PASTEL_ORANGE, tr("Vent. · Ch. 2", "Lüftung · Kap. 2"), ("v", "n")),
-            ("c", r"c_{\mathrm{Luft}}", tr("Heat capacity", "Wärmekapazität"), C_LUFT, 2, r"\mathrm{Wh/(m^{3}K)}", PASTEL_GREEN, tr("Vent. · Ch. 3", "Lüftung · Kap. 3"), ("c",)),
+            ("vn", r"\dot{V} = V \cdot n", tr("Volume flow", "Volumenstrom"), V_DOT, 0, UNIT_V_DOT, PASTEL_ORANGE, tr("Vent. · Ch. 2", "Lüftung · Kap. 2"), ("v", "n")),
+            ("c", r"c_{\mathrm{Luft}}", tr("Heat capacity", "Wärmekapazität"), C_LUFT, 2, UNIT_C, PASTEL_GREEN, tr("Vent. · Ch. 3", "Lüftung · Kap. 3"), ("c",)),
             ("dt", r"\Delta\theta", tr("Indoor − outdoor", "Innen − außen"), D_THETA, 0, r"\mathrm{K}", PASTEL_YELLOW, tr("Vent. · Ch. 3", "Lüftung · Kap. 3"), ("dt",)),
         ]
         trackers = {spec[0]: ValueTracker(0.0) for spec in specs}
@@ -257,9 +258,10 @@ class Beat1_LueftungImWinter(Scene):
         self.play(*[FadeOut(r) for r in rings], *breeze(0.2), run_time=0.2)
         k = ValueTracker(0.0)
         phi_read = math_readout(
-            lambda: rf"\Phi_{{\mathrm{{V}}}} = {label_number(V_NET)} \cdot {label_number(N_RATE, 1)} \cdot {label_number(C_LUFT, 2)} \cdot "
-                    rf"{label_number(D_THETA * k.get_value())} \approx {label_number(round(PHI_V * k.get_value(), -1))}\,\mathrm{{W}}",
-            np.array([2.6, -0.98, 0.0]), size=BODY_FONT_SIZE + 2, color=PASTEL_BLUE, edge="center")
+            lambda: rf"\dot{{Q}}_{{\mathrm{{V}}}} = {label_number(V_NET)}\,\mathrm{{m^{{3}}}} \cdot {label_number(N_RATE, 1)}\,\mathrm{{h^{{-1}}}} \cdot "
+                    rf"{label_number(C_LUFT, 2)}\,{UNIT_C} \cdot {label_number(D_THETA * k.get_value())}\,\mathrm{{K}}"
+                    rf" \approx {label_number(round(Q_V_W * k.get_value(), -1))}\,\mathrm{{W}}",
+            np.array([2.6, -0.98, 0.0]), size=LABEL_FONT_SIZE + 2, color=PASTEL_BLUE, edge="center")
         self.add(phi_read)
         ring = highlight_param(items, "phi", color=PASTEL_BLUE)
         self.play(k.animate.set_value(1.0), Create(ring), *breeze(1.2), run_time=1.2)
@@ -273,21 +275,21 @@ class Beat1_LueftungImWinter(Scene):
             mob.clear_updaters()
         self.play(FadeOut(phi_read), *[FadeOut(VGroup(c[0], c[1], c[2])) for c in cards.values()], *breeze(0.7), run_time=0.7)
 
-        unit, base_y, bar_x, col_x = 3.0 / (PHI_T + PHI_V), -1.2, -0.5, 0.35
+        unit, base_y, bar_x, col_x = 3.0 / (Q_T_W + Q_V_W), -1.2, -0.5, 0.35
         k_t, k_v, eta = ValueTracker(0.0), ValueTracker(0.0), ValueTracker(0.0)
-        cut = lambda: PHI_V * (1.0 - ETA_WRG * eta.get_value())
-        seg_t = _segment(bar_x, lambda: base_y, lambda: PHI_T * unit * k_t.get_value(), PASTEL_CYAN)
-        seg_v = _segment(bar_x, lambda: base_y + PHI_T * unit * k_t.get_value(),
+        cut = lambda: Q_V_W * (1.0 - ETA_WRG * eta.get_value())
+        seg_t = _segment(bar_x, lambda: base_y, lambda: Q_T_W * unit * k_t.get_value(), PASTEL_CYAN)
+        seg_v = _segment(bar_x, lambda: base_y + Q_T_W * unit * k_t.get_value(),
                          lambda: cut() * unit * k_v.get_value(), PASTEL_BLUE)
-        t_mid = lambda: [col_x, base_y + 0.5 * PHI_T * unit * k_t.get_value(), 0.0]
-        v_mid = lambda: [col_x, base_y + PHI_T * unit * k_t.get_value() + 0.5 * cut() * unit * k_v.get_value(), 0.0]
-        t_read = math_readout(lambda: rf"\Phi_{{\mathrm{{T}}}} \approx {label_number(round(PHI_T * k_t.get_value(), -1))}\,\mathrm{{W}}",
+        t_mid = lambda: [col_x, base_y + 0.5 * Q_T_W * unit * k_t.get_value(), 0.0]
+        v_mid = lambda: [col_x, base_y + Q_T_W * unit * k_t.get_value() + 0.5 * cut() * unit * k_v.get_value(), 0.0]
+        t_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{T}}}} \approx {label_number(round(Q_T_W * k_t.get_value(), -1))}\,\mathrm{{W}}",
                               t_mid, size=BODY_FONT_SIZE, color=PASTEL_CYAN, edge="left")
-        v_read = math_readout(lambda: rf"\Phi_{{\mathrm{{V}}}} \approx {label_number(round(cut() * k_v.get_value(), -1))}\,\mathrm{{W}}",
+        v_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V}}}} \approx {label_number(round(cut() * k_v.get_value(), -1))}\,\mathrm{{W}}",
                               v_mid, size=BODY_FONT_SIZE, color=PASTEL_BLUE, edge="left")
         total = math_readout(
-            lambda: rf"\Phi_{{\mathrm{{T}}}} + \Phi_{{\mathrm{{V}}}} \approx "
-                    rf"{label_number(round(PHI_T * k_t.get_value() + cut() * k_v.get_value(), -1))}\,\mathrm{{W}}",
+            lambda: rf"\dot{{Q}}_{{\mathrm{{T}}}} + \dot{{Q}}_{{\mathrm{{V}}}} \approx "
+                    rf"{label_number(round(Q_T_W * k_t.get_value() + cut() * k_v.get_value(), -1))}\,\mathrm{{W}}",
             [bar_x, 2.12, 0.0],
             size=BODY_FONT_SIZE, color=PASTEL_WHITE, edge="center")
         t_link = _backlink(tr("Module 2", "Modul 2"), color=PASTEL_CYAN)
@@ -300,7 +302,7 @@ class Beat1_LueftungImWinter(Scene):
         self.play(Create(sheet), FadeIn(wall_arrows), k_t.animate.set_value(1.0), *breeze(1.2), run_time=1.2)
         self.add(v_read)
         self.play(FadeOut(wall_arrows), k_v.animate.set_value(1.0), *breeze(1.2), run_time=1.2)
-        t_link.move_to([col_x + t_link.width / 2, base_y + PHI_T * unit / 2 - 0.45, 0.0])
+        t_link.move_to([col_x + t_link.width / 2, base_y + Q_T_W * unit / 2 - 0.45, 0.0])
         v_link.move_to([col_x + v_link.width / 2, v_mid()[1] - 0.45, 0.0])
         self.play(FadeIn(t_link), FadeIn(v_link), *breeze(0.4), run_time=0.4)
         hold_for(self, N, "bars", used=0.35 + 0.7 + 1.2 + 1.2 + 0.4, during=breeze)
@@ -315,11 +317,11 @@ class Beat1_LueftungImWinter(Scene):
                                 np.array([5.3, 1.25, 0.0]), size=BODY_FONT_SIZE, color=PASTEL_GREEN, edge="center")
         eta_link = _backlink(tr("Vent. · Ch. 5", "Lüftung · Kap. 5")).move_to([5.3, 0.75, 0])
         ghost = always_redraw(lambda: Rectangle(
-            width=1.3, height=max(0.004, PHI_V * ETA_WRG * eta.get_value() * unit), color=PASTEL_GREEN, stroke_width=1.6,
-            fill_opacity=0.0).move_to([bar_x, base_y + (PHI_T + PHI_V) * unit - PHI_V * ETA_WRG * eta.get_value() * unit / 2, 0.0])
+            width=1.3, height=max(0.004, Q_V_W * ETA_WRG * eta.get_value() * unit), color=PASTEL_GREEN, stroke_width=1.6,
+            fill_opacity=0.0).move_to([bar_x, base_y + (Q_T_W + Q_V_W) * unit - Q_V_W * ETA_WRG * eta.get_value() * unit / 2, 0.0])
             .set_stroke(opacity=1.0 if eta.get_value() > 0.001 else 0.0))
-        saved = math_readout(lambda: rf"-{label_number(round(PHI_V * ETA_WRG * eta.get_value(), -1))}\,\mathrm{{W}}",
-                             lambda: [col_x, base_y + (PHI_T + PHI_V) * unit - PHI_V * ETA_WRG * eta.get_value() * unit / 2, 0.0],
+        saved = math_readout(lambda: rf"-{label_number(round(Q_V_W * ETA_WRG * eta.get_value(), -1))}\,\mathrm{{W}}",
+                             lambda: [col_x, base_y + (Q_T_W + Q_V_W) * unit - Q_V_W * ETA_WRG * eta.get_value() * unit / 2, 0.0],
                              size=BODY_FONT_SIZE, color=PASTEL_GREEN, edge="left")
         row2, box2, items2 = math_panel(parts + [
             ("dot2", r"\cdot", None), ("eta", r"(1 - \eta_{\mathrm{WRG}})", PASTEL_GREEN)])

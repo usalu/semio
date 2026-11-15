@@ -2,7 +2,22 @@
   "enabledPlugins": {
     "mcp-apps@mcp-apps": true
   },
-  "hooks": {},
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"$CLAUDE_PROJECT_DIR/.cache/f/hints\";[ -d \"$d\" ]&&cat >\"$d/.h$$\"&&mv \"$d/.h$$\" \"$d/h$$-$(date +%s).hook\";exit 0",
+            "shell": "bash",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [],
     "ask": [],

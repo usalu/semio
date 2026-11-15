@@ -291,3 +291,15 @@ test("lease status and order diagnostics name modes and priorities in the chosen
     expect(word(statusSchema.definitions.Messages.const, "modeExclusive", "de")).toBe("exklusiv");
   } finally { db.close(); }
 });
+
+test("a counter that other progress lines interrupt keeps the start of its series, so the estimate follows the whole run and not the time since the last interruption",()=>{
+ const base=Date.now(),line=(resource:string,at:number)=>noteLeaseProgressV1({activity:{resource}},at),start=()=>leaseStandingSnapshotV1(false,base+700000).phaseStartedAtMs;
+ line("build:graph-phase:inference:0:1885",base);
+ line("build:graph-phase:verification:3:40",base+1000);
+ line("build:graph-phase:inference:158:1885",base+600000);
+ expect(start()).toBe(base);
+ line("build:graph-phase:inference:2:100",base+650000);
+ expect(start()).toBe(base+650000);
+ line("build:graph-phase:inference:0:1885",base+660000);
+ expect(start()).toBe(base+660000);
+});

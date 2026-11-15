@@ -10,7 +10,7 @@ fn permits(grant:RetainedCloneGrant,d:RetirementDemand)->bool{grant.maximum_item
 fn slot<T>(values:&mut Vec<T>,work:&mut RetainedWorkLedger,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,ValueError>{let target=if values.len()==values.capacity(){values.capacity().checked_mul(2).ok_or_else(||refusal("Flow trace capacity overflow"))?.max(16)}else{values.len()+1};if !work.reserve_vec(values,target,effect.actual()).map_err(refusal)?{return Ok(false);}work.vec_slot(values).map_err(refusal)}
 fn u32_arg(args:&FlowArguments,key:&str)->Result<u32,ValueError>{let span=args.get(key).ok_or_else(||refusal("Original trace argument absent"))?;let raw:[u8;4]=args.bytes(span).try_into().map_err(|_|refusal("Original trace integer extent changed"))?;Ok(u32::from_le_bytes(raw))}
 fn f64_arg(args:&FlowArguments,key:&str)->Result<f64,ValueError>{let span=args.get(key).ok_or_else(||refusal("Original trace argument absent"))?;let raw:[u8;8]=args.bytes(span).try_into().map_err(|_|refusal("Original trace scalar extent changed"))?;Ok(f64::from_le_bytes(raw))}
-fn fault_message(error:BitmapTraceError)->&'static str{match error{BitmapTraceError::Invalid(message)=>message,BitmapTraceError::Incomplete=>"Bitmap trace incomplete",BitmapTraceError::Cancelled=>"Bitmap trace cancelled"}}
+fn fault_message(error:BitmapTraceError)->&'static str{match error{BitmapTraceError::Invalid(message)=>message,BitmapTraceError::Refused(_)=>"Bitmap trace refused",BitmapTraceError::Incomplete=>"Bitmap trace incomplete",BitmapTraceError::Cancelled=>"Bitmap trace cancelled"}}
 #[derive(semio_framework_value::CanonicalJsonTree,semio_framework_value::RetireOwned)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[value(tag="kind",rename_all="camelCase")]

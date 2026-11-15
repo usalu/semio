@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "pid": 10926,
+  "phase": "running",
+  "source": "worktree",
+  "digest": null,
+  "reason": "",
+  "attempts": [
+    {
+      "source": "worktree",
+      "digest": null,
+      "outcome": "exit 0",
+      "atMs": 1794653829871
+    }
+  ]
+}

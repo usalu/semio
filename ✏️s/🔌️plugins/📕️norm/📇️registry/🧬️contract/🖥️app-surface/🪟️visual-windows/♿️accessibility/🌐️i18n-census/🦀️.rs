@@ -18,6 +18,7 @@ const SKIPPED_DIRS: [&str; 5] = ["🧪️tests", "🔮️oracles", "target", "no
 pub struct Finding {
     pub file: String,
     pub line: usize,
+    pub at: usize,
     pub rule: &'static str,
     pub en: String,
     pub de: String,
@@ -142,27 +143,30 @@ fn judge(file: &str, line: usize, en: &Arg, de: &Arg, census: &mut Census) {
     let (Arg::Literal(e), Arg::Literal(d)) = (en, de) else {
         let empty = |arg: &Arg| matches!(arg, Arg::Literal(t) if t.trim().is_empty());
         if empty(en) {
-            census.findings.push(Finding { file: file.into(), line, rule: "empty English", en: String::new(), de: String::new() });
+            census.findings.push(Finding { file: file.into(), line, at: 0, rule: "empty English", en: String::new(), de: String::new() });
         }
         if empty(de) {
-            census.findings.push(Finding { file: file.into(), line, rule: "empty German", en: String::new(), de: String::new() });
+            census.findings.push(Finding { file: file.into(), line, at: 0, rule: "empty German", en: String::new(), de: String::new() });
         }
         return;
     };
     census.literal_pairs += 1;
-    let rule = if e.trim().is_empty() { Some("empty English") } else if d.trim().is_empty() { Some("empty German") } else if e == d && e.len() >= 8 && english_words(e) { Some("German equals English") } else { None };
+    let rule = if e.trim().is_empty() && d.trim().is_empty() { None } else if e.trim().is_empty() { Some("empty English") } else if d.trim().is_empty() { Some("empty German") } else if e == d && e.len() >= 8 && english_words(e) { Some("German equals English") } else { None };
     if let Some(rule) = rule {
-        census.findings.push(Finding { file: file.into(), line, rule, en: e.clone(), de: d.clone() });
+        census.findings.push(Finding { file: file.into(), line, at: 0, rule, en: e.clone(), de: d.clone() });
     }
 }
 
 /// 🔍️ Census of one source text; `file` only labels findings.
 pub fn scan_source(file: &str, src: &str, census: &mut Census) {
+    let start = census.findings.len();
     for call in CALLS {
         for (at, _) in src.match_indices(call) {
             let args = split_args(src, at + call.len() - 1);
             if args.len() >= 2 {
+                let before = census.findings.len();
                 judge(file, line_of(src, at), &classify(&args[0]), &classify(&args[1]), census);
+                census.findings[before..].iter_mut().for_each(|finding| finding.at = at);
             }
         }
     }
@@ -182,9 +186,12 @@ pub fn scan_source(file: &str, src: &str, census: &mut Census) {
                 continue;
             }
             let Some(de_end) = literal_end(de_rest.as_bytes(), 0) else { continue };
+            let before = census.findings.len();
             judge(file, line_of(src, at), &classify(en_text), &classify(&de_rest[..de_end]), census);
+            census.findings[before..].iter_mut().for_each(|finding| finding.at = at);
         }
     }
+    census.findings[start..].sort_by_key(|finding| finding.at);
 }
 
 fn walk(dir: &Path, out: &mut Vec<PathBuf>) {

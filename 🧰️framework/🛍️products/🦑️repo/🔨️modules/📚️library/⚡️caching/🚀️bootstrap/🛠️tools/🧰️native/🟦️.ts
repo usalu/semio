@@ -13,8 +13,14 @@ import {
   nativeToolSpecV1,
   nativeToolPathV1,
   nativeToolUrlV1,
+  pythonInterpreterBinaryV1,
+  pythonInterpreterHomeV1,
+  pythonInterpreterIdentityV1,
+  pythonInterpreterUrlV1,
+  pythonInterpreterV1,
   toolchainHostV1,
   toolchainMessageV1,
+  type NativeDistributionV1,
   type NativeToolV1,
   type ToolchainHostV1,
 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
@@ -24,13 +30,16 @@ export type NativeToolPortV1 = Readonly<{
   platform: NodeJS.Platform;
   offline: boolean;
   environment: Readonly<Record<string, string | undefined>>;
-  fetch(url: string, signal: AbortSignal): Promise<Response>;
+  fetch(url: string, signal: AbortSignal, pin?: Readonly<{sha256: string; bytes: number}>): Promise<Response>;
   run(command: string, args: readonly string[], cwd: string, signal: AbortSignal): Promise<void>;
   capture(command: string, args: readonly string[], cwd: string, signal: AbortSignal): Promise<string>;
   log(text: string): void;
 }>;
 /** 🧾️ The receipt published next to an installed tool: who owns it, which pin it is and the digest of every executable. */
 export type NativeToolReceiptV1 = Readonly<{owner: string; identity: string; files: Readonly<Record<string, string>>}>;
+
+/** 🎯️ Everything one archive installation needs: what it is called, where it lives, where it comes from and which executable proves it. */
+type ArchiveSubjectV1 = Readonly<{tool: string; version: string; host: ToolchainHostV1; directory: string; binaryDirectory: string; url: string; row: NativeDistributionV1; versionArguments: readonly string[]; identity: string}>;
 
 const owner = "workspace:native-tools", ceiling = Object.freeze({entries: 200000, depth: 32});
 const digest = (path: string): string => createHash("sha256").update(readFileSync(path)).digest("hex");
@@ -52,9 +61,19 @@ function plainDirectoryChain(path: string, root: string): void {
   }
 }
 
+const toolSubject = (tool: NativeToolV1, host: ToolchainHostV1, toolsRoot: string): ArchiveSubjectV1 => ({tool, version: nativeToolSpecV1(tool).version, host, directory: nativeToolDirectoryV1(tool, host, toolsRoot), binaryDirectory: nativeToolBinaryDirectoryV1(tool, host, toolsRoot), url: nativeToolUrlV1(tool, host), row: nativeDistributionV1(tool, host), versionArguments: nativeToolSpecV1(tool).versionArguments, identity: nativeToolIdentityV1(tool, host)});
+const interpreterSubject = (series: string, host: ToolchainHostV1, toolsRoot: string): ArchiveSubjectV1 => {
+  const pin = pythonInterpreterV1(series, host);
+  return {tool: "cpython", version: pin.version, host, directory: pythonInterpreterHomeV1(series, host, toolsRoot), binaryDirectory: dirname(pythonInterpreterBinaryV1(series, host, toolsRoot)), url: pythonInterpreterUrlV1(series, host), row: pin.distribution, versionArguments: pin.versionArguments, identity: pythonInterpreterIdentityV1(series, host)};
+};
+
 /** 🔐️ Checks the executables of one installed pin against its receipt and returns the directory that holds them. */
 export function preparedNativeToolV1(tool: NativeToolV1, host: ToolchainHostV1, toolsRoot: string, environment: Readonly<Record<string, string | undefined>> = process.env): string {
-  const directory = nativeToolDirectoryV1(tool, host, toolsRoot), row = nativeDistributionV1(tool, host), version = nativeToolSpecV1(tool).version;
+  return preparedArchiveV1(toolSubject(tool, host, toolsRoot), toolsRoot, environment);
+}
+
+function preparedArchiveV1(subject: ArchiveSubjectV1, toolsRoot: string, environment: Readonly<Record<string, string | undefined>>): string {
+  const {directory, row, version, host, tool} = subject;
   plainDirectoryChain(directory, toolsRoot);
   let receipt: NativeToolReceiptV1;
   try {
@@ -64,12 +83,12 @@ export function preparedNativeToolV1(tool: NativeToolV1, host: ToolchainHostV1, 
     throw error;
   }
   const base = row.binaryDirectory === "." ? "" : row.binaryDirectory + "/";
-  if (receipt.owner !== owner || receipt.identity !== nativeToolIdentityV1(tool, host)) throw new Error(toolchainMessageV1("receipt", {tool, version, path: ".toolchain.json"}, environment));
+  if (receipt.owner !== owner || receipt.identity !== subject.identity) throw new Error(toolchainMessageV1("receipt", {tool, version, path: ".toolchain.json"}, environment));
   for (const name of row.binaries) {
     const path = join(directory, ...(base + name).split("/")), recorded = receipt.files[base + name];
     if (recorded === undefined || !regular(path) || digest(path) !== recorded) throw new Error(toolchainMessageV1("receipt", {tool, version, path: base + name}, environment));
   }
-  return nativeToolBinaryDirectoryV1(tool, host, toolsRoot);
+  return subject.binaryDirectory;
 }
 
 /** 🧪️ Walks an extracted tree under a finite ceiling and refuses a link that leaves it. */
@@ -93,12 +112,12 @@ export function verifyExtractedTreeV1(root: string): number {
 }
 
 /** 📥️ Downloads one pinned archive into a private directory under its pinned size and SHA-256 and returns its path. */
-async function download(tool: NativeToolV1, host: ToolchainHostV1, directory: string, port: NativeToolPortV1, signal: AbortSignal): Promise<string> {
-  const row = nativeDistributionV1(tool, host), version = nativeToolSpecV1(tool).version, values = {tool, version, host, bytes: row.bytes};
+async function download(subject: ArchiveSubjectV1, directory: string, port: NativeToolPortV1, signal: AbortSignal): Promise<string> {
+  const {row, version, tool, host} = subject, values = {tool, version, host, bytes: row.bytes};
   if (port.offline) throw new Error(toolchainMessageV1("offline", values, port.environment));
   port.log(toolchainMessageV1("download", values, port.environment));
-  const response = await port.fetch(nativeToolUrlV1(tool, host), signal);
-  if (!response.ok || !response.body) throw new Error(toolchainMessageV1("http", {status: response.status, url: nativeToolUrlV1(tool, host)}, port.environment));
+  const response = await port.fetch(subject.url, signal, {sha256: row.sha256, bytes: row.bytes});
+  if (!response.ok || !response.body) throw new Error(toolchainMessageV1("http", {status: response.status, url: subject.url}, port.environment));
   const archive = join(directory, row.archive), file = await open(archive, "wx"), hash = createHash("sha256"), reader = response.body.getReader();
   let bytes = 0, reported = Date.now();
   try {
@@ -194,18 +213,22 @@ with zipfile.ZipFile(archive) as archive_file:
 
 /** 📦️ Provisions one pinned tool: download under the pinned checksum, unpack with the program every operating system ships, verify the tree, record the executables in a receipt and publish the directory by one rename; a second call finds the receipt and does nothing. */
 export async function prepareNativeToolV1(tool: NativeToolV1, host: ToolchainHostV1, toolsRoot: string, port: NativeToolPortV1, signal: AbortSignal): Promise<string> {
-  const directory = nativeToolDirectoryV1(tool, host, toolsRoot), parent = dirname(directory), row = nativeDistributionV1(tool, host), version = nativeToolSpecV1(tool).version, values = {tool, version, host};
+  return prepareArchiveV1(toolSubject(tool, host, toolsRoot), toolsRoot, port, signal);
+}
+
+async function prepareArchiveV1(subject: ArchiveSubjectV1, toolsRoot: string, port: NativeToolPortV1, signal: AbortSignal): Promise<string> {
+  const {directory, row, version, host, tool} = subject, parent = dirname(directory), values = {tool, version, host};
   plainDirectoryChain(parent, toolsRoot);
   try {
     lstatSync(directory);
-    return preparedNativeToolV1(tool, host, toolsRoot, port.environment);
+    return preparedArchiveV1(subject, toolsRoot, port.environment);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
   mkdirSync(parent, {recursive: true});
   const temporary = mkdtempSync(join(parent, ".prepare-"));
   try {
-    const archive = await download(tool, host, temporary, port, signal), extracted = join(temporary, "extracted");
+    const archive = await download(subject, temporary, port, signal), extracted = join(temporary, "extracted");
     mkdirSync(extracted);
     const extractors: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>> = NATIVE_TOOLCHAINS_V1.extract;
     const [program, ...template] = extractors[row.format]![port.platform]!;
@@ -235,9 +258,9 @@ export async function prepareNativeToolV1(tool: NativeToolV1, host: ToolchainHos
       if (port.platform !== "win32") chmodSync(path, 0o755);
       files[base + name] = digest(path);
     }
-    const main = join(payload, ...(base + row.binaries[0]!).split("/")), reported = await port.capture(main, [...nativeToolSpecV1(tool).versionArguments], temporary, signal);
-    if (!reported.includes(version)) throw new Error(toolchainMessageV1("pin", {tool, actual: reported.trim().split(/\r?\n/u)[0] ?? "", expected: version, source: nativeToolSpecV1(tool).versionArguments.join(" ")}, port.environment));
-    writeFileSync(join(payload, ".toolchain.json"), JSON.stringify({owner, identity: nativeToolIdentityV1(tool, host), files}) + "\n");
+    const main = join(payload, ...(base + row.binaries[0]!).split("/")), reported = await port.capture(main, [...subject.versionArguments], temporary, signal);
+    if (!reported.includes(version)) throw new Error(toolchainMessageV1("pin", {tool, actual: reported.trim().split(/\r?\n/u)[0] ?? "", expected: version, source: subject.versionArguments.join(" ")}, port.environment));
+    writeFileSync(join(payload, ".toolchain.json"), JSON.stringify({owner, identity: subject.identity, files}) + "\n");
     signal.throwIfAborted();
     try {
       renameSync(payload, directory);
@@ -249,10 +272,27 @@ export async function prepareNativeToolV1(tool: NativeToolV1, host: ToolchainHos
         throw error;
       }
     }
-    return preparedNativeToolV1(tool, host, toolsRoot, port.environment);
+    return preparedArchiveV1(subject, toolsRoot, port.environment);
   } finally {
     rmSync(temporary, {recursive: true, force: true});
   }
+}
+
+/** 🐍️ Provisions one pinned CPython of the running host the way a tool is provisioned (fleet tier first, checksum-gated, receipt, one rename) into the directory uv recognises as a managed installation, and returns its executable. */
+export async function prepareInterpreterV1(series: string, host: ToolchainHostV1, toolsRoot: string, port: NativeToolPortV1, signal: AbortSignal): Promise<string> {
+  const subject = interpreterSubject(series, host, toolsRoot);
+  await prepareArchiveV1(subject, toolsRoot, port, signal);
+  return pythonInterpreterBinaryV1(series, host, toolsRoot);
+}
+
+/** 🐍️ Provisions the pinned CPython of every named series in order (or only finds them) and returns the executable of each; a cancelled signal stops between and inside downloads. */
+export async function provisionInterpretersV1(series: readonly string[], toolsRoot: string, port: NativeToolPortV1, signal: AbortSignal, provision: boolean = true, host: ToolchainHostV1 = toolchainHostV1()): Promise<Readonly<Record<string, string>>> {
+  const binaries: Record<string, string> = {};
+  for (const name of series) {
+    signal.throwIfAborted();
+    binaries[name] = provision ? await prepareInterpreterV1(name, host, toolsRoot, port, signal) : (preparedArchiveV1(interpreterSubject(name, host, toolsRoot), toolsRoot, port.environment), pythonInterpreterBinaryV1(name, host, toolsRoot));
+  }
+  return Object.freeze(binaries);
 }
 
 /** 🧭️ Puts the pinned tools first on the `PATH` of an environment, under the spelling of the variable that environment already uses. */

@@ -1,0 +1,17 @@
+[
+  {
+    "attempt": 1,
+    "start": "2026-11-14T16:10:01Z",
+    "end": "2026-11-14T16:30:09Z",
+    "wall_s": 1208.666,
+    "log": "/Users/ueli/native-bootstrap-round-2.log",
+    "wrapper_rc": 0,
+    "native_rc": 1,
+    "hard_stop": null,
+    "peak_owned_rss_kib": 3678016,
+    "sample_count": 40,
+    "fleet_refusal": false,
+    "retry_wait_s": 0,
+    "marker_exists": false
+  }
+]

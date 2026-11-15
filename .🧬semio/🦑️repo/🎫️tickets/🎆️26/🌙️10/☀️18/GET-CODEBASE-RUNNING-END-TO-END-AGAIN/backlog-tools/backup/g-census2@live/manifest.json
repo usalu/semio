@@ -1,0 +1,112 @@
+{
+ "🧰️framework/📦️packages/🟦️typescript/🧪️tests/🔌️sdk-surface/🟦️.ts": {
+  "file": "f000",
+  "before": "c9a3eb5c61c478e0d127805d7764ba26368b0cd278e6fd59791e888fe7515cad",
+  "after": "c3b21f8b77d70ed1db757dbf08818c2d0131650db7b7da99a7887522f70d2042"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts": {
+  "file": "f001",
+  "before": "f817242081ca983ffcbbaaa0cb369683a9eabebce2386cfdc4d6d34af84bed81",
+  "after": "f759f31b7ae98ae8155ea4861f727364b02c3b5e58a3c67984fb0cae06fd201f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts": {
+  "file": "f002",
+  "before": "8a41774ee3fdc2ba3c42c68b141c3d0a4397358bae4de72d27814a81f0f55200",
+  "after": "d78cfc8e7ca97a60f97f3ebf5964c0d6df173e85029c2ab205eae8ce06b12d14"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🎛️execution/🟦️.ts": {
+  "file": "f003",
+  "before": "3bdb5372336751f780c75a4b3f3037ff078e37b13923b0d2be626b3d9f8128ca",
+  "after": "2291446035a5547ff9ff6008c783f2f6b71b48d58173934c12ce21f33f9c7897"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "1cabdd530f7150a84b0bcb6db5cb4785490a64615f16d45dcd4364a394d746be"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "68ce754e01e6dbd805c0491a068c6cfb25dc591479375c6f2582c1dc5095158b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": null,
+  "before": null,
+  "after": "073df13643ffc6829ae65ce46d062a4f8b143c444aba5c946297d80806d10473"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🧪️tests/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "4eeda949f028730454017000d11a6e893a497971c0be03fc73b28ec7d53db228"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "a0f10324355c68c23160c84ead9bf2087cf87af0219aaa123b7574e6c937bdef"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🧪️tests/🧱️capped-files/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "25b6abdc84a8274f1775643a86c75f90d3b8bff9216abf5494d2faa41b3894d0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "632a36aa149a37e96e720661f8afb1dfab96862d6a7ef4155e7b64b3e6e0900d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🏃️run/🟦️.ts": {
+  "file": "f011",
+  "before": "ad1d693151e31f04d0e2b4d9d36c5881b985ce75362964acc0b9212b43f7d7cb",
+  "after": "319b84a16f32535af0119ec807a46a2472eaefc24487015e218bfb8a25e7dfa3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/📁️files/🟦️.ts": {
+  "file": "f012",
+  "before": "d2cb99442207c04545f44f26964637983cb08fba7d415a689ebc0c3e306e712f",
+  "after": "005ac90b1960e6093b90332d165181218d11e5f677cc01e7dc3a0e6cb0e3f9d3"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "ec417cdc156e950937bd12d691c51f62bbc6ff1e5644a69bc76098b92c76343f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🧪️tests/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "363bc0bbe28fa67732d6aacdc7649de5113094677b07cdd3dfbf46f0984c5e5c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "5938f1e61d61f6bebf418d7696bcdb792f5c34363bfbbab086498aba96285525"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🧪️tests/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "335de27fb0751dc89c761ab3aec5d4d822150e892338dee6c98ffc571dbcb981"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "ba93acf4a81414f38af75d95559a985fcdab4722435075c92fd90f251cc90130"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts": {
+  "file": "f018",
+  "before": "f7d23f4a70964f4e2bf29ea42d42d3a3a4142eaa434fa1dacc042a12f91523ba",
+  "after": "f9925b49b076c7f307d7ce1e95af711bbafe01b271a0b09099206447e4358f61"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "f019",
+  "before": "5838235e5dfe52baee9bea794a2366bde526c17794eed6235c75e9007d1b2d22",
+  "after": "8f52cce10a308e25ffa07dbafbea2aefe24f973e6d3f88d77f59ee9ed1a099ad"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts": {
+  "file": "f020",
+  "before": "d39e79b47fe4791e7e34d01900be5d860141ace21bec4f7f454f72067c0fbea9",
+  "after": "7a02529757c27eae787f59e01fbb0facabe41e7686b8fb1b299f33794e4c5cf5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🎓️course-inputs/🟦️.ts": {
+  "file": "f021",
+  "before": "4c57325f2c7305eac004217eb6076bcf25a3f4e90dd876da79c5ea265c5b5201",
+  "after": "5895afe70b763a16f640cdcc0ca3f9b2552c455625461894f6eaa51872102369"
+ }
+}

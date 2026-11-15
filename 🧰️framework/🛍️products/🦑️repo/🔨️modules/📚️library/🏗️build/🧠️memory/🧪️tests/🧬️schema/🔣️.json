@@ -82,7 +82,10 @@
               "waiting",
               "serial",
               "resumed",
-              "learning"
+              "learning",
+              "admittedAlone",
+              "refused",
+              "fleet"
             ]
           },
           "fields": {

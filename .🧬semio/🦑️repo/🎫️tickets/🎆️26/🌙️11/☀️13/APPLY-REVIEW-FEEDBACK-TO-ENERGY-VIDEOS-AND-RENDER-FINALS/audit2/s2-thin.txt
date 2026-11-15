@@ -1,0 +1,518 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:27: "en": "Assign each building its specific cooling load in W/m² (the heat to remove on a hot design day, VDI 2078:2015-06) and its annual cooling demand in kWh/(m²·a) (the useful cooling per year to keep about 26 °C), both per m² of floor area. Allow about five minutes: compare every item, check units
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:28: "de": "Ordne jedem Gebäude seine spezifische Kühllast in W/m² (die an einem heißen Auslegungstag abzuführende Wärme, VDI 2078:2015-06) und seinen Jahres-Kühlbedarf in kWh/(m²·a) (die Nutzkälte pro Jahr, um etwa 26 °C zu halten) zu, beide je m² Fläche. Plane etwa fünf Minuten ein: Vergleiche alle Bei
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:94: "en": "About 6 W/m² and 2 kWh/(m²·a): shading and low internal gains keep it comfortable without a chiller; the Passive House Institute limits overheating above 25 °C to 10% of the hours.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:95: "de": "Rund 6 W/m² und 2 kWh/(m²·a): Verschattung und geringe innere Lasten halten es ohne Kältemaschine behaglich; das Passivhaus Institut begrenzt Überhitzung über 25 °C auf 10 % der Stunden."
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:207: "en": "About 50 W/m² and 25 kWh/(m²·a): the sun heats the roof surface to 60–70 °C (sol-air temperature, VDI 2078:2015-06), and the heat passes the uninsulated roof almost unhindered.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:208: "de": "Rund 50 W/m² und 25 kWh/(m²·a): die Sonne heizt die Dachhaut auf 60–70 °C auf (Sonnenlufttemperatur, VDI 2078:2015-06), und die Wärme gelangt fast ungehindert durch das ungedämmte Dach."
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:364: Text(tr(f"Extract air {unit_text('26', '°C')}", "Abluft 26 °C"), font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to([5.0, y_exh - 0.62, 0.0]),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:98: # the outer wall of the Heating example house (Heating Modul 2: 89 m² · 0,20 and 209 m² · 0,24 W/(m²·K)).
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:219: r"$U$ is the thermal transmittance in $\mathrm{W/(m^2K)}$. On the design day a lower $U$ cuts the inward heat flow.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:220: r"$U$ ist der Wärmedurchgangskoeffizient in $\mathrm{W/(m^2K)}$. Am Auslegungstag senkt ein niedrigeres $U$ den Wärmestrom nach innen."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:356: """🌬️ Bridge beat: a short reminder of the summer air load from the Lüftung video (chapter 3: 450 W sensible +
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:357: 810 W latent) stacked next to the opaque transmission load, then η_WRG (chapter 5) and the window strategies (chapter 4).
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:367: r"From ventilation: $220\,\mathrm{m^3/h}\cdot 0.34\,\mathrm{Wh/(m^3K)}\cdot 6\,\mathrm{K}$ adds about $450\,\mathrm{W}$ of sensible heat through the now-reversed openings.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:368: r"Kurz zur Erinnerung aus dem Lüftungsvideo: $220\,\mathrm{m^3/h}\cdot 0{,}34\,\mathrm{Wh/(m^3K)}\cdot 6\,\mathrm{K}$ bringen rund $450\,\mathrm{W}$ sensible Wärme herein."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:92: # the factors of ``☀️solar-radiation`` Beat 5 on the 30 m² of glazing of the running example house; the room is the
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:93: # running example's summer indoor temperature, the supply air leaves the coil at 18 °C.
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:305: Text(tr("Air density at 20 °C", "Luftdichte bei 20 °C"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:742: "en": "High-bay warehouse without workplaces (10 m high)",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:743: "de": "Hochregallager ohne Arbeitsplätze (10 m hoch)"
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:754: "en": "About 0.13 1/h: only the building's own emissions need diluting, 0.35 l/(s·m²) for very low-polluting buildings (EN 16798-1) = 1.26 m³/(h·m²) spread over 10 m of height.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:755: "de": "Rund 0,13 1/h: nur die Emissionen des Gebäudes selbst sind zu verdünnen, 0,35 l/(s·m²) für sehr schadstoffarme Gebäude (EN 16798-1) = 1,26 m³/(h·m²) verteilt auf 10 m Höhe."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:795: "en": "About 0.5 1/h: DIN 1946-6 requires −0.001·A² + 1.15·A + 20 = 125 m³/h for a 100 m² apartment with 250 m³ of air.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:796: "de": "Rund 0,5 1/h: DIN 1946-6 verlangt −0,001·A² + 1,15·A + 20 = 125 m³/h für eine 100-m²-Wohnung mit 250 m³ Luft."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:803: "en": "Single sports hall (15 × 27 m, 5.5 m high) with 30 athletes",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:804: "de": "Einfeldsporthalle (15 × 27 m, 5,5 m hoch) mit 30 Sporttreibenden"
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:816: "en": "About 0.8 1/h: 60 m³/h per athlete (DIN 18032-1) × 30 = 1,800 m³/h in 2,230 m³ – a large volume for few people.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:817: "de": "Rund 0,8 1/h: 60 m³/h je sporttreibender Person (DIN 18032-1) × 30 = 1.800 m³/h in 2.230 m³ – viel Volumen für wenige Menschen."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:824: "en": "Single office (12 m², one person)",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:825: "de": "Einzelbüro (12 m², eine Person)"
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:836: "en": "About 1.5 1/h: category II of EN 16798-1 requires 7 l/s per person + 0.7 l/(s·m²), i.e. 55 m³/h for 36 m³ of room.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:837: "de": "Rund 1,5 1/h: Kategorie II der EN 16798-1 verlangt 7 l/s je Person + 0,7 l/(s·m²), also 55 m³/h für 36 m³ Raum."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:856: "en": "About 2.4 1/h: the garage ordinances of the German states require 6 m³/h of exhaust air per m² for garages with little traffic; at 2.5 m height that is 2.4 air changes.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:857: "de": "Rund 2,4 1/h: die Garagenverordnungen der Länder verlangen 6 m³/h Abluft je m² für Garagen mit geringem Verkehr; bei 2,5 m Höhe sind das 2,4 Luftwechsel."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:877: "en": "About 3.5 1/h: EN 16798-1 category II with one seat per m² (27.7 m³/(h·m²)) spread over about 8 m of room height.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:878: "de": "Rund 3,5 1/h: EN 16798-1 Kategorie II mit einem Sitz je m² (27,7 m³/(h·m²)) verteilt auf rund 8 m Raumhöhe."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:885: "en": "Classroom with 28 pupils (60 m², 3 m high)",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:886: "de": "Klassenzimmer mit 28 Schulkindern (60 m², 3 m hoch)"
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:898: "en": "About 4.8 1/h: EN 16798-1 category II gives 28 × 25 m³/h + 60 m² × 2.5 m³/(h·m²) ≈ 860 m³/h for 180 m³, which is why window ventilation alone struggles.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:899: "de": "Rund 4,8 1/h: EN 16798-1 Kategorie II ergibt 28 × 25 m³/h + 60 m² × 2,5 m³/(h·m²) ≈ 860 m³/h für 180 m³, deshalb kommt Fensterlüftung allein kaum hinterher."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:915: "en": "About 6.4 1/h: EN 16798-1 category II with 1.5 m² per guest and 3 m room height.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:916: "de": "Rund 6,4 1/h: EN 16798-1 Kategorie II mit 1,5 m² je Gast und 3 m Raumhöhe."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:931: "en": "About 8.3 1/h: DIN 1946-7 requires at least 25 m³/h of outdoor air per m² of floor; at 3 m height that is 8.3 air changes.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:932: "de": "Rund 8,3 1/h: DIN 1946-7 fordert mindestens 25 m³/h Außenluft je m² Grundfläche; bei 3 m Höhe sind das 8,3 Luftwechsel."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:951: "en": "About 20 1/h: DIN 1946-4 requires 60 m³/(h·m²) of filtered supply air, 20 air changes at 3 m height (and at least 1,200 m³/h of outdoor air).",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:952: "de": "Rund 20 1/h: DIN 1946-4 verlangt 60 m³/(h·m²) gefilterte Zuluft, also 20 Luftwechsel bei 3 m Höhe (und mindestens 1.200 m³/h Außenluft)."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:1023: "en": "About 540 1/h: the whole ceiling blows filtered air downwards at about 0.45 m/s (ISO 14644-4: 0.2–0.5 m/s); 0.45 m/s × 3,600 s ÷ 3 m = 540.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:1024: "de": "Rund 540 1/h: die ganze Decke bläst gefilterte Luft mit etwa 0,45 m/s nach unten (ISO 14644-4: 0,2–0,5 m/s); 0,45 m/s × 3.600 s ÷ 3 m = 540."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:29: | `c_Luft = ρ·c_p / 3600 ≈ 0,34 Wh/(m³·K)` (ρ ≈ 1,2 kg/m³ at 20 °C, 1,27 kg/m³ at 5 °C; the norm uses the fixed 0,34) | Kapitel 3 | winter factor | summer factor |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:30: | `Δθ` (signed), `Δx` | Kapitel 3 | `Δθ = 20 K`, latent part by convention not counted | `Δθ = 6 K`, `Δx = 4,5 g/kg` |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:46: V_e = 580 m³ → V ≈ 440 m³ (0,76·V_e)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:47: n = 0,5 h⁻¹ → V̇ = 220 m³/h = 0,061 m³/s (= q_v,R)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:49: Winter: Δθ = 20 K → Q̇_V,sens ≈ 1500 W   → mit WRG (η = 0,8) ≈ 300 W
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:50: Δx = 4,3 g/kg → Q̇_V,lat ≈ 770 W (Plattentauscher gewinnt nichts zurück;
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:52: Sommer: Δθ =  6 K → Q̇_V,sens ≈  450 W   → mit WRG (η = 0,8) ≈  90 W
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:53: Δx = 4,5 g/kg → Q̇_V,lat ≈ 810 W (Plattentauscher gewinnt nichts zurück)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:54: Summe:  Q̇_V = Q̇_V,sens + Q̇_V,lat: Winter 2270 W, Sommer 1260 W
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:55: mit WRG: Winter 300 W + 770 W = 1070 W, Sommer 90 W + 810 W = 900 W
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:56: Kanal:  v_m = 2,5 m/s → A ≈ 0,0244 m² → r ≈ 0,088 m
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:106: | 3 | `Beat1_Luftwaerme` | 1 m³ Luft, `c_Luft ≈ 0,34 Wh/(m³·K)` |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:111: | 4 | `Beat2_StossOderKipp` | 340 Wh gegen ≈ 830 Wh; „8 %“ = 5 min / 60 min bei `n ≈ 1 h⁻¹` (Maas 1995, Kap. 8: 0,56 … 1,38 h⁻¹) |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:117: | 5 | `Beat2_Waermerueckgewinnung` | `η_WRG`, Winter 1500 → 300 W, Sommer Kälterückgewinnung |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:6: This chapter owns η_WRG = 0,8 (winter 1500 W → 300 W, summer sensible
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:7: 450 W → 90 W, latent 810 W untouched) and the duct numbers of the running
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:8: example (q_v,R = 0,061 m³/s, v_m = 2,5 m/s, A ≈ 0,0244 m², r ≈ 0,088 m).
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:9: The airflow itself (V̇ = 220 m³/h) and the heat flows 1500 W / 450 W / 810 W are
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:191: """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:207: """🌡️ Particle colour for an air temperature in °C — cold blue to hot red over 0 … 32 °C."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:426: "Im Winter gibt die 20 °C warme Abluft Wärme an die 0 °C\nkalte Außenluft ab — die Zuluft steigt auf 16 °C."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:801: lbl_in1 = legend([tr("Cold air", "Kaltluft"), "(0 °C)"], P_BLUE, 0.75, [p1 - 1.4, -1.55, 0])
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:802: lbl_out1 = legend([tr("Warm air", "Warmluft"), "(20 °C)"], P_ORANGE, 0.75, [p1 - 1.3, 0.45, 0])
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:821: lbl_supply = legend([tr("preheated", "vorgewärmte"), tr("supply air (16 °C)", "Zuluft (16 °C)")], P_GREEN, 0.62, [p2 - 1.53, -0.75, 0])
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:140: """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top; ``mirror`` faces the other way."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:267: """🔋 One cubic metre of air (1,2 kg) warmed by 1 K: the energy counted from 0 is c_Luft."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:286: r"The norm calculates with the fixed value $0.34\,\mathrm{Wh/(m^3K)}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:287: r"Die Norm rechnet mit dem festen Wert $0{,}34\,\mathrm{Wh/(m^3K)}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:289: r"The same physics comes in two unit sets: building-related units with $\mathrm{m^3/h}$ and $\mathrm{Wh/(m^3K)}$, or SI units with $\mathrm{m^3/s}$ and $\mathrm{J/(m^3K)}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:290: r"Dieselbe Physik gibt es in zwei Einheitensätzen: gebäudebezogene Einheiten mit $\mathrm{m^3/h}$ und $\mathrm{Wh/(m^3K)}$ oder SI-Einheiten mit $\mathrm{m^3/s}$ und $\mathrm{J/(m^3K)}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:464: r"And $c_{\mathrm{Luft}}$ is the heat capacity of air: $0.34\,\mathrm{Wh/(m^3K)}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:465: r"Und $c_{\mathrm{Luft}}$ ist die Wärmekapazität der Luft: $0{,}34\,\mathrm{Wh/(m^3K)}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:467: r"In winter: $220\,\mathrm{m^3/h} \cdot 0.34\,\mathrm{Wh/(m^3K)} \cdot 20\,\mathrm{K}$ — about $1500\,\mathrm{W}$ leave with the air. Heating counts this as ventilation loss.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:468: r"Im Winter: $220\,\mathrm{m^3/h} \cdot 0{,}34\,\mathrm{Wh/(m^3K)} \cdot 20\,\mathrm{K}$ — rund $1500\,\mathrm{W}$ gehen mit der Luft verloren. Die Heizung rechnet das als Lüftungsverlust."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:7: (V ≈ 440 m³, n = 0,5 h⁻¹, V̇ = 220 m³/h = 0,061 m³/s); every later chapter reads
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:193: Footprint 10 m × 8 m, eaves 6 m, ridge 8,5 m, Geschossdecke at 3 m. The roof
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:289: """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:460: "Wir zeichnen das Haus im Schnitt: 10 m breit, 6 m bis zur Traufe, 8,5 m bis zum First."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:240: r"Every cubic metre carries heat: $c_{Luft} = \rho \cdot c_p \approx 0.34\,\mathrm{Wh/(m^3K)}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:241: r"Jeder Kubikmeter trägt Wärme: $c_{Luft} = \rho \cdot c_p \approx 0{,}34\,\mathrm{Wh/(m^3K)}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🔣️.transitions.json:24: {"id": "ventilation.natural.stack-effect.height-token-taller", "duration": 1.6, "why": "stack height 2.5 m to 4.4 m", "frames": {"15": [0, 23], "30": [0, 47]}},
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🔣️.transitions.json:25: {"id": "ventilation.mechanical.heat-recovery.winter-bar-share", "duration": 2.0, "why": "WRG share bar 1500 W to 300 W", "frames": {"30": [0, 59], "60": [0, 119]}},
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🔣️.transitions.json:26: {"id": "ventilation.mechanical.heat-recovery.winter-value-remaining", "duration": 2.0, "why": "WRG value 1500 W to 300 W", "frames": {"30": [0, 59], "60": [0, 119]}}
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:6: Laufendes Beispiel: 20 °C innen, 0 °C außen im Winter (Δθ = 20 K), 26 °C innen, 32 °C außen im Sommer.
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:137: """🧍 A 1.75 m breathing occupant (thermal staffage clip) in a 2.5 m clear room, anchored to the slab top."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:218: room is 4 m wide and 2,5 m high; the window sits 0,9 m … 2,2 m above the floor
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:219: in a 0,35 m exterior wall with the radiator below it.
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:278: c_Luft = ρ·c_p/3600 = 1,2 kg/m³ · 1005 J/(kg·K) / (3600 J/Wh) ≈ 0,34 Wh/(m³·K); Winter 20 °C innen gegen 0 °C außen (Δθ = 20 K),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:279: Sommer 26 °C innen gegen 32 °C außen am Tag und 18 °C in der Nacht.
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:291: """⚖️ Dichte trockener Luft bei ``theta`` °C aus dem idealen Gasgesetz, ρ = p/(R·T) mit p = 101325 Pa.
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:389: outdoor_cool = _badge(tr("Summer night", "Sommernacht"), "18 °C", P_BLUE)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:391: outdoor_hot = _badge(tr("Summer day", "Sommertag"), "32 °C", P_RED).move_to(outdoor_cool)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:392: outdoor_winter = _badge("Winter", "0 °C", P_CYAN).move_to(outdoor_cool)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:552: """⏱️ Same 50 m³ of fresh air: wide-open window in 5 min versus tilted window in 60 min — and what each costs."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:565: r"Purge ventilation only reheats the air: $0.34\,\mathrm{Wh/(m^3K)} \cdot 50\,\mathrm{m^3} \cdot 20\,\mathrm{K} = 340\,\mathrm{Wh}$. The walls stay warm.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:566: r"Beim Stoßlüften wird nur die Luft nachgeheizt: $0{,}34\,\mathrm{Wh/(m^3K)} \cdot 50\,\mathrm{m^3} \cdot 20\,\mathrm{K} = 340\,\mathrm{Wh}$. Die Wände bleiben warm."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1007: r"The pressure accelerates the air: $v = \sqrt{2\,\Delta p/\rho}$ gives $1.2\,\mathrm{m/s}$ with $\rho \approx 1.2\,\mathrm{kg/m^3}$ (20 °C).",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1008: r"Der Druck beschleunigt die Luft: $v = \sqrt{2\,\Delta p/\rho}$ ergibt $1{,}2\,\mathrm{m/s}$ mit $\rho \approx 1{,}2\,\mathrm{kg/m^3}$ (20 °C)."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1402: mass_hot = Text("27 °C", font_size=BODY_FONT_SIZE, color=P_RED).move_to(mass)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1403: mass_cool = Text("22 °C", font_size=BODY_FONT_SIZE, color=P_BLUE).move_to(mass)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1449: mass_warm = Text("21 °C", font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to(mass)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1516: gain_lbl = Text("≈ 4 K", font_size=BODY_FONT_SIZE, color=P_YELLOW)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1552: "Im Winter ist es umgekehrt: Luft mit 0 °C strömt herein,\nder Raum verliert Wärme."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1587: outdoor = _badge(tr("Summer afternoon", "Sommernachmittag"), tr("32 °C · humid", "32 °C · schwül"), P_RED)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1589: outdoor_cold = _badge("Winter", tr("0 °C · cold", "0 °C · kalt"), P_CYAN).move_to(outdoor)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:801: """🪨 Cut wall section behind a panel-radiator cast: the radiator asset owns no wall, so a scene that hangs it away from a drawn wall adds this 0.15 m thick strip, as high as the cast, at its anchor."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🔣️.cases.json:437: "value": "1200 W"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🔣️.cases.json:534: "1200 W"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🔣️.cases.json:545: "1200 W"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🔣️.cases.json:559: "1200 W"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:45: "de": "Elektroheizstab: am Haus genau 1 kWh Nutzwärme. Brennstoffe verlieren den Rest mit dem Abgas; Strom kann anderswo Abgas verursachen.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:100: "en": "Summer: ≈100 Wh of air heat at 6 K, no radiator or reveal. Tilt moves little air: open wide, briefly, in cool hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:101: "de": "Im Sommer entfallen Heizkörper und Laibung: nur etwa 100 Wh bei 6 K.\nGekippt tauscht kaum Luft — weit und kurz, in den kühlen Stunden.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:133: "en": "Summer night: 18 °C outside, 26 °C inside. Warmer indoor air is less dense, so it rises more strongly.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:134: "de": "Der Dichteunterschied folgt aus der Temperaturdifferenz: 18 °C außen,\n26 °C innen — je wärmer die Raumluft, desto stärker der Auftrieb.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:144: "en": "Winter: 20 K instead of 8 K gives the same shaft almost three times the pressure. Buoyancy is strongest in cold weather.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:145: "de": "Im Winter: 20 statt 8 K, im selben Schacht fast dreifacher Druck. Bei Kälte wirkt der Auftrieb am stärksten.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:148: "de": "Im Winter beträgt die Temperaturdifferenz 20 statt 8 K — derselbe Schacht\nerzeugt fast dreimal so viel Druck: im Kalten wirkt der Auftrieb am stärksten."
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:200: "en": "At η = 0, exhaust energy escapes through the opening. No heat is recovered: winter ventilation loses all 1500 W.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:201: "de": "Bei η = 0 entweicht die Abluftenergie durch die Öffnung. Keine Rückgewinnung: im Winter gehen volle 1500 W verloren.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:204: "de": "Die gesamte Energie der abströmenden Luft verschwindet durch die Öffnung:\nη = 0, im Winter gehen die vollen 1500 W Lüftungswärmeverlust verloren."
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:257: "en": "Summer: 32 °C outdoors, 26 °C exhaust; about 5 of 6 K recovered. The same ratio turns heat recovery into cold recovery.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:258: "de": "Im Sommer gilt dieselbe Definition: Außenluft 32 °C, Abluft 26 °C —\nfast fünf von sechs Kelvin, die WRG wird zur Kälterückgewinnung.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:291: "en": "For the same flow, more area means less speed. At 2.5 m/s, area = flow ÷ speed ≈ 0.0244 m².",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:292: "de": "Mehr Fläche bremst denselben Strom: bei 2,5 m/s ist A gleich\nVolumenstrom durch Geschwindigkeit — rund 0,0244 m².",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:324: "en": "Opaque envelope: 68 W/K × 10 K ≈ 680 W. Summer airflow adds another load, covered in the ventilation video.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:325: "de": "Die opake Hülle liefert hier rund 680 W (68 W/K mal 10 K).\nIm Sommer kommt die Luft als zweite Last hinzu.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:335: "en": "From ventilation: 220 m³/h at 6 K adds about 450 W of sensible heat through the now-reversed openings.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:336: "de": "Kurz zur Erinnerung aus dem Lüftungsvideo: 220 m³/h bei 6 K\nbringen rund 450 W sensible Wärme herein.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:401: "en": "Part 4: 30 m² of glazing × 0.49 × 0.15 × 0.60 × 800 W/m² ≈ 1060 W.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:402: "de": "Aus Teil 4 kennen wir die Last: 30 m² Verglasung mal 0,49 mal 0,15\nmal 0,60 mal 800 W/m² ergeben rund 1060 W.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️labels.json:12: "unit": {"value": "16", "unit": "°C", "expected": "16 °C"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:16: C_LUFT_WH_M3_K = float(_DATA["air"]["volumetricHeatCapacityWhM3K"])
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:38: ENVELOPE = [(item["nameDe"], float(item["areaM2"]), float(item["uValueWM2K"]), float(item["deltaK"])) for item in _DATA["envelope"]]
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:40: UA_OPAQUE_W_K = sum(item["areaM2"] * item["uValueWM2K"] for item in _DATA["envelope"] if item["id"] in ("roof", "wall"))
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🔣️.json:6: "volumetricHeatCapacityWhM3K": 0.34,
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🔣️.json:28: { "id": "roof", "nameDe": "Dach", "nameEn": "Roof", "areaM2": 89, "uValueWM2K": 0.2, "deltaK": 20 },
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🔣️.json:29: { "id": "wall", "nameDe": "Außenwand", "nameEn": "Exterior wall", "areaM2": 209, "uValueWM2K": 0.24, "deltaK": 20 },
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🔣️.json:30: { "id": "window", "nameDe": "Fenster", "nameEn": "Windows", "areaM2": 30, "uValueWM2K": 1.1, "deltaK": 20 },
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🔣️.json:31: { "id": "door", "nameDe": "Haustür", "nameEn": "Front door", "areaM2": 2, "uValueWM2K": 1.3, "deltaK": 20 },
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🔣️.json:32: { "id": "floor", "nameDe": "Boden", "nameEn": "Floor", "areaM2": 80, "uValueWM2K": 0.3, "deltaK": 10 }
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📝️narration/🧪️tests/🧮️tex/🔣️.cases.json:16: {"tex": "0{,}34\\,\\mathrm{Wh/(m^3K)}", "expected": "0,34 Wh/(m³K)"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📝️narration/🧪️tests/🧮️tex/🔣️.cases.json:20: {"tex": "20\\,^\\circ\\mathrm{C}", "expected": "20 °C"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📝️narration/🧪️tests/🧮️tex/🔣️.cases.json:22: {"tex": "1\\,000\\,\\mathrm{kWh}", "expected": "1 000 kWh"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:12: {"tex": "U = 0{,}24\\,\\mathrm{W/(m^2K)}", "de": "U gleich 0,24 Watt pro Quadratmeter und Kelvin", "en": "U equals 0.24 watts per square metre and kelvin"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:14: {"tex": "0{,}34\\,\\mathrm{Wh/(m^3K)}", "de": "0,34 Wattstunden pro Kubikmeter und Kelvin", "en": "0.34 watt hours per cubic metre and kelvin"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:31: {"tex": "75\\,\\mathrm{m^3/h}\\cdot 0{,}34\\,\\mathrm{Wh/(m^3K)}\\cdot 20\\,\\mathrm{K} = 510\\,\\mathrm{W}", "de": "75 Kubikmeter pro Stunde mal 0,34 Wattstunden pro Kubikmeter und Kelvin mal 20 Kelvin gleich 510 Watt", "en": "75 cubic metres per hour times 0.34 watt hours per cubic metre and kelvi
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:29: "Temperatur 20 °C",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:67: "text": "volle Lüftungsverlust von 1500 W bleibt, η",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:44: "en": "Cooling demand to keep 26 °C",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:45: "de": "Kühlbedarf für 26 °C"
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:28: | Verfahren | 12 Monatsbilanzen, Klimadaten, `G_t20/15` (bezogen auf `θ_i = 20 °C`, Heizgrenze `θ_HG = 15 °C`), `F_Gt = 0,024 · G_t` | Kapitel 2 |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:35: The building blocks of `Q_V` (airflow `V̇ = V·n`, `ρ·c_p = 0,34 Wh/(m³K)` for `ρ ≈ 1,2 kg/m³` at 20 °C, `Δθ`, `η_WRG`) come
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:95: | 1 | `Beat2_Verlustseite` | `Q_l = Q_T + Q_V` (Übergangsmonat, `Δθ = 10 K`), Wärmebrückenzuschlag |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:88: E_ERZEUGUNG_GAS = 1.18            # Gaskessel: 118 kWh Erdgas → 100 kWh Wärme
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:89: E_ERZEUGUNG_GAS_BRENNWERT = 1.07  # nach Kondensation: 107 kWh → 100 kWh
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:90: E_ERZEUGUNG_WP = 0.26             # Wärmepumpe: 26 kWh Strom → 100 kWh Wärme
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:117: ))  # ≈ +4, +8, +7, +21 kWh → Q_E_GAS
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:120: LEVELS = tuple(Q_NUTZ + sum(LOSS[:k]) for k in range(5))  # 100, 104, 112, 119, 140 kWh
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:1198: bridge_note = note_line(tr("1 kWh electricity ≠ 1 kWh gas, both final energy", "1 kWh Strom ≠ 1 kWh Gas, beides Endenergie"), color=P_PRIMARY)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:332: """🧍 Breathing thermal occupant at true scale — 1.75 m in a 2.5 m storey is 70 % of the clear height, feet on the slab's top edge."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:136: """∑ Energy in kWh after each hour — the rectangle rule with Δt = 1 h."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:569: """🌡️ Thermometer fill for a temperature on the −15…25 °C scale shared by both glyphs."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:259: """🧍 Thermal occupant at true scale — 1.75 m in a 2.5 m storey, feet on the floor line at ``x``."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:598: r"The U-value $U$ states how many watts flow through one square metre per kelvin: here $0.24\;\mathrm{W/(m^2K)}$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:599: r"Der U-Wert $U$ gibt an, wie viele Watt je Quadratmeter und Kelvin fließen: hier $0{,}24\;\mathrm{W/(m^2K)}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:610: r"The exterior wall: $209\;\mathrm{m^2}\cdot 0.24\;\mathrm{W/(m^2K)}\cdot 10\;\mathrm{K}$ is about $500\;\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:611: r"Die Außenwand: $209\;\mathrm{m^2}\cdot 0{,}24\;\mathrm{W/(m^2K)}\cdot 10\;\mathrm{K}$ ergeben rund $500\;\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:613: r"The roof: $89\;\mathrm{m^2}$ at $0.20\;\mathrm{W/(m^2K)}$ — well insulated, so only about $180\;\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:614: r"Das Dach: $89\;\mathrm{m^2}$ mit $0{,}20\;\mathrm{W/(m^2K)}$ — gut gedämmt, daher nur etwa $180\;\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:616: r"The windows: only $30\;\mathrm{m^2}$, but $1.10\;\mathrm{W/(m^2K)}$ — that is about $330\;\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:617: r"Die Fenster: nur $30\;\mathrm{m^2}$, aber $1{,}10\;\mathrm{W/(m^2K)}$ — das sind etwa $330\;\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:619: r"The floor: $80\;\mathrm{m^2}$ at $0.30\;\mathrm{W/(m^2K)}$, and the ground stays $10\;\mathrm{K}$ below the room all year — $240\;\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:620: r"Der Boden: $80\;\mathrm{m^2}$ mit $0{,}30\;\mathrm{W/(m^2K)}$, und das Erdreich bleibt das ganze Jahr $10\;\mathrm{K}$ kälter als der Raum — $240\;\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:628: r"That is $0.05\;\mathrm{W/(m^2K)}$ when a thermal-bridge check is available, more without one.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:629: r"Mit Wärmebrückennachweis sind es $0{,}05\;\mathrm{W/(m^2K)}$, ohne Nachweis deutlich mehr."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:640: r"$\rho\,c_p = 0.34\;\mathrm{Wh/(m^3K)}$ is the heat capacity of air per cubic metre; it turns the air flow into heat per kelvin.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:641: r"$\rho\,c_p = 0{,}34\;\mathrm{Wh/(m^3K)}$ ist die Wärmekapazität der Luft je Kubikmeter; sie macht aus dem Luftstrom Wärme je Kelvin."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🧪️tests/🧮️balance/🔣️.json:12: "oracle": "numpy re-derivation from areas, U-values, volume, n, 0.34 Wh/(m3K), 0.6 g, 0.7 F_S, 5 W/m2 * 60 m2"
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:158: """♨️ Thermal panel radiator at its physical size on the floor line of a 2.5 m room."""
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:60: | 1 | Leistung — wie schnell Energie fließt | Formelzeichen P · 1 W = 1 J/s · 1 kW = 1 000 W · E = P · t als Fläche · Staubsauger/Wasserkocher/Dusche · Leistungs-Skala Teelicht → alle Kraftwerke · Heizlast vs. Heizwärmebedarf |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:61: | 2 | Arbeit und Energie — die Kilowattstunde | Arbeit als übertragene Energie E = P · t bei konstanter Leistung · Zähler · weggelassenes „h“ · 1 kWh = Staubsauger 1 h = ≈ 3 min warm duschen · Energie-Skala Teelicht → Welt · Glas, Decke, Öffnungen |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:62: | 3 | Energie bleibt erhalten — jedes Watt wird Wärme | E_ein = E_aus + ΔE_Speicher · Lampe 5 % Licht + 95 % Wärme → 100 % Wärme · Mensch 100 W · Winter/Sommer |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:63: | 4 | Wärmepumpe — Energie auf höheres Temperaturniveau übertragen | Kältekreis animiert · 1 + 3 = 4 · Endenergie Q_E + Umweltwärme Q_U = Nutzwärme Q_N · COP = Q_N/Q_E aus Balken · COP(Außentemperatur) · Jahresarbeitszahl JAZ (VDI 4650 Blatt 1; SCOP: DIN EN 14825) · Nutzwärme je 1 kWh Endenergie: Ho
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:65: | 6 | Thermische Masse — speichern und zeitversetzt abgeben | Q = m · c · ΔT an 1 m² Betondecke · 24-h-Verlauf, Phasenverschiebung, Dämpfung · warum die Decke · Nachtlüftung/Sonnengewinne |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:66: | 7 | Sensible und latente Wärme | T-Q-Diagramm Wasser · Sättigungskurve x_s(ϑ) · Taupunkt · Mensch 70 W sensibel + 30 W latent · Tauwasser/Entfeuchtung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:67: | 8 | Zusammenfassung — was wir gelernt haben | Sieben Zeilen, eine je Baustein: P = E / t · 1 kW · 1 h = 1 kWh · E_ein = E_aus + ΔE_Speicher · COP = Q_H / W_el · Q̇_S = g · A · I · Q = m · c · ΔT · Q_lat = m · r · Überleitung zu Heizung und Kühlung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:73: | **Kilowattstunde (kWh)** | Energie / verrichtete Arbeit: 1 kW eine Stunde lang | Staubsauger 1 h · ≈ 3 min warm duschen (30 l von 10 auf 38 °C) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:74: | **Kurzform** | Im Alltag fällt oft das „h“ weg („4 000 kW verbraucht“) | ohne „h“ ist es eine Leistung, keine Menge |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:75: | **Kilowatt (kW)** | Leistung = Energie pro Zeit | Staubsauger ≈ 1 kW · Wasserkocher 2 kW · Durchlauferhitzer 18–24 kW |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:76: | **Watt (W)** | 1 J pro Sekunde | 1 kWh = 1 000 W · 3 600 s = 3,6 Mio. J |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:77: | **Joule (J)** | Energie: 1 W eine Sekunde lang | 1 kWh = 3,6 Mio. J |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:78: | **Heizlast** | Spitzenleistung der kältesten Stunde | EFH ≈ 8 kW, DIN EN 12831 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:80: | **COP** | Heizwärme / Strom in einem Betriebspunkt | 1 kWh Strom + 3 kWh Umweltwärme = 4 kWh, DIN EN 14511 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:84: | **Thermische Masse** | Wärmespeicher eines Bauteils, Q = m · c · ΔT | 1 m² Beton, 10 cm, 2 K → 480 kJ ≈ 0,13 kWh |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:85: | **Phasenverschiebung φ** | Zeitversatz der Temperaturspitze durch Speichermasse | massive Decke ≈ 6 h (schematisch), DIN EN ISO 13786 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:86: | **sensible Wärme** | ändert die Temperatur | 1 kg Wasser 0 → 100 °C: 419 kJ |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:87: | **latente Wärme** | steckt im Phasenwechsel, Temperatur bleibt | Verdampfen 1 kg Wasser: 2 257 kJ |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:88: | **Taupunkt** | Temperatur, bei der φ = 100 % erreicht wird | 20 °C / 50 % → ≈ 9,3 °C, DIN 4108-3 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:94: | **1 kW · 1 h = 1 kWh** | Kilowatt mal Stunde |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:97: | **1 W = 1 J/s**, **1 kWh = 3,6 · 10⁶ J** | Grundeinheit und Umrechnung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:99: | **P_el = P_Licht + P_Wärme** | 100 W = 5 W + 95 W → am Ende 100 W Wärme |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:100: | **COP = Q_H / W_el** | 4 kWh / 1 kWh = 4 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:101: | **Q̇_S = g · A · I** | 0,5 · 2,0 m² · 500 W/m² = 500 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:102: | **m = ρ · A · d** | 2 400 kg/m³ · 1 m² · 0,10 m = 240 kg |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:103: | **Q_lat = m · r** | 1 kg · 2 257 kJ/kg |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:110: | ≈ 0,1 kWh | Teelicht |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:111: | 1 kWh | Staubsauger 1 Stunde |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:112: | ≈ 3 000 kWh | Haushaltsstrom pro Jahr |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:113: | ≈ 15 000 kWh | Heizwärme Einfamilienhaus pro Jahr |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:119: | ≈ 30 W | Teelicht |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:120: | ≈ 100 W | Mensch in Ruhe (≈ 70 W sensibel + 30 W latent) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:121: | ≈ 1 kW | Staubsauger |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:122: | ≈ 8 kW | Einfamilienhaus, kältester Tag |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:123: | ≈ 100 kW | Auto |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:128: | Nutzwärme aus 1 kWh Endenergie | Wert |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:140: - **Leistung × Zeit = Fläche = Energie**; dieselbe kWh kann schnell (Dusche, 20 kW) oder langsam (Staubsauger, 1 kW) fließen.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:164: | 2 · Wie viel Luft? | Innenvolumen · Luftwechselrate · Volumenstrom | V_e = 580 m³ → V ≈ 0,76 · V_e ≈ 440 m³ · n = 0,5 h⁻¹ → V̇ = V · n = 220 m³/h = 0,061 m³/s = q_v,R |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:165: | 3 · Was die Luft trägt | Luftwärme · sensible Wärme · latente Last · Winter und Sommer | c_Luft ≈ 0,34 Wh/(m³·K) · Winter 1 500 W Verlust · Sommer 450 W sensibel + 810 W latent |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:166: | 4 · Natürliche Lüftung | Fensterregeln · Stoß oder Kipp · Querlüftung · Auftrieb · Nachtlüftung · Grenzen | Fenster als Regler · 340 Wh gegen ≈ 780 Wh · 1/A_eff² = 1/A₁² + 1/A₂² · Δp = h · g · (ρ_a − ρ_i) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:167: | 5 · Mechanische Lüftung und WRG | Grundtypen · Wärmerückgewinnung · Anlagenvergleich · Kanalquerschnitt | η_WRG = (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL) · Winter 1 500 → 300 W · Sommer sensibel 450 → 90 W, latent bleibt · A = q_v,R / v_m, r = √(A/π) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:174: | **Nettovolumen V** | beheiztes Luftvolumen ohne Konstruktion | ≈ 440 m³ |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:175: | **Luftwechselrate n** | wie oft das Luftvolumen pro Stunde ausgetauscht wird [h⁻¹] | 0,5 h⁻¹ (Wohnung, DIN EN 12831) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:178: | **Δθ** | Temperaturdifferenz innen − außen, mit Vorzeichen | Winter 20 K · Sommer −6 K (Gewinn) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:179: | **Δx** | Differenz der absoluten Feuchte | 4,5 g/kg (15,0 gegen 10,5 g/kg) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:188: | **Q̇_V,sens = V̇ · c_Luft · Δθ** | sensible Lüftungsleistung; Winter 440 · 0,5 · 0,34 · 20 ≈ 1 500 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:189: | **Q̇_V,lat = ρ · r · Δx · q_v,R** | latente Last; 1,2 · 2 450 kJ/kg · 4,5 g/kg · 0,061 m³/s ≈ 810 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:190: | **Q̇_V,sens · (1 − η_WRG)** | mit Wärmerückgewinnung; 1 500 → 300 W, 450 → 90 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:191: | **q_v,R = v_m · A**, **r = √(A/π)** | Kanal: 0,061 m³/s bei 2,5 m/s → A ≈ 0,0244 m², r ≈ 0,088 m |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:197: | **Heizung** | Φ_V = Q̇_V,sens als Lüftungsterm der Heizlast (1 500 W, mit WRG 300 W); Stoß- statt Kipplüftung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:198: | **Kühlung** | Q̇_L = sensibel + latent (450 W + 810 W), V̇ als Auslegungsgröße für Luftmenge und Kanal, Nachtlüftung als Speicherentladung, Kälterückgewinnung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:244: - Temperatur fällt in Stufen: 20 °C Luft → 16,3 °C Innenoberfläche → 1,1 °C Außenoberfläche → 0 °C (U = 1,43).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:263: | **U-Wert je 1 m²** | Watt durch genau 1 m² Bauteil bei 1 K — die Dicke steckt schon über R = d/λ im U-Wert |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:274: | **U = 1 / R_ges** | Wärmestrom je 1 m² und 1 K |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:280: ### Wattvergleich (25 m² Wand, Δθ = 20 K)
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:284: | Ungedämmte Ziegelwand 36,5 cm | ≈ 1,43 | ≈ 715 W | ≈ 0,7 Toaster |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:285: | + 12 cm Dämmung | ≈ 0,24 | ≈ 120 W | ≈ ein ruhender Mensch |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:286: | + 30 cm Dämmung | ≈ 0,11 | ≈ 55 W | ≈ zwei Teelichter |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:308: | **Φ_V = V · n · c_Luft · Δθ** | Lüftungswärmeverlust ohne WRG; 440 · 0,5 · 0,34 · 20 ≈ 1 500 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:309: | **Φ_V = V · n · (1 − η_WRG) · c_Luft · Δθ** | mit Wärmerückgewinnung η_WRG = 0,8: ≈ 300 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:313: - Φ_T ≈ 2 300 W plus Φ_V ≈ 1 500 W ergibt 3 800 W; mit WRG bleiben 2 600 W.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:345: - Ruhende Person ≈ **80–100 W** thermisch (≈ Glühbirne).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:400: | **G_t20/15 = Σ (θ_i − θ_e)** | Gradtagzahl in Kd/a: nur Tage mit θ_e < 15 °C (Heizgrenze), Raumtemperatur θ_i = 20 °C (VDI 3807 Blatt 1) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:416: - **Heizlast (kW)** = Dimensionierung für den kältesten Moment (DIN EN 12831, Hannover −12 °C).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:435: | **Interne Gewinne** | Personen (~100 W), Laptop (~60 W), Beleuchtung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:465: | Schlafen | ≈ 80 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:466: | Büroarbeit (sitzend) | ≈ 100 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:467: | Gehen | ≈ 200 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:468: | Hochleistungssport | ≈ 800 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:480: - Hörsaal mit 100 Personen: **~10 kW** interne Wärme — massive Sommerlast.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:492: Sommerliche Transmissionslast (mit ΔT_eq für solare Aufheizung, Zeitverzögerung) und — als kurze Erinnerung, ohne Herleitung — die Lüftungslast aus dem Lüftungsvideo (450 W sensibel + 810 W latent) neben der Transmission im Lastbalken.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:499: | **Q̇_L = Q̇_V,sens + Q̇_V,lat** | Lüftungslast aus dem Lüftungsvideo (Kapitel 3); 450 W + 810 W ≈ 1 260 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:511: - Ein Plattentauscher gewinnt nur sensible Wärme zurück (450 → 90 W); die latente Last bleibt und braucht Entfeuchtung.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:557: | **q_v,R = Q̇_S,tr / (ρ_a · c_p,a · Δθ)** | Erforderlicher Volumenstrom aus solarer Last (≈ 0,126 m³/s bei Q̇_S,tr ≈ 1 060 W, Δθ = 7 K) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:558: | **A = q_v,R / v_m** | Kanalquerschnitt: 0,0505 m² gegenüber 0,0244 m² beim hygienischen Volumenstrom |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:585: 1. **Sorptionsrad** entfeuchtet die schwüle Außenluft (Sorptionswärme: Luft wird zunächst wärmer, z. B. 32 °C feucht → 48 °C trocken).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:586: 2. **Plattentauscher** gibt diese Wärme an die Abluft ab (→ ≈ 24 °C).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:587: 3. **Verdunstungskühlung** senkt die trockene Luft auf Zulufttemperatur (→ ≈ 19 °C) — nur möglich, *weil* sie vorher entfeuchtet wurde.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:622: | 1 kW · 1 h = 1 kWh | Ein Stunde lang gleichbleibender Fluss füllt genau einen Eimer |
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:27: "en": "Assign each building component its thermal transmittance (U-value) in W/(m²·K): the heat flow through 1 m² per kelvin of temperature difference. Smaller means better insulated. Allow about five minutes: compare every item, check units, and review your answer. New design examples use represent
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:28: "de": "Ordne jedem Bauteil seinen Wärmedurchgangskoeffizienten (U-Wert) in W/(m²·K) zu: den Wärmestrom durch 1 m² je Kelvin Temperaturdifferenz. Kleiner heißt besser gedämmt. Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbe
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:69: "en": "5.8 W/(m²·K) (Ug): a single pane has practically nothing but its surface resistances (0.13 + 0.04 m²·K/W). Source: Federal Gazette (BAnz AT 04.12.2020 B1), Table 3 (windows before 1979).",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:70: "de": "5,8 W/(m²·K) (Ug): eine Einzelscheibe hat praktisch nur ihre Wärmeübergangswiderstände (0,13 + 0,04 m²·K/W). Quelle: BAnz AT 04.12.2020 B1, Tabelle 3 (Fenster bis 1978)."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:423: "en": "0.10 W/(m²·K): about 35 cm of insulation (λ = 0.035 W/(m·K), R ≈ 10 m²·K/W), typical for passive-house roofs. Source: Passive House Institute.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:424: "de": "0,10 W/(m²·K): rund 35 cm Dämmung (λ = 0,035 W/(m·K), R ≈ 10 m²·K/W), typisch für Passivhausdächer. Quelle: Passivhaus Institut."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1582: "en": "About 50 W/m² and 89 kWh/(m²·a) under the Energy Saving Ordinance (EnEV): IWU type EFH_J with 1.14 W/(m²·K) transmission per m² of living area; load = (transmission + ventilation at 0.5 1/h, the airtight envelope required since EnEV 2002) × 32 K (20 °C inside, −12 °C outside).",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1583: "de": "Rund 50 W/m² und 89 kWh/(m²·a): IWU-Typ EFH_J mit 1,14 W/(m²·K) Transmission je m² Wohnfläche; Last = (Transmission + Lüftung mit 0,5 1/h, der seit der EnEV 2002 geforderten luftdichten Hülle) × 32 K (20 °C innen, −12 °C außen)."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/README.md:14: `V̇ = V · n` (Lüftung Kapitel 2), `c_Luft` and `Δθ = 20 K` (Kapitel 3), shows the ventilation load `Q̇_V ≈ 1500 W` next to
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/README.md:15: the transmission load `Q̇_T ≈ 2300 W` of Modul 2 (both are the heat flow `Φ`, written as loads at the room; values come from the shared running example), applies `(1 − η_WRG)` (Kapitel 5) and links
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:114: # 1,2 m × 1,6 m, clear winter day I_s = 400 W/m², glass share F_F = 0,70 from the
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:4: winter into it with one short reminder: the airflow V · n (Lüftung Kapitel 2), c_Luft and Δθ = 20 K (Kapitel 3) give
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:5: the ventilation load Q̇_V = V · n · c_Luft · Δθ ≈ 1500 W, which stands next to the transmission load Q̇_T ≈ 2300 W of Modul 2; a heat
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:6: exchanger (Kapitel 5) leaves Q̇_V · (1 − η_WRG) ≈ 300 W. Every shown quantity counts up from 0 and every result is
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:144: """🌬️ Q̇_V = V · n · c_Luft · Δθ ≈ 1500 W next to Q̇_T ≈ 2300 W, then ·(1 − η_WRG) ≈ 300 W."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1287: parts["pipe_label"] = _label(tr("30 m pipe", "30 m Rohr"), size=12, color=PIPE).move_to(P(-5.62, -0.66))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1304: "Emission: the radiator also heats the outer wall behind it and the thermostat regulates sluggishly — about five percent, roughly 600 kWh.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1305: "Übergabe: Der Heizkörper erwärmt auch die Außenwand dahinter, das Thermostat regelt träge — rund 5 Prozent, also etwa 600 kWh."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1307: "Distribution: 30 metres of pipe in the cold cellar lose 10 watts per metre over 3,000 hours, 900 kWh.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1308: "Verteilung: 30 Meter Rohr im kalten Keller verlieren 10 Watt pro Meter über 3 000 Stunden — 900 kWh."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1311: "Speicherung: Der Pufferspeicher verliert im Bereitschaftsbetrieb 1,8 kWh pro Tag, über 200 Heiztage 360 kWh."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1313: "Generation: with an efficiency of 0.95, part of the fuel energy leaves through the flue, about 700 kWh.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1314: "Erzeugung: Bei einem Wirkungsgrad von 0,95 geht ein Teil als Abgas durch den Schornstein — rund 700 kWh."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:215: """🌡️ Block colour from its temperature: blue at 0 °C, violet at 20 °C, red at 40 °C."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:239: """🟨 Oblique 1 m × 1 m wall tile — front face is the area, the receding edge is the thickness d."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:368: "Zwei Ziegel einer Wand: Wärme fließt vom 40 °C warmen in den 0 °C kalten Stein, bis beide gleich warm sind."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:371: "Bei 20 °C ist das thermische Gleichgewicht erreicht — der Nettostrom ist null."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:680: r"Die Dicke steckt schon in $U$, über $R = \frac{d}{\lambda}$ — deshalb ist $U$ auf 1 m² normiert."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:862: "Aus dem letzten Video: Ein Teelicht leistet rund 40 W, ein ruhender Mensch rund 100 W, ein Toaster rund 900 W."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:865: "Dieselbe Wand mit 25 m², innen 20 °C, außen 0 °C — ungedämmt, mit 12 cm und mit 30 cm Dämmung."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:490: ti_cool = Text(tr("inside 19 °C", "innen 19 °C"), font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE).move_to(stage["ti"])
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:491: te_warm = Text(tr("outside 1 °C", "außen 1 °C"), font_size=BODY_FONT_SIZE, color=PASTEL_BLUE).move_to(stage["te"])
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:880: marker(0.5, tr("Sun (5800 K): short-wave", "Sonne (5800 K): kurzwellig"), PASTEL_YELLOW),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:881: marker(10.0, tr("Room surfaces (20 °C): long-wave", "Raumflächen (20 °C): langwellig"), PASTEL_ORANGE),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1002: """📊 Design height of a temperature on the profile overlay (0 °C at the floor, 20 °C under the ceiling)."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1253: "For one layer, the drop from 20 °C to 0 °C is unchanged. Poorer insulation passes more heat through that same drop.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1254: "Über eine Schicht fällt die Temperatur von 20 °C auf 0 °C. Ein schlecht dämmendes Material lässt dabei mehr Wärme durch."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1328: ti = Text("20 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1330: te = Text("0 °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1722: ti = Text(tr("inside 20 °C", "innen 20 °C"), font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1724: te = Text(tr("outside 0 °C", "außen 0 °C"), font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1726: te_cold = Text(tr("outside −20 °C", "außen −20 °C"), font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(te, aligned_edge=LEFT)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1727: te_back = Text(tr("outside 0 °C", "außen 0 °C"), font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(te, aligned_edge=LEFT)
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:42: "en": "A rate: how fast energy is converted (1 W = 1 J/s).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:43: "de": "Energie pro Zeit: wie schnell Energie umgesetzt wird (1 W = 1 J/s)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:79: "en": "About 35 W: roughly 12 g of paraffin (≈ 12 Wh/g) burn in about 4 hours, and heat per unit of time is a power. Source: calorific value of paraffin; Wikipedia “Teelicht” (30–40 W).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:80: "de": "Rund 35 W: etwa 12 g Paraffin (≈ 12 Wh/g) verbrennen in rund 4 Stunden, und Wärme pro Zeit ist eine Leistung. Quelle: Heizwert von Paraffin; Wikipedia „Teelicht“ (30–40 W)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:95: "en": "About 2 kW according to the rating plate; a 230 V/16 A socket allows at most 3.7 kW. The power tells how fast the kettle heats, not how much energy it uses.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:96: "de": "Rund 2 kW laut Typenschild; eine 230-V/16-A-Steckdose erlaubt höchstens 3,7 kW. Die Leistung sagt, wie schnell der Kocher heizt, nicht wie viel Energie er verbraucht."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:115: "en": "About 100 W: 1 met = 58 W per m² of skin × 1.8 m² (ISO 7730, ISO 8996). The matching energy is the daily food intake of about 2,300 kcal ≈ 2.7 kWh.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:116: "de": "Rund 100 W: 1 met = 58 W pro m² Haut × 1,8 m² (ISO 7730, ISO 8996). Die dazugehörige Energie ist die tägliche Nahrung von etwa 2.300 kcal ≈ 2,7 kWh."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:131: "en": "About 0.43 kWp for a 2 m² module: the electrical power under standard test conditions (1,000 W/m², 25 °C; IEC 60904-3). The “p” stands for peak, not for an amount.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:132: "de": "Rund 0,43 kWp bei einem 2-m²-Modul: die elektrische Leistung unter Standard-Testbedingungen (1.000 W/m², 25 °C; IEC 60904-3). Das „p“ steht für Spitze (peak), nicht für eine Menge."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:147: "en": "About 18 kW for an unrenovated 1960s single-family house (110 m² × 160 W/m²): the heat flow needed on the coldest design day (DIN EN 12831).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:148: "de": "Rund 18 kW für ein unsaniertes Einfamilienhaus der 1960er-Jahre (110 m² × 160 W/m²): der Wärmestrom, der am kältesten Auslegungstag nötig ist (DIN EN 12831)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:187: "en": "About 100 kW = 136 PS (1 PS = 735.5 W): horsepower is an old unit of power.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:188: "de": "Rund 100 kW = 136 PS (1 PS = 735,5 W): die Pferdestärke ist eine alte Einheit der Leistung."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:203: "en": "11 kW = 3 phases × 230 V × 16 A: the rate at which the car battery is filled.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:204: "de": "11 kW = 3 Phasen × 230 V × 16 A: die Geschwindigkeit, mit der der Autoakku geladen wird."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:223: "en": "About 2,500 kWh per year (Stromspiegel für Deutschland): an amount summed over a year. Divided by 8,760 h it corresponds to an average power of only about 0.3 kW.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:224: "de": "Rund 2.500 kWh pro Jahr (Stromspiegel für Deutschland): eine über ein Jahr aufsummierte Menge. Geteilt durch 8.760 h entspricht sie einer mittleren Leistung von nur etwa 0,3 kW."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:243: "en": "About 60 kWh (e.g. VW ID.3: 58 kWh net): a stored amount of energy. With an 11 kW wall box it takes 60 ÷ 11 ≈ 5.5 hours to fill.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:244: "de": "Rund 60 kWh (z. B. VW ID.3: 58 kWh netto): eine gespeicherte Energiemenge. Mit einer 11-kW-Wallbox dauert das Laden 60 ÷ 11 ≈ 5,5 Stunden."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:263: "en": "About 10 kWh: net calorific value of heating oil EL ≈ 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:264: "de": "Rund 10 kWh: Heizwert von Heizöl EL ≈ 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:283: "en": "About 33,000 kWh per year for a 1960s house (110 m² × 303 kWh/(m²·a); IWU, the Institute for Housing and Environment, German residential building typology 2015, type EFH_E): an annual amount, i.e. an energy demand.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:284: "de": "Rund 33.000 kWh pro Jahr für ein Haus der 1960er-Jahre (110 m² × 303 kWh/(m²·a); IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E): eine Jahresmenge, also Arbeit über ein Jahr."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:299: "en": "About 540 kcal ≈ 0.63 kWh (1 kcal = 1.163 Wh) according to the nutrition label: kilocalories measure energy.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:300: "de": "Rund 540 kcal ≈ 0,63 kWh (1 kcal = 1,163 Wh) laut Nährwerttabelle: Kilokalorien messen Energie."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:319: "en": "About 9,500 kWh per year: roughly 950 kWh per kWp in Germany (Fraunhofer ISE, Recent Facts about Photovoltaics in Germany). Peak power times full-load hours gives energy.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:320: "de": "Rund 9.500 kWh pro Jahr: in Deutschland etwa 950 kWh je kWp (Fraunhofer ISE, Aktuelle Fakten zur Photovoltaik in Deutschland). Spitzenleistung mal Volllaststunden ergibt Energie."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:339: "en": "About 15 Wh: a 4,000 mAh battery at 3.85 V stores 15.4 Wh, a stored amount of energy.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:340: "de": "Rund 15 Wh: ein Akku mit 4.000 mAh bei 3,85 V speichert 15,4 Wh, eine gespeicherte Energiemenge."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:866: "en": "Energy used by a 2 kW kettle in half an hour (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:906: "en": "Annual electricity for a 1 kW device running 2,000 hours (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:946: "en": "Heat from ten seated adults over one hour at 100 W each (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:947: "de": "Wärme von zehn sitzenden Erwachsenen in einer Stunde bei je 100 W (gesamte Energiemenge)"
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1006: "en": "Heat half a litre of water from 20 °C to boiling (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1007: "de": "Einen halben Liter Wasser von 20 °C zum Kochen erwärmen (gesamte Energiemenge)"
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1066: "en": "Annual useful heating of a 150 m² retrofit at 100 kWh/(m²·a) (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1126: "en": "Useful heat from a 5 kW heater running for 24 hours (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1146: "en": "Annual heating for a 500 m² school wing at 80 kWh/(m²·a) (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1159: "en": "Annual heating for a 500 m² school wing",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1166: "en": "Energy used by a 1 kW radiator in one hour (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1186: "en": "Energy used by a 1 kW radiator over ten hours (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1266: "en": "Heat stored in 200 litres of water over a 40 K rise (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1267: "de": "Wärme in 200 Litern Wasser bei 40 K Temperaturhub (gesamte Energiemenge)"
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1306: "en": "Annual heating for a 200 m² duplex at 180 kWh/(m²·a) (total energy)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1462: "en": "About 35 W (30–40 W): roughly 12 g of paraffin burn in about 4 hours (Wikipedia “Teelicht”).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1463: "de": "Rund 35 W (30–40 W): etwa 12 g Paraffin verbrennen in rund 4 Stunden (Wikipedia „Teelicht“)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1483: "en": "About 100 W: 1 met = 58 W/m² × 1.8 m² of skin (ISO 7730). A lecture hall with 100 students is a 10 kW heater.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1484: "de": "Rund 100 W: 1 met = 58 W/m² × 1,8 m² Haut (ISO 7730). Ein Hörsaal mit 100 Studierenden ist eine 10-kW-Heizung."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1490: "en": "Sunlight on 1 m² at noon on a clear summer day",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1491: "de": "Sonnenlicht auf 1 m² an einem klaren Sommermittag"
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1503: "en": "About 1 kW (1,000 W): the standard irradiance for testing solar modules (IEC 60904-3); a module with 20% efficiency turns 200 W of it into electricity.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1504: "de": "Rund 1 kW (1.000 W): die Standard-Bestrahlungsstärke für die Prüfung von Solarmodulen (IEC 60904-3); ein Modul mit 20 % Wirkungsgrad macht daraus 200 W Strom."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1520: "en": "About 2 kW (2,000 W) according to the rating plate; a 230 V/16 A socket allows at most 3.7 kW.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1521: "de": "Rund 2 kW (2.000 W) laut Typenschild; eine 230-V/16-A-Steckdose erlaubt höchstens 3,7 kW."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1537: "en": "11 kW = 3 × 230 V × 16 A, the most common home charging power in Germany.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1538: "de": "11 kW = 3 × 230 V × 16 A, die häufigste Ladeleistung zu Hause in Deutschland."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1557: "en": "About 18 kW: 110 m² × 160 W/m² (envelope of IWU type EFH_E, −12 °C design temperature, DIN EN 12831) – the power of nine kettles.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1558: "de": "Rund 18 kW: 110 m² × 160 W/m² (Hülle des IWU-Typs EFH_E, −12 °C Auslegungstemperatur, DIN EN 12831) – die Leistung von neun Wasserkochern."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1578: "en": "100 kW = 136 PS (1 PS = 735.5 W), a typical mid-size car.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1579: "de": "100 kW = 136 PS (1 PS = 735,5 W), ein typisches Mittelklasseauto."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1730: "en": "10 W. Small device and human heat outputs are in tens to hundreds of watts.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1731: "de": "10 W. Kleine Geräte und menschliche Wärmeabgaben liegen bei zehn bis einigen hundert Watt."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1750: "en": "45 W. Small device and human heat outputs are in tens to hundreds of watts.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1751: "de": "45 W. Kleine Geräte und menschliche Wärmeabgaben liegen bei zehn bis einigen hundert Watt."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1770: "en": "60 W. Small device and human heat outputs are in tens to hundreds of watts.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1771: "de": "60 W. Kleine Geräte und menschliche Wärmeabgaben liegen bei zehn bis einigen hundert Watt."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1790: "en": "30 W. Small device and human heat outputs are in tens to hundreds of watts.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1791: "de": "30 W. Kleine Geräte und menschliche Wärmeabgaben liegen bei zehn bis einigen hundert Watt."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1810: "en": "1 kW. These examples deliver about one kilowatt: ten people at about 100 W each, sunshine on one square metre at 1,000 W/m², or an appliance of similar rating.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1811: "de": "1 kW. Diese Beispiele liefern etwa ein Kilowatt: zehn Menschen zu etwa 100 W, Sonne auf einem Quadratmeter bei 1.000 W/m² oder ein ähnlich bemessenes Gerät."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1830: "en": "1 kW. These examples deliver about one kilowatt: ten people at about 100 W each, sunshine on one square metre at 1,000 W/m², or an appliance of similar rating.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1831: "de": "1 kW. Diese Beispiele liefern etwa ein Kilowatt: zehn Menschen zu etwa 100 W, Sonne auf einem Quadratmeter bei 1.000 W/m² oder ein ähnlich bemessenes Gerät."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1850: "en": "1 kW. These examples deliver about one kilowatt: ten people at about 100 W each, sunshine on one square metre at 1,000 W/m², or an appliance of similar rating.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1851: "de": "1 kW. Diese Beispiele liefern etwa ein Kilowatt: zehn Menschen zu etwa 100 W, Sonne auf einem Quadratmeter bei 1.000 W/m² oder ein ähnlich bemessenes Gerät."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1870: "en": "1.2 kW. These examples deliver about one kilowatt: ten people at about 100 W each, sunshine on one square metre at 1,000 W/m², or an appliance of similar rating.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1871: "de": "1,2 kW. Diese Beispiele liefern etwa ein Kilowatt: zehn Menschen zu etwa 100 W, Sonne auf einem Quadratmeter bei 1.000 W/m² oder ein ähnlich bemessenes Gerät."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1890: "en": "3 kW. Several kilowatts suit household charging, cooking or a small building heating system.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1891: "de": "3 kW. Mehrere Kilowatt passen zum Laden, Kochen oder zu kleinen Gebäudeheizungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1910: "en": "6 kW. Several kilowatts suit household charging, cooking or a small building heating system.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1911: "de": "6 kW. Mehrere Kilowatt passen zum Laden, Kochen oder zu kleinen Gebäudeheizungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1930: "en": "21 kW. Several kilowatts suit household charging, cooking or a small building heating system.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1931: "de": "21 kW. Mehrere Kilowatt passen zum Laden, Kochen oder zu kleinen Gebäudeheizungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1950: "en": "12 kW. Several kilowatts suit household charging, cooking or a small building heating system.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1951: "de": "12 kW. Mehrere Kilowatt passen zum Laden, Kochen oder zu kleinen Gebäudeheizungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1970: "en": "70 kW. Vehicle and small commercial equipment outputs are in tens to hundreds of kilowatts.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1971: "de": "70 kW. Fahrzeuge und kleine gewerbliche Anlagen liegen bei zehn bis einigen hundert Kilowatt."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1990: "en": "75 kW. Vehicle and small commercial equipment outputs are in tens to hundreds of kilowatts.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1991: "de": "75 kW. Fahrzeuge und kleine gewerbliche Anlagen liegen bei zehn bis einigen hundert Kilowatt."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2010: "en": "150 kW. Vehicle and small commercial equipment outputs are in tens to hundreds of kilowatts.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2011: "de": "150 kW. Fahrzeuge und kleine gewerbliche Anlagen liegen bei zehn bis einigen hundert Kilowatt."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2030: "en": "100 kW. Vehicle and small commercial equipment outputs are in tens to hundreds of kilowatts.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2031: "de": "100 kW. Fahrzeuge und kleine gewerbliche Anlagen liegen bei zehn bis einigen hundert Kilowatt."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2470: "en": "1.148E27 W. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2471: "de": "1,148E27 W. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2490: "en": "1.531E27 W. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2491: "de": "1,531E27 W. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2510: "en": "1.914E27 W. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2511: "de": "1,914E27 W. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2643: "en": "About 15 Wh: a 4,000 mAh battery at 3.85 V stores 15.4 Wh.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2644: "de": "Rund 15 Wh: ein Akku mit 4.000 mAh bei 3,85 V speichert 15,4 Wh."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2650: "en": "Heating 1 litre of water from 20 °C to boiling",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2651: "de": "1 Liter Wasser von 20 °C zum Kochen bringen"
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2664: "en": "About 93 Wh: 4.19 kJ/(kg·K) × 1 kg × 80 K = 335 kJ; a 2 kW kettle needs about 3 minutes plus losses.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2665: "de": "Rund 93 Wh: 4,19 kJ/(kg·K) × 1 kg × 80 K = 335 kJ; ein 2-kW-Wasserkocher braucht dafür knapp 3 Minuten plus Verluste."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2681: "en": "About 540 kcal ≈ 628 Wh (1 kcal = 1.163 Wh) according to the nutrition label.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2682: "de": "Rund 540 kcal ≈ 628 Wh (1 kcal = 1,163 Wh) laut Nährwerttabelle."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2702: "en": "About 2,300 kcal ≈ 2.7 kWh (reference values of the German Nutrition Society, DGE, for moderate activity, about 1,900–2,500 kcal); it keeps 100 W of body heat going for 24 hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2703: "de": "Rund 2.300 kcal ≈ 2,7 kWh (DGE-Referenzwerte bei mäßiger Aktivität, etwa 1.900–2.500 kcal); damit laufen 100 W Körperwärme 24 Stunden lang."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2723: "en": "About 10 kWh: net calorific value 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2724: "de": "Rund 10 kWh: Heizwert 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2744: "en": "About 60 kWh (e.g. VW ID.3: 58 kWh net), enough for roughly 350 km.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2745: "de": "Rund 60 kWh (z. B. VW ID.3: 58 kWh netto), genug für rund 350 km."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2765: "en": "About 440 kWh: 50 l × 8.8 kWh/l (42.7 MJ/kg × 0.745 kg/l), seven times the car battery, yet an engine turns only about a quarter of it into motion.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2766: "de": "Rund 440 kWh: 50 l × 8,8 kWh/l (42,7 MJ/kg × 0,745 kg/l), siebenmal der Autoakku, doch ein Motor setzt nur etwa ein Viertel davon in Bewegung um."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2785: "en": "About 2.5 MWh (2,500 kWh) per year (Stromspiegel für Deutschland).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2786: "de": "Rund 2,5 MWh (2.500 kWh) pro Jahr (Stromspiegel für Deutschland)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2805: "en": "About 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU German residential building typology 2015, type EFH_E), thirteen times the household electricity.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2806: "de": "Rund 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E), dreizehnmal der Haushaltsstrom."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2881: "en": "60 Wh. Stored charge and small water-heating tasks require tens to hundreds of watt-hours; use E = P × t or heat capacity × mass × temperature rise.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2882: "de": "60 Wh. Gespeicherte Ladung und kleine Wassererwärmungen benötigen zehn bis einige hundert Wattstunden; nutze E = P × t oder Wärmekapazität × Masse × Temperaturanstieg."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2901: "en": "14 Wh. Stored charge and small water-heating tasks require tens to hundreds of watt-hours; use E = P × t or heat capacity × mass × temperature rise.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2902: "de": "14 Wh. Gespeicherte Ladung und kleine Wassererwärmungen benötigen zehn bis einige hundert Wattstunden; nutze E = P × t oder Wärmekapazität × Masse × Temperaturanstieg."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2912: "en": "Heat half a litre of water from 20 °C to boiling",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2913: "de": "Einen halben Liter Wasser von 20 °C zum Kochen erwärmen"
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2921: "en": "46.5 Wh. Stored charge and small water-heating tasks require tens to hundreds of watt-hours; use E = P × t or heat capacity × mass × temperature rise.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2922: "de": "46,5 Wh. Gespeicherte Ladung und kleine Wassererwärmungen benötigen zehn bis einige hundert Wattstunden; nutze E = P × t oder Wärmekapazität × Masse × Temperaturanstieg."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2941: "en": "74 Wh. Stored charge and small water-heating tasks require tens to hundreds of watt-hours; use E = P × t or heat capacity × mass × temperature rise.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2942: "de": "74 Wh. Gespeicherte Ladung und kleine Wassererwärmungen benötigen zehn bis einige hundert Wattstunden; nutze E = P × t oder Wärmekapazität × Masse × Temperaturanstieg."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2952: "en": "Energy used by a 1 kW radiator in one hour",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2961: "en": "1 kWh. Food energy and a few hours of appliance use are comparable on the kilowatt-hour scale.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2962: "de": "1 kWh. Nahrungsenergie und einige Betriebsstunden von Geräten sind auf Kilowattstundenebene vergleichbar."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2981: "en": "400 Wh. Food energy and a few hours of appliance use are comparable on the kilowatt-hour scale.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2982: "de": "400 Wh. Nahrungsenergie und einige Betriebsstunden von Geräten sind auf Kilowattstundenebene vergleichbar."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2992: "en": "Energy used by a 2 kW kettle in half an hour",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3001: "en": "1 kWh. Food energy and a few hours of appliance use are comparable on the kilowatt-hour scale.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3002: "de": "1 kWh. Nahrungsenergie und einige Betriebsstunden von Geräten sind auf Kilowattstundenebene vergleichbar."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3012: "en": "Heat from ten seated adults over one hour at 100 W each",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3013: "de": "Wärme von zehn sitzenden Erwachsenen in einer Stunde bei je 100 W"
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3021: "en": "1 kWh. Food energy and a few hours of appliance use are comparable on the kilowatt-hour scale.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3022: "de": "1 kWh. Nahrungsenergie und einige Betriebsstunden von Geräten sind auf Kilowattstundenebene vergleichbar."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3041: "en": "8.8 kWh. Fuel stores and modest household heat stores hold several to tens of kilowatt-hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3042: "de": "8,8 kWh. Brennstoffspeicher und kleine häusliche Wärmespeicher enthalten einige bis zehn Kilowattstunden."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3061: "en": "9.6 kWh. Fuel stores and modest household heat stores hold several to tens of kilowatt-hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3062: "de": "9,6 kWh. Brennstoffspeicher und kleine häusliche Wärmespeicher enthalten einige bis zehn Kilowattstunden."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3072: "en": "Energy used by a 1 kW radiator over ten hours",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3081: "en": "10 kWh. Fuel stores and modest household heat stores hold several to tens of kilowatt-hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3082: "de": "10 kWh. Brennstoffspeicher und kleine häusliche Wärmespeicher enthalten einige bis zehn Kilowattstunden."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3092: "en": "Heat stored in 200 litres of water over a 40 K rise",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3093: "de": "Wärme in 200 Litern Wasser bei 40 K Temperaturhub"
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3101: "en": "9.3 kWh. Fuel stores and modest household heat stores hold several to tens of kilowatt-hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3102: "de": "9,3 kWh. Brennstoffspeicher und kleine häusliche Wärmespeicher enthalten einige bis zehn Kilowattstunden."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3121: "en": "40 kWh. Vehicle energy storage and long heating periods reach tens to hundreds of kilowatt-hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3122: "de": "40 kWh. Fahrzeugenergiespeicher und lange Heizperioden erreichen zehn bis einige hundert Kilowattstunden."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3141: "en": "90 kWh. Vehicle energy storage and long heating periods reach tens to hundreds of kilowatt-hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3142: "de": "90 kWh. Fahrzeugenergiespeicher und lange Heizperioden erreichen zehn bis einige hundert Kilowattstunden."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3161: "en": "392 kWh. Vehicle energy storage and long heating periods reach tens to hundreds of kilowatt-hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3162: "de": "392 kWh. Fahrzeugenergiespeicher und lange Heizperioden erreichen zehn bis einige hundert Kilowattstunden."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3172: "en": "Useful heat from a 5 kW heater running for 24 hours",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3181: "en": "120 kWh. Vehicle energy storage and long heating periods reach tens to hundreds of kilowatt-hours.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3182: "de": "120 kWh. Fahrzeugenergiespeicher und lange Heizperioden erreichen zehn bis einige hundert Kilowattstunden."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3232: "en": "Annual electricity for a 1 kW device running 2,000 hours",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3272: "en": "Annual useful heating of a 150 m² retrofit at 100 kWh/(m²·a)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3292: "en": "Annual heating for a 500 m² school wing at 80 kWh/(m²·a)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3305: "en": "Annual heating for a 500 m² school wing",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3332: "en": "Annual heating for a 200 m² duplex at 180 kWh/(m²·a)",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:586: "Ein Staubsauger: 0,7 kW hoch, rund 1,4 h breit — Fläche 1 kWh."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:589: "Ein Wasserkocher mit 2 kW braucht dafür nur eine halbe Stunde: fast dreimal so hoch, ein Drittel so breit."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:592: "Eine warme Dusche: 1 kWh in drei Minuten sind rund 20 kW — darum haben Durchlauferhitzer 18 bis 24 kW."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:601: "1 kWh sind 1 000 W mal 3 600 s — 3,6 Millionen Joule."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:604: "Leistung wächst in Tausender-Schritten: 1 000 W haben 3 Nullen, eine Million 6, eine Milliarde 9, eine Billion 12."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:607: "Die Namen: Kilo = 1 000 W, Mega = eine Million W, Giga = eine Milliarde W, Tera = eine Billion W."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:610: "Eine Skala der Leistung: Teelicht rund 40 W, ruhender Mensch rund 100 W, Staubsauger rund 700 W."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:613: "Gedämmtes Einfamilienhaus am kältesten Tag rund 8 kW, ein Auto rund 100 kW."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:913: "Im Alltag fällt dabei oft das h weg: „4 000 kW verbraucht“."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:919: r"Arbeit ist übertragene Energie: Bei konstanter Leistung gilt $E = P \cdot t$. 1 kW über 1 h ergibt 1 kWh."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:922: "Was ist 1 kWh? Ein Staubsauger mit rund 700 W läuft damit rund anderthalb Stunden."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:925: "Oder rund drei Minuten warm duschen: 30 Liter Wasser, erwärmt von 10 auf 38 °C."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:928: "Masse mal spezifische Wärme mal Temperaturanstieg: rund 3 520 kJ."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:931: "Umrechnung: 1 kW sind 1 kJ pro Sekunde, also sind 1 kWh genau 3 600 s davon — 3 600 kJ."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:934: "3 520 kJ geteilt durch 3 600 kJ pro kWh: rund 1 kWh."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:942: "The k in kWh already means a thousand — so 1,000 kWh are 1 MWh.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:943: "Das k in kWh heißt schon Tausend — 1 000 kWh sind also 1 MWh."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:946: "Auf einer Skala: Ein Teelicht enthält rund 0,15 kWh, ein Haushalt braucht rund 3 000 kWh Strom im Jahr."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:949: "Ein Einfamilienhaus braucht rund 15 000 kWh Heizwärme im Jahr."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1344: "Nicht alles kommt hinein: Das Glas reflektiert 20 J. Und Gespeichertes gibt später 10 J wieder ab."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1347: "Eine Lampe nimmt 60 W elektrische Leistung auf."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1356: "Am Ende sind alle 60 W Raumwärme. Das gilt auch für LEDs und für jedes Gerät."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1359: "Auch ein ruhender Mensch gibt rund 100 W Wärme ab."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1703: r"Die Bilanz: 1 kWh Strom, die Endenergie $Q_{\mathrm{E}}$, plus 3 kWh Umweltwärme $Q_{\mathrm{U}}$ ergeben 4 kWh Nutzwärme $Q_{\mathrm{N}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1723: r"Per kilowatt-hour of final energy $Q_{\mathrm{E}}$: wood chips give about 0.85 kWh of useful heat $Q_{\mathrm{N}}$, oil 0.94, gas 0.96.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1724: r"Je 1 kWh Endenergie $Q_{\mathrm{E}}$ liefert Holz rund 0,85 kWh Nutzwärme $Q_{\mathrm{N}}$, Öl 0,94, Erdgas 0,96."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1727: "Elektroheizstab: am Haus genau 1 kWh Nutzwärme. Brennstoffe verlieren den Rest mit dem Abgas; Strom kann anderswo Abgas verursachen."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1733: "Die Luft-Wärmepumpe liefert rund 3 kWh Nutzwärme, die Erd-Wärmepumpe rund 4 kWh — weil sie Umweltwärme dazuholt."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2086: "Der Vergleich: Außen bleibt der Raum bei 22 °C, innen steigt er auf 30 °C — außen verschattet wirkt besser."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2339: "1 m² Betondecke mit 10 cm wirksamer Schicht: 0,1 m³ — das sind 240 kg."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2342: "Um 2 K erwärmt speichert sie 480 kJ — rund 0,13 kWh."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2345: "Eine Decke mit 20 m² nimmt so rund 2,7 kWh auf — fast vier Stunden Staubsaugen."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2712: "1 kg Wasser von 0 auf 100 °C zu erwärmen kostet rund 419 kJ."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2715: "Bei 100 °C bleibt die Temperatur stehen, obwohl weiter Energie hineingeht — sie steckt im Verdampfen."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2718: "Diese latente Wärme, rund 2 257 kJ pro kg, ist mehr als fünfmal so groß wie das Erwärmen."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2724: "Bei 0 °C sind es rund 4 g pro kg Luft, bei 20 °C rund 15 g, bei 30 °C rund 27 g."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2727: "Raumluft mit 20 °C und 50 % relativer Feuchte enthält rund 7 g Wasser pro kg."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2730: "Kühlt sie ab, steigt die relative Feuchte — bei rund 9 °C sind es 100 %: der Taupunkt."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2739: "Ein ruhender Mensch gibt rund 70 W sensibel und 30 W latent ab — etwa 45 g Wasser pro Stunde."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2862: air_tag = Text(tr("1 kg air", "1 kg Luft"), font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(air_box, UP, buff=0.12)
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3118: "Arbeit ist übertragene Energie: 1 kW über 1 Stunde ergibt 1 Kilowattstunde."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🧪️tests/🐍️.py:215: per_kelvin = water["heatCapacityJM2K"] * water["areaM2"]
+TOTAL 517

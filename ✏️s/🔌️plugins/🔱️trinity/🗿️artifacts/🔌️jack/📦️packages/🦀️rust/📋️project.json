@@ -7,7 +7,7 @@
     "role:artifact",
     "family:trinity"
   ],
-  "namedInputs": {
+  "namedInputs": { "default": ["{projectRoot}/**/*", "sharedGlobals", { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🤖️generated\"" }],
     "nativeSources": [
       "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🫴️receiving/🧪️tests/**/*",

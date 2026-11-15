@@ -40,7 +40,7 @@ async fn point_patches_on_one_curve_coalesce_to_the_last_value() {
     let base = Vdi3805Snapshot::default();
     let id = base.curves.keys().next().expect("curve").clone();
     let set = |scale: f64| {
-        let mut points = base.curves[&id].points.clone();
+        let mut points = base.curves.get(&id).expect("curve").points.clone();
         points.iter_mut().for_each(|point| point.y *= scale);
         Vdi3805Mutation::ChangeCurvePoints(ChangeCurvePoints { id: id.clone(), new_points: points })
     };
@@ -63,7 +63,7 @@ async fn add_then_remove_cancels_and_remove_then_add_replaces() {
 async fn a_connection_replaced_twice_keeps_one_inserted_connection() {
     let base = Vdi3805Snapshot::default();
     let id = base.geometry.keys().next().expect("geometry").clone();
-    let mut connection = base.geometry[&id].connections[0].clone();
+    let mut connection = base.geometry.get(&id).expect("geometry").connections[0].clone();
     connection.id = "connection-created".into();
     let mut moved = connection.clone();
     moved.medium = "steam".into();

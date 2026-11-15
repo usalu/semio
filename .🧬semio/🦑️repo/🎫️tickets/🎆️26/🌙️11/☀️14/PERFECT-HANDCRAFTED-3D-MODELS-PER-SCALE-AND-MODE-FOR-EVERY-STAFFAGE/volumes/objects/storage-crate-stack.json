@@ -1,0 +1,8884 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "foot-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02
+    },
+    {
+     "id": "floor-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.012,
+      0.34
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.166,
+        -0.274
+       ],
+       [
+        -0.166,
+        0.274
+       ],
+       [
+        -0.164,
+        0.276
+       ],
+       [
+        0.164,
+        0.276
+       ],
+       [
+        0.166,
+        0.274
+       ],
+       [
+        0.166,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.276
+       ],
+       [
+        -0.164,
+        -0.276
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3
+    },
+    {
+     "id": "slot-a-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-b-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       -0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-c-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-d-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       -0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-x-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.5,
+      0.004,
+      0.006
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-z-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.006,
+      0.004,
+      0.28
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "foot-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02
+    },
+    {
+     "id": "floor-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.012,
+      0.34
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.166,
+        -0.274
+       ],
+       [
+        -0.166,
+        0.274
+       ],
+       [
+        -0.164,
+        0.276
+       ],
+       [
+        0.164,
+        0.276
+       ],
+       [
+        0.166,
+        0.274
+       ],
+       [
+        0.166,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.276
+       ],
+       [
+        -0.164,
+        -0.276
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3
+    },
+    {
+     "id": "slot-a-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-b-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       -0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-c-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-d-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       -0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-x-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.5,
+      0.004,
+      0.006
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-z-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.006,
+      0.004,
+      0.28
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "foot-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02
+    },
+    {
+     "id": "floor-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.012,
+      0.34
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.166,
+        -0.274
+       ],
+       [
+        -0.166,
+        0.274
+       ],
+       [
+        -0.164,
+        0.276
+       ],
+       [
+        0.164,
+        0.276
+       ],
+       [
+        0.166,
+        0.274
+       ],
+       [
+        0.166,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.276
+       ],
+       [
+        -0.164,
+        -0.276
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3
+    },
+    {
+     "id": "slot-a-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-b-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       -0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-c-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-d-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       -0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-x-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.5,
+      0.004,
+      0.006
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-z-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.006,
+      0.004,
+      0.28
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "foot-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02
+    },
+    {
+     "id": "floor-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.012,
+      0.34
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.166,
+        -0.274
+       ],
+       [
+        -0.166,
+        0.274
+       ],
+       [
+        -0.164,
+        0.276
+       ],
+       [
+        0.164,
+        0.276
+       ],
+       [
+        0.166,
+        0.274
+       ],
+       [
+        0.166,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.276
+       ],
+       [
+        -0.164,
+        -0.276
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3
+    },
+    {
+     "id": "slot-a-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-b-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       -0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-c-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-d-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       -0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-x-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.5,
+      0.004,
+      0.006
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-z-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.006,
+      0.004,
+      0.28
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "foot-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02
+    },
+    {
+     "id": "floor-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.012,
+      0.34
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.166,
+        -0.274
+       ],
+       [
+        -0.166,
+        0.274
+       ],
+       [
+        -0.164,
+        0.276
+       ],
+       [
+        0.164,
+        0.276
+       ],
+       [
+        0.166,
+        0.274
+       ],
+       [
+        0.166,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.276
+       ],
+       [
+        -0.164,
+        -0.276
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        -0.256
+       ],
+       [
+        -0.142,
+        0.256
+       ],
+       [
+        -0.136,
+        0.262
+       ],
+       [
+        0.136,
+        0.262
+       ],
+       [
+        0.142,
+        0.256
+       ],
+       [
+        0.142,
+        -0.256
+       ],
+       [
+        0.136,
+        -0.262
+       ],
+       [
+        -0.136,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3
+    },
+    {
+     "id": "slot-a-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-b-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.1,
+      0.04,
+      0.002
+     ],
+     "transform": {
+      "translation": [
+       -0.17,
+       0.14,
+       -0.177062
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.17,
+       0,
+       0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-c-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "slot-d-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.002,
+      0.04,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       -0.291631,
+       0.14,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-x-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.5,
+      0.004,
+      0.006
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    },
+    {
+     "id": "floor-rib-z-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.006,
+      0.004,
+      0.28
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.034,
+       0.0
+      ]
+     },
+     "texture": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-envelope-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-1"
+    },
+    {
+     "id": "th-rim-edge-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-1"
+    },
+    {
+     "id": "th-foot-edge-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-1"
+    },
+    {
+     "id": "th-envelope-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-2"
+    },
+    {
+     "id": "th-rim-edge-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-2"
+    },
+    {
+     "id": "th-foot-edge-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-2"
+    },
+    {
+     "id": "th-envelope-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-3"
+    },
+    {
+     "id": "th-rim-edge-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-3"
+    },
+    {
+     "id": "th-foot-edge-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-3"
+    },
+    {
+     "id": "th-envelope-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-4"
+    },
+    {
+     "id": "th-rim-edge-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-4"
+    },
+    {
+     "id": "th-foot-edge-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-4"
+    },
+    {
+     "id": "th-envelope-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.274
+      ],
+      [
+       -0.17,
+       0.274
+      ],
+      [
+       -0.164,
+       0.28
+      ],
+      [
+       0.164,
+       0.28
+      ],
+      [
+       0.17,
+       0.274
+      ],
+      [
+       0.17,
+       -0.274
+      ],
+      [
+       0.164,
+       -0.28
+      ],
+      [
+       -0.164,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.28,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-5"
+    },
+    {
+     "id": "th-rim-edge-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.304
+      ],
+      [
+       -0.2,
+       0.304
+      ],
+      [
+       -0.194,
+       0.31
+      ],
+      [
+       0.194,
+       0.31
+      ],
+      [
+       0.2,
+       0.304
+      ],
+      [
+       0.2,
+       -0.304
+      ],
+      [
+       0.194,
+       -0.31
+      ],
+      [
+       -0.194,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.28,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-5"
+    },
+    {
+     "id": "th-foot-edge-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.15,
+       -0.264
+      ],
+      [
+       -0.15,
+       0.264
+      ],
+      [
+       -0.144,
+       0.27
+      ],
+      [
+       0.144,
+       0.27
+      ],
+      [
+       0.15,
+       0.264
+      ],
+      [
+       0.15,
+       -0.264
+      ],
+      [
+       0.144,
+       -0.27
+      ],
+      [
+       -0.144,
+       -0.27
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.02,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-5"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-foot-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.149,
+       -0.263
+      ],
+      [
+       -0.149,
+       0.263
+      ],
+      [
+       -0.143,
+       0.269
+      ],
+      [
+       0.143,
+       0.269
+      ],
+      [
+       0.149,
+       0.263
+      ],
+      [
+       0.149,
+       -0.263
+      ],
+      [
+       0.143,
+       -0.269
+      ],
+      [
+       -0.143,
+       -0.269
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.001,
+     "to": 0.019,
+     "member": "crate-1",
+     "part": "member"
+    },
+    {
+     "id": "member-tray-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.169,
+       -0.273
+      ],
+      [
+       -0.169,
+       0.273
+      ],
+      [
+       -0.163,
+       0.279
+      ],
+      [
+       0.163,
+       0.279
+      ],
+      [
+       0.169,
+       0.273
+      ],
+      [
+       0.169,
+       -0.273
+      ],
+      [
+       0.163,
+       -0.279
+      ],
+      [
+       -0.163,
+       -0.279
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.167,
+        -0.274
+       ],
+       [
+        -0.167,
+        0.274
+       ],
+       [
+        -0.164,
+        0.277
+       ],
+       [
+        0.164,
+        0.277
+       ],
+       [
+        0.167,
+        0.274
+       ],
+       [
+        0.167,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.277
+       ],
+       [
+        -0.164,
+        -0.277
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.021,
+     "to": 0.279,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-1",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       -0.303
+      ],
+      [
+       -0.199,
+       0.303
+      ],
+      [
+       -0.193,
+       0.309
+      ],
+      [
+       0.193,
+       0.309
+      ],
+      [
+       0.199,
+       0.303
+      ],
+      [
+       0.199,
+       -0.303
+      ],
+      [
+       0.193,
+       -0.309
+      ],
+      [
+       -0.193,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.281,
+     "to": 0.299,
+     "member": "crate-1",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.01,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     },
+     "member": "crate-1",
+     "part": "member"
+    },
+    {
+     "id": "mass-1",
+     "kind": "ellipsoid",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-1",
+     "part": "mass"
+    },
+    {
+     "id": "joint-stack-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.149,
+       -0.263
+      ],
+      [
+       -0.149,
+       0.263
+      ],
+      [
+       -0.143,
+       0.269
+      ],
+      [
+       0.143,
+       0.269
+      ],
+      [
+       0.149,
+       0.263
+      ],
+      [
+       0.149,
+       -0.263
+      ],
+      [
+       0.143,
+       -0.269
+      ],
+      [
+       -0.143,
+       -0.269
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.29,
+     "to": 0.299,
+     "member": "crate-1",
+     "part": "joint"
+    },
+    {
+     "id": "member-foot-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.149,
+       -0.263
+      ],
+      [
+       -0.149,
+       0.263
+      ],
+      [
+       -0.143,
+       0.269
+      ],
+      [
+       0.143,
+       0.269
+      ],
+      [
+       0.149,
+       0.263
+      ],
+      [
+       0.149,
+       -0.263
+      ],
+      [
+       0.143,
+       -0.269
+      ],
+      [
+       -0.143,
+       -0.269
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.001,
+     "to": 0.019,
+     "member": "crate-2",
+     "part": "member"
+    },
+    {
+     "id": "member-tray-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.169,
+       -0.273
+      ],
+      [
+       -0.169,
+       0.273
+      ],
+      [
+       -0.163,
+       0.279
+      ],
+      [
+       0.163,
+       0.279
+      ],
+      [
+       0.169,
+       0.273
+      ],
+      [
+       0.169,
+       -0.273
+      ],
+      [
+       0.163,
+       -0.279
+      ],
+      [
+       -0.163,
+       -0.279
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.167,
+        -0.274
+       ],
+       [
+        -0.167,
+        0.274
+       ],
+       [
+        -0.164,
+        0.277
+       ],
+       [
+        0.164,
+        0.277
+       ],
+       [
+        0.167,
+        0.274
+       ],
+       [
+        0.167,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.277
+       ],
+       [
+        -0.164,
+        -0.277
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.021,
+     "to": 0.279,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-2",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       -0.303
+      ],
+      [
+       -0.199,
+       0.303
+      ],
+      [
+       -0.193,
+       0.309
+      ],
+      [
+       0.193,
+       0.309
+      ],
+      [
+       0.199,
+       0.303
+      ],
+      [
+       0.199,
+       -0.303
+      ],
+      [
+       0.193,
+       -0.309
+      ],
+      [
+       -0.193,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.281,
+     "to": 0.299,
+     "member": "crate-2",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.01,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     },
+     "member": "crate-2",
+     "part": "member"
+    },
+    {
+     "id": "mass-2",
+     "kind": "ellipsoid",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-2",
+     "part": "mass"
+    },
+    {
+     "id": "joint-stack-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.149,
+       -0.263
+      ],
+      [
+       -0.149,
+       0.263
+      ],
+      [
+       -0.143,
+       0.269
+      ],
+      [
+       0.143,
+       0.269
+      ],
+      [
+       0.149,
+       0.263
+      ],
+      [
+       0.149,
+       -0.263
+      ],
+      [
+       0.143,
+       -0.269
+      ],
+      [
+       -0.143,
+       -0.269
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.29,
+     "to": 0.299,
+     "member": "crate-2",
+     "part": "joint"
+    },
+    {
+     "id": "member-foot-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.149,
+       -0.263
+      ],
+      [
+       -0.149,
+       0.263
+      ],
+      [
+       -0.143,
+       0.269
+      ],
+      [
+       0.143,
+       0.269
+      ],
+      [
+       0.149,
+       0.263
+      ],
+      [
+       0.149,
+       -0.263
+      ],
+      [
+       0.143,
+       -0.269
+      ],
+      [
+       -0.143,
+       -0.269
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.001,
+     "to": 0.019,
+     "member": "crate-3",
+     "part": "member"
+    },
+    {
+     "id": "member-tray-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.169,
+       -0.273
+      ],
+      [
+       -0.169,
+       0.273
+      ],
+      [
+       -0.163,
+       0.279
+      ],
+      [
+       0.163,
+       0.279
+      ],
+      [
+       0.169,
+       0.273
+      ],
+      [
+       0.169,
+       -0.273
+      ],
+      [
+       0.163,
+       -0.279
+      ],
+      [
+       -0.163,
+       -0.279
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.167,
+        -0.274
+       ],
+       [
+        -0.167,
+        0.274
+       ],
+       [
+        -0.164,
+        0.277
+       ],
+       [
+        0.164,
+        0.277
+       ],
+       [
+        0.167,
+        0.274
+       ],
+       [
+        0.167,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.277
+       ],
+       [
+        -0.164,
+        -0.277
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.021,
+     "to": 0.279,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-3",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       -0.303
+      ],
+      [
+       -0.199,
+       0.303
+      ],
+      [
+       -0.193,
+       0.309
+      ],
+      [
+       0.193,
+       0.309
+      ],
+      [
+       0.199,
+       0.303
+      ],
+      [
+       0.199,
+       -0.303
+      ],
+      [
+       0.193,
+       -0.309
+      ],
+      [
+       -0.193,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.281,
+     "to": 0.299,
+     "member": "crate-3",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.01,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     },
+     "member": "crate-3",
+     "part": "member"
+    },
+    {
+     "id": "mass-3",
+     "kind": "ellipsoid",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-3",
+     "part": "mass"
+    },
+    {
+     "id": "joint-stack-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.149,
+       -0.263
+      ],
+      [
+       -0.149,
+       0.263
+      ],
+      [
+       -0.143,
+       0.269
+      ],
+      [
+       0.143,
+       0.269
+      ],
+      [
+       0.149,
+       0.263
+      ],
+      [
+       0.149,
+       -0.263
+      ],
+      [
+       0.143,
+       -0.269
+      ],
+      [
+       -0.143,
+       -0.269
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.29,
+     "to": 0.299,
+     "member": "crate-3",
+     "part": "joint"
+    },
+    {
+     "id": "member-foot-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.149,
+       -0.263
+      ],
+      [
+       -0.149,
+       0.263
+      ],
+      [
+       -0.143,
+       0.269
+      ],
+      [
+       0.143,
+       0.269
+      ],
+      [
+       0.149,
+       0.263
+      ],
+      [
+       0.149,
+       -0.263
+      ],
+      [
+       0.143,
+       -0.269
+      ],
+      [
+       -0.143,
+       -0.269
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.001,
+     "to": 0.019,
+     "member": "crate-4",
+     "part": "member"
+    },
+    {
+     "id": "member-tray-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.169,
+       -0.273
+      ],
+      [
+       -0.169,
+       0.273
+      ],
+      [
+       -0.163,
+       0.279
+      ],
+      [
+       0.163,
+       0.279
+      ],
+      [
+       0.169,
+       0.273
+      ],
+      [
+       0.169,
+       -0.273
+      ],
+      [
+       0.163,
+       -0.279
+      ],
+      [
+       -0.163,
+       -0.279
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.167,
+        -0.274
+       ],
+       [
+        -0.167,
+        0.274
+       ],
+       [
+        -0.164,
+        0.277
+       ],
+       [
+        0.164,
+        0.277
+       ],
+       [
+        0.167,
+        0.274
+       ],
+       [
+        0.167,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.277
+       ],
+       [
+        -0.164,
+        -0.277
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.021,
+     "to": 0.279,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-4",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       -0.303
+      ],
+      [
+       -0.199,
+       0.303
+      ],
+      [
+       -0.193,
+       0.309
+      ],
+      [
+       0.193,
+       0.309
+      ],
+      [
+       0.199,
+       0.303
+      ],
+      [
+       0.199,
+       -0.303
+      ],
+      [
+       0.193,
+       -0.309
+      ],
+      [
+       -0.193,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.281,
+     "to": 0.299,
+     "member": "crate-4",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.01,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     },
+     "member": "crate-4",
+     "part": "member"
+    },
+    {
+     "id": "mass-4",
+     "kind": "ellipsoid",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-4",
+     "part": "mass"
+    },
+    {
+     "id": "joint-stack-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.149,
+       -0.263
+      ],
+      [
+       -0.149,
+       0.263
+      ],
+      [
+       -0.143,
+       0.269
+      ],
+      [
+       0.143,
+       0.269
+      ],
+      [
+       0.149,
+       0.263
+      ],
+      [
+       0.149,
+       -0.263
+      ],
+      [
+       0.143,
+       -0.269
+      ],
+      [
+       -0.143,
+       -0.269
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.29,
+     "to": 0.299,
+     "member": "crate-4",
+     "part": "joint"
+    },
+    {
+     "id": "member-foot-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.149,
+       -0.263
+      ],
+      [
+       -0.149,
+       0.263
+      ],
+      [
+       -0.143,
+       0.269
+      ],
+      [
+       0.143,
+       0.269
+      ],
+      [
+       0.149,
+       0.263
+      ],
+      [
+       0.149,
+       -0.263
+      ],
+      [
+       0.143,
+       -0.269
+      ],
+      [
+       -0.143,
+       -0.269
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.001,
+     "to": 0.019,
+     "member": "crate-5",
+     "part": "member"
+    },
+    {
+     "id": "member-tray-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.169,
+       -0.273
+      ],
+      [
+       -0.169,
+       0.273
+      ],
+      [
+       -0.163,
+       0.279
+      ],
+      [
+       0.163,
+       0.279
+      ],
+      [
+       0.169,
+       0.273
+      ],
+      [
+       0.169,
+       -0.273
+      ],
+      [
+       0.163,
+       -0.279
+      ],
+      [
+       -0.163,
+       -0.279
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.167,
+        -0.274
+       ],
+       [
+        -0.167,
+        0.274
+       ],
+       [
+        -0.164,
+        0.277
+       ],
+       [
+        0.164,
+        0.277
+       ],
+       [
+        0.167,
+        0.274
+       ],
+       [
+        0.167,
+        -0.274
+       ],
+       [
+        0.164,
+        -0.277
+       ],
+       [
+        -0.164,
+        -0.277
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.021,
+     "to": 0.279,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-5",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       -0.303
+      ],
+      [
+       -0.199,
+       0.303
+      ],
+      [
+       -0.193,
+       0.309
+      ],
+      [
+       0.193,
+       0.309
+      ],
+      [
+       0.199,
+       0.303
+      ],
+      [
+       0.199,
+       -0.303
+      ],
+      [
+       0.193,
+       -0.309
+      ],
+      [
+       -0.193,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        -0.257
+       ],
+       [
+        -0.143,
+        0.257
+       ],
+       [
+        -0.137,
+        0.263
+       ],
+       [
+        0.137,
+        0.263
+       ],
+       [
+        0.143,
+        0.257
+       ],
+       [
+        0.143,
+        -0.257
+       ],
+       [
+        0.137,
+        -0.263
+       ],
+       [
+        -0.137,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.281,
+     "to": 0.299,
+     "member": "crate-5",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.01,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.026,
+       0.0
+      ]
+     },
+     "member": "crate-5",
+     "part": "member"
+    },
+    {
+     "id": "mass-5",
+     "kind": "ellipsoid",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-5",
+     "part": "mass"
+    },
+    {
+     "id": "support-base-contact-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.1,
+     "profile": [
+      [
+       -0.148,
+       -0.262
+      ],
+      [
+       -0.148,
+       0.262
+      ],
+      [
+       -0.142,
+       0.268
+      ],
+      [
+       0.142,
+       0.268
+      ],
+      [
+       0.148,
+       0.262
+      ],
+      [
+       0.148,
+       -0.262
+      ],
+      [
+       0.142,
+       -0.268
+      ],
+      [
+       -0.142,
+       -0.268
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.144,
+        -0.258
+       ],
+       [
+        -0.144,
+        0.258
+       ],
+       [
+        -0.138,
+        0.264
+       ],
+       [
+        0.138,
+        0.264
+       ],
+       [
+        0.144,
+        0.258
+       ],
+       [
+        0.144,
+        -0.258
+       ],
+       [
+        0.138,
+        -0.264
+       ],
+       [
+        -0.138,
+        -0.264
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.01,
+     "member": "crate-1",
+     "part": "support",
+     "anchor": "base-contact"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: five identical HDPE crates on their own bones, each hand-built from the 1:50 drawings: a 20 mm foot ring (8 mm wall, 0.54 x 0.30 m), a 12 mm floor plate, the 4 mm wall tray tapering from 0.56 x 0.34 m at the floor to 0.61 x 0.37 m at the rim, and the 20 mm rim ring 0.62 x 0.40 m whose inner opening is a stacking ledge that carries the foot ring of the next crate (the drawn foot, wall and rim sizes do not otherwise touch each other). Handle slots and floor ribs are texture decals (below every feature).",
+     "de": "K\u00f6rper: f\u00fcnf gleiche PE-HD-Kisten auf eigenen Knochen, je von Hand aus den Zeichnungen 1:50 gebaut: ein Fu\u00dfring von 20 mm (8 mm Wand, 0,54 x 0,30 m), eine Bodenplatte von 12 mm, die Wannenwand von 4 mm, die sich von 0,56 x 0,34 m am Boden auf 0,61 x 0,37 m am Rand weitet, und der Randring von 20 mm 0,62 x 0,40 m, dessen innere \u00d6ffnung als Stapelleiste den Fu\u00dfring der n\u00e4chsten Kiste tr\u00e4gt (die gezeichneten Fu\u00df-, Wand- und Randma\u00dfe ber\u00fchren sich sonst nicht). Griffschlitze und Bodenrippen sind Texturdecals (unter jeder Schwelle)."
+    },
+    {
+     "en": "Thermal: the declared 0.6 m2 per crate is the outer wall area, so each region is the outer envelope of its crate (tapered wall block, rim and foot ring edges) with its top and bottom faces as section faces; the inside of the tray, the floor faces and the open top are not an exchange surface of the stack.",
+     "de": "Thermik: die angegebenen 0,6 m2 je Kiste sind die \u00e4u\u00dfere Wandfl\u00e4che, daher ist jede Region die Au\u00dfenh\u00fclle ihrer Kiste (Wandblock, Rand- und Fu\u00dfringkanten) mit Ober- und Unterseite als Schnittfl\u00e4chen; Wanneninnenseite, Bodenfl\u00e4chen und offene Oberseite sind keine Austauschfl\u00e4che des Stapels."
+    },
+    {
+     "en": "Structure: per crate the foot ring, the wall tray (2 mm wall inside the 4 mm skin), the rim ledge and the floor plate are members; the stack joint is the ring where a foot ring meets the ledge below, the support is the foot ring of the lowest crate, one mass lump of 1.9 kg at the declared centre of each crate.",
+     "de": "Tragwerk: je Kiste sind Fu\u00dfring, Wannenwand (2 mm Wand innerhalb der 4 mm Haut), Randleiste und Bodenplatte St\u00e4be; die Stapelfuge ist der Ring, wo ein Fu\u00dfring auf die Leiste darunter trifft, das Auflager ist der Fu\u00dfring der untersten Kiste, ein Massenst\u00fcck von 1,9 kg im angegebenen Schwerpunkt jeder Kiste."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "floor-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.02,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       0.28
+      ],
+      [
+       0.17,
+       0.28
+      ],
+      [
+       0.17,
+       -0.28
+      ],
+      [
+       -0.17,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        -0.2725
+       ],
+       [
+        -0.164,
+        0.2725
+       ],
+       [
+        -0.1625,
+        0.274
+       ],
+       [
+        0.1625,
+        0.274
+       ],
+       [
+        0.164,
+        0.2725
+       ],
+       [
+        0.164,
+        -0.2725
+       ],
+       [
+        0.1625,
+        -0.274
+       ],
+       [
+        -0.1625,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       0.31
+      ],
+      [
+       0.2,
+       0.31
+      ],
+      [
+       0.2,
+       -0.31
+      ],
+      [
+       -0.2,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        0.262
+       ],
+       [
+        0.142,
+        0.262
+       ],
+       [
+        0.142,
+        -0.262
+       ],
+       [
+        -0.142,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3
+    },
+    {
+     "id": "floor-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.02,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       0.28
+      ],
+      [
+       0.17,
+       0.28
+      ],
+      [
+       0.17,
+       -0.28
+      ],
+      [
+       -0.17,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        -0.2725
+       ],
+       [
+        -0.164,
+        0.2725
+       ],
+       [
+        -0.1625,
+        0.274
+       ],
+       [
+        0.1625,
+        0.274
+       ],
+       [
+        0.164,
+        0.2725
+       ],
+       [
+        0.164,
+        -0.2725
+       ],
+       [
+        0.1625,
+        -0.274
+       ],
+       [
+        -0.1625,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       0.31
+      ],
+      [
+       0.2,
+       0.31
+      ],
+      [
+       0.2,
+       -0.31
+      ],
+      [
+       -0.2,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        0.262
+       ],
+       [
+        0.142,
+        0.262
+       ],
+       [
+        0.142,
+        -0.262
+       ],
+       [
+        -0.142,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3
+    },
+    {
+     "id": "floor-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.02,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       0.28
+      ],
+      [
+       0.17,
+       0.28
+      ],
+      [
+       0.17,
+       -0.28
+      ],
+      [
+       -0.17,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        -0.2725
+       ],
+       [
+        -0.164,
+        0.2725
+       ],
+       [
+        -0.1625,
+        0.274
+       ],
+       [
+        0.1625,
+        0.274
+       ],
+       [
+        0.164,
+        0.2725
+       ],
+       [
+        0.164,
+        -0.2725
+       ],
+       [
+        0.1625,
+        -0.274
+       ],
+       [
+        -0.1625,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       0.31
+      ],
+      [
+       0.2,
+       0.31
+      ],
+      [
+       0.2,
+       -0.31
+      ],
+      [
+       -0.2,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        0.262
+       ],
+       [
+        0.142,
+        0.262
+       ],
+       [
+        0.142,
+        -0.262
+       ],
+       [
+        -0.142,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3
+    },
+    {
+     "id": "floor-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.02,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       0.28
+      ],
+      [
+       0.17,
+       0.28
+      ],
+      [
+       0.17,
+       -0.28
+      ],
+      [
+       -0.17,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        -0.2725
+       ],
+       [
+        -0.164,
+        0.2725
+       ],
+       [
+        -0.1625,
+        0.274
+       ],
+       [
+        0.1625,
+        0.274
+       ],
+       [
+        0.164,
+        0.2725
+       ],
+       [
+        0.164,
+        -0.2725
+       ],
+       [
+        0.1625,
+        -0.274
+       ],
+       [
+        -0.1625,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       0.31
+      ],
+      [
+       0.2,
+       0.31
+      ],
+      [
+       0.2,
+       -0.31
+      ],
+      [
+       -0.2,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        0.262
+       ],
+       [
+        0.142,
+        0.262
+       ],
+       [
+        0.142,
+        -0.262
+       ],
+       [
+        -0.142,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3
+    },
+    {
+     "id": "floor-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.02,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       0.28
+      ],
+      [
+       0.17,
+       0.28
+      ],
+      [
+       0.17,
+       -0.28
+      ],
+      [
+       -0.17,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        -0.2725
+       ],
+       [
+        -0.164,
+        0.2725
+       ],
+       [
+        -0.1625,
+        0.274
+       ],
+       [
+        0.1625,
+        0.274
+       ],
+       [
+        0.164,
+        0.2725
+       ],
+       [
+        0.164,
+        -0.2725
+       ],
+       [
+        0.1625,
+        -0.274
+       ],
+       [
+        -0.1625,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ]
+    },
+    {
+     "id": "rim-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.2,
+       0.31
+      ],
+      [
+       0.2,
+       0.31
+      ],
+      [
+       0.2,
+       -0.31
+      ],
+      [
+       -0.2,
+       -0.31
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.142,
+        0.262
+       ],
+       [
+        0.142,
+        0.262
+       ],
+       [
+        0.142,
+        -0.262
+       ],
+       [
+        -0.142,
+        -0.262
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-envelope-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-1"
+    },
+    {
+     "id": "th-rim-edge-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.302
+      ],
+      [
+       -0.2,
+       0.302
+      ],
+      [
+       -0.192,
+       0.31
+      ],
+      [
+       0.192,
+       0.31
+      ],
+      [
+       0.2,
+       0.302
+      ],
+      [
+       0.2,
+       -0.302
+      ],
+      [
+       0.192,
+       -0.31
+      ],
+      [
+       -0.192,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-1"
+    },
+    {
+     "id": "th-envelope-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-2"
+    },
+    {
+     "id": "th-rim-edge-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.302
+      ],
+      [
+       -0.2,
+       0.302
+      ],
+      [
+       -0.192,
+       0.31
+      ],
+      [
+       0.192,
+       0.31
+      ],
+      [
+       0.2,
+       0.302
+      ],
+      [
+       0.2,
+       -0.302
+      ],
+      [
+       0.192,
+       -0.31
+      ],
+      [
+       -0.192,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-2"
+    },
+    {
+     "id": "th-envelope-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-3"
+    },
+    {
+     "id": "th-rim-edge-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.302
+      ],
+      [
+       -0.2,
+       0.302
+      ],
+      [
+       -0.192,
+       0.31
+      ],
+      [
+       0.192,
+       0.31
+      ],
+      [
+       0.2,
+       0.302
+      ],
+      [
+       0.2,
+       -0.302
+      ],
+      [
+       0.192,
+       -0.31
+      ],
+      [
+       -0.192,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-3"
+    },
+    {
+     "id": "th-envelope-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-4"
+    },
+    {
+     "id": "th-rim-edge-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.302
+      ],
+      [
+       -0.2,
+       0.302
+      ],
+      [
+       -0.192,
+       0.31
+      ],
+      [
+       0.192,
+       0.31
+      ],
+      [
+       0.2,
+       0.302
+      ],
+      [
+       0.2,
+       -0.302
+      ],
+      [
+       0.192,
+       -0.31
+      ],
+      [
+       -0.192,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-4"
+    },
+    {
+     "id": "th-envelope-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.02,
+     "to": 0.275,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-5"
+    },
+    {
+     "id": "th-rim-edge-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.2,
+       -0.302
+      ],
+      [
+       -0.2,
+       0.302
+      ],
+      [
+       -0.192,
+       0.31
+      ],
+      [
+       0.192,
+       0.31
+      ],
+      [
+       0.2,
+       0.302
+      ],
+      [
+       0.2,
+       -0.302
+      ],
+      [
+       0.192,
+       -0.31
+      ],
+      [
+       -0.192,
+       -0.31
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.275,
+     "to": 0.3,
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-5"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-tray-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       0.278
+      ],
+      [
+       0.168,
+       0.278
+      ],
+      [
+       0.168,
+       -0.278
+      ],
+      [
+       -0.168,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        0.274
+       ],
+       [
+        0.164,
+        0.274
+       ],
+       [
+        0.164,
+        -0.274
+       ],
+       [
+        -0.164,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.022,
+     "to": 0.273,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-1",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       0.309
+      ],
+      [
+       0.199,
+       0.309
+      ],
+      [
+       0.199,
+       -0.309
+      ],
+      [
+       -0.199,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        0.263
+       ],
+       [
+        0.143,
+        0.263
+       ],
+       [
+        0.143,
+        -0.263
+       ],
+       [
+        -0.143,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.2765,
+     "to": 0.2985,
+     "member": "crate-1",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.015,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     },
+     "member": "crate-1",
+     "part": "member"
+    },
+    {
+     "id": "mass-1",
+     "kind": "ellipsoid",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-1",
+     "part": "mass"
+    },
+    {
+     "id": "joint-stack-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.199,
+       0.309
+      ],
+      [
+       0.199,
+       0.309
+      ],
+      [
+       0.199,
+       -0.309
+      ],
+      [
+       -0.199,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        0.263
+       ],
+       [
+        0.143,
+        0.263
+       ],
+       [
+        0.143,
+        -0.263
+       ],
+       [
+        -0.143,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.283,
+     "to": 0.2985,
+     "member": "crate-1",
+     "part": "joint"
+    },
+    {
+     "id": "member-tray-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       0.278
+      ],
+      [
+       0.168,
+       0.278
+      ],
+      [
+       0.168,
+       -0.278
+      ],
+      [
+       -0.168,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        0.274
+       ],
+       [
+        0.164,
+        0.274
+       ],
+       [
+        0.164,
+        -0.274
+       ],
+       [
+        -0.164,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.022,
+     "to": 0.273,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-2",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       0.309
+      ],
+      [
+       0.199,
+       0.309
+      ],
+      [
+       0.199,
+       -0.309
+      ],
+      [
+       -0.199,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        0.263
+       ],
+       [
+        0.143,
+        0.263
+       ],
+       [
+        0.143,
+        -0.263
+       ],
+       [
+        -0.143,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.2765,
+     "to": 0.2985,
+     "member": "crate-2",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.015,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     },
+     "member": "crate-2",
+     "part": "member"
+    },
+    {
+     "id": "mass-2",
+     "kind": "ellipsoid",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-2",
+     "part": "mass"
+    },
+    {
+     "id": "joint-stack-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.199,
+       0.309
+      ],
+      [
+       0.199,
+       0.309
+      ],
+      [
+       0.199,
+       -0.309
+      ],
+      [
+       -0.199,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        0.263
+       ],
+       [
+        0.143,
+        0.263
+       ],
+       [
+        0.143,
+        -0.263
+       ],
+       [
+        -0.143,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.283,
+     "to": 0.2985,
+     "member": "crate-2",
+     "part": "joint"
+    },
+    {
+     "id": "member-tray-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       0.278
+      ],
+      [
+       0.168,
+       0.278
+      ],
+      [
+       0.168,
+       -0.278
+      ],
+      [
+       -0.168,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        0.274
+       ],
+       [
+        0.164,
+        0.274
+       ],
+       [
+        0.164,
+        -0.274
+       ],
+       [
+        -0.164,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.022,
+     "to": 0.273,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-3",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       0.309
+      ],
+      [
+       0.199,
+       0.309
+      ],
+      [
+       0.199,
+       -0.309
+      ],
+      [
+       -0.199,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        0.263
+       ],
+       [
+        0.143,
+        0.263
+       ],
+       [
+        0.143,
+        -0.263
+       ],
+       [
+        -0.143,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.2765,
+     "to": 0.2985,
+     "member": "crate-3",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.015,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     },
+     "member": "crate-3",
+     "part": "member"
+    },
+    {
+     "id": "mass-3",
+     "kind": "ellipsoid",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-3",
+     "part": "mass"
+    },
+    {
+     "id": "joint-stack-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.199,
+       0.309
+      ],
+      [
+       0.199,
+       0.309
+      ],
+      [
+       0.199,
+       -0.309
+      ],
+      [
+       -0.199,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        0.263
+       ],
+       [
+        0.143,
+        0.263
+       ],
+       [
+        0.143,
+        -0.263
+       ],
+       [
+        -0.143,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.283,
+     "to": 0.2985,
+     "member": "crate-3",
+     "part": "joint"
+    },
+    {
+     "id": "member-tray-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       0.278
+      ],
+      [
+       0.168,
+       0.278
+      ],
+      [
+       0.168,
+       -0.278
+      ],
+      [
+       -0.168,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        0.274
+       ],
+       [
+        0.164,
+        0.274
+       ],
+       [
+        0.164,
+        -0.274
+       ],
+       [
+        -0.164,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.022,
+     "to": 0.273,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-4",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       0.309
+      ],
+      [
+       0.199,
+       0.309
+      ],
+      [
+       0.199,
+       -0.309
+      ],
+      [
+       -0.199,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        0.263
+       ],
+       [
+        0.143,
+        0.263
+       ],
+       [
+        0.143,
+        -0.263
+       ],
+       [
+        -0.143,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.2765,
+     "to": 0.2985,
+     "member": "crate-4",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.015,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     },
+     "member": "crate-4",
+     "part": "member"
+    },
+    {
+     "id": "mass-4",
+     "kind": "ellipsoid",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-4",
+     "part": "mass"
+    },
+    {
+     "id": "joint-stack-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.199,
+       0.309
+      ],
+      [
+       0.199,
+       0.309
+      ],
+      [
+       0.199,
+       -0.309
+      ],
+      [
+       -0.199,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        0.263
+       ],
+       [
+        0.143,
+        0.263
+       ],
+       [
+        0.143,
+        -0.263
+       ],
+       [
+        -0.143,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.283,
+     "to": 0.2985,
+     "member": "crate-4",
+     "part": "joint"
+    },
+    {
+     "id": "member-tray-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       0.278
+      ],
+      [
+       0.168,
+       0.278
+      ],
+      [
+       0.168,
+       -0.278
+      ],
+      [
+       -0.168,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.164,
+        0.274
+       ],
+       [
+        0.164,
+        0.274
+       ],
+       [
+        0.164,
+        -0.274
+       ],
+       [
+        -0.164,
+        -0.274
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.022,
+     "to": 0.273,
+     "taperTo": [
+      1,
+      1.09
+     ],
+     "member": "crate-5",
+     "part": "member"
+    },
+    {
+     "id": "member-rim-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.199,
+       0.309
+      ],
+      [
+       0.199,
+       0.309
+      ],
+      [
+       0.199,
+       -0.309
+      ],
+      [
+       -0.199,
+       -0.309
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.143,
+        0.263
+       ],
+       [
+        0.143,
+        0.263
+       ],
+       [
+        0.143,
+        -0.263
+       ],
+       [
+        -0.143,
+        -0.263
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.2765,
+     "to": 0.2985,
+     "member": "crate-5",
+     "part": "member"
+    },
+    {
+     "id": "member-floor-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.55,
+      0.015,
+      0.33
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     },
+     "member": "crate-5",
+     "part": "member"
+    },
+    {
+     "id": "mass-5",
+     "kind": "ellipsoid",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-5",
+     "part": "mass"
+    },
+    {
+     "id": "support-base-contact",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.54,
+      0.015,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0075,
+       0.0
+      ]
+     },
+     "member": "crate-1",
+     "part": "support",
+     "anchor": "base-contact"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the 1:100 drawings build each crate as the 20 mm floor plate, the 6 mm wall tray tapering to the drawn 0.60 x 0.38 m top and the 25 mm rim ring with its stacking ledge; foot ring, handle slots and floor ribs are below the scale or not drawn.",
+     "de": "K\u00f6rper: die Zeichnungen 1:100 bauen jede Kiste als Bodenplatte von 20 mm, die Wannenwand von 6 mm, die sich auf die gezeichnete Oberkante 0,60 x 0,38 m weitet, und den Randring von 25 mm mit seiner Stapelleiste; Fu\u00dfring, Griffschlitze und Bodenrippen liegen unter dem Ma\u00dfstab oder sind nicht gezeichnet."
+    },
+    {
+     "en": "Thermal: the declared 0.6 m2 per crate is the outer wall area, so each region is the outer envelope of its crate (tapered wall block, rim and foot ring edges) with its top and bottom faces as section faces; the inside of the tray, the floor faces and the open top are not an exchange surface of the stack.",
+     "de": "Thermik: die angegebenen 0,6 m2 je Kiste sind die \u00e4u\u00dfere Wandfl\u00e4che, daher ist jede Region die Au\u00dfenh\u00fclle ihrer Kiste (Wandblock, Rand- und Fu\u00dfringkanten) mit Ober- und Unterseite als Schnittfl\u00e4chen; Wanneninnenseite, Bodenfl\u00e4chen und offene Oberseite sind keine Austauschfl\u00e4che des Stapels."
+    },
+    {
+     "en": "Structure: per crate the foot ring, the wall tray (2 mm wall inside the 4 mm skin), the rim ledge and the floor plate are members; the stack joint is the ring where a foot ring meets the ledge below, the support is the foot ring of the lowest crate, one mass lump of 1.9 kg at the declared centre of each crate.",
+     "de": "Tragwerk: je Kiste sind Fu\u00dfring, Wannenwand (2 mm Wand innerhalb der 4 mm Haut), Randleiste und Bodenplatte St\u00e4be; die Stapelfuge ist der Ring, wo ein Fu\u00dfring auf die Leiste darunter trifft, das Auflager ist der Fu\u00dfring der untersten Kiste, ein Massenst\u00fcck von 1,9 kg im angegebenen Schwerpunkt jeder Kiste."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "floor-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.03,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.2635
+       ],
+       [
+        -0.155,
+        0.2635
+       ],
+       [
+        -0.1535,
+        0.265
+       ],
+       [
+        0.1535,
+        0.265
+       ],
+       [
+        0.155,
+        0.2635
+       ],
+       [
+        0.155,
+        -0.2635
+       ],
+       [
+        0.1535,
+        -0.265
+       ],
+       [
+        -0.1535,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ]
+    },
+    {
+     "id": "floor-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.03,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.2635
+       ],
+       [
+        -0.155,
+        0.2635
+       ],
+       [
+        -0.1535,
+        0.265
+       ],
+       [
+        0.1535,
+        0.265
+       ],
+       [
+        0.155,
+        0.2635
+       ],
+       [
+        0.155,
+        -0.2635
+       ],
+       [
+        0.1535,
+        -0.265
+       ],
+       [
+        -0.1535,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ]
+    },
+    {
+     "id": "floor-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.03,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.2635
+       ],
+       [
+        -0.155,
+        0.2635
+       ],
+       [
+        -0.1535,
+        0.265
+       ],
+       [
+        0.1535,
+        0.265
+       ],
+       [
+        0.155,
+        0.2635
+       ],
+       [
+        0.155,
+        -0.2635
+       ],
+       [
+        0.1535,
+        -0.265
+       ],
+       [
+        -0.1535,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ]
+    },
+    {
+     "id": "floor-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.03,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.2635
+       ],
+       [
+        -0.155,
+        0.2635
+       ],
+       [
+        -0.1535,
+        0.265
+       ],
+       [
+        0.1535,
+        0.265
+       ],
+       [
+        0.155,
+        0.2635
+       ],
+       [
+        0.155,
+        -0.2635
+       ],
+       [
+        0.1535,
+        -0.265
+       ],
+       [
+        -0.1535,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ]
+    },
+    {
+     "id": "floor-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.03,
+      0.34
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tray-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.2635
+       ],
+       [
+        -0.155,
+        0.2635
+       ],
+       [
+        -0.1535,
+        0.265
+       ],
+       [
+        0.1535,
+        0.265
+       ],
+       [
+        0.155,
+        0.2635
+       ],
+       [
+        0.155,
+        -0.2635
+       ],
+       [
+        0.1535,
+        -0.265
+       ],
+       [
+        -0.1535,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-envelope-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-1"
+    },
+    {
+     "id": "th-envelope-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-2"
+    },
+    {
+     "id": "th-envelope-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-3"
+    },
+    {
+     "id": "th-envelope-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-4"
+    },
+    {
+     "id": "th-envelope-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.17,
+       -0.272
+      ],
+      [
+       -0.17,
+       0.272
+      ],
+      [
+       -0.162,
+       0.28
+      ],
+      [
+       0.162,
+       0.28
+      ],
+      [
+       0.17,
+       0.272
+      ],
+      [
+       0.17,
+       -0.272
+      ],
+      [
+       0.162,
+       -0.28
+      ],
+      [
+       -0.162,
+       -0.28
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.3,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "sectionFaces": [
+      "+v",
+      "-v"
+     ],
+     "region": "crate-5"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-tray-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       -0.27
+      ],
+      [
+       -0.168,
+       0.27
+      ],
+      [
+       -0.16,
+       0.278
+      ],
+      [
+       0.16,
+       0.278
+      ],
+      [
+       0.168,
+       0.27
+      ],
+      [
+       0.168,
+       -0.27
+      ],
+      [
+       0.16,
+       -0.278
+      ],
+      [
+       -0.16,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.259
+       ],
+       [
+        -0.155,
+        0.259
+       ],
+       [
+        -0.149,
+        0.265
+       ],
+       [
+        0.149,
+        0.265
+       ],
+       [
+        0.155,
+        0.259
+       ],
+       [
+        0.155,
+        -0.259
+       ],
+       [
+        0.149,
+        -0.265
+       ],
+       [
+        -0.149,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.032,
+     "to": 0.298,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "member": "crate-1",
+     "part": "member"
+    },
+    {
+     "id": "mass-1",
+     "kind": "ellipsoid",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.05,
+      0.05,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-1",
+     "part": "mass"
+    },
+    {
+     "id": "member-tray-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       -0.27
+      ],
+      [
+       -0.168,
+       0.27
+      ],
+      [
+       -0.16,
+       0.278
+      ],
+      [
+       0.16,
+       0.278
+      ],
+      [
+       0.168,
+       0.27
+      ],
+      [
+       0.168,
+       -0.27
+      ],
+      [
+       0.16,
+       -0.278
+      ],
+      [
+       -0.16,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.259
+       ],
+       [
+        -0.155,
+        0.259
+       ],
+       [
+        -0.149,
+        0.265
+       ],
+       [
+        0.149,
+        0.265
+       ],
+       [
+        0.155,
+        0.259
+       ],
+       [
+        0.155,
+        -0.259
+       ],
+       [
+        0.149,
+        -0.265
+       ],
+       [
+        -0.149,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.032,
+     "to": 0.298,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "member": "crate-2",
+     "part": "member"
+    },
+    {
+     "id": "mass-2",
+     "kind": "ellipsoid",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.05,
+      0.05,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-2",
+     "part": "mass"
+    },
+    {
+     "id": "member-tray-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       -0.27
+      ],
+      [
+       -0.168,
+       0.27
+      ],
+      [
+       -0.16,
+       0.278
+      ],
+      [
+       0.16,
+       0.278
+      ],
+      [
+       0.168,
+       0.27
+      ],
+      [
+       0.168,
+       -0.27
+      ],
+      [
+       0.16,
+       -0.278
+      ],
+      [
+       -0.16,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.259
+       ],
+       [
+        -0.155,
+        0.259
+       ],
+       [
+        -0.149,
+        0.265
+       ],
+       [
+        0.149,
+        0.265
+       ],
+       [
+        0.155,
+        0.259
+       ],
+       [
+        0.155,
+        -0.259
+       ],
+       [
+        0.149,
+        -0.265
+       ],
+       [
+        -0.149,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.032,
+     "to": 0.298,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "member": "crate-3",
+     "part": "member"
+    },
+    {
+     "id": "mass-3",
+     "kind": "ellipsoid",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.05,
+      0.05,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-3",
+     "part": "mass"
+    },
+    {
+     "id": "member-tray-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       -0.27
+      ],
+      [
+       -0.168,
+       0.27
+      ],
+      [
+       -0.16,
+       0.278
+      ],
+      [
+       0.16,
+       0.278
+      ],
+      [
+       0.168,
+       0.27
+      ],
+      [
+       0.168,
+       -0.27
+      ],
+      [
+       0.16,
+       -0.278
+      ],
+      [
+       -0.16,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.259
+       ],
+       [
+        -0.155,
+        0.259
+       ],
+       [
+        -0.149,
+        0.265
+       ],
+       [
+        0.149,
+        0.265
+       ],
+       [
+        0.155,
+        0.259
+       ],
+       [
+        0.155,
+        -0.259
+       ],
+       [
+        0.149,
+        -0.265
+       ],
+       [
+        -0.149,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.032,
+     "to": 0.298,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "member": "crate-4",
+     "part": "member"
+    },
+    {
+     "id": "mass-4",
+     "kind": "ellipsoid",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.05,
+      0.05,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-4",
+     "part": "mass"
+    },
+    {
+     "id": "member-tray-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.168,
+       -0.27
+      ],
+      [
+       -0.168,
+       0.27
+      ],
+      [
+       -0.16,
+       0.278
+      ],
+      [
+       0.16,
+       0.278
+      ],
+      [
+       0.168,
+       0.27
+      ],
+      [
+       0.168,
+       -0.27
+      ],
+      [
+       0.16,
+       -0.278
+      ],
+      [
+       -0.16,
+       -0.278
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.155,
+        -0.259
+       ],
+       [
+        -0.155,
+        0.259
+       ],
+       [
+        -0.149,
+        0.265
+       ],
+       [
+        0.149,
+        0.265
+       ],
+       [
+        0.155,
+        0.259
+       ],
+       [
+        0.155,
+        -0.259
+       ],
+       [
+        0.149,
+        -0.265
+       ],
+       [
+        -0.149,
+        -0.265
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.032,
+     "to": 0.298,
+     "taperTo": [
+      1,
+      1.14
+     ],
+     "member": "crate-5",
+     "part": "member"
+    },
+    {
+     "id": "mass-5",
+     "kind": "ellipsoid",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.05,
+      0.05,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-5",
+     "part": "mass"
+    },
+    {
+     "id": "support-base-contact",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.54,
+      0.03,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "crate-1",
+     "part": "support",
+     "anchor": "base-contact"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: each crate as one 15 mm wall tray tapering from 0.56 x 0.34 m to the drawn 0.62 x 0.40 m on a 30 mm floor plate (the drawing shows one tapered outline per crate; foot, rim and slots are merged into it).",
+     "de": "K\u00f6rper: jede Kiste als eine Wanne mit 15 mm Wand, die sich von 0,56 x 0,34 m auf die gezeichneten 0,62 x 0,40 m weitet, auf einer Bodenplatte von 30 mm (die Zeichnung zeigt eine geneigte Kontur je Kiste; Fu\u00df, Rand und Schlitze sind darin zusammengefasst)."
+    },
+    {
+     "en": "Thermal: the declared 0.6 m2 per crate is the outer wall area, so each region is the outer envelope of its crate (tapered wall block, rim and foot ring edges) with its top and bottom faces as section faces; the inside of the tray, the floor faces and the open top are not an exchange surface of the stack.",
+     "de": "Thermik: die angegebenen 0,6 m2 je Kiste sind die \u00e4u\u00dfere Wandfl\u00e4che, daher ist jede Region die Au\u00dfenh\u00fclle ihrer Kiste (Wandblock, Rand- und Fu\u00dfringkanten) mit Ober- und Unterseite als Schnittfl\u00e4chen; Wanneninnenseite, Bodenfl\u00e4chen und offene Oberseite sind keine Austauschfl\u00e4che des Stapels."
+    },
+    {
+     "en": "Structure: per crate the foot ring, the wall tray (2 mm wall inside the 4 mm skin), the rim ledge and the floor plate are members; the stack joint is the ring where a foot ring meets the ledge below, the support is the foot ring of the lowest crate, one mass lump of 1.9 kg at the declared centre of each crate.",
+     "de": "Tragwerk: je Kiste sind Fu\u00dfring, Wannenwand (2 mm Wand innerhalb der 4 mm Haut), Randleiste und Bodenplatte St\u00e4be; die Stapelfuge ist der Ring, wo ein Fu\u00dfring auf die Leiste darunter trifft, das Auflager ist der Fu\u00dfring der untersten Kiste, ein Massenst\u00fcck von 1,9 kg im angegebenen Schwerpunkt jeder Kiste."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "crate-block-1",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.62,
+      0.3,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "crate-block-2",
+     "kind": "box",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.62,
+      0.3,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "crate-block-3",
+     "kind": "box",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.62,
+      0.3,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "crate-block-4",
+     "kind": "box",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.62,
+      0.3,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "crate-block-5",
+     "kind": "box",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.62,
+      0.3,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-crate-block-1",
+     "of": "crate-block-1",
+     "region": "crate-1"
+    },
+    {
+     "id": "th-crate-block-2",
+     "of": "crate-block-2",
+     "region": "crate-2"
+    },
+    {
+     "id": "th-crate-block-3",
+     "of": "crate-block-3",
+     "region": "crate-3"
+    },
+    {
+     "id": "th-crate-block-4",
+     "of": "crate-block-4",
+     "region": "crate-4"
+    },
+    {
+     "id": "th-crate-block-5",
+     "of": "crate-block-5",
+     "region": "crate-5"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-shell-1",
+     "kind": "extrude",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.198,
+       0.308
+      ],
+      [
+       0.198,
+       0.308
+      ],
+      [
+       0.198,
+       -0.308
+      ],
+      [
+       -0.198,
+       -0.308
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.15,
+        0.26
+       ],
+       [
+        0.15,
+        0.26
+       ],
+       [
+        0.15,
+        -0.26
+       ],
+       [
+        -0.15,
+        -0.26
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.002,
+     "to": 0.298,
+     "member": "crate-1",
+     "part": "member"
+    },
+    {
+     "id": "mass-1",
+     "kind": "ellipsoid",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-1",
+     "part": "mass"
+    },
+    {
+     "id": "member-shell-2",
+     "kind": "extrude",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.198,
+       0.308
+      ],
+      [
+       0.198,
+       0.308
+      ],
+      [
+       0.198,
+       -0.308
+      ],
+      [
+       -0.198,
+       -0.308
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.15,
+        0.26
+       ],
+       [
+        0.15,
+        0.26
+       ],
+       [
+        0.15,
+        -0.26
+       ],
+       [
+        -0.15,
+        -0.26
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.002,
+     "to": 0.298,
+     "member": "crate-2",
+     "part": "member"
+    },
+    {
+     "id": "mass-2",
+     "kind": "ellipsoid",
+     "bone": "crate-2",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-2",
+     "part": "mass"
+    },
+    {
+     "id": "member-shell-3",
+     "kind": "extrude",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.198,
+       0.308
+      ],
+      [
+       0.198,
+       0.308
+      ],
+      [
+       0.198,
+       -0.308
+      ],
+      [
+       -0.198,
+       -0.308
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.15,
+        0.26
+       ],
+       [
+        0.15,
+        0.26
+       ],
+       [
+        0.15,
+        -0.26
+       ],
+       [
+        -0.15,
+        -0.26
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.002,
+     "to": 0.298,
+     "member": "crate-3",
+     "part": "member"
+    },
+    {
+     "id": "mass-3",
+     "kind": "ellipsoid",
+     "bone": "crate-3",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-3",
+     "part": "mass"
+    },
+    {
+     "id": "member-shell-4",
+     "kind": "extrude",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.198,
+       0.308
+      ],
+      [
+       0.198,
+       0.308
+      ],
+      [
+       0.198,
+       -0.308
+      ],
+      [
+       -0.198,
+       -0.308
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.15,
+        0.26
+       ],
+       [
+        0.15,
+        0.26
+       ],
+       [
+        0.15,
+        -0.26
+       ],
+       [
+        -0.15,
+        -0.26
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.002,
+     "to": 0.298,
+     "member": "crate-4",
+     "part": "member"
+    },
+    {
+     "id": "mass-4",
+     "kind": "ellipsoid",
+     "bone": "crate-4",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-4",
+     "part": "mass"
+    },
+    {
+     "id": "member-shell-5",
+     "kind": "extrude",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.198,
+       0.308
+      ],
+      [
+       0.198,
+       0.308
+      ],
+      [
+       0.198,
+       -0.308
+      ],
+      [
+       -0.198,
+       -0.308
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.15,
+        0.26
+       ],
+       [
+        0.15,
+        0.26
+       ],
+       [
+        0.15,
+        -0.26
+       ],
+       [
+        -0.15,
+        -0.26
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.002,
+     "to": 0.298,
+     "member": "crate-5",
+     "part": "member"
+    },
+    {
+     "id": "mass-5",
+     "kind": "ellipsoid",
+     "bone": "crate-5",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.5,
+     "radii": [
+      0.0375,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.15,
+       0.0
+      ]
+     },
+     "member": "crate-5",
+     "part": "mass"
+    },
+    {
+     "id": "support-base-contact",
+     "kind": "box",
+     "bone": "crate-1",
+     "material": "hdpe-crate",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.5,
+      0.075,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0375,
+       0.0
+      ]
+     },
+     "member": "crate-1",
+     "part": "support",
+     "anchor": "base-contact"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: each crate is the drawn 0.62 x 0.30 x 0.40 m block, five of them stacked.",
+     "de": "K\u00f6rper: jede Kiste ist der gezeichnete Block 0,62 x 0,30 x 0,40 m, f\u00fcnf \u00fcbereinander."
+    },
+    {
+     "en": "Thermal: the declared 0.6 m2 per crate is the outer wall area, so each region is the outer envelope of its crate (tapered wall block, rim and foot ring edges) with its top and bottom faces as section faces; the inside of the tray, the floor faces and the open top are not an exchange surface of the stack.",
+     "de": "Thermik: die angegebenen 0,6 m2 je Kiste sind die \u00e4u\u00dfere Wandfl\u00e4che, daher ist jede Region die Au\u00dfenh\u00fclle ihrer Kiste (Wandblock, Rand- und Fu\u00dfringkanten) mit Ober- und Unterseite als Schnittfl\u00e4chen; Wanneninnenseite, Bodenfl\u00e4chen und offene Oberseite sind keine Austauschfl\u00e4che des Stapels."
+    },
+    {
+     "en": "Structure: per crate the foot ring, the wall tray (2 mm wall inside the 4 mm skin), the rim ledge and the floor plate are members; the stack joint is the ring where a foot ring meets the ledge below, the support is the foot ring of the lowest crate, one mass lump of 1.9 kg at the declared centre of each crate.",
+     "de": "Tragwerk: je Kiste sind Fu\u00dfring, Wannenwand (2 mm Wand innerhalb der 4 mm Haut), Randleiste und Bodenplatte St\u00e4be; die Stapelfuge ist der Ring, wo ein Fu\u00dfring auf die Leiste darunter trifft, das Auflager ist der Fu\u00dfring der untersten Kiste, ein Massenst\u00fcck von 1,9 kg im angegebenen Schwerpunkt jeder Kiste."
+    }
+   ]
+  }
+ }
+}

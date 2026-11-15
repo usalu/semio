@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/build/source/closure/readmission",
+  "title": "Re-admission of a moved implementation closure",
+  "description": "A process that admitted the sources of the build implementation at its start (its captured physical sources, a list of path and sha256) compares the files with the disk whenever a task asks it to capture a child image. Peers edit the tree continuously, so the list is outdated after minutes. The check protects one property: a task runs with ONE consistent version of the build implementation, and the cache key it publishes names the code that really ran. That property does not need a failure. When the closure moved, the task admits the CURRENT closure for itself: a new consistent capture from the disk, a new snapshot digest and so a new key, handed to a fresh child process. Only a closure that keeps moving DURING one admission (a file changes between hash and load) is retried with a growing pause, five retries after the first attempt (`maximumAttempts` attempts in all); then the task ends with the refusal `closure.moving` of class `unserved` (exit status 75, try again later), never with an internal error. Files that are not part of the closure never take part. The texts are in the build catalog (EN, DE): `closure.readmitted`, `closure.readmit-retry`, `closure.moving`.",
+  "definitions": {
+    "Signal": {
+      "description": "A text a thrown error carries: the message contains `value`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value"],
+      "properties": { "value": { "type": "string", "minLength": 1, "maxLength": 256 } }
+    },
+    "Policy": {
+      "description": "Authored numbers. `movedSignals`: errors that say the admitted list is outdated (a file differs, a file or an import is not in the list). `tornSignals`: errors that say a file changed while it was being captured (the capture is taken again after the pause). `backoffMs[i]` is the pause after attempt i+1 (one pause less than attempts). `maximumListedFiles`: files named in a line, `maximumMovedFiles`: files hashed to find all moved ones, `readConcurrency`: files read at the same time.",
+      "const": {
+        "version": 1,
+        "maximumAttempts": 6,
+        "backoffMs": [250, 500, 1000, 2000, 4000],
+        "maximumListedFiles": 4,
+        "maximumMovedFiles": 256,
+        "readConcurrency": 16,
+        "movedSignals": [
+          { "value": "build.closure.source-differs" },
+          { "value": "build.closure.source-not-admitted" },
+          { "value": "Admitted implementation declaring image and import required" },
+          { "value": "no such file or directory" }
+        ],
+        "tornSignals": [
+          { "value": "Authorizer source changed during capture" },
+          { "value": "tools.authorizer-ancestry-changed" },
+          { "value": "Short authorizer Source read" },
+          { "value": "Authorizer DATA directory changed" },
+          { "value": "Implementation Source changed during capture" },
+          { "value": "Implementation Source ancestry changed" },
+          { "value": "Implementation Source shortened" }
+        ]
+      }
+    }
+  }
+}

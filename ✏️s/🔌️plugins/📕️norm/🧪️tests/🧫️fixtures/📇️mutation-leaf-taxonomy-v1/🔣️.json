@@ -3773,12 +3773,12 @@
         ],
         "value": "newInternalGainsWM2"
       },
-      "entity": "zone-internal-gains-w-m2",
-      "kind": "change-zone-internal-gains-w-m2",
-      "module": "🟧change-zone-internal-gains-w-m2",
+      "entity": "zone-internal-gains-wm2",
+      "kind": "change-zone-internal-gains-wm2",
+      "module": "🟧change-zone-internal-gains-wm2",
       "physicalLayout": "direct",
       "record": "ChangedZoneInternalGainsWM2",
-      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧change-zone-internal-gains-w-m2/🦀️.rs",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧change-zone-internal-gains-wm2/🦀️.rs",
       "standard": "🔖️1",
       "subset": "✳️any",
       "type": "ChangeZoneInternalGainsWM2",
@@ -3798,12 +3798,12 @@
         ],
         "value": "newLightingPowerWM2"
       },
-      "entity": "zone-lighting-power-w-m2",
-      "kind": "change-zone-lighting-power-w-m2",
-      "module": "🟨change-zone-lighting-power-w-m2",
+      "entity": "zone-lighting-power-wm2",
+      "kind": "change-zone-lighting-power-wm2",
+      "module": "🟨change-zone-lighting-power-wm2",
       "physicalLayout": "direct",
       "record": "ChangedZoneLightingPowerWM2",
-      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟨change-zone-lighting-power-w-m2/🦀️.rs",
+      "source": "⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟨change-zone-lighting-power-wm2/🦀️.rs",
       "standard": "🔖️1",
       "subset": "✳️any",
       "type": "ChangeZoneLightingPowerWM2",
@@ -59551,6 +59551,31 @@
       "standard": "🔖️1",
       "subset": "✳️any",
       "type": "ChangeAssessmentAnalysisMethod",
+      "verb": "change"
+    },
+    {
+      "aggregateVariant": "ChangeFoundationPileAxialLoadN",
+      "artifact": "🫨️en1998",
+      "edit": {
+        "rule": "set-field",
+        "path": "foundations[].pileAxialLoadN",
+        "selectors": [
+          {
+            "kind": "id",
+            "key": "id"
+          }
+        ],
+        "value": "newPileAxialLoadN"
+      },
+      "entity": "foundation-pile-axial-load-n",
+      "kind": "change-foundation-pile-axial-load-n",
+      "module": "✏️change-foundation-pile-axial-load-n",
+      "physicalLayout": "direct",
+      "record": "ChangedFoundationPileAxialLoadN",
+      "source": "🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-foundation-pile-axial-load-n/🦀️.rs",
+      "standard": "🔖️1",
+      "subset": "✳️any",
+      "type": "ChangeFoundationPileAxialLoadN",
       "verb": "change"
     },
     {

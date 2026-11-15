@@ -1,0 +1,11 @@
+try 1 started pid=9671 2026-11-14T16:58:01Z log=/Users/ueli/native-bootstrap-round-3.log
+try 1 ended 2026-11-14T17:06:04Z native_rc=75 stopped=0 fleet_refusal=1
+try 1 refusal: waiting 180 s 2026-11-14T17:06:04Z
+try 2 started pid=15609 2026-11-14T17:09:04Z log=/Users/ueli/native-bootstrap-round-3-try-2.log
+try 2 ended 2026-11-14T17:15:36Z native_rc=75 stopped=0 fleet_refusal=1
+try 2 refusal: waiting 180 s 2026-11-14T17:15:36Z
+try 3 started pid=20442 2026-11-14T17:18:36Z log=/Users/ueli/native-bootstrap-round-3-try-3.log
+try 3 ended 2026-11-14T17:45:11Z native_rc=75 stopped=0 fleet_refusal=1
+try 3 refusal: waiting 180 s 2026-11-14T17:45:11Z
+try 4 started pid=35471 2026-11-14T17:48:11Z log=/Users/ueli/native-bootstrap-round-3-try-4.log
+round 5 posted: runner stopped and one SIGINT to process group 35471 (try 4) 2026-11-14T17:55:16Z

@@ -1,0 +1,51 @@
+[
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🌐️host/🟨️.mjs",
+  "kind": "literal",
+  "old": " function startJob(key,workspace,frame,indexKey){",
+  "new": " const settleAfterJobV1=async()=>{if(jobs.size>0||governor.inFlight>0)return;try{await ports.settle?.();}catch{}};\n function startJob(key,workspace,frame,indexKey){",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🌐️host/🟨️.mjs",
+  "kind": "literal",
+  "old": "job.settled=run(job,workspace,frame,progress,indexKey).then(()=>finish({}),error=>finish({error}));",
+  "new": "job.settled=run(job,workspace,frame,progress,indexKey).then(()=>finish({}),error=>finish({error})).then(settleAfterJobV1);",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/🟨️.mjs",
+  "kind": "literal",
+  "old": "import {graphServiceHeapBytesV1,GRAPH_MEMORY_POLICY_V1} from \"../../../🧠️memory/🟨️.mjs\";",
+  "new": "import {graphServiceHeapBytesV1,GRAPH_MEMORY_POLICY_V1} from \"../../../🧠️memory/🟨️.mjs\";\nimport {settleGraphMemoryV1} from \"../../../🧠️memory/🧽️settle/🟨️.mjs\";",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/🟨️.mjs",
+  "kind": "literal",
+  "old": "...(admission?{admission}:{}),workers:{memory:workerMemory,active:workerBusy}",
+  "new": "...(admission?{admission}:{}),settle:()=>settleGraphMemoryV1(),workers:{memory:workerMemory,active:workerBusy}",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️host/🟦️.ts",
+  "kind": "literal",
+  "old": "graphStringInternerV1.clear();createMemoryPortsV1().collect();},\n    releaseCutoff:async",
+  "new": "graphStringInternerV1.clear();createMemoryPortsV1().collect();if(options?.more===true)(await import(\"../../🧠️memory/🧽️settle/🟨️.mjs\")).reportRetainedGraphMemoryV1();},\n    releaseCutoff:async",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+  "kind": "literal",
+  "old": "const walkFactsByDigestV1 = new Map(), walkMembersByDigestV1 = new Map(), layerListsV1 = new WeakMap();",
+  "new": "const walkFactsByDigestV1 = createBoundedCacheV1({ name: \"inference:closure-walk-facts\", maxEntries: 65536, maxBytes: 65536 }), walkMembersByDigestV1 = createBoundedCacheV1({ name: \"inference:closure-walk-members\", maxEntries: 65536, maxBytes: 65536 }), layerListsV1 = new WeakMap();",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+  "kind": "literal",
+  "old": "closureStoresV1.clear(); closureCountsV1.derived",
+  "new": "closureStoresV1.clear(); walkFactsByDigestV1.clear(); walkMembersByDigestV1.clear(); closureCountsV1.derived",
+  "count": 1
+ }
+]

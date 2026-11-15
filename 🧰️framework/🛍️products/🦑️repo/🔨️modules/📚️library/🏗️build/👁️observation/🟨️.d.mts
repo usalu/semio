@@ -23,7 +23,7 @@ export type SourceObservationV1 =
 /** 🎟️ Names the immutable parser handle; structural copies remain refused by the runtime registry. */
 export type SourceAnalysisProviderV1 = Readonly<{id:string;revision:string}>;
 /** 📸️ Captures the actual result and every original Source and load-authority observation. */
-export type CapturedSourceInputsV1<T> = Readonly<{value:T;observations:readonly SourceObservationV1[];authorityObservations:readonly SourceObservationV1[]}>;
+export type CapturedSourceInputsV1<T> = Readonly<{value:T;observations:Iterable<SourceObservationV1>&{readonly length:number};authorityObservations:readonly SourceObservationV1[]}>;
 /** 🧩️ Supplies only neutral compiler filesystem methods; external compiler types are not required. */
 export interface SourceTypeScriptSystemV1 {
  fileExists(path:string):boolean;
@@ -51,7 +51,7 @@ export function adoptInferenceAuthorityV1(rows:readonly {readonly kind:string;re
 /** 🧊️ Registers a block a farm worker validated and the caller verified by its hash. */
 export function adoptVerifiedBlockV1(path:string,text:string):void;
 /** 📦️ Admits one physical project's awaited JSON computation and complete observations. */
-export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;stamps?:readonly string[];prepare?:()=>boolean|PromiseLike<boolean>}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
+export function observeProjectInferenceV1<T>(options:Readonly<{cachePath:string;key:unknown;owner:string;reusable?:(value:unknown)=>boolean|PromiseLike<boolean>;stamps?:readonly string[];prepare?:()=>boolean|PromiseLike<boolean>;fleet?:string}>,compute:()=>T|PromiseLike<T>):Promise<Awaited<T>>;
 /** 🔖️ Registers the declared stamps of the inference protocol as `[path, stamp]` pairs and the path fragments they cover, which the module-load authority names by stamp instead of by bytes. */
 export function registerInferenceStampsV1(entries:Iterable<readonly [string,string]>,fragments?:readonly string[]):void;
 /** 📌️ Records the stamp of each named inferrer in the active inference scope. */
@@ -61,7 +61,7 @@ export function memoizedObservedComputationV1<T>(cache:Map<unknown,unknown>,key:
 /** 🧪️ Replays original facts while checking the receiving caller's continuation. */
 export function memoizedObservedAsyncComputationV1<T>(cache:Map<unknown,unknown>,key:unknown,compute:()=>Promise<T>,checkpoint:()=>Promise<void>):Promise<T>;
 /** 🕸️ Preserves every Source fact even when a computation fails. */
-export function captureObservedSourceInputsV1<T>(compute:()=>T|PromiseLike<T>,onFailure?:((observations:SourceObservationV1[],authorityObservations:SourceObservationV1[])=>void)|undefined,includeAuthority?:boolean):Promise<CapturedSourceInputsV1<Awaited<T>>>;
+export function captureObservedSourceInputsV1<T>(compute:()=>T|PromiseLike<T>,onFailure?:((observations:SourceObservationV1[],authorityObservations:SourceObservationV1[])=>void)|undefined,includeAuthority?:boolean,spill?:{builder():{add(rows:Iterable<SourceObservationV1>):void;finish():Iterable<SourceObservationV1>&{readonly length:number}}}):Promise<CapturedSourceInputsV1<Awaited<T>>>;
 /** ✍️ Records actual bounded bytes without accepting a caller-provided digest or file observation. */
 export function observedExactSourceFileV1(batch:ExactSourceReadBatchV1,root:string,name:string):Promise<ExactSourceFileV1|null>;
 /** 📍️ Records the actual system module resolver result or failure. */
@@ -172,3 +172,19 @@ export function observationRowsHoldAsyncV1(rows:readonly unknown[],step:()=>Prom
 export function useStableDirectoriesV1(directories:ReadonlySet<string>):void;
 /** 🔢️ How many directory listings this process made. */
 export function observationProbeCountsV1():{readdir:number};
+
+/** 🌐️ The port through which project inference records travel through the fleet cache; `undefined` keeps them local. */
+/** 🚚️ How the closure entries of a project record travel with it. */
+export type ProjectClosureTravelV1 = Readonly<{ export(root: string, image: string): Promise<readonly Readonly<{ recipeKey: string; bundle: unknown }>[]>; import(root: string, bundles: readonly Readonly<{ recipeKey: string; bundle: unknown }>[]): Promise<number> }>;
+export function registerProjectClosureTravelV1(travel: ProjectClosureTravelV1): void;
+export function useProjectFleetV1(port:undefined|Readonly<{gate(info:unknown):Promise<unknown>;offer(info:unknown):void}>):void;
+/** 📤️ The record at `cachePath` in portable form or undefined. */
+export function exportProjectRecordV1(cachePath:string):undefined|Readonly<{digest:string;authority:readonly unknown[];observations:readonly unknown[];image:string}>;
+/** 📥️ Writes a portable record as the local record at `cachePath`. */
+export function importProjectRecordV1(cachePath:string,portable:unknown):Promise<void>;
+/** 🧾️ The JSON text of one observation row, serialised once per row object. */
+export function observationRowJsonV1(row:unknown):string;
+/** 🧹️ Drops what the inference record at `cachePath` still retains in memory. */
+export function releaseProjectInferenceRetentionV1(cachePath:string):void;
+export function settleObservationLeafV1<T>(attempt:()=>T,options?:{attempts?:number}):T;
+export function readInferenceRecordOrMissV1(cachePath:string,options?:{read?:(path:string,optional:boolean)=>unknown;say?:(line:string)=>void}):any;

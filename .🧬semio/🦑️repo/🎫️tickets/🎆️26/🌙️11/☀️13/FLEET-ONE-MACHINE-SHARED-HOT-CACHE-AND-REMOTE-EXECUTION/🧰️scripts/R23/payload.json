@@ -1,0 +1,156 @@
+[
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🌍️platform-class/🟦️.ts",
+  "flat": "01.ts",
+  "kind": "edit",
+  "base": "5c24055e8a5dd8af9b8552538963b2f7e56ae14394efc91b34810ba7021c7303",
+  "new": "1fe315652edffb0a9ae34825f139b77d771fe75c2de98f1f0c5033924ecd89c2"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🌍️platform-class/🧪️tests/🐍️.py",
+  "flat": "02.py",
+  "kind": "edit",
+  "base": "0cc790967ea1e63ecddb651ce525a00fc5298fffb79906ef664c29092fb3286a",
+  "new": "4c6b5f64996576ad330a4c42479ec2a91e2d1fa232630d32a234c579a30097b2"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🌍️platform-class/🧪️tests/🔣️.json",
+  "flat": "03.json",
+  "kind": "edit",
+  "base": "0d0a86cef12eedd832dc46dae378f53cc4275f7a33d6686f38f7521bbeba0160",
+  "new": "43eb0d1f4a3691a6e0d2e73c6e5fa425b7fa33c76dabcc60efb8019e541f12fa"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🌍️platform-class/🧪️tests/🟦️.ts",
+  "flat": "04.ts",
+  "kind": "edit",
+  "base": "eaf7c666823e151d4d2d21f5c4fd71aaeb7c27e658ddf7248857befe1c2dc00d",
+  "new": "900cf46b29638ad98f846068d4d5280fe4d0a64d8e9390c516517cc01be1d15a"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🌍️platform-class/🧬️schema/🔣️.json",
+  "flat": "05.json",
+  "kind": "edit",
+  "base": "939557c037bf32a4a2317d346405cc83fbc5fda1e9e484563dbcce2be3bed902",
+  "new": "bedc015f393bdcb929baa9761016cf7e5b963274e399cd8bf66ba59aa7a1e7b0"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🟦️.ts",
+  "flat": "06.ts",
+  "kind": "edit",
+  "base": "f563d3213f3049987569c59417bb81cc499aeedd84632b4bb0fdc5e4bb253f3a",
+  "new": "f2e22a0e5846879897a9aaf116194497c84a01720f3dc6b311910c7909c7083c"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧪️tests/🟦️.ts",
+  "flat": "07.ts",
+  "kind": "edit",
+  "base": "b6a3ba23c977a2c4ede4f65b8083ea21a4285fba4411aef4a9346448ee8d0417",
+  "new": "03d49a517a23fe741fbc9f43fd62bfb9a9655dca65d4dd8f0177480a021c25e4"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧪️tests/🌍️two-platforms/🟦️.ts",
+  "flat": "08.ts",
+  "kind": "edit",
+  "base": "8ae47d71db43b55d9366607852caf3fa4d01aa01b0d69f8ad5ebd134dbb0f2af",
+  "new": "291127878002629bc8469c273d5924259994a14558f31af01e4dd9d4d74cc67e"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧬️schema/🔣️.json",
+  "flat": "09.json",
+  "kind": "edit",
+  "base": "7ae09c6620f06df3e99035cc2b7e714c623ea67bae7ec698feb02ddf716625c2",
+  "new": "1312aba6776e76b3e5f160ab14b55abe569f7b45207e3f59b735cd05838817f6"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧳️portable/🟦️.ts",
+  "flat": "10.ts",
+  "kind": "edit",
+  "base": "954f50c9da4a88babd54bf3e8dc03da083b49ca41c2e8cf349a8fd79d233dc16",
+  "new": "c496764c78f0da0409661b9c7fba0f569fb8a21a3536041a96bb74ede0412d7a"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧳️portable/🧪️tests/🐍️.py",
+  "flat": "11.py",
+  "kind": "edit",
+  "base": "fd17b832a3f8c5395d6394f6195231e756736cb03332b00df044a9d5619cd9ce",
+  "new": "ac5af7e957ad75e5860b41b55efbc0662b6659cc2e8500453dd3c7aa026f0d88"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧳️portable/🧪️tests/🔣️.json",
+  "flat": "12.json",
+  "kind": "edit",
+  "base": "5c58a04b3be15b66a17590d2b931123033d45ad3328bfd8d0bf1d3407735330e",
+  "new": "3d0daf6f39d67b52d3f46c16dbf8bb59e89cd9845720f49c15340f16b592962d"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧳️portable/🧪️tests/🟦️.ts",
+  "flat": "13.ts",
+  "kind": "edit",
+  "base": "6d9f9aeb966ccbcb42384fc45aada89e363391fbdfdad59d83bf53a77e647d0d",
+  "new": "02d928ffc0c5e410a1f3265f5f943c643a074bda86d6ccb9e7de96d9e3b2c156"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧳️portable/🧪️tests/🌍️real/🔣️.json",
+  "flat": "14.json",
+  "kind": "new",
+  "base": null,
+  "new": "e57816862dabef6ddcd5a9bf45f07de148e79a1d504100a4b1373a0ee1be1f58"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧳️portable/🧪️tests/🌍️real/🟦️.ts",
+  "flat": "15.ts",
+  "kind": "new",
+  "base": null,
+  "new": "8a2c793dbcfaaaecda40ff6956221780ccd58500145227176c7a27a9b26e6c81"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧳️portable/🧬️schema/🔣️.json",
+  "flat": "16.json",
+  "kind": "edit",
+  "base": "9ad35098b9aee2fec98469df7f87ba9bcb14f22da1bf05f47fd3bb2833abd93a",
+  "new": "18ad4d2ce6feb9b7d00f0259fb8caacfa9fb1a82a9a796d90302f6e1ad417b31"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "flat": "17.ts",
+  "kind": "edit",
+  "base": "ad1cee87d7a9b4221eca9cf3c525fad92423fc72d3a0b9c858094af48517d8e5",
+  "new": "2dfa97bf6310fdfb42abd20ee09bed6a95f60f536010c8f4ab52fb4b02c14751"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts",
+  "flat": "18.ts",
+  "kind": "edit",
+  "base": "9524d6234902b8be5c7bfa135b562631d81341c26b239874c7843dae8c101729",
+  "new": "8f09f07fc549631f76dbaf69faf35e7ee847ccca464fe160966fa248f2dfa402"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts",
+  "flat": "19.ts",
+  "kind": "edit",
+  "base": "b122a2b161c217a889839e6a5c33fea8c08eb62d76a6b5ecb71739a859b126f2",
+  "new": "649247b342c158bdea17da0e71eb30701c3fc75aa14d05cab6fc7403d4d11ea6"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🌍️two-platforms/🟦️.ts",
+  "flat": "20.ts",
+  "kind": "edit",
+  "base": "7012e43f32c3aa27575fc238ca3030aa65a4c8f4bed6c0aea8a55d4d1dd9475e",
+  "new": "cffe9041a5381f664dd06c4ae56176fddd4fd377cda10ce3f74602c7042dd9ee"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🛠️server/🟦️.ts",
+  "flat": "21.ts",
+  "kind": "edit",
+  "base": "5158dd41bf28a6eaecf80c0a8c81885da5f87ff38ec36094d7dffc561c0b9191",
+  "new": "b3da5c3a92f83294c0dec7543b0200511ddb256d173d376eae5ebd58e87fb03a"
+ },
+ {
+  "dest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json",
+  "flat": "22.json",
+  "kind": "edit",
+  "base": "c253f1e9bc56cae8a6272a6b610020c1c8cfdedf80d14eae8b60e7c396c03759",
+  "new": "9e3c48fdcb9054cec5223cc9e1e17ea766cc5bab882a5500766e8402f02e1526"
+ }
+]

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:generations:steering:v1",
+  "title": "Steering of a running graph read by the graph server",
+  "description": "Two small files in one directory connect the graph server to the graph read it runs. The server writes the priority file: the projects machines asked for. The read orders the dirty projects of every wave so that the priority projects come first, and writes the pending file after every plan: which of the priority projects are still dirty. A priority project that is not pending is fresh in the tree of the server. Both files are replaced atomically; a missing or damaged file means no steering.",
+  "definitions": {
+    "Environment": {
+      "const": { "directory": "SEMIO_GRAPH_STEER_DIRECTORY" }
+    },
+    "Files": {
+      "const": { "priority": "priority.json", "pending": "pending.json" }
+    },
+    "Offered": {
+      "description": "EN: What the read has offered to the fleet cache is kept in one file next to the steering files, which the start of a read does not clear: a project that a wave of the read looked up itself, or that an earlier read offered, is not offered again, and one call offers at most one wave of names, so the first wave after a start costs what any later wave costs. A name expires after the time to live. DE: Was der Lauf dem Flotten-Cache angeboten hat, steht in einer Datei neben den Steuerdateien, die der Start eines Laufs nicht löscht: ein Projekt, das eine Welle des Laufs selbst nachgeschlagen hat oder das ein früherer Lauf angeboten hat, wird nicht erneut angeboten, und ein Aufruf bietet höchstens eine Welle an Namen an, damit die erste Welle nach einem Start so viel kostet wie jede spätere. Ein Name verfällt nach der Lebensdauer.",
+      "const": { "file": "offered.json", "maximumNames": 16384, "ttlMilliseconds": 21600000, "maximumPerWave": 48 }
+    },
+    "OfferedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "offered"],
+      "properties": {
+        "version": { "const": 1 },
+        "offered": { "type": "object", "maxProperties": 16384, "propertyNames": { "minLength": 1, "maxLength": 512 }, "additionalProperties": { "type": "integer", "minimum": 0 } }
+      }
+    },
+    "Priority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "atMs", "projects"],
+      "properties": {
+        "version": { "const": 1 },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "projects": { "type": "array", "maxItems": 65536, "items": { "type": "string", "minLength": 1, "maxLength": 512 } }
+      }
+    },
+    "Pending": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "generation", "atMs", "priorityAtMs", "projects"],
+      "properties": {
+        "version": { "const": 1 },
+        "generation": { "type": "integer", "minimum": -1 },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "priorityAtMs": { "type": "integer", "minimum": 0 },
+        "projects": { "type": "array", "maxItems": 65536, "items": { "type": "string", "minLength": 1, "maxLength": 512 } }
+      }
+    }
+  }
+}

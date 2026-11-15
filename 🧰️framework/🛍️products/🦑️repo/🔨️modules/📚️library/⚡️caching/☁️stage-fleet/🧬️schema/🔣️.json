@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.cache/StageFleetV1",
+  "title": "Fleet tier of the post-link stage cache",
+  "description": "☁️ A post-link stage (describe, transpile, optimize, probe) is a pure function of the digests of its inputs, the identities of its tools and its own schema version. Its outputs are computed once in the fleet: a machine whose local stage cache misses looks the stage up at the fleet cache (key = SHA-256 of the namespace, the machine's platform and the stage key digest), claims it when nobody has it, computes, stores the files by their digests and the entry as a Bazel action result whose first file is the stage manifest, and releases the claim; a machine that finds the claim held waits for the upload instead of computing. Every entry belongs to a slot (the stage and the module it builds without its content inputs), so a newer entry of a slot supersedes the older ones, at the fleet cache and in the local stage cache. A cache that is down, denies, stalls or serves a corrupt entry never fails or hangs a stage: it is computed here.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "namespace": "semio.stage-cache.fleet/v1",
+        "manifestName": "stage.json",
+        "outputPrefix": "out/",
+        "slotIndex": "slots",
+        "localGraceMilliseconds": 600000,
+        "limits": { "maximumFiles": 512, "maximumFileBytes": 268435456, "maximumEntryBytes": 536870912, "maximumManifestBytes": 1048576, "downloadConcurrency": 4, "uploadConcurrency": 3 },
+        "timeouts": { "publishMilliseconds": 180000, "fetchMilliseconds": 120000, "releaseMilliseconds": 600 },
+        "claim": { "ttlMilliseconds": 30000, "heartbeatMilliseconds": 8000, "minimumWaitMilliseconds": 30000, "maximumWaitMilliseconds": 1200000, "waitFactor": 2, "maximumRounds": 40, "defaultExpectedMilliseconds": 60000, "expectedMilliseconds": { "describe": 30000, "transpile": 90000, "optimize": 60000, "probe": 30000 } }
+      }
+    },
+    "Digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "KeyVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "platform", "digest", "remoteKey", "stage", "schemaVersion", "slot", "slotId"],
+      "properties": {
+        "name": { "type": "string" },
+        "platform": { "type": "string", "minLength": 1 },
+        "digest": { "$ref": "#/definitions/Digest" },
+        "remoteKey": { "$ref": "#/definitions/Digest" },
+        "stage": { "type": "string" },
+        "schemaVersion": { "type": "integer", "minimum": 1 },
+        "slot": { "type": "string", "minLength": 1 },
+        "slotId": { "$ref": "#/definitions/Digest" }
+      }
+    },
+    "SlotIndex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "rows"],
+      "properties": {
+        "version": { "const": 1 },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["digest", "storedAt"],
+            "properties": { "digest": { "$ref": "#/definitions/Digest" }, "storedAt": { "type": "integer", "minimum": 0 } }
+          }
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "served": {
+          "en": "Stage {stage} of {slot} came from the fleet cache ({files} files, {bytes} bytes).",
+          "de": "Stufe {stage} von {slot} kam aus dem Flotten-Cache ({files} Dateien, {bytes} Bytes)."
+        },
+        "waited": {
+          "en": "Stage {stage} of {slot} was computed on another machine; waited {seconds} s for it.",
+          "de": "Stufe {stage} von {slot} wurde auf einer anderen Maschine berechnet; {seconds} s darauf gewartet."
+        },
+        "shared": {
+          "en": "Stage {stage} of {slot} was shared with the fleet cache ({files} files, {bytes} bytes).",
+          "de": "Stufe {stage} von {slot} wurde im Flotten-Cache geteilt ({files} Dateien, {bytes} Bytes)."
+        },
+        "skipped": {
+          "en": "The fleet cache is not used for stage {stage} of {slot} ({reason}); it is computed here.",
+          "de": "Der Flotten-Cache wird für Stufe {stage} von {slot} nicht verwendet ({reason}); sie wird hier berechnet."
+        }
+      }
+    }
+  }
+}

@@ -65,9 +65,16 @@ test("each nested grid pans under glass, reveals crisp screen-sized previews and
     await expect(card(learner.page, id)).toHaveAttribute("data-revealed", "");
     await expect.poll(() => displacement(learner, id)).toBeLessThan(0.5);
     await expect.poll(() => sizeGap(learner, id)).toEqual([0, 0]);
+    await expect(veil).toHaveAttribute("data-veil", "whole");
+    await expect(veil).toBeVisible();
+    await learner.page.mouse.down();
     await expect(veil).toHaveAttribute("data-veil", "clear");
     await expect(veil).toBeHidden();
     await expect(pane(learner.page, id)).toHaveAttribute("inert", "");
+    await learner.page.mouse.move(frame.x + frame.width - 2, frame.y + frame.height - 2, { steps: 4 });
+    await learner.page.mouse.up();
+    await expect(veil).toHaveAttribute("data-veil", "whole");
+    await expect(veil).toBeVisible();
     await learner.page.emulateMedia({ reducedMotion: "reduce" });
     await expect(root).toHaveAttribute("data-pan", "pointer");
     await card(learner.page, id).getByRole("link").click();

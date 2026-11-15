@@ -1,0 +1,64 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/tiers/v1",
+ "title": "Shared worktree change detection tiers: the hint drop file, the Claude Code hook payload, the passive latency percentiles and the language-agnostic fixture",
+ "definitions": {
+  "HintFile": {
+   "description": "The content of one file in .cache/f/hints/: paths separated by NUL or newline (a trailing carriage return is dropped, empty items vanish), each absolute or relative to the worktree. The file is created under a name starting with a dot and renamed inside the directory.",
+   "type": "string"
+  },
+  "PathCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["expect", "name", "raw"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "raw": {"description": "One raw hint path; {root} is the worktree, {outside} a directory beside it.", "type": "string"},
+    "expect": {"description": "The worktree-relative POSIX NFC path, or null when the path is refused.", "anyOf": [{"type": "null"}, {"type": "string", "minLength": 1}]}
+   }
+  },
+  "HintCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["expect", "name", "text"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "text": {"$ref": "#/definitions/HintFile"},
+    "expect": {"type": "array", "items": {"type": "string", "minLength": 1}}
+   }
+  },
+  "HookCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["expect", "name", "text"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "text": {"description": "The standard input of the hook, valid or not.", "type": "string"},
+    "expect": {"description": "tool_input.file_path then tool_input.notebook_path, when non-empty strings.", "type": "array", "items": {"type": "string", "minLength": 1}}
+   }
+  },
+  "PercentileCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["name", "p50", "p95", "values"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "values": {"type": "array", "items": {"type": "number", "minimum": 0}},
+    "p50": {"description": "Nearest rank: the value at rank ceil(p/100*n) of the sorted values.", "anyOf": [{"type": "null"}, {"type": "number", "minimum": 0}]},
+    "p95": {"anyOf": [{"type": "null"}, {"type": "number", "minimum": 0}]}
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["hints", "hooks", "paths", "percentiles", "version"],
+   "properties": {
+    "version": {"const": 1},
+    "paths": {"type": "array", "items": {"$ref": "#/definitions/PathCase"}},
+    "hints": {"type": "array", "items": {"$ref": "#/definitions/HintCase"}},
+    "hooks": {"type": "array", "items": {"$ref": "#/definitions/HookCase"}},
+    "percentiles": {"type": "array", "items": {"$ref": "#/definitions/PercentileCase"}}
+   }
+  }
+ }
+}

@@ -1,0 +1,526 @@
+{
+ "version": 1,
+ "vectors": [
+  {
+   "name": "no clash",
+   "entries": [
+    {
+     "path": "a.txt",
+     "hlc": "1700000000001-000000-a"
+    },
+    {
+     "path": "b.txt",
+     "hlc": "1700000000002-000000-a"
+    },
+    {
+     "path": "d/x",
+     "hlc": "1700000000003-000000-a"
+    }
+   ],
+   "retired": {}
+  },
+  {
+   "name": "case collision, newer wins",
+   "entries": [
+    {
+     "path": "b.txt",
+     "hlc": "1700000000001-000000-a"
+    },
+    {
+     "path": "B.txt",
+     "hlc": "1700000000002-000000-a"
+    }
+   ],
+   "retired": {
+    "b.txt": "B.txt"
+   }
+  },
+  {
+   "name": "case collision, older rename loses",
+   "entries": [
+    {
+     "path": "B.txt",
+     "hlc": "1700000000001-000000-a"
+    },
+    {
+     "path": "b.txt",
+     "hlc": "1700000000005-000000-a"
+    }
+   ],
+   "retired": {
+    "B.txt": "b.txt"
+   }
+  },
+  {
+   "name": "three spellings",
+   "entries": [
+    {
+     "path": "q.txt",
+     "hlc": "1700000000001-000000-a"
+    },
+    {
+     "path": "Q.txt",
+     "hlc": "1700000000003-000000-a"
+    },
+    {
+     "path": "QQ.txt",
+     "hlc": "1700000000002-000000-a"
+    },
+    {
+     "path": "q.TXT",
+     "hlc": "1700000000004-000000-a"
+    }
+   ],
+   "retired": {
+    "q.txt": "q.TXT",
+    "Q.txt": "q.TXT"
+   }
+  },
+  {
+   "name": "file newer than every descendant",
+   "entries": [
+    {
+     "path": "dir",
+     "hlc": "1700000000009-000000-a"
+    },
+    {
+     "path": "dir/c.txt",
+     "hlc": "1700000000002-000000-a"
+    },
+    {
+     "path": "dir/sub/d.txt",
+     "hlc": "1700000000003-000000-a"
+    }
+   ],
+   "retired": {
+    "dir/c.txt": "dir",
+    "dir/sub/d.txt": "dir"
+   }
+  },
+  {
+   "name": "a descendant is newer than the file",
+   "entries": [
+    {
+     "path": "dir",
+     "hlc": "1700000000005-000000-a"
+    },
+    {
+     "path": "dir/c.txt",
+     "hlc": "1700000000002-000000-a"
+    },
+    {
+     "path": "dir/e.txt",
+     "hlc": "1700000000007-000000-a"
+    }
+   ],
+   "retired": {
+    "dir": "dir/e.txt"
+   }
+  },
+  {
+   "name": "retired file keeps older descendants",
+   "entries": [
+    {
+     "path": "dir",
+     "hlc": "1700000000005-000000-a"
+    },
+    {
+     "path": "dir/c.txt",
+     "hlc": "1700000000003-000000-a"
+    },
+    {
+     "path": "dir/e.txt",
+     "hlc": "1700000000007-000000-a"
+    }
+   ],
+   "retired": {
+    "dir": "dir/e.txt"
+   }
+  },
+  {
+   "name": "link is a non-directory entry",
+   "entries": [
+    {
+     "path": "ln",
+     "hlc": "1700000000001-000000-a"
+    },
+    {
+     "path": "ln/x.txt",
+     "hlc": "1700000000002-000000-a"
+    }
+   ],
+   "retired": {
+    "ln": "ln/x.txt"
+   }
+  },
+  {
+   "name": "nested files",
+   "entries": [
+    {
+     "path": "a",
+     "hlc": "1700000000003-000000-a"
+    },
+    {
+     "path": "a/b",
+     "hlc": "1700000000005-000000-a"
+    },
+    {
+     "path": "a/b/c",
+     "hlc": "1700000000004-000000-a"
+    }
+   ],
+   "retired": {
+    "a": "a/b",
+    "a/b/c": "a/b"
+   }
+  },
+  {
+   "name": "fold across directory case",
+   "entries": [
+    {
+     "path": "Dir",
+     "hlc": "1700000000008-000000-a"
+    },
+    {
+     "path": "dir/x.txt",
+     "hlc": "1700000000002-000000-a"
+    }
+   ],
+   "retired": {
+    "dir/x.txt": "Dir"
+   }
+  },
+  {
+   "name": "sharp s folds to ss",
+   "entries": [
+    {
+     "path": "straße",
+     "hlc": "1700000000001-000000-a"
+    },
+    {
+     "path": "STRASSE",
+     "hlc": "1700000000002-000000-a"
+    }
+   ],
+   "retired": {
+    "straße": "STRASSE"
+   }
+  },
+  {
+   "name": "equal time, origin decides",
+   "entries": [
+    {
+     "path": "m.txt",
+     "hlc": "1700000000004-000000-b"
+    },
+    {
+     "path": "M.txt",
+     "hlc": "1700000000004-000000-a"
+    }
+   ],
+   "retired": {
+    "M.txt": "m.txt"
+   }
+  },
+  {
+   "name": "sibling directories do not clash",
+   "entries": [
+    {
+     "path": "Dir/a.txt",
+     "hlc": "1700000000001-000000-a"
+    },
+    {
+     "path": "dir/b.txt",
+     "hlc": "1700000000002-000000-a"
+    }
+   ],
+   "retired": {}
+  }
+ ],
+ "stale": [
+  {
+   "name": "incident: a machine with an empty register republishes the first content",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": {
+    "winner": "bbbb2222"
+   }
+  },
+  {
+   "name": "the same event is an edit on a machine that listed it in another order",
+   "events": [
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": {
+    "winner": "bbbb2222"
+   }
+  },
+  {
+   "name": "a revert written on top of the newest content is an edit",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "aaaa1111",
+     "base": "bbbb2222"
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": null
+  },
+  {
+   "name": "new content is an edit",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "cccc3333",
+     "base": null
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": null
+  },
+  {
+   "name": "a concurrent edit based on the first content is an edit",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "cccc3333",
+     "base": "aaaa1111"
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": null
+  },
+  {
+   "name": "the first event of a path is an edit",
+   "events": [
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": null
+  },
+  {
+   "name": "the same content as the predecessor is an edit",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": null
+  },
+  {
+   "name": "a re-creation after a delete is an edit",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": null,
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": null
+  },
+  {
+   "name": "a delete is never stale",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": null,
+     "base": "bbbb2222"
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": null
+  },
+  {
+   "name": "an older equal content without a known predecessor is an edit",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": null
+  },
+  {
+   "name": "three versions deep: the oldest content is stale against the newest",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "cccc3333",
+     "base": "bbbb2222"
+    },
+    {
+     "hlc": "1700000000004-000000-a",
+     "sha256": "aaaa1111",
+     "base": "bbbb2222"
+    }
+   ],
+   "hlc": "1700000000004-000000-a",
+   "stale": {
+    "winner": "cccc3333"
+   }
+  },
+  {
+   "name": "an hlc that is not among the events is no republish",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    }
+   ],
+   "hlc": "1700000000009-000000-a",
+   "stale": null
+  },
+  {
+   "name": "only the event itself decides, a later event does not change it",
+   "events": [
+    {
+     "hlc": "1700000000001-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000002-000000-a",
+     "sha256": "bbbb2222",
+     "base": "aaaa1111"
+    },
+    {
+     "hlc": "1700000000003-000000-a",
+     "sha256": "aaaa1111",
+     "base": null
+    },
+    {
+     "hlc": "1700000000004-000000-a",
+     "sha256": "cccc3333",
+     "base": "aaaa1111"
+    }
+   ],
+   "hlc": "1700000000003-000000-a",
+   "stale": {
+    "winner": "bbbb2222"
+   }
+  }
+ ]
+}

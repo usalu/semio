@@ -1,0 +1,10 @@
+try 1 started pid=96305 2026-11-14T23:11:43Z log=/Users/ueli/native-bootstrap-round-10.log
+try 1 ended 2026-11-14T23:36:16Z native_rc=1 stopped=0 fleet_refusal=0 retry_wording=0 failed=[]
+try 1 ended without a rule for a further try (native_rc=1)
+round ended 2026-11-14T23:36:16Z
+try 1 ended with an unexpected failure of the resident service (reference 3420bc16, first frame requireRepositoryBuildGraphWriterV1); its text says try again: one comparison try follows after 120 s from the end (23:36:15Z); 2026-11-14T23:36:55Z
+try 2 started pid=12010 2026-11-14T23:38:16Z log=/Users/ueli/native-bootstrap-round-10-try-2.log
+try 2 ended 2026-11-14T23:49:18Z native_rc=1 stopped=0 fleet_refusal=0 retry_wording=0 failed=[]
+try 2 unexpected failure of the resident service (reference a, first frame unknown); the text says try again
+try 2 failed with the same reference 3420bc16 and the same first frame as try 1 (the runner's own parse of the reference was wrong): two tries in a row with the same failure, runner stopped before try 3, round ended 2026-11-14T23:49:38Z
+wait for round > 10 started 2026-11-14T23:50:07Z

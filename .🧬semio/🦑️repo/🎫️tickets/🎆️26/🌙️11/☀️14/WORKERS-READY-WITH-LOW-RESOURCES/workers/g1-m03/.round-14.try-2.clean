@@ -1,0 +1,606 @@
+start 2026-11-15T02:45:21Z
+[semio] Homebrew not available; install pkg-config, Cairo, Pango and DejaVu fonts before running native C++ builds (CMake and Ninja are provisioned by the repository).
+[semio] Building the repo launcher (it provisions the pinned JavaScript runtime itself)…
+[semio] The repo launcher is current, nothing was replaced: /Users/ueli/.local/share/semio/launcher/bin/repo
+[semio] Der Repo-Launcher ist aktuell, nichts wurde ersetzt: /Users/ueli/.local/share/semio/launcher/bin/repo
+[semio] Add to PATH: /Users/ueli/.local/share/semio/launcher/bin
+[semio] Zum PATH hinzufügen: /Users/ueli/.local/share/semio/launcher/bin
+[semio] Another repository frontend is on PATH: /Users/ueli/.local/bin/repo. Installed launcher: /Users/ueli/.local/share/semio/launcher/bin/versions/cf25f2b751f83336/repo
+[semio] Ein weiteres Repository-Frontend liegt im PATH: /Users/ueli/.local/bin/repo. Installierter Launcher: /Users/ueli/.local/share/semio/launcher/bin/versions/cf25f2b751f83336/repo
+[semio] Installing the rust-toolchain.toml toolchain…
+info: using existing install for nightly-2026-07-20-aarch64-apple-darwin
+info: the active toolchain `nightly-2026-07-20-aarch64-apple-darwin` has been installed
+info: it's active because: overridden by '/Users/ueli/Documents/semio/rust-toolchain.toml'
+[semio] Installing the native repository command…
+[capacity] run: sized at 5% of the default from 15 earlier run(s) of its class, at least 4484 MB because of its assembly phase
+[capacity] admitted run: 8 job(s), 5142 MB reserved (8739 MB available, 2048 MB floor)
+[capacity] run: sized at 5% of the default from 15 earlier run(s) of its class, at least 4484 MB because of its assembly phase
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] build:neutral-child · Running the neutral build child
+$ repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo run repo-mcp:build
+[capacity] run: sized at 46% of the default from 12 earlier run(s) of its class
+[capacity] run: sized at 46% of the default from 12 earlier run(s) of its class
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[repo] still working after 5 s; last phase started: source.served
+[repo] still working after 5 s; last phase started: source.served
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+repo - Tool-neutral build entry with two implementations: Nx with Bun (default) and Bazel.
+
+Usage:
+  repo [--tool=nx|bazel|semio] <command> [options] [-- <arguments>]
+  repo <command> --help [--lang=en|de]
+
+Commands:
+  run <project:target[:configuration]>            Run one task of one project.
+  run-many --targets=<targets> [--projects=<projects>]
+                                                  Run the same targets in many projects.
+  affected --targets=<targets>                    Run targets in the projects changed against HEAD and their dependents.
+  exec --projects=<projects> -- <command>         Run a command once per selected project, in the project root.
+  watch --projects=<projects> -- <command>        Rerun a command when selected source files change.
+  graph                                           Print the tool-neutral build graph.
+  show projects|project <name>|targets            Print projects, one project or all targets of the neutral graph.
+  inputs <project:target[:configuration]>         Print what the selected implementation hashes for one task: files, environment, runtime values and external packages.
+  reset                                           Invalidate the graph and reset the selected tool's local state.
+  tools setup [nx|bazel|semio|toolchains [tool...]|all]|verify [tool...]|list [--json]|exec <tool|command> -- <arguments>
+                                                  Provision the pinned tools for this host, report where it differs from the pins and run every other external tool through the tool registry.
+  preflight                                       Check the host against the finite requirements before any store is provisioned.
+  incremental list|plan|prepare|run|discard       Prove in a disposable copy that Nx and Bazel rebuild exactly what an edit affects, no more and no less.
+  concurrency list|plan|run                       Prove that simulated agents working in one checkout copy at the same time never wait for unrelated projects, share cached work and get the results of a serial run, with Nx and Bazel.
+  conformance list|plan|run                       Judge every build backend against the same language-agnostic scenarios: plan, run, cache hit and miss, outputs, test results, affected, cancellation, progress, concurrency and remote cache.
+  units plan|run|emit|exec                        Plan, run and emit language-neutral compilation units (Go, Python, .NET, C/C++, WIT, TeX) whose dependents re-run only when a dependency's interface changes, and execute one unit as the action of Nx or Bazel.
+  bench list|run|compare|acceptance               Measure the performance objectives (hot-cache latency, edit to rebuild per language, cache hit rate, graph, memory, concurrent agents) in a disposable checkout copy, judge them against the SLO table and compare with a stored baseline; `bench acceptance` holds the acceptance scenarios of the three products (hot no-op, peer edit, one-line edit with byte-exact revert) on the checkout itself to declared budgets.
+  dependencies sync|lock --all|--scope <owner> | ensure
+                                                  Install, lock or ensure the workspace dependencies.
+  cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <cargo subcommand> <args>
+                                                  Compile through the repository's Cargo ingress gate.
+  cache status|gc|verify|dedupe|cas|clear         Show and collect every declared cache home with its budget, or clear the selected tool's local task cache.
+  remote-cache serve|status|gc|rotate             Serve a bounded, shared result cache for Bazel and Nx from this machine, inspect the remote cache contract and the server, or collect the cache store.
+  capacity status|run                             Show the machine's free memory, floor, load and the running and waiting grants, or run any command under a machine-wide capacity grant.
+  leases status                                   Show which processes hold and wait for resource leases, how long, who blocks whom, deadlock cycles, lock order violations and the machine's admission queue.
+  fleet status                                    Show one picture of the shared workspace: who runs what (phase, progress, age, priority, code freshness), the queues with waiting-time estimates, memory admitted against really used, the Bazel servers, storage against its budgets, the sealed implementation and the last graph generation.
+  scheduler status|cancel|run                     Show or steer the fair global build queue shared by every agent on this machine, or run a command through it.
+  service host start|status|stop|run              Run, inspect or stop the per-host graph service: the one process of this machine that holds the fact index and answers every agent's plan request over one local socket or pipe.
+  remote-execution serve|status|workers           Run the in-house remote execution service that hermetic Bazel actions can run on, inspect it, or join this machine to it as a worker.
+  doctor [--json] [--fix [--dry-run]] [--only=<area>[,<area>]] [--strict] [--facts]
+                                                  Answer in one shot why work is waiting, slow or failing: tool pins, storage images, leases, capacity grants, agent sessions, graph and dependency generations, caches, running repo processes and the host, each problem with its owner and the command that resolves it.
+  session open|status|close|list                  Show, open and close agent sessions: one identity per agent working in this worktree, with its cargo lane, Bazel slot preference, Nx daemon namespace, test sandbox root, lease owner tag, budget share and capability.
+
+Options:
+  --agent=<id>                                    service issue: the agent the token is issued to; service revoke: revoke every session of this agent. (used by: service, session)
+  -p, --projects=<projects>                       Comma list of project names with * wildcards, tag:<tag>, name:<name>, directory:<root> and !<pattern> negation. (used by: run-many, exec, watch)
+  --exclude=<projects>                            Comma list of projects to leave out (same patterns as --projects). (used by: run-many, affected, exec, watch)
+  -t, --targets=<targets>, --target               Comma list of target names or * patterns. (used by: run-many, affected)
+  -c, --configuration=<prototype|release>         Compiler configuration; disagreeing values (also a :<configuration> suffix or SEMIO_BUILD_MODE) are refused; cargo takes the full name only. (used by: run, run-many, affected, cargo)
+  --parallel=<n>                                  Maximum number of concurrent tasks. (used by: run, run-many, affected)
+  --bail                                          Stop at the first failing task. (used by: run, run-many, affected)
+  --verbose                                       Print more detail. (used by: run, run-many, affected)
+  --output=<stream|stream-without-prefixes|static>, --output-style
+                                                  Output style of the task logs. (used by: run, run-many, affected)
+  --skip-cache                                    Ignore the task cache. (used by: run, run-many, affected)
+  --skip-remote-cache                             Ignore the remote cache. (used by: run, run-many, affected)
+  --exclude-dependencies, --exclude-task-dependencies
+                                                  Run only the named tasks, not the tasks they depend on. (used by: run, run-many, affected)
+  --dry-run                                       Print the task graph as a DryRunPlan on stdout and execute nothing; the same for every tool. With cache gc or remote-cache gc: list what would be removed and remove nothing. (used by: run, run-many, affected, exec, cache, remote-cache, doctor)
+  --graph[=<file>]                                Same as --dry-run; with a file the plan is written there (Nx: the file as given, Bazel: a report whose path is printed). (used by: run, run-many, affected, exec)
+  --all                                           Select every project (affected, watch), every dependency owner (dependencies) or every lease directory with registered processes (leases). (used by: affected, watch, dependencies, leases, session)
+  --base=<ref>                                    Compare against this revision instead of HEAD. (used by: affected)
+  --head=<ref>                                    End revision of the comparison. (used by: affected)
+  --files=<files>                                 Comma list of changed files instead of the git comparison. (used by: affected)
+  --uncommitted                                   Only uncommitted changes. (used by: affected)
+  --untracked                                     Only untracked files. (used by: affected)
+  --include-global-files                          Also react to files outside any project. (used by: watch)
+  --file=<path>                                   Write the result as a report file and print its path. (used by: graph, show, incremental, concurrency, bench, conformance, units)
+  --json                                          Print lists as JSON instead of one entry per line. (used by: graph, show, incremental, concurrency, bench, capacity, fleet, scheduler, leases, cache, remote-cache, doctor, tools, conformance, units, service, session)
+  --area=<id[,id]>                                cache status|gc: limit the report or the collection to these ledger areas (or retired, undeclared); cache dedupe: limit the search to these places (bazel-outputs, bazel-workspaces, vite-products, tools). (used by: cache)
+  --budget=<size>                                 cache status|gc: the disk budget of this machine for this call (an integer or a number with KiB, MiB, GiB, TiB, e.g. 40GiB); it beats the SEMIO_CACHE_BUDGET_BYTES variable, which beats the machine file in the repository cache root, which beats the declared default. (used by: cache)
+  --deep                                          cache verify (required): read every indexed optional graph leaf and every closure inventory again and compare it with its recorded hash. cache status: walk every cache home now (with progress, cancellable) and record the sizes, instead of reading statfs and the size ledger. (used by: cache)
+  --tasks                                         cache status: print the selected tool's task cache (a CacheStatus) instead of the cache ledger. (used by: cache)
+  --graph-policy=<fresh|current>                  fresh (default) verifies the graph and waits for a rebuild when a project changed; current serves the newest sealed graph at once and never waits; otherwise SEMIO_BUILD_GRAPH_POLICY. (used by: graph, show)
+  --scenario=<ids|all>                            incremental plan|run and bench acceptance: comma list of scenario ids, or all (bench acceptance also takes kind:<noop|peer|edit> and product:<course|print|dashboard>; without --in-place, all leaves the scenarios that edit files out). (used by: incremental, conformance, bench)
+  --implementations=<nx|bazel|semio>              incremental and concurrency plan|run: implementations to judge (default: every registered backend). (used by: incremental, concurrency, bench, conformance)
+  --root=<path>                                   incremental, concurrency, bench: the disposable repository copy (default: the folder .sinc in the home directory, else sinc in the temporary directory of the process, else /tmp/sinc); it must not lie inside or contain the checkout, and its path stays short because absolute paths are limited to 256 characters. (used by: incremental, concurrency, bench, units)
+  --phases=<warm,edit,revert>                     incremental run: phases to judge (default: all three). (used by: incremental)
+  --fresh                                         incremental prepare: discard the copy and clone it again. (used by: incremental)
+  --workloads=<ids|all>                           concurrency plan|run: comma list of workload ids, or all. (used by: concurrency)
+  --sessions=<n>                                  concurrency plan|run: simulated agents per workload, the first n of its sessions (default: 3, at most 8). (used by: concurrency)
+  --criteria=<id>                                 concurrency run: judge every workload with this set of pass criteria instead of its own. (used by: concurrency)
+  --keep                                          conformance run: keep the scratch workspaces for inspection. (used by: conformance)
+  --slo=<ids|all>                                 bench run: comma list of objective ids, probe:<id>, kind:<cli-help|noop|edit|graph|cache|concurrency|planning>, or all. (used by: bench)
+  --runs=<n>                                      bench run: samples per probe instead of the authored count (the 95th percentile needs 20 samples, the 99th needs 100; fewer leave those objectives unproven). (used by: bench)
+  --baseline=<path>                               bench run|compare: a stored report to compare with; a change beyond the tolerance of an objective is a regression or an improvement. (used by: bench)
+  --save-baseline=<path>                          bench run: store the report as the baseline of later runs. (used by: bench)
+  --history=<folder>                              bench run: store the report in this folder as <UTC start>-<host class>.json and compare with the newest earlier report of this host class when no --baseline is given; bench compare: compare the two newest reports of this host class. (used by: bench)
+  --current=<path>                                bench compare: the stored report to judge against --baseline. (used by: bench)
+  --markdown=<path>                               bench run|compare|acceptance: also write the report as a markdown file. (used by: bench)
+  --max-load=<per-core>                           bench run: refuse to start when the one-minute load per core of the host exceeds this number. (used by: bench)
+  --prepare                                       bench run: discard and prepare the disposable copy first, so that the cold graph probe starts from a copy without graph. (used by: bench)
+  --in-place                                      bench acceptance: run the scenarios that edit and restore source files in this checkout (a CI runner, a private clone); nobody else may edit it meanwhile. (used by: bench)
+  --scope <owner>                                 Restrict the operation to one dependency owner. (used by: dependencies)
+  --store=<shared|isolated>                       Cargo target store; never create a private target directory. (used by: cargo)
+  --parallelism=<cores>                           Positive number of cores for Cargo. (used by: cargo)
+  --port <port>                                   remote-cache serve: port to listen on; 0 picks a free port (default from the build policy). (used by: remote-cache)
+  --host <address>                                remote-cache serve: address to listen on; beyond loopback a token is required. (used by: remote-cache)
+  --directory <path>                              remote-cache serve|status|gc: store directory, relative to the workspace root (default: the remote cache home of the cache ledger). (used by: remote-cache)
+  --max-bytes <bytes>                             remote-cache serve|gc: upper bound of the store; the least recently used entries are evicted beyond it. (used by: remote-cache)
+  --read-only                                     remote-cache serve: refuse every write with 403, whatever token is presented. (used by: remote-cache)
+  --tls-certificate <path>                        remote-cache serve, remote-execution serve: PEM certificate chain; together with --tls-key the server speaks HTTPS (grpcs for the execution service). (used by: remote-cache, remote-execution)
+  --tls-key <path>                                remote-cache serve, remote-execution serve: PEM private key of the certificate. (used by: remote-cache, remote-execution)
+  --origin <id>                                   remote-execution workers: origin id of this machine in the fleet (default: the origin of the replica, else the host name); the scheduler never gives a machine the units it requested itself. (used by: remote-execution)
+  --load-interval <seconds>                       remote-execution workers: seconds between the load reports of this machine to the scheduler (default 5). (used by: remote-execution)
+  --bind <address>                                remote-execution serve: address both listeners bind to (default 127.0.0.1); beyond loopback the cache tokens and the worker token are required. (used by: remote-execution)
+  --grpc-port <port>                              remote-execution serve: port of the gRPC listener for build tools (default 8980); 0 picks a free port. (used by: remote-execution)
+  --worker-port <port>                            remote-execution serve: port of the HTTP listener for workers and status (default 8981); 0 picks a free port. (used by: remote-execution)
+  --cache <url>                                   remote-execution serve: the shared store to use, the URL of a running repo remote-cache server; by default serve starts the store itself. (used by: remote-execution)
+  --local-workers <n>                             remote-execution serve: worker processes started with the service (default 1; 0 starts none). (used by: remote-execution)
+  --concurrency <n>                               remote-execution serve|workers: actions one worker runs at the same time (default: one per CPU). (used by: remote-execution)
+  --advertise <host>                              remote-execution serve: the host name clients and workers use to reach the service (default: loopback, else this machine's name). (used by: remote-execution)
+  --sandbox <auto|darwin-sandbox|linux-sandbox|isolated-root>
+                                                  remote-execution serve|workers: how workers confine an action (default: the first available strategy of the hermetic table for this host). (used by: remote-execution)
+  --work-directory <path>                         remote-execution serve|workers: directory of a worker's blob cache and private input roots, relative to the workspace root (default: the remote execution home of the cache ledger). (used by: remote-execution)
+  --join <url>                                    remote-execution workers|status: the worker API of the scheduler, for example http://build-host:8981 (default: SEMIO_REMOTE_EXECUTION_SCHEDULER). (used by: remote-execution)
+  --name <name>                                   remote-execution workers: name of the worker in status and logs (default: host name and process id). (used by: remote-execution)
+  --properties <name=value,...>                   remote-execution workers: platform properties the worker offers in addition to OSFamily and Arch. (used by: remote-execution)
+  --operation=<name>                              capacity run: the catalogue operation whose estimate is reserved (default: command). (used by: capacity)
+  --memory=<megabytes>                            capacity run: reserve exactly this many megabytes instead of an operation's estimate. (used by: capacity)
+  --cpu=<cores>                                   capacity run: cores the command keeps busy, counted against the load ceiling (default: 1). (used by: capacity)
+  --jobs=<n>                                      capacity run: jobs of a task operation to reserve (default: 1). (used by: capacity)
+  --cwd=<path>                                    tools exec: the directory the tool runs in (default: the current directory). (used by: tools)
+  --light                                         tools exec: run without waiting for machine capacity, for short queries. (used by: tools)
+  --lease-directory=<path>                        leases status: the lease directory to inspect (default: the checkout's lease store). (used by: leases)
+  --limit=<n>                                     fleet status: how many runs the text output lists (default: 20, the JSON output always lists all). (used by: fleet)
+  --key=<key>                                     scheduler run: the dedupe key; agents that run the same key at the same time share one run (default: the command line). (used by: scheduler)
+  --priority=<band>                               scheduler run: priority band background, agent or interactive (default: agent). (used by: scheduler)
+  --depth=<n>                                     scheduler run: length of the longest chain of dependents of the target; deeper (shared) targets start first (default: 0). (used by: scheduler)
+  --peak-mb=<n>                                   scheduler run: expected peak memory in MB that is reserved for the command (default: 1024). (used by: scheduler)
+  --lane=<lane>                                   scheduler run: shared compiler lane (rustc or tsc) whose concurrency is capped. (used by: scheduler)
+  --class=<class>                                 scheduler run: job class plan, compile, test or generate (default: compile). (used by: scheduler)
+  --violations=<n>                                leases status: how many recent lock order violations to list (default: 10). (used by: leases)
+  --fix                                           doctor: apply the declared safe repairs for the findings (publications of dead processes, stale lease registry rows, gone agent sessions); with --dry-run list what they would remove. (used by: doctor)
+  --only=<area[,area]>                            doctor: limit the report to these areas (tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host). (used by: doctor)
+  --strict                                        doctor: exit with status 1 for warnings as well as errors. (used by: doctor)
+  --facts                                         doctor: print the raw facts document the findings are derived from, as JSON, instead of the report. (used by: doctor)
+  --for=<go|python|dotnet|cpp|wit|tex>            units plan|run|emit: the source language whose units are planned (go, python, dotnet, cpp through CMake and Ninja, wit, tex; the tracked files of the checkout). (used by: units)
+  --out=<path>                                    units emit: the directory that receives the spec files and the build files; units exec: the result file of the unit (out.json). (used by: units)
+  --out-root=<path>                               units exec: read the files of the dependencies from and write the files of the unit below this directory (the layout the Nx targets use) instead of naming each file. (used by: units)
+  --spec=<path>                                   units exec: the spec file of the unit to execute. (used by: units)
+  --iface=<path>                                  units exec: the interface file (iface.json) the unit publishes. (used by: units)
+  --iface-dep=<path>                              units exec: the interface file of one dependency whose interface the unit consumes; repeatable. (used by: units)
+  --impl-dep=<path>                               units exec: a result file (out.json) of the implementation closure of the unit; repeatable. (used by: units)
+  --only=<unit-id>                                units run: run only this unit and its dependencies; repeatable. (used by: units)
+  --concurrency=<n>                               units run: units executed at the same time, 1 to 16 (default: 1). (used by: units)
+  --receipts=<path>                               units run: directory of the shared receipts, so later runs and other sessions reuse results (default: memory only). (used by: units)
+  --client=<name>                                 session open: the name of the agent client, used to name the agent of an MCP connection when no client variable identifies it. (used by: session)
+  --client-pid=<pid>                              session open: the process id of the agent client of a connection (part of the connection's identity). (used by: session)
+  --owner-pid=<pid>                               session open: a process whose end ends the session (default: the nearest agent-client ancestor). (used by: session)
+  --weight=<n>                                    session open: the weight of the session in the budget split between live sessions, 1 to 16 (default: 1). (used by: session)
+  --export                                        session open: also print the environment line NAME=value that attaches child processes to the session. (used by: session)
+  --dead                                          session close: close every gone session instead of one. (used by: session)
+  --force                                         session close: close a session although its owner process is still alive. (used by: session)
+
+Global options:
+  --tool=<nx|bazel|semio>  Select the build implementation; otherwise SEMIO_BUILD_TOOL, then the policy default (nx).
+  --workers=<on|off>       Run actions in persistent workers (on) or in one process each (off); otherwise SEMIO_BUILD_WORKERS, then the worker policy of the build policy.
+  -h, --help               Print the usage of the command and stop.
+  --lang=<en|de>           Language of the texts; otherwise SEMIO_LANGUAGE, then LANGUAGE and the locale variables (LC_ALL, LC_MESSAGES, LANG), then the operating system language. No language is assumed: the command refuses when none resolves.
+
+Examples:
+  repo run @semio-tech/semio-tech-play:serve
+      Run the serve task with the default implementation.
+  repo run-many --targets=test --projects=tag:rust
+      Run the test target in every project tagged rust.
+  repo affected --targets=test
+      Test what changed against HEAD plus untracked files.
+  repo exec --projects=@semio-tech/repo-client -- repo tools exec bun -- test
+      Run one command inside one project root.
+  repo watch --projects=@semio-tech/repo-client -- repo run @semio-tech/repo-client:build
+      Rebuild one project on every source change.
+  repo graph --file=graph.json
+      Write the graph as a report file.
+  repo show projects
+      List all projects.
+  repo --tool=nx inputs @teaching/architecture-course:test
+      List the inputs Nx hashes for the course tests.
+  repo reset --tool=bazel
+      Reset the Bazel state.
+  repo tools setup all
+      Provision Nx, Bazel and every native toolchain at its pin.
+  repo preflight
+      Check architecture, free space, tools and directory exchange.
+  repo incremental list
+      List the incremental build scenarios.
+  repo concurrency list
+      List the concurrent workloads.
+  repo conformance list
+      List the conformance scenarios.
+  repo units plan --for=go
+      Plan the Go units of the checkout.
+  repo bench list
+      List the performance objectives.
+  repo dependencies lock --all
+      Regenerate the lock after editing a package.json.
+  repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
+      Type-check one crate in the shared store.
+  repo cache status
+      Show every cache partition and area against its budget.
+  repo remote-cache serve
+      Serve a local remote cache on 127.0.0.1:6090.
+  repo capacity status
+      See how much memory the machine has left above its floor and who holds it.
+  repo leases status
+      See who holds the repository's leases, who waits behind whom and for how long.
+  repo fleet status
+      See at a glance who runs what, who waits for what and for how long, and what the disk and memory budgets look like.
+  repo scheduler status
+      See what runs and waits in the global queue and every agent's share.
+  repo service host status
+      Show the one service of this machine, its memory and how many workspaces it serves.
+  repo remote-execution serve
+      Run the service with the shared store and one local worker: gRPC for build tools on 127.0.0.1:8980, HTTP for workers, status and the fleet load table on 127.0.0.1:8981; hermetic Bazel actions can then run remotely.
+  repo doctor
+      See who waits for whom, what is slow and what is broken, with the command that fixes each finding.
+  repo session status
+      See which agent session this command belongs to and what it holds.
+
+Native commands of the repository (repo <command> --help):
+  mcp [kind]                           Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)
+  graphql [query]                      Execute a GraphQL query
+  test [testable-id-or-uri]...         Run tests for given entities
+  ticket                               Ticket management commands
+  todo                                 Todo management commands
+  goal                                 Goal management commands
+  contributor                          Contributor management commands
+  folder                               Folder management commands
+  file                                 File management commands
+  section                              Section management commands
+  move <source> <target>               Move an artifact from source to target
+  integrate [source] [target]          Integrate source code into a target file section
+  extract [source] [target]            Extract a section from a source file into a target file
+  rename <old> <new> [scope]           Rename a token across non-gitignored files (all case variants)
+  sync                                 Synchronize monorepo artifacts
+  search [query]                       Search monorepo tree
+  list [query]                         Stream a flat list of monorepo items
+  query [keywords]                     Keyword search across monorepo resources
+  tree                                 Show a repository tree
+  export [output]                      Export repo data to an event log
+  hook <event> <client>                Run a lifecycle hook (git or agent)
+  mermaid <visualization>              Generate mermaid diagram strings
+  loc                                  Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)
+  technology                           Manage technologies
+  bundle                               Bundle management commands
+  analyze [scope]                      Analyze codebase for breachs
+  entity-emojis                        List all entity-identifying emojis
+  configure                            Remove blocking git hooks; repo config files are edited manually
+  micro-commit [subcommand] [args...]  Micro-commit workflow (reset, prepare-commit-msg, stage, diff, prepare)
+  benchmark                            Run benchmarks for all ecosystems
+  update [target]                      Update dependencies (npm, python, rust, go, dotnet)
+  auth                                 Server authentication
+  autofix [scope]                      Apply autofixes for breachs
+  statute                              Statute management commands
+  checkpoint                           Checkpoint management commands
+  interaction                          Interaction management commands
+  draft                                Draft management commands
+  definition                           Definition management commands
+  dashboard [arguments]                Human control plane (not for agents).
+  dev mcp stdio os [arguments]         MCP server of the OS over stdio.
+repo - Tool-neutral build entry with two implementations: Nx with Bun (default) and Bazel.
+
+Usage:
+  repo [--tool=nx|bazel|semio] <command> [options] [-- <arguments>]
+  repo <command> --help [--lang=en|de]
+
+Commands:
+  run <project:target[:configuration]>            Run one task of one project.
+  run-many --targets=<targets> [--projects=<projects>]
+                                                  Run the same targets in many projects.
+  affected --targets=<targets>                    Run targets in the projects changed against HEAD and their dependents.
+  exec --projects=<projects> -- <command>         Run a command once per selected project, in the project root.
+  watch --projects=<projects> -- <command>        Rerun a command when selected source files change.
+  graph                                           Print the tool-neutral build graph.
+  show projects|project <name>|targets            Print projects, one project or all targets of the neutral graph.
+  inputs <project:target[:configuration]>         Print what the selected implementation hashes for one task: files, environment, runtime values and external packages.
+  reset                                           Invalidate the graph and reset the selected tool's local state.
+  tools setup [nx|bazel|semio|toolchains [tool...]|all]|verify [tool...]|list [--json]|exec <tool|command> -- <arguments>
+                                                  Provision the pinned tools for this host, report where it differs from the pins and run every other external tool through the tool registry.
+  preflight                                       Check the host against the finite requirements before any store is provisioned.
+  incremental list|plan|prepare|run|discard       Prove in a disposable copy that Nx and Bazel rebuild exactly what an edit affects, no more and no less.
+  concurrency list|plan|run                       Prove that simulated agents working in one checkout copy at the same time never wait for unrelated projects, share cached work and get the results of a serial run, with Nx and Bazel.
+  conformance list|plan|run                       Judge every build backend against the same language-agnostic scenarios: plan, run, cache hit and miss, outputs, test results, affected, cancellation, progress, concurrency and remote cache.
+  units plan|run|emit|exec                        Plan, run and emit language-neutral compilation units (Go, Python, .NET, C/C++, WIT, TeX) whose dependents re-run only when a dependency's interface changes, and execute one unit as the action of Nx or Bazel.
+  bench list|run|compare|acceptance               Measure the performance objectives (hot-cache latency, edit to rebuild per language, cache hit rate, graph, memory, concurrent agents) in a disposable checkout copy, judge them against the SLO table and compare with a stored baseline; `bench acceptance` holds the acceptance scenarios of the three products (hot no-op, peer edit, one-line edit with byte-exact revert) on the checkout itself to declared budgets.
+  dependencies sync|lock --all|--scope <owner> | ensure
+                                                  Install, lock or ensure the workspace dependencies.
+  cargo --store=shared|isolated --configuration=prototype|release [--parallelism=<cores>] -- <cargo subcommand> <args>
+                                                  Compile through the repository's Cargo ingress gate.
+  cache status|gc|verify|dedupe|cas|clear         Show and collect every declared cache home with its budget, or clear the selected tool's local task cache.
+  remote-cache serve|status|gc|rotate             Serve a bounded, shared result cache for Bazel and Nx from this machine, inspect the remote cache contract and the server, or collect the cache store.
+  capacity status|run                             Show the machine's free memory, floor, load and the running and waiting grants, or run any command under a machine-wide capacity grant.
+  leases status                                   Show which processes hold and wait for resource leases, how long, who blocks whom, deadlock cycles, lock order violations and the machine's admission queue.
+  fleet status                                    Show one picture of the shared workspace: who runs what (phase, progress, age, priority, code freshness), the queues with waiting-time estimates, memory admitted against really used, the Bazel servers, storage against its budgets, the sealed implementation and the last graph generation.
+  scheduler status|cancel|run                     Show or steer the fair global build queue shared by every agent on this machine, or run a command through it.
+  service host start|status|stop|run              Run, inspect or stop the per-host graph service: the one process of this machine that holds the fact index and answers every agent's plan request over one local socket or pipe.
+  remote-execution serve|status|workers           Run the in-house remote execution service that hermetic Bazel actions can run on, inspect it, or join this machine to it as a worker.
+  doctor [--json] [--fix [--dry-run]] [--only=<area>[,<area>]] [--strict] [--facts]
+                                                  Answer in one shot why work is waiting, slow or failing: tool pins, storage images, leases, capacity grants, agent sessions, graph and dependency generations, caches, running repo processes and the host, each problem with its owner and the command that resolves it.
+  session open|status|close|list                  Show, open and close agent sessions: one identity per agent working in this worktree, with its cargo lane, Bazel slot preference, Nx daemon namespace, test sandbox root, lease owner tag, budget share and capability.
+
+Options:
+  --agent=<id>                                    service issue: the agent the token is issued to; service revoke: revoke every session of this agent. (used by: service, session)
+  -p, --projects=<projects>                       Comma list of project names with * wildcards, tag:<tag>, name:<name>, directory:<root> and !<pattern> negation. (used by: run-many, exec, watch)
+  --exclude=<projects>                            Comma list of projects to leave out (same patterns as --projects). (used by: run-many, affected, exec, watch)
+  -t, --targets=<targets>, --target               Comma list of target names or * patterns. (used by: run-many, affected)
+  -c, --configuration=<prototype|release>         Compiler configuration; disagreeing values (also a :<configuration> suffix or SEMIO_BUILD_MODE) are refused; cargo takes the full name only. (used by: run, run-many, affected, cargo)
+  --parallel=<n>                                  Maximum number of concurrent tasks. (used by: run, run-many, affected)
+  --bail                                          Stop at the first failing task. (used by: run, run-many, affected)
+  --verbose                                       Print more detail. (used by: run, run-many, affected)
+  --output=<stream|stream-without-prefixes|static>, --output-style
+                                                  Output style of the task logs. (used by: run, run-many, affected)
+  --skip-cache                                    Ignore the task cache. (used by: run, run-many, affected)
+  --skip-remote-cache                             Ignore the remote cache. (used by: run, run-many, affected)
+  --exclude-dependencies, --exclude-task-dependencies
+                                                  Run only the named tasks, not the tasks they depend on. (used by: run, run-many, affected)
+  --dry-run                                       Print the task graph as a DryRunPlan on stdout and execute nothing; the same for every tool. With cache gc or remote-cache gc: list what would be removed and remove nothing. (used by: run, run-many, affected, exec, cache, remote-cache, doctor)
+  --graph[=<file>]                                Same as --dry-run; with a file the plan is written there (Nx: the file as given, Bazel: a report whose path is printed). (used by: run, run-many, affected, exec)
+  --all                                           Select every project (affected, watch), every dependency owner (dependencies) or every lease directory with registered processes (leases). (used by: affected, watch, dependencies, leases, session)
+  --base=<ref>                                    Compare against this revision instead of HEAD. (used by: affected)
+  --head=<ref>                                    End revision of the comparison. (used by: affected)
+  --files=<files>                                 Comma list of changed files instead of the git comparison. (used by: affected)
+  --uncommitted                                   Only uncommitted changes. (used by: affected)
+  --untracked                                     Only untracked files. (used by: affected)
+  --include-global-files                          Also react to files outside any project. (used by: watch)
+  --file=<path>                                   Write the result as a report file and print its path. (used by: graph, show, incremental, concurrency, bench, conformance, units)
+  --json                                          Print lists as JSON instead of one entry per line. (used by: graph, show, incremental, concurrency, bench, capacity, fleet, scheduler, leases, cache, remote-cache, doctor, tools, conformance, units, service, session)
+  --area=<id[,id]>                                cache status|gc: limit the report or the collection to these ledger areas (or retired, undeclared); cache dedupe: limit the search to these places (bazel-outputs, bazel-workspaces, vite-products, tools). (used by: cache)
+  --budget=<size>                                 cache status|gc: the disk budget of this machine for this call (an integer or a number with KiB, MiB, GiB, TiB, e.g. 40GiB); it beats the SEMIO_CACHE_BUDGET_BYTES variable, which beats the machine file in the repository cache root, which beats the declared default. (used by: cache)
+  --deep                                          cache verify (required): read every indexed optional graph leaf and every closure inventory again and compare it with its recorded hash. cache status: walk every cache home now (with progress, cancellable) and record the sizes, instead of reading statfs and the size ledger. (used by: cache)
+  --tasks                                         cache status: print the selected tool's task cache (a CacheStatus) instead of the cache ledger. (used by: cache)
+  --graph-policy=<fresh|current>                  fresh (default) verifies the graph and waits for a rebuild when a project changed; current serves the newest sealed graph at once and never waits; otherwise SEMIO_BUILD_GRAPH_POLICY. (used by: graph, show)
+  --scenario=<ids|all>                            incremental plan|run and bench acceptance: comma list of scenario ids, or all (bench acceptance also takes kind:<noop|peer|edit> and product:<course|print|dashboard>; without --in-place, all leaves the scenarios that edit files out). (used by: incremental, conformance, bench)
+  --implementations=<nx|bazel|semio>              incremental and concurrency plan|run: implementations to judge (default: every registered backend). (used by: incremental, concurrency, bench, conformance)
+  --root=<path>                                   incremental, concurrency, bench: the disposable repository copy (default: the folder .sinc in the home directory, else sinc in the temporary directory of the process, else /tmp/sinc); it must not lie inside or contain the checkout, and its path stays short because absolute paths are limited to 256 characters. (used by: incremental, concurrency, bench, units)
+  --phases=<warm,edit,revert>                     incremental run: phases to judge (default: all three). (used by: incremental)
+  --fresh                                         incremental prepare: discard the copy and clone it again. (used by: incremental)
+  --workloads=<ids|all>                           concurrency plan|run: comma list of workload ids, or all. (used by: concurrency)
+  --sessions=<n>                                  concurrency plan|run: simulated agents per workload, the first n of its sessions (default: 3, at most 8). (used by: concurrency)
+  --criteria=<id>                                 concurrency run: judge every workload with this set of pass criteria instead of its own. (used by: concurrency)
+  --keep                                          conformance run: keep the scratch workspaces for inspection. (used by: conformance)
+  --slo=<ids|all>                                 bench run: comma list of objective ids, probe:<id>, kind:<cli-help|noop|edit|graph|cache|concurrency|planning>, or all. (used by: bench)
+  --runs=<n>                                      bench run: samples per probe instead of the authored count (the 95th percentile needs 20 samples, the 99th needs 100; fewer leave those objectives unproven). (used by: bench)
+  --baseline=<path>                               bench run|compare: a stored report to compare with; a change beyond the tolerance of an objective is a regression or an improvement. (used by: bench)
+  --save-baseline=<path>                          bench run: store the report as the baseline of later runs. (used by: bench)
+  --history=<folder>                              bench run: store the report in this folder as <UTC start>-<host class>.json and compare with the newest earlier report of this host class when no --baseline is given; bench compare: compare the two newest reports of this host class. (used by: bench)
+  --current=<path>                                bench compare: the stored report to judge against --baseline. (used by: bench)
+  --markdown=<path>                               bench run|compare|acceptance: also write the report as a markdown file. (used by: bench)
+  --max-load=<per-core>                           bench run: refuse to start when the one-minute load per core of the host exceeds this number. (used by: bench)
+  --prepare                                       bench run: discard and prepare the disposable copy first, so that the cold graph probe starts from a copy without graph. (used by: bench)
+  --in-place                                      bench acceptance: run the scenarios that edit and restore source files in this checkout (a CI runner, a private clone); nobody else may edit it meanwhile. (used by: bench)
+  --scope <owner>                                 Restrict the operation to one dependency owner. (used by: dependencies)
+  --store=<shared|isolated>                       Cargo target store; never create a private target directory. (used by: cargo)
+  --parallelism=<cores>                           Positive number of cores for Cargo. (used by: cargo)
+  --port <port>                                   remote-cache serve: port to listen on; 0 picks a free port (default from the build policy). (used by: remote-cache)
+  --host <address>                                remote-cache serve: address to listen on; beyond loopback a token is required. (used by: remote-cache)
+  --directory <path>                              remote-cache serve|status|gc: store directory, relative to the workspace root (default: the remote cache home of the cache ledger). (used by: remote-cache)
+  --max-bytes <bytes>                             remote-cache serve|gc: upper bound of the store; the least recently used entries are evicted beyond it. (used by: remote-cache)
+  --read-only                                     remote-cache serve: refuse every write with 403, whatever token is presented. (used by: remote-cache)
+  --tls-certificate <path>                        remote-cache serve, remote-execution serve: PEM certificate chain; together with --tls-key the server speaks HTTPS (grpcs for the execution service). (used by: remote-cache, remote-execution)
+  --tls-key <path>                                remote-cache serve, remote-execution serve: PEM private key of the certificate. (used by: remote-cache, remote-execution)
+  --origin <id>                                   remote-execution workers: origin id of this machine in the fleet (default: the origin of the replica, else the host name); the scheduler never gives a machine the units it requested itself. (used by: remote-execution)
+  --load-interval <seconds>                       remote-execution workers: seconds between the load reports of this machine to the scheduler (default 5). (used by: remote-execution)
+  --bind <address>                                remote-execution serve: address both listeners bind to (default 127.0.0.1); beyond loopback the cache tokens and the worker token are required. (used by: remote-execution)
+  --grpc-port <port>                              remote-execution serve: port of the gRPC listener for build tools (default 8980); 0 picks a free port. (used by: remote-execution)
+  --worker-port <port>                            remote-execution serve: port of the HTTP listener for workers and status (default 8981); 0 picks a free port. (used by: remote-execution)
+  --cache <url>                                   remote-execution serve: the shared store to use, the URL of a running repo remote-cache server; by default serve starts the store itself. (used by: remote-execution)
+  --local-workers <n>                             remote-execution serve: worker processes started with the service (default 1; 0 starts none). (used by: remote-execution)
+  --concurrency <n>                               remote-execution serve|workers: actions one worker runs at the same time (default: one per CPU). (used by: remote-execution)
+  --advertise <host>                              remote-execution serve: the host name clients and workers use to reach the service (default: loopback, else this machine's name). (used by: remote-execution)
+  --sandbox <auto|darwin-sandbox|linux-sandbox|isolated-root>
+                                                  remote-execution serve|workers: how workers confine an action (default: the first available strategy of the hermetic table for this host). (used by: remote-execution)
+  --work-directory <path>                         remote-execution serve|workers: directory of a worker's blob cache and private input roots, relative to the workspace root (default: the remote execution home of the cache ledger). (used by: remote-execution)
+  --join <url>                                    remote-execution workers|status: the worker API of the scheduler, for example http://build-host:8981 (default: SEMIO_REMOTE_EXECUTION_SCHEDULER). (used by: remote-execution)
+  --name <name>                                   remote-execution workers: name of the worker in status and logs (default: host name and process id). (used by: remote-execution)
+  --properties <name=value,...>                   remote-execution workers: platform properties the worker offers in addition to OSFamily and Arch. (used by: remote-execution)
+  --operation=<name>                              capacity run: the catalogue operation whose estimate is reserved (default: command). (used by: capacity)
+  --memory=<megabytes>                            capacity run: reserve exactly this many megabytes instead of an operation's estimate. (used by: capacity)
+  --cpu=<cores>                                   capacity run: cores the command keeps busy, counted against the load ceiling (default: 1). (used by: capacity)
+  --jobs=<n>                                      capacity run: jobs of a task operation to reserve (default: 1). (used by: capacity)
+  --cwd=<path>                                    tools exec: the directory the tool runs in (default: the current directory). (used by: tools)
+  --light                                         tools exec: run without waiting for machine capacity, for short queries. (used by: tools)
+  --lease-directory=<path>                        leases status: the lease directory to inspect (default: the checkout's lease store). (used by: leases)
+  --limit=<n>                                     fleet status: how many runs the text output lists (default: 20, the JSON output always lists all). (used by: fleet)
+  --key=<key>                                     scheduler run: the dedupe key; agents that run the same key at the same time share one run (default: the command line). (used by: scheduler)
+  --priority=<band>                               scheduler run: priority band background, agent or interactive (default: agent). (used by: scheduler)
+  --depth=<n>                                     scheduler run: length of the longest chain of dependents of the target; deeper (shared) targets start first (default: 0). (used by: scheduler)
+  --peak-mb=<n>                                   scheduler run: expected peak memory in MB that is reserved for the command (default: 1024). (used by: scheduler)
+  --lane=<lane>                                   scheduler run: shared compiler lane (rustc or tsc) whose concurrency is capped. (used by: scheduler)
+  --class=<class>                                 scheduler run: job class plan, compile, test or generate (default: compile). (used by: scheduler)
+  --violations=<n>                                leases status: how many recent lock order violations to list (default: 10). (used by: leases)
+  --fix                                           doctor: apply the declared safe repairs for the findings (publications of dead processes, stale lease registry rows, gone agent sessions); with --dry-run list what they would remove. (used by: doctor)
+  --only=<area[,area]>                            doctor: limit the report to these areas (tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host). (used by: doctor)
+  --strict                                        doctor: exit with status 1 for warnings as well as errors. (used by: doctor)
+  --facts                                         doctor: print the raw facts document the findings are derived from, as JSON, instead of the report. (used by: doctor)
+  --for=<go|python|dotnet|cpp|wit|tex>            units plan|run|emit: the source language whose units are planned (go, python, dotnet, cpp through CMake and Ninja, wit, tex; the tracked files of the checkout). (used by: units)
+  --out=<path>                                    units emit: the directory that receives the spec files and the build files; units exec: the result file of the unit (out.json). (used by: units)
+  --out-root=<path>                               units exec: read the files of the dependencies from and write the files of the unit below this directory (the layout the Nx targets use) instead of naming each file. (used by: units)
+  --spec=<path>                                   units exec: the spec file of the unit to execute. (used by: units)
+  --iface=<path>                                  units exec: the interface file (iface.json) the unit publishes. (used by: units)
+  --iface-dep=<path>                              units exec: the interface file of one dependency whose interface the unit consumes; repeatable. (used by: units)
+  --impl-dep=<path>                               units exec: a result file (out.json) of the implementation closure of the unit; repeatable. (used by: units)
+  --only=<unit-id>                                units run: run only this unit and its dependencies; repeatable. (used by: units)
+  --concurrency=<n>                               units run: units executed at the same time, 1 to 16 (default: 1). (used by: units)
+  --receipts=<path>                               units run: directory of the shared receipts, so later runs and other sessions reuse results (default: memory only). (used by: units)
+  --client=<name>                                 session open: the name of the agent client, used to name the agent of an MCP connection when no client variable identifies it. (used by: session)
+  --client-pid=<pid>                              session open: the process id of the agent client of a connection (part of the connection's identity). (used by: session)
+  --owner-pid=<pid>                               session open: a process whose end ends the session (default: the nearest agent-client ancestor). (used by: session)
+  --weight=<n>                                    session open: the weight of the session in the budget split between live sessions, 1 to 16 (default: 1). (used by: session)
+  --export                                        session open: also print the environment line NAME=value that attaches child processes to the session. (used by: session)
+  --dead                                          session close: close every gone session instead of one. (used by: session)
+  --force                                         session close: close a session although its owner process is still alive. (used by: session)
+
+Global options:
+  --tool=<nx|bazel|semio>  Select the build implementation; otherwise SEMIO_BUILD_TOOL, then the policy default (nx).
+  --workers=<on|off>       Run actions in persistent workers (on) or in one process each (off); otherwise SEMIO_BUILD_WORKERS, then the worker policy of the build policy.
+  -h, --help               Print the usage of the command and stop.
+  --lang=<en|de>           Language of the texts; otherwise SEMIO_LANGUAGE, then LANGUAGE and the locale variables (LC_ALL, LC_MESSAGES, LANG), then the operating system language. No language is assumed: the command refuses when none resolves.
+
+Examples:
+  repo run @semio-tech/semio-tech-play:serve
+      Run the serve task with the default implementation.
+  repo run-many --targets=test --projects=tag:rust
+      Run the test target in every project tagged rust.
+  repo affected --targets=test
+      Test what changed against HEAD plus untracked files.
+  repo exec --projects=@semio-tech/repo-client -- repo tools exec bun -- test
+      Run one command inside one project root.
+  repo watch --projects=@semio-tech/repo-client -- repo run @semio-tech/repo-client:build
+      Rebuild one project on every source change.
+  repo graph --file=graph.json
+      Write the graph as a report file.
+  repo show projects
+      List all projects.
+  repo --tool=nx inputs @teaching/architecture-course:test
+      List the inputs Nx hashes for the course tests.
+  repo reset --tool=bazel
+      Reset the Bazel state.
+  repo tools setup all
+      Provision Nx, Bazel and every native toolchain at its pin.
+  repo preflight
+      Check architecture, free space, tools and directory exchange.
+  repo incremental list
+      List the incremental build scenarios.
+  repo concurrency list
+      List the concurrent workloads.
+  repo conformance list
+      List the conformance scenarios.
+  repo units plan --for=go
+      Plan the Go units of the checkout.
+  repo bench list
+      List the performance objectives.
+  repo dependencies lock --all
+      Regenerate the lock after editing a package.json.
+  repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
+      Type-check one crate in the shared store.
+  repo cache status
+      Show every cache partition and area against its budget.
+  repo remote-cache serve
+      Serve a local remote cache on 127.0.0.1:6090.
+  repo capacity status
+      See how much memory the machine has left above its floor and who holds it.
+  repo leases status
+      See who holds the repository's leases, who waits behind whom and for how long.
+  repo fleet status
+      See at a glance who runs what, who waits for what and for how long, and what the disk and memory budgets look like.
+  repo scheduler status
+      See what runs and waits in the global queue and every agent's share.
+  repo service host status
+      Show the one service of this machine, its memory and how many workspaces it serves.
+  repo remote-execution serve
+      Run the service with the shared store and one local worker: gRPC for build tools on 127.0.0.1:8980, HTTP for workers, status and the fleet load table on 127.0.0.1:8981; hermetic Bazel actions can then run remotely.
+  repo doctor
+      See who waits for whom, what is slow and what is broken, with the command that fixes each finding.
+  repo session status
+      See which agent session this command belongs to and what it holds.
+
+Native commands of the repository (repo <command> --help):
+  mcp [kind]                           Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)
+  graphql [query]                      Execute a GraphQL query
+  test [testable-id-or-uri]...         Run tests for given entities
+  ticket                               Ticket management commands
+  todo                                 Todo management commands
+  goal                                 Goal management commands
+  contributor                          Contributor management commands
+  folder                               Folder management commands
+  file                                 File management commands
+  section                              Section management commands
+  move <source> <target>               Move an artifact from source to target
+  integrate [source] [target]          Integrate source code into a target file section
+  extract [source] [target]            Extract a section from a source file into a target file
+  rename <old> <new> [scope]           Rename a token across non-gitignored files (all case variants)
+  sync                                 Synchronize monorepo artifacts
+  search [query]                       Search monorepo tree
+  list [query]                         Stream a flat list of monorepo items
+  query [keywords]                     Keyword search across monorepo resources
+  tree                                 Show a repository tree
+  export [output]                      Export repo data to an event log
+  hook <event> <client>                Run a lifecycle hook (git or agent)
+  mermaid <visualization>              Generate mermaid diagram strings
+  loc                                  Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)
+  technology                           Manage technologies
+  bundle                               Bundle management commands
+  analyze [scope]                      Analyze codebase for breachs
+  entity-emojis                        List all entity-identifying emojis
+  configure                            Remove blocking git hooks; repo config files are edited manually
+  micro-commit [subcommand] [args...]  Micro-commit workflow (reset, prepare-commit-msg, stage, diff, prepare)
+  benchmark                            Run benchmarks for all ecosystems
+  update [target]                      Update dependencies (npm, python, rust, go, dotnet)
+  auth                                 Server authentication
+  autofix [scope]                      Apply autofixes for breachs
+  statute                              Statute management commands
+  checkpoint                           Checkpoint management commands
+  interaction                          Interaction management commands
+  draft                                Draft management commands
+  definition                           Definition management commands
+  dashboard [arguments]                Human control plane (not for agents).
+  dev mcp stdio os [arguments]         MCP server of the OS over stdio.
+[repo] Installed native repository command: /Users/ueli/.local/bin/repo
+[semio] Installing the dependency scopes (the planner of every later run needs them)…
+[capacity] dependencies: sized at 25% of the default from 15 earlier run(s) of its class, at least 5903 MB because of its assembly phase
+[capacity] admitted dependencies with 4756 of 5903 MB: only 4756 MB are free above the 2048 MB floor right now, and 3072 MB are enough to start
+[capacity] dependencies: sized at 25% of the default from 15 earlier run(s) of its class, at least 5903 MB because of its assembly phase
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[repo] still working after 5 s; last phase started: source.served
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+[DATA] Store dependency sync current {"version":1,"purpose":"current-store-dependency-sync-current","scopes":6}
+[semio] workspace:setup…
+[capacity] run: sized at 70% of the default from 7 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 2048 MB reserved (6343 MB available, 2048 MB floor)
+Starting the repo graph service for this host.
+Waiting for the repo graph service (262 ms).
+Waiting for the repo graph service (2290 ms).
+Loading the project graph of 440cffa5563d.
+Planning 1 targets.
+[repo] still working after 5 s; last phase started: door.script
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+[repo] still working after 10 s; last phase started: door.script
+Reading the project graph slice (6 s): files 123 of 123.
+Reading the project graph slice (8 s): doubt 453127 of 453127.
+Reading the project graph slice (10 s): facts 90112 of 207346.
+Reading the project graph slice (12 s): facts 207346 of 207346.
+Reading the project graph slice (14 s): facts 207346 of 207346.
+[repo] still working after 20 s; last phase started: door.script
+Reading the project graph slice (16 s): facts 207346 of 207346.
+Reading the project graph slice (18 s): verification 1 of 1051.
+Reading the project graph slice (20 s): verification 1 of 1051.
+Reading the project graph slice (22 s): verification 1 of 1051.
+Reading the project graph slice (24 s): verification 1 of 1051.
+Reading the project graph slice (26 s): verification 4 of 1051.
+Reading the project graph slice (28 s): verification 33 of 1051.
+Reading the project graph slice (30 s): verification 119 of 1051.
+Reading the project graph slice (32 s): verification 198 of 1051.
+Reading the project graph slice (34 s): rederivation 2 of 2.
+Reading the project graph slice (36 s): flush 1 of 1.
+Reading the project graph slice (38 s): verification 362 of 1051.
+Reading the project graph slice (40 s): verification 362 of 1051.
+Reading the project graph slice (42 s): verification 365 of 1051.
+Reading the project graph slice (44 s): verification 454 of 1051.
+[repo] still working after 50 s; last phase started: door.script
+Reading the project graph slice (46 s): rederivation 1 of 1.
+Reading the project graph slice (48 s): flush 1 of 1.
+Reading the project graph slice (50 s): flush 1 of 1.
+Reading the project graph slice (52 s): flush 1 of 1.
+Reading the project graph slice (54 s): verification 536 of 1051.
+Reading the project graph slice (56 s): verification 539 of 1051.
+Reading the project graph slice (58 s): verification 637 of 1051.
+Reading the project graph slice (60 s): verification 761 of 1051.
+Reading the project graph slice (62 s): verification 847 of 1051.
+Reading the project graph slice (64 s): verification 928 of 1051.
+Reading the project graph slice (66 s): flush 1 of 1.
+The project graph could not be read on this machine: it can infer only 72 of the stale projects, the fleet was asked for 657 and delivered 0 within 0 s, 657 are still missing, among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/framework-renderer-wgpu (about 7348 MB), @semio-tech/framework-os-mcp (about 5530 MB), @semio-tech/framework-os (about 5424 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/ui-contract-identity-rs (about 4894 MB), and 181 more (this machine can give about 264 MB per project). Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T02:46:57Z
+native_rc=75

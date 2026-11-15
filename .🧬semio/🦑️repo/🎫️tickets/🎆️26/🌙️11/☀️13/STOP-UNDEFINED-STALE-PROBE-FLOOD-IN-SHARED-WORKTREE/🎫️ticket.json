@@ -1,0 +1,46 @@
+{
+  "title": "Stop Undefined Stale Probe Flood in Shared Worktree",
+  "emoji": "🧯",
+  "status": "closed",
+  "description": "Stop the `undefined.stale` flood: the `[DEBUG] hitcost` probe in build graph inference script-inputs appends to `process.env.PROBE_OUT + \".stale\"`, which with PROBE_OUT unset writes a ~30 MB root file `undefined.stale` replicated to all fleet machines and breaking replica verify. Check whether the hitcost investigation (ticket 26/11/10/GET-NORM-PLUGIN-WORKING-END-TO-END, hitcost.md) still needs the probe; remove it if finished, otherwise guard it. Delete the root file, confirm it stays gone, and confirm replica verify no longer reports it as drift.",
+  "summary": "Removed all finished `[DEBUG] hitcost` probes (including the `PROBE_OUT + \".stale\"` writer) from three build library files, deleted root `undefined.stale`; it stayed gone for 7+ minutes and replica verify no longer reports it. Report: undefined-stale-flood.md. Finding for others: the farmhits pass-wide verdict fix (inPassRowsV1/factTooLargeV1) is missing from the shared worktree and pass-verdicts test fails (40 vs 240).",
+  "goal": "runningrepo",
+  "sessions": [
+    "956cbca7-16c5-41d0-a953-969453370eb6"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-13 23:30:19",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Stop the `undefined.stale` flood: the `[DEBUG] hitcost` probe in build graph inference script-inputs appends to `process.env.PROBE_OUT + \".stale\"`, which with PROBE_OUT unset writes a ~30 MB root file `undefined.stale` replicated to all fleet machines and breaking replica verify. Check whether the hitcost investigation (ticket 26/11/10/GET-NORM-PLUGIN-WORKING-END-TO-END, hitcost.md) still needs the probe; remove it if finished, otherwise guard it. Delete the root file, confirm it stays gone, and confirm replica verify no longer reports it as drift.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-13 23:39:24",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Removed all finished `[DEBUG] hitcost` probes (including the `PROBE_OUT + \".stale\"` writer) from three build library files, deleted root `undefined.stale`; it stayed gone for 7+ minutes and replica verify no longer reports it. Report: undefined-stale-flood.md. Finding for others: the farmhits pass-wide verdict fix (inPassRowsV1/factTooLargeV1) is missing from the shared worktree and pass-verdicts test fails (40 vs 240).",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️🧭️scriptinputs💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️👁️observation💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️🧭️scriptinputs🗃️💾️entries💻🟨️"
+        },
+        {
+          "path": "💾undefined"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+Pre-run facts, 2026-11-15T01:41:15Z
+- replica code digest (.cache/f/health.json): 52e46eee5c577cf8425b43f243681f24326d6645807f938982368d8c64cbfc7f, store ok, daemon pid 77232 , health.json age 0 s
+- replica agent: state = running
+state = active
+state = active
+- graph service job: 41996 0 tech.semio.repo.service.19c193692817
+- repo service host processes:
+    pid 41996 ppid 1 age 01:10:37 rss 61872
+    pid 42029 ppid 41996 age 01:10:33 rss 206784
+- memory pressure level 1, swap total = 3072.00M  used = 2480.19M  free = 591.81M  (encrypted), free disk 82Gi

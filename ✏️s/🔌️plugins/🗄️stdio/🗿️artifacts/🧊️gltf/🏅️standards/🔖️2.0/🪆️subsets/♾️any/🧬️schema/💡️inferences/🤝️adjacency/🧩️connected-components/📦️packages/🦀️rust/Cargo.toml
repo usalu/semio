@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../../../../../.."
-name = "semio-s-artifact-stdio-gltf-inferences-connected-components"
+name = "semio-s-artifact-stdio-gltf-inferences-connected"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Component crate of semio-s-artifact-stdio-gltf-inferences: connected-components"
+description = "Component crate of semio-s-artifact-stdio-gltf-inferences: connected"
 
 [package.metadata.semio]
 role = "library"

@@ -105,7 +105,8 @@ def _handoff_identity(batch: dict) -> str:
     """🧬 Bind a captured UI handoff to its catalog, locale, viewport, code, CSS and assets."""
     catalog_path = (_ROOT.parent / "🔣️.json").resolve()
     sources = tuple(path for path in source_files() if path.resolve() != catalog_path)
-    payload = {key: batch[key] for key in ("catalog", "language", "viewport")}
+    catalog = {**batch["catalog"], "posters": {scene: poster["sha256"] for scene, poster in batch["catalog"].get("posters", {}).items()}}
+    payload = {"catalog": catalog, "language": batch["language"], "viewport": batch["viewport"]}
     digest = hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8"))
     digest.update(_identity(sources).encode("ascii"))
     return digest.hexdigest()

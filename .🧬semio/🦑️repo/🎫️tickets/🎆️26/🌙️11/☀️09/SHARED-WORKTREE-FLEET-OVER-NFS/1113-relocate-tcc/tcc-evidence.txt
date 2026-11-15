@@ -1,0 +1,27 @@
+== probe output (job program in each variant; the process that touched the folder is the bun runtime) ==
+2026-11-13T03:35:50.681Z direct start pid=84713 exec=/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+direct ok ["inside.txt"]
+2026-11-13T03:36:30.639Z launcher start pid=85677 exec=/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+launcher ok ["inside.txt"]
+2026-11-13T03:37:26.423Z shell start pid=98942 exec=/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+shell ok ["inside.txt"]
+2026-11-13T03:37:50.278Z shell start pid=4758 exec=/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun ppid=4747 parent=/bin/sh
+shell ok ["inside.txt"]
+2026-11-13T03:42:41.555Z protected start pid=56015 exec=/Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun ppid=1 parent=/sbin/launchd
+protected ok ["inside.txt"]
+== tccd attribution, variant direct ==
+04:35:46.894 attribution={accessing={TCCDProcess: identifier=bun, pid=84713, auid=501, euid=501, binary_path=~/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun}, requesting={TCCDProcess: identifier=com.apple.sandboxd, pid=57686, auid=0, euid=0, binary_path=/usr/libexec/sandboxd}, },
+04:35:46.927 attribution={accessing={TCCDProcess: identifier=bun, pid=84713, auid=501, euid=501, binary_path=~/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun}, requesting={TCCDProcess: identifier=com.apple.sandboxd, pid=57686, auid=0, euid=0, binary_path=/usr/libexec/sandboxd}, },
+04:36:02.206 attribution={accessing={TCCDProcess: identifier=a.out, pid=85404, auid=501, euid=501, binary_path=~/.local/share/semio/launcher/bin/repo}, requesting={TCCDProcess: identifier=com.apple.syspolicyd, pid=274, auid=0, euid=0, binary_path=/usr/libexec/syspolicyd}, },
+== tccd attribution, variant shell ==
+04:37:26.363 attribution={accessing={TCCDProcess: identifier=bun, pid=98942, auid=501, euid=501, binary_path=~/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun}, requesting={TCCDProcess: identifier=com.apple.sandboxd, pid=57686, auid=0, euid=0, binary_path=/usr/libexec/sandboxd}, },
+04:37:26.387 attribution={accessing={TCCDProcess: identifier=bun, pid=98942, auid=501, euid=501, binary_path=~/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun}, requesting={TCCDProcess: identifier=com.apple.sandboxd, pid=57686, auid=0, euid=0, binary_path=/usr/libexec/sandboxd}, },
+04:37:50.177 attribution={accessing={TCCDProcess: identifier=bun, pid=4758, auid=501, euid=501, binary_path=~/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun}, requesting={TCCDProcess: identifier=com.apple.sandboxd, pid=57686, auid=0, euid=0, binary_path=/usr/libexec/sandboxd}, },
+== tccd attribution, variant protected ==
+04:42:41.194 attribution={accessing={TCCDProcess: identifier=a.out, pid=56015, auid=501, euid=501, binary_path=~/.local/share/semio/launcher/bin/repo}, requesting={TCCDProcess: identifier=com.apple.syspolicyd, pid=274, auid=0, euid=0, binary_path=/usr/libexec/syspolicyd}, },
+04:42:41.251 attribution={accessing={TCCDProcess: identifier=a.out, pid=56015, auid=501, euid=501, binary_path=~/.local/share/semio/launcher/bin/repo}, requesting={TCCDProcess: identifier=com.apple.sandboxd, pid=57686, auid=0, euid=0, binary_path=/usr/libexec/sandboxd}, },
+04:42:41.256 attribution={accessing={TCCDProcess: identifier=a.out, pid=56015, auid=501, euid=501, binary_path=~/.local/share/semio/launcher/bin/repo}, requesting={TCCDProcess: identifier=com.apple.sandboxd, pid=57686, auid=0, euid=0, binary_path=/usr/libexec/sandboxd}, },
+== existing consent record, launcher as responsible (no prompt, authValue=2 allowed, authReason=2 user consent) ==
+04:42:41.261 AUTHREQ_RESULT service=kTCCServiceSystemPolicyDocumentsFolder responsible=a.out(launcher) authValue=2 authReason=2
+== copied Apple binary as supervisor ==
+AMFI: Launch Constraint Violation (enforcing), OS_REASON_CODESIGNING: copy of /bin/sh at another path cannot run

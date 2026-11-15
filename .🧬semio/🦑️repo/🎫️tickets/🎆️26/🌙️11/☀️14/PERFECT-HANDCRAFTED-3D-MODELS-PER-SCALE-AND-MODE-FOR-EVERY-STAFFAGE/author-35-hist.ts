@@ -1,0 +1,13 @@
+import { evaluate } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+import { measureView, worldSolids } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
+import { entryOf, loadSource, merged } from "./volumes-lib.ts";
+const [spec, scaleS, view] = process.argv.slice(2) as string[];
+const { entry, asset } = entryOf(spec!);
+const sc = Number(scaleS);
+const m = merged(asset, loadSource(entry)!) as any;
+const st = evaluate(m, { kind: "pose", pose: m.presentation.defaultPose }, { kind: "scale", scale: { denominator: sc } });
+const solids = worldSolids(m, st.bones as never, sc).filter((w: any) => w.texture !== true);
+const r = measureView(m, st, solids, view as any, sc, undefined, 0.15e-3 * sc) as any;
+const h = r.spread.hard as number[]; const tot = h.reduce((s, x) => s + x, 0);
+console.log("cell", r.cell, "total", tot, "p95", r.p95M, "hausdorff", r.hausdorffM, "box", JSON.stringify(r.box));
+let run = 0; console.log(h.slice(0, 40).map((x, k) => { run += x; return `${k}:${x}(${(100 * run / tot).toFixed(1)}%)`; }).join(" "));

@@ -1,0 +1,4 @@
+try 1 ended 2026-11-14T17:05:36Z native_rc=75 refusal=2026-11-14T17:05:09.698Z graph-wanted-expired {"wanted":"703","arrived":"0","seconds":"302","missing":"703","local":"192"}
+try 2 ended 2026-11-14T17:15:38Z native_rc=75 refusal=2026-11-14T17:15:14.264Z graph-wanted-expired {"wanted":"703","arrived":"0","seconds":"301","missing":"703","local":"192"}
+try 3 ended 2026-11-14T17:44:45Z native_rc=75 refusal=2026-11-14T17:44:40.708Z graph-wanted-expired {"wanted":"703","arrived":"502","seconds":"1480","missing":"201","local":"192"}
+try 4 ended 2026-11-14T18:07:50Z native_rc=7 refusal=none

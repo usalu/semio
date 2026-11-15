@@ -3,7 +3,7 @@ import {createRequire} from "node:module";
 import {existsSync,mkdirSync,readFileSync,realpathSync,renameSync,statSync,writeFileSync} from "node:fs";
 import {dirname,join,relative,resolve} from "node:path";
 import {withCompilerState} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts";
-import {compilerAdmissionBudgetV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+
 import {typeScriptCheckEnvironmentV1,type TypeScriptCheckOptions} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {currentAgentSessionV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
@@ -63,7 +63,7 @@ async function runUnits(options: UnitsRun): Promise<void> {
       const host: TypeScriptUnitsHostV1 = {workspace: options.workspace, typeRoots, typeFiles, compiler: `typescript@${ts.version}`, options: sha(JSON.stringify(parsed.options), JSON.stringify(document.compiler)), environment: modules, family, store: join(sharedRoot, "store"), session: "current", state: directory, digest,
         tsc: async (config, signal) => {
           const lines: string[] = []; let code = 0;
-          try {await runOwnedCommand(process.execPath, [compiler, "-p", config, "--pretty", "false"], options.cwd, options.owner, compilerAdmissionBudgetV1(actualControl), {env: typeScriptCheckEnvironmentV1(options.mode, compilerEnvironment), signal, onLine: line => {lines.push(line);}});}
+          try {await runOwnedCommand(process.execPath, [compiler, "-p", config, "--pretty", "false"], options.cwd, options.owner, 0, {deadline:actualControl,env: typeScriptCheckEnvironmentV1(options.mode, compilerEnvironment), signal, onLine: line => {lines.push(line);}});}
           catch (error) {const status = /status (\d+)/u.exec(String((error as Error).message))?.[1]; if (signal.aborted || (status !== "1" && status !== "2")) throw error; code = Number(status);}
           return {code, output: lines.join("\n")};
         }};

@@ -1,0 +1,8 @@
+🏗️machinery/oil-pumpjack
+🏗️machinery/plate-heat-exchanger
+🏗️machinery/scissor-lift
+🏗️machinery/scroll-compressor
+🏗️machinery/solar-thermal-collector
+🏗️machinery/sorption-wheel
+🏗️machinery/tower-crane
+🏗️machinery/wheel-loader

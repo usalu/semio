@@ -46,7 +46,7 @@ export function ButtonLink(props: { readonly href: string; readonly icon?: IconN
 }
 
 /** 🎛️ One option of a segmented choice. */
-export type SegmentOption<T extends string | number> = { readonly value: T; readonly label: ReactNode; readonly title?: string; readonly name?: string; readonly icon?: IconName; readonly lang?: string };
+export type SegmentOption<T extends string | number> = { readonly value: T; readonly label: ReactNode; readonly title?: string; readonly name?: string; readonly icon?: IconName; readonly lang?: string; readonly unavailable?: string };
 
 /** 🎛️ A radio group drawn as segments: arrow keys move and select, the selected segment is the only tab stop. */
 export function Segmented<T extends string | number>(props: { readonly label: string; readonly options: readonly SegmentOption<T>[]; readonly value: T | null; readonly onChange: (value: T) => void; readonly className?: string; readonly hideLabel?: boolean }): ReactElement {
@@ -60,7 +60,7 @@ export function Segmented<T extends string | number>(props: { readonly label: st
     event.preventDefault();
     const next = (index + step + options.length) % options.length;
     refs.current[next]?.focus();
-    onChange(options[next]!.value);
+    if (options[next]!.unavailable === undefined) onChange(options[next]!.value);
   };
   return (
     <div className={cn("flex min-w-0 flex-col gap-single", className)}>
@@ -76,12 +76,13 @@ export function Segmented<T extends string | number>(props: { readonly label: st
             role="radio"
             aria-checked={option.value === value}
             tabIndex={index === selected ? 0 : -1}
-            title={option.title}
+            title={option.unavailable ?? option.title}
             aria-label={option.name}
+            {...(option.unavailable === undefined ? {} : { "aria-disabled": true, "aria-description": option.unavailable, "data-unavailable": "" })}
             lang={option.lang}
             onKeyDown={(event) => move(event, index)}
-            onClick={() => onChange(option.value)}
-            className={cn("inline-flex min-h-6 items-center gap-single border-0 px-double py-single text-xs font-medium transition-colors motion-reduce:transition-none", option.value === value ? "bg-active-base text-active-foreground" : "bg-panel text-foreground hover:bg-hover-panel", index > 0 && "border-l border-border")}
+            onClick={() => option.unavailable === undefined && onChange(option.value)}
+            className={cn("inline-flex min-h-6 items-center gap-single border-0 px-double py-single text-xs font-medium transition-colors motion-reduce:transition-none", option.value === value ? "bg-active-base text-active-foreground" : "bg-panel text-foreground hover:bg-hover-panel", option.unavailable !== undefined && "cursor-not-allowed border-dashed opacity-65", index > 0 && "border-l border-border")}
           >
             {option.icon === undefined ? null : <Icon icon={option.icon} size="small" className="shrink-0" />}
             {option.label}

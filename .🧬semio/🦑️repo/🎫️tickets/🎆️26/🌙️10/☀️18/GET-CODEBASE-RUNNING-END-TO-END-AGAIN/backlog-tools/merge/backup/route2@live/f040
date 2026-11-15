@@ -1,0 +1,768 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.repo.build.native-recovery/1",
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "project": "repo-mcp",
+        "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp",
+        "targets": [
+          "build",
+          "install"
+        ],
+        "options": [
+          "--skip-cache",
+          "--skip-cache=true",
+          "--skip-remote-cache",
+          "--skip-remote-cache=true",
+          "--output=stream"
+        ],
+        "buildChild": [
+          "run",
+          "repo-mcp:build"
+        ],
+        "buildOnlyOptions": [
+          "--exclude-dependencies",
+          "--exclude-dependencies=true"
+        ],
+        "maximumOwnerBytes": 65536,
+        "maintenance": {
+          "project": "repo",
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+          "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+          "targets": {
+            "cache-retire-inactive-preview": "preview",
+            "cache-retire-inactive": "retire"
+          }
+        },
+        "reset": {
+          "project": "repo",
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+          "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+          "targets": {
+            "cache-reset-graph": "graph",
+            "cache-reset-nx": "nx",
+            "cache-reset-rust": "rust",
+            "cache-reset-products": "products"
+          }
+        }
+      }
+    },
+    "Owner": {
+      "type": "object",
+      "required": [
+        "name",
+        "targets"
+      ],
+      "properties": {
+        "name": {
+          "const": "repo-mcp"
+        },
+        "targets": {
+          "type": "object",
+          "required": [
+            "build",
+            "install"
+          ],
+          "properties": {
+            "build": {
+              "type": "object",
+              "required": [
+                "options",
+                "executor"
+              ],
+              "properties": {
+                "dependsOn": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "required": [
+                    "command",
+                    "cwd"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts build"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
+                    }
+                  }
+                },
+                "executor": {
+                  "const": "repo:script"
+                }
+              }
+            },
+            "install": {
+              "type": "object",
+              "required": [
+                "options",
+                "dependsOn",
+                "executor"
+              ],
+              "properties": {
+                "dependsOn": {
+                  "const": [
+                    "build"
+                  ]
+                },
+                "options": {
+                  "type": "object",
+                  "required": [
+                    "command"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts install"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
+                    }
+                  }
+                },
+                "executor": {
+                  "const": "repo:script"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "fault",
+        "target",
+        "events"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "owner",
+            "command",
+            "dependencies",
+            "spread",
+            "abort",
+            "reject"
+          ]
+        },
+        "target": {
+          "enum": [
+            "build",
+            "install",
+            null
+          ]
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "MaintenanceOwner": {
+      "type": "object",
+      "required": [
+        "name",
+        "targets"
+      ],
+      "properties": {
+        "name": {
+          "const": "repo"
+        },
+        "targets": {
+          "type": "object",
+          "required": [
+            "cache-retire-inactive-preview",
+            "cache-retire-inactive"
+          ],
+          "properties": {
+            "cache-retire-inactive-preview": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts cache-retire-inactive preview"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "cache-retire-inactive": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts cache-retire-inactive retire"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "MaintenanceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "fault",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "owner",
+            "command",
+            "dependencies",
+            "cwd",
+            "forward",
+            "source",
+            "capture",
+            "spread",
+            "abort",
+            "reject"
+          ]
+        },
+        "target": {
+          "enum": [
+            "preview",
+            "retire",
+            null
+          ]
+        }
+      }
+    },
+    "ResetOwner": {
+      "type": "object",
+      "required": [
+        "name",
+        "targets"
+      ],
+      "properties": {
+        "name": {
+          "const": "repo"
+        },
+        "targets": {
+          "type": "object",
+          "required": [
+            "cache-reset-graph",
+            "cache-reset-nx"
+          ],
+          "properties": {
+            "cache-reset-nx": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata",
+                "inputs"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts reset nx"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution",
+                        "sourceInputObservation",
+                        "cache"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        },
+                        "sourceInputObservation": {
+                          "const": "freshness"
+                        },
+                        "cache": {
+                          "const": {
+                            "version": 1,
+                            "class": "live",
+                            "reason": "exercises-host-resources"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "inputs": {
+                  "const": [
+                    "{projectRoot}/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/**/*"
+                  ]
+                }
+              }
+            },
+            "cache-reset-graph": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata",
+                "inputs"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts reset graph"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution",
+                        "sourceInputObservation",
+                        "cache"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        },
+                        "sourceInputObservation": {
+                          "const": "freshness"
+                        },
+                        "cache": {
+                          "const": {
+                            "version": 1,
+                            "class": "live",
+                            "reason": "exercises-host-resources"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "inputs": {
+                  "const": [
+                    "{projectRoot}/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/**/*"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ResetCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "fault",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "owner",
+            "command",
+            "dependencies",
+            "outputs",
+            "cache",
+            "cwd",
+            "forward",
+            "source",
+            "capture",
+            "spread",
+            "abort",
+            "reject"
+          ]
+        },
+        "target": {
+          "enum": [
+            "graph",
+            "nx",
+            null
+          ]
+        }
+      }
+    },
+    "ResetArgumentsCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "profile"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "profile": {
+          "enum": [
+            "graph",
+            "nx",
+            null
+          ]
+        }
+      }
+    },
+    "CapacityParallelJobs": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "CapacityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args",
+        "grant",
+        "target"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 12
+        },
+        "grant": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapacityParallelJobs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "enum": [
+            "build",
+            "install",
+            "preview",
+            "retire",
+            "graph",
+            "nx",
+            null
+          ]
+        }
+      }
+    },
+    "RecoveryCaptureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry",
+        "owner",
+        "documents",
+        "foreign"
+      ],
+      "properties": {
+        "entry": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "documents": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "request",
+              "kind",
+              "target"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "request": {
+                "enum": [
+                  "repo:cache-reset-graph",
+                  "repo-mcp:build"
+                ]
+              },
+              "kind": {
+                "enum": [
+                  "cache-reset",
+                  "frontend"
+                ]
+              },
+              "target": {
+                "enum": [
+                  "graph",
+                  "build"
+                ]
+              }
+            }
+          }
+        },
+        "foreign": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

@@ -236,9 +236,10 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
             maintain(app, 65_536);
             app.0.advance_typed_operation_publication(&mut identity, app.1.cx()).await.expect("advance the publication");
             let _ = (app.take_constructor_receipt(), app.take_typed_operation_preparation_receipt(), app.take_typed_operation_retirement_receipt(), app.take_history_command_receipt(), app.take_tool_run_receipt());
-            while let Some(page) = app.take_typed_operation_result_page(SHOOTING_TEST_INSTANCE) {
+            while let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, SHOOTING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("take the result page") {
                 assert_ne!(page.lane, TypedOperationResultLane::Fault, "the retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
-                assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge the result page"), "the app accepts its own result token");
+                let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
+                assert!(app.acknowledge_typed_operation_result(token).expect("acknowledge the result page"), "the app accepts its own result token");
             }
             while app.take_typed_operation_effect().is_some() || app.take_typed_operation_event().is_some() || app.take_typed_operation_ui_scope().is_some() || app.take_typed_operation_composed_result().is_some() {}
             while let Some(completion) = app.take_typed_operation_completion().await.expect("take the completion") {
@@ -251,7 +252,7 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
     /// 🧹️ One cooperative-maintenance unit of `app`: the mounted policy's maintenance grant, widened to the owner's own quote on every axis the way the plugin runtime funds a lifecycle turn.
     pub fn maintain(app: &mut ShootingApp, body: usize) {
         let policy = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
-        let demand = app.maintenance_retirement_demands(body).expect("maintenance quote");
+        let demand = app.maintenance_retirement_demands(body, semio_plugin::artifact_app_laws::FIXTURE_EFFECT_WORK).expect("maintenance quote");
         app.0.maintenance_step(app.1.cx(), semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: policy.maximum_items, maximum_copy_bytes: policy.maximum_copy_bytes.max(demand.copy_bytes), maximum_capacity_bytes: policy.maximum_capacity_bytes.max(demand.capacity_bytes), maximum_release_bytes: policy.maximum_release_bytes.max(demand.release_bytes), maximum_depth: policy.maximum_depth.max(demand.depth) }).expect("maintenance step");
     }
 
@@ -513,39 +514,39 @@ fn command_from_action_round_trips_every_command_id() {
             DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other.clone(),
         };
-        let bridged = ShootingPlayApp::command_from_action(id, Some((camel_case_keys(&payload)).clone()), None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
+        let bridged = ShootingPlayApp::command_from_action(id, &mut Some((camel_case_keys(&payload)).clone()), &mut None).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
         assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
     }
-    assert!(ShootingPlayApp::command_from_action("nonsense", None, None).is_err());
+    assert!(ShootingPlayApp::command_from_action("nonsense", &mut None, &mut None).is_err());
 }
 
 /// 🎛️ The host control contracts (`value`/`pressed`/gumball `ids`/viewport `camera`) reach the rows.
 #[test]
 fn command_from_action_bridges_host_control_contracts() {
     let args = |json: Value| action_args(&json);
-    assert_eq!(ShootingPlayApp::command_from_action("setActiveShot", Some((args(json!({ "value": "s2" }))).clone()), None).expect("select bridge"), ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some("s2".into()) }));
-    assert_eq!(ShootingPlayApp::command_from_action("toggleSun", Some((args(json!({ "pressed": true }))).clone()), None).expect("toggle bridge"), ShootingCommand::ToggleSun(toggle_sun::ToggleSun { value: true }));
-    assert_eq!(ShootingPlayApp::command_from_action("setCenterModel", Some((args(json!({ "pressed": false }))).clone()), None).expect("toggle bridge"), ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) }));
-    assert_eq!(ShootingPlayApp::command_from_action("setSunAzimuth", Some((args(json!({ "value": 90 }))).clone()), None).expect("slider bridge"), ShootingCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }));
+    assert_eq!(ShootingPlayApp::command_from_action("setActiveShot", &mut Some((args(json!({ "value": "s2" }))).clone()), &mut None).expect("select bridge"), ShootingCommand::SetActiveShot(set_active_shot::SetActiveShot { shot_id: Some("s2".into()) }));
+    assert_eq!(ShootingPlayApp::command_from_action("toggleSun", &mut Some((args(json!({ "pressed": true }))).clone()), &mut None).expect("toggle bridge"), ShootingCommand::ToggleSun(toggle_sun::ToggleSun { value: true }));
+    assert_eq!(ShootingPlayApp::command_from_action("setCenterModel", &mut Some((args(json!({ "pressed": false }))).clone()), &mut None).expect("toggle bridge"), ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) }));
+    assert_eq!(ShootingPlayApp::command_from_action("setSunAzimuth", &mut Some((args(json!({ "value": 90 }))).clone()), &mut None).expect("slider bridge"), ShootingCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: 90.0 }));
     assert_eq!(
-        ShootingPlayApp::command_from_action("patchShots", Some((args(json!({ "field": "width", "shotIds": ["s1"], "value": 512 }))).clone()), None).expect("inspector bridge"),
+        ShootingPlayApp::command_from_action("patchShots", &mut Some((args(json!({ "field": "width", "shotIds": ["s1"], "value": 512 }))).clone()), &mut None).expect("inspector bridge"),
         ShootingCommand::PatchShots(patch_shots::PatchShots { shot_ids: vec!["s1".into()], field: "width".into(), value: "512".into() })
     );
-    assert_eq!(ShootingPlayApp::command_from_action("addShot", Some((args(json!({ "format": "svg", "shape": "ellipse" }))).clone()), None).expect("catalogue bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() }));
-    assert_eq!(ShootingPlayApp::command_from_action("addShot", None, None).expect("defaults bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }));
+    assert_eq!(ShootingPlayApp::command_from_action("addShot", &mut Some((args(json!({ "format": "svg", "shape": "ellipse" }))).clone()), &mut None).expect("catalogue bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "svg".into(), shape: "ellipse".into() }));
+    assert_eq!(ShootingPlayApp::command_from_action("addShot", &mut None, &mut None).expect("defaults bridge"), ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }));
     assert_eq!(
-        ShootingPlayApp::command_from_action("translateSelection", Some((args(json!({ "mode": "object", "ids": ["a1"], "dx": 1, "dy": 0, "dz": -2.5 }))).clone()), None).expect("gumball bridge"),
+        ShootingPlayApp::command_from_action("translateSelection", &mut Some((args(json!({ "mode": "object", "ids": ["a1"], "dx": 1, "dy": 0, "dz": -2.5 }))).clone()), &mut None).expect("gumball bridge"),
         ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["a1".into()], dx: 1.0, dy: 0.0, dz: -2.5 })
     );
-    let ShootingCommand::SetCamera(set_camera::SetCamera { camera }) = ShootingPlayApp::command_from_action("setCamera", Some((args(json!({ "windowId": "w1", "camera": { "position": [1, 2, 3], "target": [0, 0, 0], "zoom": 2 } }))).clone()), None).expect("viewport bridge") else {
+    let ShootingCommand::SetCamera(set_camera::SetCamera { camera }) = ShootingPlayApp::command_from_action("setCamera", &mut Some((args(json!({ "windowId": "w1", "camera": { "position": [1, 2, 3], "target": [0, 0, 0], "zoom": 2 } }))).clone()), &mut None).expect("viewport bridge") else {
         panic!("setCamera must bridge to SetCamera");
     };
     assert_eq!(camera.position, [1.0, 2.0, 3.0]);
     assert_eq!(camera.zoom, 2.0);
     assert_eq!(camera.fov, crate::default_fov());
-    assert_eq!(ShootingPlayApp::command_from_action("loadSavedCamera", Some((args(json!({ "id": "cam1" }))).clone()), None).expect("possible engagement bridge"), ShootingCommand::LoadSavedCamera(load_saved_camera::LoadSavedCamera { id: "cam1".into() }));
-    assert_eq!(ShootingPlayApp::command_from_action("setShotSelection", Some((args(json!({ "shotIds": ["s1", "s2"] }))).clone()), None).expect("tree bridge"), ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec!["s1".into(), "s2".into()] }));
-    assert_eq!(ShootingPlayApp::command_from_action("exportAllShots", None, None).expect("export bridge"), ShootingCommand::ExportAllShots(export_all_shots::ExportAllShots {}));
+    assert_eq!(ShootingPlayApp::command_from_action("loadSavedCamera", &mut Some((args(json!({ "id": "cam1" }))).clone()), &mut None).expect("possible engagement bridge"), ShootingCommand::LoadSavedCamera(load_saved_camera::LoadSavedCamera { id: "cam1".into() }));
+    assert_eq!(ShootingPlayApp::command_from_action("setShotSelection", &mut Some((args(json!({ "shotIds": ["s1", "s2"] }))).clone()), &mut None).expect("tree bridge"), ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec!["s1".into(), "s2".into()] }));
+    assert_eq!(ShootingPlayApp::command_from_action("exportAllShots", &mut None, &mut None).expect("export bridge"), ShootingCommand::ExportAllShots(export_all_shots::ExportAllShots {}));
 }
 //#endregion 🔖️ActionBridge
 
@@ -594,7 +595,7 @@ async fn interaction_select_is_reachable_as_a_framework_injected_action_under_re
     let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).unwrap();
     let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
-    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("the selection admission settles");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("the selection admission settles");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -776,7 +777,7 @@ async fn every_example_load_settles_through_the_host_document_archive_door() {
         let loaded = settled.effects.into_iter().find_map(|effect| if let Effect::LoadDocument { pack, spr } = effect { Some((pack, spr)) } else { None });
         let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");
         let expected = <ShootingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a shooting document");
-        PluginApp::begin_document_archive_load(&mut app.0, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+        artifact_app_laws::admit_document_archive_load(&mut app.0, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }, app.1.cx()).expect("archive admission");
         let mut status = None;
         for _ in 0..1_000_000 {
             let polled = PluginApp::poll_document_archive_load(&mut app.0, archive_id, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
@@ -806,7 +807,7 @@ async fn new_shot_keeps_captured_camera_after_viewport_navigation() {
     dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(navigated) })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let shot = crate::active_shot(&snapshot).expect("new shot");
-    let camera = crate::shooting_resolve_shot_camera(&snapshot, shot, &default_camera(navigated));
+    let camera = semio_s_artifact_shooting_shooting_inferences::shooting_resolve_shot_camera(&snapshot, shot, &default_camera(navigated));
     let expected: [f64; 3] = serde_json::from_value(fixture["expected"].clone()).expect("expected position");
     assert_eq!(camera.position, expected);
     assert!(shot.camera_id.is_some());

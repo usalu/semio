@@ -5,6 +5,7 @@
  * and heading the client itself words reads differently in the other language.
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive */
 import { COURSE, LOCALES, authorPreview, QUIZZES, activeOverview, openGrid, answerRun, arrive, card, enter, expect, handle, openTask, pane, playQuiz, primary, quizOf, readIntroduction, screen, shownName, shownTask, test, unresolvedLabels, type Device, type Locale } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { readFileSync } from "node:fs";
 import course from "../../🔣️.json" with { type: "json" };
 
 const other = (locale: Locale): Locale => (locale === "en" ? "de" : "en");
@@ -86,21 +87,20 @@ for (const locale of LOCALES) {
     for (const assignment of course.assignments) {
       await openGrid(learner, assignment.topic);
       const document = assignment.documents[locale];
-      const link = pane(learner.page, assignment.topic).getByRole("link", { name: `${assignment.title[locale]} · PDF`, exact: true });
+      const link = learner.page.getByRole("region", { name: locale === "en" ? "Assignments" : "Übungen", exact: true }).getByRole("link", { name: `${assignment.title[locale]} · PDF`, exact: true });
       const href = `/assignments/${document.file}`;
       await expect(link).toBeVisible();
       await expect(link).toHaveAttribute("href", href);
       await expect(link).toHaveAttribute("download", document.file);
-      const received = await learner.page.evaluate(async (path) => {
-        const answer = await fetch(path);
-        const bytes = new Uint8Array(await answer.arrayBuffer());
-        return { status: answer.status, type: answer.headers.get("content-type"), signature: Array.from(bytes.subarray(0, 5)), bytes: bytes.byteLength };
-      }, href);
-      expect(received.status).toBe(200);
-      expect(received.type).toMatch(/^application\/pdf(?:;|$)/u);
-      expect(received.signature).toEqual([37, 80, 68, 70, 45]);
-      expect(received.bytes).toBeGreaterThan(5);
-      expect(received.bytes).toBeLessThanOrEqual(16 * 1024 * 1024);
+      const answer = await learner.page.request.get(new URL(href, learner.page.url()).href);
+      expect(answer.status()).toBe(200);
+      expect(answer.headers()["content-type"]).toMatch(/^application\/pdf(?:;|$)/u);
+      const [download] = await Promise.all([learner.page.waitForEvent("download"), link.click()]);
+      expect(download.suggestedFilename()).toBe(document.file);
+      const bytes = readFileSync((await download.path())!);
+      expect([...bytes.subarray(0, 5)]).toEqual([37, 80, 68, 70, 45]);
+      expect(bytes.byteLength).toBeGreaterThan(5);
+      expect(bytes.byteLength).toBeLessThanOrEqual(16 * 1024 * 1024);
     }
   });
 

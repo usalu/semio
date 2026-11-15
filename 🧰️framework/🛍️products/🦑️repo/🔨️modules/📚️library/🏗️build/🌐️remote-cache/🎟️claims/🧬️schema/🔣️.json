@@ -1,0 +1,154 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.remote-cache/ClaimsV1",
+  "title": "Fleet-wide single-flight claim table of the remote cache: who computes a missing key, how long the claim lives and who waits for the stored result",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "kinds": ["ac", "nx"],
+        "minimumTtlMilliseconds": 1000,
+        "maximumTtlMilliseconds": 300000,
+        "maximumAwaitMilliseconds": 25000,
+        "maximumClaims": 65536,
+        "maximumWaiters": 4096,
+        "sweepMilliseconds": 500,
+        "ownerPattern": "^[A-Za-z0-9._:@/+-]{1,160}$",
+        "minimumLifetimeMilliseconds": 120000,
+        "maximumLifetimeMilliseconds": 1800000,
+        "lifetimeMultiple": 4,
+        "cooloffMilliseconds": 30000,
+        "journalFile": "claims.jsonl",
+        "journalCompactEvents": 20000,
+        "restoreGraceMilliseconds": 20000
+      }
+    },
+    "Kind": { "enum": ["ac", "nx"] },
+    "Key": { "type": "string", "pattern": "^[a-z0-9_-]{1,128}$" },
+    "Owner": { "type": "string", "pattern": "^[A-Za-z0-9._:@/+-]{1,160}$" },
+    "ClaimRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "ttlMilliseconds"],
+      "properties": {
+        "owner": { "$ref": "#/definitions/Owner" },
+        "ttlMilliseconds": { "type": "integer", "minimum": 1 },
+        "expectedMilliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ReleaseRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner"],
+      "properties": { "owner": { "$ref": "#/definitions/Owner" } }
+    },
+    "Granted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "owner", "untilMilliseconds", "ttlMilliseconds"],
+      "properties": {
+        "state": { "const": "granted" },
+        "owner": { "$ref": "#/definitions/Owner" },
+        "untilMilliseconds": { "type": "integer", "minimum": 0 },
+        "ttlMilliseconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "Held": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "by", "untilMilliseconds"],
+      "properties": {
+        "state": { "const": "held" },
+        "by": { "$ref": "#/definitions/Owner" },
+        "untilMilliseconds": { "type": "integer", "minimum": 0 },
+        "expectedMilliseconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Stored": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": { "state": { "const": "stored" } }
+    },
+    "Full": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": { "state": { "const": "full" } }
+    },
+    "Lost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": { "state": { "const": "lost" } }
+    },
+    "Released": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": { "state": { "enum": ["released", "absent"] } }
+    },
+    "ClaimResponse": {
+      "oneOf": [
+        { "$ref": "#/definitions/Granted" },
+        { "$ref": "#/definitions/Held" },
+        { "$ref": "#/definitions/Stored" },
+        { "$ref": "#/definitions/Full" }
+      ]
+    },
+    "RenewResponse": {
+      "oneOf": [{ "$ref": "#/definitions/Granted" }, { "$ref": "#/definitions/Lost" }]
+    },
+    "AwaitResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": { "state": { "enum": ["stored", "lapsed", "timeout"] } }
+    },
+    "Summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active", "waiting", "oldestSeconds"],
+      "properties": {
+        "active": { "type": "integer", "minimum": 0 },
+        "waiting": { "type": "integer", "minimum": 0 },
+        "oldestSeconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Routes": {
+      "const": {
+        "claim": "POST /<instance>/claim/<kind>/<key>",
+        "renew": "POST /<instance>/claim/<kind>/<key>/renew",
+        "release": "POST /<instance>/claim/<kind>/<key>/release",
+        "await": "GET /<instance>/claim/<kind>/<key>/await?timeoutMilliseconds=<n>",
+        "status": { "granted": 200, "held": 409, "stored": 200, "full": 503, "lost": 409 }
+      }
+    },
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "steps"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["at", "op"],
+            "properties": {
+              "at": { "type": "integer", "minimum": 0 },
+              "op": { "enum": ["claim", "renew", "release", "stored", "sweep", "claimed", "summary"] },
+              "key": { "type": "string" },
+              "owner": { "type": "string" },
+              "ttl": { "type": "integer" },
+              "expected": { "type": "integer", "minimum": 0 },
+              "stored": { "type": "boolean" },
+              "expect": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

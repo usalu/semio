@@ -31,4 +31,4 @@ for(index,x)in n::list(n::field(root,18)?)?.iter().enumerate(){n::entity(out,"en
  Ok(())
 }
 /// 🛂️ Nineteen authored tables and complete copied semantic controls.
-pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1999Snapshot::SQLITE_SCHEMA,23,34,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1999Snapshot::SQLITE_SCHEMA,25,34,count(root)?,write)}

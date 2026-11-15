@@ -1,0 +1,45 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-4a3e468900f5.log (lines after 3721)
+graph: project @semio-tech/wfc-3d-rs (language:rust) grew by 6112 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/wfc-grid3d-rs (language:rust) grew by 6029 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/procedural-generation2d (language:typescript) grew by 3407 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/procedural-generation2d-rs (language:rust) grew by 5961 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/procedural-generation3d-rs (language:rust) grew by 5647 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+2026-11-15T07:31:03.297Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":8212,"limit":6553,"available":2357,"reserve":2048,"reason":"pressure","worker":{"heapMb":3676.1,"extraMb":3022.7,"objectCount":14923590,"objectTypes":[{"type":"string","count":8417524},{"type":"Object","count":5269246},{"type":"Array","count":675539},{"type":"Uint8Array","count":624470},{"type":"WeakRef","count":84568},{"type":"Structure","count":56860},{"type":"Function","count":24909},{"type":"FunctionExecutable","count":20915}],"at":1794727826657}}
+graph: plan stage inference starts (managed 198 MB, resident 833 MB)
+graph: plan stage inference settled from 6594 to 4577 MB
+Graph: Plan-Stufe inference beruhigt von 6594 auf 4577 MB
+graph: plan stage inference (during inference) grew the plan by 5124 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: project @semio-tech/flow-flow-rs (language:rust) grew by 4640 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/flow-extension-list-rust (language:cargo) grew by 5729 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+2026-11-15T07:37:34.647Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":8895,"limit":6553,"available":2788,"reserve":2048,"reason":"pressure","worker":{"heapMb":2249,"extraMb":1792.6,"objectCount":10132654,"objectTypes":[{"type":"string","count":8331934},{"type":"Object","count":6393769},{"type":"Array","count":875716},{"type":"WeakRef","count":66663},{"type":"Structure","count":46887},{"type":"Function","count":23766},{"type":"FunctionExecutable","count":20231},{"type":"UnlinkedFunctionExecutable","count":20198}],"at":1794728191631}}
+-- last 30 lines when the try ended
+[script] {"owner":"repository:build","command":"build:project-assembly","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:15:4774","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 15 of 4774 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[repository:command] still running after 1151 s
+[repo] still working after 1161 s; last phase started: source.served
+graph: waiting for memory headroom (5010 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 9 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:16:4774:1:5:%40semio-tech%2Fflow-extension-list-rust|language%3Acargo|5|0:waiting|5010|910|language%3Acargo","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 16 of 4774 projects · 1 running, longest 5 s: @semio-tech/flow-extension-list-rust (language:cargo, 5 s, 0 rows) · waiting for memory headroom (5010 of 910 MB reserved)
+[repository:command] still running after 1161 s
+graph: project @semio-tech/flow-extension-list-rust (language:cargo) grew by 5729 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (5729 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 23 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:16:4774:1:20:%40semio-tech%2Fflow-extension-list-rust|language%3Acargo|20|0:waiting|5729|910|language%3Acargo","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 16 of 4774 projects · 1 running, longest 20 s: @semio-tech/flow-extension-list-rust (language:cargo, 20 s, 0 rows) · waiting for memory headroom (5729 of 910 MB reserved)
+[repository:command] still running after 1171 s
+[repository:command] still running after 1181 s
+[repo] still working after 1191 s; last phase started: source.served
+graph: waiting for memory headroom (7988 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 40 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:16:4774:1:40:%40semio-tech%2Fflow-extension-list-rust|language%3Acargo|40|0:waiting|7988|910|language%3Acargo","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 16 of 4774 projects · 1 running, longest 40 s: @semio-tech/flow-extension-list-rust (language:cargo, 40 s, 0 rows) · waiting for memory headroom (7988 of 910 MB reserved)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:16:4774","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 16 of 4774 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[repository:command] still running after 1191 s
+2026-11-15T07:37:34.647Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":8895,"limit":6553,"available":2788,"reserve":2048,"reason":"pressure","worker":{"heapMb":2249,"extraMb":1792.6,"objectCount":10132654,"objectTypes":[{"type":"string","count":8331934},{"type":"Object","count":6393769},{"type":"Array","count":875716},{"type":"WeakRef","count":66663},{"type":"Structure","count":46887},{"type":"Function","count":23766},{"type":"FunctionExecutable","count":20231},{"
+graph: plan answered, managed 104 MB, resident 132 MB (released 0 MB)
+[repository:command] still running after 1201 s
+[repository:command] still running after 1211 s
+[repo] still working after 1221 s; last phase started: source.served
+[repository:command] still running after 1221 s

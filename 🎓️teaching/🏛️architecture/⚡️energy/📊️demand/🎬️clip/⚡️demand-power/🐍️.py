@@ -48,7 +48,6 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
@@ -63,8 +62,8 @@ thermometer_glyph = _manim_module.thermometer_glyph
 ripples = _manim_module.ripples
 energy_tank = _manim_module.energy_tank
 
-set_vo_language("de")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
@@ -81,18 +80,34 @@ DELTA_T = P_YELLOW
 
 PROFILE_N = 8760
 PLOT_N = 365
-PEAK_KW = 10.0
-DESIGN_DT = 32.0
-THETA_I = 20.0
-THETA_E = -12.0
+_example = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📏️running-example.🐍️")
+H_T_VAL, H_V_VAL = _example.H_T_W_K, _example.H_V_W_K
+THETA_I = _example.THETA_I_WINTER_C
+THETA_E = _example.THETA_E_DESIGN_C
+DESIGN_DT = _example.D_THETA_DESIGN_K
+PEAK_KW = (H_T_VAL + H_V_VAL) * DESIGN_DT / 1000.0
+GAIN_LIMIT = 12.0
 
 BASE_Y = -1.15
 WIDE_ORIGIN = np.array([-4.4, -0.75, 0.0])
 WIDE_W, WIDE_H = 8.8, 2.75
 #region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+def _din_ref(text: str, title=None):
+    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -111,7 +126,7 @@ def _annual_load(n: int = PROFILE_N, seed: int = 5) -> np.ndarray:
     """📉 Synthetic annual heating-power profile, normalised to its own peak.
 
     Shape only — a cosine season plus multi-day weather driving ``θ_i − θ_e``
-    above the heating limit, one sample per hour of the year. It is deliberately
+    below the building heating limit that the free gains lower to ``GAIN_LIMIT``, one sample per hour of the year. It is deliberately
     not measured data; multiplying by ``PEAK_KW`` is what gives the beats real
     kW/kWh.
     """
@@ -120,7 +135,7 @@ def _annual_load(n: int = PROFILE_N, seed: int = 5) -> np.ndarray:
     window = 240
     noise = np.convolve(rng.normal(0.0, 1.0, n + 2 * window), np.ones(window) / window, "same")[window:window + n]
     theta_e = 9.0 - 9.5 * np.cos(2 * np.pi * t) + 3.0 * noise / noise.std()
-    load = np.maximum(0.0, 15.0 - theta_e)
+    load = np.maximum(0.0, GAIN_LIMIT - theta_e)
     return load / load.max()
 
 
@@ -141,7 +156,7 @@ def _energy_at(cum: np.ndarray, frac: float) -> float:
 
 
 #region Stage
-def _wide_chart(y_src: str = r"P\;[\mathrm{kW}]"):
+def _wide_chart(y_src: str = r"\dot{Q}\;\mathrm{in}\;\mathrm{kW}"):
     """🖼️ Full-width chart on the shared baseline — the curve is the subject, nothing shares its screen."""
     return _chart(WIDE_ORIGIN, WIDE_W, WIDE_H, r"t", y_src)
 
@@ -188,10 +203,10 @@ def _chart(origin, x_len: float, y_len: float, x_src: str, y_src: str):
             "group": VGroup(x_ax, y_ax, xl, yl)}
 
 
-def _kw_ticks(chart, y_max_kw: float, values=(5, 10)):
+def _kw_ticks(chart, y_max_kw: float, values=None):
     """📏 Power ticks on the y axis — the height of the curve read off in kW."""
     group = VGroup()
-    for v in values:
+    for v in values or range(2, int(y_max_kw - 0.5) + 1, 2):
         f = v / y_max_kw
         group.add(Line(chart["pt"](0, f) + LEFT * 0.07, chart["pt"](0, f) + RIGHT * 0.07, color=P_WHITE, stroke_width=2))
         group.add(math_label(rf"{v}", chart["pt"](0, f) + LEFT * 0.20 + DOWN * 0.07, size=LABEL_FONT_SIZE, edge="right"))
@@ -393,35 +408,35 @@ def _clear_stage(scene, keep, run_time: float = 0.6):
 class Beat1_LeistungUndEnergie(Scene):
     NARRATION = [
         ("zahlen",
-         "Two numbers describe every heating system.",
-         "Zwei Zahlen beschreiben jede Heizung."),
+         r"Two numbers describe every heating system.",
+         r"Zwei Zahlen beschreiben jede Heizung."),
         ("fehler",
-         "Mixing them up is the classic beginner's mistake.",
-         "Sie zu verwechseln ist der klassische Anfängerfehler."),
+         r"Mixing them up is the classic beginner's mistake.",
+         r"Sie zu verwechseln ist der klassische Anfängerfehler."),
         ("jahr",
-         "This is one year of heating power for our building.",
-         "Das ist ein Jahr Heizleistung unseres Gebäudes."),
+         r"This is one year of heating power for our building.",
+         r"Das ist ein Jahr Heizleistung unseres Gebäudes."),
         ("saison",
-         "It is high on cold days and zero all summer.",
-         "An kalten Tagen ist sie hoch, den ganzen Sommer null."),
+         r"It is high on cold days and zero all summer.",
+         r"An kalten Tagen ist sie hoch, den ganzen Sommer null."),
         ("hoehe",
-         "Power is the height of the curve at one moment.",
-         "Leistung ist die Höhe der Kurve in einem Moment."),
+         r"Power $\dot{Q}$ is the height of the curve at one moment.",
+         r"Die Leistung $\dot{Q}$ ist die Höhe der Kurve in einem Moment."),
         ("rate",
-         "Its unit is the kilowatt: how fast energy flows right now.",
-         "Ihre Einheit ist das Kilowatt: wie schnell Energie gerade fließt."),
+         r"Its unit is the kilowatt, $\mathrm{kW}$: how fast energy flows right now.",
+         r"Ihre Einheit ist das Kilowatt, $\mathrm{kW}$: wie schnell Energie gerade fließt."),
         ("summe",
-         "Energy is the running sum of power over time.",
-         "Energie ist die zeitliche Summe der Leistung."),
+         r"The energy $Q$ is the running sum of power over time.",
+         r"Die Energie $Q$ ist die zeitliche Summe der Leistung."),
         ("kwh",
-         "That is the area under the curve, and its unit is the kilowatt-hour.",
-         "Das ist die Fläche unter der Kurve. Ihre Einheit ist die Kilowattstunde."),
+         r"That is the area under the curve, and its unit is the kilowatt-hour, $\mathrm{kWh}$.",
+         r"Das ist die Fläche unter der Kurve. Ihre Einheit ist die Kilowattstunde, $\mathrm{kWh}$."),
         ("produkt",
-         "Power times time gives energy.",
-         "Leistung mal Zeit ergibt Energie."),
+         r"Power times time gives energy: $1\;\mathrm{kW}\cdot 1\;\mathrm{h} = 1\;\mathrm{kWh}$.",
+         r"Leistung mal Zeit ergibt Energie: $1\;\mathrm{kW}\cdot 1\;\mathrm{h} = 1\;\mathrm{kWh}$."),
         ("trennung",
-         "That single relation from the fundamentals separates the load from the demand.",
-         "Diese eine Beziehung aus den Grundlagen trennt Last von Bedarf."),
+         r"That single relation from the fundamentals separates the load from the demand.",
+         r"Diese eine Beziehung aus den Grundlagen trennt Last von Bedarf."),
     ]
 
     def construct(self):
@@ -430,7 +445,7 @@ class Beat1_LeistungUndEnergie(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Power is a rate, energy is an amount", "Leistung ist eine Rate, Energie eine Menge"))
-        din = _din_ref(tr("Fundamentals · DIN V 18599-2", "Grundlagen · DIN V 18599-2"))
+        din = _din_ref(_references.cite(("din-v-4108-6", "symbole")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "zahlen"))
@@ -450,14 +465,14 @@ class Beat1_LeistungUndEnergie(Scene):
         kw_ticks = _kw_ticks(chart, PEAK_KW)
         months = _month_labels(chart)
         tank = _wide_tank()
-        q_tag = math_label(r"Q\;[\mathrm{kWh}]", tank["cap"].get_top() + UP * 0.28, size=LABEL_FONT_SIZE, color=ENERGY)
-        p_card = _card(tr("Power", "Leistung"), r"P\;[\mathrm{kW}]", POWER, np.array([-2.8, 0.3, 0.0]))
-        q_card = _card(tr("Energy", "Energie"), r"Q\;[\mathrm{kWh}]", ENERGY, np.array([2.8, 0.3, 0.0]))
+        q_tag = math_label(r"Q\;\mathrm{in}\;\mathrm{kWh}", tank["cap"].get_top() + UP * 0.28, size=LABEL_FONT_SIZE, color=ENERGY)
+        p_card = _card(tr("Power", "Leistung"), r"\dot{Q}\;\mathrm{in}\;\mathrm{kW}", POWER, np.array([-2.8, 0.3, 0.0]))
+        q_card = _card(tr("Energy", "Energie"), r"Q\;\mathrm{in}\;\mathrm{kWh}", ENERGY, np.array([2.8, 0.3, 0.0]))
         neq = math_label("≠", np.array([0.0, 0.1, 0.0]), size=FORMULA_FONT_SIZE + 12, color=P_WHITE)
 
         curve = always_redraw(lambda: _partial(chart, ys, year.get_value()))
         knob = always_redraw(lambda: Dot(chart["pt"](year.get_value(), p_frac()), radius=0.07, color=POWER))
-        p_read = math_readout(lambda: rf"P = {label_number(p_frac() * PEAK_KW, 1)}\,\mathrm{{kW}}",
+        p_read = math_readout(lambda: rf"\dot{{Q}} = {label_number(p_frac() * PEAK_KW, 1)}\,\mathrm{{kW}}",
                               np.array([-2.0, 1.30, 0.0]), color=POWER)
         stem = always_redraw(lambda: DashedLine(chart["pt"](year.get_value(), 0), chart["pt"](year.get_value(), p_frac()),
                                                 color=P_YELLOW, stroke_width=2.4))
@@ -518,7 +533,7 @@ class Beat1_LeistungUndEnergie(Scene):
         hold_for(self, N, "summe")
 
         caption = swap_caption(self, caption, subtitle_text(N, "kwh"))
-        q_final = math_label(rf"Q \approx {label_number(q_year)}\,\mathrm{{kWh/a}}", np.array([-2.0, 1.30, 0.0]),
+        q_final = math_label(rf"Q \approx {label_number(q_year)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", np.array([-2.0, 1.30, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")
         self.play(stage.transition("demand.power.energy.readout-to-annual-sum", source=q_read, target=q_final), run_time=1.2)
         self.play(Indicate(q_final, color=ENERGY, scale_factor=1.15), run_time=1.4)
@@ -532,13 +547,13 @@ class Beat1_LeistungUndEnergie(Scene):
         cell_p = math_label(r"1\,\mathrm{kW}", cell.get_left() + LEFT * 0.12 + DOWN * 0.07, size=LABEL_FONT_SIZE,
                             color=POWER, edge="right")
         cell_q = math_label(r"1\,\mathrm{kWh}", cell.get_center() + DOWN * 0.07, size=LABEL_FONT_SIZE, color=ENERGY)
-        p_now = math_readout(lambda: rf"P = {label_number(p_frac() * PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([-2.0, 0.80, 0.0]),
+        p_now = math_readout(lambda: rf"\dot{{Q}} = {label_number(p_frac() * PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([-2.0, 0.80, 0.0]),
                              color=POWER)
         self.play(FadeIn(cell), FadeIn(cell_h), run_time=1.2)
         self.play(FadeIn(cell_p), FadeIn(p_now), run_time=1.2)
         self.play(FadeIn(cell_q), run_time=1.0)
         panel = math_panel([
-            ("q", "Q", ENERGY), (None, "=", P_WHITE), (None, r"\Sigma", P_WHITE), ("p", "P_{i}", POWER),
+            ("q", "Q", ENERGY), (None, "=", P_WHITE), (None, r"\Sigma", P_WHITE), ("p", "\\dot{Q}_{i}", POWER),
             (None, r"\cdot", P_WHITE), ("dt", r"\Delta t", TIME), (None, r"\quad", P_WHITE),
             ("u1", r"1\,\mathrm{kW}", POWER), (None, r"\cdot", P_WHITE), ("u2", r"1\,\mathrm{h}", TIME),
             (None, "=", P_WHITE), ("u3", r"1\,\mathrm{kWh}", ENERGY),
@@ -580,54 +595,56 @@ def _fact(name: str, value):
 class Beat2_Normheizlast(Scene):
     NARRATION = [
         ("spitze",
-         "The peak of that curve has a name of its own: the design heat load.",
-         "Die Spitze dieser Kurve hat einen eigenen Namen: die Norm-Heizlast."),
+         r"The peak of that curve has a name of its own: the design heat load $\dot{Q}_H$.",
+         r"Die Spitze dieser Kurve hat einen eigenen Namen: die Norm-Heizlast $\dot{Q}_H$."),
         ("regeln",
-         "It comes with its own standard, its own symbol and its own rules.",
-         "Dazu gehören eine eigene Norm, ein eigenes Formelzeichen, eigene Regeln."),
+         r"It comes with its own standard, DIN EN 12831-1, and its own rules.",
+         r"Dazu gehören eine eigene Norm, DIN EN 12831-1, und eigene Regeln."),
         ("extremfall",
-         "It is computed for one artificial worst case.",
-         "Sie wird für einen künstlichen Extremfall berechnet."),
+         r"It is computed for one artificial worst case.",
+         r"Sie wird für einen künstlichen Extremfall berechnet."),
         ("normtemperatur",
-         "What counts is the design outdoor temperature of the site, which sets the design difference.",
-         "Es gilt die Norm-Außentemperatur des Standorts — sie legt die Auslegungsdifferenz fest."),
+         r"What counts is the design day with the standard outdoor temperature $\theta_e = -12\;^{\circ}\mathrm{C}$, which sets $\Delta\theta = 32\;\mathrm{K}$.",
+         r"Es gilt der Auslegungstag mit der Norm-Außentemperatur $\theta_e = -12\;^{\circ}\mathrm{C}$ — sie legt $\Delta\theta = 32\;\mathrm{K}$ fest."),
+        ("beispieltag",
+         r"The example winter day of the earlier videos, $\theta_e = 0\;^{\circ}\mathrm{C}$ with $\Delta\theta = 20\;\mathrm{K}$, is a milder case.",
+         r"Der Beispiel-Wintertag der früheren Videos, $\theta_e = 0\;^{\circ}\mathrm{C}$ mit $\Delta\theta = 20\;\mathrm{K}$, ist ein milderer Fall."),
         ("raumweise",
-         "The calculation is done room by room.",
-         "Gerechnet wird Raum für Raum."),
+         r"The calculation is done room by room.",
+         r"Gerechnet wird Raum für Raum."),
         ("verluste",
-         "Crucially, only the losses under these design conditions count.",
-         "Entscheidend: Nur die Verluste unter diesen Normbedingungen zählen."),
+         r"Crucially, only the losses under these design conditions count.",
+         r"Entscheidend: Nur die Verluste unter diesen Normbedingungen zählen."),
         ("solar",
-         "Solar gains are not credited as reliable heating power.",
-         "Solare Gewinne gelten nicht als verlässliche Heizleistung."),
+         r"Solar gains are not credited as reliable heating power.",
+         r"Solare Gewinne gelten nicht als verlässliche Heizleistung."),
         ("intern",
-         "Internal gains are not credited either.",
-         "Interne Gewinne werden ebenfalls nicht angerechnet."),
+         r"Internal gains are not credited either.",
+         r"Interne Gewinne werden ebenfalls nicht angerechnet."),
         ("transmission",
-         "As a schematic simplification, the envelope contributes the transmission heat transfer coefficient.",
-         "Schematisch vereinfacht liefert die Hülle den Transmissions-Wärmetransferkoeffizienten."),
+         r"The envelope contributes the transmission heat transfer coefficient $H_T = 115\;\mathrm{W/K}$ — simplified.",
+         r"Die Hülle liefert den Transmissions-Wärmetransferkoeffizienten $H_T = 115\;\mathrm{W/K}$ — vereinfacht."),
         ("lueftung",
-         "The air exchange contributes the ventilation heat transfer coefficient.",
-         "Der Luftaustausch liefert den Lüftungs-Wärmetransferkoeffizienten."),
+         r"The air exchange contributes the ventilation coefficient $H_V = 75\;\mathrm{W/K}$.",
+         r"Der Luftaustausch liefert den Lüftungs-Wärmetransferkoeffizienten $H_V = 75\;\mathrm{W/K}$."),
         ("summe",
-         "Both together times the design difference give the design heat load.",
-         "Beide zusammen mal der Auslegungsdifferenz ergeben die Norm-Heizlast."),
+         r"Both together times $\Delta\theta = 32\;\mathrm{K}$ give the design heat load $\dot{Q}_H = 6.08\;\mathrm{kW}$.",
+         r"Beide zusammen mal $\Delta\theta = 32\;\mathrm{K}$ ergeben die Norm-Heizlast $\dot{Q}_H = 6{,}08\;\mathrm{kW}$."),
         ("kilowatt",
-         "The result is kilowatts, not kilowatt-hours.",
-         "Das Ergebnis sind Kilowatt, nicht Kilowattstunden."),
+         r"The result is kilowatts, $\mathrm{kW}$, not kilowatt-hours.",
+         r"Das Ergebnis sind Kilowatt, $\mathrm{kW}$, nicht Kilowattstunden."),
         ("auslegung",
-         "It is an important basis for sizing the whole heating system.",
-         "Das ist eine wichtige Grundlage für die Auslegung der Heizungsanlage."),
+         r"It is an important basis for sizing the whole heating system.",
+         r"Das ist eine wichtige Grundlage für die Auslegung der Heizungsanlage."),
     ]
 
     def construct(self):
         apply_scene_style(self)
         stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
-        H_T_VAL, H_V_VAL = 225.0, 87.5
 
-        subtitle = section_heading(tr("The standard heating load per DIN EN 12831-1", "Die Norm-Heizlast nach DIN EN 12831-1"))
-        din = _din_ref("DIN EN 12831-1 · DIN/TS 12831-1")
+        subtitle = section_heading(tr("The standard heating load per DIN EN 12831-1:2017-09", "Die Norm-Heizlast nach DIN EN 12831-1:2017-09"))
+        din = _din_ref(_references.cite(("din-en-12831-1", "abschn6"), "din-ts-12831-1"), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "spitze"))
@@ -642,12 +659,12 @@ class Beat2_Normheizlast(Scene):
         peak_x = peak_i / (len(ys) - 1)
         year_curve = _partial(chart, ys, 1.0)
         peak_dot = Dot(chart["pt"](peak_x, 1.0), radius=0.08, color=POWER)
-        peak_name = VGroup(math_label(r"\Phi_{\mathrm{HL}}", size=BODY_FONT_SIZE, color=POWER),
+        peak_name = VGroup(math_label(r"\dot{Q}_{H}", size=BODY_FONT_SIZE, color=POWER),
                            body_text(tr("Standard heating load", "Norm-Heizlast"), font_size=LABEL_FONT_SIZE, color=POWER)).arrange(RIGHT, buff=0.18)
         peak_name.next_to(peak_dot, LEFT if peak_x > 0.5 else RIGHT, buff=0.25).shift(UP * 0.12)
         facts = VGroup(
-            _fact(tr("Standard:", "Norm:"), body_text("DIN EN 12831-1", font_size=LABEL_FONT_SIZE, color=P_WHITE)),
-            _fact(tr("Symbol:", "Formelzeichen:"), math_label(r"\Phi_{\mathrm{HL}}", size=LABEL_FONT_SIZE, color=POWER)),
+            _fact(tr("Standard:", "Norm:"), body_text("DIN EN 12831-1:2017-09", font_size=LABEL_FONT_SIZE, color=P_WHITE)),
+            _fact(tr("Symbol:", "Formelzeichen:"), math_label(r"\dot{Q}_{H}", size=LABEL_FONT_SIZE, color=POWER)),
             _fact(tr("Rules:", "Regeln:"), body_text(tr("Standard conditions", "Normbedingungen"), font_size=LABEL_FONT_SIZE, color=P_WHITE)),
         ).arrange(DOWN, buff=0.3, aligned_edge=LEFT).move_to(np.array([0.0, 1.0, 0.0]))
 
@@ -683,13 +700,13 @@ class Beat2_Normheizlast(Scene):
                                                    stroke_width=1.4, stroke_opacity=0.6))
         span = always_redraw(lambda: dim_arrow(np.array([arrow_x, top(theta_e.get_value()), 0.0]),
                                                np.array([arrow_x, top(THETA_I), 0.0]), color=DELTA_T))
-        row_i = math_readout(lambda: rf"\theta_{{\mathrm{{int}}}} = {label_number(THETA_I)}\,\mathrm{{°C}}",
+        row_i = math_readout(lambda: rf"\theta_{{i}} = {label_number(THETA_I)}\,\mathrm{{°C}}",
                              np.array([row_x, -0.12, 0.0]), size=LABEL_FONT_SIZE, color=P_RED)
-        row_e = math_readout(lambda: rf"\theta_{{\mathrm{{e}}}} = {_signed(theta_e.get_value())}\,\mathrm{{°C}}",
+        row_e = math_readout(lambda: rf"\theta_{{e}} = {_signed(theta_e.get_value())}\,\mathrm{{°C}}",
                              np.array([row_x, -0.52, 0.0]), size=LABEL_FONT_SIZE, color=P_BLUE)
         row_d = math_readout(lambda: rf"\Delta\theta = {label_number(d_theta())}\,\mathrm{{K}}",
                              np.array([row_x, -0.97, 0.0]), size=BODY_FONT_SIZE, color=DELTA_T)
-        phi_read = math_readout(lambda: rf"\Phi_{{\mathrm{{HL}}}} = {label_number(phi_kw(), 1)}\,\mathrm{{kW}}",
+        phi_read = math_readout(lambda: rf"\dot{{Q}}_{{H}} = {label_number(phi_kw(), 1)}\,\mathrm{{kW}}",
                                 np.array([row_x, 0.55, 0.0]), size=BODY_FONT_SIZE, color=POWER)
         peak_line = always_redraw(lambda: DashedLine(chart["pt"](0, min(level(), 1.0)), chart["pt"](1, min(level(), 1.0)),
                                                      color=POWER, stroke_width=2.0, stroke_opacity=0.85))
@@ -716,12 +733,17 @@ class Beat2_Normheizlast(Scene):
         hold_for(self, N, "extremfall", during=lambda rt: _life(house, level, rt, paths=every, r_max=0.45))
 
         caption = swap_caption(self, caption, subtitle_text(N, "normtemperatur"))
-        self.play(Indicate(row_e, color=P_BLUE, scale_factor=1.15), run_time=1.4)
+        day_note = VGroup(math_label(_example.design_day_label(_manim_module.language()), np.array([row_x, 1.3, 0.0]), size=LABEL_FONT_SIZE, color=P_BLUE, edge="left"),
+                          math_label(_example.design_day_source(_manim_module.language()), np.array([row_x, 0.95, 0.0]), size=LABEL_FONT_SIZE - 3, color=P_BLUE, edge="left"))
+        self.play(Indicate(row_e, color=P_BLUE, scale_factor=1.15), FadeIn(day_note), run_time=1.4)
         for live in (guide_i, guide_e, span, row_d, phi_read):
             live.update()
         self.play(FadeIn(guide_i), FadeIn(guide_e), FadeIn(span), FadeIn(row_d), run_time=1.6)
         self.play(FadeIn(phi_read), run_time=1.4)
         hold_for(self, N, "normtemperatur")
+
+        caption = swap_caption(self, caption, subtitle_text(N, "beispieltag"))
+        hold_for(self, N, "beispieltag")
 
         caption = swap_caption(self, caption, subtitle_text(N, "raumweise"))
         rooms = [Rectangle(width=hs["w_width"] - 0.2, height=storey - 0.06, color=P_PRIMARY, stroke_width=2.6)
@@ -731,7 +753,7 @@ class Beat2_Normheizlast(Scene):
         self.play(FadeOut(rooms[1]), run_time=0.6)
         hold_for(self, N, "raumweise")
         _hide(self, th_i["group"], th_i["column"], th_e["group"], th_e["column"], row_i, row_e, row_d, phi_read,
-              guide_i, guide_e, span)
+              guide_i, guide_e, span, day_note)
 
         caption = swap_caption(self, caption, subtitle_text(N, "verluste"))
         loss_lbl = body_text(tr("only losses count", "nur Verluste zählen"), font_size=LABEL_FONT_SIZE, color=P_RED)
@@ -776,9 +798,9 @@ class Beat2_Normheizlast(Scene):
         _hide(self, person, lamp["group"], int_lbl)
 
         caption = swap_caption(self, caption, subtitle_text(N, "transmission"))
-        t_lbl = math_label(rf"H_{{T}} = {label_number(H_T_VAL)}\,\mathrm{{W/K}}", np.array([-0.85, 1.72, 0.0]),
+        t_lbl = math_label(rf"H_{{T}} = {label_number(H_T_VAL)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}", np.array([-0.85, 1.72, 0.0]),
                            size=LABEL_FONT_SIZE, color=H_T, edge="left")
-        v_lbl = math_label(rf"H_{{V}} = {label_number(H_V_VAL, 1)}\,\mathrm{{W/K}}", np.array([-6.2, -0.05, 0.0]),
+        v_lbl = math_label(rf"H_{{V}} = {label_number(H_V_VAL)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}", np.array([-6.2, -0.05, 0.0]),
                            size=LABEL_FONT_SIZE, color=H_V, edge="left")
         note = math_label(tr(r"\text{simplified schematic — the standard contains further terms}", r"\text{schematisch vereinfacht — die Norm enthält weitere Terme}"),
                           np.array([0.0, NOTE_BAND_Y - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY)
@@ -803,24 +825,25 @@ class Beat2_Normheizlast(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "summe"))
         row_d = math_label(rf"\Delta\theta = {label_number(DESIGN_DT)}\,\mathrm{{K}}", np.array([row_x, -0.97, 0.0]),
                            size=BODY_FONT_SIZE, color=DELTA_T, edge="left")
-        phi_read = math_label(rf"\Phi_{{\mathrm{{HL}}}} = {label_number(PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([row_x, 0.55, 0.0]),
+        phi_read = math_label(rf"\dot{{Q}}_{{H}} = {label_number(PEAK_KW, 2)}\,\mathrm{{kW}}", np.array([row_x, 0.55, 0.0]),
                               size=BODY_FONT_SIZE, color=POWER, edge="left")
         self.play(FadeIn(row_d), FadeIn(phi_read), FadeIn(note), run_time=1.2)
         panel = math_panel([
-            (None, r"\Phi_{\mathrm{HL}}", POWER), (None, "=", P_WHITE), (None, "(", P_WHITE),
+            (None, r"\dot{Q}_{H}", POWER), (None, "=", P_WHITE), (None, "(", P_WHITE),
             (None, "H_{T}", H_T), (None, "+", P_WHITE), (None, "H_{V}", H_V), (None, ")", P_WHITE),
             (None, r"\cdot", P_WHITE), (None, r"\Delta\theta", DELTA_T), (None, "=", P_WHITE),
-            (None, "(", P_WHITE), ("t", label_number(H_T_VAL), H_T), (None, "+", P_WHITE), ("v", label_number(H_V_VAL, 1), H_V),
-            (None, ")", P_WHITE), (None, r"\mathrm{W/K}", P_WHITE), (None, r"\cdot", P_WHITE),
+            (None, "(", P_WHITE), ("t", rf"{label_number(H_T_VAL)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}", H_T), (None, "+", P_WHITE),
+            ("v", rf"{label_number(H_V_VAL)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}", H_V),
+            (None, ")", P_WHITE), (None, r"\cdot", P_WHITE),
             ("d", rf"{label_number(DESIGN_DT)}\,\mathrm{{K}}", DELTA_T), (None, "=", P_WHITE),
-            ("phi", rf"{label_number(PEAK_KW)}\,\mathrm{{kW}}", POWER),
+            ("phi", rf"{label_number(PEAK_KW, 2)}\,\mathrm{{kW}}", POWER),
         ], size=FORMULA_FONT_SIZE - 5)
         _fill_panel(self, stage, "demand.power.heat-load.fill", panel, {"t": t_lbl, "v": v_lbl, "d": row_d, "phi": phi_read})
         hold_for(self, N, "summe")
 
         caption = swap_caption(self, caption, subtitle_text(N, "kilowatt"))
         area = _partial_area(chart, ys, 1.0)
-        kwh_tag = VGroup(math_label(tr(r"\text{Area} = Q_h\;[\mathrm{kWh/a}]", r"\text{Fläche} = Q_h\;[\mathrm{kWh/a}]"), size=LABEL_FONT_SIZE, color=ENERGY),
+        kwh_tag = VGroup(math_label(tr(r"\text{Area} = Q_h", r"\text{Fläche} = Q_h"), size=LABEL_FONT_SIZE, color=ENERGY),
                          cross_mark(size=0.11)).arrange(RIGHT, buff=0.2)
         kwh_tag.move_to(chart["pt"](0.5, 0.55))
         ring = highlight_param(panel[2], "phi", color=POWER)
@@ -847,38 +870,38 @@ class Beat2_Normheizlast(Scene):
 class Beat3_Jahresdauerlinie(Scene):
     NARRATION = [
         ("kurve",
-         "Load and demand live on the same curve.",
-         "Last und Bedarf stecken in derselben Kurve."),
+         r"Load and demand live on the same curve.",
+         r"Last und Bedarf stecken in derselben Kurve."),
         ("bild",
-         "One picture shows both at once — sort the year by size.",
-         "Ein Bild zeigt beides — man sortiert das Jahr nach Größe."),
+         r"One picture shows both at once — sort the year by size.",
+         r"Ein Bild zeigt beides — man sortiert das Jahr nach Größe."),
         ("aufreihen",
-         "Take every hour of the year and line them up from the coldest to the mildest.",
-         "Man reiht jede Stunde des Jahres von der kältesten bis zur mildesten auf."),
+         r"Take every hour of the year and line them up from the coldest to the mildest.",
+         r"Man reiht jede Stunde des Jahres von der kältesten bis zur mildesten auf."),
         ("dauerlinie",
-         "That is the load duration curve.",
-         "Das ist die Jahresdauerlinie."),
+         r"That is the load duration curve.",
+         r"Das ist die Jahresdauerlinie."),
         ("hoehe",
-         "Its starting height is the design heat load.",
-         "Ihre Anfangshöhe ist die Norm-Heizlast."),
+         r"Its starting height is the design heat load $\dot{Q}_H$.",
+         r"Ihre Anfangshöhe ist die Norm-Heizlast $\dot{Q}_H$."),
         ("wenige",
-         "These are the few hours the plant must still be able to cover.",
-         "Das sind die wenigen Stunden, die die Anlage noch abdecken muss."),
+         r"These are the few hours the plant must still be able to cover.",
+         r"Das sind die wenigen Stunden, die die Anlage noch abdecken muss."),
         ("flaeche_bedarf",
-         "Its area is the annual heating demand.",
-         "Ihre Fläche ist der Jahres-Heizwärmebedarf."),
+         r"Its area is the annual heating demand $Q_h$.",
+         r"Ihre Fläche ist der Jahres-Heizwärmebedarf $Q_h$."),
         ("nutzenergie",
-         "It is useful energy, not the billed consumption.",
-         "Es ist Nutzenergie, nicht der abgerechnete Verbrauch."),
+         r"It is useful energy at the room, not the final energy on the meter and not the billed consumption.",
+         r"Es ist Nutzenergie am Raum, nicht die Endenergie am Zähler und nicht der abgerechnete Verbrauch."),
         ("rechteck",
-         "The same area fits into a rectangle as tall as the peak.",
-         "Dieselbe Fläche passt in ein Rechteck, das so hoch ist wie die Spitze."),
+         r"The same area fits into a rectangle as tall as the peak.",
+         r"Dieselbe Fläche passt in ein Rechteck, das so hoch ist wie die Spitze."),
         ("vollstunden",
-         "Area divided by peak gives the full-load hours.",
-         "Fläche geteilt durch Spitze ergibt die Vollbenutzungsstunden."),
+         r"Area divided by peak gives the full-load hours $t_{VL} = Q_h / \dot{Q}_H$.",
+         r"Fläche geteilt durch Spitze ergibt die Vollbenutzungsstunden $t_{VL} = Q_h / \dot{Q}_H$."),
         ("bruchteil",
-         "A building runs at full load only a fraction of the year.",
-         "Volllast läuft ein Gebäude nur einen Bruchteil des Jahres."),
+         r"A building runs at full load only a fraction of the year.",
+         r"Volllast läuft ein Gebäude nur einen Bruchteil des Jahres."),
     ]
 
     def construct(self):
@@ -887,7 +910,7 @@ class Beat3_Jahresdauerlinie(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("The annual load duration curve", "Die Jahresdauerlinie"))
-        din = _din_ref("DIN EN 12831-1 · DIN V 18599-2")
+        din = _din_ref(_references.cite(("din-en-12831-1", "abschn6"), ("din-v-4108-6", "bilanz")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "kurve"))
@@ -913,7 +936,7 @@ class Beat3_Jahresdauerlinie(Scene):
         months = _month_labels(chart)
         hours = _hour_labels(chart)
         tank = _wide_tank()
-        q_tag = math_label(r"Q_{h}\;[\mathrm{kWh}]", tank["cap"].get_top() + UP * 0.28, size=LABEL_FONT_SIZE, color=ENERGY)
+        q_tag = math_label(r"Q_{h}\;\mathrm{in}\;\mathrm{kWh}", tank["cap"].get_top() + UP * 0.28, size=LABEL_FONT_SIZE, color=ENERGY)
 
         curve = always_redraw(lambda: _partial(chart, ys_year, x.get_value()))
         knob = always_redraw(lambda: Dot(chart["pt"](x.get_value(), p_frac()), radius=0.07, color=POWER))
@@ -960,7 +983,7 @@ class Beat3_Jahresdauerlinie(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "hoehe"))
         peak_line = DashedLine(chart["pt"](0, 1.0), chart["pt"](1, 1.0), color=POWER, stroke_width=2.2, stroke_opacity=0.8)
-        phi_read = math_label(rf"\Phi_{{\mathrm{{HL}}}} = {label_number(PEAK_KW, 1)}\,\mathrm{{kW}}", np.array([0.2, 1.62, 0.0]),
+        phi_read = math_label(rf"\dot{{Q}}_{{H}} = {label_number(PEAK_KW, 2)}\,\mathrm{{kW}}", np.array([0.2, 1.62, 0.0]),
                               size=BODY_FONT_SIZE, color=POWER, edge="left")
         self.play(Create(peak_line), run_time=1.6)
         self.play(FadeIn(phi_read, shift=UP * 0.2), Indicate(knob, color=POWER, scale_factor=2.4), run_time=1.4)
@@ -984,7 +1007,7 @@ class Beat3_Jahresdauerlinie(Scene):
         self.add(sweep, tank["level"])
         self.play(FadeOut(area), FadeIn(tank["group"]), FadeIn(tank["fill"]), FadeIn(q_tag), FadeIn(q_read), run_time=1.4)
         self.play(_ramp(x, 1.0, rate_func=linear), run_time=6.0)
-        q_final = math_label(rf"Q_{{h}} \approx {label_number(q_year)}\,\mathrm{{kWh/a}}", np.array([0.2, 1.08, 0.0]),
+        q_final = math_label(rf"Q_{{h}} \approx {label_number(q_year)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", np.array([0.2, 1.08, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")
         self.play(stage.transition("demand.power.duration.readout-to-annual-demand", source=q_read, target=q_final), run_time=1.0)
         hold_for(self, N, "flaeche_bedarf")
@@ -1014,10 +1037,10 @@ class Beat3_Jahresdauerlinie(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "vollstunden"))
         panel = math_panel([
             ("t", r"t_{VL}", TIME), (None, "=", P_WHITE),
-            (None, r"\frac{Q_{h}}{\Phi_{\mathrm{HL}}}", P_WHITE), (None, "=", P_WHITE),
-            ("f", rf"\frac{{\textcolor{{{ENERGY}}}{{{label_number(q_year)}\,\mathrm{{kWh/a}}}}}}"
-                  rf"{{\textcolor{{{POWER}}}{{{label_number(PEAK_KW)}\,\mathrm{{kW}}}}}}", P_WHITE),
-            (None, "=", P_WHITE), ("res", rf"{label_number(t_vl)}\,\mathrm{{h/a}}", TIME),
+            (None, r"\frac{Q_{h}}{\dot{Q}_{H}}", P_WHITE), (None, "=", P_WHITE),
+            ("f", rf"\frac{{\textcolor{{{ENERGY}}}{{{label_number(q_year)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}}}}}"
+                  rf"{{\textcolor{{{POWER}}}{{{label_number(PEAK_KW, 2)}\,\mathrm{{kW}}}}}}", P_WHITE),
+            (None, "=", P_WHITE), ("res", rf"{label_number(t_vl)}\,\frac{{\mathrm{{h}}}}{{\mathrm{{a}}}}", TIME),
         ], size=FORMULA_FONT_SIZE - 5)
         _fill_panel(self, stage, "demand.power.duration.fill", panel, {"f": [q_final, phi_read], "res": t_read, "t": t_read})
         hold_for(self, N, "vollstunden")
@@ -1039,41 +1062,41 @@ class Beat3_Jahresdauerlinie(Scene):
 class Beat4_RichtigAuslegen(Scene):
     NARRATION = [
         ("kurve",
-         "Here is our load duration curve again.",
-         "Hier ist wieder unsere Jahresdauerlinie."),
+         r"Here is our load duration curve again.",
+         r"Hier ist wieder unsere Jahresdauerlinie."),
         ("falsch",
-         "On that same curve you can see, directly, what happens when a plant is sized wrongly.",
-         "An derselben Kurve sieht man unmittelbar, was passiert, wenn eine Anlage falsch ausgelegt wird."),
+         r"On that same curve you can see, directly, what happens when a plant is sized wrongly.",
+         r"An derselben Kurve sieht man unmittelbar, was passiert, wenn eine Anlage falsch ausgelegt wird."),
         ("mittelwert",
-         "Size the plant on the average load and it covers only part of the curve.",
-         "Legt man auf den Mittelwert aus, deckt die Anlage nur einen Teil der Kurve."),
+         r"Size the plant on the average load and it covers only part of the curve.",
+         r"Legt man auf den Mittelwert aus, deckt die Anlage nur einen Teil der Kurve."),
         ("defizit",
-         "At high load a power deficit remains.",
-         "Bei hoher Last bleibt ein Leistungsdefizit."),
+         r"At high load a power deficit remains.",
+         r"Bei hoher Last bleibt ein Leistungsdefizit."),
         ("temperatur",
-         "Without reserve capacity the indoor temperature can no longer be held.",
-         "Ohne Reserve lässt sich die Raumtemperatur dann nicht halten."),
+         r"Without reserve capacity the room temperature $\theta_i$ can no longer be held.",
+         r"Ohne Reserve lässt sich die Raumtemperatur $\theta_i$ dann nicht halten."),
         ("reserve",
-         "Size the plant far above the peak and a large reserve appears.",
-         "Legt man die Anlage weit über die Spitze aus, entsteht eine große Reserve."),
+         r"Size the plant far above the peak and a large reserve appears.",
+         r"Legt man die Anlage weit über die Spitze aus, entsteht eine große Reserve."),
         ("ueberdimensioniert",
-         "Almost all year that reserve stays unused — the plant is oversized.",
-         "Fast das ganze Jahr bleibt diese Reserve ungenutzt — die Anlage ist überdimensioniert."),
+         r"Almost all year that reserve stays unused — the plant is oversized.",
+         r"Fast das ganze Jahr bleibt diese Reserve ungenutzt — die Anlage ist überdimensioniert."),
         ("takten",
-         "At too high a minimum output that means more cycling.",
-         "Bei zu hoher Mindestleistung führt das zu häufigerem Takten."),
+         r"At too high a minimum output that means more cycling.",
+         r"Bei zu hoher Mindestleistung führt das zu häufigerem Takten."),
         ("auslegungspunkt",
-         "The design heat load gives the central sizing point.",
-         "Die Norm-Heizlast liefert den zentralen Auslegungspunkt."),
+         r"The design heat load $\dot{Q}_H$ gives the central sizing point.",
+         r"Die Norm-Heizlast $\dot{Q}_H$ liefert den zentralen Auslegungspunkt."),
         ("anlage",
-         "The real plant also depends on the heat generator, controls and storage.",
-         "Die reale Anlage hängt zusätzlich von Erzeuger, Regelung und Speicher ab."),
+         r"The real plant also depends on the heat generator, controls and storage.",
+         r"Die reale Anlage hängt zusätzlich von Erzeuger, Regelung und Speicher ab."),
         ("bedarf",
-         "The area under the curve is the useful heating demand.",
-         "Die Fläche darunter ist der Heizwärmebedarf."),
+         r"The area under the curve is the useful heating demand $Q_h$ — useful energy at the room.",
+         r"Die Fläche darunter ist der Heizwärmebedarf $Q_h$ — Nutzenergie am Raum."),
         ("kosten",
-         "The plant turns that into final energy, and only that creates cost.",
-         "Das Heizsystem macht daraus Endenergie, erst daraus entstehen Kosten."),
+         r"The plant turns that into final energy $Q_E$, and only that creates cost.",
+         r"Das Heizsystem macht daraus Endenergie $Q_E$, erst daraus entstehen Kosten."),
     ]
 
     def construct(self):
@@ -1083,7 +1106,7 @@ class Beat4_RichtigAuslegen(Scene):
         PEAK_F = 0.68
 
         subtitle = section_heading(tr("Size for the peak, not for the mean", "Auslegen auf die Spitze, nicht auf den Mittelwert"))
-        din = _din_ref("DIN EN 12831-1 · DIN/TS 12831-1 · VDI 4645")
+        din = _din_ref(_references.cite(("din-en-12831-1", "abschn6"), "vdi-4645"), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "kurve"))
@@ -1119,7 +1142,7 @@ class Beat4_RichtigAuslegen(Scene):
         knob = always_redraw(lambda: Dot(chart["pt"](x.get_value(), demand()), radius=0.07, color=POWER))
         cap_line = always_redraw(lambda: DashedLine(chart["pt"](0.0, cap.get_value()), chart["pt"](1.0, cap.get_value()),
                                                     color=P_GREEN, stroke_width=2.6))
-        cap_read = math_readout(lambda: rf"\Phi_{{\mathrm{{Anlage}}}} = {label_number(kw_of(cap.get_value()), 1)}\,\mathrm{{kW}}",
+        cap_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{Anl}}}} = {label_number(kw_of(cap.get_value()), 1)}\,\mathrm{{kW}}",
                                 lambda: chart["pt"](1.0, cap.get_value()) + UP * 0.2, size=LABEL_FONT_SIZE, color=P_GREEN,
                                 edge="right")
         above = [i for i, v in enumerate(ys) if v > mean_f]
@@ -1211,7 +1234,7 @@ class Beat4_RichtigAuslegen(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "bedarf"))
         tank = _wide_tank()
-        q_tag = math_label(r"Q_{h}\;[\mathrm{kWh}]", tank["cap"].get_top() + UP * 0.28, size=LABEL_FONT_SIZE, color=ENERGY)
+        q_tag = math_label(r"Q_{h}\;\mathrm{in}\;\mathrm{kWh}", tank["cap"].get_top() + UP * 0.28, size=LABEL_FONT_SIZE, color=ENERGY)
         sweep = always_redraw(lambda: _partial_area(chart, ys, x.get_value()))
         q_read = math_readout(lambda: rf"Q_{{h}} = {label_number(round(_energy_at(cum, x.get_value()), -2))}\,\mathrm{{kWh}}",
                               np.array([0.2, 1.08, 0.0]), size=BODY_FONT_SIZE, color=ENERGY)
@@ -1221,7 +1244,7 @@ class Beat4_RichtigAuslegen(Scene):
         q_read.update()
         self.play(FadeIn(tank["group"]), FadeIn(tank["fill"]), FadeIn(q_tag), FadeIn(q_read), run_time=1.4)
         self.play(_ramp(x, 1.0, rate_func=linear), run_time=6.0)
-        q_final = math_label(rf"Q_{{h}} \approx {label_number(q_year)}\,\mathrm{{kWh/a}}", np.array([0.2, 1.08, 0.0]),
+        q_final = math_label(rf"Q_{{h}} \approx {label_number(q_year)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", np.array([0.2, 1.08, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")
         self.play(stage.transition("demand.power.sizing.readout-to-annual-demand", source=q_read, target=q_final), run_time=1.0)
         hold_for(self, N, "bedarf")
@@ -1229,8 +1252,9 @@ class Beat4_RichtigAuslegen(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "kosten"))
         _hide(self, tank["group"], tank["fill"], q_tag)
         panel = math_panel([
-            ("q", r"Q_{h}", ENERGY), (None, r"\to", P_WHITE), (None, tr(r"\text{Final energy}", r"\text{Endenergie}"), P_WHITE),
-            (None, r"\to", P_WHITE), (None, tr(r"\text{Costs}", r"\text{Kosten}"), P_WHITE),
+            ("q", r"Q_{h}", ENERGY), (None, tr(r"\text{useful energy}", r"\text{Nutzenergie}"), P_WHITE), (None, r"\to", P_WHITE),
+            (None, r"Q_{E}", P_ORANGE), (None, tr(r"\text{final energy}", r"\text{Endenergie}"), P_WHITE),
+            (None, r"\to", P_WHITE), (None, tr(r"\text{costs}", r"\text{Kosten}"), P_WHITE),
         ])
         _fill_panel(self, stage, "demand.power.sizing.fill", panel, {"q": q_final})
         hold_for(self, N, "kosten")

@@ -4,7 +4,7 @@ use super::*;
 use semio_framework_value::{FromValue, ToValue};
 
 fn schema_dir() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🪟️visual-windows/🎨️themes/🧬️schema")
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧬️schema")
 }
 
 #[test]

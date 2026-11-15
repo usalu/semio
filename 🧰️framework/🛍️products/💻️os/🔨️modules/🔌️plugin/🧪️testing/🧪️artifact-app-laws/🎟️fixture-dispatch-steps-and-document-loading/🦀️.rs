@@ -46,10 +46,20 @@ pub fn fixture_renew_turn(cx:&mut semio_framework_job::StepContext<'_>,fuel:u64,
 pub fn ensure_fixture_cancellation_issuer<P:PluginApp>(app:&mut P,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
     let (instance_id,actor)=app.birth_identity().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture app has no bound instance identity to be born under"))?;
     let mut birth=semio_plugin_reactor_app::InstanceBirth::default();
-    for _ in 0..OriginalFixtureCaller::maximum_turns(){
-        if app.advance_instance_birth(&mut birth,instance_id,&actor,cx)?{return Ok(())}
+    let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.original_turn_ceiling().0);
+    let mut paid=Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture cancellation issuer birth exceeded its authored turn bound").into());
+    for turn in 0..OriginalFixtureCaller::maximum_turns(){
+        if let Err(error)=fixture_renew_turn(cx,fresh_fuel,fresh_grant){paid=Err(error.into());break}
+        let r=app.advance_instance_birth(&mut birth,instance_id,&actor,cx);
+        if turn<4{let d=semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:1,capacity_bytes:0,release_bytes:0,depth:1};eprintln!("[DEBUG] birth turn {turn} ok={:?} bound={} ready={} empty={} fuel={} grant={:?} ceiling={:?} yield={} cancelled={} rty={} settle={:?}",r.as_ref().map_err(|e|format!("{e:?}")),birth.identity_bound,birth.issuer_ready,birth.construction.terminal_is_empty(),cx.fuel_remaining(),cx.retained_grant(),cx.original_turn_ceiling(),cx.should_yield(),cx.is_cancelled(),cx.retirement_should_yield(),semio_framework_job::original_construction_settled_quote::<()>(d,1).ok());}
+        match r{Ok(false)=>{}Ok(true)=>{paid=Ok(());break}Err(failure)=>{paid=Err(failure);break}}
     }
-    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture cancellation issuer birth exceeded its authored turn bound").into())
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if birth.construction.terminal_is_empty(){return paid}
+        fixture_renew_turn(cx,fresh_fuel,fresh_grant)?;
+        birth.construction.close_step(cx)?;
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture birth admission exceeded its authored retirement bound").into())
 }
 
 /// 🎟️ Drives the actual borrowed action endpoint and pays remaining original fixture sources under its authored close loan.

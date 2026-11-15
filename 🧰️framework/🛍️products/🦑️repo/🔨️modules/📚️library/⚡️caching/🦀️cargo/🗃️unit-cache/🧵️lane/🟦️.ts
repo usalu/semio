@@ -13,7 +13,13 @@ export function laneTargetNamespaceV1(input:Readonly<{version:number;build:strin
 export function lanePathsV1(root:string,id:string){
  if(!idPattern.test(id))throw Error("Invalid Cargo lane identifier");
  const base=join(root,layout.lanes,id);
- return Object.freeze({id,base,target:join(base,laneTargetNamespaceV1({version:layout.targetIdentityVersion,build:".",target:layout.target})),build:base,live:join(base,layout.live),stamps:join(base,layout.stamps),metadata:join(base,layout.metadata),size:join(base,layout.size)});
+ return Object.freeze({id,base,target:join(base,laneTargetNamespaceV1({version:layout.targetIdentityVersion,build:".",target:layout.target})),build:base,temporaries:join(base,layout.compilerTemporaries),live:join(base,layout.live),stamps:join(base,layout.stamps),metadata:join(base,layout.metadata),size:join(base,layout.size)});
+}
+
+/** 🧹️ Hands rustc the short temporary directory of a lane for its codegen files (`-Z temps-dir`): their names carry the crate name up to three times, so below the unit directory they overran the 256 character bound that the path envelope (`📏️path-envelope`) now models at this place. Only compilations whose arguments already carry an unstable flag (the repository's rustflags carry `-Z threads=0`, so its nightly toolchain takes them) get it; probes and a stable toolchain get nothing. */
+export function compilerTemporaryArgumentsV1(directory:string,args:readonly string[]):readonly string[]{
+ if(!args.includes("--crate-name")||!args.includes("--out-dir")||!args.some(argument=>argument==="-Z"||argument.startsWith("-Z")))return[];
+ mkdirSync(directory,{recursive:true});return["-Z","temps-dir="+directory];
 }
 
 /** 🔑️ The affinity key of a crate set: the same sorted, de-duplicated names always give the same key, an empty set (a whole-workspace command) gives `*`. */

@@ -369,7 +369,7 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1997-checks-oracle-wiring]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧪️tests/🎯️oracle-wiring/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-norm-en1997-mut-wall-seismic-reinforcement]
+[workspace.dependencies.semio-s-artifact-norm-en1997-mut-wall-reinforcement]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️wall-seismic-reinforcement/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1997-mut-pile-dynamic]
@@ -404,7 +404,7 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧱️c
 
 [workspace.dependencies.semio-s-artifact-norm-en1997-mut-ground-investigation]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️ground-investigation/📦️packages/🦀️rust"
-[workspace.dependencies.semio-s-artifact-norm-en1997-mut-ground-investigation-reading]
+[workspace.dependencies.semio-s-artifact-norm-en1997-mut-ground-reading]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️ground-investigation-reading/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-norm-en1997-mut-characteristic-basis]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️characteristic-basis/📦️packages/🦀️rust"

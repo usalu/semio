@@ -28,7 +28,7 @@ export async function registerFolderWriteAcknowledgmentTests(
   const nameOf = (body: Uint8Array) => ["a1", "a2", "a3"].find((name) => new TextDecoder("latin1").decode(body).includes(name)) ?? "?";
 
   describe("folder write acknowledgment", () => {
-    for (const scenario of corpus.cases as readonly { readonly name: string; readonly steps: readonly Step[] }[]) {
+    for (const scenario of corpus.worker as readonly { readonly name: string; readonly steps: readonly Step[] }[]) {
       it(scenario.name, async () => {
         const documentId = `folder-write-${scenario.name}`;
         const clientInstanceId = crypto.randomUUID();

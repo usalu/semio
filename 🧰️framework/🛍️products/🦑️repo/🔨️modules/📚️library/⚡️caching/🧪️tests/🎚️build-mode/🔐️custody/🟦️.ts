@@ -1,6 +1,6 @@
 import {withInstalledNxFixtureV1} from "../../🔒️nx/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
-import {runOwnedCommand} from "@semio-tech/process/execution";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptInvocationEnvironment,requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";

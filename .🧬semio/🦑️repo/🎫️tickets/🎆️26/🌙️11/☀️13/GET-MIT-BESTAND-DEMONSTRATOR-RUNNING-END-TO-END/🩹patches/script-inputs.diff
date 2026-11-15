@@ -1,0 +1,11 @@
+--- a/script-inputs/🟨️.mjs
++++ b/script-inputs/🟨️.mjs
+@@ -1318,7 +1318,7 @@
+     async resolve(recipes, log) {
+       const values = new Map(), derived = new Map(), walked = new Set(), layers = new Map(), seen = new Set(), rows = [], take = row => { const key = rowKeyV1(row); if (!seen.has(key)) { seen.add(key); rows.push(row); } };
+       const builder = log?.builder(), addRows = items => { if (builder) builder.add(items); else for (const row of items) take(row); }, addLayer = view => { if (builder) builder.addList(closureLayerListV1(log, view)); else for (const batch of closureLayerBatchesV1(view)) addRows(batch); }, supportOf = view => log ? closureLayerListV1(log, view) : view.rows ?? [...closureLayerBatchesV1(view)].flat();
+-      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); addRows(entry.rows); for (const layer of closureLayerViewsV1(entry)) { layers.set(layer.key, layer); if (layer.fact) { const row = view === undefined ? layer.fact.row : layer.fact.views?.[view] ?? layer.fact.row; derived.set(row.path, { row, support: supportOf(layer) }); walked.add(layer.fact.row.path); } } }
++      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); addRows(entry.rows); for (const layer of closureLayerViewsV1(entry)) { layers.set(layer.key, layer); if (layer.fact) { const row = view === undefined ? layer.fact.row : layer.fact.views?.[view] ?? layer.fact.row; if (!derived.has(row.path)) derived.set(row.path, { row, support: supportOf(layer) }); walked.add(layer.fact.row.path); } } }
+       for (const layer of layers.values()) { if (layer.fact) continue; if (!layer.members || ![...layer.members].some(question => walked.has(question))) addLayer(layer); }
+       return { values, rows: builder ? builder.finish() : rows, derived: [...derived.values()] };
+     },

@@ -1,0 +1,2257 @@
+{
+ "summary": {
+  "doc_total": 271507,
+  "shared_total": 272503,
+  "union": 272782,
+  "only_doc": 279,
+  "only_shared": 1275,
+  "both": 271228,
+  "both_result": {
+   "same": 270982,
+   "differ": 246
+  },
+  "differ_reasons": {
+   "size": 243,
+   "content": 3
+  },
+  "newer": {
+   "shared_newer": 199,
+   "doc_newer": 47
+  },
+  "missing": {},
+  "only_doc_newer_ge_2026_11_10": 14,
+  "only_doc_ge_2026_11_09": 14,
+  "top_dirs_differ": [
+   [
+    "🧰️framework/🛍️products/🦑️repo",
+    92
+   ],
+   [
+    "✏️s/🔌️plugins/🌊️flow",
+    19
+   ],
+   [
+    "✏️s/🔌️plugins/🧩️puzzle",
+    17
+   ],
+   [
+    "✏️s/🔌️plugins/📕️norm",
+    16
+   ],
+   [
+    "🎓️teaching/🏛️architecture/📚️course",
+    12
+   ],
+   [
+    ".🧬semio/🦑️repo/🎫️tickets",
+    10
+   ],
+   [
+    "✏️s/🔌️plugins/🗄️stdio",
+    9
+   ],
+   [
+    "🧰️framework/🛍️products/💻️os",
+    7
+   ],
+   [
+    "✏️s/🔌️plugins/🪵️sourcing",
+    6
+   ],
+   [
+    "🧰️framework/🔨️modules/🏃️process",
+    6
+   ],
+   [
+    "(root)",
+    6
+   ],
+   [
+    "✏️s/🔌️plugins/📐️cad",
+    5
+   ],
+   [
+    "✏️s/🔌️plugins/🏭️process",
+    5
+   ],
+   [
+    "🧰️framework/🔨️modules/📡️replication",
+    5
+   ],
+   [
+    "✏️s/🔌️plugins/🏗️fem",
+    4
+   ],
+   [
+    "🧰️framework/🛍️products/📓️print",
+    3
+   ],
+   [
+    "🧰️framework/🔨️modules/🎠️kernel",
+    2
+   ],
+   [
+    "🎓️teaching/🛂️proctor/🏗️bootstrap",
+    2
+   ],
+   [
+    "🧰️framework/🔨️modules/🖱️ui",
+    1
+   ],
+   [
+    "✏️s/🔌️plugins/🌀️procedural",
+    1
+   ],
+   [
+    "✏️s",
+    1
+   ],
+   [
+    "🧰️framework",
+    1
+   ],
+   [
+    "✏️s/🔌️plugins/📖️playbook",
+    1
+   ],
+   [
+    "🌎️hub/🧩️compositions/🎪️demonstrator",
+    1
+   ],
+   [
+    "✏️s/🔌️plugins/🔋️energy",
+    1
+   ],
+   [
+    "🌎️hub",
+    1
+   ],
+   [
+    "✏️s/🔌️plugins/✒️writer",
+    1
+   ],
+   [
+    "✏️s/🔌️plugins/🌍️gis",
+    1
+   ],
+   [
+    "🌎️hub/🧩️compositions/🪵️sourcing",
+    1
+   ],
+   [
+    "🎓️teaching/🛂️proctor/📦️packages",
+    1
+   ]
+  ],
+  "top_dirs_only_doc": [
+   [
+    ".🧬semio/🦑️repo/🎫️tickets",
+    211
+   ],
+   [
+    "🧰️framework/🛍️products/💻️os",
+    36
+   ],
+   [
+    "✏️s/🔌️plugins/🔋️energy",
+    10
+   ],
+   [
+    "teaching-morph-preview-launch-kit",
+    6
+   ],
+   [
+    "staffage-launch-kit",
+    4
+   ],
+   [
+    "puzzle-artifact-editors-windows-kit",
+    4
+   ],
+   [
+    "holder",
+    3
+   ],
+   [
+    "holder/claims",
+    2
+   ],
+   [
+    "🌎️hub/📦️packages/🦀️rust",
+    2
+   ],
+   [
+    "✏️s/🔌️plugins/🗄️stdio",
+    1
+   ]
+  ],
+  "top_dirs_only_shared": [
+   [
+    ".🧬semio/🦑️repo/🎫️tickets",
+    1187
+   ],
+   [
+    "🧰️framework/🛍️products/🦑️repo",
+    64
+   ],
+   [
+    "🎓️teaching/🏛️architecture/⚡️energy",
+    10
+   ],
+   [
+    "✏️s/🔌️plugins/🔋️energy",
+    10
+   ],
+   [
+    "✏️s/🔌️plugins/📸️remodel",
+    2
+   ],
+   [
+    "✏️s/🔌️plugins/🖨️raster",
+    2
+   ]
+  ]
+ },
+ "only_doc_newer": [
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/resolution-2026-11-12-memory.md",
+   "size": 1524,
+   "mtime": "2026-11-12T22:35:17.359722"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1112-result-puzzlefinal.md",
+   "size": 1763,
+   "mtime": "2026-11-12T22:22:19.952666"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1112-result-graphslice.md",
+   "size": 14064,
+   "mtime": "2026-11-12T22:22:19.951764"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1112-result-floweditor.md",
+   "size": 4046,
+   "mtime": "2026-11-12T22:22:19.951498"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1112-rename-fieldprep.files",
+   "size": 5262,
+   "mtime": "2026-11-12T22:22:19.951186"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1112-audit-unauthorized.md",
+   "size": 7671,
+   "mtime": "2026-11-12T22:22:19.950875"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1112-audit-directcmds.md",
+   "size": 14046,
+   "mtime": "2026-11-12T22:22:19.950462"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️11/ARCHITECTURE-COURSE-REDEPLOY-READINESS/readiness-report.md",
+   "size": 5535,
+   "mtime": "2026-11-12T22:19:41.832349"
+  },
+  {
+   "path": "teaching-morph-preview-launch-kit/run.sh",
+   "size": 1224,
+   "mtime": "2026-11-11T02:33:31.996851"
+  },
+  {
+   "path": "teaching-morph-preview-launch-kit/prompt.txt",
+   "size": 13994,
+   "mtime": "2026-11-11T02:33:31.996645"
+  },
+  {
+   "path": "teaching-morph-preview-launch-kit/fleet.md",
+   "size": 4906,
+   "mtime": "2026-11-11T02:33:31.996382"
+  },
+  {
+   "path": "teaching-morph-preview-launch-kit/agents.json",
+   "size": 28344,
+   "mtime": "2026-11-11T02:33:31.995227"
+  },
+  {
+   "path": "teaching-morph-preview-launch-kit/acceptance.md",
+   "size": 5864,
+   "mtime": "2026-11-11T02:33:31.995050"
+  },
+  {
+   "path": "teaching-morph-preview-launch-kit/README.md",
+   "size": 7108,
+   "mtime": "2026-11-11T02:33:31.994884"
+  }
+ ],
+ "differ": [
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🧪️tests/🔵️.ts",
+   "reason": "size",
+   "doc_size": 35571,
+   "sh_size": 37204,
+   "doc_mtime": "2026-11-11T03:37:00.830332",
+   "sh_mtime": "2026-11-13T06:29:15.783098"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏭️direct-store-factory-and-child-group-route/🦀️.rs",
+   "reason": "size",
+   "doc_size": 22781,
+   "sh_size": 23426,
+   "doc_mtime": "2026-11-12T22:22:19.959921",
+   "sh_mtime": "2026-11-07T02:26:16.833996"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📋️clipboard/🦀️.rs",
+   "reason": "size",
+   "doc_size": 19512,
+   "sh_size": 19473,
+   "doc_mtime": "2026-11-12T22:22:20.025986",
+   "sh_mtime": "2026-11-07T02:26:17.112134"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts",
+   "reason": "size",
+   "doc_size": 26953,
+   "sh_size": 27154,
+   "doc_mtime": "2026-11-12T22:19:43.504234",
+   "sh_mtime": "2026-11-13T08:42:25.070060"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/Cargo.lock",
+   "reason": "size",
+   "doc_size": 363458,
+   "sh_size": 363466,
+   "doc_mtime": "2026-11-12T22:22:20.029213",
+   "sh_mtime": "2026-11-12T22:52:40.731920"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/⌨️command/🟦️.ts",
+   "reason": "size",
+   "doc_size": 15477,
+   "sh_size": 35233,
+   "doc_mtime": "2026-11-11T03:37:00.820533",
+   "sh_mtime": "2026-11-13T07:25:33.682659"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/Cargo.lock",
+   "reason": "size",
+   "doc_size": 308138,
+   "sh_size": 308146,
+   "doc_mtime": "2026-11-12T22:22:19.968615",
+   "sh_mtime": "2026-11-12T22:53:00.332169"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🟦️.ts",
+   "reason": "size",
+   "doc_size": 15724,
+   "sh_size": 15714,
+   "doc_mtime": "2026-11-10T03:30:51.583283",
+   "sh_mtime": "2026-11-13T08:43:18.688424"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/Cargo.lock",
+   "reason": "size",
+   "doc_size": 243959,
+   "sh_size": 243967,
+   "doc_mtime": "2026-11-12T22:22:20.002122",
+   "sh_mtime": "2026-11-12T22:52:48.584106"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🛰️plan/🔣️.json",
+   "reason": "size",
+   "doc_size": 3596,
+   "sh_size": 5446,
+   "doc_mtime": "2026-11-11T02:33:33.880768",
+   "sh_mtime": "2026-11-13T08:43:11.408621"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️config-store-preparation/🦀️.rs",
+   "reason": "size",
+   "doc_size": 19256,
+   "sh_size": 19356,
+   "doc_mtime": "2026-11-12T22:22:20.033896",
+   "sh_mtime": "2026-11-07T09:05:42.284732"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/👓️walk-views/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 9071,
+   "sh_size": 11549,
+   "doc_mtime": "2026-10-28T15:10:57.115947",
+   "sh_mtime": "2026-11-13T08:43:13.655426"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🔣️.json",
+   "reason": "size",
+   "doc_size": 18014,
+   "sh_size": 19092,
+   "doc_mtime": "2026-10-31T18:50:08.272061",
+   "sh_mtime": "2026-11-13T08:47:56.168060"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.lock",
+   "reason": "size",
+   "doc_size": 350183,
+   "sh_size": 350191,
+   "doc_mtime": "2026-11-12T22:22:19.981749",
+   "sh_mtime": "2026-11-12T22:52:55.149925"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🛰️plan/🐍️oracle.py",
+   "reason": "size",
+   "doc_size": 1047,
+   "sh_size": 1378,
+   "doc_mtime": "2026-11-10T03:14:42.947315",
+   "sh_mtime": "2026-11-13T08:43:11.407643"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👆️gestures/🎛️selection-and-weights/🦀️.rs",
+   "reason": "size",
+   "doc_size": 46973,
+   "sh_size": 48181,
+   "doc_mtime": "2026-11-12T22:22:20.025493",
+   "sh_mtime": "2026-11-12T22:52:45.851551"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/Cargo.lock",
+   "reason": "size",
+   "doc_size": 197312,
+   "sh_size": 197320,
+   "doc_mtime": "2026-11-12T22:22:19.998268",
+   "sh_mtime": "2026-11-12T22:52:53.447277"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/shared-border.ts",
+   "reason": "size",
+   "doc_size": 25411,
+   "sh_size": 25175,
+   "doc_mtime": "2026-11-12T22:19:43.062578",
+   "sh_mtime": "2026-11-13T05:10:55.184740"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧱️blocks/🖼️assets/🚏️bus-shelter/🖊️.dxf",
+   "reason": "size",
+   "doc_size": 9358,
+   "sh_size": 7950,
+   "doc_mtime": "2026-09-30T17:43:57.162668",
+   "sh_mtime": "2026-11-12T22:52:31.820178"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/Cargo.lock",
+   "reason": "size",
+   "doc_size": 235626,
+   "sh_size": 235634,
+   "doc_mtime": "2026-11-12T22:22:20.020343",
+   "sh_mtime": "2026-11-11T02:33:32.645454"
+  },
+  {
+   "path": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json",
+   "reason": "size",
+   "doc_size": 18983,
+   "sh_size": 19162,
+   "doc_mtime": "2026-10-31T18:50:08.541095",
+   "sh_mtime": "2026-11-13T08:47:56.189382"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️09/SHARED-WORKTREE-FLEET-OVER-NFS/🎫️ticket.json",
+   "reason": "size",
+   "doc_size": 9701,
+   "sh_size": 10246,
+   "doc_mtime": "2026-11-11T03:57:07.753071",
+   "sh_mtime": "2026-11-13T00:17:10.465837"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/Cargo.lock",
+   "reason": "size",
+   "doc_size": 360809,
+   "sh_size": 360817,
+   "doc_mtime": "2026-11-12T22:22:19.992593",
+   "sh_mtime": "2026-11-12T22:52:52.389727"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 9621,
+   "sh_size": 10092,
+   "doc_mtime": "2026-11-12T22:19:43.508310",
+   "sh_mtime": "2026-11-13T08:43:29.612752"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts",
+   "reason": "size",
+   "doc_size": 14498,
+   "sh_size": 14922,
+   "doc_mtime": "2026-10-28T15:10:56.779691",
+   "sh_mtime": "2026-11-13T08:43:50.059360"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/Cargo.lock",
+   "reason": "size",
+   "doc_size": 344661,
+   "sh_size": 344669,
+   "doc_mtime": "2026-11-12T22:22:20.001660",
+   "sh_mtime": "2026-11-12T22:52:48.457963"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/📖️texts/🔣️.json",
+   "reason": "size",
+   "doc_size": 10035,
+   "sh_size": 30203,
+   "doc_mtime": "2026-11-11T03:37:00.820739",
+   "sh_mtime": "2026-11-13T07:25:33.682976"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/📒️journal/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 21395,
+   "sh_size": 21947,
+   "doc_mtime": "2026-11-11T03:37:00.819331",
+   "sh_mtime": "2026-11-13T04:55:58.469059"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/Cargo.lock",
+   "reason": "size",
+   "doc_size": 256731,
+   "sh_size": 256739,
+   "doc_mtime": "2026-11-12T22:22:20.009998",
+   "sh_mtime": "2026-11-12T22:52:47.749594"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧬️schema/🔣️.json",
+   "reason": "size",
+   "doc_size": 54674,
+   "sh_size": 54844,
+   "doc_mtime": "2026-11-12T22:19:43.516318",
+   "sh_mtime": "2026-11-13T08:43:14.374735"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧾️proctor-product/🟦️.ts",
+   "reason": "size",
+   "doc_size": 17778,
+   "sh_size": 18806,
+   "doc_mtime": "2026-10-22T19:38:31.629366",
+   "sh_mtime": "2026-11-13T08:43:13.534962"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📌️paste/🦀️.rs",
+   "reason": "size",
+   "doc_size": 16806,
+   "sh_size": 16767,
+   "doc_mtime": "2026-11-12T22:22:20.026495",
+   "sh_mtime": "2026-11-07T02:26:17.112338"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏛️service/🌐️host/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 28724,
+   "sh_size": 28773,
+   "doc_mtime": "2026-11-12T22:19:43.511407",
+   "sh_mtime": "2026-11-13T08:43:14.408836"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 114581,
+   "sh_size": 116736,
+   "doc_mtime": "2026-11-12T22:19:43.519659",
+   "sh_mtime": "2026-11-13T08:42:25.072118"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.d.mts",
+   "reason": "size",
+   "doc_size": 809,
+   "sh_size": 866,
+   "doc_mtime": "2026-11-11T02:33:33.812664",
+   "sh_mtime": "2026-11-13T08:43:14.416015"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔤️ordering/🧪️laws/🦀️.rs",
+   "reason": "size",
+   "doc_size": 5688,
+   "sh_size": 5646,
+   "doc_mtime": "2026-11-12T22:22:20.052875",
+   "sh_mtime": "2026-11-11T02:33:33.276050"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json",
+   "reason": "size",
+   "doc_size": 34217,
+   "sh_size": 34763,
+   "doc_mtime": "2026-11-11T03:37:00.811693",
+   "sh_mtime": "2026-11-13T08:43:13.660870"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🧪️tests/🔵️.ps1",
+   "reason": "size",
+   "doc_size": 14136,
+   "sh_size": 14571,
+   "doc_mtime": "2026-11-11T03:37:00.829814",
+   "sh_mtime": "2026-11-13T06:29:15.783315"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️load/🟦️.ts",
+   "reason": "size",
+   "doc_size": 33244,
+   "sh_size": 33228,
+   "doc_mtime": "2026-11-11T02:33:33.849362",
+   "sh_mtime": "2026-11-13T08:43:25.759833"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 48525,
+   "sh_size": 48693,
+   "doc_mtime": "2026-11-12T22:19:43.549127",
+   "sh_mtime": "2026-11-13T08:43:13.670231"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 6024,
+   "sh_size": 6552,
+   "doc_mtime": "2026-10-26T08:21:00.226706",
+   "sh_mtime": "2026-11-13T08:47:56.175086"
+  },
+  {
+   "path": ".gitignore",
+   "reason": "size",
+   "doc_size": 13924,
+   "sh_size": 13915,
+   "doc_mtime": "2026-11-11T03:37:00.785655",
+   "sh_mtime": "2026-11-13T02:49:34.261247"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🕰️graph-hooks/📖️direct/🟦️.ts",
+   "reason": "size",
+   "doc_size": 5470,
+   "sh_size": 5427,
+   "doc_mtime": "2026-11-10T03:14:42.745511",
+   "sh_mtime": "2026-11-13T08:43:26.435725"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/README.md",
+   "reason": "size",
+   "doc_size": 67997,
+   "sh_size": 125879,
+   "doc_mtime": "2026-11-11T04:09:33.875977",
+   "sh_mtime": "2026-11-13T07:25:33.682273"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️direct-store-command-work/🦀️.rs",
+   "reason": "size",
+   "doc_size": 29795,
+   "sh_size": 29407,
+   "doc_mtime": "2026-11-12T22:22:19.962332",
+   "sh_mtime": "2026-11-07T02:26:16.839297"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🧪️tests/🐍️.py",
+   "reason": "size",
+   "doc_size": 15980,
+   "sh_size": 17333,
+   "doc_mtime": "2026-11-11T17:46:03.317093",
+   "sh_mtime": "2026-11-13T06:16:50.344842"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/Cargo.lock",
+   "reason": "size",
+   "doc_size": 43162,
+   "sh_size": 43170,
+   "doc_mtime": "2026-11-12T22:22:19.980627",
+   "sh_mtime": "2026-11-12T22:53:03.439014"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕸️graph-operation-route/🦀️.rs",
+   "reason": "size",
+   "doc_size": 30528,
+   "sh_size": 30698,
+   "doc_mtime": "2026-11-12T22:22:19.961188",
+   "sh_mtime": "2026-11-07T02:26:16.836611"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+   "reason": "size",
+   "doc_size": 86299,
+   "sh_size": 85519,
+   "doc_mtime": "2026-11-12T22:22:20.049413",
+   "sh_mtime": "2026-11-05T05:35:59.056447"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/Cargo.lock",
+   "reason": "size",
+   "doc_size": 243580,
+   "sh_size": 243588,
+   "doc_mtime": "2026-11-12T22:22:20.008774",
+   "sh_mtime": "2026-11-12T22:52:47.632879"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/⌨️command/🟦️.ts",
+   "reason": "size",
+   "doc_size": 39310,
+   "sh_size": 44291,
+   "doc_mtime": "2026-11-11T04:08:31.219491",
+   "sh_mtime": "2026-11-13T06:29:15.741230"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/Cargo.lock",
+   "reason": "size",
+   "doc_size": 360821,
+   "sh_size": 360829,
+   "doc_mtime": "2026-11-12T22:22:19.991364",
+   "sh_mtime": "2026-11-12T22:52:52.378682"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🚧️boundary/🟦️.ts",
+   "reason": "size",
+   "doc_size": 14942,
+   "sh_size": 21888,
+   "doc_mtime": "2026-11-11T03:37:00.831433",
+   "sh_mtime": "2026-11-13T06:29:15.474988"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/Cargo.lock",
+   "reason": "size",
+   "doc_size": 565971,
+   "sh_size": 565979,
+   "doc_mtime": "2026-11-12T22:22:19.958849",
+   "sh_mtime": "2026-11-12T22:53:01.120000"
+  },
+  {
+   "path": "✏️s/Cargo.lock",
+   "reason": "size",
+   "doc_size": 326504,
+   "sh_size": 326512,
+   "doc_mtime": "2026-11-12T22:22:19.955574",
+   "sh_mtime": "2026-11-12T22:51:37.974735"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📊️tables/🖼️assets/🚏️bus-shelter/🖊️.dxf",
+   "reason": "size",
+   "doc_size": 9358,
+   "sh_size": 7950,
+   "doc_mtime": "2026-09-30T17:43:57.149365",
+   "sh_mtime": "2026-11-12T22:52:31.818762"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️workspace-namespace/🐹️.go",
+   "reason": "size",
+   "doc_size": 14614,
+   "sh_size": 16057,
+   "doc_mtime": "2026-11-05T09:52:15.390662",
+   "sh_mtime": "2026-11-13T04:07:42.574497"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 57215,
+   "sh_size": 57945,
+   "doc_mtime": "2026-11-12T22:19:43.546778",
+   "sh_mtime": "2026-11-13T08:43:13.616675"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧳️preparation/📦️packages/🦀️rust/Cargo.toml",
+   "reason": "size",
+   "doc_size": 1133,
+   "sh_size": 1141,
+   "doc_mtime": "2026-11-12T22:22:20.050948",
+   "sh_mtime": "2026-11-08T19:03:39.470650"
+  },
+  {
+   "path": "🧰️framework/Cargo.lock",
+   "reason": "size",
+   "doc_size": 406069,
+   "sh_size": 406077,
+   "doc_mtime": "2026-11-12T22:22:20.048816",
+   "sh_mtime": "2026-11-12T22:51:37.946930"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/Cargo.lock",
+   "reason": "size",
+   "doc_size": 362539,
+   "sh_size": 362547,
+   "doc_mtime": "2026-11-12T22:22:20.014619",
+   "sh_mtime": "2026-11-12T22:52:20.391281"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🎠️kernel/♻️retirement/🧪️tests/🦀️.rs",
+   "reason": "size",
+   "doc_size": 5875,
+   "sh_size": 5766,
+   "doc_mtime": "2026-11-11T02:33:33.082858",
+   "sh_mtime": "2026-11-13T08:47:56.191878"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🧪️tests/🛰️plan/🟦️.ts",
+   "reason": "size",
+   "doc_size": 11075,
+   "sh_size": 11623,
+   "doc_mtime": "2026-11-11T02:33:33.881516",
+   "sh_mtime": "2026-11-13T08:43:11.410127"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 2996,
+   "sh_size": 3097,
+   "doc_mtime": "2026-11-12T22:22:20.054653",
+   "sh_mtime": "2026-11-13T08:43:29.620979"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🚧️boundary/🧪️tests/🧫️fixtures/🔣️.json",
+   "reason": "size",
+   "doc_size": 14784,
+   "sh_size": 20450,
+   "doc_mtime": "2026-11-11T03:37:00.831989",
+   "sh_mtime": "2026-11-13T06:29:15.818675"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🕰️graph-hooks/🔌️host/🟨️.d.mts",
+   "reason": "size",
+   "doc_size": 2291,
+   "sh_size": 2343,
+   "doc_mtime": "2026-11-10T03:14:42.745782",
+   "sh_mtime": "2026-11-13T08:43:26.436461"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧪️tests/🔣️.json",
+   "reason": "content",
+   "doc_size": 850,
+   "sh_size": 850,
+   "doc_mtime": "2026-10-21T19:16:34.975016",
+   "sh_mtime": "2026-11-13T08:43:50.208429"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 32310,
+   "sh_size": 34611,
+   "doc_mtime": "2026-11-12T22:19:43.527798",
+   "sh_mtime": "2026-11-13T08:43:51.016650"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+   "reason": "size",
+   "doc_size": 46866,
+   "sh_size": 46872,
+   "doc_mtime": "2026-11-12T22:19:43.585198",
+   "sh_mtime": "2026-11-13T04:33:45.666735"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔤️ordering/🦀️.rs",
+   "reason": "size",
+   "doc_size": 11212,
+   "sh_size": 10836,
+   "doc_mtime": "2026-11-12T22:22:20.052612",
+   "sh_mtime": "2026-11-10T00:31:30.105533"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1105b-tools/slots.k",
+   "reason": "size",
+   "doc_size": 1,
+   "sh_size": 2,
+   "doc_mtime": "2026-11-12T22:22:19.946611",
+   "sh_mtime": "2026-11-08T02:51:37.777227"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🦀️.rs",
+   "reason": "size",
+   "doc_size": 11420,
+   "sh_size": 11218,
+   "doc_mtime": "2026-11-12T22:22:20.024152",
+   "sh_mtime": "2026-11-12T22:52:45.849168"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎛️flow-play-app/🦀️.rs",
+   "reason": "size",
+   "doc_size": 33931,
+   "sh_size": 33918,
+   "doc_mtime": "2026-11-12T22:22:19.959391",
+   "sh_mtime": "2026-11-11T02:33:32.044661"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/📖️texts/🔣️.json",
+   "reason": "size",
+   "doc_size": 432,
+   "sh_size": 624,
+   "doc_mtime": "2026-10-28T15:10:56.997764",
+   "sh_mtime": "2026-11-13T08:43:26.453745"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/Cargo.lock",
+   "reason": "size",
+   "doc_size": 237403,
+   "sh_size": 237411,
+   "doc_mtime": "2026-11-12T22:22:20.000880",
+   "sh_mtime": "2026-11-12T22:52:48.379841"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🌐️remote-exchange/🟦️.ts",
+   "reason": "size",
+   "doc_size": 11076,
+   "sh_size": 11123,
+   "doc_mtime": "2026-11-11T03:37:00.808605",
+   "sh_mtime": "2026-11-13T08:43:26.374261"
+  },
+  {
+   "path": "🎓️teaching/🛂️proctor/🏗️bootstrap/🧾️product/📥️inputs/🔣️.json",
+   "reason": "size",
+   "doc_size": 669,
+   "sh_size": 797,
+   "doc_mtime": "2026-10-21T22:29:00.220426",
+   "sh_mtime": "2026-11-13T08:43:13.484315"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🚪️admission/🟦️.ts",
+   "reason": "size",
+   "doc_size": 8419,
+   "sh_size": 7813,
+   "doc_mtime": "2026-11-12T22:22:20.057714",
+   "sh_mtime": "2026-10-28T15:10:57.044335"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/Cargo.lock",
+   "reason": "size",
+   "doc_size": 291404,
+   "sh_size": 291412,
+   "doc_mtime": "2026-11-12T22:22:20.006708",
+   "sh_mtime": "2026-11-12T22:52:48.399365"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧳️preparation/📦️packages/🦀️rust/tests/producer.rs",
+   "reason": "size",
+   "doc_size": 55893,
+   "sh_size": 55897,
+   "doc_mtime": "2026-11-12T22:22:20.051728",
+   "sh_mtime": "2026-11-08T19:03:39.470961"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/Cargo.lock",
+   "reason": "size",
+   "doc_size": 308135,
+   "sh_size": 308143,
+   "doc_mtime": "2026-11-12T22:22:19.973790",
+   "sh_mtime": "2026-11-12T22:53:00.230805"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/Cargo.lock",
+   "reason": "size",
+   "doc_size": 364313,
+   "sh_size": 364321,
+   "doc_mtime": "2026-11-12T22:22:20.037651",
+   "sh_mtime": "2026-11-12T22:51:58.176904"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧩️contributions-route-and-instance-owner/🦀️.rs",
+   "reason": "size",
+   "doc_size": 11881,
+   "sh_size": 11618,
+   "doc_mtime": "2026-11-12T22:22:19.961876",
+   "sh_mtime": "2026-11-12T22:53:03.526322"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 13306,
+   "sh_size": 13341,
+   "doc_mtime": "2026-11-10T03:30:51.587341",
+   "sh_mtime": "2026-11-13T08:43:28.959539"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/Cargo.lock",
+   "reason": "size",
+   "doc_size": 197312,
+   "sh_size": 197320,
+   "doc_mtime": "2026-11-12T22:22:19.996294",
+   "sh_mtime": "2026-11-12T22:52:53.464343"
+  },
+  {
+   "path": "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+   "reason": "size",
+   "doc_size": 6155,
+   "sh_size": 6030,
+   "doc_mtime": "2026-11-12T22:22:20.041494",
+   "sh_mtime": "2026-11-11T02:33:32.826005"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 100811,
+   "sh_size": 123250,
+   "doc_mtime": "2026-11-11T17:48:16.145266",
+   "sh_mtime": "2026-11-13T06:29:15.782638"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.lock",
+   "reason": "size",
+   "doc_size": 549227,
+   "sh_size": 549235,
+   "doc_mtime": "2026-11-12T22:22:19.995103",
+   "sh_mtime": "2026-11-12T22:52:47.021844"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 37889,
+   "sh_size": 38626,
+   "doc_mtime": "2026-11-10T03:14:42.816666",
+   "sh_mtime": "2026-11-13T08:43:28.955170"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📜️script.ts",
+   "reason": "size",
+   "doc_size": 11499,
+   "sh_size": 11669,
+   "doc_mtime": "2026-10-31T18:50:08.271689",
+   "sh_mtime": "2026-11-13T08:47:56.170524"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/Cargo.lock",
+   "reason": "size",
+   "doc_size": 223800,
+   "sh_size": 223808,
+   "doc_mtime": "2026-11-12T22:22:20.021302",
+   "sh_mtime": "2026-11-09T16:28:45.993079"
+  },
+  {
+   "path": "🎓️teaching/🛂️proctor/🏗️bootstrap/🟦️.ts",
+   "reason": "size",
+   "doc_size": 34075,
+   "sh_size": 36362,
+   "doc_mtime": "2026-11-07T02:21:32.617751",
+   "sh_mtime": "2026-11-13T08:43:13.483516"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🧪️tests/🐍️.py",
+   "reason": "size",
+   "doc_size": 7339,
+   "sh_size": 8597,
+   "doc_mtime": "2026-11-11T03:37:00.822569",
+   "sh_mtime": "2026-11-12T22:47:11.671824"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎮️prepare/🧰️child/🦀️.rs",
+   "reason": "size",
+   "doc_size": 14149,
+   "sh_size": 13507,
+   "doc_mtime": "2026-11-12T22:22:20.024585",
+   "sh_mtime": "2026-11-12T22:52:45.848043"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 46844,
+   "sh_size": 49204,
+   "doc_mtime": "2026-11-10T03:14:42.719737",
+   "sh_mtime": "2026-11-13T08:43:14.423753"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 124561,
+   "sh_size": 129129,
+   "doc_mtime": "2026-11-12T22:19:43.536319",
+   "sh_mtime": "2026-11-13T08:42:25.070793"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/Cargo.lock",
+   "reason": "size",
+   "doc_size": 239545,
+   "sh_size": 239553,
+   "doc_mtime": "2026-11-12T22:22:20.004452",
+   "sh_mtime": "2026-11-12T22:52:48.702754"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 3283,
+   "sh_size": 4059,
+   "doc_mtime": "2026-11-12T22:22:20.054965",
+   "sh_mtime": "2026-11-13T08:43:14.419125"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️workspaces/🧬️schema/🔣️.json",
+   "reason": "size",
+   "doc_size": 3902,
+   "sh_size": 4246,
+   "doc_mtime": "2026-11-05T09:52:15.393183",
+   "sh_mtime": "2026-11-13T04:07:42.574471"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🧶️nx/🟦️.ts",
+   "reason": "size",
+   "doc_size": 1611,
+   "sh_size": 3083,
+   "doc_mtime": "2026-11-10T03:14:42.720154",
+   "sh_mtime": "2026-11-13T08:43:14.424264"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/💾️store-preparation/🦀️.rs",
+   "reason": "size",
+   "doc_size": 21719,
+   "sh_size": 20149,
+   "doc_mtime": "2026-11-12T22:22:20.027340",
+   "sh_mtime": "2026-11-07T02:26:17.113351"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🔍️revalidate-job/🦀️.rs",
+   "reason": "size",
+   "doc_size": 13190,
+   "sh_size": 13074,
+   "doc_mtime": "2026-11-12T22:22:20.022676",
+   "sh_mtime": "2026-11-01T12:22:06.180418"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/Cargo.toml",
+   "reason": "size",
+   "doc_size": 1732,
+   "sh_size": 1736,
+   "doc_mtime": "2026-11-12T22:22:20.050315",
+   "sh_mtime": "2026-11-08T21:15:23.849326"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/📜️script.ts",
+   "reason": "size",
+   "doc_size": 1172,
+   "sh_size": 5745,
+   "doc_mtime": "2026-11-11T03:37:00.820870",
+   "sh_mtime": "2026-11-13T06:48:09.582277"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 43178,
+   "sh_size": 43343,
+   "doc_mtime": "2026-11-12T22:19:43.544379",
+   "sh_mtime": "2026-11-13T08:43:13.690282"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🟦️.ts",
+   "reason": "size",
+   "doc_size": 41416,
+   "sh_size": 44155,
+   "doc_mtime": "2026-11-11T04:08:18.876023",
+   "sh_mtime": "2026-11-13T06:29:15.740566"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🧪️tests/🏁️race.ts",
+   "reason": "size",
+   "doc_size": 14526,
+   "sh_size": 14529,
+   "doc_mtime": "2026-11-11T03:37:00.822429",
+   "sh_mtime": "2026-11-13T04:55:58.551239"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🦀️.rs",
+   "reason": "size",
+   "doc_size": 19183,
+   "sh_size": 19187,
+   "doc_mtime": "2026-11-12T22:22:20.050606",
+   "sh_mtime": "2026-11-08T21:38:21.158802"
+  },
+  {
+   "path": "README.md",
+   "reason": "size",
+   "doc_size": 73100,
+   "sh_size": 73136,
+   "doc_mtime": "2026-11-12T22:19:41.868500",
+   "sh_mtime": "2026-11-13T08:42:25.069859"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/🧩️entities/🖼️assets/🚏️bus-shelter/🖊️.dxf",
+   "reason": "size",
+   "doc_size": 9358,
+   "sh_size": 7950,
+   "doc_mtime": "2026-09-30T17:43:57.154812",
+   "sh_mtime": "2026-11-12T22:52:31.818796"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/⏯️run-job-state-and-search/🦀️.rs",
+   "reason": "size",
+   "doc_size": 18804,
+   "sh_size": 18751,
+   "doc_mtime": "2026-11-12T22:22:20.021810",
+   "sh_mtime": "2026-11-11T02:33:32.770935"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/Cargo.lock",
+   "reason": "size",
+   "doc_size": 308120,
+   "sh_size": 308128,
+   "doc_mtime": "2026-11-12T22:22:19.977560",
+   "sh_mtime": "2026-11-12T22:52:57.536718"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/Cargo.lock",
+   "reason": "size",
+   "doc_size": 308117,
+   "sh_size": 308125,
+   "doc_mtime": "2026-11-12T22:22:19.965291",
+   "sh_mtime": "2026-11-12T22:53:00.307624"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/README.md",
+   "reason": "size",
+   "doc_size": 96748,
+   "sh_size": 97214,
+   "doc_mtime": "2026-11-12T22:19:42.436473",
+   "sh_mtime": "2026-11-13T08:47:56.165405"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🧪️tests/🧫️fixtures/🔣️.json",
+   "reason": "size",
+   "doc_size": 5269,
+   "sh_size": 5996,
+   "doc_mtime": "2026-11-11T03:37:00.830817",
+   "sh_mtime": "2026-11-13T06:16:50.350994"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🧳️preparation/📦️packages/🦀️rust/tests/close.rs",
+   "reason": "size",
+   "doc_size": 4230,
+   "sh_size": 4234,
+   "doc_mtime": "2026-11-12T22:22:20.051446",
+   "sh_mtime": "2026-11-08T19:03:39.470834"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/Cargo.lock",
+   "reason": "size",
+   "doc_size": 247246,
+   "sh_size": 247254,
+   "doc_mtime": "2026-11-12T22:22:20.009347",
+   "sh_mtime": "2026-11-12T22:52:47.603603"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/Cargo.lock",
+   "reason": "size",
+   "doc_size": 308123,
+   "sh_size": 308131,
+   "doc_mtime": "2026-11-12T22:22:19.976331",
+   "sh_mtime": "2026-11-12T22:53:00.203714"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🚧️boundary/🧬️schema/🔣️.json",
+   "reason": "size",
+   "doc_size": 3926,
+   "sh_size": 5471,
+   "doc_mtime": "2026-11-11T03:37:00.832173",
+   "sh_mtime": "2026-11-13T06:29:15.819370"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🧬️schema/🔣️.json",
+   "reason": "size",
+   "doc_size": 12579,
+   "sh_size": 17895,
+   "doc_mtime": "2026-11-11T03:37:00.823574",
+   "sh_mtime": "2026-11-13T07:25:33.684496"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📖️assignment-pdfs/🟦️.ts",
+   "reason": "size",
+   "doc_size": 7124,
+   "sh_size": 7349,
+   "doc_mtime": "2026-11-05T09:52:15.338982",
+   "sh_mtime": "2026-11-13T08:47:56.171759"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures/📦️packages/🦀️rust/Cargo.toml",
+   "reason": "size",
+   "doc_size": 3589,
+   "sh_size": 3422,
+   "doc_mtime": "2026-11-12T22:19:43.375236",
+   "sh_mtime": "2026-11-13T01:52:43.769760"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/Cargo.lock",
+   "reason": "size",
+   "doc_size": 512318,
+   "sh_size": 512326,
+   "doc_mtime": "2026-11-12T22:22:19.984234",
+   "sh_mtime": "2026-11-11T03:37:16.318444"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/Cargo.lock",
+   "reason": "size",
+   "doc_size": 360812,
+   "sh_size": 360820,
+   "doc_mtime": "2026-11-12T22:22:19.985391",
+   "sh_mtime": "2026-11-12T22:52:53.236528"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🥾️provision/🔵️.ps1",
+   "reason": "size",
+   "doc_size": 28276,
+   "sh_size": 33448,
+   "doc_mtime": "2026-11-11T16:32:40.325703",
+   "sh_mtime": "2026-11-13T06:29:15.743844"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+   "reason": "size",
+   "doc_size": 26054,
+   "sh_size": 25770,
+   "doc_mtime": "2026-11-12T22:22:20.053634",
+   "sh_mtime": "2026-11-07T02:21:33.476439"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/🎯️target-fanout/🟦️.ts",
+   "reason": "size",
+   "doc_size": 5148,
+   "sh_size": 5216,
+   "doc_mtime": "2026-11-12T22:19:43.529551",
+   "sh_mtime": "2026-11-13T08:43:29.271121"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/📒️journal/🧪️tests/🐍️.py",
+   "reason": "size",
+   "doc_size": 5679,
+   "sh_size": 6205,
+   "doc_mtime": "2026-11-11T03:37:00.819182",
+   "sh_mtime": "2026-11-13T04:55:58.492267"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.lock",
+   "reason": "size",
+   "doc_size": 450493,
+   "sh_size": 450501,
+   "doc_mtime": "2026-11-12T22:22:20.015457",
+   "sh_mtime": "2026-11-12T22:52:37.261318"
+  },
+  {
+   "path": "🌎️hub/Cargo.lock",
+   "reason": "size",
+   "doc_size": 2621161,
+   "sh_size": 2621117,
+   "doc_mtime": "2026-11-12T22:22:20.040562",
+   "sh_mtime": "2026-11-12T22:51:37.950117"
+  },
+  {
+   "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.lock",
+   "reason": "size",
+   "doc_size": 492482,
+   "sh_size": 492490,
+   "doc_mtime": "2026-11-12T22:22:19.956933",
+   "sh_mtime": "2026-11-12T22:52:57.279000"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.lock",
+   "reason": "size",
+   "doc_size": 604803,
+   "sh_size": 604811,
+   "doc_mtime": "2026-11-12T22:22:19.979052",
+   "sh_mtime": "2026-11-11T03:37:16.316875"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 51109,
+   "sh_size": 87175,
+   "doc_mtime": "2026-11-11T03:37:00.822779",
+   "sh_mtime": "2026-11-13T06:16:50.331834"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/Cargo.lock",
+   "reason": "size",
+   "doc_size": 211636,
+   "sh_size": 211644,
+   "doc_mtime": "2026-11-12T22:22:20.018885",
+   "sh_mtime": "2026-11-11T02:33:32.573536"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🗣️both-languages/🟦️.ts",
+   "reason": "size",
+   "doc_size": 15124,
+   "sh_size": 15189,
+   "doc_mtime": "2026-11-07T02:21:32.616485",
+   "sh_mtime": "2026-11-13T08:43:51.016005"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/Cargo.lock",
+   "reason": "size",
+   "doc_size": 308120,
+   "sh_size": 308128,
+   "doc_mtime": "2026-11-12T22:22:19.966321",
+   "sh_mtime": "2026-11-12T22:53:00.531581"
+  },
+  {
+   "path": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🔬️probes/🟦️.ts",
+   "reason": "size",
+   "doc_size": 35063,
+   "sh_size": 35418,
+   "doc_mtime": "2026-10-25T14:58:43.206387",
+   "sh_mtime": "2026-11-13T08:43:22.322549"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🗓️scheduling/🔣️.json",
+   "reason": "size",
+   "doc_size": 17384,
+   "sh_size": 18708,
+   "doc_mtime": "2026-11-10T03:14:42.796641",
+   "sh_mtime": "2026-11-13T08:47:56.176149"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.lock",
+   "reason": "size",
+   "doc_size": 364319,
+   "sh_size": 364327,
+   "doc_mtime": "2026-11-12T22:22:20.036726",
+   "sh_mtime": "2026-11-12T22:51:58.199080"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/Cargo.lock",
+   "reason": "size",
+   "doc_size": 237880,
+   "sh_size": 237888,
+   "doc_mtime": "2026-11-12T22:22:20.008339",
+   "sh_mtime": "2026-11-12T22:52:48.377705"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🚧️boundary/🧪️tests/🐍️.py",
+   "reason": "size",
+   "doc_size": 4275,
+   "sh_size": 6065,
+   "doc_mtime": "2026-11-11T03:37:00.831630",
+   "sh_mtime": "2026-11-13T06:29:15.780550"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️09/SHARED-WORKTREE-FLEET-OVER-NFS/design-contract.md",
+   "reason": "size",
+   "doc_size": 21627,
+   "sh_size": 22881,
+   "doc_mtime": "2026-11-11T03:37:00.786726",
+   "sh_mtime": "2026-11-13T00:39:10.495215"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️2026-10-02-final-family-capability-policy-proof-provenance.md",
+   "reason": "size",
+   "doc_size": 36114,
+   "sh_size": 36106,
+   "doc_mtime": "2026-10-02T10:35:48.452166",
+   "sh_mtime": "2026-11-12T22:54:00.308423"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/Cargo.lock",
+   "reason": "size",
+   "doc_size": 242197,
+   "sh_size": 242205,
+   "doc_mtime": "2026-11-12T22:22:19.997106",
+   "sh_mtime": "2026-11-12T22:52:53.314351"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+   "reason": "size",
+   "doc_size": 54119,
+   "sh_size": 54125,
+   "doc_mtime": "2026-11-12T22:19:43.463019",
+   "sh_mtime": "2026-11-13T08:41:48.655046"
+  },
+  {
+   "path": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/package.json",
+   "reason": "size",
+   "doc_size": 4368,
+   "sh_size": 3700,
+   "doc_mtime": "2026-10-29T11:56:40.115173",
+   "sh_mtime": "2026-11-13T08:43:22.369765"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🥾️bootstrap/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 14678,
+   "sh_size": 16130,
+   "doc_mtime": "2026-11-11T03:37:00.822207",
+   "sh_mtime": "2026-11-13T00:36:05.137417"
+  },
+  {
+   "path": "bun.lock",
+   "reason": "size",
+   "doc_size": 604725,
+   "sh_size": 604724,
+   "doc_mtime": "2026-11-12T22:19:41.872704",
+   "sh_mtime": "2026-11-13T01:34:10.654346"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/📖️texts/🔣️.json",
+   "reason": "size",
+   "doc_size": 14455,
+   "sh_size": 24207,
+   "doc_mtime": "2026-11-11T03:37:00.824194",
+   "sh_mtime": "2026-11-13T06:29:15.743406"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🏊️pool/🧬️schema/🔣️.json",
+   "reason": "size",
+   "doc_size": 9320,
+   "sh_size": 9351,
+   "doc_mtime": "2026-10-31T18:50:31.286379",
+   "sh_mtime": "2026-11-13T08:43:51.016341"
+  },
+  {
+   "path": "🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust/Cargo.toml",
+   "reason": "size",
+   "doc_size": 2839,
+   "sh_size": 2714,
+   "doc_mtime": "2026-11-12T22:22:20.042216",
+   "sh_mtime": "2026-11-11T02:33:32.835570"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/Cargo.lock",
+   "reason": "size",
+   "doc_size": 360818,
+   "sh_size": 360826,
+   "doc_mtime": "2026-11-12T22:22:19.986685",
+   "sh_mtime": "2026-11-12T22:52:53.308750"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
+   "reason": "size",
+   "doc_size": 20937,
+   "sh_size": 20840,
+   "doc_mtime": "2026-11-12T22:22:20.053199",
+   "sh_mtime": "2026-11-07T02:21:33.294969"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/Cargo.lock",
+   "reason": "size",
+   "doc_size": 222089,
+   "sh_size": 222097,
+   "doc_mtime": "2026-11-12T22:22:20.007619",
+   "sh_mtime": "2026-11-12T22:52:48.866585"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️host-only-retained-route/🦀️.rs",
+   "reason": "size",
+   "doc_size": 22121,
+   "sh_size": 21857,
+   "doc_mtime": "2026-11-12T22:22:19.960763",
+   "sh_mtime": "2026-11-07T02:26:16.835762"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🟦️.ts",
+   "reason": "size",
+   "doc_size": 107078,
+   "sh_size": 194070,
+   "doc_mtime": "2026-11-11T03:37:00.821329",
+   "sh_mtime": "2026-11-13T08:32:42.299943"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧱️job-limits/🟦️.ts",
+   "reason": "size",
+   "doc_size": 9465,
+   "sh_size": 9529,
+   "doc_mtime": "2026-11-10T03:14:42.952031",
+   "sh_mtime": "2026-11-13T08:43:24.529433"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️10/GET-NORM-PLUGIN-WORKING-END-TO-END/coordination-plan.md",
+   "reason": "size",
+   "doc_size": 58553,
+   "sh_size": 59024,
+   "doc_mtime": "2026-11-12T22:19:41.808121",
+   "sh_mtime": "2026-11-13T08:47:56.167235"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🗂️registry-contract/🐹️.go",
+   "reason": "size",
+   "doc_size": 9828,
+   "sh_size": 9849,
+   "doc_mtime": "2026-10-28T15:10:57.256034",
+   "sh_mtime": "2026-11-13T04:07:42.574693"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "reason": "size",
+   "doc_size": 21557,
+   "sh_size": 21293,
+   "doc_mtime": "2026-11-12T22:22:20.054335",
+   "sh_mtime": "2026-11-03T18:55:07.413879"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1105b-claims.md",
+   "reason": "size",
+   "doc_size": 897790,
+   "sh_size": 894311,
+   "doc_mtime": "2026-11-12T22:22:19.944296",
+   "sh_mtime": "2026-11-12T22:53:13.481286"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/Cargo.lock",
+   "reason": "size",
+   "doc_size": 195032,
+   "sh_size": 195040,
+   "doc_mtime": "2026-11-12T22:22:19.979797",
+   "sh_mtime": "2026-11-12T03:21:21.189556"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/📨️pending/🔎️origin.rs",
+   "reason": "size",
+   "doc_size": 8608,
+   "sh_size": 8529,
+   "doc_mtime": "2026-11-12T22:22:20.052177",
+   "sh_mtime": "2026-11-09T10:31:38.314061"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+   "reason": "size",
+   "doc_size": 1691,
+   "sh_size": 1636,
+   "doc_mtime": "2026-11-12T22:22:20.054057",
+   "sh_mtime": "2026-10-18T22:26:36.363082"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/🎫️ticket.json",
+   "reason": "size",
+   "doc_size": 52090,
+   "sh_size": 50664,
+   "doc_mtime": "2026-11-12T22:35:45.911036",
+   "sh_mtime": "2026-11-12T22:53:21.894612"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.lock",
+   "reason": "size",
+   "doc_size": 365759,
+   "sh_size": 365767,
+   "doc_mtime": "2026-11-12T22:22:20.033268",
+   "sh_mtime": "2026-11-11T03:37:16.336159"
+  },
+  {
+   "path": "📋️build-owners.json",
+   "reason": "size",
+   "doc_size": 2136547,
+   "sh_size": 2136551,
+   "doc_mtime": "2026-11-12T22:22:20.045268",
+   "sh_mtime": "2026-11-12T22:51:37.621199"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🔣️.json",
+   "reason": "size",
+   "doc_size": 2248,
+   "sh_size": 2242,
+   "doc_mtime": "2026-11-11T04:08:12.825758",
+   "sh_mtime": "2026-11-13T06:16:50.340776"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/Cargo.lock",
+   "reason": "size",
+   "doc_size": 233785,
+   "sh_size": 233793,
+   "doc_mtime": "2026-11-12T22:22:20.007197",
+   "sh_mtime": "2026-11-12T22:52:48.679173"
+  },
+  {
+   "path": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+   "reason": "size",
+   "doc_size": 18542,
+   "sh_size": 19742,
+   "doc_mtime": "2026-11-12T22:19:42.865152",
+   "sh_mtime": "2026-11-13T08:43:13.481558"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗄️artifact-store-preparation/🦀️.rs",
+   "reason": "size",
+   "doc_size": 16526,
+   "sh_size": 16626,
+   "doc_mtime": "2026-11-12T22:22:20.034148",
+   "sh_mtime": "2026-11-07T09:05:35.574104"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.lock",
+   "reason": "size",
+   "doc_size": 364313,
+   "sh_size": 364321,
+   "doc_mtime": "2026-11-12T22:22:20.035775",
+   "sh_mtime": "2026-11-12T22:51:58.775451"
+  },
+  {
+   "path": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts",
+   "reason": "size",
+   "doc_size": 8469,
+   "sh_size": 8609,
+   "doc_mtime": "2026-10-29T11:59:14.476193",
+   "sh_mtime": "2026-11-13T08:43:51.015498"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🔒️sessions/🟦️.ts",
+   "reason": "size",
+   "doc_size": 8885,
+   "sh_size": 9331,
+   "doc_mtime": "2026-10-28T15:10:56.699110",
+   "sh_mtime": "2026-11-13T08:43:13.526842"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 24081,
+   "sh_size": 22111,
+   "doc_mtime": "2026-11-12T22:33:41.317904",
+   "sh_mtime": "2026-11-12T22:51:45.868873"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/Cargo.lock",
+   "reason": "size",
+   "doc_size": 223446,
+   "sh_size": 223454,
+   "doc_mtime": "2026-11-12T22:22:20.006124",
+   "sh_mtime": "2026-11-12T22:52:48.643182"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🏷️managed-workspaces/🟦️.ts",
+   "reason": "size",
+   "doc_size": 2629,
+   "sh_size": 3896,
+   "doc_mtime": "2026-11-05T09:52:15.393874",
+   "sh_mtime": "2026-11-13T04:07:42.575396"
+  },
+  {
+   "path": "nx.json",
+   "reason": "size",
+   "doc_size": 7840,
+   "sh_size": 7979,
+   "doc_mtime": "2026-11-10T03:14:41.749688",
+   "sh_mtime": "2026-11-13T08:43:49.162476"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+   "reason": "size",
+   "doc_size": 808,
+   "sh_size": 771,
+   "doc_mtime": "2026-11-12T22:22:20.049936",
+   "sh_mtime": "2026-10-31T18:50:31.007439"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/README.md",
+   "reason": "size",
+   "doc_size": 649041,
+   "sh_size": 649079,
+   "doc_mtime": "2026-11-12T22:19:43.484360",
+   "sh_mtime": "2026-11-13T06:44:12.275162"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1112-result-puzzle2d.md",
+   "reason": "size",
+   "doc_size": 6306,
+   "sh_size": 2748,
+   "doc_mtime": "2026-11-12T22:22:19.952358",
+   "sh_mtime": "2026-11-12T22:53:21.914285"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🚧️boundary/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 15725,
+   "sh_size": 19592,
+   "doc_mtime": "2026-11-11T03:37:00.831789",
+   "sh_mtime": "2026-11-13T06:29:15.779927"
+  },
+  {
+   "path": "♻️mit-bestand/🧺️demonstrator/README.md",
+   "reason": "size",
+   "doc_size": 19610,
+   "sh_size": 19598,
+   "doc_mtime": "2026-11-04T15:43:24.631241",
+   "sh_mtime": "2026-11-13T08:43:51.015474"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🥾️bootstrap/🟦️.ts",
+   "reason": "size",
+   "doc_size": 17691,
+   "sh_size": 17725,
+   "doc_mtime": "2026-11-11T03:37:00.821628",
+   "sh_mtime": "2026-11-13T00:28:47.300652"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/Cargo.lock",
+   "reason": "size",
+   "doc_size": 254555,
+   "sh_size": 254563,
+   "doc_mtime": "2026-11-12T22:22:20.003982",
+   "sh_mtime": "2026-11-12T22:52:48.644319"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.lock",
+   "reason": "size",
+   "doc_size": 343517,
+   "sh_size": 343525,
+   "doc_mtime": "2026-11-12T22:22:19.982606",
+   "sh_mtime": "2026-11-12T22:52:53.957037"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🧬️schema/🔣️.json",
+   "reason": "size",
+   "doc_size": 5367,
+   "sh_size": 5732,
+   "doc_mtime": "2026-11-11T03:37:00.831114",
+   "sh_mtime": "2026-11-13T06:16:50.342875"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📤️effect/🦀️.rs",
+   "reason": "size",
+   "doc_size": 1072,
+   "sh_size": 1833,
+   "doc_mtime": "2026-11-12T22:22:19.962769",
+   "sh_mtime": "2026-11-05T05:36:33.288285"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.lock",
+   "reason": "size",
+   "doc_size": 382911,
+   "sh_size": 382919,
+   "doc_mtime": "2026-11-12T22:22:20.016511",
+   "sh_mtime": "2026-11-12T22:52:45.205169"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts",
+   "reason": "size",
+   "doc_size": 17320,
+   "sh_size": 17356,
+   "doc_mtime": "2026-11-12T22:19:43.545631",
+   "sh_mtime": "2026-11-13T08:43:25.759833"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🥾️provision/🐚️.sh",
+   "reason": "size",
+   "doc_size": 40764,
+   "sh_size": 49927,
+   "doc_mtime": "2026-11-11T17:46:39.457491",
+   "sh_mtime": "2026-11-13T06:16:50.344008"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs",
+   "reason": "size",
+   "doc_size": 7057,
+   "sh_size": 6329,
+   "doc_mtime": "2026-11-12T22:22:19.963379",
+   "sh_mtime": "2026-11-12T22:53:03.526945"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 23353,
+   "sh_size": 21301,
+   "doc_mtime": "2026-11-12T22:33:28.568427",
+   "sh_mtime": "2026-11-12T22:51:45.867691"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json",
+   "reason": "size",
+   "doc_size": 17506,
+   "sh_size": 17645,
+   "doc_mtime": "2026-11-11T02:33:33.837538",
+   "sh_mtime": "2026-11-13T08:43:11.376073"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📈️standing/🧪️tests/🟦️.ts",
+   "reason": "size",
+   "doc_size": 30811,
+   "sh_size": 31542,
+   "doc_mtime": "2026-11-11T02:33:33.146935",
+   "sh_mtime": "2026-11-13T08:43:50.063524"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/📖️texts/🔣️.json",
+   "reason": "size",
+   "doc_size": 5217,
+   "sh_size": 5517,
+   "doc_mtime": "2026-10-28T15:10:56.995799",
+   "sh_mtime": "2026-11-13T08:43:14.430144"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/📚️example-and-brush-mesh/🦀️.rs",
+   "reason": "size",
+   "doc_size": 33440,
+   "sh_size": 33331,
+   "doc_mtime": "2026-11-12T22:22:20.027709",
+   "sh_mtime": "2026-11-12T22:52:45.851005"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🛰️plan/🟦️.ts",
+   "reason": "size",
+   "doc_size": 10784,
+   "sh_size": 11211,
+   "doc_mtime": "2026-11-11T02:33:33.879309",
+   "sh_mtime": "2026-11-13T08:43:11.430022"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+   "reason": "size",
+   "doc_size": 40412,
+   "sh_size": 40697,
+   "doc_mtime": "2026-11-12T22:19:42.438293",
+   "sh_mtime": "2026-11-13T08:43:13.527895"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/Cargo.lock",
+   "reason": "size",
+   "doc_size": 197303,
+   "sh_size": 197311,
+   "doc_mtime": "2026-11-12T22:22:19.999292",
+   "sh_mtime": "2026-11-12T22:52:47.027885"
+  },
+  {
+   "path": ".claude/settings.json",
+   "reason": "size",
+   "doc_size": 222,
+   "sh_size": 640,
+   "doc_mtime": "2026-10-22T09:32:58.943511",
+   "sh_mtime": "2026-11-13T05:12:20.578507"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/Cargo.lock",
+   "reason": "size",
+   "doc_size": 213110,
+   "sh_size": 213150,
+   "doc_mtime": "2026-11-12T22:22:19.999961",
+   "sh_mtime": "2026-11-13T08:42:25.070439"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🎭️sessions/🟦️.ts",
+   "reason": "size",
+   "doc_size": 7318,
+   "sh_size": 8331,
+   "doc_mtime": "2026-10-28T15:10:56.703515",
+   "sh_mtime": "2026-11-13T08:43:13.539883"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️workspaces/🐹️.go",
+   "reason": "size",
+   "doc_size": 11158,
+   "sh_size": 11190,
+   "doc_mtime": "2026-11-05T09:52:15.390938",
+   "sh_mtime": "2026-11-13T04:07:42.578056"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 45037,
+   "sh_size": 44637,
+   "doc_mtime": "2026-11-12T22:22:20.055734",
+   "sh_mtime": "2026-11-10T03:14:42.791072"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🖼️assets/🚏️bus-shelter/🖊️.dxf",
+   "reason": "size",
+   "doc_size": 9358,
+   "sh_size": 7950,
+   "doc_mtime": "2026-09-30T17:43:57.141068",
+   "sh_mtime": "2026-11-12T22:52:31.818799"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/📥️snapshot-import/🦀️.rs",
+   "reason": "size",
+   "doc_size": 41332,
+   "sh_size": 41293,
+   "doc_mtime": "2026-11-12T22:22:20.026991",
+   "sh_mtime": "2026-11-07T02:26:17.112693"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🎠️kernel/📥️events/🧪️tests/🦀️.rs",
+   "reason": "size",
+   "doc_size": 3610,
+   "sh_size": 1978,
+   "doc_mtime": "2026-11-07T02:21:32.847461",
+   "sh_mtime": "2026-11-13T08:47:56.190908"
+  },
+  {
+   "path": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml",
+   "reason": "content",
+   "doc_size": 3696,
+   "sh_size": 3696,
+   "doc_mtime": "2026-11-12T22:22:20.041948",
+   "sh_mtime": "2026-11-11T02:33:32.832898"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/🏷️managed-workspaces/🐹️.go",
+   "reason": "size",
+   "doc_size": 3869,
+   "sh_size": 7505,
+   "doc_mtime": "2026-11-05T09:52:15.393751",
+   "sh_mtime": "2026-11-13T04:07:42.574813"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/📒️journal/🟦️.ts",
+   "reason": "size",
+   "doc_size": 27047,
+   "sh_size": 45886,
+   "doc_mtime": "2026-11-11T03:37:00.818887",
+   "sh_mtime": "2026-11-13T06:48:09.486810"
+  },
+  {
+   "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+   "reason": "size",
+   "doc_size": 5302,
+   "sh_size": 5441,
+   "doc_mtime": "2026-11-11T02:33:33.048203",
+   "sh_mtime": "2026-11-13T08:43:14.616500"
+  },
+  {
+   "path": "🎓️teaching/Cargo.lock",
+   "reason": "size",
+   "doc_size": 59964,
+   "sh_size": 72149,
+   "doc_mtime": "2026-11-10T03:30:51.571613",
+   "sh_mtime": "2026-11-13T05:03:23.676149"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🏗️builder/📖️assignments/🟦️.ts",
+   "reason": "size",
+   "doc_size": 2519,
+   "sh_size": 2672,
+   "doc_mtime": "2026-10-31T18:50:08.271042",
+   "sh_mtime": "2026-11-13T08:47:56.169333"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🏃️run-job-stepping-and-finalize/🦀️.rs",
+   "reason": "size",
+   "doc_size": 12352,
+   "sh_size": 12154,
+   "doc_mtime": "2026-11-12T22:22:20.022190",
+   "sh_mtime": "2026-11-11T02:33:32.771689"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🏊️farm/🟦️.ts",
+   "reason": "size",
+   "doc_size": 5597,
+   "sh_size": 6452,
+   "doc_mtime": "2026-11-10T03:14:42.723888",
+   "sh_mtime": "2026-11-13T08:42:25.071383"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/🗂️runtime-registry/🐹️.go",
+   "reason": "size",
+   "doc_size": 10902,
+   "sh_size": 10923,
+   "doc_mtime": "2026-10-28T15:10:57.250875",
+   "sh_mtime": "2026-11-13T04:07:42.574536"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
+   "reason": "size",
+   "doc_size": 39116,
+   "sh_size": 38636,
+   "doc_mtime": "2026-11-12T22:22:20.023407",
+   "sh_mtime": "2026-11-07T02:26:17.106134"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   "reason": "size",
+   "doc_size": 25524,
+   "sh_size": 23954,
+   "doc_mtime": "2026-11-12T22:22:20.023678",
+   "sh_mtime": "2026-11-07T02:26:17.106820"
+  },
+  {
+   "path": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️auxiliary/🧬️schema/🔣️.json",
+   "reason": "content",
+   "doc_size": 2356,
+   "sh_size": 2356,
+   "doc_mtime": "2026-11-05T05:35:59.053600",
+   "sh_mtime": "2026-11-13T08:43:50.207409"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/Cargo.lock",
+   "reason": "size",
+   "doc_size": 223733,
+   "sh_size": 223741,
+   "doc_mtime": "2026-11-12T22:22:20.002553",
+   "sh_mtime": "2026-11-12T22:52:48.387375"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🧱️board-events-and-fasteners/🦀️.rs",
+   "reason": "size",
+   "doc_size": 50222,
+   "sh_size": 49707,
+   "doc_mtime": "2026-11-12T22:22:20.028080",
+   "sh_mtime": "2026-11-12T22:52:45.849918"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/↩️inverse/🦀️.rs",
+   "reason": "size",
+   "doc_size": 14225,
+   "sh_size": 14280,
+   "doc_mtime": "2026-11-12T22:22:20.025047",
+   "sh_mtime": "2026-11-12T22:52:45.846842"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️child-publication/🍃️leaves/🦀️.rs",
+   "reason": "size",
+   "doc_size": 22334,
+   "sh_size": 22294,
+   "doc_mtime": "2026-11-12T22:22:19.960438",
+   "sh_mtime": "2026-11-12T22:53:03.530166"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🧲️fill-capture/🦀️.rs",
+   "reason": "size",
+   "doc_size": 30640,
+   "sh_size": 30600,
+   "doc_mtime": "2026-11-12T22:22:20.023028",
+   "sh_mtime": "2026-11-11T02:33:32.772053"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1028-coordination.md",
+   "reason": "size",
+   "doc_size": 123494,
+   "sh_size": 123037,
+   "doc_mtime": "2026-11-12T22:22:19.940583",
+   "sh_mtime": "2026-11-12T22:53:21.895090"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🛑️cancel/🟦️.ts",
+   "reason": "size",
+   "doc_size": 27506,
+   "sh_size": 26438,
+   "doc_mtime": "2026-11-12T22:22:20.055352",
+   "sh_mtime": "2026-11-13T08:41:44.030081"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/💾️entries/🟨️.mjs",
+   "reason": "size",
+   "doc_size": 9131,
+   "sh_size": 9217,
+   "doc_mtime": "2026-11-12T22:19:43.534527",
+   "sh_mtime": "2026-11-13T08:42:25.071681"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🗂️registry/🔣️.json",
+   "reason": "size",
+   "doc_size": 10690,
+   "sh_size": 11202,
+   "doc_mtime": "2026-10-28T15:10:57.253066",
+   "sh_mtime": "2026-11-13T04:07:42.575036"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/Cargo.lock",
+   "reason": "size",
+   "doc_size": 308120,
+   "sh_size": 308128,
+   "doc_mtime": "2026-11-12T22:22:19.969579",
+   "sh_mtime": "2026-11-12T22:53:00.433690"
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1105b-tools/slots.wextra",
+   "reason": "size",
+   "doc_size": 1,
+   "sh_size": 2,
+   "doc_mtime": "2026-11-12T22:22:19.949814",
+   "sh_mtime": "2026-11-07T14:14:48.089484"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🟦️.ts",
+   "reason": "size",
+   "doc_size": 34248,
+   "sh_size": 34386,
+   "doc_mtime": "2026-11-05T09:52:15.336899",
+   "sh_mtime": "2026-11-13T08:43:13.524382"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/Cargo.lock",
+   "reason": "size",
+   "doc_size": 308143,
+   "sh_size": 308151,
+   "doc_mtime": "2026-11-12T22:22:19.975139",
+   "sh_mtime": "2026-11-12T22:53:00.355335"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts",
+   "reason": "size",
+   "doc_size": 2827,
+   "sh_size": 3258,
+   "doc_mtime": "2026-11-11T03:37:00.806424",
+   "sh_mtime": "2026-11-13T08:43:29.612701"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/Cargo.lock",
+   "reason": "size",
+   "doc_size": 365701,
+   "sh_size": 365709,
+   "doc_mtime": "2026-11-12T22:22:19.967552",
+   "sh_mtime": "2026-11-12T22:53:00.494152"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/README.md",
+   "reason": "size",
+   "doc_size": 24853,
+   "sh_size": 25759,
+   "doc_mtime": "2026-11-05T09:52:15.378489",
+   "sh_mtime": "2026-11-13T04:07:42.574484"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/Cargo.lock",
+   "reason": "size",
+   "doc_size": 223109,
+   "sh_size": 223117,
+   "doc_mtime": "2026-11-12T22:22:20.005718",
+   "sh_mtime": "2026-11-12T22:52:48.597418"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/Cargo.lock",
+   "reason": "size",
+   "doc_size": 209695,
+   "sh_size": 209703,
+   "doc_mtime": "2026-11-12T22:22:20.017860",
+   "sh_mtime": "2026-11-12T22:52:20.328049"
+  },
+  {
+   "path": "Cargo.lock",
+   "reason": "size",
+   "doc_size": 707994,
+   "sh_size": 708002,
+   "doc_mtime": "2026-11-12T22:22:19.954315",
+   "sh_mtime": "2026-11-12T22:51:37.595767"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.d.mts",
+   "reason": "size",
+   "doc_size": 4888,
+   "sh_size": 4513,
+   "doc_mtime": "2026-11-12T22:33:16.280913",
+   "sh_mtime": "2026-11-12T22:51:45.867586"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/Cargo.lock",
+   "reason": "size",
+   "doc_size": 205447,
+   "sh_size": 205455,
+   "doc_mtime": "2026-11-12T22:22:20.019541",
+   "sh_mtime": "2026-11-11T02:33:32.615401"
+  },
+  {
+   "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🥞️layered-home/🟦️.ts",
+   "reason": "size",
+   "doc_size": 12468,
+   "sh_size": 12844,
+   "doc_mtime": "2026-10-31T18:50:08.276960",
+   "sh_mtime": "2026-11-13T08:43:51.015855"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.lock",
+   "reason": "size",
+   "doc_size": 646514,
+   "sh_size": 646522,
+   "doc_mtime": "2026-11-12T22:22:19.993805",
+   "sh_mtime": "2026-11-12T22:52:52.297906"
+  },
+  {
+   "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪆️composed-source/🧵️assembly/🦀️.rs",
+   "reason": "size",
+   "doc_size": 21553,
+   "sh_size": 21254,
+   "doc_mtime": "2026-11-12T22:22:19.963911",
+   "sh_mtime": "2026-11-12T22:53:03.526801"
+  },
+  {
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🕰️graph-hooks/🟨️.d.mts",
+   "reason": "size",
+   "doc_size": 2009,
+   "sh_size": 2115,
+   "doc_mtime": "2026-11-10T03:14:42.746448",
+   "sh_mtime": "2026-11-13T08:43:26.432652"
+  },
+  {
+   "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🗂️schema-document-index.json",
+   "reason": "size",
+   "doc_size": 2138039,
+   "sh_size": 2138624,
+   "doc_mtime": "2026-11-12T22:19:43.454911",
+   "sh_mtime": "2026-11-13T06:44:12.263956"
+  }
+ ]
+}

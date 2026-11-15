@@ -1,0 +1,84 @@
+{
+  "at": "2026-11-15T04:13:17.782781+00:00",
+  "origin": "g1-m08",
+  "worktree": "/Users/ueli/Documents/semio",
+  "coordination": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES",
+  "own_folder": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08",
+  "next": "round: 18\n\nFor g1-m08: follow `ROUND.md` round 18 like every other macOS machine.\n",
+  "state": {
+    "origin": "g1-m08",
+    "round": 17,
+    "native_rc": 75,
+    "ready": false,
+    "failed": [
+      "workspace:setup"
+    ],
+    "at": "2026-11-15T03:52:11Z"
+  },
+  "processes": [
+    {
+      "pid": 81717,
+      "ppid": 6956,
+      "pgid": 81717,
+      "age": "19:49",
+      "rss_kib": 9776,
+      "args": "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -u .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-18-observer.py"
+    },
+    {
+      "pid": 82552,
+      "ppid": 81717,
+      "pgid": 81717,
+      "age": "18:06",
+      "rss_kib": 2112,
+      "args": "zsh /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-18-sampler.zsh /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-18-try-1-p12-samples.txt"
+    },
+    {
+      "pid": 82566,
+      "ppid": 81717,
+      "pgid": 82566,
+      "age": "18:05",
+      "rss_kib": 1184,
+      "args": "bash /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/native-bootstrap.sh /Users/ueli/native-bootstrap-round-18.log"
+    }
+  ],
+  "current_native_log": "/Users/ueli/native-bootstrap-round-18.log",
+  "current_native_last8": [
+    "Reading the project graph slice (1042 s): owners 79 of 609; running (name, kind, seconds, rows): @semio-tech/framework-plugin (language:cargo, 18, 0); waiting for memory headroom (1163 of 972 MB reserved).",
+    "Reading the project graph slice (1044 s): owners 79 of 609; running (name, kind, seconds, rows): @semio-tech/framework-plugin (language:cargo, 24, 0); waiting for memory headroom (1163 of 998 MB reserved).",
+    "Reading the project graph slice (1046 s): owners 80 of 609.",
+    "Reading the project graph slice (1048 s): owners 80 of 609; running (name, kind, seconds, rows): @semio-tech/framework-plugin-host (language:cargo, 3, 0); waiting for memory headroom (1163 of 107 MB reserved).",
+    "Reading the project graph slice (1050 s): owners 80 of 609; running (name, kind, seconds, rows): @semio-tech/framework-plugin-host (language:cargo, 3, 0); waiting for memory headroom (1163 of 107 MB reserved).",
+    "Reading the project graph slice (1052 s): owners 81 of 609.",
+    "Reading the project graph slice (1054 s): owners 85 of 609; running (name, kind, seconds, rows): @semio-tech/framework-plugin-host-engine-rs (language:rust, 0, 0).",
+    "Reading the project graph slice (1056 s): owners 92 of 609."
+  ],
+  "observer_exec_session": 78878,
+  "observer_script": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-18-observer.py",
+  "report_script": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-18-report.py",
+  "sampler_script": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-18-sampler.zsh",
+  "tools_setup_completed": {
+    "round": 16,
+    "exit_code": 0,
+    "wall_s": 1923.607,
+    "result": "round-16-tools-setup-result.json"
+  },
+  "last_complete_native": {
+    "round": 17,
+    "attempt": 1,
+    "native_rc": 75,
+    "reason": "graph-plan-too-heavy inference (during inference), 6910 MB versus6553 MB",
+    "peak_owned_rss_kib": 5056192
+  },
+  "current_round18_observation": "try1 started03:55:11Z; fleet delivered609of609; gen218 refresh; per-projectgrant3512MB; local140 (35perwave),10tooheavy; normalpressure1; no zero grant/EPERM4 observed so far",
+  "restrictions": [
+    "No build code changes; direct writes only own worker folder.",
+    "No mutating git, no sudo, no pkill/killall, never print tokens.",
+    "Kill only processes started by this worker agent. Do not interrupt a running try when current round says not to.",
+    "No duplicate graph command; existing observer autonomously handles samplers, guardrails, reports and at most12tries.",
+    "Do not rerun once-per-machine tools setup; it succeeded.",
+    "Read PROTOCOL, own next, ROUND before next step. Continue untilready0+marker+preflight/status or protocol six-hour wait stop."
+  ],
+  "continuation": "First inspect current processes, own artifacts and controls. Do not launch another controller or native while this one is alive. Exec session may not be transferable; use filesystem and read-only ps/logs. Existing observer writes per-try reports and state, then retries180sec as authorized. On higher round it lets current native finish if noninterrupt instruction found, then exits; handle next round afterward.",
+  "artifact_portability": "P12 sample filename colon issue was fixed only in own artifacts by preserving bytes under colon-free name. Own replica ok at03:41:32 and matchedcode97445096cc0a. No fleet or build repair.",
+  "other_history": "round12read-onlypause, round13two native75tries, no natives14/15/16; round16tools setup0. Reports in ownfolder."
+}

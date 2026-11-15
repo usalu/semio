@@ -1,0 +1,200 @@
+Reading the project graph slice (212 s): flush 1 of 1.
+Reading the project graph slice (214 s): flush 1 of 1.
+Reading the project graph slice (216 s): flush 1 of 1.
+Reading the project graph slice (218 s): owners 0 of 657; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 1, 0), @semio-tech/async-timer-rs (language:rust, 1, 0), @semio-tech/async-macros-rs (language:cargo, 0, 0).
+Reading the project graph slice (220 s): owners 0 of 657; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 1, 0), @semio-tech/async-timer-rs (language:rust, 1, 0), @semio-tech/async-macros-rs (language:cargo, 0, 0).
+Reading the project graph slice (222 s): owners 0 of 657; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 1, 0), @semio-tech/async-timer-rs (language:rust, 1, 0), @semio-tech/async-macros-rs (language:cargo, 0, 0).
+[repo] still working after 230 s; last phase started: door.script
+Reading the project graph slice (224 s): owners 0 of 657; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 6, 0), @semio-tech/async-timer-rs (language:rust, 5, 0), @semio-tech/async-macros-rs (language:cargo, 5, 0); waiting for memory headroom (1212 of 1236 MB reserved).
+Reading the project graph slice (226 s): owners 0 of 657; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 8, 0), @semio-tech/async-timer-rs (language:rust, 8, 0), @semio-tech/async-macros-rs (language:cargo, 7, 0).
+Reading the project graph slice (228 s): owners 0 of 657; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 11, 0), @semio-tech/async-timer-rs (language:rust, 11, 0), @semio-tech/async-macros-rs (language:cargo, 10, 0).
+Reading the project graph slice (230 s): owners 0 of 657; running (name, kind, seconds, rows): @semio-tech/energy-oracle-py (project, 11, 0), @semio-tech/async-timer-rs (language:rust, 11, 0), @semio-tech/async-macros-rs (language:cargo, 10, 0).
+Reading the project graph slice (232 s): owners 15 of 657.
+Reading the project graph slice (234 s): owners 24 of 657.
+Reading the project graph slice (236 s): owners 32 of 657; running (name, kind, seconds, rows): @semio-tech/font-anta-latin-regular-rs (language:cargo, 1, 0), @semio-tech/font-kelly-slab-latin-regular-rs (language:cargo, 1, 0), @semio-tech/dsl-syntax-rs (language:rust, 1, 0).
+Reading the project graph slice (238 s): owners 33 of 657.
+Reading the project graph slice (240 s): owners 44 of 657; running (name, kind, seconds, rows): @semio-tech/browser-actor-import-test (project, 3, 0), @semio-tech/dsl-derive-rs (language:cargo, 3, 0), @semio-tech/component-deployment-contract (project, 0, 0).
+Reading the project graph slice (242 s): owners 46 of 657.
+Reading the project graph slice (244 s): owners 47 of 657.
+Reading the project graph slice (246 s): owners 47 of 657.
+Reading the project graph slice (248 s): owners 47 of 657; running (name, kind, seconds, rows): @semio-tech/cargo-workspaces (language:typescript, 4, 0).
+Reading the project graph slice (250 s): owners 47 of 657; running (name, kind, seconds, rows): .
+Reading the project graph slice (252 s): owners 47 of 657; running (name, kind, seconds, rows): .
+[repo] still working after 260 s; last phase started: door.script
+Reading the project graph slice (254 s): owners 48 of 657.
+Reading the project graph slice (256 s): owners 48 of 657.
+Reading the project graph slice (258 s): owners 48 of 657.
+Reading the project graph slice (260 s): owners 48 of 657.
+Reading the project graph slice (262 s): owners 48 of 657.
+Reading the project graph slice (264 s): owners 48 of 657.
+Reading the project graph slice (266 s): owners 48 of 657.
+Reading the project graph slice (268 s): owners 48 of 657.
+Reading the project graph slice (270 s): owners 48 of 657.
+Reading the project graph slice (272 s): owners 48 of 657.
+Reading the project graph slice (274 s): owners 48 of 657.
+Reading the project graph slice (276 s): owners 48 of 657.
+Reading the project graph slice (278 s): owners 48 of 657.
+Reading the project graph slice (280 s): owners 48 of 657.
+Reading the project graph slice (282 s): owners 48 of 657.
+[repo] still working after 290 s; last phase started: door.script
+Reading the project graph slice (284 s): owners 48 of 657.
+Reading the project graph slice (286 s): owners 48 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 0, 0).
+Reading the project graph slice (288 s): owners 48 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 0, 0).
+Reading the project graph slice (290 s): owners 48 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 0, 0).
+Reading the project graph slice (292 s): owners 48 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 5, 0); waiting for memory headroom (527 of 1024 MB reserved).
+Reading the project graph slice (294 s): owners 48 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 8, 0), @semio-tech/framework-time-travel-rs (language:cargo, 0, 0).
+Reading the project graph slice (296 s): owners 48 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 11, 0), @semio-tech/framework-time-travel-rs (language:cargo, 2, 0), @semio-tech/framework-tool-run-tick-wire-rs (language:rust, 2, 0); waiting for memory headroom (1983 of 2377 MB reserved).
+Reading the project graph slice (298 s): owners 49 of 657.
+Reading the project graph slice (300 s): owners 49 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 14, 0), @semio-tech/framework-time-travel-rs (language:cargo, 5, 0), @semio-tech/framework-tool-run-rs (language:cargo, 5, 0).
+Reading the project graph slice (302 s): owners 49 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 16, 0), @semio-tech/framework-time-travel-rs (language:cargo, 7, 0), @semio-tech/framework-tool-run-rs (language:cargo, 7, 0); waiting for memory headroom (2466 of 2679 MB reserved).
+Reading the project graph slice (304 s): owners 49 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 16, 0), @semio-tech/framework-time-travel-rs (language:cargo, 7, 0), @semio-tech/framework-tool-run-rs (language:cargo, 7, 0); waiting for memory headroom (2466 of 2679 MB reserved).
+Reading the project graph slice (306 s): owners 51 of 657.
+Reading the project graph slice (308 s): owners 51 of 657.
+Reading the project graph slice (310 s): owners 51 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 25, 0), @semio-tech/framework-tool-run-rs (language:cargo, 16, 0), @semio-tech/framework-async-rs (language:cargo, 8, 0).
+Reading the project graph slice (312 s): owners 51 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 25, 0), @semio-tech/framework-tool-run-rs (language:cargo, 16, 0), @semio-tech/framework-async-rs (language:cargo, 8, 0).
+[repo] still working after 320 s; last phase started: door.script
+Reading the project graph slice (314 s): owners 51 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 25, 0), @semio-tech/framework-tool-run-rs (language:cargo, 16, 0), @semio-tech/framework-async-rs (language:cargo, 8, 0).
+Reading the project graph slice (316 s): owners 51 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 30, 0), @semio-tech/framework-tool-run-rs (language:cargo, 21, 0), @semio-tech/framework-async-rs (language:cargo, 14, 0).
+Reading the project graph slice (318 s): owners 51 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 30, 0), @semio-tech/framework-tool-run-rs (language:cargo, 21, 0), @semio-tech/framework-async-rs (language:cargo, 14, 0).
+Reading the project graph slice (320 s): owners 51 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 34, 0), @semio-tech/framework-tool-run-rs (language:cargo, 25, 0), @semio-tech/framework-async-rs (language:cargo, 17, 0).
+Reading the project graph slice (322 s): owners 51 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 35, 0), @semio-tech/framework-tool-run-rs (language:cargo, 26, 0), @semio-tech/framework-async-rs (language:cargo, 19, 0).
+Reading the project graph slice (324 s): owners 54 of 657.
+Reading the project graph slice (326 s): owners 54 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 39, 0), @semio-tech/framework-tool-run-rs (language:cargo, 30, 0), @semio-tech/framework-async-rs (language:cargo, 23, 0); waiting for memory headroom (2677 of 3153 MB reserved).
+Reading the project graph slice (328 s): owners 56 of 657.
+Reading the project graph slice (330 s): owners 63 of 657.
+Reading the project graph slice (332 s): owners 66 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 45, 0), @semio-tech/framework-pack-rs (language:cargo, 7, 0), @semio-tech/framework-pack-json-rs (language:cargo, 3, 0).
+Reading the project graph slice (334 s): owners 66 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 45, 0), @semio-tech/framework-pack-rs (language:cargo, 7, 0), @semio-tech/framework-pack-json-rs (language:cargo, 3, 0).
+Reading the project graph slice (336 s): owners 67 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 50, 0), @semio-tech/framework-pack-rs (language:cargo, 12, 0), @semio-tech/framework-pack-json-rs (language:cargo, 9, 0).
+Reading the project graph slice (338 s): owners 68 of 657.
+Reading the project graph slice (340 s): owners 72 of 657.
+Reading the project graph slice (342 s): owners 74 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 57, 0), @semio-tech/framework-pack-rs (language:cargo, 19, 0), @semio-tech/framework-actor-rs (language:cargo, 11, 0).
+[repo] still working after 350 s; last phase started: door.script
+Reading the project graph slice (344 s): owners 75 of 657.
+Reading the project graph slice (346 s): owners 75 of 657.
+Reading the project graph slice (348 s): owners 77 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 63, 0), @semio-tech/framework-process (project, 12, 0), @semio-tech/geometry-primitives-rs (language:rust, 6, 0).
+Reading the project graph slice (350 s): owners 77 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 63, 0), @semio-tech/framework-process (project, 12, 0), @semio-tech/geometry-primitives-rs (language:rust, 6, 0).
+Reading the project graph slice (352 s): owners 78 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 67, 0), @semio-tech/framework-process (project, 16, 0), @semio-tech/geometry-primitives-rs (language:rust, 10, 0).
+Reading the project graph slice (354 s): owners 78 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 68, 0), @semio-tech/framework-process (project, 18, 0), @semio-tech/geometry-primitives-rs (language:rust, 12, 0).
+Reading the project graph slice (356 s): owners 79 of 657.
+Reading the project graph slice (358 s): owners 79 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 72, 0), @semio-tech/framework-process (project, 22, 0), @semio-tech/geometry-primitives-rs (language:rust, 16, 0).
+Reading the project graph slice (360 s): owners 80 of 657.
+Reading the project graph slice (362 s): owners 81 of 657.
+Reading the project graph slice (364 s): owners 81 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 78, 0), @semio-tech/framework-process (project, 28, 0), @semio-tech/geometry-primitives-rs (language:rust, 21, 0).
+Reading the project graph slice (366 s): owners 82 of 657.
+Reading the project graph slice (368 s): owners 82 of 657.
+Reading the project graph slice (370 s): owners 87 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 83, 0), @semio-tech/framework-process (project, 33, 0), @semio-tech/geometry-bulge-rs (language:rust, 26, 0).
+Reading the project graph slice (372 s): owners 90 of 657.
+[repo] still working after 380 s; last phase started: door.script
+Reading the project graph slice (374 s): owners 91 of 657.
+Reading the project graph slice (376 s): owners 92 of 657.
+Reading the project graph slice (378 s): owners 93 of 657; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 93, 32410), @semio-tech/framework-process (project, 42, 0), @semio-tech/framework-replication-rs (language:cargo, 30, 0).
+Reading the project graph slice (380 s): owners 94 of 657.
+Reading the project graph slice (382 s): owners 94 of 657.
+Reading the project graph slice (384 s): owners 96 of 657.
+Reading the project graph slice (386 s): owners 97 of 657.
+Reading the project graph slice (388 s): owners 98 of 657.
+Reading the project graph slice (390 s): owners 98 of 657; running (name, kind, seconds, rows): @semio-tech/framework-replication-rs (language:cargo, 42, 0).
+Reading the project graph slice (392 s): owners 98 of 657; running (name, kind, seconds, rows): @semio-tech/framework-replication-rs (language:cargo, 42, 0).
+Reading the project graph slice (394 s): owners 98 of 657; running (name, kind, seconds, rows): @semio-tech/framework-replication-rs (language:cargo, 44, 0), @semio-tech/framework-dsl-record-rs (language:cargo, 0, 0).
+Reading the project graph slice (397 s): owners 99 of 657; running (name, kind, seconds, rows): @semio-tech/framework-replication-rs (language:cargo, 47, 0), @semio-tech/framework-dsl-record-rs (language:cargo, 2, 0), @semio-tech/framework-surface-terrain-rs (language:rust, 2, 0).
+Reading the project graph slice (399 s): owners 103 of 657; running (name, kind, seconds, rows): @semio-tech/framework-surface-rs (language:cargo, 3, 0), @semio-tech/framework-surface-tiled-map-rs (language:rust, 0, 0).
+Reading the project graph slice (401 s): owners 103 of 657; running (name, kind, seconds, rows): @semio-tech/framework-surface-rs (language:cargo, 4, 0), @semio-tech/framework-surface-tiled-map-rs (language:rust, 1, 0), @semio-tech/framework-surface-tiled-map-model-rs (language:rust, 1, 0).
+Reading the project graph slice (403 s): owners 108 of 657.
+[repo] still working after 410 s; last phase started: door.script
+Reading the project graph slice (405 s): owners 110 of 657.
+Reading the project graph slice (407 s): owners 111 of 657; running (name, kind, seconds, rows): @semio-tech/framework-io-base64-rs (language:cargo, 3, 0), @semio-tech/framework-io-schema-rs (language:cargo, 0, 0).
+Reading the project graph slice (409 s): owners 111 of 657; running (name, kind, seconds, rows): @semio-tech/framework-io-base64-rs (language:cargo, 3, 0), @semio-tech/framework-io-schema-rs (language:cargo, 0, 0).
+Reading the project graph slice (411 s): owners 113 of 657; running (name, kind, seconds, rows): @semio-tech/framework-io-schema-rs (language:cargo, 3, 0), @semio-tech/framework-sqlite-snapshot-rs (language:cargo, 1, 0), @semio-tech/manifest-media-rs (language:rust, 1, 0).
+Reading the project graph slice (413 s): owners 118 of 657.
+Reading the project graph slice (415 s): owners 123 of 657.
+Reading the project graph slice (417 s): owners 124 of 657.
+Reading the project graph slice (419 s): owners 130 of 657.
+Reading the project graph slice (421 s): owners 132 of 657; running (name, kind, seconds, rows): @semio-tech/framework-schema (language:cargo, 3, 0), @semio-tech/framework-job-worker-authority-rs (language:rust, 2, 0), @semio-tech/framework-job-rs (language:cargo, 1, 0).
+Reading the project graph slice (423 s): owners 134 of 657.
+Reading the project graph slice (425 s): owners 139 of 657; running (name, kind, seconds, rows): @semio-tech/framework-schema (language:cargo, 7, 0), @semio-tech/framework-job-rs (language:cargo, 5, 0), @semio-tech/job-receiving-rs (language:rust, 1, 0).
+Reading the project graph slice (427 s): owners 140 of 657; running (name, kind, seconds, rows): @semio-tech/framework-job-rs (language:cargo, 7, 0), @semio-tech/job-receiving-rs (language:rust, 3, 0), @semio-tech/framework-job-replacement-rs (language:rust, 3, 0).
+Reading the project graph slice (429 s): owners 141 of 657.
+Reading the project graph slice (431 s): owners 141 of 657.
+Reading the project graph slice (433 s): owners 143 of 657.
+[repo] still working after 440 s; last phase started: door.script
+Reading the project graph slice (435 s): owners 144 of 657.
+Reading the project graph slice (437 s): owners 145 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os (project, 13, 0), @semio-tech/framework-os-kernel (language:cargo, 4, 0), @semio-tech/os-infinite-world-model-rs (language:rust, 3, 0).
+Reading the project graph slice (439 s): owners 146 of 657.
+Reading the project graph slice (441 s): owners 154 of 657.
+Reading the project graph slice (443 s): owners 157 of 657.
+Reading the project graph slice (445 s): owners 158 of 657.
+Reading the project graph slice (447 s): owners 163 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os (project, 23, 0), @semio-tech/framework-os-kernel (language:cargo, 14, 0), @semio-tech/framework-os-mcp-inference-hub-rs (language:rust, 3, 0).
+Reading the project graph slice (449 s): owners 168 of 657.
+Reading the project graph slice (451 s): owners 169 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os (project, 27, 0), @semio-tech/framework-os-kernel (language:cargo, 18, 0), @semio-tech/framework-os-mcp (project, 4, 0).
+Reading the project graph slice (453 s): owners 169 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os (project, 28, 0), @semio-tech/framework-os-kernel (language:cargo, 19, 0), @semio-tech/framework-os-mcp (project, 5, 0).
+Reading the project graph slice (455 s): owners 170 of 657.
+Reading the project graph slice (457 s): owners 170 of 657.
+Reading the project graph slice (459 s): owners 171 of 657.
+Reading the project graph slice (461 s): owners 171 of 657.
+Reading the project graph slice (463 s): owners 177 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 30, 0), @semio-tech/framework-os-mcp-rs (language:cargo, 12, 0), @semio-tech/framework-os-mcp-capabilities-rs (language:rust, 1, 0).
+[repo] still working after 470 s; last phase started: door.script
+Reading the project graph slice (465 s): owners 177 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 30, 0), @semio-tech/framework-os-mcp-rs (language:cargo, 12, 0), @semio-tech/framework-os-mcp-capabilities-rs (language:rust, 1, 0).
+Reading the project graph slice (467 s): owners 180 of 657.
+Reading the project graph slice (469 s): owners 184 of 657.
+Reading the project graph slice (471 s): owners 190 of 657.
+Reading the project graph slice (473 s): owners 190 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 39, 0), @semio-tech/framework-os-mcp-rs (language:cargo, 21, 0), @semio-tech/os-directory-rs (language:cargo, 1, 0).
+Reading the project graph slice (475 s): owners 192 of 657.
+Reading the project graph slice (477 s): owners 192 of 657.
+Reading the project graph slice (479 s): owners 195 of 657.
+Reading the project graph slice (481 s): owners 197 of 657.
+Reading the project graph slice (483 s): owners 197 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 50, 0), @semio-tech/os-directory-schema-rs (language:cargo, 2, 0), @semio-tech/os-spr-cli-rs (language:rust, 2, 0); waiting for memory headroom (2048 of 2294 MB reserved).
+Reading the project graph slice (485 s): owners 199 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 51, 0), @semio-tech/os-command-rs (language:cargo, 0, 0).
+Reading the project graph slice (487 s): owners 200 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 54, 0), @semio-tech/os-history-codec-rs (language:cargo, 2, 0), @semio-tech/os-history-rs (language:cargo, 0, 0).
+Reading the project graph slice (489 s): owners 200 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 55, 0), @semio-tech/os-history-codec-rs (language:cargo, 3, 0), @semio-tech/os-history-rs (language:cargo, 1, 0); waiting for memory headroom (2894 of 3146 MB reserved).
+Reading the project graph slice (491 s): owners 201 of 657.
+Reading the project graph slice (493 s): owners 205 of 657.
+[repo] still working after 500 s; last phase started: door.script
+Reading the project graph slice (495 s): owners 206 of 657.
+Reading the project graph slice (497 s): owners 206 of 657.
+Reading the project graph slice (499 s): owners 207 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 65, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 2, 0), @semio-tech/framework-os-node-graph-rs (language:cargo, 0, 0).
+Reading the project graph slice (501 s): owners 207 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 65, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 2, 0), @semio-tech/framework-os-node-graph-rs (language:cargo, 0, 0).
+Reading the project graph slice (503 s): owners 208 of 657.
+Reading the project graph slice (505 s): owners 208 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 72, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 9, 0), @semio-tech/framework-plugin-mounted-owner-rs (language:cargo, 0, 0).
+Reading the project graph slice (507 s): owners 208 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 74, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 12, 0), @semio-tech/framework-plugin-mounted-owner-rs (language:cargo, 2, 0).
+Reading the project graph slice (509 s): owners 208 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 76, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 14, 0), @semio-tech/framework-plugin-mounted-owner-rs (language:cargo, 4, 0); waiting for memory headroom (3826 of 4078 MB reserved).
+Reading the project graph slice (511 s): owners 209 of 657.
+Reading the project graph slice (513 s): owners 209 of 657.
+Reading the project graph slice (515 s): owners 210 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 81, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 19, 0), @semio-tech/framework-plugin-ownership (language:cargo, 7, 0); waiting for memory headroom (2806 of 3383 MB reserved).
+Reading the project graph slice (517 s): owners 211 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 82, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 20, 0), @semio-tech/framework-plugin (language:cargo, 1, 0).
+Reading the project graph slice (519 s): owners 212 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 86, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 24, 0), @semio-tech/framework-plugin (language:cargo, 5, 0); waiting for memory headroom (2740 of 3234 MB reserved).
+Reading the project graph slice (521 s): owners 212 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 86, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 24, 0), @semio-tech/framework-plugin (language:cargo, 5, 0); waiting for memory headroom (2740 of 3234 MB reserved).
+Reading the project graph slice (523 s): owners 212 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 90, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 27, 0), @semio-tech/framework-plugin (language:cargo, 8, 0).
+[repo] still working after 530 s; last phase started: door.script
+Reading the project graph slice (525 s): owners 212 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 92, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 30, 0), @semio-tech/framework-plugin (language:cargo, 11, 0).
+Reading the project graph slice (527 s): owners 213 of 657.
+Reading the project graph slice (529 s): owners 213 of 657.
+Reading the project graph slice (531 s): owners 217 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 97, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 35, 0), @semio-tech/framework-plugin (language:cargo, 16, 0).
+Reading the project graph slice (533 s): owners 217 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 97, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 35, 0), @semio-tech/framework-plugin (language:cargo, 16, 0).
+Reading the project graph slice (535 s): owners 220 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 102, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 39, 0), @semio-tech/framework-plugin (language:cargo, 20, 0).
+Reading the project graph slice (537 s): owners 222 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 104, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 41, 0), @semio-tech/framework-plugin (language:cargo, 22, 0).
+Reading the project graph slice (539 s): owners 222 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 106, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 44, 0), @semio-tech/framework-plugin (language:cargo, 25, 0).
+Reading the project graph slice (541 s): owners 222 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 107, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 45, 0), @semio-tech/framework-plugin (language:cargo, 26, 0).
+Reading the project graph slice (543 s): owners 222 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 107, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 45, 0), @semio-tech/framework-plugin (language:cargo, 26, 0).
+Reading the project graph slice (545 s): owners 223 of 657.
+Reading the project graph slice (547 s): owners 224 of 657.
+Reading the project graph slice (549 s): owners 224 of 657.
+Reading the project graph slice (551 s): owners 224 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 117, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 55, 0), @semio-tech/framework-plugin (language:cargo, 36, 0); waiting for memory headroom (4797 of 5207 MB reserved).
+Reading the project graph slice (553 s): owners 225 of 657.
+[repo] still working after 560 s; last phase started: door.script
+Reading the project graph slice (555 s): owners 227 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 121, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 59, 0), @semio-tech/framework-plugin (language:cargo, 40, 0).
+Reading the project graph slice (557 s): owners 228 of 657.
+Reading the project graph slice (559 s): owners 231 of 657.
+Reading the project graph slice (561 s): owners 231 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 128, 0), @semio-tech/framework-plugin (language:cargo, 47, 0); waiting for memory headroom (960 of 1635 MB reserved).
+Reading the project graph slice (563 s): owners 232 of 657.
+Reading the project graph slice (565 s): owners 232 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 131, 0), @semio-tech/framework-plugin (language:cargo, 50, 0), @semio-tech/framework-os-dev (project, 0, 0).
+Reading the project graph slice (567 s): owners 233 of 657.
+Reading the project graph slice (569 s): owners 236 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 136, 0), @semio-tech/framework-plugin (language:cargo, 55, 0), @semio-tech/framework-os-dev (project, 5, 0).
+Reading the project graph slice (571 s): owners 237 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 138, 0), @semio-tech/framework-plugin (language:cargo, 57, 0), @semio-tech/framework-os-dev (project, 7, 0).
+Reading the project graph slice (573 s): owners 237 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 138, 0), @semio-tech/framework-plugin (language:cargo, 57, 0), @semio-tech/framework-os-dev (project, 7, 0).
+Reading the project graph slice (575 s): owners 237 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 138, 0), @semio-tech/framework-plugin (language:cargo, 57, 0), @semio-tech/framework-os-dev (project, 7, 0).
+Reading the project graph slice (577 s): owners 237 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 138, 0), @semio-tech/framework-plugin (language:cargo, 57, 0), @semio-tech/framework-os-dev (project, 7, 0).
+Reading the project graph slice (579 s): owners 237 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 138, 0), @semio-tech/framework-plugin (language:cargo, 57, 0), @semio-tech/framework-os-dev (project, 7, 0).
+Reading the project graph slice (581 s): owners 237 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 138, 0), @semio-tech/framework-plugin (language:cargo, 57, 0), @semio-tech/framework-os-dev (project, 7, 0).
+The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 6910 MB, more than the 6553 MB this machine gives a plan. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine.
+end 2026-11-15T03:52:02Z
+native_rc=75

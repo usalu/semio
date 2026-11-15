@@ -1,4 +1,4 @@
-/** 🧱️ The posed triangle soup of one evaluated instant: the volume solids of the asset at the scale (`maxDenominator`), tessellated by the neutral kernel at a chord tolerance of the paper, carried by the evaluated bone frames (rigid per bone, uniformly blended for weighted solids exactly as the kernel skins them), plus the glyph solids of the analytic view.
+/** 🧱️ The posed triangle soup of one evaluated instant: the solids of the list that the view's mode draws from (`body` for the tone views, `thermal`, `structure`) in the authored volume of the scale, tessellated by the neutral kernel at a chord tolerance of the paper, carried by the evaluated bone frames (rigid per bone, uniformly blended for weighted solids exactly as the kernel skins them), plus the glyph solids of the analytic view.
  *
  * Nothing about posing is solved here: the bone frames come from `evaluate` (placements as in `modelOf`, see ../../../🧊️volume/🧷️frames), the node hierarchy from `skeletonOf`, the geometry from the kernel `tessellateSolid` (the same tessellator the model, GLB and FBX use), the glyphs from `glyphOf`. The soup is in the neutral frame (right-handed, +Y up, +Z ahead, +X the asset's left, metres) with counter-clockwise outward triangles.
  * The rest geometry of an asset at a scale is tessellated once and cached, so the frames of a clip only pay for posing.
@@ -6,12 +6,14 @@
  * @see ../../../🧊️volume/🟦️.ts — `modelOf`, the same pipeline as a model document
  * @see ../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🔺️tessellation/🟦️.ts — `tessellateSolid`
  */
-import type { Asset, ShapeRole, Slug, Volume, VolumeSolid } from "../../../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredVolume, ShapeRole, Slug } from "../../../../🧬️schema/🟦️.ts";
 import { invert4, multiply4, restWorldMatrices, tessellateSolid, transformPoint, type M4, type Node, type Quality } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import { type FrameData, type Slot, glyphOf } from "../../../🧊️volume/🧷️frames/🟦️.ts";
+import { paperSizing } from "../../../🧊️volume/🪧️glyphs/🟦️.ts";
 import { type Surface, surfacesOf } from "../../../🧊️volume/🎨️looks/🟦️.ts";
 import { skeletonOf } from "../../../🧊️volume/🦴️skeleton/🟦️.ts";
-import { shownSolids, solidOf } from "../../../🧊️volume/🧊️solids/🟦️.ts";
+import { type ListSolid, authoredAt, listOf, solidOf } from "../../../🧊️volume/🧊️solids/🟦️.ts";
+import type { Mode } from "../../../🔗️contracts/🟦️.ts";
 
 /** 🧩️ One drawn body: a volume solid or a glyph solid, its triangle range in the soup and what the views paint it by. */
 export type Part = {
@@ -23,7 +25,7 @@ export type Part = {
   readonly regions: readonly Slug[];
   readonly surface: Surface | null;
   readonly material: Slug;
-  readonly solid: VolumeSolid | null;
+  readonly solid: ListSolid | null;
   readonly first: number;
   readonly count: number;
 };
@@ -37,31 +39,31 @@ export const CHORD_PAPER_MM = 0.04;
 /** 🐙 The tessellation quality at a scale denominator: a chord deviation of {@link CHORD_PAPER_MM} paper millimetres (so `0.04 · denominator / 1000` metres, between 0.5 mm and 50 mm) and 12 to 64 segments per circle; deterministic and the same for every frame of a drawing. */
 export const qualityAt = (denominator: number): Quality => ({ chordM: Math.min(0.05, Math.max(0.0005, (CHORD_PAPER_MM * denominator) / 1000)), minSegments: 12, maxSegments: 64 });
 
-type Rest = { readonly solid: VolumeSolid; readonly surface: Surface; readonly positions: Float64Array; readonly indices: Uint32Array; readonly joints: readonly { readonly bone: Slug; readonly weight: number }[] };
+type Rest = { readonly solid: ListSolid; readonly surface: Surface; readonly positions: Float64Array; readonly indices: Uint32Array; readonly joints: readonly { readonly bone: Slug; readonly weight: number }[] };
 type Cache = { readonly solids: readonly Rest[]; readonly surfaces: readonly Surface[]; readonly world: Map<Slug, M4>; readonly inverse: Map<Slug, M4>; readonly nodes: readonly Node[] };
 
-const RESTS = new WeakMap<Volume, Map<number, Cache>>();
+const RESTS = new WeakMap<AuthoredVolume, Map<Mode, Cache>>();
 const GLYPHS = new Map<string, { readonly positions: Float64Array; readonly indices: Uint32Array }>();
 const GLYPH_CACHE_LIMIT = 1024;
 
 const IDENTITY: M4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 
-function jointsOf(solid: VolumeSolid): readonly { readonly bone: Slug; readonly weight: number }[] {
+function jointsOf(solid: ListSolid): readonly { readonly bone: Slug; readonly weight: number }[] {
   const live = (solid.weights ?? []).filter((w) => w.weight > 0).slice(0, 4);
   const total = live.reduce((sum, w) => sum + w.weight, 0);
   return live.map((w) => ({ bone: w.bone, weight: w.weight / total }));
 }
 
-/** 🦋 The rest tessellation of an asset's volume at a denominator, cached per volume. */
-function restOf(asset: Asset, denominator: number): Cache {
-  const volume = asset.volume!;
+/** 🦋 The rest tessellation of one list of an asset's authored volume at a denominator, cached per volume and mode. Throws `ModelRequestError` for a scale that is not authored. */
+function restOf(asset: Asset, denominator: number, mode: Mode): Cache {
+  const volume = authoredAt(asset.volumes, denominator, asset.id);
   const byScale = RESTS.get(volume) ?? RESTS.set(volume, new Map()).get(volume)!;
-  const known = byScale.get(denominator);
+  const known = byScale.get(mode);
   if (known !== undefined) return known;
   const nodes = skeletonOf(asset);
   const world = restWorldMatrices(nodes);
   const inverse = new Map([...world].map(([id, m]) => [id, invert4(m)]));
-  const shown = shownSolids(volume, denominator);
+  const shown = listOf(volume, mode);
   const { surfaces, of } = surfacesOf(shown);
   const quality = qualityAt(denominator);
   const solids = shown.map((solid): Rest => {
@@ -70,21 +72,21 @@ function restOf(asset: Asset, denominator: number): Cache {
     return { solid, surface: of.get(solid.id)!, positions: Float64Array.from(geometry.positions), indices: Uint32Array.from(geometry.indices), joints };
   });
   const made: Cache = { solids, surfaces, world, inverse, nodes };
-  byScale.set(denominator, made);
+  byScale.set(mode, made);
   return made;
 }
 
-/** 🐝 The surfaces of the solids shown at a denominator, in order of first use (the base surfaces of the looks). */
-export const surfacesAt = (asset: Asset, denominator: number): readonly Surface[] => restOf(asset, denominator).surfaces;
+/** 🐝 The surfaces of the list of a mode at a denominator, in order of first use (the base surfaces of the looks). */
+export const surfacesAt = (asset: Asset, denominator: number, mode: Mode = "body"): readonly Surface[] => restOf(asset, denominator, mode).surfaces;
 
-/** 🧊️ The solids shown at a denominator. */
-export const solidsAt = (asset: Asset, denominator: number): readonly VolumeSolid[] => restOf(asset, denominator).solids.map((r) => r.solid);
+/** 🧊️ The solids of the list of a mode at a denominator. */
+export const solidsAt = (asset: Asset, denominator: number, mode: Mode = "body"): readonly ListSolid[] => restOf(asset, denominator, mode).solids.map((r) => r.solid);
 
 const GLYPH_HIDDEN = 1e-4;
 
-/** 🦉 Poses the volume of an asset by the bone placements of one frame (and the glyph slots of that frame) into one soup. `asset` must have a volume; `denominator` filters the solids and sets the tessellation; `mm` is the metres per paper millimetre of the scale. */
-export function poseSoup(asset: Asset, frame: FrameData, slots: ReadonlyMap<Slug, Slot>, denominator: number): Soup {
-  const cache = restOf(asset, denominator);
+/** 🦉 Poses the volume of an asset by the bone placements of one frame (and the glyph slots of that frame) into one soup. `denominator` names the authored scale whose list of `mode` is drawn and sets the tessellation; `mm` is the metres per paper millimetre of the scale. */
+export function poseSoup(asset: Asset, frame: FrameData, slots: ReadonlyMap<Slug, Slot>, denominator: number, mode: Mode = "body"): Soup {
+  const cache = restOf(asset, denominator, mode);
   const posed: Node[] = cache.nodes.map((node) => {
     const local = frame.locals[node.id]!;
     return { ...node, translation: [...local.translation], rotation: [...local.rotation] };
@@ -120,7 +122,7 @@ export function poseSoup(asset: Asset, frame: FrameData, slots: ReadonlyMap<Slug
   }
   const quality = qualityAt(denominator);
   for (const [root, slot] of slots) {
-    const made = glyphOf(root, slot, mm, frame.glyphs);
+    const made = glyphOf(root, slot, paperSizing(mm), frame.glyphs);
     const rootNode = made.nodes.find((n) => n.id === root)!;
     if (rootNode.scale[0]! < GLYPH_HIDDEN) continue;
     const glyphWorld = restWorldMatrices(made.nodes);

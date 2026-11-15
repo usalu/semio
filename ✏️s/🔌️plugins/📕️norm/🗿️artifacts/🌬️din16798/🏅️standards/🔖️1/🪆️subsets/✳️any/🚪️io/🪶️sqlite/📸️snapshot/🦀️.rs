@@ -1,7 +1,7 @@
 //! 🌬️ Handwritten complete building, comfort-zone and ventilation-system snapshot entities.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
-use semio_s_artifact_norm_din16798_model::{ZoneDocument, VentSystemDocument};
+use crate::Din16798Snapshot;
+use crate::{ZoneDocument, VentSystemDocument};
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};

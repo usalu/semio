@@ -1,0 +1,1637 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "foot-front",
+     "kind": "box",
+     "bone": "base",
+     "material": "rubber-foot",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.022,
+      0.0075,
+      0.022
+     ],
+     "transform": {
+      "translation": [
+       0.096,
+       0.00375,
+       -0.101
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.202
+      ]
+     }
+    },
+    {
+     "id": "foot-rear",
+     "kind": "box",
+     "bone": "base",
+     "material": "rubber-foot",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.022,
+      0.0075,
+      0.022
+     ],
+     "transform": {
+      "translation": [
+       -0.077,
+       0.00375,
+       -0.101
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.202
+      ]
+     }
+    },
+    {
+     "id": "base-plate",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "stand-plastic",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.113,
+       -0.096
+      ],
+      [
+       0.11611,
+       -0.09559
+      ],
+      [
+       0.119,
+       -0.09439
+      ],
+      [
+       0.12149,
+       -0.09249
+      ],
+      [
+       0.12339,
+       -0.09
+      ],
+      [
+       0.12459,
+       -0.08711
+      ],
+      [
+       0.125,
+       -0.084
+      ],
+      [
+       0.125,
+       0.102
+      ],
+      [
+       0.12459,
+       0.10511
+      ],
+      [
+       0.12339,
+       0.108
+      ],
+      [
+       0.12149,
+       0.11049
+      ],
+      [
+       0.119,
+       0.11239
+      ],
+      [
+       0.11611,
+       0.11359
+      ],
+      [
+       0.113,
+       0.114
+      ],
+      [
+       -0.113,
+       0.114
+      ],
+      [
+       -0.11611,
+       0.11359
+      ],
+      [
+       -0.119,
+       0.11239
+      ],
+      [
+       -0.12149,
+       0.11049
+      ],
+      [
+       -0.12339,
+       0.108
+      ],
+      [
+       -0.12459,
+       0.10511
+      ],
+      [
+       -0.125,
+       0.102
+      ],
+      [
+       -0.125,
+       -0.084
+      ],
+      [
+       -0.12459,
+       -0.08711
+      ],
+      [
+       -0.12339,
+       -0.09
+      ],
+      [
+       -0.12149,
+       -0.09249
+      ],
+      [
+       -0.119,
+       -0.09439
+      ],
+      [
+       -0.11611,
+       -0.09559
+      ],
+      [
+       -0.113,
+       -0.096
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.002,
+     "to": 0.0122
+    },
+    {
+     "id": "neck",
+     "kind": "loft",
+     "bone": "neck",
+     "material": "stand-plastic",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.035,
+       "ry": 0.018,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.2,
+        0
+       ],
+       "rx": 0.03,
+       "ry": 0.013,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.243,
+        0
+       ],
+       "rx": 0.032,
+       "ry": 0.016,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "hinge",
+     "kind": "revolve",
+     "bone": "neck",
+     "material": "stand-plastic",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.012
+      ],
+      [
+       0.07,
+       0.012
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0.243,
+      -0.035
+     ]
+    },
+    {
+     "id": "housing",
+     "kind": "loft",
+     "bone": "panel",
+     "material": "housing-plastic",
+     "role": "body",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        -0.0075,
+        -0.0305,
+        0
+       ],
+       "rx": 0.265,
+       "ry": 0.1175,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0075,
+        -0.0245,
+        0
+       ],
+       "rx": 0.261,
+       "ry": 0.11646,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0075,
+        -0.0185,
+        0
+       ],
+       "rx": 0.253,
+       "ry": 0.11309,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0075,
+        -0.0125,
+        0
+       ],
+       "rx": 0.242,
+       "ry": 0.1066,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0075,
+        -0.0075,
+        0
+       ],
+       "rx": 0.23,
+       "ry": 0.09695,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0075,
+        -0.004,
+        0
+       ],
+       "rx": 0.222,
+       "ry": 0.0775,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "panel-slab",
+     "kind": "extrude",
+     "bone": "panel",
+     "material": "bezel-plastic",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.264,
+       -0.17
+      ],
+      [
+       0.26555,
+       -0.1698
+      ],
+      [
+       0.267,
+       -0.1692
+      ],
+      [
+       0.26824,
+       -0.16824
+      ],
+      [
+       0.2692,
+       -0.167
+      ],
+      [
+       0.2698,
+       -0.16555
+      ],
+      [
+       0.27,
+       -0.164
+      ],
+      [
+       0.27,
+       0.147
+      ],
+      [
+       0.2698,
+       0.14855
+      ],
+      [
+       0.2692,
+       0.15
+      ],
+      [
+       0.26824,
+       0.15124
+      ],
+      [
+       0.267,
+       0.1522
+      ],
+      [
+       0.26555,
+       0.1528
+      ],
+      [
+       0.264,
+       0.153
+      ],
+      [
+       -0.264,
+       0.153
+      ],
+      [
+       -0.26555,
+       0.1528
+      ],
+      [
+       -0.267,
+       0.1522
+      ],
+      [
+       -0.26824,
+       0.15124
+      ],
+      [
+       -0.2692,
+       0.15
+      ],
+      [
+       -0.2698,
+       0.14855
+      ],
+      [
+       -0.27,
+       0.147
+      ],
+      [
+       -0.27,
+       -0.164
+      ],
+      [
+       -0.2698,
+       -0.16555
+      ],
+      [
+       -0.2692,
+       -0.167
+      ],
+      [
+       -0.26824,
+       -0.16824
+      ],
+      [
+       -0.267,
+       -0.1692
+      ],
+      [
+       -0.26555,
+       -0.1698
+      ],
+      [
+       -0.264,
+       -0.17
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.04,
+     "to": -0.0305
+    },
+    {
+     "id": "screen-glass",
+     "kind": "box",
+     "bone": "panel",
+     "material": "display-glass",
+     "role": "glazing",
+     "tone": 0.1,
+     "size": [
+      0.299,
+      0.0028,
+      0.51
+     ],
+     "transform": {
+      "translation": [
+       -0.0085,
+       -0.04,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "power-led",
+     "kind": "ellipsoid",
+     "bone": "panel",
+     "material": "bezel-plastic",
+     "role": "detail",
+     "tone": 0.9,
+     "radii": [
+      0.004,
+      0.004,
+      0.004
+     ],
+     "transform": {
+      "translation": [
+       -0.164,
+       -0.0395,
+       -0.24
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-screen-glass",
+     "of": "screen-glass",
+     "region": "panel-front",
+     "layer": "front-stack"
+    },
+    {
+     "id": "th-panel-slab",
+     "of": "panel-slab",
+     "region": "panel-front",
+     "layer": "front-stack"
+    },
+    {
+     "id": "th-housing",
+     "of": "housing",
+     "region": "housing",
+     "layer": "housing-shell"
+    },
+    {
+     "id": "th-rear-plume",
+     "kind": "box",
+     "bone": "panel",
+     "material": "housing-plastic",
+     "role": "body",
+     "tone": 0.55,
+     "layer": "housing-shell",
+     "size": [
+      0.056,
+      0.0075,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       -0.01225,
+       0.0
+      ]
+     },
+     "region": "housing",
+     "tags": [
+      "rear-plume"
+     ]
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "stand",
+     "layer": "stand-body"
+    },
+    {
+     "id": "th-foot-front",
+     "of": "foot-front",
+     "region": "stand",
+     "layer": "stand-body"
+    },
+    {
+     "id": "th-foot-rear",
+     "of": "foot-rear",
+     "region": "stand",
+     "layer": "stand-body"
+    },
+    {
+     "id": "th-neck",
+     "of": "neck",
+     "region": "stand",
+     "layer": "stand-body"
+    },
+    {
+     "id": "th-hinge",
+     "of": "hinge",
+     "region": "stand",
+     "layer": "stand-body"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-base",
+     "of": "base-plate",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-neck",
+     "of": "neck",
+     "member": "neck",
+     "part": "member"
+    },
+    {
+     "id": "member-panel",
+     "of": "panel-slab",
+     "member": "panel",
+     "part": "member"
+    },
+    {
+     "id": "joint-hinge",
+     "of": "hinge",
+     "member": "neck",
+     "part": "joint"
+    },
+    {
+     "id": "joint-base",
+     "kind": "ellipsoid",
+     "bone": "neck",
+     "material": "stand-plastic",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "neck",
+     "part": "joint",
+     "radii": [
+      0.025,
+      0.012,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0.012,
+       0
+      ]
+     }
+    },
+    {
+     "id": "mass-panel",
+     "kind": "ellipsoid",
+     "bone": "panel",
+     "material": "stand-plastic",
+     "role": "detail",
+     "tone": 0.15,
+     "member": "panel",
+     "part": "mass",
+     "radii": [
+      0.1,
+      0.008,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.01,
+       -0.025,
+       0
+      ]
+     }
+    },
+    {
+     "id": "mass-base",
+     "kind": "ellipsoid",
+     "bone": "base",
+     "material": "stand-plastic",
+     "role": "detail",
+     "tone": 0.15,
+     "member": "base",
+     "part": "mass",
+     "radii": [
+      0.08,
+      0.004,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.01,
+       0.006,
+       0
+      ]
+     }
+    },
+    {
+     "id": "support-base-contact",
+     "kind": "box",
+     "bone": "base",
+     "material": "stand-plastic",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "base",
+     "part": "support",
+     "size": [
+      0.16,
+      0.0075,
+      0.17
+     ],
+     "transform": {
+      "translation": [
+       0.01,
+       0.00375,
+       0.0
+      ]
+     },
+     "tags": [
+      "base-contact"
+     ],
+     "anchor": "base-contact"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Own 1:50 model against the 1:50 drawings. Frames: the panel bone is the neck tip turned 95 degrees, its u axis runs up the screen and v backwards, the screen faces +x. Panel: a 0.54 x 0.323 m bezel slab with rounded corners, a 0.51 m glass sheet on its face (2.8 mm thin sheet, role glazing), an LED lens, and the rear housing hump as a six-section loft whose u extents follow the drawn elevation curve and whose width tapers from 0.53 m to 0.44 m (the plan draws it as wide as the bezel, a monitor hump is narrower). Stand: a rounded 0.25 x 0.21 m base plate on four 7.5 mm rubber feet, a tapered neck loft and the hinge barrel on the neck bone.",
+     "de": "Eigenes 1:50-Modell gegen die 1:50-Zeichnungen. Rahmen: der Knochen Panel ist die um 95 Grad gedrehte Halsspitze, seine u-Achse läuft den Bildschirm hinauf und v nach hinten, der Bildschirm blickt nach +x. Panel: eine Blendenplatte 0,54 x 0,323 m mit gerundeten Ecken, eine Glasscheibe von 0,51 m auf ihrer Fläche (1,8 mm dünnes Blech, Rolle glazing), eine LED-Linse und der hintere Gehäusebuckel als Loft aus sechs Schnitten, dessen u-Ausdehnung der gezeichneten Ansichtskurve folgt und dessen Breite von 0,53 m auf 0,44 m abnimmt (der Grundriss zeichnet ihn so breit wie die Blende, ein Monitorbuckel ist schmaler). Ständer: eine gerundete Fussplatte 0,25 x 0,21 m auf vier 7,5-mm-Gummifüssen, ein sich verjüngender Halsloft und die Scharniertrommel am Halsknochen."
+    },
+    {
+     "en": "Thermal (area = exposed surface): panel front = glass and bezel slab, housing = the hump, stand = base plate, feet, neck and hinge, all by reference; the rear plume is a 0.3 m wide vent patch inside the hump at the housing-top anchor (tag rear-plume). Faces buried in other solids and the floor contact do not count, so areaM2 was corrected at the root (see report). Structure: base plate, neck and bezel slab are the three members, hinge barrel and a neck-foot ellipsoid are the joints, two flat mass ellipsoids sit in panel and base, and a 0.17 x 0.2 m contact pad under the base is the support.",
+     "de": "Thermik (Fläche = freie Oberfläche): Panelfront = Glas und Blendenplatte, Gehäuse = der Buckel, Ständer = Fussplatte, Füsse, Hals und Scharnier, alles als Verweis; die Rückfahne ist ein 0,3 m breites Lüftungsfeld im Buckel am Anker housing-top (Markierung rear-plume). Verdeckte Flächen und der Bodenkontakt zählen nicht, daher wurde areaM2 an der Wurzel korrigiert (siehe Bericht). Tragwerk: Fussplatte, Hals und Blendenplatte sind die drei Stäbe, Scharniertrommel und ein Halsfuss-Ellipsoid die Gelenke, zwei flache Massenellipsoide sitzen in Panel und Fuss, und eine Kontaktfläche 0,17 x 0,2 m unter dem Fuss ist das Auflager."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "base-plate",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "stand-plastic",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.113,
+       -0.096
+      ],
+      [
+       0.11611,
+       -0.09559
+      ],
+      [
+       0.119,
+       -0.09439
+      ],
+      [
+       0.12149,
+       -0.09249
+      ],
+      [
+       0.12339,
+       -0.09
+      ],
+      [
+       0.12459,
+       -0.08711
+      ],
+      [
+       0.125,
+       -0.084
+      ],
+      [
+       0.125,
+       0.102
+      ],
+      [
+       0.12459,
+       0.10511
+      ],
+      [
+       0.12339,
+       0.108
+      ],
+      [
+       0.12149,
+       0.11049
+      ],
+      [
+       0.119,
+       0.11239
+      ],
+      [
+       0.11611,
+       0.11359
+      ],
+      [
+       0.113,
+       0.114
+      ],
+      [
+       -0.113,
+       0.114
+      ],
+      [
+       -0.11611,
+       0.11359
+      ],
+      [
+       -0.119,
+       0.11239
+      ],
+      [
+       -0.12149,
+       0.11049
+      ],
+      [
+       -0.12339,
+       0.108
+      ],
+      [
+       -0.12459,
+       0.10511
+      ],
+      [
+       -0.125,
+       0.102
+      ],
+      [
+       -0.125,
+       -0.084
+      ],
+      [
+       -0.12459,
+       -0.08711
+      ],
+      [
+       -0.12339,
+       -0.09
+      ],
+      [
+       -0.12149,
+       -0.09249
+      ],
+      [
+       -0.119,
+       -0.09439
+      ],
+      [
+       -0.11611,
+       -0.09559
+      ],
+      [
+       -0.113,
+       -0.096
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.0152
+    },
+    {
+     "id": "neck",
+     "kind": "loft",
+     "bone": "neck",
+     "material": "stand-plastic",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.035,
+       "ry": 0.019,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.2,
+        0
+       ],
+       "rx": 0.03,
+       "ry": 0.014,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.243,
+        0
+       ],
+       "rx": 0.032,
+       "ry": 0.017,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "housing",
+     "kind": "loft",
+     "bone": "panel",
+     "material": "housing-plastic",
+     "role": "body",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        -0.0075,
+        -0.0248,
+        0
+       ],
+       "rx": 0.262,
+       "ry": 0.11656,
+       "exponent": 3,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0075,
+        -0.0155,
+        0
+       ],
+       "rx": 0.25,
+       "ry": 0.11032,
+       "exponent": 3,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0075,
+        -0.004,
+        0
+       ],
+       "rx": 0.222,
+       "ry": 0.0775,
+       "exponent": 3,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "panel-slab",
+     "kind": "extrude",
+     "bone": "panel",
+     "material": "bezel-plastic",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.266,
+       -0.17
+      ],
+      [
+       0.26704,
+       -0.16986
+      ],
+      [
+       0.268,
+       -0.16946
+      ],
+      [
+       0.26883,
+       -0.16883
+      ],
+      [
+       0.26946,
+       -0.168
+      ],
+      [
+       0.26986,
+       -0.16704
+      ],
+      [
+       0.27,
+       -0.166
+      ],
+      [
+       0.27,
+       0.149
+      ],
+      [
+       0.26986,
+       0.15004
+      ],
+      [
+       0.26946,
+       0.151
+      ],
+      [
+       0.26883,
+       0.15183
+      ],
+      [
+       0.268,
+       0.15246
+      ],
+      [
+       0.26704,
+       0.15286
+      ],
+      [
+       0.266,
+       0.153
+      ],
+      [
+       -0.266,
+       0.153
+      ],
+      [
+       -0.26704,
+       0.15286
+      ],
+      [
+       -0.268,
+       0.15246
+      ],
+      [
+       -0.26883,
+       0.15183
+      ],
+      [
+       -0.26946,
+       0.151
+      ],
+      [
+       -0.26986,
+       0.15004
+      ],
+      [
+       -0.27,
+       0.149
+      ],
+      [
+       -0.27,
+       -0.166
+      ],
+      [
+       -0.26986,
+       -0.16704
+      ],
+      [
+       -0.26946,
+       -0.168
+      ],
+      [
+       -0.26883,
+       -0.16883
+      ],
+      [
+       -0.268,
+       -0.16946
+      ],
+      [
+       -0.26704,
+       -0.16986
+      ],
+      [
+       -0.266,
+       -0.17
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.04,
+     "to": -0.0248
+    },
+    {
+     "id": "screen-glass",
+     "kind": "box",
+     "bone": "panel",
+     "material": "display-glass",
+     "role": "glazing",
+     "tone": 0.1,
+     "size": [
+      0.299,
+      0.0028,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       -0.0085,
+       -0.04,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-screen-glass",
+     "of": "screen-glass",
+     "region": "panel-front",
+     "layer": "front-stack"
+    },
+    {
+     "id": "th-panel-slab",
+     "of": "panel-slab",
+     "region": "panel-front",
+     "layer": "front-stack"
+    },
+    {
+     "id": "th-housing",
+     "of": "housing",
+     "region": "housing",
+     "layer": "housing-shell"
+    },
+    {
+     "id": "th-rear-plume",
+     "kind": "box",
+     "bone": "panel",
+     "material": "housing-plastic",
+     "role": "body",
+     "tone": 0.55,
+     "layer": "housing-shell",
+     "size": [
+      0.056,
+      0.015,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       -0.011,
+       0.0
+      ]
+     },
+     "region": "housing",
+     "tags": [
+      "rear-plume"
+     ]
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "stand",
+     "layer": "stand-body"
+    },
+    {
+     "id": "th-neck",
+     "of": "neck",
+     "region": "stand",
+     "layer": "stand-body"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-base",
+     "of": "base-plate",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-neck",
+     "of": "neck",
+     "member": "neck",
+     "part": "member"
+    },
+    {
+     "id": "member-panel",
+     "of": "panel-slab",
+     "member": "panel",
+     "part": "member"
+    },
+    {
+     "id": "joint-hinge",
+     "kind": "revolve",
+     "bone": "neck",
+     "material": "stand-plastic",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "neck",
+     "part": "joint",
+     "profile": [
+      [
+       0,
+       0.0155
+      ],
+      [
+       0.07,
+       0.0155
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0.243,
+      -0.035
+     ]
+    },
+    {
+     "id": "mass-panel",
+     "kind": "ellipsoid",
+     "bone": "panel",
+     "material": "stand-plastic",
+     "role": "detail",
+     "tone": 0.15,
+     "member": "panel",
+     "part": "mass",
+     "radii": [
+      0.1,
+      0.0155,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.01,
+       -0.025,
+       0
+      ]
+     }
+    },
+    {
+     "id": "support-base-contact",
+     "kind": "box",
+     "bone": "base",
+     "material": "stand-plastic",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "base",
+     "part": "support",
+     "size": [
+      0.16,
+      0.0152,
+      0.17
+     ],
+     "transform": {
+      "translation": [
+       0.01,
+       0.0076,
+       0.0
+      ]
+     },
+     "tags": [
+      "base-contact"
+     ],
+     "anchor": "base-contact"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Own 1:100 model against the 1:100 shapes: the base plate is 15 mm thick (the drawn 12 mm plus the merged feet), the neck keeps its taper, the housing hump is a three-section loft, the bezel slab is 15 mm and reaches into the hump, the glass stays a thin sheet. Feet, hinge barrel and the LED are merged away (below 15 mm).",
+     "de": "Eigenes 1:100-Modell gegen die 1:100-Formen: die Fussplatte ist 15 mm dick (die gezeichneten 12 mm samt zusammengefassten Füssen), der Hals behält seine Verjüngung, der Gehäusebuckel ist ein Loft aus drei Schnitten, die Blendenplatte ist 15 mm dick und reicht in den Buckel, das Glas bleibt ein dünnes Blech. Füsse, Scharniertrommel und LED sind zusammengefasst (unter 15 mm)."
+    },
+    {
+     "en": "Thermal and structure are rebuilt on these solids by reference (glass, bezel, hump, base plate, neck, plume patch); the hinge becomes a 31 mm joint cylinder, one flat mass ellipsoid sits in the panel and a 15 mm contact pad is the support.",
+     "de": "Thermik und Tragwerk sind auf diesen Körpern als Verweis neu aufgebaut (Glas, Blende, Buckel, Fussplatte, Hals, Fahnenfeld); das Scharnier wird ein Gelenkzylinder von 31 mm, ein flaches Massenellipsoid sitzt im Panel und eine 15-mm-Kontaktfläche ist das Auflager."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "stand-base",
+     "kind": "loft",
+     "bone": "base",
+     "material": "stand-plastic",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        -0.096,
+        0.006,
+        0
+       ],
+       "rx": 0.125,
+       "ry": 0.006,
+       "exponent": 4,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        -0.06,
+        0.0157,
+        0
+       ],
+       "rx": 0.125,
+       "ry": 0.0157,
+       "exponent": 4,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.0,
+        0.0157,
+        0
+       ],
+       "rx": 0.125,
+       "ry": 0.0157,
+       "exponent": 4,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.114,
+        0.006,
+        0
+       ],
+       "rx": 0.125,
+       "ry": 0.006,
+       "exponent": 4,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "stand-neck",
+     "kind": "box",
+     "bone": "base",
+     "material": "stand-plastic",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.06,
+      0.248,
+      0.07
+     ],
+     "transform": {
+      "translation": [
+       -0.03,
+       0.136,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel",
+     "kind": "loft",
+     "bone": "panel",
+     "material": "bezel-plastic",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.0085,
+        -0.04,
+        0
+       ],
+       "rx": 0.27,
+       "ry": 0.1615,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0085,
+        -0.0278,
+        0
+       ],
+       "rx": 0.27,
+       "ry": 0.1615,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0075,
+        -0.0272,
+        0
+       ],
+       "rx": 0.24,
+       "ry": 0.1175,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.0075,
+        -0.004,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.1175,
+       "exponent": 4,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-front-slab",
+     "kind": "box",
+     "bone": "panel",
+     "material": "bezel-plastic",
+     "role": "body",
+     "tone": 0.6,
+     "layer": "front-stack",
+     "size": [
+      0.323,
+      0.0302,
+      0.54
+     ],
+     "transform": {
+      "translation": [
+       -0.0085,
+       -0.0249,
+       0.0
+      ]
+     },
+     "region": "panel-front"
+    },
+    {
+     "id": "th-hump",
+     "kind": "box",
+     "bone": "panel",
+     "material": "housing-plastic",
+     "role": "body",
+     "tone": 0.55,
+     "layer": "housing-shell",
+     "size": [
+      0.235,
+      0.03,
+      0.44
+     ],
+     "transform": {
+      "translation": [
+       -0.0075,
+       -0.019,
+       0.0
+      ]
+     },
+     "region": "housing"
+    },
+    {
+     "id": "th-stand-base",
+     "of": "stand-base",
+     "region": "stand",
+     "layer": "stand-body"
+    },
+    {
+     "id": "th-stand-neck",
+     "of": "stand-neck",
+     "region": "stand",
+     "layer": "stand-body"
+    },
+    {
+     "id": "th-rear-plume",
+     "kind": "box",
+     "bone": "panel",
+     "material": "housing-plastic",
+     "role": "body",
+     "tone": 0.55,
+     "layer": "housing-shell",
+     "size": [
+      0.056,
+      0.0303,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.03,
+       -0.01965,
+       0.0
+      ]
+     },
+     "region": "housing",
+     "tags": [
+      "rear-plume"
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-base",
+     "of": "stand-base",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-neck",
+     "of": "stand-neck",
+     "member": "neck",
+     "part": "member"
+    },
+    {
+     "id": "member-panel",
+     "of": "panel",
+     "member": "panel",
+     "part": "member"
+    },
+    {
+     "id": "support-base-contact",
+     "kind": "box",
+     "bone": "base",
+     "material": "stand-plastic",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "base",
+     "part": "support",
+     "size": [
+      0.16,
+      0.0305,
+      0.17
+     ],
+     "transform": {
+      "translation": [
+       0.01,
+       0.01525,
+       0.0
+      ]
+     },
+     "tags": [
+      "base-contact"
+     ],
+     "anchor": "base-contact"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Own 1:200 model: the stand is one flat base loft and one 0.06 x 0.07 m neck block, the panel one loft that starts as the 0.54 m bezel and steps in to the housing hump; bezel, glass, hump, feet, hinge and LED are merged into masses of at least 30 mm.",
+     "de": "Eigenes 1:200-Modell: der Ständer ist ein flacher Fussloft und ein Halsblock 0,06 x 0,07 m, das Panel ein Loft, der als 0,54 m breite Blende beginnt und zum Gehäusebuckel eingezogen wird; Blende, Glas, Buckel, Füsse, Scharnier und LED sind zu Massen von mindestens 30 mm zusammengefasst."
+    },
+    {
+     "en": "Thermal: a 30 mm bezel slab and a 30 mm hump block lying inside the panel loft carry panel front and housing (their exposed faces are the front and the back of the panel), base and neck by reference carry the stand, plus the plume patch; structure: the same three members and a contact pad, joints and masses merged into the members.",
+     "de": "Thermik: eine 30-mm-Blendenplatte und ein 30-mm-Buckelblock im Panelloft tragen Panelfront und Gehäuse (ihre freien Flächen sind Vorder- und Rückseite des Panels), Fuss und Hals als Verweis den Ständer, dazu das Fahnenfeld; Tragwerk: dieselben drei Stäbe und eine Kontaktfläche, Gelenke und Massen in den Stäben aufgegangen."
+    }
+   ]
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

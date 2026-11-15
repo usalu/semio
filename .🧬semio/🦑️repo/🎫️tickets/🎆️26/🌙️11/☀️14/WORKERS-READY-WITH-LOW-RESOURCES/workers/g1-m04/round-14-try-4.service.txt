@@ -1,0 +1,141 @@
+## /run/user/1000/semio-repo/1000/host-c879f21b8561.log
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: 517 stale projects, 246 taken from the fleet, 1 too heavy for this machine (semio-framework-value-native-outcome (about 960 MB); it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 271
+graph: waiting for the fleet: 0 of 271 projects arrived
+graph: refreshing 517 projects (generation 390)
+graph: 486 stale facts (file 224, analysis 216, readdir 44, digest 2) leave 517 projects stale
+graph: @semio-tech/filesystem-observation is stale: the workspace file 🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🧭️denied-entry/🟦️.ts was added
+graph: @semio-tech/plugin-registry is stale: the workspace file 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🔗️import-resolution/🟦️.ts was added
+graph: repo is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/⏳️busy-funding/🟦️.ts was added
+graph: repo is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/⏳️busy-funding/🥒️.feature was added
+graph: repo is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🧪️tests/🌱️probe/🟦️.ts was added
+graph: repo is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/✅️complete/🟦️.ts was added
+graph: repo is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/✅️complete/🧪️tests/🟦️.ts was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🧪️tests/🕸️graph/🌊️wave-rows/🟦️.ts was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🧪️tests/🕸️graph/💰️wave-costs/🟦️.ts was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🧪️tests/🕸️graph/📡️wave-upload/🟦️.ts was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.d.mts was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/🍎️launchd/🟨️.mjs was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔐️consent/🔎️probe/🟨️.mjs was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.d.mts was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.mjs was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🍎️launchd/🟦️.ts was added
+graph: 486 more stale inputs are not listed
+graph: plan stage inference starts (managed 1304 MB, resident 1455 MB)
+graph: asking the host for up to 8 worker processes for 48 projects; the projects wait for them
+graph: headroom of 1024 MB is below one project (1247 MB), inferring one project at a time
+graph: waiting for memory headroom (1247 of 1069 MB reserved, 1 projects running)
+graph: waiting for memory headroom (1247 of 1173 MB reserved, 1 projects running)
+graph: headroom of 1182 MB again (239 MB taken), resuming
+graph: waiting for memory headroom (1964 of 1630 MB reserved, 4 projects running)
+graph: waiting for memory headroom (2203 of 2085 MB reserved, 5 projects running)
+graph: project @semio-tech/energy-oracle-py (project) grew by 1026 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (2441 of 2270 MB reserved, 6 projects running)
+graph: waiting for memory headroom (873 of 1278 MB reserved, 3 projects running)
+graph: waiting for memory headroom (291 of 929 MB reserved, 1 projects running)
+graph: headroom of 692 MB is below one project (1247 MB), inferring one project at a time
+graph: waiting for memory headroom (1247 of 968 MB reserved, 1 projects running)
+graph: waiting for memory headroom (1247 of 846 MB reserved, 1 projects running)
+graph: headroom of 634 MB again (291 MB taken), resuming
+graph: waiting for memory headroom (582 of 812 MB reserved, 2 projects running)
+graph: waiting for memory headroom (846 of 1118 MB reserved, 3 projects running)
+graph: waiting for memory headroom (1480 of 1409 MB reserved, 6 projects running)
+graph: waiting for memory headroom (815 of 857 MB reserved, 7 projects running)
+graph: waiting for memory headroom (815 of 1190 MB reserved, 7 projects running)
+graph: waiting for memory headroom (1188 of 1418 MB reserved, 6 projects running)
+graph: waiting for memory headroom (1984 of 2116 MB reserved, 5 projects running)
+graph: inferring projects with 3 worker processes (1536 MB each)
+graph: waiting for memory headroom (2157 of 2445 MB reserved, 5 projects running)
+graph: waiting for memory headroom (3003 of 3027 MB reserved, 7 projects running)
+graph: waiting for memory headroom (3102 of 2999 MB reserved, 7 projects running)
+graph: inferring projects with 2 worker processes (1536 MB each)
+graph: waiting for memory headroom (3021 of 3084 MB reserved, 7 projects running)
+graph: waiting for memory headroom (3320 of 3337 MB reserved, 7 projects running)
+graph: waiting for memory headroom (2192 of 2145 MB reserved, 4 projects running)
+graph: waiting for memory headroom (3767 of 3629 MB reserved, 7 projects running)
+graph: waiting for memory headroom (4182 of 4644 MB reserved, 7 projects running)
+graph: waiting for memory headroom (4183 of 4051 MB reserved, 7 projects running)
+graph: waiting for memory headroom (4183 of 3953 MB reserved, 7 projects running)
+graph: waiting for memory headroom (4183 of 3963 MB reserved, 7 projects running)
+graph: waiting for memory headroom (4183 of 4024 MB reserved, 7 projects running)
+graph: waiting for memory headroom (3695 of 3765 MB reserved, 6 projects running)
+graph: waiting for memory headroom (832 of 375 MB reserved, 1 projects running)
+graph: headroom of 279 MB is below one project (653 MB), inferring one project at a time
+graph: inferring projects with 1 worker processes (1536 MB each)
+graph: 1 of 48 projects inferred by 8 worker processes in 837 s (0 failed, 0 lost, 0 restarts)
+graph: plan stage inference took 842.2 s (managed 2439 MB, 1134 MB more than at its start, resident 2867 MB)
+graph: plan answered, managed 104 MB, resident 221 MB (released 38 MB)
+## last waiting line: graph: waiting for the fleet: 271 of 271 projects arrived
+## last 30 lines
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:47:48:1:525:%40semio-tech%2Fframework-os-dev|project|525|3633","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 47 of 48 projects · 1 running, longest 525 s: @semio-tech/framework-os-dev (project, 525 s, 3633 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:46:517:1:525:%40semio-tech%2Fframework-os-dev|project|525|3633","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repo] still working after 1040 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 1040 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 1050 s
+[repository:command] still running after 1060 s
+[repo] still working after 1070 s; last phase started: source.served
+[repository:command] still running after 1070 s
+[repository:command] still running after 1080 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:47:517:1:525:%40semio-tech%2Fframework-os-dev|project|525|3633","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:47:48","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 47 of 48 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:48:48","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 48 of 48 projects
+graph: 1 of 48 projects inferred by 8 worker processes in 837 s (0 failed, 0 lost, 0 restarts)
+[fleet] projects from the fleet: 0 taken, 0 stored, 0 offered, 0 waited for another machine, 1 computed here | Projekte aus der Flotte: 0 übernommen, 0 gespeichert, 0 angeboten, 0 auf eine andere Maschine gewartet, 1 hier berechnet
+graph: plan stage inference took 842.2 s (managed 2439 MB, 1134 MB more than at its start, resident 2867 MB)
+2026-11-15T03:49:38.994Z graph-owner-too-heavy {"named":"@semio-tech/energy-oracle-py (about 2052 MB)","limit":"1024"}
+graph: plan answered, managed 104 MB, resident 221 MB (released 38 MB)
+## /run/user/1000/semio-repo/1000/host-f1aa47bafc29.log
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.
+graph: 517 stale projects, 0 taken from the fleet, 68 too heavy for this machine (@semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 62 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 517
+graph: waiting for the fleet: 0 of 517 projects arrived
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: the fleet was asked for 517 stale projects and delivered 0 within 902 s; 517 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 62 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+graph: plan answered, managed 104 MB, resident 184 MB (released 2 MB)
+graph: nothing to wait for any longer: asked the fleet for 517 stale projects and received 246 within 1493 s, 271 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+graph: plan answered, managed 104 MB, resident 177 MB (released 0 MB)
+## last waiting line: graph: waiting for the fleet: 246 of 517 projects arrived
+## last 30 lines
+[repository:command] still running after 3210 s
+[repository:command] still running after 3220 s
+[repo] still working after 3230 s; last phase started: source.served
+[repository:command] still running after 3230 s
+[repository:command] still running after 3240 s
+[repository:command] still running after 3250 s
+[repo] still working after 3260 s; last phase started: source.served
+[repository:command] still running after 3260 s
+[repository:command] still running after 3270 s
+[repository:command] still running after 3280 s
+[repo] still working after 3290 s; last phase started: source.served
+[repository:command] still running after 3290 s
+[repository:command] still running after 3300 s
+[repository:command] still running after 3310 s
+[repo] still working after 3320 s; last phase started: source.served
+[repository:command] still running after 3320 s
+[repository:command] still running after 3330 s
+[repository:command] still running after 3340 s
+[repo] still working after 3350 s; last phase started: source.served
+[repository:command] still running after 3350 s
+[repository:command] still running after 3360 s
+[repository:command] still running after 3370 s
+[repo] still working after 3380 s; last phase started: source.served
+[repository:command] still running after 3380 s
+[repository:command] still running after 3390 s
+[repository:command] still running after 3400 s
+[repo] still working after 3410 s; last phase started: source.served
+[repository:command] still running after 3410 s
+2026-11-15T03:32:52.561Z shutdown superseded
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}

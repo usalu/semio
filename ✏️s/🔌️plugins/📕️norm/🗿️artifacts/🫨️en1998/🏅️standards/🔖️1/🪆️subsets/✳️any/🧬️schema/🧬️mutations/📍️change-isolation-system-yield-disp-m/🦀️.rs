@@ -1,4 +1,4 @@
-//! 📍️ `change-isolation-system-yield-disp-m` mutation leaf.
+//! 📍️ `change-isolation-system-yield-displacement-m` mutation leaf.
 
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
@@ -17,7 +17,7 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeIsolationSystemYie
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "isolation-system-yield-displacement-m",
-        kind: "change-isolation-system-yield-disp-m",
+        kind: "change-isolation-system-yield-displacement-m",
         record: "ChangeIsolationSystemYieldDisplacementM",
     };
 

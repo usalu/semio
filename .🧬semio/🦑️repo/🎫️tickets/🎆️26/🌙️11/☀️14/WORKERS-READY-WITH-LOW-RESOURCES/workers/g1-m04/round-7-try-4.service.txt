@@ -1,0 +1,68 @@
+## /run/user/1000/semio-repo/1000/host-6b3804922737.log
+graph: 516 stale projects, 0 taken from the fleet, this machine can infer 0 (0 per wave); asking the fleet for 516
+graph: waiting for the fleet: 0 of 516 projects arrived
+## last 30 lines
+[repository:command] still running after 2650 s
+[repo] still working after 2660 s; last phase started: source.served
+[repository:command] still running after 2660 s
+[repository:command] still running after 2670 s
+[repository:command] still running after 2680 s
+[repo] still working after 2690 s; last phase started: source.served
+[repository:command] still running after 2690 s
+[repository:command] still running after 2700 s
+[repository:command] still running after 2710 s
+[repo] still working after 2720 s; last phase started: source.served
+[repository:command] still running after 2720 s
+[repository:command] still running after 2730 s
+[repository:command] still running after 2740 s
+[repo] still working after 2750 s; last phase started: source.served
+[repository:command] still running after 2750 s
+[repository:command] still running after 2760 s
+[repository:command] still running after 2770 s
+[repo] still working after 2780 s; last phase started: source.served
+[repository:command] still running after 2780 s
+[repository:command] still running after 2790 s
+[repository:command] still running after 2800 s
+[repo] still working after 2810 s; last phase started: source.served
+[repository:command] still running after 2810 s
+[repository:command] still running after 2820 s
+[repository:command] still running after 2830 s
+[repo] still working after 2840 s; last phase started: source.served
+[repository:command] still running after 2840 s
+[repository:command] still running after 2850 s
+2026-11-14T21:02:14.334Z shutdown superseded
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+## /run/user/1000/semio-repo/1000/host-90c88f72a8b1.log
+graph: 516 stale projects, 0 taken from the fleet, this machine can infer 0 (0 per wave); asking the fleet for 516
+graph: waiting for the fleet: 0 of 516 projects arrived
+## last 30 lines
+[repository:command] still running after 300 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 310 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 320 s; last phase started: source.served
+[repository:command] still running after 320 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 330 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 340 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 350 s; last phase started: source.served
+[repository:command] still running after 350 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 360 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 370 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 380 s; last phase started: source.served
+[repository:command] still running after 380 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 390 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 400 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 410 s; last phase started: source.served
+[repository:command] still running after 410 s
+graph: nothing to wait for any longer: asked the fleet for 516 stale projects and received 0 within 301 s, 516 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-14T21:07:49.812Z graph-wanted-expired {"wanted":"516","arrived":"0","seconds":"301","missing":"516","local":"0"}
+[repository:command] still running after 420 s

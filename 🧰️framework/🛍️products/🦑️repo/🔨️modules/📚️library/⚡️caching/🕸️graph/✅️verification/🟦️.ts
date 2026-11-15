@@ -5,7 +5,7 @@ import{readFileSync}from"node:fs";
 import{join}from"node:path";
 import{createHash}from"node:crypto";
 import{BundleScript,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl}from"@semio-tech/process/leases";
+import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { loadBuildGraphV1, workspaceBuildFilesV1, buildGraphMembersV1, neutralBuildTargetV1 } from "../../../🏗️build/🕸️graph/🟦️.ts"; import type { BuildTargetV1 } from "../../../🏗️build/🕸️graph/📋️model/🟦️.ts";
 import{readBuildGraphSelectionV1,readBuildOwnerRegistryV1}from"../../../🏗️build/🕸️graph/🚪️admission/🟦️.ts";
 import{discoverBuildProjectsV1}from"../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";

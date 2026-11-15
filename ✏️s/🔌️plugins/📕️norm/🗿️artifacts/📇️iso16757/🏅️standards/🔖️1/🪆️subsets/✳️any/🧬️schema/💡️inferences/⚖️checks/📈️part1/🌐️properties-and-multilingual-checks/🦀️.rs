@@ -652,7 +652,7 @@ pub(super) fn check_variant_domains(catalogue: &Catalogue, report: &mut CheckRep
     let mut failed = 0u32;
     for (_pi, product) in catalogue.products.iter().enumerate() {
         for (_vi, variant) in product.variants.iter().enumerate() {
-            for (param_id, value) in &variant.parameter_values {
+            for (param_id, value) in variant.parameter_values.iter() {
                 checked += 1;
                 if let Some(domain) = product.parameter_domains.iter().find(|d| &d.parameter_id == param_id) {
                     let pv = match value {

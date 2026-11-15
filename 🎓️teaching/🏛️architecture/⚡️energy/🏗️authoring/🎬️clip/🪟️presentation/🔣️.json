@@ -101,7 +101,6 @@
             "de": "Physikalische Grundlagen"
           },
           "icon": "🧲",
-          "symbol": "physics",
           "cell": {
             "column": 0,
             "row": 0
@@ -114,7 +113,6 @@
             "de": "Lüftung"
           },
           "icon": "🌬️",
-          "symbol": "air",
           "cell": {
             "column": 1,
             "row": 0
@@ -127,7 +125,6 @@
             "de": "Heizen"
           },
           "icon": "🔥",
-          "symbol": "heat",
           "cell": {
             "column": 2,
             "row": 0
@@ -140,7 +137,6 @@
             "de": "Kühlen"
           },
           "icon": "❄️",
-          "symbol": "cool",
           "cell": {
             "column": 0,
             "row": 1
@@ -153,7 +149,6 @@
             "de": "Energiebilanz"
           },
           "icon": "📊",
-          "symbol": "balance",
           "cell": {
             "column": 1,
             "row": 1
@@ -193,7 +188,6 @@
             "de": "Daten und Information"
           },
           "icon": "📊️",
-          "symbol": "bim",
           "cell": {
             "column": 0,
             "row": 0
@@ -206,7 +200,6 @@
             "de": "Objektorientierung"
           },
           "icon": "🧬️",
-          "symbol": "bim",
           "cell": {
             "column": 1,
             "row": 0
@@ -219,7 +212,6 @@
             "de": "Repräsentationen von Objekten"
           },
           "icon": "👁️",
-          "symbol": "bim",
           "cell": {
             "column": 2,
             "row": 0
@@ -232,7 +224,6 @@
             "de": "Teilmodelle und Modellübersetzungen"
           },
           "icon": "🧩️",
-          "symbol": "bim",
           "cell": {
             "column": 0,
             "row": 1
@@ -245,7 +236,6 @@
             "de": "Schnittstellen und Modellübersetzung"
           },
           "icon": "🔌️",
-          "symbol": "bim",
           "cell": {
             "column": 1,
             "row": 1
@@ -258,7 +248,6 @@
             "de": "Konsistenz über Modelle hinweg"
           },
           "icon": "🔗️",
-          "symbol": "bim",
           "cell": {
             "column": 2,
             "row": 1
@@ -285,7 +274,6 @@
             "de": "Aufbau eines Grasshopper-Skripts"
           },
           "icon": "🦴️",
-          "symbol": "grasshopper",
           "cell": {
             "column": 0,
             "row": 0
@@ -298,7 +286,6 @@
             "de": "Eine Kapsel, parametrisch"
           },
           "icon": "💊️",
-          "symbol": "grasshopper",
           "cell": {
             "column": 1,
             "row": 0
@@ -311,7 +298,6 @@
             "de": "Von der Kapsel zum Turm"
           },
           "icon": "🗼️",
-          "symbol": "grasshopper",
           "cell": {
             "column": 2,
             "row": 0
@@ -324,7 +310,6 @@
             "de": "Casting: Wenn Typen sich treffen"
           },
           "icon": "🫗️",
-          "symbol": "grasshopper",
           "cell": {
             "column": 0,
             "row": 1
@@ -337,7 +322,6 @@
             "de": "Datenbäume am Turm"
           },
           "icon": "🌳️",
-          "symbol": "grasshopper",
           "cell": {
             "column": 1,
             "row": 1
@@ -364,7 +348,6 @@
             "de": "Aufbau einer Arbeitsmappe"
           },
           "icon": "🦴️",
-          "symbol": "excel",
           "cell": {
             "column": 0,
             "row": 0
@@ -377,7 +360,6 @@
             "de": "Zellbezüge"
           },
           "icon": "📍️",
-          "symbol": "excel",
           "cell": {
             "column": 1,
             "row": 0
@@ -390,7 +372,6 @@
             "de": "Das Raumprogramm in Excel"
           },
           "icon": "📋️",
-          "symbol": "excel",
           "cell": {
             "column": 2,
             "row": 0
@@ -403,7 +384,6 @@
             "de": "Heizwärmebedarf in der Nakagin-Arbeitsmappe"
           },
           "icon": "⚡️",
-          "symbol": "excel",
           "cell": {
             "column": 0,
             "row": 1
@@ -430,7 +410,6 @@
             "de": "Minimierung und Maximierung"
           },
           "icon": "📉️",
-          "symbol": "optimization",
           "cell": {
             "column": 0,
             "row": 0
@@ -443,7 +422,6 @@
             "de": "Sampling des Entwurfsraums"
           },
           "icon": "🎲️",
-          "symbol": "optimization",
           "cell": {
             "column": 1,
             "row": 0
@@ -456,7 +434,6 @@
             "de": "Design of Experiments"
           },
           "icon": "🧪️",
-          "symbol": "optimization",
           "cell": {
             "column": 2,
             "row": 0
@@ -469,7 +446,6 @@
             "de": "Multikriteriell und Index"
           },
           "icon": "⚖️",
-          "symbol": "optimization",
           "cell": {
             "column": 0,
             "row": 1
@@ -482,7 +458,6 @@
             "de": "Pareto-Fronten"
           },
           "icon": "🏆️",
-          "symbol": "optimization",
           "cell": {
             "column": 1,
             "row": 1
@@ -495,7 +470,6 @@
             "de": "Optimierungsalgorithmen"
           },
           "icon": "🧬️",
-          "symbol": "optimization",
           "cell": {
             "column": 2,
             "row": 1

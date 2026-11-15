@@ -4,8 +4,14 @@
   "targets": {
     "generate": {
       "executor": "repo:script",
+      "outputs": [],
       "metadata": {
         "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          },
           "execution": {
             "version": 1,
             "kind": "source"
@@ -18,7 +24,7 @@
         "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
-      "cache": true
+      "cache": false
     },
     "preview-generated": {
       "executor": "repo:script",
@@ -159,7 +165,7 @@
   },
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🔨️modules/🖱️ui/🎨️styling/🤖️generated\"" }, "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/**/*",
       "sharedGlobals",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎚️config/🟦️.ts"
     ],

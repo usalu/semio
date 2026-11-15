@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 serde = { workspace = true, optional = true }
-semio-s-artifact-norm-en1992-mut-member-fields-liquid-bridge = { workspace = true }
+semio-s-artifact-norm-en1992-mut-fields-liquid-bridge = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
@@ -28,7 +28,7 @@ semio-s-artifact-norm-en1992-diff = { workspace = true }
 semio-s-artifact-norm-en1992-model = { workspace = true }
 
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-en1992-diff/test-support", "semio-s-artifact-norm-en1992-model/test-support", "semio-s-artifact-norm-en1992-mut-member-fields-liquid-bridge/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1992-diff/test-support", "semio-s-artifact-norm-en1992-model/test-support", "semio-s-artifact-norm-en1992-mut-fields-liquid-bridge/test-support"]
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

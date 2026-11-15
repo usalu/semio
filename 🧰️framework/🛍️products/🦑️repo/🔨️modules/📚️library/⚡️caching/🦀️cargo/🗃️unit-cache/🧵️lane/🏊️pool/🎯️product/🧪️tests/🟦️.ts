@@ -44,7 +44,7 @@ test("short namespace collisions refuse the different full digest without rewrit
  const root=scratch(),signal=new AbortController().signal;
  try{
   const first=await acquireProductLaneV1(root,request(key),{signal}),receipt=join(first.paths.base,"product.json"),before=readFileSync(receipt,"utf8");first.release();
-  await expect(acquireProductLaneV1(root,request(key.slice(0,11)+"b".repeat(53)),{signal})).rejects.toThrow("identity collision");expect(readFileSync(receipt,"utf8")).toBe(before);
+  await expect(acquireProductLaneV1(root,request(key.slice(0,6)+"b".repeat(58)),{signal})).rejects.toThrow("identity collision");expect(readFileSync(receipt,"utf8")).toBe(before);
   const again=await acquireProductLaneV1(root,request(key),{signal});again.release();
  }finally{rmSync(root,{recursive:true,force:true});}
 });

@@ -1,4 +1,4 @@
-import sharp from "sharp";
+import { sharpPrintRasterEngineV1 } from "./🖼️raster/🔌️sharp/🟦️.ts";
 import limits from "../📋️intent/🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🖼️ Renders one self-contained authored SVG into bounded PNG bytes behind the Print resource interface. */
@@ -14,17 +14,7 @@ export async function renderPrintSvgResourceV1(source: Uint8Array, width: number
   if (!Number.isSafeInteger(height) || height < 1 || width * height > policy.maximumPagePixels) throw Error("Bounded SVG resource dimensions required");
   const viewport = root.replace(/\s(?:width|height)\s*=\s*(?:"[^"]*"|'[^']*')/gu, "").replace(/>$/u, ` width="${width}px" height="${height}px">`);
   const projected = text.replace(root, viewport);
-  const image = sharp(Buffer.from(projected), { density: 72, limitInputPixels: policy.maximumPagePixels });
-  const abort = () => image.destroy(signal.reason instanceof Error ? signal.reason : Error("SVG rendering cancelled"));
-  signal.addEventListener("abort", abort, { once: true });
-  try {
-    signal.throwIfAborted();
-    const metadata = await image.metadata();
-    if (!metadata.width || !metadata.height || Math.ceil(metadata.height * width / metadata.width) * width > policy.maximumPagePixels) throw Error("Bounded SVG resource dimensions required");
-    signal.throwIfAborted();
-    const bytes = await image.resize({ width, withoutEnlargement: false }).png().toBuffer();
-    signal.throwIfAborted();
-    if (bytes.byteLength > policy.maximumPngBytes) throw Error("Bounded PNG resource required");
-    return new Uint8Array(bytes);
-  } finally { signal.removeEventListener("abort", abort); image.destroy(); }
+  const bytes = await sharpPrintRasterEngineV1.svgToPng({ svg: new TextEncoder().encode(projected), width, maximumPixels: policy.maximumPagePixels }, signal);
+  if (bytes.byteLength > policy.maximumPngBytes) throw Error("Bounded PNG resource required");
+  return bytes;
 }

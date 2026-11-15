@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use semio_s_artifact_norm_din16798_mutations::Din16798Mutation;
+use crate::Din16798Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -26,8 +26,8 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-#[cfg(test)] use crate::binary::mutations::*;
-use semio_s_artifact_norm_din16798_mutations::Din16798Mutation;
+#[cfg(test)] use crate::binary::*;
+use crate::Din16798Mutation;
 use semio_s_artifact_norm_din16798_mut_building::change_annex::ChangeAnnex;
 use semio_s_artifact_norm_din16798_mut_building::change_theta_rm::ChangeThetaRm;
 use semio_s_artifact_norm_din16798_mut_building::change_outdoor_co2::ChangeOutdoorCo2;
@@ -693,3 +693,5 @@ impl protocol::OpBinary for Din16798Mutation {
     }
 }
 }
+
+dsl::original_pack_value_operation_receiving!(crate::Din16798Mutation);

@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:nx-task-slot:v1",
+  "title": "Nx Task Slot",
+  "description": "🪢️ Analysis only (the wire slot is `nxTaskSlotV1` of `🌐️remote-cache/🪢️nx-slots`, which always includes the platform): the identity of the task without its content inputs, so that retention can supersede older results of the same task. Project, target and configuration always belong to it. The platform belongs to it whenever the task's hash can differ between platforms; a slot that is too coarse would let two platforms delete each other's current result, a slot that is too fine only keeps one result per platform, so everything not proven platform-free is platform-bound. Proof is by the declared inputs alone: after expanding named inputs, a task is platform-free when it reads only files, dependency outputs, external packages, environment variables and runtime commands this policy lists as platform-neutral, and is not a native-toolchain task.",
+  "oneOf": [{ "$ref": "#/definitions/Policy" }, { "$ref": "#/definitions/Verdict" }],
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "const": {
+        "version": 1,
+        "domain": "nx-task",
+        "neutralRuntimeCommands": [
+          "repo tools exec --light bun -- --version",
+          "repo tools exec --light node -- --version"
+        ],
+        "neutralEnvironment": [
+          "NODE_ENV",
+          "BUN_ENV",
+          "CI",
+          "SEMIO_BUILD_MODE",
+          "SEMIO_RENDERER",
+          "SEMIO_PLUGIN",
+          "SEMIO_TEST_LEVEL",
+          "SEMIO_TEST_BUDGET_MS",
+          "SEMIO_BUILD_BUDGET_MS"
+        ],
+        "platformNamedInputPattern": "native",
+        "nativeExecutionKinds": ["native"],
+        "maximumExpansion": 100000
+      }
+    },
+    "Verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "reasons"],
+      "properties": {
+        "platform": { "type": "boolean" },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

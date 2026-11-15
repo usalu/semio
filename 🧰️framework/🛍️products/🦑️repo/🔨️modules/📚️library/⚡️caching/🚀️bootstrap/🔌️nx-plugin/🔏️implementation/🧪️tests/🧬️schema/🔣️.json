@@ -19,9 +19,11 @@
         "additionalProperties": false,
         "required": [
           "name",
-          "changes",
+          "before",
+          "after",
           "environment",
           "readmitted",
+          "probeCalls",
           "identityCalls",
           "guardAccepted"
         ],
@@ -30,15 +32,18 @@
             "type": "string",
             "minLength": 1
           },
-          "changes": {
+          "before": {
             "type": "array",
-            "minItems": 1,
             "items": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1
-              }
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "after": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
             }
           },
           "environment": {
@@ -47,6 +52,10 @@
           },
           "readmitted": {
             "type": "boolean"
+          },
+          "probeCalls": {
+            "type": "integer",
+            "minimum": 0
           },
           "identityCalls": {
             "type": "integer",

@@ -1,0 +1,11 @@
+import { readFileSync } from "node:fs";
+const S = `../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next/🌓️silhouette/🟦️.ts`;
+const { measureView, worldSolids } = await import(S);
+const { evaluate } = await import(`../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts`);
+const a = JSON.parse(readFileSync("/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/👤️sample-figure/🔣️.json", "utf8")).asset;
+if (process.env.SECTION) a.representations['200'].sections = { front: { plane: 0.1, label: { en: 'A-A', de: 'A-A' } } };
+const state = evaluate(a, { kind: "pose", pose: a.presentation.defaultPose }, { kind: "scale", scale: { denominator: 200 } });
+const solids = worldSolids(a, state.bones, 200, "body");
+const tile = Number(process.argv[2]);
+const m = measureView(a, state, solids, process.argv[3] ?? "front", 200, 400, 0.03, tile);
+console.log("tile", tile, "p95", +(m.p95M*1000).toFixed(1), "hd", +(m.hausdorffM*1000).toFixed(0), "hist", m.spread.hard.slice(0, 40).join(","));

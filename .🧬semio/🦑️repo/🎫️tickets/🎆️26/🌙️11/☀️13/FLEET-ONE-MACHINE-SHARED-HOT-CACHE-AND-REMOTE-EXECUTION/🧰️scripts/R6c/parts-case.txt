@@ -1,0 +1,79 @@
+    {
+      "id": "bazel-module-cache",
+      "listing": [
+        {
+          "name": ".fseventsd",
+          "kind": "directory"
+        },
+        {
+          "name": ".metadata_never_index",
+          "kind": "file"
+        },
+        {
+          "name": "bazel",
+          "kind": "directory"
+        },
+        {
+          "name": "bootstrap",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-bin",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-cache",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-config",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-global",
+          "kind": "directory"
+        },
+        {
+          "name": "bun-home",
+          "kind": "directory"
+        },
+        {
+          "name": "dependencies.json",
+          "kind": "file"
+        },
+        {
+          "name": "dotnet",
+          "kind": "directory"
+        },
+        {
+          "name": "generation",
+          "kind": "directory"
+        },
+        {
+          "name": "j",
+          "kind": "directory"
+        },
+        {
+          "name": "nuget",
+          "kind": "directory"
+        },
+        {
+          "name": "pointer",
+          "kind": "directory"
+        },
+        {
+          "name": "python",
+          "kind": "directory"
+        },
+        {
+          "name": "storage-events.jsonl",
+          "kind": "file"
+        },
+        {
+          "name": "tmp",
+          "kind": "directory"
+        }
+      ],
+      "accepted": true,
+      "refusal": null
+    },

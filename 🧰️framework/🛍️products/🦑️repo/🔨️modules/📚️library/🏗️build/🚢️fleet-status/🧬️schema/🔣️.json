@@ -552,6 +552,38 @@
      "en": "  #{position} {key} [{agents}] {reserve} MB, {priority}, depth {depth}, waiting {waited}",
      "de": "  #{position} {key} [{agents}] {reserve} MB, {priority}, Tiefe {depth}, wartet {waited}"
     },
+    "fleet": {
+     "en": "Fleet of machines: {machines} reporting, {queued} queued and {executing} executing at the scheduler; {offloadedIn} units offloaded, {offloadedOut} requested, {refused} refused, {declined} declined, {retried} rescheduled",
+     "de": "Maschinenflotte: {machines} melden sich, {queued} warten und {executing} laufen beim Scheduler; {offloadedIn} Einheiten ausgelagert, {offloadedOut} angefragt, {refused} abgelehnt, {declined} verweigert, {retried} neu geplant"
+    },
+    "fleet.machine": {
+     "en": "  {origin} {platform}: pressure {pressure}, load {load}/{cores} cores, {running} running, {queued} queued, worker {worker}{headroom}, in {offloadedIn} out {offloadedOut} refused {refused}, units {cacheHit} hit {cacheMiss} miss {cacheSkipped} skipped, report {age}",
+     "de": "  {origin} {platform}: Druck {pressure}, Last {load}/{cores} Kerne, {running} laufen, {queued} warten, Worker {worker}{headroom}, ein {offloadedIn} aus {offloadedOut} abgelehnt {refused}, Einheiten {cacheHit} Treffer {cacheMiss} Fehlgriffe {cacheSkipped} übersprungen, Meldung {age}"
+    },
+    "fleet.why": {
+     "en": "    {origin} worker {worker}: {reason}",
+     "de": "    {origin} Worker {worker}: {reason}"
+    },
+    "fleet.noheadroom": {
+     "en": " (no headroom)",
+     "de": " (kein Spielraum)"
+    },
+    "fleet.apart": {
+     "en": "    {origin} shares its platform key with no other machine (other keys: {others}): its Rust units are neither taken from nor offloaded to the others",
+     "de": "    {origin} teilt seinen Plattformschlüssel mit keiner anderen Maschine (andere Schlüssel: {others}): seine Rust-Einheiten werden weder von den anderen übernommen noch an sie ausgelagert"
+    },
+    "fleet.norustc": {
+     "en": "    {origin} reports no Rust compiler ({platform}): it is no Rust worker and shares and offloads no Rust units",
+     "de": "    {origin} meldet keinen Rust-Compiler ({platform}): es ist kein Rust-Worker und teilt oder lagert keine Rust-Einheiten aus"
+    },
+    "fleet.cache": {
+     "en": "  cache server: {hits} hit, {misses} miss, {puts} stored",
+     "de": "  Cache-Server: {hits} Treffer, {misses} Fehlgriffe, {puts} gespeichert"
+    },
+    "fleet.claims": {
+     "en": "  claims: {active} active, {waiting} waiting, oldest {oldest}",
+     "de": "  Beanspruchungen: {active} aktiv, {waiting} wartend, älteste {oldest}"
+    },
     "scheduler.agent": {
      "en": "  agent {agent}: {running} running, {queued} queued, {served} served ({percent}%)",
      "de": "  Agent {agent}: {running} laufen, {queued} warten, {served} bedient ({percent}%)"
@@ -864,7 +896,8 @@
       "storage",
       "sealed",
       "generation",
-      "scheduler"
+      "scheduler",
+      "fleet"
      ]
     },
     "ok": {
@@ -1495,6 +1528,9 @@
     },
     "scheduler": {
      "$ref": "#/definitions/SchedulerFact"
+    },
+    "fleet": {
+     "$ref": "#/definitions/FleetFact"
     }
    }
   },
@@ -2793,6 +2829,9 @@
     },
     "scheduler": {
      "$ref": "#/definitions/SchedulerSection"
+    },
+    "fleet": {
+     "$ref": "#/definitions/FleetSection"
     }
    }
   },
@@ -3046,6 +3085,68 @@
       "$ref": "#/definitions/SchedulerAgentFact"
      }
     }
+   }
+  },
+  "FleetMachine": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["origin", "platform", "pressure", "load", "cores", "running", "queued", "headroom", "ageSeconds", "worker", "offloadedIn", "offloadedOut", "refused", "cacheHit", "cacheMiss"],
+   "properties": {
+    "origin": {"type": "string"},
+    "platform": {"type": "string"},
+    "pressure": {"enum": ["normal", "warn", "critical"]},
+    "load": {"anyOf": [{"type": "number", "minimum": 0}, {"type": "null"}]},
+    "cores": {"type": "integer", "minimum": 1},
+    "running": {"type": "integer", "minimum": 0},
+    "queued": {"type": "integer", "minimum": 0},
+    "headroom": {"type": "boolean"},
+    "ageSeconds": {"type": "integer", "minimum": 0},
+    "worker": {"enum": ["absent", "idle", "busy", "refusing"]},
+    "offloadedIn": {"type": "integer", "minimum": 0},
+    "offloadedOut": {"type": "integer", "minimum": 0},
+    "refused": {"type": "integer", "minimum": 0},
+    "cacheHit": {"type": "integer", "minimum": 0},
+    "cacheMiss": {"type": "integer", "minimum": 0},
+    "cacheSkipped": {"type": "integer", "minimum": 0},
+    "why": {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}
+   }
+  },
+  "FleetFact": {
+   "description": "The machines of the fleet as the scheduler of remote execution sees them, with the counters of the cache server.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["scheduler", "expireSeconds", "machines", "queued", "executing", "offloadRejected", "refused", "retried"],
+   "properties": {
+    "scheduler": {"type": "string"},
+    "expireSeconds": {"type": "integer", "minimum": 0},
+    "machines": {"type": "array", "items": {"$ref": "#/definitions/FleetMachine"}},
+    "queued": {"type": "integer", "minimum": 0},
+    "executing": {"type": "integer", "minimum": 0},
+    "offloadRejected": {"type": "integer", "minimum": 0},
+    "refused": {"type": "integer", "minimum": 0},
+    "retried": {"type": "integer", "minimum": 0},
+    "cache": {"type": "object", "additionalProperties": false, "required": ["hits", "misses", "puts"], "properties": {"hits": {"type": "integer", "minimum": 0}, "misses": {"type": "integer", "minimum": 0}, "puts": {"type": "integer", "minimum": 0}}},
+    "claims": {"type": "object", "additionalProperties": false, "required": ["active", "waiting", "oldestSeconds"], "properties": {"active": {"type": "integer", "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "oldestSeconds": {"type": "integer", "minimum": 0}}}
+   }
+  },
+  "FleetSection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["scheduler", "machines", "queued", "executing", "offloadedIn", "offloadedOut", "refused", "declined", "retried", "cacheHit", "cacheMiss"],
+   "properties": {
+    "scheduler": {"type": "string"},
+    "machines": {"type": "array", "items": {"$ref": "#/definitions/FleetMachine"}},
+    "queued": {"type": "integer", "minimum": 0},
+    "executing": {"type": "integer", "minimum": 0},
+    "offloadedIn": {"type": "integer", "minimum": 0},
+    "offloadedOut": {"type": "integer", "minimum": 0},
+    "refused": {"type": "integer", "minimum": 0},
+    "declined": {"type": "integer", "minimum": 0},
+    "retried": {"type": "integer", "minimum": 0},
+    "cacheHit": {"type": "integer", "minimum": 0},
+    "cacheMiss": {"type": "integer", "minimum": 0},
+    "cache": {"type": "object", "additionalProperties": false, "required": ["hits", "misses", "puts"], "properties": {"hits": {"type": "integer", "minimum": 0}, "misses": {"type": "integer", "minimum": 0}, "puts": {"type": "integer", "minimum": 0}}},
+    "claims": {"type": "object", "additionalProperties": false, "required": ["active", "waiting", "oldestSeconds"], "properties": {"active": {"type": "integer", "minimum": 0}, "waiting": {"type": "integer", "minimum": 0}, "oldestSeconds": {"type": "integer", "minimum": 0}}}
    }
   }
  }

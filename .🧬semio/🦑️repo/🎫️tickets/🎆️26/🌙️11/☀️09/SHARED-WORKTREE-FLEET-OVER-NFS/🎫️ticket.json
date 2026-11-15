@@ -6,7 +6,8 @@
   "summary": "Built and verified the shared-worktree fleet: local replica per machine, event journal and content-addressed blobs on the group NFS store, relays between groups, provisioning for Linux, macOS and Windows, preflight, docs and CI aligned. Verified by five suites, a real-tree rehearsal, a 50-machine 5-group rehearsal and a Linux VM run over kernel NFS 4.2. Not yet confirmed: real Windows machine, real hosts, owner files. See scale-report.md, linux-nfs-report.md, windows-ci-report.md, provisioning-review.md, rehearsal-report.md, review-sync-correctness.md, owner-file-changes.md.",
   "goal": "aioptimizedrepo",
   "sessions": [
-    "40e7bf97-6892-4904-8125-4c1d9594fb48"
+    "40e7bf97-6892-4904-8125-4c1d9594fb48",
+    "9f6d3d77-cfd2-486b-942c-2101ee51a1fb"
   ],
   "interactions": [
     {
@@ -174,12 +175,22 @@
     {
       "kind": "ticket.reopen",
       "date": "2026-11-11 03:57:07",
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "mac",
       "client": "cursor-chat",
       "checkpoint": "ff42158b9733c2ef40b30b1a47fdba2c7c77ace2",
       "prompt": "Stand this Mac up as group g1 server: NFS store, cache, relay and its own replica. Fix macOS nfsd defects found on the first real group server.",
       "llm": "grok-4"
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-13 00:30:00",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "prompt": "Make synchronous development across machines, operating systems and fleets work end to end: edits, stages and commits replicate, and every worker shows the same state. Manual reopen: repo MCP did not connect.",
+      "llm": "claude-fable-5-2"
     }
   ]
 }

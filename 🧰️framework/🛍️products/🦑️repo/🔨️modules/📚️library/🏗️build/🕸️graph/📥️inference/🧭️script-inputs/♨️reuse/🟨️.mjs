@@ -31,6 +31,26 @@ export function createTypeScriptProgramReuseV1() {
   });
 }
 
+/** 🤝️ The parsed source files of the programs of every owner of this process, shared by the compiler options they were parsed under: an owner whose tsconfig reaches the same declaration files as an earlier owner (`lib.*.d.ts`, the typings of the installed packages) never parses them again; a file is reused only when its text is equal to the text the compiler reads now, so a changed file is parsed again and the programs that reach it see the change. Bounded by `maximumFiles` distinct files (then dropped as a whole), dropped by `clear()` when the owner state is released under memory pressure; it keeps no program and hands none to `createProgram`. */
+export function createSharedSourceFilesV1({ maximumFiles = 8000 } = {}) {
+  const stores = new Map(), seen = new Set();
+  return Object.freeze({
+    shared: true,
+    sourceFile(_config, original, readFile, settings = "") {
+      let store = stores.get(settings); if (!store) stores.set(settings, store = createTypeScriptProgramReuseV1());
+      const inner = store.sourceFile("shared", original, readFile, settings);
+      return (fileName, ...rest) => { if (!seen.has(settings + "\0" + fileName)) { if (seen.size >= maximumFiles) { stores.clear(); seen.clear(); stores.set(settings, store = createTypeScriptProgramReuseV1()); return store.sourceFile("shared", original, readFile, settings)(fileName, ...rest); } seen.add(settings + "\0" + fileName); } return inner(fileName, ...rest); };
+    },
+    oldProgram() { return undefined; },
+    keep() {},
+    clear() { stores.clear(); seen.clear(); },
+    size() { return seen.size; },
+  });
+}
+
+/** 🤝️ The shared parsed files of this process. */
+export const sharedSourceFilesV1 = createSharedSourceFilesV1();
+
 /** 🔌️ Installs the store the program questions of this process use (`undefined` uninstalls it); only a long-lived deriver installs one. */
 export function useTypeScriptProgramReuseV1(store) { active = store; }
 

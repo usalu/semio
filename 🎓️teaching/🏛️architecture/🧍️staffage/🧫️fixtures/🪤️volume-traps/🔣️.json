@@ -1,0 +1,16 @@
+{
+ "scale": "50",
+ "solids": [
+  { "name": "cylinder-reaching-the-axis", "codes": [], "solid": { "kind": "revolve", "profile": [[0, 0], [0, 0.1], [0.5, 0.1], [0.5, 0]], "axis": [0, 1, 0], "origin": [0, 0, 0] } },
+  { "name": "closed-loop-wall", "codes": [], "solid": { "kind": "revolve", "profile": [[0, 0.09], [0, 0.1], [0.5, 0.1], [0.5, 0.09], [0, 0.09]], "axis": [0, 1, 0], "origin": [0, 0, 0] } },
+  { "name": "two-point-cylinder-off-axis", "codes": [], "solid": { "kind": "revolve", "profile": [[0, 0.1], [0.5, 0.1]], "axis": [0, 1, 0], "origin": [0, 0, 0] } },
+  { "name": "wall-without-repeated-first-point", "codes": ["volume-revolve-implied-closure"], "shell": true, "solid": { "kind": "revolve", "profile": [[0, 0.09], [0, 0.1], [0.5, 0.1], [0.5, 0.09]], "axis": [0, 1, 0], "origin": [0, 0, 0] } },
+  { "name": "bead-without-repeated-first-point", "codes": ["volume-revolve-implied-closure"], "shell": true, "solid": { "kind": "revolve", "profile": [[0.0235, 0.1175], [0.0235, 0.125], [0.031, 0.125], [0.031, 0.1175]], "axis": [1, 0, 0], "origin": [0, 0, 0] } },
+  { "name": "pyramid", "codes": [], "solid": { "kind": "extrude", "profile": [[-0.2, -0.2], [0.2, -0.2], [0.2, 0.2], [-0.2, 0.2]], "plane": "xy", "from": 0, "to": 0.3, "taperTo": [1, 0] } },
+  { "name": "frustum", "codes": [], "solid": { "kind": "extrude", "profile": [[-0.2, -0.2], [0.2, -0.2], [0.2, 0.2], [-0.2, 0.2]], "plane": "xy", "from": 0, "to": 0.3, "taperTo": [1, 0.5] } },
+  { "name": "taper-read-as-scale-u-and-v", "codes": ["volume-taper-uniform"], "solid": { "kind": "extrude", "profile": [[-0.2, -0.2], [0.2, -0.2], [0.2, 0.2], [-0.2, 0.2]], "plane": "xy", "from": 0, "to": 0.3, "taperTo": [0.4, 0.4] } },
+  { "name": "taper-both-zero", "codes": ["volume-taper-degenerate"], "solid": { "kind": "extrude", "profile": [[-0.2, -0.2], [0.2, -0.2], [0.2, 0.2], [-0.2, 0.2]], "plane": "xy", "from": 0, "to": 0.3, "taperTo": [0, 0] } },
+  { "name": "loft-straight", "codes": [], "solid": { "kind": "loft", "sections": [{ "at": [0, 0, 0], "rx": 0.1, "ry": 0.1 }, { "at": [0, 0, 1], "rx": 0.1, "ry": 0.1 }], "capStart": true, "capEnd": true } },
+  { "name": "loft-hairpin", "codes": ["volume-loft-fold"], "solid": { "kind": "loft", "sections": [{ "at": [0, 0, 0], "rx": 0.2, "ry": 0.2 }, { "at": [0, 0, 1], "rx": 0.2, "ry": 0.2 }, { "at": [0, 0.05, 0.9], "rx": 0.2, "ry": 0.2 }], "capStart": true, "capEnd": true } }
+ ]
+}

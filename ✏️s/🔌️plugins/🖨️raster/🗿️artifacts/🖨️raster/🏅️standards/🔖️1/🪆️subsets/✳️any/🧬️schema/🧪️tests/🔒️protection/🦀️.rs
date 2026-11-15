@@ -25,7 +25,7 @@ fn protection_mutations_preserve_inverse_and_refuse_stale_guards() {
     let fixture:serde_json::Value=serde_json::from_str(runtime_fixture_text("../../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();
     for row in fixture["changes"].as_array().unwrap() {
         let mut base=empty_raster_snapshot();base.layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let operation=semio_s_artifact_raster_raster_mutations::RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_locked::ChangeLayerLocked {layer_id:row["id"].as_str().unwrap().into(),expected:row["expected"].as_bool().unwrap(),locked:row["locked"].as_bool().unwrap()});
+        let operation=semio_s_artifact_raster_raster_mutations::RasterMutation::ChangeLayerLocked(semio_s_artifact_raster_raster_mutations_layer_props::change_layer_locked::ChangeLayerLocked {layer_id:row["id"].as_str().unwrap().into(),expected:row["expected"].as_bool().unwrap(),locked:row["locked"].as_bool().unwrap()});
         let (next,messages)=semio_os_kernel::apply_mutation(&base,&operation).unwrap();
         if row["accepted"].as_bool().unwrap() {
             assert!(messages.is_empty());assert_eq!(layer_locked(find_layer(&next.layers,row["id"].as_str().unwrap()).unwrap()),row["locked"].as_bool().unwrap());

@@ -78,7 +78,7 @@
     },
     "producers": {
       "type": "array",
-      "minItems": 4,
+      "minItems": 6,
       "uniqueItems": true,
       "items": {
         "type": "string",
@@ -86,10 +86,12 @@
           "@teaching/architecture-course:build-parametrization-en",
           "@teaching/architecture-course:build-parametrization-de",
           "@teaching/architecture-course:build-typology-en",
-          "@teaching/architecture-course:build-typology-de"
+          "@teaching/architecture-course:build-typology-de",
+          "@teaching/architecture-course:build-heating-cooling-en",
+          "@teaching/architecture-course:build-heating-cooling-de"
         ]
       },
-      "maxItems": 4
+      "maxItems": 6
     },
     "requiredTargets": {
       "type": "array",

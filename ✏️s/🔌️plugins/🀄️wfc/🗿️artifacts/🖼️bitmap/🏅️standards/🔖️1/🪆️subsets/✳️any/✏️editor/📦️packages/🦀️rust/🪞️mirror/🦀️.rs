@@ -101,7 +101,7 @@ pub mod standards {
                     pub use component::*;
                     #[path = "."]
                     pub mod binary {
-                        pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::standards::v1::subsets::any::io::binary::*;
+                        pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::standards::v1::subsets::any::io::binary::*;
                         pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::binary::snapshot;
                         pub use semio_s_artifact_wfc_bitmap_inferences::standards::v1::subsets::any::io::binary::mutations;
                     }
@@ -149,7 +149,7 @@ pub mod editor {
         pub mod commands {
             #[path = "."]
             pub mod set_active_example {
-                pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::editor::bitmap::commands::set_active_example::*;
+                pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::editor::bitmap::commands::set_active_example::*;
                 #[cfg(test)]
                 #[path = "../../../🎮️commands/🎬️set-active-example/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;
@@ -203,7 +203,7 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod bitmap {
-        pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::viewer::bitmap::*;
+        pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::viewer::bitmap::*;
     }
 }
-pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::examples;
+pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::examples;

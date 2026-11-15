@@ -11,7 +11,7 @@ use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 #[value(rename_all = "camelCase")]
 pub struct ChangeFastenedJointPerRow {
     pub id: String,
-    pub new_per_row: usize,
+    pub new_per_row: u32,
 }
 
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFastenedJointPerRow where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::change_fastened_joint_per_row::ChangeFastenedJointPerRow> {

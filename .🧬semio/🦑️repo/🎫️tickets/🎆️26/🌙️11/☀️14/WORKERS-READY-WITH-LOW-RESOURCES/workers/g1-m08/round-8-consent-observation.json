@@ -1,0 +1,49 @@
+{
+  "at": "2026-11-14T21:08:51.693143+00:00",
+  "service_receipts_selected": {
+    "/Users/ueli/Library/Application Support/semio/access/3f08bbea4d32/service.json": {
+      "role": "service",
+      "pid": 14729,
+      "state": "ok",
+      "identity": "/Users/ueli/.local/share/semio/launcher/bin/repo",
+      "at": 1794688380883
+    }
+  },
+  "preflight_polls": [
+    {
+      "at": "2026-11-14T21:03:57Z",
+      "elapsed_s": 4.237,
+      "rc": 0,
+      "access_lines": [],
+      "access_ok_explicit": false
+    },
+    {
+      "at": "2026-11-14T21:04:56Z",
+      "elapsed_s": 63.518,
+      "rc": 0,
+      "access_lines": [],
+      "access_ok_explicit": false
+    },
+    {
+      "at": "2026-11-14T21:05:56Z",
+      "elapsed_s": 123.033,
+      "rc": 0,
+      "access_lines": [],
+      "access_ok_explicit": false
+    },
+    {
+      "at": "2026-11-14T21:06:55Z",
+      "elapsed_s": 182.77,
+      "rc": 0,
+      "access_lines": [],
+      "access_ok_explicit": false
+    },
+    {
+      "at": "2026-11-14T21:07:56Z",
+      "elapsed_s": 243.812,
+      "rc": 0,
+      "access_lines": [],
+      "access_ok_explicit": false
+    }
+  ]
+}

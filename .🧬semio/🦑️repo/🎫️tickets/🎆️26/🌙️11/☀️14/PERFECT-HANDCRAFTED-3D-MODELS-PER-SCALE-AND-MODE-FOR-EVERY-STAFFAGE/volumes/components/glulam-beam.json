@@ -1,0 +1,1658 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "lamella-00",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.56,
+     "profile": [
+      [
+       -0.3,
+       -0.074
+      ],
+      [
+       -0.294,
+       -0.08
+      ],
+      [
+       -0.26,
+       -0.08
+      ],
+      [
+       -0.26,
+       0.08
+      ],
+      [
+       -0.294,
+       0.08
+      ],
+      [
+       -0.3,
+       0.074
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-01",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       -0.26,
+       -0.08
+      ],
+      [
+       -0.22,
+       -0.08
+      ],
+      [
+       -0.22,
+       0.08
+      ],
+      [
+       -0.26,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-02",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.56,
+     "profile": [
+      [
+       -0.22,
+       -0.08
+      ],
+      [
+       -0.18,
+       -0.08
+      ],
+      [
+       -0.18,
+       0.08
+      ],
+      [
+       -0.22,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-03",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       -0.18,
+       -0.08
+      ],
+      [
+       -0.14,
+       -0.08
+      ],
+      [
+       -0.14,
+       0.08
+      ],
+      [
+       -0.18,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-04",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.56,
+     "profile": [
+      [
+       -0.14,
+       -0.08
+      ],
+      [
+       -0.1,
+       -0.08
+      ],
+      [
+       -0.1,
+       0.08
+      ],
+      [
+       -0.14,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-05",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       -0.1,
+       -0.08
+      ],
+      [
+       -0.06,
+       -0.08
+      ],
+      [
+       -0.06,
+       0.08
+      ],
+      [
+       -0.1,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-06",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.56,
+     "profile": [
+      [
+       -0.06,
+       -0.08
+      ],
+      [
+       -0.02,
+       -0.08
+      ],
+      [
+       -0.02,
+       0.08
+      ],
+      [
+       -0.06,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-07",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       -0.02,
+       -0.08
+      ],
+      [
+       0.02,
+       -0.08
+      ],
+      [
+       0.02,
+       0.08
+      ],
+      [
+       -0.02,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-08",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.56,
+     "profile": [
+      [
+       0.02,
+       -0.08
+      ],
+      [
+       0.06,
+       -0.08
+      ],
+      [
+       0.06,
+       0.08
+      ],
+      [
+       0.02,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-09",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.06,
+       -0.08
+      ],
+      [
+       0.1,
+       -0.08
+      ],
+      [
+       0.1,
+       0.08
+      ],
+      [
+       0.06,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-10",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.56,
+     "profile": [
+      [
+       0.1,
+       -0.08
+      ],
+      [
+       0.14,
+       -0.08
+      ],
+      [
+       0.14,
+       0.08
+      ],
+      [
+       0.1,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-11",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.14,
+       -0.08
+      ],
+      [
+       0.18,
+       -0.08
+      ],
+      [
+       0.18,
+       0.08
+      ],
+      [
+       0.14,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-12",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.56,
+     "profile": [
+      [
+       0.18,
+       -0.08
+      ],
+      [
+       0.22,
+       -0.08
+      ],
+      [
+       0.22,
+       0.08
+      ],
+      [
+       0.18,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-13",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.22,
+       -0.08
+      ],
+      [
+       0.26,
+       -0.08
+      ],
+      [
+       0.26,
+       0.08
+      ],
+      [
+       0.22,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "lamella-14",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.56,
+     "profile": [
+      [
+       0.26,
+       -0.08
+      ],
+      [
+       0.294,
+       -0.08
+      ],
+      [
+       0.3,
+       -0.074
+      ],
+      [
+       0.3,
+       0.074
+      ],
+      [
+       0.294,
+       0.08
+      ],
+      [
+       0.26,
+       0.08
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 8.0
+    },
+    {
+     "id": "bearing-plate-left",
+     "kind": "box",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.12,
+      0.02,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       0.06,
+       -0.31,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "bearing-plate-right",
+     "kind": "box",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.12,
+      0.02,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       7.94,
+       -0.31,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-side-l",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.036
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       -0.062
+      ]
+     },
+     "region": "beam-sides",
+     "sectionFaces": [
+      "+w",
+      "-v",
+      "+v"
+     ]
+    },
+    {
+     "id": "th-side-r",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.036
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.062
+      ]
+     },
+     "region": "beam-sides",
+     "sectionFaces": [
+      "-w",
+      "-v",
+      "+v"
+     ]
+    },
+    {
+     "id": "th-top",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.036,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.282,
+       0.0
+      ]
+     },
+     "region": "beam-top",
+     "sectionFaces": [
+      "-v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-soffit",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.036,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       -0.282,
+       0.0
+      ]
+     },
+     "region": "beam-soffit",
+     "sectionFaces": [
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-bearing-plate-left",
+     "of": "bearing-plate-left",
+     "region": "bearing-steel"
+    },
+    {
+     "id": "th-bearing-plate-right",
+     "of": "bearing-plate-right",
+     "region": "bearing-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "beam-member",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.16
+     ],
+     "cornerRadius": 0.006,
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "support-bearing-left-pin",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       -0.32
+      ],
+      [
+       0.12,
+       -0.32
+      ],
+      [
+       0.12,
+       -0.312
+      ],
+      [
+       0.09,
+       -0.312
+      ],
+      [
+       0.06,
+       -0.3
+      ],
+      [
+       0.03,
+       -0.312
+      ],
+      [
+       0.0,
+       -0.312
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08,
+     "member": "beam",
+     "part": "support",
+     "anchor": "bearing-left"
+    },
+    {
+     "id": "support-bearing-right-roller",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.16,
+       0.008
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      7.94,
+      -0.312,
+      -0.08
+     ],
+     "member": "beam",
+     "part": "support",
+     "anchor": "bearing-right"
+    },
+    {
+     "id": "joint-load-carrier",
+     "kind": "box",
+     "bone": "load-carrier",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.05,
+      0.05,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.275,
+       0.0
+      ]
+     },
+     "member": "load-carrier",
+     "part": "joint"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the beam as its fifteen 40 mm lamellae (alternating tone so the glue lines read), the outermost two with the 6 mm arris chamfer of the drawing, plus the two 120 x 20 x 160 mm steel bearing plates. Finger joints and glue lines are texture in the drawing and stay off the solid.",
+     "de": "K\u00f6rper: der Balken als seine f\u00fcnfzehn Lamellen zu 40 mm (abwechselnder Ton, damit die Leimfugen lesbar sind), die \u00e4u\u00dferen beiden mit der 6-mm-Kantenfase der Zeichnung, dazu die zwei Stahllagerplatten 120 x 20 x 160 mm. Keilzinkenst\u00f6\u00dfe und Leimfugen sind in der Zeichnung Textur und bleiben ohne Volumen."
+    },
+    {
+     "en": "Thermal: faces are skins of the effective storage depth 36 mm of the passive timber (heat capacity 24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0.036 m): two side skins, top and soffit; the bearing plates are referenced from the body. The four skins overlap in the arris prisms: the top and soffit skins span the full width, the side skins the full height, and the faces that lie against the core or against the neighbouring skin (inner faces, arris strips) are section faces, so every skin exposes its own outer face once.",
+     "de": "Thermisch: Fl\u00e4chen sind H\u00e4ute der wirksamen Speichertiefe 36 mm des passiven Holzes (W\u00e4rmekapazit\u00e4t 24 kJ/m2K = 420 kg/m3 x 1600 J/kgK x 0,036 m): zwei Seitenh\u00e4ute, Oberseite und Unterseite; die Lagerplatten werden aus dem K\u00f6rper referenziert. Die vier H\u00e4ute \u00fcberlappen in den Kantenprismen: Ober- und Unterhaut laufen \u00fcber die ganze Breite, die Seitenh\u00e4ute \u00fcber die ganze H\u00f6he, und die Fl\u00e4chen am Kern oder an der Nachbarhaut (Innenfl\u00e4chen, Kantenstreifen) sind Schnittfl\u00e4chen, damit jede Haut ihre Au\u00dfenfl\u00e4che genau einmal zeigt."
+    },
+    {
+     "en": "Structure: one member solid of the real 160 x 600 mm section (A 0.096 m2, I 0.00288 m4), a slider joint at the prismatic load carrier, and the supports by type: pin = steel pad with a fixed wedge knuckle, roller = steel pad with a free roller across the beam width. One member solid is right: the beam is a single rig bone with one 160 x 600 mm section, so its member is one solid; the load carrier is a joint, the bearings are supports.",
+     "de": "Tragwerk: ein Stabk\u00f6rper mit dem echten Querschnitt 160 x 600 mm (A 0,096 m2, I 0,00288 m4), ein Gleitgelenk am verschieblichen Lasttr\u00e4ger und die Auflager nach Typ: Festlager = Stahlplatte mit festem Keilgelenk, Rollenlager = Stahlplatte mit freier Rolle \u00fcber die Balkenbreite. Ein Stabk\u00f6rper ist richtig: der Balken ist eine einzige Bone mit dem einen Querschnitt 160 x 600 mm, sein Stab daher ein K\u00f6rper; der Lasttr\u00e4ger ist ein Gelenk, die Lager sind Auflager."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "beam",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "bearing-plate-left",
+     "kind": "box",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.12,
+      0.025,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       0.06,
+       -0.3075,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "bearing-plate-right",
+     "kind": "box",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.12,
+      0.025,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       7.94,
+       -0.3075,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-side-l",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       -0.06
+      ]
+     },
+     "region": "beam-sides",
+     "sectionFaces": [
+      "+w",
+      "-v",
+      "+v"
+     ]
+    },
+    {
+     "id": "th-side-r",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.06
+      ]
+     },
+     "region": "beam-sides",
+     "sectionFaces": [
+      "-w",
+      "-v",
+      "+v"
+     ]
+    },
+    {
+     "id": "th-top",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.04,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.28,
+       0.0
+      ]
+     },
+     "region": "beam-top",
+     "sectionFaces": [
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "slender": true
+    },
+    {
+     "id": "th-soffit",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.04,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       -0.28,
+       0.0
+      ]
+     },
+     "region": "beam-soffit",
+     "sectionFaces": [
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "slender": true
+    },
+    {
+     "id": "th-bearing-plate-left",
+     "of": "bearing-plate-left",
+     "region": "bearing-steel"
+    },
+    {
+     "id": "th-bearing-plate-right",
+     "of": "bearing-plate-right",
+     "region": "bearing-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "beam-member",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "support-bearing-left-pin",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       -0.32
+      ],
+      [
+       0.12,
+       -0.32
+      ],
+      [
+       0.12,
+       -0.31
+      ],
+      [
+       0.09,
+       -0.31
+      ],
+      [
+       0.06,
+       -0.295
+      ],
+      [
+       0.03,
+       -0.31
+      ],
+      [
+       0.0,
+       -0.31
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08,
+     "member": "beam",
+     "part": "support",
+     "anchor": "bearing-left"
+    },
+    {
+     "id": "support-bearing-right-roller",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0,
+       0.01
+      ],
+      [
+       0.16,
+       0.01
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      7.94,
+      -0.31,
+      -0.08
+     ],
+     "member": "beam",
+     "part": "support",
+     "anchor": "bearing-right"
+    },
+    {
+     "id": "joint-load-carrier",
+     "kind": "box",
+     "bone": "load-carrier",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.05,
+      0.05,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.275,
+       0.0
+      ]
+     },
+     "member": "load-carrier",
+     "part": "joint"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: lamellae, chamfers and finger joints are merged into one 160 x 600 x 8000 mm beam (the drawing shows grain hatch only); the bearing plates keep their 25 mm drawn thickness.",
+     "de": "K\u00f6rper: Lamellen, Fasen und Keilzinkenst\u00f6\u00dfe sind zu einem Balken 160 x 600 x 8000 mm zusammengefasst (die Zeichnung zeigt nur Faserschraffur); die Lagerplatten behalten ihre gezeichnete Dicke 25 mm."
+    },
+    {
+     "en": "Thermal: the same four faces as skins, now one solid per face and the 36 mm storage depth rounded to 40 mm (the nearest 10 mm); plates referenced from the body. Structure: member as before, pad and knuckle of each support are 15 mm parts, the load-carrier joint stays a 50 mm slider. The four skins overlap in the arris prisms: the top and soffit skins span the full width, the side skins the full height, and the faces that lie against the core or against the neighbouring skin (inner faces, arris strips) are section faces, so every skin exposes its own outer face once. One member solid is right: the beam is a single rig bone with one 160 x 600 mm section, so its member is one solid; the load carrier is a joint, the bearings are supports.",
+     "de": "Thermisch: dieselben vier Fl\u00e4chen als H\u00e4ute, jetzt ein K\u00f6rper je Fl\u00e4che, die Speichertiefe 36 mm auf 40 mm gerundet (n\u00e4chste 10 mm); Platten aus dem K\u00f6rper referenziert. Tragwerk: Stab wie zuvor, Platte und Gelenk jedes Auflagers sind Teile von 15 mm, das Lasttr\u00e4gergelenk bleibt ein Gleiter von 50 mm. Die vier H\u00e4ute \u00fcberlappen in den Kantenprismen: Ober- und Unterhaut laufen \u00fcber die ganze Breite, die Seitenh\u00e4ute \u00fcber die ganze H\u00f6he, und die Fl\u00e4chen am Kern oder an der Nachbarhaut (Innenfl\u00e4chen, Kantenstreifen) sind Schnittfl\u00e4chen, damit jede Haut ihre Au\u00dfenfl\u00e4che genau einmal zeigt. Ein Stabk\u00f6rper ist richtig: der Balken ist eine einzige Bone mit dem einen Querschnitt 160 x 600 mm, sein Stab daher ein K\u00f6rper; der Lasttr\u00e4ger ist ein Gelenk, die Lager sind Auflager."
+    },
+    {
+     "en": "Minimal: the thermal list is one solid per timber face region and one per bearing plate (six); a coarser list would lose a region, so its count equals the 1:50 list while body (17 to 3 solids) and structure triangles drop.",
+     "de": "Minimal: die Thermalliste hat einen K\u00f6rper je Holzfl\u00e4chenregion und einen je Lagerplatte (sechs); eine gr\u00f6bere Liste verl\u00f6re eine Region, ihre Anzahl gleicht daher der 1:50-Liste, w\u00e4hrend K\u00f6rper (17 auf 3 K\u00f6rper) und Tragwerksdreiecke sinken."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "beam",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "bearing-plate-left",
+     "kind": "box",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.12,
+      0.03,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       0.06,
+       -0.305,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "bearing-plate-right",
+     "kind": "box",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.12,
+      0.03,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       7.94,
+       -0.305,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-side-l",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.045
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       -0.0575
+      ]
+     },
+     "region": "beam-sides",
+     "sectionFaces": [
+      "+w",
+      "-v",
+      "+v"
+     ]
+    },
+    {
+     "id": "th-side-r",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.045
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.0575
+      ]
+     },
+     "region": "beam-sides",
+     "sectionFaces": [
+      "-w",
+      "-v",
+      "+v"
+     ]
+    },
+    {
+     "id": "th-top",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.045,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.2775,
+       0.0
+      ]
+     },
+     "region": "beam-top",
+     "sectionFaces": [
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "slender": true
+    },
+    {
+     "id": "th-soffit",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.045,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       -0.2775,
+       0.0
+      ]
+     },
+     "region": "beam-soffit",
+     "sectionFaces": [
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "slender": true
+    },
+    {
+     "id": "th-bearing-plate-left",
+     "of": "bearing-plate-left",
+     "region": "bearing-steel"
+    },
+    {
+     "id": "th-bearing-plate-right",
+     "of": "bearing-plate-right",
+     "region": "bearing-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "beam-member",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "support-bearing-left-pin",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       -0.32
+      ],
+      [
+       0.12,
+       -0.32
+      ],
+      [
+       0.12,
+       -0.305
+      ],
+      [
+       0.09,
+       -0.305
+      ],
+      [
+       0.06,
+       -0.2825
+      ],
+      [
+       0.03,
+       -0.305
+      ],
+      [
+       0.0,
+       -0.305
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08,
+     "member": "beam",
+     "part": "support",
+     "anchor": "bearing-left"
+    },
+    {
+     "id": "support-bearing-right-roller",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0,
+       0.015
+      ],
+      [
+       0.16,
+       0.015
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      7.94,
+      -0.305,
+      -0.08
+     ],
+     "member": "beam",
+     "part": "support",
+     "anchor": "bearing-right"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: beam and the two bearing plates, the plates thickened from 20 to 30 mm (the smallest feature at 1:200; the drawing shows them as lines at the soffit); same proportions and bounding box.",
+     "de": "K\u00f6rper: Balken und die zwei Lagerplatten, die Platten von 20 auf 30 mm verst\u00e4rkt (kleinste Einzelheit bei 1:200; die Zeichnung zeigt sie als Linien an der Unterseite); gleiche Proportionen und H\u00fcllbox."
+    },
+    {
+     "en": "Thermal: faces as skins of 45 mm (1.5 features; the 36 mm storage depth would sit just above the 30 mm feature and make this list a copy of the 1:50 one). Structure: the joint of the load carrier is merged into the member; each support is a single 30 mm part (wedge for the pin, roller for the roller bearing). The four skins overlap in the arris prisms: the top and soffit skins span the full width, the side skins the full height, and the faces that lie against the core or against the neighbouring skin (inner faces, arris strips) are section faces, so every skin exposes its own outer face once. One member solid is right: the beam is a single rig bone with one 160 x 600 mm section, so its member is one solid; the load carrier is a joint, the bearings are supports.",
+     "de": "Thermisch: Fl\u00e4chen als H\u00e4ute von 45 mm (1,5 Einzelheiten; die Speichertiefe 36 mm l\u00e4ge knapp \u00fcber der Einzelheit 30 mm und machte diese Liste zur Kopie der 1:50-Liste). Tragwerk: das Lasttr\u00e4gergelenk ist in den Stab aufgenommen; jedes Auflager ist ein einzelnes Teil von 30 mm (Keil f\u00fcr das Festlager, Rolle f\u00fcr das Rollenlager). Die vier H\u00e4ute \u00fcberlappen in den Kantenprismen: Ober- und Unterhaut laufen \u00fcber die ganze Breite, die Seitenh\u00e4ute \u00fcber die ganze H\u00f6he, und die Fl\u00e4chen am Kern oder an der Nachbarhaut (Innenfl\u00e4chen, Kantenstreifen) sind Schnittfl\u00e4chen, damit jede Haut ihre Au\u00dfenfl\u00e4che genau einmal zeigt. Ein Stabk\u00f6rper ist richtig: der Balken ist eine einzige Bone mit dem einen Querschnitt 160 x 600 mm, sein Stab daher ein K\u00f6rper; der Lasttr\u00e4ger ist ein Gelenk, die Lager sind Auflager."
+    },
+    {
+     "en": "Minimal: against 1:100 the 1:200 drawing changes only the plates (a line at the soffit instead of a 25 mm slab) and the skin thickness (45 instead of 40 mm); a glulam beam is one prism on two bearings, so beam and two plates are the least that carries them and the scale differs from 1:100 by exactly these drawn changes.",
+     "de": "Minimal: gegen\u00fcber 1:100 \u00e4ndert die Zeichnung 1:200 nur die Platten (eine Linie an der Unterseite statt einer 25-mm-Platte) und die Hauth\u00f6he (45 statt 40 mm); ein Brettschichtholztr\u00e4ger ist ein Prisma auf zwei Lagern, daher sind Balken und zwei Platten das Wenigste, das sie tr\u00e4gt, und der Ma\u00dfstab unterscheidet sich von 1:100 genau um diese gezeichneten \u00c4nderungen."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "beam",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.62,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       -0.01,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-side-l",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       -0.0425
+      ]
+     },
+     "region": "beam-sides",
+     "sectionFaces": [
+      "+w",
+      "-v",
+      "+v"
+     ]
+    },
+    {
+     "id": "th-side-r",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.0425
+      ]
+     },
+     "region": "beam-sides",
+     "sectionFaces": [
+      "-w",
+      "-v",
+      "+v"
+     ]
+    },
+    {
+     "id": "th-top",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.075,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.2625,
+       0.0
+      ]
+     },
+     "region": "beam-top",
+     "sectionFaces": [
+      "-v",
+      "-w",
+      "+w"
+     ],
+     "slender": true
+    },
+    {
+     "id": "th-soffit",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.075,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       -0.2625,
+       0.0
+      ]
+     },
+     "region": "beam-soffit",
+     "sectionFaces": [
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "slender": true
+    },
+    {
+     "id": "th-bearing-plate-left",
+     "kind": "box",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.12,
+      0.075,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       0.06,
+       -0.3225,
+       0.0
+      ]
+     },
+     "region": "bearing-steel"
+    },
+    {
+     "id": "th-bearing-plate-right",
+     "kind": "box",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.12,
+      0.075,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       7.94,
+       -0.3225,
+       0.0
+      ]
+     },
+     "region": "bearing-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "beam-member",
+     "kind": "box",
+     "bone": "beam",
+     "material": "glulam",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      8.0,
+      0.6,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "support-bearing-left-pin",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       -0.32
+      ],
+      [
+       0.12,
+       -0.32
+      ],
+      [
+       0.12,
+       -0.2825
+      ],
+      [
+       0.09,
+       -0.2825
+      ],
+      [
+       0.06,
+       -0.245
+      ],
+      [
+       0.03,
+       -0.2825
+      ],
+      [
+       0.0,
+       -0.2825
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.08,
+     "to": 0.08,
+     "member": "beam",
+     "part": "support",
+     "anchor": "bearing-left"
+    },
+    {
+     "id": "support-bearing-right-roller",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0,
+       0.0375
+      ],
+      [
+       0.16,
+       0.0375
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      7.94,
+      -0.2825,
+      -0.08
+     ],
+     "member": "beam",
+     "part": "support",
+     "anchor": "bearing-right"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: one 8000 x 620 x 160 mm block from soffit of the plates to the top of the beam, as the 1:500 drawing (a single rectangle); lamellae, chamfers and plates are merged into it.",
+     "de": "K\u00f6rper: ein Block 8000 x 620 x 160 mm von der Plattenunterseite bis zur Balkenoberkante, wie die Zeichnung 1:500 (ein einziges Rechteck); Lamellen, Fasen und Platten sind darin aufgegangen."
+    },
+    {
+     "en": "Thermal and structure are authored on their own: the bearing steel is a 75 mm block inside the block, the skins are 75 mm (the smallest feature), the member is the true section, supports are 75 mm wedge and roller blocks under the member ends; no joint (merged). The four skins overlap in the arris prisms: the top and soffit skins span the full width, the side skins the full height, and the faces that lie against the core or against the neighbouring skin (inner faces, arris strips) are section faces, so every skin exposes its own outer face once. One member solid is right: the beam is a single rig bone with one 160 x 600 mm section, so its member is one solid; the load carrier is a joint, the bearings are supports.",
+     "de": "Thermik und Tragwerk sind eigenst\u00e4ndig: der Lagerstahl ist ein Block von 75 mm im Block, die H\u00e4ute sind 75 mm (kleinste Einzelheit), der Stab hat den echten Querschnitt, die Auflager sind Keil- und Rollenbl\u00f6cke von 75 mm unter den Stabenden; kein Gelenk (zusammengefasst). Die vier H\u00e4ute \u00fcberlappen in den Kantenprismen: Ober- und Unterhaut laufen \u00fcber die ganze Breite, die Seitenh\u00e4ute \u00fcber die ganze H\u00f6he, und die Fl\u00e4chen am Kern oder an der Nachbarhaut (Innenfl\u00e4chen, Kantenstreifen) sind Schnittfl\u00e4chen, damit jede Haut ihre Au\u00dfenfl\u00e4che genau einmal zeigt. Ein Stabk\u00f6rper ist richtig: der Balken ist eine einzige Bone mit dem einen Querschnitt 160 x 600 mm, sein Stab daher ein K\u00f6rper; der Lasttr\u00e4ger ist ein Gelenk, die Lager sind Auflager."
+    },
+    {
+     "en": "Minimal: the 1:500 drawing is one rectangle, so the whole beam with its plates is one 620 mm high block; six thermal pieces and three structure solids (member, pin, roller) are all that keeps the four skin regions, the bearing steel and the load path, and no coarser abstraction of a straight prism exists.",
+     "de": "Minimal: die Zeichnung 1:500 ist ein einziges Rechteck, daher ist der ganze Balken mit seinen Platten ein 620 mm hoher Block; sechs Thermikst\u00fccke und drei Tragwerksk\u00f6rper (Stab, Festlager, Rolle) sind alles, was die vier Hautregionen, den Lagerstahl und den Lastpfad h\u00e4lt, und eine gr\u00f6bere Abstraktion eines geraden Prismas gibt es nicht."
+    }
+   ]
+  }
+ }
+}

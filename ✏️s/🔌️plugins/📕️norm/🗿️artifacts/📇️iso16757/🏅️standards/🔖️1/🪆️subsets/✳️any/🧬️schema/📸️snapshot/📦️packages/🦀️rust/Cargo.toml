@@ -24,6 +24,9 @@ semio-s-artifact-norm-iso16757-model-typescript = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-os-kernel = { workspace = true }
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }

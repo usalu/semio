@@ -1,0 +1,13 @@
+export type SteeringPathsV1=Readonly<{directory:string;priority:string;pending:string}>;
+export type PriorityV1=Readonly<{atMs:number;projects:readonly string[]}>;
+export type PendingV1=Readonly<{version:1;generation:number;atMs:number;priorityAtMs:number;projects:readonly string[]}>;
+export function steeringPathsV1(environment?:Readonly<Record<string,string|undefined>>):SteeringPathsV1|undefined;
+export function readPriorityV1(environment?:Readonly<Record<string,string|undefined>>):PriorityV1|undefined;
+export function writePriorityV1(directory:string,projects:readonly string[],atMs?:number):void;
+export function clearSteeringV1(directory:string):void;
+export function orderOwnersV1(dirty:string[],priority:PriorityV1|undefined):string[];
+export function writePendingV1(environment:Readonly<Record<string,string|undefined>>,generation:number,dirty:readonly string[],priority:PriorityV1|undefined):void;
+export function freshPriorityV1(environment:Readonly<Record<string,string|undefined>>,offered:ReadonlySet<string>,limit?:number,known?:(name:string)=>boolean):string[];
+export function readOfferedV1(environment?:Readonly<Record<string,string|undefined>>,now?:number):Set<string>;
+export function writeOfferedV1(environment:Readonly<Record<string,string|undefined>>,names:Iterable<string>,now?:number):void;
+export function readPendingV1(directory:string):PendingV1|undefined;

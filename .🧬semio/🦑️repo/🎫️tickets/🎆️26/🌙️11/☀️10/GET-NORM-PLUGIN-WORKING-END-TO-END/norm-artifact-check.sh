@@ -1,6 +1,8 @@
 #!/bin/bash
+T="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+R="$(git -C "$T" rev-parse --show-toplevel)"
 # usage: norm-artifact-check.sh <artifact-dir-name>; typechecks the package source and suites like the CheckScript.
-cd /home/deck/semio || exit 1
+cd "$R" || exit 1
 d="✏️s/🔌️plugins/📕️norm/🗿️artifacts/$1"; pkg="$d/📦️packages/🟦️typescript"
 LIBS=$(python3 -c "import json;print(','.join(json.load(open('tsconfig.json'))['compilerOptions']['lib']))")
 s=(); for x in $(grep -o 'suites:\[[^]]*\]' "$pkg/📜️script.ts" | grep -o '"[^"]*"' | tr -d '"'); do s+=("./$d/$x"); done

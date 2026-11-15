@@ -1,0 +1,20 @@
+{
+  "title": "Fleet as One Machine: Shared Hot Cache and Remote Execution",
+  "emoji": "🧠️",
+  "status": "open",
+  "description": "All synchronized machines share one hot build cache that holds entries for the synchronized state only, and compile jobs of a machine under CPU or memory pressure run on unsaturated workers, so that nothing is computed twice in the fleet.",
+  "goal": "aioptimizedrepo",
+  "sessions": ["9f6d3d77-cfd2-486b-942c-2101ee51a1fb"],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-13 21:40:00",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "prompt": "Make sure that all synchronized machines share the same hot cache; when one machine is under pressure other unsaturated workers execute its compilation jobs; the fleet behaves like one machine and nothing is computed twice. Manual open: repo MCP did not connect.",
+      "llm": "claude-fable-5-2"
+    }
+  ]
+}

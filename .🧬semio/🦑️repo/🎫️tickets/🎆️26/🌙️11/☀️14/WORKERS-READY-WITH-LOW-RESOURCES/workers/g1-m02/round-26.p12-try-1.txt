@@ -1,0 +1,33 @@
+service log: /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-25cab2808032.log
+closure entries before: 41997
+2026-11-15T08:31:24Z no slice worker
+2026-11-15T08:31:29Z no slice worker
+2026-11-15T08:31:34Z no slice worker
+2026-11-15T08:31:39Z no slice worker
+2026-11-15T08:31:44Z no slice worker
+2026-11-15T08:31:49Z pid=93308 rss=192MB footprint=[bun [93308]: 64-bit    Footprint: 127 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:31:54Z pid=93308 rss=1200MB footprint=[bun [93308]: 64-bit    Footprint: 174 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:31:59Z pid=93308 rss=1520MB footprint=[bun [93308]: 64-bit    Footprint: 272 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:04Z pid=93308 rss=2031MB footprint=[bun [93308]: 64-bit    Footprint: 307 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:10Z pid=93308 rss=2308MB footprint=[bun [93308]: 64-bit    Footprint: 443 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:15Z pid=93308 rss=2309MB footprint=[bun [93308]: 64-bit    Footprint: 409 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:20Z pid=93308 rss=2338MB footprint=[bun [93308]: 64-bit    Footprint: 405 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:25Z pid=93308 rss=2489MB footprint=[bun [93308]: 64-bit    Footprint: 407 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:30Z pid=93308 rss=2723MB footprint=[bun [93308]: 64-bit    Footprint: 421 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:35Z pid=93308 rss=2732MB footprint=[bun [93308]: 64-bit    Footprint: 404 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:40Z pid=93308 rss=2894MB footprint=[bun [93308]: 64-bit    Footprint: 524 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:45Z pid=93308 rss=2895MB footprint=[bun [93308]: 64-bit    Footprint: 405 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:50Z pid=93308 rss=2902MB footprint=[bun [93308]: 64-bit    Footprint: 400 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:32:55Z pid=93308 rss=2914MB footprint=[bun [93308]: 64-bit    Footprint: 403 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:00Z pid=93308 rss=3454MB footprint=[bun [93308]: 64-bit    Footprint: 401 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:05Z pid=93308 rss=3454MB footprint=[bun [93308]: 64-bit    Footprint: 401 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:10Z pid=93308 rss=3455MB footprint=[bun [93308]: 64-bit    Footprint: 402 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:15Z pid=93308 rss=3628MB footprint=[bun [93308]: 64-bit    Footprint: 567 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:21Z pid=93308 rss=3770MB footprint=[bun [93308]: 64-bit    Footprint: 432 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:26Z pid=93308 rss=3802MB footprint=[bun [93308]: 64-bit    Footprint: 439 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:31Z pid=93308 rss=4918MB footprint=[bun [93308]: 64-bit    Footprint: 669 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:36Z pid=93308 rss=5587MB footprint=[bun [93308]: 64-bit    Footprint: 922 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:41Z pid=93308 rss=6291MB footprint=[bun [93308]: 64-bit    Footprint: 6402 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:46Z pid=93308 rss=5836MB footprint=[bun [93308]: 64-bit    Footprint: 9464 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:51Z no slice worker
+closure entries after: 41997

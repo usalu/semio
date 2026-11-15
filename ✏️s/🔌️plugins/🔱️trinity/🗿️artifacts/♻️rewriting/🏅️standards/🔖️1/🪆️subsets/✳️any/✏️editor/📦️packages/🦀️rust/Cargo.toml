@@ -61,10 +61,10 @@ semio-s-artifact-trinity-rewriting-layout = { path = "../../../🧬️schema/�
 semio-s-artifact-trinity-rewriting-model = { path = "../../../📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting-operations = { path = "../../../🧬️schema/⚙️operations/📦️packages/🦀️rust" }
 semio-s-artifact-trinity-rewriting-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
-semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour = { path = "../../../🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/📦️packages/🦀️rust" }
+semio-s-artifact-trinity-rewriting-tests-narrows-lhs = { path = "../../../🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/📦️packages/🦀️rust" }
 
 [features]
-testkit = ["semio-s-artifact-trinity-rewriting-model/testkit", "semio-s-artifact-trinity-rewriting-layout/testkit", "semio-s-artifact-trinity-rewriting-inferences/testkit", "semio-s-artifact-trinity-rewriting-schema/testkit", "semio-s-artifact-trinity-rewriting-operations/testkit", "semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour/testkit"]
+testkit = ["semio-s-artifact-trinity-rewriting-model/testkit", "semio-s-artifact-trinity-rewriting-layout/testkit", "semio-s-artifact-trinity-rewriting-inferences/testkit", "semio-s-artifact-trinity-rewriting-schema/testkit", "semio-s-artifact-trinity-rewriting-operations/testkit", "semio-s-artifact-trinity-rewriting-tests-narrows-lhs/testkit"]
 
 [dev-dependencies]
 semio-framework = { workspace = true }
@@ -77,6 +77,6 @@ semio-s-artifact-trinity-rewriting-layout = { path = "../../../🧬️schema/�
 semio-s-artifact-trinity-rewriting-model = { path = "../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-trinity-rewriting-operations = { path = "../../../🧬️schema/⚙️operations/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-trinity-rewriting-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
-semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour = { path = "../../../🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-trinity-rewriting-tests-narrows-lhs = { path = "../../../🧬️schema/🧬️mutations/👈️edit-lhs/🧪️tests/👈️narrows/📦️packages/🦀️rust", features = ["testkit"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

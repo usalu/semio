@@ -1,0 +1,138 @@
+## /run/user/1000/semio-repo/1000/host-7372f7532ccb.log
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: 540 stale projects, 0 taken from the fleet, 77 too heavy for this machine (@semio-tech/framework-os-dev (about 22874 MB), @semio-tech/repo-lib (about 18442 MB), workspace (about 13892 MB), repo (about 13476 MB), @semio-tech/framework-plugin (about 7482 MB), @semio-tech/framework-renderer-wgpu (about 6468 MB), and 71 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 540
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 226 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 237 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 247 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 258 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 268 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 278 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 288 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 299 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 309 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 319 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 329 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 339 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 349 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 360 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 370 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 380 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 390 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 401 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 411 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 421 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 431 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 441 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 451 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 461 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 472 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 482 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 492 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 502 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 512 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 522 s ago, estimated time left: about 5 min
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: no machine of this class gave a sign of life for 5 min, so no one holds the request
+graph: nothing to wait for any longer: asked the fleet for 540 stale projects and received 0 within 302 s, 540 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+graph: plan answered, managed 105 MB, resident 195 MB (released 9 MB)
+## last waiting line: graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 522 s ago, estimated time left: about 5 min
+## last 30 lines
+[repository:command] still running after 960 s
+[repository:command] still running after 970 s
+[repo] still working after 980 s; last phase started: source.served
+[repository:command] still running after 980 s
+[repository:command] still running after 990 s
+[repository:command] still running after 1000 s
+[repo] still working after 1010 s; last phase started: source.served
+[repository:command] still running after 1010 s
+[repository:command] still running after 1020 s
+[repository:command] still running after 1030 s
+[repo] still working after 1040 s; last phase started: source.served
+[repository:command] still running after 1040 s
+[repository:command] still running after 1050 s
+[repository:command] still running after 1060 s
+[repo] still working after 1070 s; last phase started: source.served
+[repository:command] still running after 1070 s
+[repository:command] still running after 1080 s
+[repository:command] still running after 1090 s
+[repo] still working after 1100 s; last phase started: source.served
+[repository:command] still running after 1100 s
+[repository:command] still running after 1110 s
+[repository:command] still running after 1120 s
+[repo] still working after 1130 s; last phase started: source.served
+[repository:command] still running after 1130 s
+[repository:command] still running after 1140 s
+2026-11-15T05:50:04.460Z shutdown superseded
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"resource-retirement-inventory:128","mode":"shared","elapsedMs":19}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"claim-retirement-scan:128","mode":"exclusive","elapsedMs":164}}
+[repository:command] still running after 1150 s
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+## /run/user/1000/semio-repo/1000/host-d261ad6bff6a.log
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: 540 stale projects, 0 taken from the fleet, 77 too heavy for this machine (@semio-tech/framework-os-dev (about 22794 MB), @semio-tech/repo-lib (about 18378 MB), workspace (about 13842 MB), repo (about 13428 MB), @semio-tech/framework-plugin (about 7456 MB), @semio-tech/framework-renderer-wgpu (about 6444 MB), and 71 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 540
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 285 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 295 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 306 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 316 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 326 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 336 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 346 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 357 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 367 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 377 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 388 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 398 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 408 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 418 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 428 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 438 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 448 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 458 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 469 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 479 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 489 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 499 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 509 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 519 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 529 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 539 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 549 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 560 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 570 s ago, estimated time left: about 5 min
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 580 s ago, estimated time left: about 5 min
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: no machine of this class gave a sign of life for 5 min, so no one holds the request
+graph: nothing to wait for any longer: asked the fleet for 540 stale projects and received 0 within 301 s, 540 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+graph: plan answered, managed 106 MB, resident 203 MB (released 25 MB)
+## last waiting line: graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 580 s ago, estimated time left: about 5 min
+## last 30 lines
+[repository:command] still running after 570 s
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 489 s ago, estimated time left: about 5 min
+[repository:command] still running after 580 s
+[repo] still working after 590 s; last phase started: source.served
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 499 s ago, estimated time left: about 5 min
+[repository:command] still running after 590 s
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 509 s ago, estimated time left: about 5 min
+[repository:command] still running after 600 s
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 519 s ago, estimated time left: about 5 min
+[repository:command] still running after 610 s
+[repo] still working after 620 s; last phase started: source.served
+[repository:command] still running after 620 s
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 529 s ago, estimated time left: about 5 min
+[repository:command] still running after 630 s
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 539 s ago, estimated time left: about 5 min
+[repository:command] still running after 640 s
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 549 s ago, estimated time left: about 5 min
+[repo] still working after 650 s; last phase started: source.served
+[repository:command] still running after 650 s
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 560 s ago, estimated time left: about 5 min
+[repository:command] still running after 660 s
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 570 s ago, estimated time left: about 5 min
+[repository:command] still running after 670 s
+graph: waiting for the fleet: 0 of 540 projects arrived; the server last progressed 580 s ago, estimated time left: about 5 min
+[repo] still working after 680 s; last phase started: source.served
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: no machine of this class gave a sign of life for 5 min, so no one holds the request
+graph: nothing to wait for any longer: asked the fleet for 540 stale projects and received 0 within 301 s, 540 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-15T06:00:07.317Z graph-wanted-expired {"wanted":"540","arrived":"0","seconds":"301","missing":"540","local":"0","heavy":""}
+graph: plan answered, managed 106 MB, resident 203 MB (released 25 MB)

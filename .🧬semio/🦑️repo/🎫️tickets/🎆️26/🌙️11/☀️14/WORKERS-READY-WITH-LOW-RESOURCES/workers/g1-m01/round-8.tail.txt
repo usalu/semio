@@ -1,0 +1,200 @@
+Reading the project graph slice (358 s): flush 1 of 1.
+Reading the project graph slice (360 s): flush 1 of 1.
+Reading the project graph slice (362 s): flush 1 of 1.
+Reading the project graph slice (364 s): flush 1 of 1.
+Reading the project graph slice (366 s): flush 1 of 1.
+Reading the project graph slice (368 s): flush 1 of 1.
+Reading the project graph slice (370 s): flush 1 of 1.
+Reading the project graph slice (372 s): flush 1 of 1.
+Reading the project graph slice (374 s): flush 1 of 1.
+[repo] still working after 380 s; last phase started: door.script
+Reading the project graph slice (376 s): flush 1 of 1.
+Reading the project graph slice (378 s): flush 1 of 1.
+Reading the project graph slice (380 s): flush 1 of 1.
+Reading the project graph slice (382 s): flush 1 of 1.
+Reading the project graph slice (384 s): flush 1 of 1.
+Reading the project graph slice (386 s): flush 1 of 1.
+Reading the project graph slice (388 s): flush 1 of 1.
+Reading the project graph slice (390 s): flush 1 of 1.
+Reading the project graph slice (392 s): flush 1 of 1.
+Reading the project graph slice (394 s): flush 1 of 1.
+Reading the project graph slice (396 s): flush 1 of 1.
+Reading the project graph slice (398 s): flush 1 of 1.
+Reading the project graph slice (400 s): flush 1 of 1.
+Reading the project graph slice (402 s): flush 1 of 1.
+Reading the project graph slice (404 s): flush 1 of 1.
+[repo] still working after 410 s; last phase started: door.script
+Reading the project graph slice (406 s): flush 1 of 1.
+Reading the project graph slice (408 s): flush 1 of 1.
+Reading the project graph slice (410 s): flush 1 of 1.
+Reading the project graph slice (412 s): flush 1 of 1.
+Reading the project graph slice (414 s): flush 1 of 1.
+Reading the project graph slice (416 s): flush 1 of 1.
+Reading the project graph slice (418 s): flush 1 of 1.
+Reading the project graph slice (420 s): flush 1 of 1.
+Reading the project graph slice (422 s): flush 1 of 1.
+Reading the project graph slice (424 s): flush 1 of 1.
+Reading the project graph slice (426 s): flush 1 of 1.
+Reading the project graph slice (428 s): flush 1 of 1.
+Reading the project graph slice (430 s): flush 1 of 1.
+Reading the project graph slice (432 s): flush 1 of 1.
+Reading the project graph slice (434 s): flush 1 of 1.
+[repo] still working after 440 s; last phase started: door.script
+Reading the project graph slice (437 s): doubt 0 of 451004.
+Reading the project graph slice (439 s): files 0 of 0.
+Reading the project graph slice (441 s): doubt 451004 of 451004.
+Reading the project graph slice (443 s): facts 57344 of 271256.
+Reading the project graph slice (445 s): facts 98304 of 271256.
+Reading the project graph slice (447 s): facts 163840 of 271256.
+Reading the project graph slice (449 s): facts 184320 of 271256.
+Reading the project graph slice (451 s): facts 241664 of 271256.
+Reading the project graph slice (453 s): facts 271256 of 271256.
+Reading the project graph slice (455 s): facts 271256 of 271256.
+Reading the project graph slice (457 s): facts 271256 of 271256.
+Reading the project graph slice (459 s): facts 271256 of 271256.
+Reading the project graph slice (461 s): facts 271256 of 271256.
+Reading the project graph slice (463 s): flush 1 of 1.
+Reading the project graph slice (465 s): flush 1 of 1.
+[repo] still working after 470 s; last phase started: door.script
+Reading the project graph slice (467 s): flush 1 of 1.
+Reading the project graph slice (469 s): flush 1 of 1.
+Reading the project graph slice (471 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (473 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (475 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0).
+Reading the project graph slice (477 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0).
+Reading the project graph slice (479 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0).
+Reading the project graph slice (481 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 10, 0).
+Reading the project graph slice (483 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 10, 0).
+Reading the project graph slice (485 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 15, 0).
+Reading the project graph slice (487 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 15, 0).
+Reading the project graph slice (489 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 15, 0).
+Reading the project graph slice (491 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 20, 0).
+Reading the project graph slice (493 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 20, 0).
+Reading the project graph slice (495 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 25, 0).
+[repo] still working after 500 s; last phase started: door.script
+Reading the project graph slice (497 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (499 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (501 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (503 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (505 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (507 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (509 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (511 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (513 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (515 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (517 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (519 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (521 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (523 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (525 s): owners 0 of 1; running (name, kind, seconds, rows): .
+[repo] still working after 530 s; last phase started: door.script
+Reading the project graph slice (527 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (529 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (531 s): owners 1 of 1.
+Reading the project graph slice (533 s): owners 1 of 1.
+Reading the project graph slice (535 s): owners 1 of 1.
+Reading the project graph slice (537 s): owners 1 of 1.
+Reading the project graph slice (539 s): owners 1 of 1.
+Reading the project graph slice (541 s): owners 1 of 1.
+Reading the project graph slice (543 s): owners 1 of 1.
+Reading the project graph slice (545 s): owners 1 of 1.
+Reading the project graph slice (547 s): owners 1 of 1.
+Reading the project graph slice (549 s): owners 1 of 1.
+Reading the project graph slice (551 s): owners 1 of 1.
+Reading the project graph slice (553 s): owners 1 of 1.
+Reading the project graph slice (555 s): owners 1 of 1.
+[repo] still working after 560 s; last phase started: door.script
+Reading the project graph slice (557 s): owners 1 of 1.
+Reading the project graph slice (559 s): owners 1 of 1.
+Reading the project graph slice (561 s): owners 1 of 1.
+Reading the project graph slice (563 s): owners 1 of 1.
+Reading the project graph slice (565 s): owners 1 of 1.
+Reading the project graph slice (567 s): owners 1 of 1.
+Reading the project graph slice (569 s): owners 1 of 1.
+Reading the project graph slice (571 s): owners 1 of 1.
+Reading the project graph slice (573 s): owners 1 of 1.
+Reading the project graph slice (575 s): owners 1 of 1.
+Reading the project graph slice (577 s): owners 1 of 1.
+Reading the project graph slice (579 s): owners 1 of 1.
+Reading the project graph slice (581 s): owners 1 of 1.
+Reading the project graph slice (583 s): owners 1 of 1.
+Reading the project graph slice (585 s): owners 1 of 1.
+[repo] still working after 590 s; last phase started: door.script
+Reading the project graph slice (587 s): owners 1 of 1.
+Reading the project graph slice (589 s): owners 1 of 1.
+Reading the project graph slice (591 s): owners 1 of 1.
+Reading the project graph slice (593 s): owners 1 of 1.
+Reading the project graph slice (595 s): owners 1 of 1.
+Reading the project graph slice (598 s): owners 1 of 1.
+Reading the project graph slice (600 s): owners 1 of 1.
+Reading the project graph slice (602 s): owners 1 of 1.
+Reading the project graph slice (604 s): owners 1 of 1.
+Reading the project graph slice (606 s): owners 1 of 1.
+Reading the project graph slice (608 s): owners 1 of 1.
+Reading the project graph slice (610 s): owners 1 of 1.
+Reading the project graph slice (612 s): owners 1 of 1.
+Reading the project graph slice (614 s): owners 1 of 1.
+[repo] still working after 620 s; last phase started: door.script
+Reading the project graph slice (616 s): owners 1 of 1.
+Reading the project graph slice (618 s): owners 1 of 1.
+Reading the project graph slice (620 s): owners 1 of 1.
+Reading the project graph slice (622 s): owners 1 of 1.
+Reading the project graph slice (624 s): owners 1 of 1.
+Reading the project graph slice (626 s): owners 1 of 1.
+Reading the project graph slice (628 s): owners 1 of 1.
+Reading the project graph slice (630 s): owners 1 of 1.
+Reading the project graph slice (632 s): owners 1 of 1.
+Reading the project graph slice (634 s): owners 1 of 1.
+Reading the project graph slice (636 s): owners 1 of 1.
+Reading the project graph slice (638 s): owners 1 of 1.
+Reading the project graph slice (640 s): owners 1 of 1.
+Reading the project graph slice (642 s): owners 1 of 1.
+Reading the project graph slice (644 s): owners 1 of 1.
+[repo] still working after 650 s; last phase started: door.script
+Reading the project graph slice (646 s): owners 1 of 1.
+Reading the project graph slice (648 s): owners 1 of 1.
+Reading the project graph slice (650 s): owners 1 of 1.
+Reading the project graph slice (652 s): owners 1 of 1.
+Reading the project graph slice (655 s): owners 1 of 1.
+Reading the project graph slice (657 s): owners 1 of 1.
+Reading the project graph slice (659 s): owners 1 of 1.
+Reading the project graph slice (661 s): owners 1 of 1.
+Reading the project graph slice (663 s): owners 1 of 1.
+Reading the project graph slice (665 s): owners 1 of 1.
+Reading the project graph slice (667 s): owners 1 of 1.
+Reading the project graph slice (669 s): owners 1 of 1.
+Reading the project graph slice (671 s): owners 1 of 1.
+Reading the project graph slice (673 s): owners 1 of 1.
+Reading the project graph slice (675 s): owners 1 of 1.
+[repo] still working after 680 s; last phase started: door.script
+Reading the project graph slice (677 s): owners 1 of 1.
+Reading the project graph slice (679 s): owners 1 of 1.
+Reading the project graph slice (681 s): owners 1 of 1.
+Reading the project graph slice (683 s): owners 1 of 1.
+Reading the project graph slice (685 s): owners 1 of 1.
+Reading the project graph slice (687 s): owners 1 of 1.
+Reading the project graph slice (689 s): owners 1 of 1.
+Reading the project graph slice (691 s): owners 1 of 1.
+Reading the project graph slice (693 s): owners 1 of 1.
+Reading the project graph slice (695 s): owners 1 of 1.
+Reading the project graph slice (697 s): owners 1 of 1.
+Reading the project graph slice (699 s): owners 1 of 1.
+Reading the project graph slice (701 s): owners 1 of 1.
+Reading the project graph slice (703 s): owners 1 of 1.
+Reading the project graph slice (705 s): owners 1 of 1.
+[repo] still working after 710 s; last phase started: door.script
+Reading the project graph slice (707 s): owners 1 of 1.
+Reading the project graph slice (709 s): owners 1 of 1.
+Reading the project graph slice (711 s): owners 1 of 1.
+Reading the project graph slice (713 s): owners 1 of 1.
+Reading the project graph slice (715 s): owners 1 of 1.
+Reading the project graph slice (717 s): owners 1 of 1.
+Reading the project graph slice (719 s): owners 1 of 1.
+Reading the project graph slice (721 s): owners 1 of 1.
+Reading the project graph slice (723 s): owners 1 of 1.
+Reading the project graph slice (725 s): owners 1 of 1.
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+Cancelled (SIGINT); leases released.
+Internal error: Original Script process interrupted
+end 2026-11-15T00:55:37Z
+native_rc=1

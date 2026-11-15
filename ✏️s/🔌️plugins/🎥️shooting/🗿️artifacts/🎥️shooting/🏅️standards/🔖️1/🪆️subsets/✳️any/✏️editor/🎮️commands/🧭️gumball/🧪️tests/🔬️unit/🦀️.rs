@@ -112,7 +112,7 @@ async fn an_id_less_gesture_moves_the_live_selection() {
     let before = origin(&app, &asset_id);
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).expect("targets");
     let admitted = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
-    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("the selection admission settles");
+    semio_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("the selection admission settles");
     artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the selection settles");
     let captured = app.interaction_state().await;
     let rows = dispatch_rows(&mut app, translate(Vec::new(), 3.0)).await;
@@ -178,7 +178,7 @@ async fn a_gumball_drag_edited_in_history_replays_its_downstream() {
         }
         let demand = disposer.retirement_demands(&store, 4_096).expect("the store quotes its close");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(4_096), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        let step = disposer.close_step(&mut store, grant).expect("the store retires");
+        let step = disposer.close_step_cold(&mut store, grant).expect("the store retires");
         assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "every close receipt fits its grant");
     }
     assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");

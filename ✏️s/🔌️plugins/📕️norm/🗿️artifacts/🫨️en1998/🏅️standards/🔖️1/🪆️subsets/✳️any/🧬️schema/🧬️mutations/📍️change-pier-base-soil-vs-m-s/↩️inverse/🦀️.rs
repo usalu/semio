@@ -1,4 +1,4 @@
-//! ↩️ `change-pier-base-soil-vs-m-s` inverse: restores the previous `soil_vs_m_s`.
+//! ↩️ `change-pier-base-soil-vs-ms` inverse: restores the previous `soil_vs_m_s`.
 
 use crate::change_pier_base_soil_vs_m_s::ChangePierBaseSoilVsMS;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

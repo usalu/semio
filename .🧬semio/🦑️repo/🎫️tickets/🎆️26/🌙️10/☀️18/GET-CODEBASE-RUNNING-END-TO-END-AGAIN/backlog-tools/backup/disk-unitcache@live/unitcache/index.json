@@ -1,0 +1,32 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json": {
+  "backup": "000.orig",
+  "base": "44acf152654408c39e0c3b90eb885cf3d0becf44254eb3738fb778eb45a6ea7d",
+  "applied": "884bb4ef33f0fa95f2eb2746e267b110f8262c71a62412b61d56f79ce33b5a9e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts": {
+  "backup": "001.orig",
+  "base": "af6f351e583d61e139d6dd67b7b4fa93fe497e92116ae6deaed2535bd7d29a90",
+  "applied": "b8d5eb2d91eddf0ba75d372b69e352657b14beed32afe9ccbbf36ed5509d7638"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🟦️.ts": {
+  "backup": "002.orig",
+  "base": "304fff7784ddab776fce857e23897a0c800c8a51d50a177c266cfa413633a5bd",
+  "applied": "fd737222b3ce131d6fcb7afa31e141f37806f39f7940c39482bedcc3af5a54c0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📖️admissions/🟦️.ts": {
+  "backup": null,
+  "base": "absent",
+  "applied": "837ee140b70b9605972d2ddbc70ce170a7cd25952bc99850520820260f3c6a92"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📖️admissions/🧪️tests/🟦️.ts": {
+  "backup": null,
+  "base": "absent",
+  "applied": "d5665ec6fbec6ca5c9ea70ab13d15b883febccf77f470d083fb790724413e284"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🎯️budget/🟦️.ts": {
+  "backup": null,
+  "base": "absent",
+  "applied": "875653fc65a9f5afb10aa940cf3b8d75ca97b9a31ec5a7104552d765b45ba00c"
+ }
+}

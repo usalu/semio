@@ -2,7 +2,7 @@
  *
  * Pipeline, one source for every step: the bone frames of `evaluate` pose the tessellated solids of the volume (./🧱️mesh, the kernel tessellator at a chord tolerance of 0.04 paper millimetres, the same glyph placements as `modelOf` in ../../🧊️volume/🧷️frames); the camera is the fourth camera of ../🔭️views (isometric, ISO 5456-3 dimetric or free, the vertical axis true to scale);
  * exact hidden-surface removal (./📐️visibility) leaves, per solid, the visible faces as convex polygons that ./🖇️stitch merges per solid and shading band into one clean outline path; the visible silhouette, crease and interpenetration lines come from ./🧭️edges and the same exact hidden-line removal and are stroked with the pens of the authored representation of the scale.
- * Level of detail is the authored `maxDenominator` of the solids and the role pens of the representation (a role whose pen is `null` at that scale is not drawn), nothing else. The seven views use the colours, ramps, hatch patterns, values and legends of the planar views (`baseStyle`, `thermalView`, `memberView`); the arrows, arcs, centre of mass and emitter cones of the analytic views are the 3D glyph solids of the model.
+ * Level of detail is the individually authored volume of the scale (its own `body`, `thermal` and `structure` solids, never a filtered copy of another scale) and the role pens of the representation (a role whose pen is `null` at that scale is not drawn), nothing else. The seven views use the colours, ramps, hatch patterns, values and legends of the planar views (`baseStyle`, `thermalView`, `memberView`); the arrows, arcs, centre of mass and emitter cones of the analytic views are the 3D glyph solids of the model.
  *
  * What is to scale: see {@link axonometricCamera}. Deterministic in `(state, options, analysis)`. Expensive: progress and cancellation go through the checkpoints of the generator ({@link Checkpoint}), driven by `depict(..., control)` or `depictAsync`.
  *
@@ -27,6 +27,7 @@ import { thermalView } from "../🌡️thermal-view/🟦️.ts";
 import { ViewMissingError, type AxonometricCamera } from "../🔭️views/🟦️.ts";
 import type { Checkpoint } from "../⏳️steps/🟦️.ts";
 import { type Soup, type Part, poseSoup, surfacesAt } from "./🧱️mesh/🟦️.ts";
+import { modeOf } from "../../🔗️contracts/🟦️.ts";
 import { type Candidate, edgesOf, joinsOf } from "./🧭️edges/🟦️.ts";
 import { type Path, chainOf, unionOf } from "./🖇️stitch/🟦️.ts";
 import { Visibility, toleranceOf } from "./📐️visibility/🟦️.ts";
@@ -95,18 +96,19 @@ function arcLegend(ctx: Ctx, max: number): Legend {
 
 type Segment = readonly [number, number, number, number];
 
-/** 🖌️ Draws the figure of the context's state into the canvas: the fills per solid, the visible lines and the ground outline. A generator that yields a {@link Checkpoint} between its steps (every few hundred triangles). Throws `ViewMissingError` for an asset without volume. */
+/** 🖌️ Draws the figure of the context's state into the canvas: the fills per solid, the visible lines and the ground outline. A generator that yields a {@link Checkpoint} between its steps (every few hundred triangles). Throws `ViewMissingError` for a scale whose volume is not authored: the solids are those of the list of the view's mode (tone views `body`, `thermal`, forces and moments `structure`) at that scale, never another scale's. */
 export function* drawAxonometric(canvas: Canvas, ctx: Ctx, source: Source, analytic: Analysis3d, figure: FigureOptions): Generator<Checkpoint, AxonometricFigure> {
   const { state, options, k, theme, colours } = ctx;
   const asset = state.asset;
   const camera = ctx.camera;
   if (camera === undefined) throw new Error("an axonometric depiction needs ctx.camera");
-  if (asset.volume === undefined) throw new ViewMissingError(asset.id, "axonometric");
   const view = options.view;
   const denominator = options.scale.denominator;
+  const mode = modeOf(view);
+  if (asset.volumes[`${denominator}` as "50"]?.status !== "authored") throw new ViewMissingError(asset.id, "axonometric");
   const mm = denominator / 1000;
   const heightM = asset.dimensions.heightM;
-  const surfaces = surfacesAt(asset, denominator);
+  const surfaces = surfacesAt(asset, denominator, mode);
   const slots = new Slots();
   const eligible = eligibleBones(asset, heightM);
   const range = options.range;
@@ -131,7 +133,7 @@ export function* drawAxonometric(canvas: Canvas, ctx: Ctx, source: Source, analy
   );
 
   yield { done: 0, total: PERMILLE, label: LABELS.pose };
-  const soup: Soup = poseSoup(asset, frame, slots.map, denominator);
+  const soup: Soup = poseSoup(asset, frame, slots.map, denominator, mode);
   const parts = soup.parts;
   const pens = source.pens;
   const drawn = parts.map((p) => p.kind === "glyph" || pens[p.role] !== null);
@@ -197,7 +199,7 @@ export function* drawAxonometric(canvas: Canvas, ctx: Ctx, source: Source, analy
     const p = parts[part]!;
     if (p.kind !== "solid") return;
     const regions = p.regions;
-    const shape = { ...SHAPE_STUB, id: p.id, bone: p.bone!, role: p.role, z: order, filled: true, tone: p.tone, ...(regions.length === 1 ? { region: regions[0]! } : regions.length > 1 ? { regions } : {}) } as unknown as Shape;
+    const shape = { ...SHAPE_STUB, id: p.id, bone: (p.solid?.part === "support" || p.solid?.part === "mass" ? "" : (p.solid?.member ?? p.bone))!, role: p.role, z: order, filled: true, tone: p.tone, ...(regions.length === 1 ? { region: regions[0]! } : regions.length > 1 ? { regions } : {}) } as unknown as Shape;
     prepared.set(part, { shape, rings: [], closed: true, box: { minX: 0, minY: 0, maxX: 0, maxY: 0 }, order, occluder: null, weightMm: pens[p.role] ?? 0, hatch: null, parent: parents.get(p.bone!) ?? null });
   });
   const visibleSolids = [...prepared.values()];

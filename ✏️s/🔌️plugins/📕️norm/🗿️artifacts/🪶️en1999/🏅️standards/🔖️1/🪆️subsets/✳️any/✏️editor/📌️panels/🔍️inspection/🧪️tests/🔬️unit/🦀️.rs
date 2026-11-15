@@ -1,6 +1,10 @@
 use crate::panels::inspection::*;
 use crate::unit_tests::context;
 use crate::CONTROLLER_ID;
+use semio_s_plugin_norm_compliance::NormHost;
+use semio_s_artifact_norm_en1999_editor::En1999Family;
+use semio_plugin::PanelGroup;
+use semio_plugin::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {

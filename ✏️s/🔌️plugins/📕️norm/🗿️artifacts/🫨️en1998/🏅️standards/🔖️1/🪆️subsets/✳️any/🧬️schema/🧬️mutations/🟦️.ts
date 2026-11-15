@@ -120,6 +120,7 @@ import { type ChangeFoundationLiqUnitWtNM3, parseChangeFoundationLiqUnitWtNM3 } 
 import { type ChangeFoundationLiqWaterDepthM, parseChangeFoundationLiqWaterDepthM } from "./✏️change-foundation-liq-water-depth-m/🧬️schema/🟦️.ts";
 import { type ChangeFoundationPRdPa, parseChangeFoundationPRdPa } from "./✏️change-foundation-p-rd-pa/🧬️schema/🟦️.ts";
 import { type ChangeFoundationPassiveResistanceN, parseChangeFoundationPassiveResistanceN } from "./✏️change-foundation-passive-resistance-n/🧬️schema/🟦️.ts";
+import { type ChangeFoundationPileAxialLoadN, parseChangeFoundationPileAxialLoadN } from "./✏️change-foundation-pile-axial-load-n/🧬️schema/🟦️.ts";
 import { type ChangeFoundationPileDiameterM, parseChangeFoundationPileDiameterM } from "./✏️change-foundation-pile-diameter-m/🧬️schema/🟦️.ts";
 import { type ChangeFoundationPileHeadFixed, parseChangeFoundationPileHeadFixed } from "./✏️change-foundation-pile-head-fixed/🧬️schema/🟦️.ts";
 import { type ChangeFoundationPileHeadShearN, parseChangeFoundationPileHeadShearN } from "./✏️change-foundation-pile-head-shear-n/🧬️schema/🟦️.ts";
@@ -561,6 +562,7 @@ export type En1998Mutation =
   | ChangeFoundationPileModulusPa
   | ChangeFoundationPileKsNM3
   | ChangeFoundationPileHeadShearN
+  | ChangeFoundationPileAxialLoadN
   | ChangeFoundationPileHeadFixed
   | ChangeFoundationPileIfaceM
   | ChangeFoundationPileUpVsMS
@@ -923,6 +925,7 @@ export const parseEn1998Mutation: NormWireReader<En1998Mutation> = normWireTagge
   changeFoundationPileModulusPa: parseChangeFoundationPileModulusPa,
   changeFoundationPileKsNM3: parseChangeFoundationPileKsNM3,
   changeFoundationPileHeadShearN: parseChangeFoundationPileHeadShearN,
+  changeFoundationPileAxialLoadN: parseChangeFoundationPileAxialLoadN,
   changeFoundationPileHeadFixed: parseChangeFoundationPileHeadFixed,
   changeFoundationPileIfaceM: parseChangeFoundationPileIfaceM,
   changeFoundationPileUpVsMS: parseChangeFoundationPileUpVsMS,

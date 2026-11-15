@@ -7,7 +7,8 @@ extern crate semio_s_plugin_norm_mechanics as mechanics;
 extern crate semio_s_plugin_norm_structural_scene as scene;
 
 pub use semio_s_artifact_norm_en1999_scene_core::*;
-use semio_s_artifact_norm_en1999_scene_core::{kit, layout, facts, handles};
+use semio_s_artifact_norm_en1999_scene_core::{kit, layout, facts};
+pub use semio_s_artifact_norm_en1999_scene_core::handles::handles;
 
 #[path = "📈️diagrams/🦀️.rs"]
 pub mod diagrams;

@@ -4,6 +4,7 @@
  *
  * @see ./🥒️.feature — the scenarios
  */
+import { bodyOf } from "../🧰️support/🧊️volumes/🟦️.ts";
 import { Box3, Matrix4, Quaternion, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
 import { poseModel, restWorldMatrices, tessellateSolid, transformPoint } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
@@ -117,7 +118,7 @@ describe("🧊️ frame conversion between the staffage world and the neutral mo
   it.each(["sample-figure", "dairy-cow", "bookshelf", "toaster"])("reproduces in the staffage world, at rest and in the default pose, the point set of the raw kernel tessellation carried by the bone frames (the reference of the authoring tool volume-lib) for %s, wound outward", async (id) => {
     const asset = id === "sample-figure" ? sampleFigure() : volumeAssets().find((a) => a.id === id);
     if (asset === undefined) return;
-    const document = await modelOf(asset, { scale: 50, views: ["light-solid"], poses: [asset.presentation.defaultPose], clips: [], at: { kind: "pose", pose: asset.presentation.defaultPose } });
+    const document = await modelOf(asset, { scale: 50, view: "light-solid", poses: [asset.presentation.defaultPose], clips: [], at: { kind: "pose", pose: asset.presentation.defaultPose } });
     const nodes = skeletonOf(asset);
     const state = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose });
     const states = [
@@ -125,9 +126,8 @@ describe("🧊️ frame conversion between the staffage world and the neutral mo
       { frames: Object.fromEntries(Object.entries(state.bones).map(([k, b]) => [k, { o: [b.frame.o.x, b.frame.o.y, b.frame.o.z], u: [b.frame.u.x, b.frame.u.y, b.frame.u.z], v: [b.frame.v.x, b.frame.v.y, b.frame.v.z], w: [b.frame.w.x, b.frame.w.y, b.frame.w.z] }])), world: new Map(Object.entries(poseModel(document, asset.presentation.defaultPose).world)), weighted: false },
     ];
     for (const { frames, world, weighted } of states) {
-      for (const solid of asset.volume!.solids) {
+      for (const solid of bodyOf(asset, 50)) {
         if (!weighted && solid.weights !== undefined) continue;
-        if (solid.maxDenominator !== undefined && solid.maxDenominator < 50) continue;
         const raw = tessellateSolid({ ...solid, node: solid.bone } as never, FINE);
         const ours = tessellateSolid(solidOf(solid, "m"), FINE);
         expect(ours.positions.length, solid.id).toBe(raw.positions.length);
@@ -147,7 +147,7 @@ describe("🧊️ frame conversion between the staffage world and the neutral mo
 
   it("keeps the loft sections as authored: the torso sections, turned by their rotation, lie across the bone, extent from the hand-computed numbers", () => {
     const asset = sampleFigure();
-    const solid = asset.volume!.solids.find((s) => s.id === vectors.loft.solid)!;
+    const solid = bodyOf(asset, 50).find((s) => s.id === vectors.loft.solid)!;
     expect(solid.kind).toBe("loft");
     const geometry = tessellateSolid(solidOf(solid, "m"), FINE);
     const box = new Box3();

@@ -3,9 +3,11 @@
  * Per solid: raw geometry in the node frame, then `transform` (scale, rotation, translation), then the k-th repeat copy applies the step `translate(translation) * rotateAbout(origin, rotationAxis, rotationRad)` k times.
  * Rigid solids (no `weights`) become primitives of one mesh per node (mesh id = node id, merged per material) in node-local coordinates. Weighted solids are brought into model space with the rest world matrix of their node, blended uniformly
  * over at most four joints, and gathered in one skin (`skin`) on one mesh (`skinned`) carried by a new identity root node (`skinned`), with inverse bind matrices of the rest pose.
+ * With scenes, a solid belongs to the scenes of its node; weighted solids are grouped by that scene set into one mesh and one identity root node per distinct set (`skinned`, or `skinned-<scene>-<scene>` when several sets exist) that joins each of its scenes; all groups share the one skin. With `option.scene` only that scene is tessellated ({@link selectScene}).
  * Every primitive lists in `solids` which solid produced which contiguous index range (solid order, covering all indices).
  * @see ../🧬️schema/🟦️.ts */
-import type { Mesh, ModelDocument, Node, Operation, Primitive, PrimitiveSolid, Quality, Skin, Slug, Solid } from "../🧬️schema/🟦️.ts";
+import type { Mesh, ModelDocument, Node, Operation, Primitive, PrimitiveSolid, Quality, Scene, Skin, Slug, Solid } from "../🧬️schema/🟦️.ts";
+import { selectScene, sceneIdsOfNodes, type SceneOption } from "../🎞️scenes/🟦️.ts";
 import { compose, determinant3, identity4, invert4, multiply4, normalMatrix, qAxisAngle, transformNormal, transformPoint, worldMatrices, type M4, type V3 } from "../🧮️math/🟦️.ts";
 import { CancelledError, Pace, silentOperation } from "../⏱️operation/🟦️.ts";
 import { validateModel } from "../✅️validation/🟦️.ts";
@@ -112,15 +114,17 @@ const VALIDATION_SHARE = 0.05;
 const yieldToLoop = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 /** 🏭️ Turns every solid into primitives (see module docs); the result carries no solids. Rejects with {@link CancelledError} when cancelled (checked between solids, inside validation and inside every solid's tessellation) and {@link ModelInvalidError} when the document has errors. */
-export async function tessellate(document: ModelDocument, quality: Quality, operation: Operation = silentOperation): Promise<ModelDocument> {
+export async function tessellate(source: ModelDocument, quality: Quality, operation: Operation = silentOperation, option: SceneOption = {}): Promise<ModelDocument> {
   const pace = new Pace(operation);
-  const issues = validateModel(document, { report: (f) => operation.report(f * VALIDATION_SHARE), cancelled: () => operation.cancelled() });
+  const issues = validateModel(source, { report: (f) => operation.report(f * VALIDATION_SHARE), cancelled: () => operation.cancelled() });
   if (issues.some((i) => i.severity === "error")) throw new ModelInvalidError(issues);
+  const document = option.scene === undefined ? source : selectScene(source, option.scene);
   if (document.solids.length === 0) return document;
+  const sceneOfNode = sceneIdsOfNodes(document);
   const world = restWorldMatrices(document.nodes);
   const nodeIndex = new Map(document.nodes.map((n, i) => [n.id, i]));
   const rigid = new Map<Slug, Map<Slug, Accumulator>>();
-  const skinned = new Map<Slug, Accumulator>();
+  const skinned = new Map<string, Map<Slug, Accumulator>>();
   const jointOrder: Slug[] = [];
   let clock = Date.now();
   for (let i = 0; i < document.solids.length; i++) {
@@ -145,8 +149,11 @@ export async function tessellate(document: ModelDocument, quality: Quality, oper
         joints.push(0);
         weights.push(0);
       }
-      const acc = skinned.get(solid.material) ?? { material: solid.material, positions: [], normals: [], joints: [], weights: [], indices: [], solids: [] };
-      skinned.set(solid.material, acc);
+      const key = (sceneOfNode.get(solid.node) ?? []).join("\u0000");
+      const perMaterial = skinned.get(key) ?? new Map<Slug, Accumulator>();
+      skinned.set(key, perMaterial);
+      const acc = perMaterial.get(solid.material) ?? { material: solid.material, positions: [], normals: [], joints: [], weights: [], indices: [], solids: [] };
+      perMaterial.set(solid.material, acc);
       append(acc, solid.id, tessellateSolid(solid, quality, world.get(solid.node)!, operation), pace, joints, weights);
     } else {
       const perNode = rigid.get(solid.node) ?? new Map<Slug, Accumulator>();
@@ -172,15 +179,25 @@ export async function tessellate(document: ModelDocument, quality: Quality, oper
     }
   }
   const skins: Skin[] = [...document.skins];
+  const scenes: Scene[] = document.scenes ? document.scenes.map((sc) => sc) : [];
   if (skinned.size > 0) {
     const usedSkins = new Set(skins.map((s) => s.id));
     const usedNodes = new Set(nodes.map((n) => n.id));
-    const meshId = unique("skinned", usedMeshes), skinId = unique("skinned", usedSkins), nodeId = unique("skinned", usedNodes);
+    const skinId = unique("skinned", usedSkins);
     const joints = jointOrder.slice();
     skins.push({ id: skinId, joints, inverseBind: joints.map((j) => invert4(world.get(j)!) as unknown as Skin["inverseBind"][number]) });
-    meshes.push({ id: meshId, primitives: [...skinned.values()].map(primitiveOf) });
-    nodes.push({ id: nodeId, parent: null, translation: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1], mesh: meshId, skin: skinId });
+    let group = 0;
+    for (const [key, perMaterial] of skinned) {
+      const members = key === "" ? [] : key.split("\u0000");
+      const named = `skinned-${members.join("-") || "all"}`;
+      const base = skinned.size === 1 ? "skinned" : named.length <= 60 ? named : `skinned-g${group}`;
+      group++;
+      const meshId = unique(base, usedMeshes), nodeId = unique(base, usedNodes);
+      meshes.push({ id: meshId, primitives: [...perMaterial.values()].map(primitiveOf) });
+      nodes.push({ id: nodeId, parent: null, translation: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1], mesh: meshId, skin: skinId });
+      scenes.forEach((sc, k) => { if (members.includes(sc.id)) scenes[k] = { ...sc, nodes: [...sc.nodes, nodeId] }; });
+    }
   }
   operation.report(1);
-  return { ...document, nodes, solids: [], meshes, skins };
+  return { ...document, nodes, solids: [], meshes, skins, ...(document.scenes ? { scenes } : {}) };
 }

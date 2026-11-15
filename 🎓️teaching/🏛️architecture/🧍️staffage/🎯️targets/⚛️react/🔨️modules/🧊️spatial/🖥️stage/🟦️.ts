@@ -9,14 +9,15 @@
  * @see ../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🕹️controller/🟦️.ts — the viewer
  */
 import { ModelViewer, PRESETS, type BackendFactory, type CameraPreset, type ViewerStatus } from "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🟦️.ts";
-import type { Asset, Language } from "@teaching/staffage";
+import type { Asset, Language, View } from "@teaching/staffage";
+import { VIEWS, authoredScales, modeOf } from "@teaching/staffage";
 import type { StaffageClock } from "../../⏱️clock/🧱️core/🟦️.ts";
 import { translator, type Key } from "../../🌐️i18n/🟦️.ts";
 import { VIEW_NAMES } from "../../🗣️labels/🟦️.ts";
 import { PREPARE_PHASES, phaseStart, prepareModel, type PreparePhase } from "../🏭️prepare/🟦️.ts";
-import { CAMERA_PRESETS, describeModel, modelKey, variantOf, type CameraPresetName, type SpatialRequest } from "../🟦️.ts";
+import { CAMERA_PRESETS, describeModel, modelKey, sceneOf, scaleChoices, variantOf, type CameraPresetName, type ScaleChoice, type SpatialRequest } from "../🟦️.ts";
 
-/** 🧾️ Where the stage is: nothing yet, preparing the model, showing it, cancelled by the reader, failed, or refused because the asset has no 3D volume. */
+/** 🧾️ Where the stage is: nothing yet, preparing the model, showing it, cancelled by the reader, failed, or refused because the asset has no 3D model at the requested scale (no authored volume there; no other scale stands in). */
 export type StagePhase = "idle" | "preparing" | "ready" | "cancelled" | "error" | "unavailable";
 
 /** 📤️ What a stage reports about itself. */
@@ -31,6 +32,8 @@ export type StageOptions = SpatialRequest & {
   readonly toolbar?: boolean;
   readonly reducedMotion?: boolean;
   readonly onPreset?: (preset: CameraPresetName) => void;
+  readonly onScale?: (scale: number) => void;
+  readonly onView?: (view: View) => void;
   readonly onState?: (state: StageState) => void;
   readonly backend?: BackendFactory;
   readonly settleMs?: number;
@@ -46,6 +49,7 @@ const STYLE = `
 .semio-stage-group button{border:0;border-inline-start:1px solid var(--staffage-model-border,currentColor)}
 .semio-stage-group button:first-child{border-inline-start:0}
 .semio-stage button:hover{background:color-mix(in srgb,var(--staffage-model-accent,currentColor) 18%,transparent)}
+.semio-stage button[aria-disabled="true"]{opacity:.65;border-style:dashed;cursor:not-allowed}
 .semio-stage button[aria-pressed="true"]{background:var(--staffage-model-accent,Highlight);color:var(--staffage-model-accent-foreground,HighlightText);font-weight:600}
 .semio-stage button:focus-visible,.semio-stage canvas:focus-visible{outline:2px solid var(--staffage-model-focus,var(--staffage-model-accent,Highlight));outline-offset:2px}
 .semio-stage-view{position:relative;flex:1 1 auto;min-block-size:12rem;border:1px solid var(--staffage-model-border,currentColor);background:var(--staffage-model-background,transparent)}
@@ -97,7 +101,11 @@ export class ModelStage {
   readonly #root: HTMLElement;
   readonly #view: HTMLElement;
   readonly #bar: HTMLElement;
+  readonly #scales: HTMLElement;
+  readonly #modes: HTMLElement;
   readonly #presets: HTMLElement;
+  readonly #hints: HTMLElement;
+  readonly #announce: HTMLElement;
   readonly #progress: HTMLElement;
   readonly #bar2: HTMLProgressElement;
   readonly #progressText: HTMLElement;
@@ -123,6 +131,7 @@ export class ModelStage {
   #wanted: CameraPresetName | null = null;
   #shown: CameraPresetName | null = null;
   #variant = "";
+  #scene = "";
   #selection = "";
   #disposed = false;
   #ready = false;
@@ -144,6 +153,12 @@ export class ModelStage {
     this.#bar = make("div", "semio-stage-bar", this.#root);
     this.#bar.setAttribute("part", "toolbar");
     this.#bar.setAttribute("role", "group");
+    this.#scales = make("div", "semio-stage-group", this.#bar);
+    this.#scales.setAttribute("role", "group");
+    this.#scales.setAttribute("data-group", "scale");
+    this.#modes = make("div", "semio-stage-group", this.#bar);
+    this.#modes.setAttribute("role", "group");
+    this.#modes.setAttribute("data-group", "mode");
     this.#presets = make("div", "semio-stage-group", this.#bar);
     this.#presets.setAttribute("role", "group");
     this.#view = make("div", "semio-stage-view", this.#root);
@@ -156,6 +171,11 @@ export class ModelStage {
     this.#note.setAttribute("role", "status");
     this.#description = make("div", "semio-sr", this.#root);
     this.#description.id = `${this.#id}-state`;
+    this.#hints = make("div", "semio-sr", this.#root);
+    this.#announce = make("div", "semio-sr", this.#root);
+    this.#announce.setAttribute("role", "status");
+    this.#announce.setAttribute("aria-live", "polite");
+    this.#announce.setAttribute("data-announce", "");
     this.#buildBar();
     host.replaceChildren(this.#root);
     styled(host, this.#root);
@@ -190,7 +210,10 @@ export class ModelStage {
       this.#requested = "";
     }
     const key = modelKey(next.asset, next);
-    if (key !== this.#requested) {
+    if (this.#phase === "unavailable" && this.#loaded === "" && authoredScales(next.asset.volumes).includes(next.scale)) {
+      this.#requested = key;
+      this.#schedule(0);
+    } else if (key !== this.#requested) {
       this.#requested = key;
       this.#schedule(this.#loaded === "" ? 0 : (next.settleMs ?? 200));
     }
@@ -239,6 +262,45 @@ export class ModelStage {
     this.#root.setAttribute("lang", this.#options.language);
     this.#bar.setAttribute("aria-label", t("model.toolbar"));
     this.#presets.setAttribute("aria-label", t("model.camera"));
+    this.#scales.setAttribute("aria-label", t("model.scale"));
+    this.#scales.title = t("model.scaleHelp");
+    this.#modes.setAttribute("aria-label", t("model.mode"));
+    this.#modes.title = t("model.modeHelp");
+    this.#hints.replaceChildren();
+    this.#scales.replaceChildren(
+      ...scaleChoices(this.#options.asset, this.#options.language).map((choice) => {
+        const button = doc.createElement("button");
+        button.type = "button";
+        button.textContent = `1:${choice.scale}`;
+        button.setAttribute("data-scale", String(choice.scale));
+        button.addEventListener("click", () => this.#pickScale(choice));
+        button.addEventListener("keydown", (event) => this.#arrow(event, this.#scales));
+        if (!choice.available) {
+          const hint = doc.createElement("span");
+          hint.id = `${this.#id}-scale-${choice.scale}`;
+          hint.textContent = t("model.scaleUnavailable", { scale: choice.scale, reason: choice.reason });
+          this.#hints.append(hint);
+          button.setAttribute("aria-disabled", "true");
+          button.setAttribute("data-unavailable", "");
+          button.setAttribute("aria-describedby", hint.id);
+          button.title = hint.textContent;
+        }
+        return button;
+      }),
+    );
+    this.#modes.replaceChildren(
+      ...VIEWS.map((view) => {
+        const button = doc.createElement("button");
+        button.type = "button";
+        button.textContent = VIEW_NAMES[view][this.#options.language];
+        button.title = `${button.textContent} · ${t(`model.mode.${modeOf(view)}` as Key)}`;
+        button.setAttribute("data-view", view);
+        button.addEventListener("click", () => this.#pickView(view));
+        button.addEventListener("keydown", (event) => this.#arrow(event, this.#modes));
+        return button;
+      }),
+    );
+    this.#markChoices();
     this.#presets.replaceChildren(
       ...CAMERA_PRESETS.map((name) => {
         const button = doc.createElement("button");
@@ -274,6 +336,38 @@ export class ModelStage {
     this.#progress.append(button);
     this.#bar2.setAttribute("aria-label", t("model.progress"));
     this.#noticeKey = "";
+  }
+
+  #pickScale(choice: ScaleChoice): void {
+    if (!choice.available) {
+      this.#announce.textContent = this.#t("model.scaleUnavailable", { scale: choice.scale, reason: choice.reason });
+      return;
+    }
+    this.#announce.textContent = "";
+    this.update({ scale: choice.scale });
+    this.#options.onScale?.(choice.scale);
+  }
+
+  #pickView(view: View): void {
+    this.#announce.textContent = "";
+    this.update({ view });
+    this.#options.onView?.(view);
+  }
+
+  #arrow(event: KeyboardEvent, group: HTMLElement): void {
+    const buttons = [...group.querySelectorAll("button")];
+    const at = buttons.indexOf(event.currentTarget as HTMLButtonElement);
+    const last = buttons.length - 1;
+    const to = event.key === "ArrowRight" || event.key === "ArrowDown" ? (at + 1) % buttons.length : event.key === "ArrowLeft" || event.key === "ArrowUp" ? (at + last) % buttons.length : event.key === "Home" ? 0 : event.key === "End" ? last : -1;
+    if (to < 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    buttons[to]?.focus();
+  }
+
+  #markChoices(): void {
+    for (const button of this.#scales.querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.getAttribute("data-scale") === String(this.#options.scale)));
+    for (const button of this.#modes.querySelectorAll("button")) button.setAttribute("aria-pressed", String(button.getAttribute("data-view") === this.#options.view));
   }
 
   #choose(name: CameraPresetName): void {
@@ -338,6 +432,10 @@ export class ModelStage {
         case "fit": return t("model.status.fit");
         case "playing": return t("model.status.playing");
         case "paused": return t("model.status.paused");
+        case "scene": {
+          const found = /^s(\d+)-(body|thermal|structure)$/u.exec(s.scene);
+          return found === null ? s.scene : t("model.status.scene", { scale: Number(found[1]), mode: t(`model.mode.${found[2] as "body"}` as Key), representation: name("view", this.#options.view) });
+        }
         case "variant": return s.variant === null ? "" : t("model.status.variant", { representation: name("view", s.variant) });
         case "animation": return s.animation === null ? "" : t("model.status.animation", { clip: name("clip", s.animation) });
         case "pose": return s.pose === null ? "" : t("model.status.pose", { pose: name("pose", s.pose) });
@@ -421,7 +519,8 @@ export class ModelStage {
     const options = this.#options;
     const asset = options.asset;
     const t = this.#t;
-    if (asset.volume === undefined) return this.#set("unavailable", 0, t("model.noVolume"));
+    if (authoredScales(asset.volumes).length === 0) return this.#set("unavailable", 0, t("model.noVolume"));
+    if (!authoredScales(asset.volumes).includes(options.scale)) return this.#set("unavailable", 0, t("model.noScale", { scale: String(options.scale), scales: authoredScales(asset.volumes).map((s) => `1:${s}`).join(", ") }));
     if (options.query.kind === "transition") return this.#set("unavailable", 0, t("model.noVolume"));
     const key = modelKey(asset, options);
     if (key === this.#loaded && this.#phase === "ready") return;
@@ -449,6 +548,7 @@ export class ModelStage {
       this.#job = null;
       this.#loaded = key;
       this.#variant = "";
+      this.#scene = "";
       this.#selection = "";
       this.#wanted = options.preset;
       this.#shown = null;
@@ -490,10 +590,18 @@ export class ModelStage {
     this.#applyBackground();
     if (viewer === null || !this.#ready) return;
     try {
+      const scales = authoredScales(options.asset.volumes);
+      if (!scales.includes(options.scale)) return this.#set("unavailable", 0, this.#t("model.noScale", { scale: String(options.scale), scales: scales.map((s) => `1:${s}`).join(", ") }));
+      if (this.#phase === "unavailable") this.#set("ready", 1, "");
       const variant = variantOf(options.view);
       if (force || variant !== this.#variant) {
         viewer.setVariant(variant);
         this.#variant = variant;
+      }
+      const scene = sceneOf(options);
+      if (force || scene !== this.#scene) {
+        viewer.setScene(scene);
+        this.#scene = scene;
       }
       const query = options.query;
       const selection = query.kind === "pose" ? `pose:${query.pose}` : query.kind === "clip" ? `clip:${query.clip}` : "";
@@ -505,6 +613,7 @@ export class ModelStage {
         }
         this.#selection = selection;
       }
+      if (force || selection !== this.#selection || options.query.kind !== "clip") viewer.setFollow(query.kind === "clip" ? "bounds" : "off");
       if (query.kind === "clip") viewer.seek(this.#timeS());
       if (force || options.preset !== this.#wanted) {
         this.#wanted = options.preset;
@@ -532,6 +641,8 @@ export class ModelStage {
     this.#root.setAttribute("data-backend", this.state.backend);
     this.#root.setAttribute("data-asset", options.asset.id);
     this.#root.setAttribute("data-view", options.view);
+    this.#root.setAttribute("data-scale", String(options.scale));
+    this.#markChoices();
     this.#root.setAttribute("data-preset", this.#shown ?? "free");
     this.#progress.hidden = phase !== "preparing";
     if (phase === "preparing") {
@@ -551,7 +662,7 @@ export class ModelStage {
         const title = doc.createElement("b");
         const body = doc.createElement("span");
         box.setAttribute("role", phase === "error" ? "alert" : "status");
-        title.textContent = phase === "cancelled" ? t("model.cancelled") : phase === "unavailable" ? t("model.noVolume") : t("model.error");
+        title.textContent = phase === "cancelled" ? t("model.cancelled") : phase === "unavailable" ? (this.#message === "" ? t("model.noVolume") : this.#message) : t("model.error");
         body.textContent = phase === "error" ? t("model.errorBody", { message: this.#message }) : "";
         box.append(title, body);
         this.#notice.append(box);

@@ -7,7 +7,7 @@ import { join } from "node:path";
 export class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "media-export-encoding") {
-      const { testMediaExportEncodingContract } = await import("../../📦️packages/🟦️typescript/🧪️testing/⬇️media-export-encoding/🟦️.ts");
+      const { testMediaExportEncodingContract } = await import("../⬇️media-export-encoding/🟦️.ts");
       testMediaExportEncodingContract();
       runCmd(runtimeExecutableV1(), [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.repoRoot, "🧰️framework/🔨️modules/🚪️io/🔤️base64")}/🟦️.ts`], { cwd: this.repoRoot });
       if (segments[1] === "native") {
@@ -17,7 +17,7 @@ export class OwnedVerifyScript extends BundleScript {
       return;
     }
     if (segments[0] === "file-open-import") {
-      const { testFileOpenImportContract } = await import("../../📦️packages/🟦️typescript/🧪️testing/📤️file-open-import/🟦️.ts");
+      const { testFileOpenImportContract } = await import("../📤️file-open-import/🟦️.ts");
       testFileOpenImportContract();
       runCmd(runtimeExecutableV1(), [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--lib", "ESNext,DOM", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io")}/🟦️.ts`], { cwd: this.repoRoot });
       if (segments[1] === "native") {
@@ -27,7 +27,7 @@ export class OwnedVerifyScript extends BundleScript {
       return;
     }
     if (segments[0] === "ui-dirty-scope") {
-      const { testUiDirtyScopeContract } = await import("../../📦️packages/🟦️typescript/🧪️testing/🐢️ui-dirty-scope/🟦️.ts");
+      const { testUiDirtyScopeContract } = await import("../🐢️ui-dirty-scope/🟦️.ts");
       testUiDirtyScopeContract();
       if (segments[1] === "native") {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "ui_dirty_scope", "--", "--nocapture"], this.repoRoot);
@@ -36,7 +36,7 @@ export class OwnedVerifyScript extends BundleScript {
       return;
     }
     if (segments[0] === "spawned-job-drive") {
-      const { testSpawnedJobDriveContract } = await import("../../📦️packages/🟦️typescript/🧪️testing/🧵️spawned-job-drive/🟦️.ts");
+      const { testSpawnedJobDriveContract } = await import("../🧵️spawned-job-drive/🟦️.ts");
       await testSpawnedJobDriveContract();
       if (segments[1] === "native") {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework", "--lib", "spawned_job_drive", "--", "--nocapture"], this.repoRoot);

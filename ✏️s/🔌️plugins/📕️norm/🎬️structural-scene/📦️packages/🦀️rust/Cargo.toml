@@ -15,6 +15,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "unit"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
 [dependencies]
 semio-s-plugin-norm-structural-scene-case-kit = { path = "../../🧰️projection-kit/🧱️case-kit/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }

@@ -1,0 +1,200 @@
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861888","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:861952","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862016","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862080","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862144","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862208","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862272","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862336","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862400","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862464","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862528","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862592","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862656","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862720","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862784","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862848","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862912","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:862976","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863040","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863104","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863168","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863232","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863296","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863360","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863424","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863488","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863552","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863616","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863680","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863744","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863808","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863872","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:863936","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864000","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864064","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864128","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864192","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864256","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864320","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864384","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864448","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864512","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864576","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864640","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864704","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864768","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864832","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864896","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:864960","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865024","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865088","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865152","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865216","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865280","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865344","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865408","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865472","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865536","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865600","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865664","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865728","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865792","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"bun:dependency-storage","stage":"running","activity":{"resource":"dependencies:preservation-ownership:865856","mode":"exclusive","elapsedMs":0}}
+[repository:command] still running after 190 s
+[repo] still working after 200 s; last phase started: source.served
+[DATA] Store dependency concurrency {"version":1,"purpose":"dependency-concurrency-event","event":"kept","count":5}
+Kept 5 superseded dependency generation(s) that are pinned, recent or the rollback target.
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+[semio] workspace:setup…
+[capacity] run: sized at 46% of the default from 4 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 2048 MB reserved (9992 MB available, 1981 MB floor)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+Starting the repo graph service for this host.
+Waiting for the repo graph service (25 ms).
+Waiting for the repo graph service (2050 ms).
+Waiting for the repo graph service (4069 ms).
+[repo] still working after 5 s; last phase started: door.script
+Waiting for the repo graph service (6088 ms).
+Waiting for the repo graph service (8108 ms).
+[repo] still working after 10 s; last phase started: door.script
+Waiting for the repo graph service (10124 ms).
+Waiting for the repo graph service (12143 ms).
+Waiting for the repo graph service (14164 ms).
+Waiting for the repo graph service (16184 ms).
+Waiting for the repo graph service (18205 ms).
+[repo] still working after 20 s; last phase started: door.script
+Waiting for the repo graph service (20221 ms).
+Waiting for the repo graph service (22239 ms).
+Waiting for the repo graph service (24262 ms).
+Waiting for the repo graph service (26280 ms).
+Waiting for the repo graph service (28297 ms).
+Waiting for the repo graph service (30313 ms).
+Waiting for the repo graph service (32330 ms).
+Waiting for the repo graph service (34347 ms).
+Waiting for the repo graph service (36363 ms).
+Waiting for the repo graph service (38378 ms).
+Waiting for the repo graph service (40393 ms).
+Waiting for the repo graph service (42409 ms).
+Waiting for the repo graph service (44424 ms).
+Waiting for the repo graph service (46438 ms).
+Waiting for the repo graph service (48452 ms).
+[repo] still working after 50 s; last phase started: door.script
+Waiting for the repo graph service (50469 ms).
+Waiting for the repo graph service (52483 ms).
+Waiting for the repo graph service (54496 ms).
+Waiting for the repo graph service (56510 ms).
+Waiting for the repo graph service (58525 ms).
+Waiting for the repo graph service (60539 ms).
+Waiting for the repo graph service (62552 ms).
+Waiting for the repo graph service (64567 ms).
+Waiting for the repo graph service (66580 ms).
+Waiting for the repo graph service (68595 ms).
+Waiting for the repo graph service (70609 ms).
+Waiting for the repo graph service (72623 ms).
+Waiting for the repo graph service (74637 ms).
+Waiting for the repo graph service (76654 ms).
+Waiting for the repo graph service (78669 ms).
+[repo] still working after 80 s; last phase started: door.script
+Waiting for the repo graph service (80682 ms).
+Waiting for the repo graph service (82697 ms).
+Waiting for the repo graph service (84710 ms).
+Waiting for the repo graph service (86724 ms).
+Waiting for the repo graph service (88738 ms).
+Waiting for the repo graph service (90753 ms).
+Waiting for the repo graph service (92767 ms).
+Waiting for the repo graph service (94780 ms).
+Waiting for the repo graph service (96794 ms).
+Loading the project graph of d09b06e73429.
+Planning 1 targets.
+Reading the project graph slice (2 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4386 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (4 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4386 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (6 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4096 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (8 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4096 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (10 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4096 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (12 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3481 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+[repo] still working after 110 s; last phase started: door.script
+Reading the project graph slice (14 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3481 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (16 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3481 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (18 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3871 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (20 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3871 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (22 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3871 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (24 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 5488 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (26 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 5488 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (28 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 5488 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (30 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4936 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (32 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4936 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (34 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4936 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (36 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4027 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (38 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4027 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (40 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4027 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (42 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3948 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+[repo] still working after 140 s; last phase started: door.script
+Reading the project graph slice (44 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3948 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (46 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3948 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (48 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4234 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (50 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4234 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (52 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4234 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (54 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3879 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (56 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3879 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (58 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3879 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (60 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4191 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (62 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4191 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (64 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4191 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (66 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4650 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (68 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4650 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (70 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4650 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (72 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4305 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+[repo] still working after 170 s; last phase started: door.script
+Reading the project graph slice (74 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4305 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (76 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4305 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (78 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4250 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (80 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4250 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (82 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 4250 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (84 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3806 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (86 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3806 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (88 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3806 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (90 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3902 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (92 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3902 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (94 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3902 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (96 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3129 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (98 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3129 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (100 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3129 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (102 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3295 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+[repo] still working after 200 s; last phase started: door.script
+Reading the project graph slice (104 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3295 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (106 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 3295 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (108 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 1045 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (110 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 1045 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (112 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 1045 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (114 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 1191 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (116 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 1191 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (118 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 1191 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (120 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 901 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (122 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 901 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (124 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 901 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (126 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 859 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+Reading the project graph slice (128 s): reservation 0 of 3239; running (name, kind, seconds, rows): ; waiting for memory: 3239 MB are asked for (2048 MB are enough to start), 859 MB are free above the 1981 MB floor of this machine; the request is refused after 120 s if nothing of ours runs and not even 2048 MB are free.
+end 2026-11-14T16:07:43Z
+native_rc=1

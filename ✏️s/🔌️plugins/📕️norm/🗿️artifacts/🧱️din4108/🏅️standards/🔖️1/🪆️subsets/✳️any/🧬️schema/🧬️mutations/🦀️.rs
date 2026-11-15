@@ -184,3 +184,9 @@ pub fn inverse_din4108_mutation(mutation: &crate::Din4108Mutation, base: &semio_
 }
 }
 pub use crate::mutation_bridge::*;
+
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;

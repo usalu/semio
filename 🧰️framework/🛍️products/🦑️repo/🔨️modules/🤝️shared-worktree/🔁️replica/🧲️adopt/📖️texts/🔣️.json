@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "join.adopt.start": {
+      "en": "Adopting the existing repository {worktree} into the store {store} as origin {origin} of group {group}",
+      "de": "Übernehme das bestehende Repository {worktree} über den Speicher {store} als Ursprung {origin} der Gruppe {group}"
+    },
+    "join.adopt.start.dry": {
+      "en": "Dry run: planning the adoption of {worktree} into the store {store} as origin {origin} of group {group}; nothing is changed",
+      "de": "Probelauf: plane die Übernahme von {worktree} in den Speicher {store} als Ursprung {origin} der Gruppe {group}; nichts wird verändert"
+    },
+    "adopt.category.same": {
+      "en": "identical, adopted as they are",
+      "de": "identisch, werden unverändert übernommen"
+    },
+    "adopt.category.materialise": {
+      "en": "missing here, taken from the fleet",
+      "de": "hier nicht vorhanden, kommen vom Verbund"
+    },
+    "adopt.category.publish": {
+      "en": "only here, published as new work",
+      "de": "nur hier, werden als neue Arbeit veröffentlicht"
+    },
+    "adopt.category.edit": {
+      "en": "edited here on top of the fleet's version, which did not change since this repository's base: published as new edits",
+      "de": "hier auf der Version des Verbunds bearbeitet, die sich seit der Basis dieses Repositorys nicht geändert hat: werden als neue Änderungen veröffentlicht"
+    },
+    "adopt.category.stale": {
+      "en": "older versions of fleet files or files the fleet deleted since: the fleet wins, nothing is published (local bytes kept in lost/)",
+      "de": "ältere Versionen von Dateien des Verbunds oder vom Verbund inzwischen gelöschte Dateien: der Verbund gewinnt, nichts wird veröffentlicht (lokale Bytes bleiben in lost/)"
+    },
+    "adopt.category.conflict": {
+      "en": "changed here and in the fleet since this repository's base: the fleet's version stays, the local version is kept in lost/ and listed (CONFLICT)",
+      "de": "hier und im Verbund seit der Basis dieses Repositorys geändert: die Version des Verbunds bleibt, die lokale Version bleibt in lost/ und wird aufgeführt (KONFLIKT)"
+    },
+    "adopt.category.nested": {
+      "en": "inside a nested repository, left alone",
+      "de": "in einem verschachtelten Repository, bleiben unberührt"
+    },
+    "adopt.plan.count": {
+      "en": "  {count} {label}",
+      "de": "  {count} {label}"
+    },
+    "adopt.plan.sample": {
+      "en": "      for example {path}",
+      "de": "      zum Beispiel {path}"
+    },
+    "adopt.plan.decision": {
+      "en": "  {path}: {label}; {reason}",
+      "de": "  {path}: {label}; {reason}"
+    },
+    "adopt.plan.decision.mode": {
+      "en": "  {path}: {label}; {reason} (same bytes, only the executable bit differs)",
+      "de": "  {path}: {label}; {reason} (gleiche Bytes, nur das Ausführbar-Bit weicht ab)"
+    },
+    "adopt.plan.decisions.more": {
+      "en": "  ... and {count} more {label}",
+      "de": "  ... und {count} weitere {label}"
+    },
+    "adopt.plan.nested": {
+      "en": "  nested repository left alone: {path}",
+      "de": "  verschachteltes Repository bleibt unberührt: {path}"
+    },
+    "adopt.plan.renamed": {
+      "en": "Names that are not NFC (macOS tar extracts them like that): {count}. The adoption renames them to NFC before it plans.",
+      "de": "Namen, die nicht NFC sind (macOS tar entpackt sie so): {count}. Die Übernahme benennt sie vor dem Planen in NFC um."
+    },
+    "adopt.plan.renamed.path": {
+      "en": "  renamed to NFC: {path}",
+      "de": "  in NFC umbenannt: {path}"
+    },
+    "adopt.plan.renamed.more": {
+      "en": "  ... and {count} more names",
+      "de": "  ... und {count} weitere Namen"
+    },
+    "adopt.plan.git": {
+      "en": "Git: fleet tip {fleet}, local tip {local}, relation {relation}; {staged} staged paths here are replaced by the stage of the fleet (the old index is kept in lost/).",
+      "de": "Git: Spitze des Verbunds {fleet}, lokale Spitze {local}, Beziehung {relation}; {staged} hier vorgemerkte Pfade werden durch die Stage des Verbunds ersetzt (der alte Index bleibt in lost/)."
+    },
+    "adopt.plan.done": {
+      "en": "Dry run finished: nothing was changed.",
+      "de": "Probelauf beendet: nichts wurde verändert."
+    },
+    "adopt.done": {
+      "en": "Adopted: {same} identical, {materialise} taken from the fleet, {publish} published as new work, {edit} published as edits, {stale} stale (fleet won), {conflict} conflicts (fleet's version stays, yours kept), {queued} still queued. Report: {report}",
+      "de": "Übernommen: {same} identisch, {materialise} vom Verbund geholt, {publish} als neue Arbeit veröffentlicht, {edit} als Änderungen veröffentlicht, {stale} veraltet (Verbund gewann), {conflict} Konflikte (Version des Verbunds bleibt, deine bleibt erhalten), {queued} noch in der Warteschlange. Bericht: {report}"
+    },
+    "error.adopt.joined": {
+      "en": "This worktree already has local replica state; join --adopt only adopts a repository that has not joined yet.",
+      "de": "Dieses Arbeitsverzeichnis hat bereits lokalen Replica-Zustand; join --adopt übernimmt nur ein Repository, das noch nicht beigetreten ist."
+    },
+    "error.adopt.history": {
+      "en": "The repository and the fleet share no commit, so nothing was adopted. Use --force to adopt it anyway.",
+      "de": "Das Repository und der Verbund haben keinen gemeinsamen Commit, daher wurde nichts übernommen. Mit --force wird es trotzdem übernommen."
+    },
+    "error.adopt.options": {
+      "en": "--dry-run, --force and --sample belong to join --adopt.",
+      "de": "--dry-run, --force und --sample gehören zu join --adopt."
+    },
+    "relocate.start": {
+      "en": "Relocating this machine from {from} to {to} (phase {phase})",
+      "de": "Verlege diese Maschine von {from} nach {to} (Phase {phase})"
+    },
+    "relocate.done": {
+      "en": "Relocation step reached: {step}; origin {origin}, old worktree {from}, new worktree {to}.",
+      "de": "Verlegungsschritt erreicht: {step}; Ursprung {origin}, altes Arbeitsverzeichnis {from}, neues Arbeitsverzeichnis {to}."
+    },
+    "relocate.verified": {
+      "en": "The new worktree is verified ({checked} paths checked).",
+      "de": "Das neue Arbeitsverzeichnis ist geprüft ({checked} Pfade geprüft)."
+    },
+    "error.relocate.to": {
+      "en": "relocate needs --to <path>.",
+      "de": "relocate braucht --to <Pfad>."
+    },
+    "error.relocate.phase": {
+      "en": "--phase must be prepare, move, finish or all.",
+      "de": "--phase muss prepare, move, finish oder all sein."
+    },
+    "error.relocate.same-path": {
+      "en": "The new worktree is the old one.",
+      "de": "Das neue Arbeitsverzeichnis ist das alte."
+    },
+    "error.relocate.nested": {
+      "en": "One worktree lies inside the other.",
+      "de": "Ein Arbeitsverzeichnis liegt im anderen."
+    },
+    "error.relocate.not-joined": {
+      "en": "The old worktree has no machine identity (.cache/f/machine.json): it has not joined.",
+      "de": "Das alte Arbeitsverzeichnis hat keine Maschinenidentität (.cache/f/machine.json): es ist nicht beigetreten."
+    },
+    "error.relocate.target-joined": {
+      "en": "The new worktree belongs to another origin.",
+      "de": "Das neue Arbeitsverzeichnis gehört zu einem anderen Ursprung."
+    },
+    "error.relocate.running": {
+      "en": "The replica daemon of the old worktree is still running: stop its services first (nothing was moved), or wait with --wait <seconds>.",
+      "de": "Der Replica-Daemon des alten Arbeitsverzeichnisses läuft noch: stoppe zuerst seine Dienste (nichts wurde verschoben) oder warte mit --wait <Sekunden>."
+    },
+    "error.relocate.order": {
+      "en": "This phase needs the earlier phases first: prepare, then move, then finish.",
+      "de": "Diese Phase braucht zuerst die früheren Phasen: prepare, dann move, dann finish."
+    },
+    "error.relocate.unverified": {
+      "en": "The new worktree or the fleet does not agree yet: the old worktree stays as it is. Fix the cause and run finish again.",
+      "de": "Das neue Arbeitsverzeichnis oder der Verbund stimmt noch nicht überein: das alte Arbeitsverzeichnis bleibt, wie es ist. Behebe die Ursache und führe finish erneut aus."
+    },
+    "access.hint.macos": {
+      "en": "macOS asks once for the launcher: accept the prompt \"repo would like to access files in your Documents folder\" in the logged-in session, or switch it on in System Settings > Privacy & Security > Files & Folders (or Full Disk Access) for repo.",
+      "de": "macOS fragt einmal für den Launcher: bestätige die Abfrage \"repo möchte auf Dateien in deinem Ordner Dokumente zugreifen\" in der angemeldeten Sitzung oder schalte es in Systemeinstellungen > Datenschutz & Sicherheit > Dateien & Ordner (oder Voller Festplattenzugriff) für repo ein."
+    },
+    "access.hint.other": {
+      "en": "Give the account that runs the replica read and write permission on the worktree.",
+      "de": "Gib dem Konto, das die Replica ausführt, Lese- und Schreibrechte auf das Arbeitsverzeichnis."
+    },
+    "status.access.denied": {
+      "en": "worktree-access-denied: the replica cannot read {worktree} ({platform}). {hint}",
+      "de": "worktree-access-denied: die Replica kann {worktree} nicht lesen ({platform}). {hint}"
+    },
+    "status.access.waiting-for-consent": {
+      "en": "worktree-access-denied (waiting): reading {worktree} does not return; a consent prompt is probably waiting. {hint}",
+      "de": "worktree-access-denied (wartet): das Lesen von {worktree} kehrt nicht zurück; vermutlich wartet eine Abfrage auf Bestätigung. {hint}"
+    },
+    "fleet.access": {
+      "en": "{origin} cannot read its worktree {worktree} ({state}): worktree-access-denied",
+      "de": "{origin} kann sein Arbeitsverzeichnis {worktree} nicht lesen ({state}): worktree-access-denied"
+    },
+    "adopt.reason.journal": {
+      "en": "same content as the fleet had earlier",
+      "de": "gleicher Inhalt, den der Verbund früher hatte"
+    },
+    "adopt.reason.git": {
+      "en": "same content as in an earlier commit of the fleet",
+      "de": "gleicher Inhalt wie in einem früheren Commit des Verbunds"
+    },
+    "adopt.reason.base": {
+      "en": "unchanged since this repository's last commit while the fleet moved on",
+      "de": "seit dem letzten Commit dieses Repositorys unverändert, der Verbund ist weitergegangen"
+    },
+    "adopt.reason.fleet-unchanged": {
+      "en": "the fleet has not changed it since this repository's base",
+      "de": "der Verbund hat es seit der Basis dieses Repositorys nicht geändert"
+    },
+    "adopt.reason.both-changed": {
+      "en": "both sides changed it since this repository's base",
+      "de": "beide Seiten haben es seit der Basis dieses Repositorys geändert"
+    },
+    "adopt.reason.deleted-by-fleet": {
+      "en": "edited here, deleted by the fleet",
+      "de": "hier bearbeitet, vom Verbund gelöscht"
+    },
+    "adopt.reason.no-base": {
+      "en": "no commit here to compare with, so it cannot be told apart from a conflict",
+      "de": "kein Commit hier zum Vergleichen, daher nicht von einem Konflikt unterscheidbar"
+    },
+    "adopt.plan.conflicts": {
+      "en": "Conflicts: {count}. Stop and report if there are more than {limit}: the fleet's version of each stays, the local one is kept in .cache/f/lost/ and listed.",
+      "de": "Konflikte: {count}. Bei mehr als {limit} anhalten und melden: die Version des Verbunds bleibt jeweils, die lokale bleibt in .cache/f/lost/ und wird aufgeführt."
+    },
+    "adopt.plan.evidence": {
+      "en": "Evidence: {events} journal events read, {commits} commits of the fleet's history searched.",
+      "de": "Belege: {events} Journal-Ereignisse gelesen, {commits} Commits der Verbundshistorie durchsucht."
+    },
+    "adopt.plan.work": {
+      "en": "New local work: {count} paths (published as new work or as edits). Stop and report if there are more than {limit}: something unexpected, such as build output that is not ignored, is probably in the repository.",
+      "de": "Neue lokale Arbeit: {count} Pfade (als neue Arbeit oder als Änderungen veröffentlicht). Bei mehr als {limit} anhalten und melden: vermutlich liegt etwas Unerwartetes im Repository, etwa nicht ignorierte Build-Ausgabe."
+    }
+  }
+}

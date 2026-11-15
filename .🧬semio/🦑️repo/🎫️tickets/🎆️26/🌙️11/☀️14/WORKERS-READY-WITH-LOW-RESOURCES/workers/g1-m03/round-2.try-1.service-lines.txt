@@ -1,0 +1,5 @@
+141: graph: No verified change journal cursor is recorded for generation 44; verifying the tree once.
+929: graph: 703 stale projects, 0 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 703
+930: graph: waiting for the fleet: 0 of 703 projects arrived
+1141: graph: nothing to wait for any longer: asked the fleet for 703 stale projects and received 0 within 902 s, 703 remain and this machine can infer only 192; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+1142: 2026-11-14T16:21:12.521Z request-failed 20faee18 RepoError: timeout graph-wanted.expired {"wanted":703,"arrived":0,"seconds":902,"missing":703,"local":192}

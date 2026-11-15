@@ -1,5 +1,6 @@
 use crate::panels::document::*;
 use crate::unit_tests::context;
+use semio_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_document_tab_to_this_body_key() {

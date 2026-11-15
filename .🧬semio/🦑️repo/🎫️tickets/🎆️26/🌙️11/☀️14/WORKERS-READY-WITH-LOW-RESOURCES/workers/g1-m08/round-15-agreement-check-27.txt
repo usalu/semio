@@ -1,0 +1,48 @@
+Replica g1-m08 of group g1, store /Volumes/semio-store: reachable
+Synchronization: on
+Daemon: running (pid 36520)
+284204 files tracked; queued: 10 incoming, ? outgoing; 27 overwritten files kept in .cache/f/lost
+Recurring failures of kind refused: 8 times, last 62 s ago.
+Recurring failures of kind unstable: 1 times, last 118 s ago.
+Recurring failures of kind loop-blocked-restart: 12 times, last 823 s ago.
+Sidecar build-agent: running (process 36735, 0 restart(s), 382 s in this state, last exit -).
+Sidecar build-scheduler: off on this machine (process -, 0 restart(s), 412 s in this state, last exit -).
+Sidecar build-cache: off on this machine (process -, 0 restart(s), 412 s in this state, last exit -).
+Journal: 12.98 MiB in 14 segments of 10 origins.
+Newest snapshot by g1-m08: 1799s old, 90.49 MiB.
+Reclaimable now: 4 journal segments (4.89 MiB).
+Last compaction 63959s ago: 861 blobs (27.00 GiB) removed; 88 blobs (129.23 MiB) were still too young.
+Git state: shared (stage and commits replicate); stage tree 5c75c44d73137807925a4f37dfbb0a95529a546e.
+Background tiers, last pass (cost, duty cycle of one core): hot 82 ms 8%, directory sweep 435 ms 10%, file sweep 3358 ms 3.2%, tree walk -, git view 34803 ms 5%.
+Latency over the last 27 publishes and 100 applies: publish p50 585 ms, p95 2653 ms; apply p50 453 ms, p95 4111 ms.
+g1-m01: 1 events (398 B) behind, last event 5s ago
+g1-m02: 4 events (1.44 KiB) behind, last event 4s ago
+g1-m03: 2 events (810 B) behind, last event 0s ago
+g1-m04: 1 events (397 B) behind, last event 5s ago
+g1-m05: 0 events (0 B) behind, last event 4807s ago
+g1-m06: 0 events (0 B) behind, last event 9000s ago
+g1-m07: 2 events (812 B) behind, last event 1s ago
+g1-m08: 0 events (0 B) behind, last event 0s ago
+g1-m10: 0 events (0 B) behind, last event 498s ago
+g1-server: 0 events (0 B) behind, last event 209s ago
+Fleet: origin platform age lag (origins behind/queued) basis (cp:s = compared at its checkpoint taken s seconds ago, now = compared as it is now) sync code view (modified/deleted/untracked) latency (publish p50/p95 ms | apply p50/p95 ms) verdict
+  g1-m01 macos 0s 5/0 cp:0s on 97445096cc0a 175/10/1410 193/930|234/638 diverged
+  g1-m02 macos 0s 5/0 cp:0s on 97445096cc0a 175/10/1408 191/1419|284/1043 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m03 macos 2s 5/0 cp:2s on 97445096cc0a 175/10/1396 197/465|242/656 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m04 linux 0s 5/0 cp:0s on 97445096cc0a 175/10/1407 182/397|304/757 diverged
+  g1-m05 windows 0s 5/0 cp:0s on 97445096cc0a 175/10/1406 -/-|3129/4327 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m06 macos 0s 4/0 cp:0s on 97445096cc0a 175/10/1406 -/-|207/557 ok
+  g1-m07 macos 0s 5/0 cp:0s on 97445096cc0a 175/10/1409 210/1863|268/836 diverged
+  g1-m08 macos 0s 5/0 cp:0s on 97445096cc0a 175/10/1407 585/2653|468/4111 ok
+  g1-m10 macos 1s 5/0 cp:1s on 97445096cc0a 175/10/1491 -/-|598/1307 diverged
+  g1-server macos 0s 5/0 cp:0s on 97445096cc0a 175/10/1407 56/305|201/877 ok
+  warning: g1-m04 runs git 2.55.0, other machines run another version
+  warning: the volume of g1-m04 behaves differently from most (case=sensitive normalisation=sensitive); the view is pinned, so this is a capability difference, not a divergence
+  warning: g1-m05 runs git 2.53.0, other machines run another version
+  warning: the volume of g1-m05 behaves differently from most (case=insensitive normalisation=sensitive); the view is pinned, so this is a capability difference, not a divergence
+  warning: g1-m06 runs git 2.50.1, other machines run another version
+  g1-m01 differs in view.digest at a common checkpoint: #23=9d04,#127=d855,#153=72c0 instead of #23=30bf,#127=633c,#153=0847 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m04 differs in view.digest at a common checkpoint: #16=10f3,#52=859d,#86=80bb,#114=258f,#121=fd52,#147=0531,#163=760f,#218=4182,#23 instead of #16=3c62,#52=aeaa,#86=2bba,#114=e01c,#121=4d8b,#147=d775,#163=a765,#218=19d1,#23 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m07 differs in view.digest at a common checkpoint: #124=16d4,#200=f36b instead of #124=0728,#200=6761 (#n = bucket n of 256 of the paths, value = its digest)
+  g1-m10 differs in view.digest at a common checkpoint: #1=ab35,#4=89ad,#5=6aa0,#7=c37d,#8=3567,#9=623d,#12=248d,#13=becf,#15=4578,#16=8 instead of #1=4ede,#4=2274,#5=5847,#7=0485,#8=d721,#9=daa5,#12=7956,#13=e494,#15=f7a7,#16=3 (#n = bucket n of 256 of the paths, value = its digest)
+The fleet is not in agreement (10 origins; fresh and checkpoint age mean within 60 s; lagging is not wrong, only not yet comparable).

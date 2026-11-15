@@ -1,6 +1,7 @@
 //! 🏭️ Moving-crane envelope of the runway girder (EN 1991-3, 2.5 and 2.7) and the silo action assessment class, slenderness and discharge pressures (EN 1991-4, 2.2 and 5.3). The wheel load, the factors C_h and C_w and the capacities of the classes are registry values, all unverified, so the verdicts report the unverified basis.
 
 use semio_s_artifact_norm_en1991_checks::{assess_covers_on, copy, force_n as force, part_3, part_4, pressure_pa as pressure, raise_pressure_remedy, ratio};
+use semio_s_artifact_norm_en1991_inferences_rail_silo::{info_check, invalid};
 use semio_s_plugin_norm_compliance::{CheckReport, ClauseId, Quantity, QuantityKind, SubjectRef};
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use semio_s_plugin_norm_compliance::AnnexChoice;

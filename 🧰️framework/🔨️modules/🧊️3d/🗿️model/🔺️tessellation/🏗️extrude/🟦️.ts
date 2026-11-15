@@ -1,5 +1,5 @@
 /** 🏗️ Extrusion of a polygon with holes between two plane coordinates with optional taper: flat caps, side walls smooth across profile corners flatter than 35 degrees and hard otherwise.
- * Taper scales the profile about the area centroid of the outer ring.
+ * `taperTo = [scale at from, scale at to]`: the profile (outer ring and holes alike) is multiplied by the first number at the plane coordinate `from` and by the second at `to`, about the area centroid of the outer ring (not the plane origin), linearly in between; it is never a scale along u and v. `[1, 0]` is a pyramid or cone with its apex at `to` (no cap there), `[1, 0.5]` a frustum narrowing to half, `[0.5, 0.5]` is NOT a taper but a prism of the half-size profile (flagged by {@link taperFault}).
  * @see ../🔺️polygon/🟦️.ts */
 import type { ExtrudeSolid, Operation, Quality, Vec2 } from "../../🧬️schema/🟦️.ts";
 import { add, cross, dot, mul, normalize, sub, type V3 } from "../../🧮️math/🟦️.ts";
@@ -18,6 +18,16 @@ const centroid = (ring: readonly Vec2[]): Vec2 => {
   }
   return a === 0 ? ring[0]! : [cx / (3 * a), cy / (3 * a)];
 };
+
+/** 🪤️ Whether a `taperTo` is a trap: `collapsed` both factors zero (no volume), `needle` a factor in (0, 0.001) (a face reduced to a speck by rounding where 0 or a real size was meant), `uniform` both factors equal and not 1 (no taper at all, a prism of the scaled profile: what `taperTo` read as [scale u, scale v] gives), `null` otherwise. */
+export function taperFault(taperTo: Vec2 | undefined): "collapsed" | "needle" | "uniform" | null {
+  if (!taperTo) return null;
+  const [a, b] = taperTo;
+  if (a === 0 && b === 0) return "collapsed";
+  if ((a > 0 && a < 1e-3) || (b > 0 && b < 1e-3)) return "needle";
+  if (a === b && a !== 1) return "uniform";
+  return null;
+}
 
 export function tessellateExtrude(solid: ExtrudeSolid, _quality: Quality, operation: Operation = silentOperation): Geometry {
   let outer = cleanRing(solid.profile);

@@ -61,7 +61,7 @@ fn a_product_is_drawn_at_the_size_of_its_geometry() {
     let document = model::conforming_valve_dataset();
     let scene = scene_of(&document);
     let scene::Geometry::Solid(scene::SolidGeometry { shape: scene::SolidShape::Box { size, .. } }) = &entity(&scene, "VLV-50-001").geometry else { panic!("the valve is no box") };
-    let bbox = document.geometry["geom-valve-50"].evaluate_bbox();
+    let bbox = document.geometry.get("geom-valve-50").expect("geometry").evaluate_bbox();
     assert!((size.x - (bbox.max_x - bbox.min_x)).abs() < 1e-12 && (size.y - (bbox.max_y - bbox.min_y)).abs() < 1e-12 && (size.z - (bbox.max_z - bbox.min_z)).abs() < 1e-12);
 }
 
@@ -134,7 +134,7 @@ fn a_curve_diagram_has_one_draggable_marker_per_point() {
     let report = inferences::evaluate(&document);
     let all = diagrams(&document, &report, Some("VLV-50-001"));
     let curve = all.iter().find(|d| d.id == "curve:VLV-50-001:curve-kvs").expect("curve diagram");
-    assert_eq!(curve.markers.len(), document.curves["curve-kvs"].points.len());
+    assert_eq!(curve.markers.len(), document.curves.get("curve-kvs").expect("curve").points.len());
     assert_eq!(curve.markers[1].binding.as_ref().map(|b| b.path.as_str()), Some("curves[id=curve-kvs].points[1].y"));
 }
 
@@ -191,7 +191,7 @@ fn the_independent_oracle_agrees() {
             "VLV-50-001:depth" => (pose.min.y, pose.min.y + pose.size.y),
             _ => (pose.min.z, pose.min.z + pose.size.z),
         };
-        let stored = valve.geometry["geom-valve-50"].bbox;
+        let stored = valve.geometry.get("geom-valve-50").expect("geometry").bbox;
         let (low, value) = match h.id.as_str() {
             "VLV-50-001:width" => (stored.min_x, stored.max_x),
             "VLV-50-001:depth" => (stored.min_y, stored.max_y),

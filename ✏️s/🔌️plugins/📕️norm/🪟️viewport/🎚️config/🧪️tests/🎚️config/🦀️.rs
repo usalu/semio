@@ -22,8 +22,11 @@ fn the_view_mutation_is_described_applied_inverted_and_round_trips_on_both_wires
         let outcome = mutation.diff(&base);
         let next = apply_diff_cold(outcome.diff(), &base).unwrap();
         let backwards = mutation.inverse(&base).expect("inverse");
-        assert_eq!(backwards.len(), 1);
-        assert_eq!(apply_diff_cold(backwards[0].diff(&next).diff(), &next).unwrap(), base);
+        let unchanged = !outcome.messages().is_empty();
+        assert_eq!(backwards.len(), usize::from(!unchanged), "a no-op has nothing to undo");
+        if let Some(inverse) = backwards.first() {
+            assert_eq!(apply_diff_cold(inverse.diff(&next).diff(), &next).unwrap(), base);
+        }
         assert_eq!(NormViewportWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(NormViewportWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     }

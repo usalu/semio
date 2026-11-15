@@ -2,7 +2,9 @@
 
 The voiceover reads the German subtitles that are already on screen, so the two
 can only drift if the audio is treated as one opaque block. Every clause is
-therefore synthesized, measured and positioned separately:
+therefore synthesized, measured and positioned separately. Inline ``$…$`` TeX of a
+clause is shown as math in the caption and spoken through ``🗣️lexicon``; the spoken
+text, model and voice form the identity that decides whether a recording is reused.
 
 1. ``synthesize_clause_audio`` renders one file per NARRATION clause.
 2. ``write_vo_timing_manifest`` feeds the measured lengths back to ``hold_for``.
@@ -12,6 +14,7 @@ therefore synthesized, measured and positioned separately:
 
 from __future__ import annotations
 
+import hashlib
 import importlib
 import sys
 from pathlib import Path
@@ -40,6 +43,8 @@ ffmpeg_command = _video_module.ffmpeg_command
 manim_command = _video_module.manim_command
 run_command = _video_module.run_command
 _output = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️")
+_lexicon = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔊️speech.🗣️lexicon.🐍️")
+SpeechError = _lexicon.SpeechError
 
 Clause = tuple[str, str, str]
 
@@ -85,17 +90,41 @@ def configure_tutorial_tts() -> None:
         os.environ["TTS_API_KEY"] = os.environ["OPENROUTER_API_KEY"]
 
 
-def subtitle_clauses(narration: list[Clause]) -> list[str]:
-    """💬 One German subtitle line per clause — empty entries stay silent staging."""
-    return [text_de.strip() for _, _, text_de in narration]
+def subtitle_clauses(narration: list[Clause], *, source: str | None = None) -> list[str]:
+    """💬 One spoken German line per clause, every ``$…$`` segment read through the lexicon — empty entries stay silent staging.
+
+    Raises ``SpeechError`` naming ``source`` and the clause key for TeX the lexicon cannot speak.
+    """
+    return _lexicon.spoken_clauses(narration, language="de", source=source)
+
+
+def spoken_clauses(narration: list[Clause], *, language: str, source: str | None = None) -> list[str]:
+    """📣 Spoken text of every clause in an explicit language; the voice itself stays German."""
+    return _lexicon.spoken_clauses(narration, language=language, source=source)
 
 
 def subtitle_narration_text(narration: list[Clause], key: str | None = None) -> str:
-    """📝 Join subtitle clauses into one spoken string."""
+    """📝 Join the spoken German clauses into one string."""
+    spoken = subtitle_clauses(narration)
     return " ".join(
-        text_de for section, _, text_de in narration
-        if text_de.strip() and (key is None or section == key)
+        text for (section, _, _), text in zip(narration, spoken)
+        if text and (key is None or section == key)
     )
+
+
+def clause_identity(text: str, *, backend: "_SpeechBackend", voice: str | None = None) -> str:
+    """🧬 Cache identity of one recording: the spoken text plus everything that shapes the audio."""
+    payload = {"text": text, "model": backend.model, "voice": voice or backend.voice,
+               "speed": (os.getenv("TTS_SPEED") or "").strip(), "instructions": (os.getenv("TTS_INSTRUCTIONS") or "").strip()}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
+
+
+_AUDIO_SUFFIXES = (".wav", ".mp3", ".m4a", ".flac", ".ogg")
+_IDENTITY_FILE = "identity.json"
+
+
+def _clause_audio(stem: Path) -> Path | None:
+    return next((path for path in (stem.with_suffix(suffix) for suffix in _AUDIO_SUFFIXES) if path.is_file() and path.stat().st_size > 0), None)
 
 
 def probe_duration(path: Path) -> float:
@@ -270,16 +299,31 @@ def synthesize_clause_audio(
 ) -> list[tuple[str, Optional[Path], float]]:
     """🎙️ One audio file per subtitle clause, returned with its measured length."""
     backends = resolve_backends()
+    texts = subtitle_clauses(narration, source=str(clause_dir))
+    identity_path = clause_dir / _IDENTITY_FILE
+    try:
+        identities = json.loads(identity_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        identities = {}
+    cached: dict[int, Path] = {}
+    identity_of: dict[int, str] = {}
+    for index, text in enumerate(texts):
+        stem = clause_dir / f"clause_{index:02d}"
+        identity_of[index] = clause_identity(text, backend=backends[0], voice=voice)
+        audio = _clause_audio(stem)
+        if text and audio and identities.get(stem.name) == identity_of[index]:
+            cached[index] = audio
     if not any(backend.api_key for backend in backends):
-        return [(section, None, 0.0) for section, _, _ in narration]
+        return [(section, cached.get(index), probe_duration(cached[index]) if index in cached else 0.0) for index, (section, _, _) in enumerate(narration)]
     clause_dir.mkdir(parents=True, exist_ok=True)
-    texts = subtitle_clauses(narration)
 
     def _render(item: tuple[int, str]) -> tuple[int, Optional[Path]]:
         index, text = item
         if not text:
             return index, None
         target = clause_dir / f"clause_{index:02d}"
+        for stale in (target.with_suffix(suffix) for suffix in _AUDIO_SUFFIXES):
+            stale.unlink(missing_ok=True)
         last_error: Exception | None = None
         for backend in backends:
             try:
@@ -293,9 +337,17 @@ def synthesize_clause_audio(
             print(f"  ! clause {index}: {last_error}", file=sys.stderr)
         return index, None
 
-    spoken = [(i, t) for i, t in enumerate(texts) if t]
+    spoken = [(i, t) for i, t in enumerate(texts) if t and i not in cached]
     with ThreadPoolExecutor(max_workers=_clause_workers()) as pool:
-        rendered = dict(pool.map(_render, spoken))
+        rendered = {**cached, **dict(pool.map(_render, spoken))}
+
+    for index, text in enumerate(texts):
+        name = f"clause_{index:02d}"
+        if text and rendered.get(index):
+            identities[name] = identity_of[index]
+        else:
+            identities.pop(name, None)
+    identity_path.write_text(json.dumps(identities, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     results: list[tuple[str, Optional[Path], float]] = []
     for index, (section, _, _) in enumerate(narration):

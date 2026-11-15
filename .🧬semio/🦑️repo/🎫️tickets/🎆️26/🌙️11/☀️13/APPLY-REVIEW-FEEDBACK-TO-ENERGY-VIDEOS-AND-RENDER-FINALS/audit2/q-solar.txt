@@ -1,0 +1,1 @@
+(G_TOT|G_VALUE|G_WINTER|G_SUMMER|G_PERP|g_\{?tot|g_\{?\\perp|g_\{\\mathrm\{tot|g_\{\\perp\}|g_\\perp|g_⊥|glass_tra|glass_share|FC_WINTER|FS_WINTER|FF_GLASS|FW_INC|shading\"|\"shading|\"glass_tra)[^\n]{0,30}?(=|:)\s*[\(\[]?\s*(0[.,]\d+|\d+[.,]\d+)

@@ -1,4 +1,4 @@
-//! ↩️ `change-critical-region-concrete-fcd` inverse: restores the previous `concrete_design_strength_mpa`.
+//! ↩️ `change-critical-region-concrete-design-strength-mpa` inverse: restores the previous `concrete_design_strength_mpa`.
 
 use crate::change_critical_region_concrete_fcd::ChangeCriticalRegionConcreteDesignStrengthMpa;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

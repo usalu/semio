@@ -527,7 +527,14 @@
           ]
         },
         {
-          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🟦️.ts",
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🚀️launch/🟦️.ts",
+          "count": 1,
+          "roots": [
+            "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🚀️launch/🟦️.ts"
+          ]
+        },
+        {
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔌️backends/🚚️loading/🟦️.ts",
           "count": 1,
           "roots": [
             "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🔌️backend/🟦️.ts",
@@ -641,6 +648,25 @@
       }
     },
     "SourceCensusPolicy": { "const": { "maximumFiles": 8192, "maximumSourceBytes": 67108864, "progressFiles": 16 } },
+    "CompilerClosureLaw": {
+      "const": {
+        "version": 1,
+        "entry": "🔏️authorizers/📜️script.ts",
+        "maximumFiles": 2400,
+        "maximumSourceBytes": 18874368,
+        "maximumSnapshotBytes": 27262976,
+        "reservedHeadroomBasisPoints": 1000,
+        "entryGuardBound": "import\\.meta\\.main\\s*\\?\\?",
+        "entryGuards": [
+          "(?:===|!==|==|!=)\\s*(?:[A-Za-z_$][\\w$.]*\\(\\s*)*import\\.meta\\.(?:url|filename|path)\\b",
+          "\\bimport\\.meta\\.(?:url|filename|path)\\b(?:\\s*\\))*\\s*(?:===|!==|==|!=)"
+        ],
+        "texts": {
+          "en": { "budget": "The authorizer compiler closure holds {files} files and {sourceBytes} source bytes; the declared budget is {budgetBytes} bytes ({headroom} percent left), the hard limit {limitBytes} bytes.", "guard": "The authorizer compiler closure reaches {path}, which decides by itself whether it is the process entry; inside the single-file bundle that is true for every module. Use isMainModuleV1(import.meta.url)." },
+          "de": { "budget": "Die Hülle des Autorisierer-Compilers enthält {files} Dateien und {sourceBytes} Quellbytes; das deklarierte Budget beträgt {budgetBytes} Bytes ({headroom} Prozent frei), die harte Grenze {limitBytes} Bytes.", "guard": "Die Hülle des Autorisierer-Compilers erreicht {path}, das selbst entscheidet, ob es der Prozess-Einstieg ist; im Einzeldatei-Bündel gilt das für jedes Modul. Verwende isMainModuleV1(import.meta.url)." }
+        }
+      }
+    },
     "SourceCensus": {
       "type": "object", "additionalProperties": false,
       "required": ["kind", "version", "entry", "files", "sourceBytes", "snapshotBytes", "sources"],

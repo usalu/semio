@@ -1,0 +1,14 @@
+
+test("dead temporary files of git writers in the pack directory are swept after an hour of silence and live or foreign files stay",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"git-sweep-"));
+ scratch.push(root);
+ const directory=join(root,".git","objects","pack");
+ mkdirSync(directory,{recursive:true});
+ for(const name of ["tmp_pack_7JgB2y",".tmp-123-pack-abc.pack","pack-1.pack","pack-1.idx","tmp_idx_Zz"])writeFileSync(join(directory,name),Buffer.alloc(1000));
+ const first=await sweepGitGarbageV1(root,{now:Date.now()+1_800_000});
+ expect(first).toEqual({files:0,bytes:0});
+ const second=await sweepGitGarbageV1(root,{now:Date.now()+2*3_600_000});
+ expect(second).toEqual({files:3,bytes:3000});
+ expect(readdirSync(directory).sort()).toEqual(["pack-1.idx","pack-1.pack"]);
+ expect(await sweepGitGarbageV1(join(root,"missing"))).toEqual({files:0,bytes:0});
+});

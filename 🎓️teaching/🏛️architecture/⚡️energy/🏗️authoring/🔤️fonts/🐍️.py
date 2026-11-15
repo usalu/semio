@@ -147,13 +147,17 @@ def _symbol_fonts() -> tuple[str, ...]:
     return _SYMBOL_CANDIDATES
 
 
+_DISTINCT_PARENTHESES: dict[str, str] = {"(": _theme.FONT_SERIF, ")": _theme.FONT_SERIF}
+
+
 def _glyph_fallbacks(font: str, text: str) -> dict[str, str]:
-    """↪️ Substitute only characters absent from the requested face."""
+    """↪️ Substitute characters absent from the requested face, and the parentheses of the body face whose rounded-square outline reads like ``[ ]`` at video size."""
     result: dict[str, str] = {}
     for character in sorted(set(text)):
-        if character.isspace() or _font_supports(font, character):
+        distinct = _DISTINCT_PARENTHESES.get(character) if font == _theme.FONT_SANS else None
+        if character.isspace() or (distinct is None and _font_supports(font, character)):
             continue
-        fallback = next((candidate for candidate in _symbol_fonts() if _font_supports(candidate, character)), None)
+        fallback = distinct or next((candidate for candidate in _symbol_fonts() if _font_supports(candidate, character)), None)
         if fallback is None:
             raise RuntimeError(f"No bundled semio font covers U+{ord(character):04X} for {font}")
         register_fonts(fallback)

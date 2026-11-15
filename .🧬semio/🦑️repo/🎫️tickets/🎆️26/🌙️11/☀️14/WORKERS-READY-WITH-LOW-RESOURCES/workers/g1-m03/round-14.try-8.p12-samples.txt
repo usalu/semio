@@ -1,0 +1,189 @@
+service log: /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b814083e21d9.log
+closure entries before: 14192
+2026-11-15T06:50:36Z pid=59013 rss=2558MB footprint=[bun [59013]: 64-bit    Footprint: 1759 MB (16384 bytes per page)] last=[]
+2026-11-15T06:50:41Z pid=59013 rss=2561MB footprint=[bun [59013]: 64-bit    Footprint: 1759 MB (16384 bytes per page)] last=[]
+2026-11-15T06:50:47Z pid=59013 rss=2561MB footprint=[bun [59013]: 64-bit    Footprint: 1758 MB (16384 bytes per page)] last=[]
+2026-11-15T06:50:52Z pid=59013 rss=2564MB footprint=[bun [59013]: 64-bit    Footprint: 1759 MB (16384 bytes per page)] last=[]
+2026-11-15T06:50:57Z pid=59013 rss=2602MB footprint=[bun [59013]: 64-bit    Footprint: 1765 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:02Z pid=59013 rss=2626MB footprint=[bun [59013]: 64-bit    Footprint: 1767 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:07Z pid=59013 rss=2646MB footprint=[bun [59013]: 64-bit    Footprint: 1762 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:13Z pid=59013 rss=2655MB footprint=[bun [59013]: 64-bit    Footprint: 1762 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:18Z pid=59013 rss=2655MB footprint=[bun [59013]: 64-bit    Footprint: 1762 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:23Z pid=59013 rss=2652MB footprint=[bun [59013]: 64-bit    Footprint: 1772 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:28Z pid=59013 rss=2653MB footprint=[bun [59013]: 64-bit    Footprint: 1771 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:34Z pid=59013 rss=2657MB footprint=[bun [59013]: 64-bit    Footprint: 1771 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:39Z pid=59013 rss=2662MB footprint=[bun [59013]: 64-bit    Footprint: 1771 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:44Z pid=59013 rss=2663MB footprint=[bun [59013]: 64-bit    Footprint: 1770 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:49Z pid=59013 rss=2688MB footprint=[bun [59013]: 64-bit    Footprint: 1783 MB (16384 bytes per page)] last=[]
+2026-11-15T06:51:55Z pid=59013 rss=2688MB footprint=[bun [59013]: 64-bit    Footprint: 1782 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:01Z pid=59013 rss=2256MB footprint=[bun [59013]: 64-bit    Footprint: 1883 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T06:52:06Z pid=59013 rss=2195MB footprint=[bun [59013]: 64-bit    Footprint: 1895 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:11Z pid=59013 rss=2195MB footprint=[bun [59013]: 64-bit    Footprint: 1891 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:17Z pid=59013 rss=2196MB footprint=[bun [59013]: 64-bit    Footprint: 1882 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:22Z pid=59013 rss=2178MB footprint=[bun [59013]: 64-bit    Footprint: 1880 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:27Z pid=59013 rss=2133MB footprint=[bun [59013]: 64-bit    Footprint: 1877 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T06:52:32Z pid=59013 rss=1938MB footprint=[bun [59013]: 64-bit    Footprint: 2046 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:38Z pid=59013 rss=1748MB footprint=[bun [59013]: 64-bit    Footprint: 2085 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:43Z pid=59013 rss=1847MB footprint=[bun [59013]: 64-bit    Footprint: 2082 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:48Z pid=59013 rss=1956MB footprint=[bun [59013]: 64-bit    Footprint: 2079 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:53Z pid=59013 rss=1985MB footprint=[bun [59013]: 64-bit    Footprint: 2083 MB (16384 bytes per page)] last=[]
+2026-11-15T06:52:59Z pid=59013 rss=1973MB footprint=[bun [59013]: 64-bit    Footprint: 2103 MB (16384 bytes per page)] last=[]
+2026-11-15T06:53:04Z pid=59013 rss=2361MB footprint=[bun [59013]: 64-bit    Footprint: 2522 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T06:53:09Z pid=59013 rss=2364MB footprint=[bun [59013]: 64-bit    Footprint: 2532 MB (16384 bytes per page)] last=[]
+2026-11-15T06:53:14Z pid=59013 rss=1475MB footprint=[bun [59013]: 64-bit    Footprint: 2577 MB (16384 bytes per page)] last=[]
+2026-11-15T06:53:20Z pid=59013 rss=1024MB footprint=[bun [59013]: 64-bit    Footprint: 2673 MB (16384 bytes per page)] last=[]
+2026-11-15T06:53:25Z pid=59013 rss=107MB footprint=[bun [59013]: 64-bit    Footprint: 2770 MB (16384 bytes per page)] last=[]
+2026-11-15T06:53:30Z pid=59013 rss=760MB footprint=[bun [59013]: 64-bit    Footprint: 2739 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T06:53:36Z pid=59013 rss=1282MB footprint=[bun [59013]: 64-bit    Footprint: 2740 MB (16384 bytes per page)] last=[]
+2026-11-15T06:53:41Z pid=59013 rss=1327MB footprint=[bun [59013]: 64-bit    Footprint: 2722 MB (16384 bytes per page)] last=[]
+2026-11-15T06:53:46Z pid=59013 rss=1365MB footprint=[bun [59013]: 64-bit    Footprint: 2723 MB (16384 bytes per page)] last=[]
+2026-11-15T06:53:51Z pid=59013 rss=2041MB footprint=[bun [59013]: 64-bit    Footprint: 2678 MB (16384 bytes per page)] last=[]
+2026-11-15T06:53:57Z pid=59013 rss=2062MB footprint=[bun [59013]: 64-bit    Footprint: 2659 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:02Z pid=59013 rss=2113MB footprint=[bun [59013]: 64-bit    Footprint: 2616 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T06:54:07Z pid=59013 rss=2006MB footprint=[bun [59013]: 64-bit    Footprint: 2593 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:13Z pid=59013 rss=2024MB footprint=[bun [59013]: 64-bit    Footprint: 2347 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:18Z pid=59013 rss=1895MB footprint=[bun [59013]: 64-bit    Footprint: 2344 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:23Z pid=59013 rss=1888MB footprint=[bun [59013]: 64-bit    Footprint: 2335 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:28Z pid=59013 rss=1900MB footprint=[bun [59013]: 64-bit    Footprint: 2317 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:34Z pid=59013 rss=1904MB footprint=[bun [59013]: 64-bit    Footprint: 2306 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:39Z pid=59013 rss=1978MB footprint=[bun [59013]: 64-bit    Footprint: 2328 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:44Z pid=59013 rss=1958MB footprint=[bun [59013]: 64-bit    Footprint: 2292 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:50Z pid=59013 rss=1888MB footprint=[bun [59013]: 64-bit    Footprint: 2290 MB (16384 bytes per page)] last=[]
+2026-11-15T06:54:55Z pid=59013 rss=2791MB footprint=[bun [59013]: 64-bit    Footprint: 2304 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:01Z pid=59013 rss=2388MB footprint=[bun [59013]: 64-bit    Footprint: 2346 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T06:55:06Z pid=59013 rss=2389MB footprint=[bun [59013]: 64-bit    Footprint: 2341 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:12Z pid=59013 rss=2389MB footprint=[bun [59013]: 64-bit    Footprint: 2324 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:17Z pid=59013 rss=2052MB footprint=[bun [59013]: 64-bit    Footprint: 2313 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:22Z pid=59013 rss=2125MB footprint=[bun [59013]: 64-bit    Footprint: 2345 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:27Z pid=59013 rss=2222MB footprint=[bun [59013]: 64-bit    Footprint: 2304 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:33Z pid=59013 rss=2232MB footprint=[bun [59013]: 64-bit    Footprint: 2313 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:38Z pid=59013 rss=2310MB footprint=[bun [59013]: 64-bit    Footprint: 2311 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:44Z pid=59013 rss=2314MB footprint=[bun [59013]: 64-bit    Footprint: 2309 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:50Z pid=59013 rss=2359MB footprint=[bun [59013]: 64-bit    Footprint: 2310 MB (16384 bytes per page)] last=[]
+2026-11-15T06:55:55Z pid=59013 rss=2365MB footprint=[bun [59013]: 64-bit    Footprint: 2308 MB (16384 bytes per page)] last=[]
+2026-11-15T06:56:00Z pid=59013 rss=2389MB footprint=[bun [59013]: 64-bit    Footprint: 2332 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T06:56:05Z pid=59013 rss=2485MB footprint=[bun [59013]: 64-bit    Footprint: 2311 MB (16384 bytes per page)] last=[]
+2026-11-15T06:56:11Z pid=59013 rss=2274MB footprint=[bun [59013]: 64-bit    Footprint: 2388 MB (16384 bytes per page)] last=[]
+2026-11-15T06:56:16Z pid=59013 rss=2394MB footprint=[bun [59013]: 64-bit    Footprint: 2364 MB (16384 bytes per page)] last=[]
+2026-11-15T06:56:22Z no slice worker
+2026-11-15T06:56:27Z no slice worker
+2026-11-15T06:56:33Z no slice worker
+2026-11-15T06:56:38Z no slice worker
+2026-11-15T06:56:43Z no slice worker
+2026-11-15T06:56:48Z no slice worker
+2026-11-15T06:56:53Z no slice worker
+2026-11-15T06:56:59Z no slice worker
+2026-11-15T06:57:04Z no slice worker
+2026-11-15T06:57:09Z no slice worker
+2026-11-15T06:57:14Z no slice worker
+2026-11-15T06:57:20Z no slice worker
+2026-11-15T06:57:25Z no slice worker
+2026-11-15T06:57:30Z no slice worker
+2026-11-15T06:57:35Z no slice worker
+2026-11-15T06:57:41Z no slice worker
+2026-11-15T06:57:46Z no slice worker
+2026-11-15T06:57:51Z no slice worker
+2026-11-15T06:57:56Z no slice worker
+2026-11-15T06:58:01Z no slice worker
+2026-11-15T06:58:07Z no slice worker
+2026-11-15T06:58:12Z no slice worker
+2026-11-15T06:58:17Z no slice worker
+2026-11-15T06:58:22Z no slice worker
+2026-11-15T06:58:27Z no slice worker
+2026-11-15T06:58:33Z no slice worker
+2026-11-15T06:58:38Z no slice worker
+2026-11-15T06:58:43Z no slice worker
+2026-11-15T06:58:48Z no slice worker
+2026-11-15T06:58:53Z no slice worker
+2026-11-15T06:58:58Z no slice worker
+2026-11-15T06:59:04Z no slice worker
+2026-11-15T06:59:09Z no slice worker
+2026-11-15T06:59:14Z no slice worker
+2026-11-15T06:59:19Z no slice worker
+2026-11-15T06:59:25Z no slice worker
+2026-11-15T06:59:30Z no slice worker
+2026-11-15T06:59:35Z no slice worker
+2026-11-15T06:59:40Z no slice worker
+2026-11-15T06:59:46Z no slice worker
+2026-11-15T06:59:51Z no slice worker
+2026-11-15T06:59:56Z no slice worker
+2026-11-15T07:00:01Z no slice worker
+2026-11-15T07:00:06Z no slice worker
+2026-11-15T07:00:11Z no slice worker
+2026-11-15T07:00:16Z no slice worker
+2026-11-15T07:00:22Z no slice worker
+2026-11-15T07:00:27Z pid=5442 rss=251MB footprint=[bun [5442]: 64-bit    Footprint: 79 MB (16384 bytes per page)] last=[graph: 18986 more stale inputs are not listed]
+2026-11-15T07:00:32Z pid=5442 rss=989MB footprint=[bun [5442]: 64-bit    Footprint: 404 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:00:37Z pid=5442 rss=1171MB footprint=[bun [5442]: 64-bit    Footprint: 207 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:00:42Z pid=5442 rss=1174MB footprint=[bun [5442]: 64-bit    Footprint: 113 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:00:47Z pid=5442 rss=1493MB footprint=[bun [5442]: 64-bit    Footprint: 143 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:00:52Z pid=5442 rss=1550MB footprint=[bun [5442]: 64-bit    Footprint: 162 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:00:57Z pid=5442 rss=1558MB footprint=[bun [5442]: 64-bit    Footprint: 154 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:01:02Z pid=5442 rss=1559MB footprint=[bun [5442]: 64-bit    Footprint: 148 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:01:08Z pid=5442 rss=1572MB footprint=[bun [5442]: 64-bit    Footprint: 149 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:01:13Z pid=5442 rss=1617MB footprint=[bun [5442]: 64-bit    Footprint: 153 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:01:18Z pid=5442 rss=1692MB footprint=[bun [5442]: 64-bit    Footprint: 162 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:01:23Z pid=5442 rss=1814MB footprint=[bun [5442]: 64-bit    Footprint: 160 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 232; verifying the tree once.]
+2026-11-15T07:01:28Z pid=5442 rss=2282MB footprint=[bun [5442]: 64-bit    Footprint: 198 MB (16384 bytes per page)] last=[]
+2026-11-15T07:01:33Z pid=5442 rss=2347MB footprint=[bun [5442]: 64-bit    Footprint: 207 MB (16384 bytes per page)] last=[]
+2026-11-15T07:01:38Z pid=5442 rss=2347MB footprint=[bun [5442]: 64-bit    Footprint: 186 MB (16384 bytes per page)] last=[]
+2026-11-15T07:01:43Z pid=5442 rss=2348MB footprint=[bun [5442]: 64-bit    Footprint: 185 MB (16384 bytes per page)] last=[]
+2026-11-15T07:01:48Z pid=5442 rss=2348MB footprint=[bun [5442]: 64-bit    Footprint: 184 MB (16384 bytes per page)] last=[]
+2026-11-15T07:01:54Z pid=5442 rss=2348MB footprint=[bun [5442]: 64-bit    Footprint: 184 MB (16384 bytes per page)] last=[]
+2026-11-15T07:01:59Z pid=5442 rss=2350MB footprint=[bun [5442]: 64-bit    Footprint: 186 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:04Z pid=5442 rss=2541MB footprint=[bun [5442]: 64-bit    Footprint: 242 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:09Z pid=5442 rss=2541MB footprint=[bun [5442]: 64-bit    Footprint: 242 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:14Z pid=5442 rss=2542MB footprint=[bun [5442]: 64-bit    Footprint: 239 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:19Z pid=5442 rss=2542MB footprint=[bun [5442]: 64-bit    Footprint: 239 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:24Z pid=5442 rss=2544MB footprint=[bun [5442]: 64-bit    Footprint: 240 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:29Z pid=5442 rss=2581MB footprint=[bun [5442]: 64-bit    Footprint: 243 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:34Z pid=5442 rss=2590MB footprint=[bun [5442]: 64-bit    Footprint: 223 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:40Z pid=5442 rss=2591MB footprint=[bun [5442]: 64-bit    Footprint: 222 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:45Z pid=5442 rss=2594MB footprint=[bun [5442]: 64-bit    Footprint: 223 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:50Z pid=5442 rss=2595MB footprint=[bun [5442]: 64-bit    Footprint: 222 MB (16384 bytes per page)] last=[]
+2026-11-15T07:02:55Z pid=5442 rss=2463MB footprint=[bun [5442]: 64-bit    Footprint: 776 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:00Z pid=5442 rss=2497MB footprint=[bun [5442]: 64-bit    Footprint: 790 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T07:03:05Z pid=5442 rss=2539MB footprint=[bun [5442]: 64-bit    Footprint: 779 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:11Z pid=5442 rss=2545MB footprint=[bun [5442]: 64-bit    Footprint: 775 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:16Z pid=5442 rss=2526MB footprint=[bun [5442]: 64-bit    Footprint: 792 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:21Z pid=5442 rss=2321MB footprint=[bun [5442]: 64-bit    Footprint: 1022 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:26Z pid=5442 rss=2152MB footprint=[bun [5442]: 64-bit    Footprint: 1129 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:31Z pid=5442 rss=1999MB footprint=[bun [5442]: 64-bit    Footprint: 1305 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T07:03:37Z pid=5442 rss=2000MB footprint=[bun [5442]: 64-bit    Footprint: 1279 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:42Z pid=5442 rss=2004MB footprint=[bun [5442]: 64-bit    Footprint: 1267 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:47Z pid=5442 rss=2092MB footprint=[bun [5442]: 64-bit    Footprint: 1256 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:52Z pid=5442 rss=2186MB footprint=[bun [5442]: 64-bit    Footprint: 1261 MB (16384 bytes per page)] last=[]
+2026-11-15T07:03:57Z pid=5442 rss=2456MB footprint=[bun [5442]: 64-bit    Footprint: 1473 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:02Z pid=5442 rss=2471MB footprint=[bun [5442]: 64-bit    Footprint: 1487 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T07:04:08Z pid=5442 rss=2471MB footprint=[bun [5442]: 64-bit    Footprint: 1470 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:13Z pid=5442 rss=2494MB footprint=[bun [5442]: 64-bit    Footprint: 1493 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:19Z pid=5442 rss=2501MB footprint=[bun [5442]: 64-bit    Footprint: 1396 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:24Z pid=5442 rss=2503MB footprint=[bun [5442]: 64-bit    Footprint: 1383 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:29Z pid=5442 rss=2503MB footprint=[bun [5442]: 64-bit    Footprint: 1355 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:34Z pid=5442 rss=2504MB footprint=[bun [5442]: 64-bit    Footprint: 1285 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:39Z pid=5442 rss=2523MB footprint=[bun [5442]: 64-bit    Footprint: 1286 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:45Z pid=5442 rss=2525MB footprint=[bun [5442]: 64-bit    Footprint: 1262 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:50Z pid=5442 rss=2525MB footprint=[bun [5442]: 64-bit    Footprint: 1261 MB (16384 bytes per page)] last=[]
+2026-11-15T07:04:55Z pid=5442 rss=2525MB footprint=[bun [5442]: 64-bit    Footprint: 1259 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:00Z pid=5442 rss=2527MB footprint=[bun [5442]: 64-bit    Footprint: 1259 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:05Z pid=5442 rss=2527MB footprint=[bun [5442]: 64-bit    Footprint: 1258 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:10Z pid=5442 rss=2953MB footprint=[bun [5442]: 64-bit    Footprint: 1259 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:15Z pid=5442 rss=2984MB footprint=[bun [5442]: 64-bit    Footprint: 1263 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:21Z pid=5442 rss=2990MB footprint=[bun [5442]: 64-bit    Footprint: 1260 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:26Z pid=5442 rss=2991MB footprint=[bun [5442]: 64-bit    Footprint: 1260 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:31Z pid=5442 rss=2991MB footprint=[bun [5442]: 64-bit    Footprint: 1260 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)]
+2026-11-15T07:05:36Z pid=5442 rss=2991MB footprint=[bun [5442]: 64-bit    Footprint: 1256 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:41Z pid=5442 rss=2991MB footprint=[bun [5442]: 64-bit    Footprint: 1256 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:46Z pid=5442 rss=2991MB footprint=[bun [5442]: 64-bit    Footprint: 1256 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:51Z pid=5442 rss=2991MB footprint=[bun [5442]: 64-bit    Footprint: 1256 MB (16384 bytes per page)] last=[]
+2026-11-15T07:05:57Z pid=5442 rss=2991MB footprint=[bun [5442]: 64-bit    Footprint: 1256 MB (16384 bytes per page)] last=[]
+2026-11-15T07:06:02Z pid=5442 rss=3250MB footprint=[bun [5442]: 64-bit    Footprint: 1310 MB (16384 bytes per page)] last=[]
+2026-11-15T07:06:07Z pid=5442 rss=3254MB footprint=[bun [5442]: 64-bit    Footprint: 1254 MB (16384 bytes per page)] last=[]
+2026-11-15T07:06:12Z pid=5442 rss=3116MB footprint=[bun [5442]: 64-bit    Footprint: 1486 MB (16384 bytes per page)] last=[]
+2026-11-15T07:06:17Z pid=5442 rss=3136MB footprint=[bun [5442]: 64-bit    Footprint: 1487 MB (16384 bytes per page)] last=[]
+2026-11-15T07:06:22Z pid=5442 rss=3142MB footprint=[bun [5442]: 64-bit    Footprint: 1484 MB (16384 bytes per page)] last=[]
+2026-11-15T07:06:27Z pid=5442 rss=3154MB footprint=[bun [5442]: 64-bit    Footprint: 1484 MB (16384 bytes per page)] last=[]
+2026-11-15T07:06:33Z pid=5442 rss=3219MB footprint=[bun [5442]: 64-bit    Footprint: 1479 MB (16384 bytes per page)] last=[]
+2026-11-15T07:06:38Z pid=5442 rss=3234MB footprint=[bun [5442]: 64-bit    Footprint: 1406 MB (16384 bytes per page)] last=[graph: 0 of 1203 projects arrived from the fleet, 0 inferred here, 1203 left]
+2026-11-15T07:06:43Z pid=5442 rss=3238MB footprint=[bun [5442]: 64-bit    Footprint: 1353 MB (16384 bytes per page)] last=[graph: preparing 128 of the 192 open stale projects (1 compute slots), 0 of 192 already prepared]
+closure entries after: 14192

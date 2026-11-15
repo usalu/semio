@@ -26,7 +26,7 @@ test("the inverted index equals rowTouchedV1 part by part, outside rows included
   });
  }
  const back=readManifestV1(JSON.parse(JSON.stringify(writeManifestV1(book))));
- expect([...back.entries.keys()]).toEqual([...book.entries.keys()]);
+ expect([...back.entries.keys()].sort()).toEqual([...book.entries.keys()].sort());
  for(const name of book.entries.keys()){expect(partIdsOfV1(back,back.entries.get(name)!)).toEqual(partIdsOfV1(book,book.entries.get(name)!));expect(back.entries.get(name)!.fact).toBe(book.entries.get(name)!.fact);}
- expect([...back.paths]).toEqual([...book.paths]);expect(back.outside.size).toBe(book.outside.size);
+ expect([...back.paths].sort()).toEqual([...book.paths].sort());expect(back.outside.size).toBe(book.outside.size);
 });

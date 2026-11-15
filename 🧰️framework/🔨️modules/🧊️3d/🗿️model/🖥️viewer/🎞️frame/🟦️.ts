@@ -5,15 +5,15 @@
  * @see ../🧬️contract/🟦️.ts */
 import { poseModel, sampleMaterials } from "../../🦴️mechanism/🟦️.ts";
 import { normalize, type V3 } from "../../🧮️math/🟦️.ts";
-import { MATERIAL_STRIDE, type Bounds, type Draw, type Frame, type FramePose, type Scene } from "../🧬️contract/🟦️.ts";
+import { MATERIAL_STRIDE, inScene, type Bounds, type Draw, type Frame, type FramePose, type Scene } from "../🧬️contract/🟦️.ts";
 import { basisOf, projectionMatrix, viewMatrix, type CameraState } from "../📷️camera/🟦️.ts";
 import { followPoint, removeRootTravel, rootIndexOf, smoothFollow, type FollowInput, type RootMotion } from "../🎥️follow/🟦️.ts";
 import type { Slug } from "../../🧬️schema/🟦️.ts";
 
 /** 💡️ Light request: `camera` keeps the key light fixed relative to the view, `world` fixed in the scene. */
 export type Lighting = { readonly mode?: "camera" | "world"; readonly direction?: V3; readonly intensity?: number; readonly ambient?: number };
-/** 🎛️ What one frame shows. `pose` is a pose id, `{ animation, timeS }` or nothing (rest); `variant` a variant id or null. `rootMotion` (default `travel`) and `rootNode` are described in `../🎥️follow/🟦️.ts`; with `follow` (default none) the frame looks at `follow.state.target`, the smoothed followed point, instead of `camera.target`; see {@link FollowInput}. */
-export type FrameInput = { readonly pose?: FramePose; readonly variant?: string | null; readonly camera: CameraState; readonly aspect: number; readonly lighting?: Lighting; readonly rootMotion?: RootMotion; readonly rootNode?: Slug; readonly follow?: FollowInput };
+/** 🎛️ What one frame shows. `pose` is a pose id, `{ animation, timeS }` or nothing (rest); `variant` a variant id or null. `rootMotion` (default `travel`) and `rootNode` are described in `../🎥️follow/🟦️.ts`; with `follow` (default none) the frame looks at `follow.state.target`, the smoothed followed point, instead of `camera.target`; see {@link FollowInput}. `scene` (default the first scene) selects the model scene: only its primitives are drawn, measured, picked and followed; the shared buffers are untouched, so switching scenes rebuilds nothing. */
+export type FrameInput = { readonly pose?: FramePose; readonly variant?: string | null; readonly camera: CameraState; readonly aspect: number; readonly lighting?: Lighting; readonly rootMotion?: RootMotion; readonly rootNode?: Slug; readonly follow?: FollowInput; readonly scene?: Slug };
 
 /** 🆕️ Allocates a frame sized for `scene`. */
 export function createFrame(scene: Scene): Frame {
@@ -23,7 +23,7 @@ export function createFrame(scene: Scene): Frame {
     view: new Float32Array(16), projection: new Float32Array(16), viewProjection: new Float32Array(16), eye: new Float32Array(3), matrices,
     palette: new Float32Array(Math.max(scene.jointCount, 1) * 16), materials: new Float32Array(scene.materials.length * MATERIAL_STRIDE), materialMap: new Int32Array(scene.materials.length),
     draws: scene.primitives.map((_, i): Draw => ({ primitive: i, matrixOffset: 0, material: 0, paletteOffset: -1, pass: 0, depth: 0 })), drawCount: 0,
-    light: { direction: new Float32Array(3), color: new Float32Array(3), sky: new Float32Array(3), ground: new Float32Array(3) }, issues: [],
+    light: { direction: new Float32Array(3), color: new Float32Array(3), sky: new Float32Array(3), ground: new Float32Array(3) }, issues: [], sceneIndex: 0,
   };
 }
 
@@ -59,6 +59,9 @@ function mulFloats(out: Float32Array, a: ArrayLike<number>, b: ArrayLike<number>
 /** 🖼️ Fills `into` (allocated by {@link createFrame} for the same scene) for `input`; throws on unknown pose, animation or variant. */
 export function frameOf(scene: Scene, input: FrameInput, into: Frame = createFrame(scene)): Frame {
   const f = into;
+  const sceneIndex = input.scene === undefined ? 0 : scene.scenes.findIndex((set) => set.id === input.scene);
+  if (sceneIndex < 0) throw new Error(`unknown scene ${input.scene}`);
+  f.sceneIndex = sceneIndex;
   const posed = poseModel(scene.document, input.pose);
   f.issues = posed.issues;
   for (let i = 0; i < scene.nodeIds.length; i++) f.matrices.set(posed.world[scene.nodeIds[i]!]!, i * 16);
@@ -117,6 +120,7 @@ export function frameOf(scene: Scene, input: FrameInput, into: Frame = createFra
   for (let pass = 0 as 0 | 1 | 2; pass < 3; pass = (pass + 1) as 0 | 1 | 2) {
     const start = n;
     for (const p of scene.primitives) {
+      if (!inScene(p, sceneIndex)) continue;
       const material = f.materialMap[p.materialIndex]!;
       const blend = f.materials[material * MATERIAL_STRIDE + 11] === 1;
       const want: 0 | 1 | 2 = p.mode === "lines" ? 2 : blend ? 1 : 0;
@@ -178,10 +182,11 @@ export function posedPositions(scene: Scene, frame: Frame, primitiveIndex: numbe
   return out;
 }
 
-/** 📦️ Exact world bounds of all triangle and line vertices under the frame's pose (skinning included). Empty scenes give an inverted box. */
+/** 📦️ Exact world bounds of all triangle and line vertices of the frame's active scene under its pose (skinning included). Empty scenes give an inverted box. */
 export function boundsOf(scene: Scene, frame: Frame): Bounds {
   const min: [number, number, number] = [Infinity, Infinity, Infinity], max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
   for (const p of scene.primitives) {
+    if (!inScene(p, frame.sceneIndex)) continue;
     const w = posedPositions(scene, frame, p.index);
     for (let i = 0; i < p.vertexCount; i++) for (let k = 0; k < 3; k++) {
       const x = w[i * 3 + k]!;

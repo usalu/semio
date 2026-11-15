@@ -176,6 +176,7 @@ use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_length_
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_modulus_pa::ChangeFoundationPileModulusPa;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_ks_n_m3::ChangeFoundationPileKsNM3;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_head_shear_n::ChangeFoundationPileHeadShearN;
+use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_axial_load_n::ChangeFoundationPileAxialLoadN;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_head_fixed::ChangeFoundationPileHeadFixed;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_iface_m::ChangeFoundationPileIfaceM;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_up_vs_m_s::ChangeFoundationPileUpVsMS;
@@ -491,6 +492,7 @@ use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_length_
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_modulus_pa;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_ks_n_m3;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_head_shear_n;
+use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_axial_load_n;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_head_fixed;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_iface_m;
 use semio_s_artifact_norm_en1998_mut_foundations::change_foundation_pile_up_vs_m_s;
@@ -796,6 +798,7 @@ pub fn demo_mutation_cases() -> Vec<En1998Mutation> {
                 pile_moment_rd_nm: 0.0,
                 base_friction_angle_deg: 0.0,
                 base_pore_pressure_pa: 0.0,
+                pile_axial_load_n: 0.0,
             },
         }),
         En1998Mutation::InsertRetainingWall(InsertRetainingWall {
@@ -1004,6 +1007,7 @@ pub fn demo_mutation_cases() -> Vec<En1998Mutation> {
         En1998Mutation::ChangeFoundationPileModulusPa(ChangeFoundationPileModulusPa { id: String::from("foundation-1"), new_pile_modulus_pa: 1.5 }),
         En1998Mutation::ChangeFoundationPileKsNM3(ChangeFoundationPileKsNM3 { id: String::from("foundation-1"), new_pile_subgrade_modulus_n_m3: 1.5 }),
         En1998Mutation::ChangeFoundationPileHeadShearN(ChangeFoundationPileHeadShearN { id: String::from("foundation-1"), new_pile_head_shear_n: 1.5 }),
+        En1998Mutation::ChangeFoundationPileAxialLoadN(ChangeFoundationPileAxialLoadN { id: String::from("foundation-1"), new_pile_axial_load_n: 1.5 }),
         En1998Mutation::ChangeFoundationPileHeadFixed(ChangeFoundationPileHeadFixed { id: String::from("foundation-1"), new_pile_head_fixed: 1.5 }),
         En1998Mutation::ChangeFoundationPileIfaceM(ChangeFoundationPileIfaceM { id: String::from("foundation-1"), new_pile_interface_depth_m: 1.5 }),
         En1998Mutation::ChangeFoundationPileUpVsMS(ChangeFoundationPileUpVsMS { id: String::from("foundation-1"), new_pile_upper_vs_m_s: 1.5 }),

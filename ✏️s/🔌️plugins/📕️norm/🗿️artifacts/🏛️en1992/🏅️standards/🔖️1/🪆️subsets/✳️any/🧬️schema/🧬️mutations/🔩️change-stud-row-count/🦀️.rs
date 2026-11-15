@@ -11,7 +11,7 @@ use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 pub struct ChangeStudRowCount {
     pub member_id: String,
     pub stud_row_id: String,
-    pub new_count: usize,
+    pub new_count: u32,
 }
 
 impl<Op> protocol::MutationKind<En1992Snapshot, Op> for ChangeStudRowCount where Op: protocol::Mutation<En1992Snapshot, Diff = semio_s_artifact_norm_en1992_diff::En1992Diff> + From<crate::change_stud_row_count::ChangeStudRowCount> {

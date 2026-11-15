@@ -1,7 +1,7 @@
 //! 📐️ Pixel/group placement, exact inverse and sequential transform coalescing.
 use semio_s_artifact_raster_raster_mutations::RasterMutation;
 use semio_s_artifact_raster_raster_model::layer_transform;
-use semio_s_artifact_raster_raster_mutations_layer_properties::change_layer_transform::*;
+use semio_s_artifact_raster_raster_mutations_layer_props::change_layer_transform::*;
 use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_raster_raster_model::RasterTransform;
 #[semio_framework_async_macros::async_test]

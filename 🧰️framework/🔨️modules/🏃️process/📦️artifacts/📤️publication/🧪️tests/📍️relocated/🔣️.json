@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {"id": "mcp-client-marker-after-relocation", "marker": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🔨️modules/💻️client/🔌️mcp:go:prototype", "owner": "/Users/Shared/semio/.🧬semio/🦑️repo/🔨️modules/💻️client/🔌️mcp:go:prototype", "relocated": true},
+    {"id": "coordinator-marker-after-relocation", "marker": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/📦️main:go:prototype", "owner": "/Users/Shared/semio/.🧬semio/🦑️repo/📦️main:go:prototype", "relocated": true},
+    {"id": "same-owner", "marker": "/Users/ueli/Documents/semio/a/b/c/d:go:prototype", "owner": "/Users/ueli/Documents/semio/a/b/c/d:go:prototype", "relocated": false},
+    {"id": "other-artifact", "marker": "/Users/ueli/Documents/semio/a/b/c/d:go:prototype", "owner": "/Users/Shared/semio/a/b/c/e:go:prototype", "relocated": false},
+    {"id": "other-mode", "marker": "/Users/ueli/Documents/semio/a/b/c/d:go:prototype", "owner": "/Users/Shared/semio/a/b/c/d:go:release", "relocated": false},
+    {"id": "foreign-short-tail", "marker": "/home/x/d:go:prototype", "owner": "/Users/y/d:go:prototype", "relocated": false},
+    {"id": "relative-marker", "marker": "semio/a/b/c/d:go:prototype", "owner": "/Users/Shared/semio/a/b/c/d:go:prototype", "relocated": false}
+  ]
+}

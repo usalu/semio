@@ -360,7 +360,7 @@ impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzz
     }
 
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
-        self.closing=true;if !self.close_staged{let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;return semio_framework_job::close_original_retained_step(cx,demand,|_|{self.owners.stage(Puzzle5dClipboardOwners{dsl_text:std::mem::take(&mut self.work.dsl_text),scan:self.work.scan.into_owners(),rejection:self.rejection.take()});self.close_staged=true;semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})}crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx)
+        self.closing=true;if !self.close_staged{let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;return semio_framework_job::close_original_retained_step(cx,demand,|_|{self.owners.stage(Puzzle5dClipboardOwners{dsl_text:std::mem::take(&mut self.work.dsl_text),scan:self.work.scan.into_owners(),rejection:self.rejection.take()});self.close_staged=true;semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})}crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx)
     }
 
     fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{

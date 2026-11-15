@@ -1,0 +1,7 @@
+🐕️animals/mallard-duck
+🐕️animals/pig
+🐕️animals/pigeon
+🐕️animals/red-fox
+🐕️animals/red-squirrel
+🐕️animals/roe-deer
+🐕️animals/sheep

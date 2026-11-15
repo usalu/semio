@@ -1,0 +1,1 @@
+(?<![A-Za-z_\\])\d\}?(\\mathrm\{|\\text\{)|\d\s(W|kW|kWh|K|m|m²|m³|°C|h|kg|Wh|Pa|J|kJ|g/kg)\b(?![\w/])|\d(W|kW|kWh|K|kg|Wh|Pa|J|kJ|°C)\b(?![\w/])|\\mathrm\{(W|K|kWh|kW|m|h|Wh|kg|Pa)\}\s*\\?\s*\d

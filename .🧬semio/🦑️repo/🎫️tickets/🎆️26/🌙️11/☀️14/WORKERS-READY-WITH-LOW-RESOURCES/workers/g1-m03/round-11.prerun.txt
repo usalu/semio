@@ -1,0 +1,30 @@
+Pre-run facts, 2026-11-14T23:53:52Z
+- replica agent: launchctl print gui/501/tech.semio.fleet.replica:
+    	state = running
+    	runs = 47
+    	pid = 95575
+    	last exit code = 0
+    		state = active
+    		state = active
+- replica code digest (.cache/f/health.json): eabbc92267329dbd39d8d05e0c8eceb1bcad083c0eea58c44805408a7d547bcc, store ok, daemon pid 95592 , health.json age 3 s
+- "bootVersion":6
+- replica agent kickstarted: 0 times
+- graph service jobs:
+    96813	0	tech.semio.repo.service.19c193692817
+- repo service host processes:
+    pid 96813 ppid 1 age 41:32 rss 65664
+    pid 96823 ppid 96813 age 41:29 rss 173616
+- receipts:
+    client.json: {"version":1,"role":"client","pid":12483,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794699530882,"launcherSha256":"cf25f2b75
+    launcher.json: {"version":1,"role":"launcher","pid":96785,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794697940078,"launcherSha256":"cf25f2b
+    service.json: {"version":1,"role":"service","pid":96823,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794697947170,"launcherSha256":"cf25f2b7
+- last 8 lines of .cache/f/sidecars/build-agent.log:
+    2026-11-14T23:50:39.782Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T23:50:40.866Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T23:50:42.008Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T23:50:43.341Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T23:50:44.428Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T23:50:45.531Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T23:50:46.603Z worker registered: a73f7d68-662b-4ab6-9642-627ec55d9da5 cache http://192.168.178.70:6094
+    2026-11-14T23:50:49.404Z load report sent: reachable again
+- memory pressure level 1, free disk 87Gi

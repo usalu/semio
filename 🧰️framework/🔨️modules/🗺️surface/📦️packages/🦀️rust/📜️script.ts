@@ -1,6 +1,6 @@
 #!/usr/bin/env repo
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {verifyProducedWasmPackageV1, buildAdmittedWasmWebV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import {withProducedWasmPackageTaskV1, buildAdmittedWasmWebV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -21,7 +21,7 @@ const SURFACE_PACKAGES = ["semio-framework-surface-terrain", "semio-framework-su
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildAdmittedWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:verifyProducedWasmPackageV1,control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
+    await buildAdmittedWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:package_=>withProducedWasmPackageTaskV1(package_,async view=>{await view.recheck();await runOwnedCommand(runtimeExecutableV1(),runtimeTestArgumentsV1([join(this.root,"../../🧪️tests/🕸️browser/🟦️.ts")]),this.repoRoot,"tool:owner",cmdBudgetMs(),{env:{...process.env,SEMIO_SURFACE_WASM_PACKAGE:JSON.stringify([...view.files])}});}),control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
       rsDir: this.root,
       componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/surface/rs",
@@ -34,7 +34,6 @@ class WasmScript extends BundleScript {
         types: "framework_surface.d.ts",
       },
     });
-    await runOwnedCommand(runtimeExecutableV1(),runtimeTestArgumentsV1([join(this.root,"../../🧪️tests/🕸️browser/🟦️.ts")]),this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
   }
 }
 

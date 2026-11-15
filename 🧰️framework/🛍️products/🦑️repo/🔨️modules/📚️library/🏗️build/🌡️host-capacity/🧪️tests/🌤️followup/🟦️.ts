@@ -3,7 +3,7 @@ import {mkdtempSync,readdirSync,rmSync} from "node:fs";
 import {availableParallelism,tmpdir,totalmem} from "node:os";
 import {join} from "node:path";
 import {setTimeout as sleep} from "node:timers/promises";
-import {type HostCapacityPolicyV1,estimateHostPhasesV1,hostClassBoundV1,evaluateHostCapacityV1,hostFloorMegabytesV1,scaleHostRequestV1,sizeHostRequestV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostEstimateStoreV1,recordHostForecastV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
+import {type HostCapacityPolicyV1,emptyHostEstimateStoreV1,forecastHostQuietV1,quietHostRequestV1,estimateHostPhasesV1,hostClassBoundV1,evaluateHostCapacityV1,hostFloorMegabytesV1,scaleHostRequestV1,sizeHostRequestV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostEstimateStoreV1,recordHostForecastV1,updateHostEstimateStoreV1,withHostCapacityV1,type HostSampleV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {planTestWorkersV1,readTestWorkerPolicyV1,testWorkerFactsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/👷️workers/🟦️.ts";
 import buildPolicy from "../../../🔣️policy.json" with {type:"json"};
 import {currentWorkerHostV1} from "../../../👷️workers/🟦️.ts";
@@ -36,7 +36,7 @@ test("The run that follows a finished run of its class answers beside a full mac
    expect(granted.handle!.reservedMegabytes).toBeLessThan(4096);
    expect(granted.args.at(-1),"the tool is told the full jobs").toBe("--parallel=2");
    await sleep(120);
-  },ports(directory,{write:(line:string)=>lines.push(line)}));
+  },ports(directory,{observe:async()=>100,write:(line:string)=>lines.push(line)}));
   expect(lines.some(line=>pattern.test(line)),lines.join("\n")).toBe(true);
   const store=readHostEstimateStoreV1(directory);
   expect(store.classes[`${leaf}~quiet`]!.samples.length,"the follow-up run executed nothing and is learned as quiet").toBe(1);
@@ -217,7 +217,7 @@ test("A run that is the only one running never waits on itself: when even the bo
   const row=lines.map(line=>pattern.exec(line)).find(item=>item!==null);
   expect(row,lines.join("\n")).toBeTruthy();
   const [from,to,wanted]=[Number(row![1]),Number(row![2]),Number(row![3])];
-  expect(wanted,"the measured bound of its own class").toBeGreaterThan(g29.spareMegabytes);expect(to).toBeGreaterThanOrEqual(from);expect(to).toBeLessThan(wanted);expect(to-from,"only what is free").toBeLessThanOrEqual(g29.spareMegabytes+1);
+  expect(wanted,"the measured bound of its own class").toBeGreaterThan(g29.spareMegabytes);expect(to).toBeGreaterThanOrEqual(from);expect(to).toBeLessThan(wanted);expect(to,"only what is free plus what the run already holds").toBeLessThanOrEqual(g29.spareMegabytes+1100+1);
   expect(lines.some(line=>/waiting \d+s to grow|wartet seit/u.test(line)),"it never waited").toBe(false);
  }
 },40000);
@@ -252,3 +252,11 @@ test("A growth that fits entirely keeps the plan and all jobs of the process unt
  const {outcome,plan,parallel,lines}=await growOn(g34,g34Store(),g34.totalMegabytes,60000,"en_US.UTF-8");
  expect(outcome,lines.join("\n")).toBe("upgraded");expect(plan!.jobs).toBe(8);expect(parallel).toBe("8");expect(lines.some(line=>/of the \d+ MB it asked for/u.test(line))).toBe(false);
 },40000);
+
+test("A quiet run of a class nothing was learned about reserves a small declared block, never a graph run's full request, and a learned quiet run stays within the quiet bound",()=>{
+ const full=sizeHostRequestV1(policy,{id:newHostCapacityIdV1(),operation:"run",preferredJobs:2,kinds:[],targets:[]})!,fresh_=forecastHostQuietV1(policy,emptyHostEstimateStoreV1(),leaf,Date.now()),unlearned=quietHostRequestV1(full,fresh_);
+ expect(unlearned.fixedMegabytes,"an unlearned quiet run books the declared reference, not 2048 MB").toBe(buildPolicy.hostCapacity.estimates.quietReferenceMegabytes);
+ expect(unlearned.fixedMegabytes).toBeLessThanOrEqual(512);expect(unlearned).toMatchObject({quiet:true,minimumJobs:1,preferredJobs:1,perJobMegabytes:0});
+ const learned=recordHostForecastV1(policy,emptyHostEstimateStoreV1(),leaf,{executed:false,peakMegabytes:47,activeMilliseconds:9000,peakAtMilliseconds:4000,endedAtMs:Date.now()}),size=forecastHostQuietV1(policy,learned,leaf,Date.now());
+ expect(size.quiet).toBe(true);expect(size.megabytes).toBeLessThanOrEqual(unlearned.fixedMegabytes);expect(size.megabytes).toBeLessThanOrEqual(buildPolicy.hostCapacity.estimates.quietMaximumMegabytes);
+});

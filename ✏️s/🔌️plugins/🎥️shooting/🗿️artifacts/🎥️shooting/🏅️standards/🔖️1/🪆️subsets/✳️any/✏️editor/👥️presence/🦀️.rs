@@ -5,11 +5,11 @@ use pack::snapshot::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of shooting selection and viewport camera state.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase", default)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase", default, by_value_projection)]
 #[artifact(extension = "shooting.presence")]
 #[dsl(layout = "lines")]
-#[derive(Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[derive(Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct ShootingPresence {
     /// 👥️ Genuinely app-specific — asset selection/hover broadcast automatically now via the

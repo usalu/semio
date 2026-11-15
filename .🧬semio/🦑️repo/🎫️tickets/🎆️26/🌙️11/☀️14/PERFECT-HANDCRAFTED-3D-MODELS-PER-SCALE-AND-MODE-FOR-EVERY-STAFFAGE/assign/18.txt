@@ -1,0 +1,9 @@
+🧱️components/sectional-garage-door
+🧱️components/sliding-door
+🧱️components/solid-brick-wall-1960
+🧱️components/spiral-stair
+🧱️components/stair-flight
+🧱️components/steel-column
+🧱️components/tied-canopy
+🧱️components/tilt-window
+🧱️components/wheelchair-ramp

@@ -35,7 +35,7 @@ def count(name):COUNTS[name]=COUNTS.get(name,0)+1
 
 def evaluate(policy,host,ledger,waiters,now):
     floor=floor_mb(policy,host["totalMegabytes"]);cap=max(0,host["totalMegabytes"]-floor)
-    def ramping(g):return now-g.get("resumedAtMs",g["admittedAtMs"])<g.get("rampMilliseconds",policy["memory"]["rampMilliseconds"])
+    def ramping(g):return g.get("quiet") is not True and now-g.get("resumedAtMs",g["admittedAtMs"])<g.get("rampMilliseconds",policy["memory"]["rampMilliseconds"])
     active=[g for g in ledger if g.get("lentSinceMs") is None]
     def unrealized_of(g):return max(0,g["reservedMegabytes"]-(g["observedMegabytes"] or 0)) if ramping(g) else 0
     def committed_of(g):

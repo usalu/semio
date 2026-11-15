@@ -1,4 +1,4 @@
-//! 📍️ `change-critical-region-long-steel-area` diff: patches `longitudinal_steel_area_m2` of the addressed critical_region row.
+//! 📍️ `change-critical-region-longitudinal-steel-area-m2` diff: patches `longitudinal_steel_area_m2` of the addressed critical_region row.
 
 use crate::change_critical_region_long_steel_area::ChangeCriticalRegionLongitudinalSteelAreaM2;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998CriticalRegionDelta, En1998CriticalRegionPatch};

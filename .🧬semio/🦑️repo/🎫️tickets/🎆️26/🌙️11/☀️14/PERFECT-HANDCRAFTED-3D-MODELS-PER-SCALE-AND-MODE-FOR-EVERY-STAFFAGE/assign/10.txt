@@ -1,0 +1,7 @@
+👤️humans/sleeping-person
+👤️humans/standing-adult
+👤️humans/standing-phone-user
+👤️humans/tour-guide
+👤️humans/walking-commuter
+👤️humans/wheelchair-user
+👤️humans/worker-carrying-box

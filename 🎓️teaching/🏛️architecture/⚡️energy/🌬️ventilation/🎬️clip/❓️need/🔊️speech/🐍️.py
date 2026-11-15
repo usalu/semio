@@ -25,7 +25,6 @@ SPEECH_DIR = _output.speech_root(BASE_DIR)
 _scene = import_module("🎓️teaching.🏛️architecture.⚡️energy.🌬️ventilation.🎬️clip.❓️need.🐍️")
 Beat1_Lueftungsbedarf = _scene.Beat1_Lueftungsbedarf
 Beat2_Lueftungsweg = _scene.Beat2_Lueftungsweg
-Beat3_Fahrplan = _scene.Beat3_Fahrplan
 _runtime = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
 manim_command = _runtime.manim_command
 render_config = _runtime.render_config
@@ -42,7 +41,6 @@ write_vo_timing_manifest = _speech.write_vo_timing_manifest
 BEATS = [
     Beat1_Lueftungsbedarf,
     Beat2_Lueftungsweg,
-    Beat3_Fahrplan,
 ]
 
 SCENE_FILE = BASE_DIR / "🐍️.py"

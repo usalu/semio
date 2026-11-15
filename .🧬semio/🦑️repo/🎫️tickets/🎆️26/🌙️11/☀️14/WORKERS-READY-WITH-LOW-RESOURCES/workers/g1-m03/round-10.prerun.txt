@@ -1,0 +1,28 @@
+Pre-run facts, 2026-11-14T23:11:42Z
+- replica agent: launchctl print gui/501/tech.semio.fleet.replica:
+    	state = running
+    	runs = 47
+    	pid = 95575
+    	last exit code = 0
+    		state = active
+    		state = active
+- replica code digest (.cache/f/health.json): eabbc92267329dbd39d8d05e0c8eceb1bcad083c0eea58c44805408a7d547bcc, store ok, daemon pid 95592 , health.json age 4 s
+- "bootVersion":6
+- replica agent kickstarted: 0 times
+- graph service jobs:
+    -	4	tech.semio.repo.service.3f8d4f1eae84
+- repo service host processes: 0
+- receipts:
+    client.json: {"version":1,"role":"client","pid":91817,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794697050112}
+    launcher.json: {"version":1,"role":"launcher","pid":95592,"state":"waiting","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794697757406,"launcherSha256":"cf
+    service.json: {"version":1,"role":"service","pid":66015,"state":"denied","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794697053191}
+- last 8 lines of .cache/f/sidecars/build-agent.log:
+    2026-11-14T23:08:33.017Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T23:08:34.101Z worker registered: e60eb409-e272-4f0a-b31a-216a36db045b cache http://192.168.178.70:6094
+    2026-11-14T23:08:34.478Z load report sent: reachable again
+    2026-11-14T23:09:09.651Z graph-server: alive, 0 machines seen, 0 requests held, read none
+    2026-11-14T23:09:15.747Z worker stopped: ueli-workstation-mac-mini-m4-16gb-256gb-03-lan.fritz.box-82638
+    2026-11-14T23:09:48.036Z joining http://192.168.178.70:8981 offering rustc for 3 target(s)
+    2026-11-14T23:09:48.082Z worker sandbox: darwin-sandbox confined network denied
+    2026-11-14T23:09:48.085Z worker registered: a4aa01b4-7fad-4c13-9662-7c1178bcad5a cache http://192.168.178.70:6094
+- memory pressure level 1, free disk 87Gi

@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-s-artifact-mathematical-equation-update-graph-algorithm"
+name = "semio-s-artifact-mathematical-equation-update-graph"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Component crate of semio-s-artifact-mathematical-equation: update-graph-algorithm"
+description = "Component crate of semio-s-artifact-mathematical-equation: update-graph"
 
 [package.metadata.semio]
 role = "library"

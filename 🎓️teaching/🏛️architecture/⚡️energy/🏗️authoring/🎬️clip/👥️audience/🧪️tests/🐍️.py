@@ -60,7 +60,8 @@ class AudienceTest(unittest.TestCase):
                 envelopes.append((output, settings["audience"]))
                 return output
 
-            with patch.object(runtime, "load_manifest", return_value=[video]), patch.object(runtime, "segment_state", side_effect=lambda segment, settings: {"segment": segment, "settings": settings}), patch.object(runtime, "render_segment", side_effect=render), patch.object(runtime, "concat_videos", side_effect=concat), patch.object(runtime, "publish_presentation", side_effect=envelope):
+            self.enterContext(patch.object(importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🖼️posters.🐍️"), "prepare", return_value={}))
+            with patch.object(runtime, "load_manifest", return_value=[video]), patch.object(runtime, "segment_state", side_effect=lambda segment, settings: {"segment": segment, "settings": settings}), patch.object(runtime, "render_segment", side_effect=render), patch.object(runtime, "concat_videos", side_effect=concat), patch.object(runtime, "publish_presentation", side_effect=envelope), patch.object(runtime, "publish_export", return_value={}):
                 for audience in CASES["variants"]:
                     runtime.compose_videos(profile="preview", language="de", audience=audience, output_root=folder)
                     runtime.compose_videos(profile="preview", language="de", audience=audience, output_root=folder, concat_only=True)

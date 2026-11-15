@@ -15,13 +15,13 @@
     {
       "name": "exact-byte-limit",
       "scalar": "a",
-      "count": 25165824,
+      "count": 33554432,
       "accepted": true
     },
     {
       "name": "byte-limit-refusal",
       "scalar": "a",
-      "count": 25165825,
+      "count": 33554433,
       "accepted": false
     },
     {

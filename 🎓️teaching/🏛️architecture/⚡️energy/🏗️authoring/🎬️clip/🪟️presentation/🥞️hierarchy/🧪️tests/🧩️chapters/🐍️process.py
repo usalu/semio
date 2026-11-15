@@ -36,7 +36,7 @@ def main():
             "cursor": {"point": state["point"], "kind": "arrow", "pressed": False},
             "transition_elapsed": 2000})
     packet = {"schema": "semio-presentation-browser/v1", "viewport": {"width": 480, "height": 270},
-        "catalog": hierarchy.hierarchy_contract(), "language": "de", "work_directory": str(work), "frames": frames}
+        "catalog": importlib.import_module(PACKAGE + ".🖼️posters.🧪️tests.🧰️synthetic.🐍️").catalog(), "language": "de", "work_directory": str(work), "frames": frames}
     (work / "packet.json").write_text(json.dumps(packet, ensure_ascii=False, indent=2), encoding="utf-8")
     result = browser.render_batch(packet)
     for frame, metadata in zip(frames, result["metadata"], strict=True):

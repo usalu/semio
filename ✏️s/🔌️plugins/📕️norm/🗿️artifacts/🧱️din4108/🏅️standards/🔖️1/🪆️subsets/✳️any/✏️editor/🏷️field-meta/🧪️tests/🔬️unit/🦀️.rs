@@ -52,8 +52,8 @@ fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
 fn climate_and_usage_choices_are_human_localized() {
     let climate = din4108_field_meta("climateZone").expect("climate");
     let c0 = &climate.choices().unwrap()[0];
-    assert_eq!(c0.label_en, "Summer climate region A");
-    assert_eq!(c0.label_de, "Sommerklimaregion A");
+    assert_eq!(c0.label_en, "Summer climate region A (cool)");
+    assert_eq!(c0.label_de, "Sommerklimaregion A (sommerkühl)");
     let usage = din4108_field_meta("usage").expect("usage");
     let u0 = &usage.choices().unwrap()[0];
     assert_eq!(u0.label_en, "Residential");

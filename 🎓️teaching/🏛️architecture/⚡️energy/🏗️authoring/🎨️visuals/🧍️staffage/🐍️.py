@@ -155,15 +155,21 @@ def _fresh(entries: int, seconds: float = _FRESH_S):
     return decorate
 
 
+def _digest_label(file: Path, root: Path) -> str:
+    """🏷️ Name a dependency relative to the cast root, or to the workspace when its relative imports leave that root."""
+    base = root if file.is_relative_to(root) else _WORKSPACE
+    return file.relative_to(base).as_posix()
+
+
 @_fresh(4)
 def _source_digest(root: Path = _SOURCES) -> str:
     """🔐 Hash the cast dependency closure (the exporter, everything it imports, its schema and level files), the staffage schema and the bundled print profiles once per provenance checkpoint, in path order; editing a module the exporter never loads leaves every cast key unchanged."""
     digest = hashlib.sha256()
     owned = root / "🔨️modules/📤️export/🎭️cast"
     files = sorted({*_imports(root), *(file for folder in (owned, root / "🧬️schema") if folder.is_dir() for file in folder.rglob("*") if file.is_file() and "node_modules" not in file.parts),
-                    *(root / name for name in _BUNDLED if (root / name).is_file())}, key=lambda file: file.relative_to(root).as_posix())
+                    *(root / name for name in _BUNDLED if (root / name).is_file())}, key=lambda file: _digest_label(file, root))
     for file in files:
-        digest.update(file.relative_to(root).as_posix().encode("utf-8") + b"\0" + _lf(file.read_bytes()) + b"\0")
+        digest.update(_digest_label(file, root).encode("utf-8") + b"\0" + _lf(file.read_bytes()) + b"\0")
     return digest.hexdigest()
 
 
@@ -939,6 +945,34 @@ def _outline(data: str) -> np.ndarray:
     return np.array(segments, dtype=float).reshape(-1, 2) if segments else np.empty((0, 2))
 
 
+def _even_odd(points: np.ndarray) -> np.ndarray:
+    """🕳️ Make Cairo's non-zero fill paint what the staffage fill rule says: Manim's Cairo camera always fills by the non-zero winding rule, the archive, its SVG, PDF and measuring code by the even-odd rule, so the subpaths of one fill (a tyre ring, a window) are re-wound by their nesting depth, even depth counter-clockwise and odd depth clockwise, which makes both rules paint the same area for rings that nest or lie apart. Paths of one subpath keep their points.
+
+    @see ../../../../🧍️staffage/🧬️schema/🔣️.json — `Shape`, the fill rule of every filled shape
+    """
+    segments = points.reshape(-1, 4, 2)
+    cuts = [0] + [i for i in range(1, len(segments)) if np.linalg.norm(segments[i, 0] - segments[i - 1, 3]) > _CLOSE_TOLERANCE] + [len(segments)]
+    if len(cuts) < 3:
+        return points
+    rings = [segments[low:high] for low, high in zip(cuts, cuts[1:])]
+    outlines = [ring[:, 0] for ring in rings]
+
+    def inside(point: np.ndarray, outline: np.ndarray) -> bool:
+        x, y = point
+        rolled = np.roll(outline, -1, axis=0)
+        crossing = (outline[:, 1] <= y) != (rolled[:, 1] <= y)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            along = outline[:, 0] + (y - outline[:, 1]) / (rolled[:, 1] - outline[:, 1]) * (rolled[:, 0] - outline[:, 0])
+        return bool(np.count_nonzero(crossing & (along > x)) % 2)
+
+    kept = []
+    for index, (ring, outline) in enumerate(zip(rings, outlines)):
+        depth = sum(sum(inside(point, other) for point in outline) * 2 > len(outline) for number, other in enumerate(outlines) if number != index)
+        area = float(np.sum(outline[:, 0] * np.roll(outline[:, 1], -1) - np.roll(outline[:, 0], -1) * outline[:, 1]))
+        kept.append(ring if (area > 0) == (depth % 2 == 0) else ring[::-1, ::-1])
+    return np.concatenate(kept).reshape(-1, 2)
+
+
 def _parse_frame(text: str, index: dict) -> _Frame:
     """🧩 Parse the paths of one cast frame straight into world-metre Bezier points and styles, without an SVG library."""
     matrix = np.array([1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
@@ -960,12 +994,14 @@ def _parse_frame(text: str, index: dict) -> _Frame:
             continue
         x = matrix[0] * points[:, 0] + matrix[2] * points[:, 1] + matrix[4]
         y = matrix[1] * points[:, 0] + matrix[3] * points[:, 1] + matrix[5]
-        blocks.append(np.column_stack(((x - origin_x) / per_metre, (origin_y - y) / per_metre)))
+        world = np.column_stack(((x - origin_x) / per_metre, (origin_y - y) / per_metre))
+        fill = _colour(attributes.get("fill"), "#000000")
+        blocks.append(world if fill is None else _even_odd(world))
         spans.append((count, count + len(points)))
         count += len(points)
         opacity = float(attributes.get("opacity", 1.0))
         stroke = _colour(attributes.get("stroke"), None)
-        shapes.append(_Shape(_colour(attributes.get("fill"), "#000000"), float(attributes.get("fill-opacity", 1.0)) * opacity, stroke,
+        shapes.append(_Shape(fill, float(attributes.get("fill-opacity", 1.0)) * opacity, stroke,
                              float(attributes.get("stroke-opacity", 1.0)) * opacity, float(attributes.get("stroke-width", 1.0)) if stroke else 0.0))
     return _Frame(np.concatenate(blocks) if blocks else np.empty((0, 2)), tuple(spans), tuple(shapes))
 

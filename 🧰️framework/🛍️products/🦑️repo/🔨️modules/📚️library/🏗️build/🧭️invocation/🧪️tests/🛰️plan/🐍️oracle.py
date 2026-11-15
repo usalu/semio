@@ -15,12 +15,18 @@ def expect(case):
         for dependency in task["dependsOn"]:
             if dependency not in ids:
                 return None
-            edges.append([task["id"], dependency])
+            if [task["id"], dependency] not in edges:
+                edges.append([task["id"], dependency])
+    tasks = list(dict.fromkeys(task["id"] for task in case["tasks"]))
+    needed = {edge[1] for edge in edges}
+    named = list(dict.fromkeys(target for target in case["targets"] if target != "*:*"))
+    roots = [task for task in tasks if task not in needed]
     return {
-        "projects": sorted({split(task["id"])[0] for task in case["tasks"]}),
-        "tasks": [task["id"] for task in case["tasks"]],
+        "projects": sorted({split(task)[0] for task in tasks}),
+        "tasks": tasks,
         "edges": edges,
-        "stale": [task["id"] for task in case["tasks"] if task["stale"]],
+        "stale": list(dict.fromkeys(task["id"] for task in case["tasks"] if task["stale"])),
+        "scope": named or roots or tasks,
     }
 
 

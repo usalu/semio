@@ -1,5 +1,6 @@
 import {spawn,spawnSync} from "node:child_process";
-import {cpus,freemem,loadavg,platform,totalmem} from "node:os";
+import {cpus,loadavg,platform,totalmem} from "node:os";
+import {hostAvailableBytesV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {existsSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
 import {acceptanceLineV1,acceptanceMutateV1,acceptanceRestoreV1} from "../../🛂️acceptance/🟦️.ts";
@@ -10,10 +11,10 @@ const repoProcess=/\brepo\b|runtimes\/bun|bazel|\bnx\b|cargo|rustc/u;
 
 /** 🌡️ Reads the resident memory of every repo-related process (summed), the memory still available and the swap in use; each value is null where the host cannot tell. */
 export function planningHostV1():PlanningHostV1{
- let availableMb:number|null=Math.round(freemem()/1048576),swapUsedMb:number|null=null,repoRssMb:number|null=null;
+ const available=hostAvailableBytesV1();let availableMb:number|null=available===undefined?null:Math.round(available/1048576),swapUsedMb:number|null=null,repoRssMb:number|null=null;
  if(platform()==="linux")try{
   const info=new Map(readFileSync("/proc/meminfo","utf8").split("\n").map(line=>line.match(/^(\w+):\s+(\d+)/u)).filter(Boolean).map(hit=>[hit![1]!,Number(hit![2])] as const));
-  availableMb=Math.round((info.get("MemAvailable")??0)/1024);swapUsedMb=Math.round(((info.get("SwapTotal")??0)-(info.get("SwapFree")??0))/1024);
+  swapUsedMb=Math.round(((info.get("SwapTotal")??0)-(info.get("SwapFree")??0))/1024);
  }catch{}
  if(platform()!=="win32"){
   const ps=spawnSync("ps",["-axo","rss=,args="],{encoding:"utf8",maxBuffer:1<<26});

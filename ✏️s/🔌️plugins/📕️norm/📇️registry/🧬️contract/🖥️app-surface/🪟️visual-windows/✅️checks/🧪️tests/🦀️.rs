@@ -107,6 +107,7 @@ fn a_check_selects_its_entity_and_field_path() {
 
 #[test]
 fn rows_carry_glyph_text_bar_and_status_beyond_colour_in_both_languages() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let report = report();
     let en = render(&report, &ChecksViewState::default(), &ChecksWindowSpec::default(), Locale::En);
     let de = render(&report, &ChecksViewState::default(), &ChecksWindowSpec::default(), Locale::De);
@@ -124,6 +125,7 @@ fn rows_carry_glyph_text_bar_and_status_beyond_colour_in_both_languages() {
 
 #[test]
 fn selection_and_remedy_actions_are_bound_only_for_an_editor_controller() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let report = report();
     let viewer = render(&report, &ChecksViewState::default(), &ChecksWindowSpec::default(), Locale::En);
     assert!(!viewer.contains("setSelectedCheckIndex") && !viewer.contains("applyRemedy"), "{viewer}");
@@ -133,6 +135,7 @@ fn selection_and_remedy_actions_are_bound_only_for_an_editor_controller() {
 
 #[test]
 fn entity_groups_pick_the_raw_entity_id_in_the_interaction_domain() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let spec = ChecksWindowSpec { controller_id: Some("s.norm.x@1/*#editor"), interaction_domain: Some("norm.x"), ..ChecksWindowSpec::default() };
     let json = render(&report(), &ChecksViewState::default(), &spec, Locale::En);
     assert!(json.contains("\"B2\"") && json.contains("entity") && json.contains("norm.x"), "{json}");
@@ -142,6 +145,7 @@ fn entity_groups_pick_the_raw_entity_id_in_the_interaction_domain() {
 
 #[test]
 fn optional_controls_cancel_and_clause_links_appear_only_when_declared() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let plain = ChecksWindowSpec { controller_id: Some("s.norm.x@1/*#editor"), ..ChecksWindowSpec::default() };
     let declared = ChecksWindowSpec { actions: ChecksActions { view_controls: true, clause_links: true, cancel_evaluation: true }, ..plain };
     let state = ChecksViewState { pending: Some(ChecksPending { completed: 2, total: 9 }), ..ChecksViewState::default() };
@@ -162,6 +166,7 @@ fn the_table_twin_lines_up_with_the_checks() {
 
 #[test]
 fn remedy_chips_of_live_editors_trigger_ghost_previews_and_a_clear_row() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let live = render(&report(), &ChecksViewState { selected: Some(1), ..ChecksViewState::default() }, &ChecksWindowSpec { controller_id: Some("s.norm.en1993@1/*#editor"), ..ChecksWindowSpec::default() }, Locale::En);
     assert!(live.contains("previewRemedy") && live.contains("clearPreview") && live.contains("Preview"), "{live}");
     let german = render(&report(), &ChecksViewState { selected: Some(1), ..ChecksViewState::default() }, &ChecksWindowSpec { controller_id: Some("s.norm.en1993@1/*#editor"), ..ChecksWindowSpec::default() }, Locale::De);
@@ -173,6 +178,7 @@ fn remedy_chips_of_live_editors_trigger_ghost_previews_and_a_clear_row() {
 
 #[test]
 fn the_checks_window_publishes_a_table_and_one_row_node_per_listed_check_in_both_languages() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     use crate::accessibility::published_nodes::published;
     let report = report();
     let state = ChecksViewState { selected: Some(1), ..ChecksViewState::default() };

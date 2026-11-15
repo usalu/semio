@@ -1,0 +1,380 @@
+{
+ "version": 1,
+ "jitter": [
+  {
+   "originId": "g1-m01",
+   "digest": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+   "span": 60000,
+   "expected": 12762
+  },
+  {
+   "originId": "g1-m02",
+   "digest": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+   "span": 60000,
+   "expected": 33837
+  },
+  {
+   "originId": "g1-m03",
+   "digest": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+   "span": 60000,
+   "expected": 47231
+  },
+  {
+   "originId": "g1-m01",
+   "digest": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+   "span": 60000,
+   "expected": 25552
+  },
+  {
+   "originId": "g2-server",
+   "digest": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+   "span": 60000,
+   "expected": 43610
+  },
+  {
+   "originId": "a",
+   "digest": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+   "span": 1,
+   "expected": 0
+  },
+  {
+   "originId": "a",
+   "digest": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+   "span": 0,
+   "expected": 0
+  },
+  {
+   "originId": "zz",
+   "digest": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+   "span": 1000,
+   "expected": 803
+  },
+  {
+   "originId": "g1-m10",
+   "digest": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d",
+   "span": 59999,
+   "expected": 10661
+  },
+  {
+   "originId": "g1-m11",
+   "digest": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d",
+   "span": 60000,
+   "expected": 53678
+  }
+ ],
+ "closure": [
+  {
+   "name": "module sources only, no imports",
+   "files": [
+    {
+     "path": "mod/a/🟦️.ts",
+     "text": "export const a=1;\n"
+    },
+    {
+     "path": "mod/b/📜️script.ts",
+     "text": "#!/usr/bin/env repo\n"
+    },
+    {
+     "path": "mod/🧪️tests/🟦️.ts",
+     "text": "import \"../a/🟦️.ts\";"
+    }
+   ],
+   "entries": [
+    "a/🟦️.ts",
+    "b/📜️script.ts"
+   ],
+   "expected": []
+  },
+  {
+   "name": "outside imports, json and transitive files are followed once",
+   "files": [
+    {
+     "path": "mod/a/🟦️.ts",
+     "text": "import {x} from \"../../shared/x.ts\";\nimport data from \"./data.json\" with {type:\"json\"};\nimport {b} from \"../b/🟦️.ts\";\nexport const a=x+b;\n"
+    },
+    {
+     "path": "mod/b/🟦️.ts",
+     "text": "export {y} from \"../../shared/y.ts\";\nexport const b=1;\n"
+    },
+    {
+     "path": "mod/a/data.json",
+     "text": "{\"from\":\"./ignored.ts\"}"
+    },
+    {
+     "path": "shared/x.ts",
+     "text": "import \"./side.ts\";\nexport const x=await import(\"./dyn.ts\");\n"
+    },
+    {
+     "path": "shared/y.ts",
+     "text": "import {x} from \"./x.ts\";\nexport const y=x;\n"
+    },
+    {
+     "path": "shared/side.ts",
+     "text": "export {};\n"
+    },
+    {
+     "path": "shared/dyn.ts",
+     "text": "import \"node:fs\";\nimport \"bun:test\";\nimport {z} from \"left-pad\";\n"
+    }
+   ],
+   "entries": [
+    "a/🟦️.ts",
+    "b/🟦️.ts"
+   ],
+   "expected": [
+    "../shared/dyn.ts",
+    "../shared/side.ts",
+    "../shared/x.ts",
+    "../shared/y.ts",
+    "a/data.json"
+   ]
+  },
+  {
+   "name": "a specifier that does not exist and text inside strings are ignored",
+   "files": [
+    {
+     "path": "mod/a/🟦️.ts",
+     "text": "import {q} from \"./missing.ts\";\n/** says from \"./never.ts\" in prose */\nconst t=\"import './string.ts'\";\n"
+    },
+    {
+     "path": "mod/a/string.ts",
+     "text": "export {};\n"
+    }
+   ],
+   "entries": [
+    "a/🟦️.ts"
+   ],
+   "expected": [
+    "a/string.ts"
+   ]
+  }
+ ],
+ "texts": [
+  {
+   "name": "complete catalogue",
+   "catalogue": {
+    "version": 1,
+    "languages": [
+     "en",
+     "de"
+    ],
+    "messages": {
+     "a": {
+      "en": "Hello {name}",
+      "de": "Hallo {name}"
+     },
+     "b": {
+      "en": "Plain",
+      "de": "Schlicht"
+     }
+    }
+   },
+   "error": null
+  },
+  {
+   "name": "a missing language",
+   "catalogue": {
+    "version": 1,
+    "languages": [
+     "en",
+     "de"
+    ],
+    "messages": {
+     "a": {
+      "en": "Hello"
+     }
+    }
+   },
+   "error": "message a must have exactly the languages en,de"
+  },
+  {
+   "name": "an empty text",
+   "catalogue": {
+    "version": 1,
+    "languages": [
+     "en",
+     "de"
+    ],
+    "messages": {
+     "a": {
+      "en": "Hello",
+      "de": ""
+     }
+    }
+   },
+   "error": "message a has no text in de"
+  },
+  {
+   "name": "placeholders that differ",
+   "catalogue": {
+    "version": 1,
+    "languages": [
+     "en",
+     "de"
+    ],
+    "messages": {
+     "a": {
+      "en": "Hello {name}",
+      "de": "Hallo {wer}"
+     }
+    }
+   },
+   "error": "message a differs in its placeholders between the languages"
+  },
+  {
+   "name": "an extra language",
+   "catalogue": {
+    "version": 1,
+    "languages": [
+     "en",
+     "de"
+    ],
+    "messages": {
+     "a": {
+      "en": "Hello",
+      "de": "Hallo",
+      "fr": "Salut"
+     }
+    }
+   },
+   "error": "message a must have exactly the languages en,de"
+  },
+  {
+   "name": "duplicate languages",
+   "catalogue": {
+    "version": 1,
+    "languages": [
+     "en",
+     "en"
+    ],
+    "messages": {}
+   },
+   "error": "languages must be unique"
+  },
+  {
+   "name": "no messages object",
+   "catalogue": {
+    "version": 1,
+    "languages": [
+     "en"
+    ],
+    "messages": []
+   },
+   "error": "messages must be an object"
+  }
+ ],
+ "prune": [
+  {
+   "name": "keeps the newest two",
+   "keep": 2,
+   "created": {
+    "a": 5,
+    "b": 9,
+    "c": 7
+   },
+   "kept": [
+    "b",
+    "c"
+   ]
+  },
+  {
+   "name": "ties break by digest",
+   "keep": 2,
+   "created": {
+    "b": 4,
+    "a": 4,
+    "c": 3
+   },
+   "kept": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "name": "keep zero keeps nothing",
+   "keep": 0,
+   "created": {
+    "a": 1
+   },
+   "kept": []
+  },
+  {
+   "name": "fewer than keep",
+   "keep": 2,
+   "created": {
+    "a": 1
+   },
+   "kept": [
+    "a"
+   ]
+  }
+ ],
+ "rotate": [
+  {
+   "name": "small stays",
+   "text": "abc\n",
+   "maxBytes": 10,
+   "keepBytes": 4,
+   "rotated": false,
+   "tail": ""
+  },
+  {
+   "name": "large rotates and keeps the tail",
+   "text": "0123456789\nabcdefghij\n",
+   "maxBytes": 10,
+   "keepBytes": 6,
+   "rotated": true,
+   "tail": "fghij\n"
+  },
+  {
+   "name": "exactly at the limit stays",
+   "text": "0123456789",
+   "maxBytes": 10,
+   "keepBytes": 4,
+   "rotated": false,
+   "tail": ""
+  }
+ ],
+ "store": [
+  {
+   "name": "a module with an imported schema and an entry script",
+   "files": [
+    {
+     "path": "m/a/🟦️.ts",
+     "text": "import d from \"./data.json\" with {type:\"json\"};\nexport const a=d;\n",
+     "executable": false
+    },
+    {
+     "path": "m/a/data.json",
+     "text": "{\"n\":1}",
+     "executable": false
+    },
+    {
+     "path": "m/b/📜️script.ts",
+     "text": "#!/usr/bin/env repo\nexport const b=2;\nexport const text=\"héllo ✓\";\n",
+     "executable": true
+    }
+   ],
+   "expected": [
+    {
+     "path": "m/a/data.json",
+     "bytes": 7,
+     "sha256": "2bfd14f43d17fc7cea24e0917a8879b4b2f880b8baeec1b9d90fbaad655e71bd",
+     "executable": false
+    },
+    {
+     "path": "m/a/🟦️.ts",
+     "bytes": 66,
+     "sha256": "d2757bb10546261d7141b9f5563d7783eda2c5d92e12fdd619bcb94d2a1294c0",
+     "executable": false
+    },
+    {
+     "path": "m/b/📜️script.ts",
+     "bytes": 70,
+     "sha256": "2427b5f4b041f6e2480c29002e6ad5fb507e591a1051c841fbde713b922c7942",
+     "executable": true
+    }
+   ]
+  }
+ ]
+}

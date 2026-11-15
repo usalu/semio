@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-15T04:00:39.441554+00:00",
+  "first_plan": {
+    "at": "2026-11-15T03:56:23Z",
+    "elapsed_s": 72.466,
+    "source": "host-c5f530f58f3a.log",
+    "line": "graph: 609 stale projects, 0 taken from the fleet, 10 too heavy for this machine (@semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-rs (about 8496 MB), @semio-tech/plugin-publication-mounted-rs (about 6484 MB), and 4 more; it can give about 3512 MB per project), it can infer 140 of the others (35 per wave); asking the fleet for 609"
+  },
+  "observation": "Actual grant3512MB, local140 (35/wave), too-heavy10; exact line retained. No new restore line emitted in this reused service during the try so far."
+}

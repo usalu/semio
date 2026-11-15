@@ -1,0 +1,1067 @@
+{
+  "schema": "semio.model.scenes-vector/v1",
+  "quality": {
+    "chordM": 0.001,
+    "minSegments": 12,
+    "maxSegments": 32
+  },
+  "document": {
+    "version": "semio.model/v1",
+    "id": "scenes",
+    "title": {
+      "en": "Scenes",
+      "de": "Szenen"
+    },
+    "nodes": [
+      {
+        "id": "root",
+        "parent": null,
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "spine",
+        "parent": "root",
+        "translation": [
+          0,
+          1,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "joint": {
+          "type": "fixed",
+          "axis": [
+            0,
+            1,
+            0
+          ]
+        },
+        "tags": [
+          "bone"
+        ]
+      },
+      {
+        "id": "arm",
+        "parent": "spine",
+        "translation": [
+          0.5,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "joint": {
+          "type": "revolute",
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -1.5,
+          "max": 1.5
+        },
+        "tags": [
+          "bone"
+        ]
+      },
+      {
+        "id": "hull-body",
+        "parent": "spine",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "hull-arm",
+        "parent": "arm",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "frame-body",
+        "parent": "spine",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "frame-arm",
+        "parent": "arm",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "skin-shared",
+        "parent": "root",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "region-a",
+        "parent": "spine",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "skin-thermal",
+        "parent": "root",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    ],
+    "scenes": [
+      {
+        "id": "body",
+        "title": {
+          "en": "Body",
+          "de": "Körper"
+        },
+        "nodes": [
+          "hull-body",
+          "hull-arm",
+          "skin-shared"
+        ],
+        "tags": [
+          "tone"
+        ]
+      },
+      {
+        "id": "structure",
+        "title": {
+          "en": "Structure",
+          "de": "Tragwerk"
+        },
+        "nodes": [
+          "frame-body",
+          "frame-arm",
+          "skin-shared"
+        ]
+      },
+      {
+        "id": "thermal",
+        "title": {
+          "en": "Thermal",
+          "de": "Thermik"
+        },
+        "nodes": [
+          "region-a",
+          "skin-thermal"
+        ]
+      }
+    ],
+    "solids": [
+      {
+        "id": "hull-torso",
+        "kind": "box",
+        "node": "hull-body",
+        "material": "hull",
+        "size": [
+          0.4,
+          0.8,
+          0.3
+        ]
+      },
+      {
+        "id": "hull-upper-arm",
+        "kind": "capsule",
+        "node": "hull-arm",
+        "material": "hull",
+        "p0": [
+          0,
+          0,
+          0
+        ],
+        "p1": [
+          0.4,
+          0,
+          0
+        ],
+        "r0": 0.06,
+        "r1": 0.05
+      },
+      {
+        "id": "frame-column",
+        "kind": "box",
+        "node": "frame-body",
+        "material": "frame",
+        "size": [
+          0.1,
+          0.9,
+          0.1
+        ]
+      },
+      {
+        "id": "frame-beam",
+        "kind": "ellipsoid",
+        "node": "frame-arm",
+        "material": "frame",
+        "radii": [
+          0.2,
+          0.04,
+          0.04
+        ],
+        "transform": {
+          "translation": [
+            0.2,
+            0,
+            0
+          ]
+        }
+      },
+      {
+        "id": "shared-skin",
+        "kind": "ellipsoid",
+        "node": "skin-shared",
+        "material": "skin",
+        "radii": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "transform": {
+          "translation": [
+            0.5,
+            1,
+            0
+          ]
+        },
+        "weights": [
+          {
+            "node": "spine",
+            "weight": 0.5
+          },
+          {
+            "node": "arm",
+            "weight": 0.5
+          }
+        ]
+      },
+      {
+        "id": "region-core",
+        "kind": "box",
+        "node": "region-a",
+        "material": "heat",
+        "size": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "transform": {
+          "translation": [
+            0,
+            0.2,
+            0.3
+          ]
+        }
+      },
+      {
+        "id": "thermal-skin",
+        "kind": "ellipsoid",
+        "node": "skin-thermal",
+        "material": "heat",
+        "radii": [
+          0.08,
+          0.08,
+          0.08
+        ],
+        "transform": {
+          "translation": [
+            0.5,
+            1,
+            0.3
+          ]
+        },
+        "weights": [
+          {
+            "node": "arm",
+            "weight": 1
+          }
+        ]
+      }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+      {
+        "id": "hull",
+        "title": {
+          "en": "Hull",
+          "de": "Hülle"
+        },
+        "baseColor": [
+          0.8,
+          0.7,
+          0.6,
+          1
+        ],
+        "metallic": 0,
+        "roughness": 0.8,
+        "emissive": [
+          0,
+          0,
+          0
+        ],
+        "alphaMode": "opaque",
+        "doubleSided": false,
+        "unlit": false
+      },
+      {
+        "id": "frame",
+        "title": {
+          "en": "Frame",
+          "de": "Rahmen"
+        },
+        "baseColor": [
+          0.4,
+          0.4,
+          0.45,
+          1
+        ],
+        "metallic": 0,
+        "roughness": 0.8,
+        "emissive": [
+          0,
+          0,
+          0
+        ],
+        "alphaMode": "opaque",
+        "doubleSided": false,
+        "unlit": false
+      },
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "baseColor": [
+          0.9,
+          0.6,
+          0.5,
+          1
+        ],
+        "metallic": 0,
+        "roughness": 0.8,
+        "emissive": [
+          0,
+          0,
+          0
+        ],
+        "alphaMode": "opaque",
+        "doubleSided": false,
+        "unlit": false
+      },
+      {
+        "id": "heat",
+        "title": {
+          "en": "Heat",
+          "de": "Wärme"
+        },
+        "baseColor": [
+          1,
+          0.4,
+          0.1,
+          1
+        ],
+        "metallic": 0,
+        "roughness": 0.8,
+        "emissive": [
+          0,
+          0,
+          0
+        ],
+        "alphaMode": "opaque",
+        "doubleSided": false,
+        "unlit": false
+      },
+      {
+        "id": "hull-dark",
+        "title": {
+          "en": "Dark hull",
+          "de": "Dunkle Hülle"
+        },
+        "baseColor": [
+          0.3,
+          0.25,
+          0.2,
+          1
+        ],
+        "metallic": 0,
+        "roughness": 0.8,
+        "emissive": [
+          0,
+          0,
+          0
+        ],
+        "alphaMode": "opaque",
+        "doubleSided": false,
+        "unlit": false
+      }
+    ],
+    "variants": [
+      {
+        "id": "dark",
+        "title": {
+          "en": "Dark",
+          "de": "Dunkel"
+        },
+        "bindings": {
+          "hull": "hull-dark"
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "bent",
+        "title": {
+          "en": "Bent",
+          "de": "Gebeugt"
+        },
+        "nodes": {
+          "arm": {
+            "rotation": [
+              0,
+              0,
+              0.3826834323650898,
+              0.9238795325112867
+            ]
+          }
+        }
+      }
+    ],
+    "animations": [
+      {
+        "id": "wave",
+        "title": {
+          "en": "Wave",
+          "de": "Winken"
+        },
+        "durationS": 1,
+        "loop": true,
+        "events": [],
+        "channels": [
+          {
+            "target": {
+              "node": "arm",
+              "path": "rotation"
+            },
+            "interpolation": "linear",
+            "times": [
+              0,
+              0.5,
+              1
+            ],
+            "values": [
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0.3826834323650898,
+              0.9238795325112867,
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "target": {
+              "material": "hull",
+              "path": "baseColor"
+            },
+            "interpolation": "linear",
+            "times": [
+              0,
+              1
+            ],
+            "values": [
+              0.8,
+              0.7,
+              0.6,
+              1,
+              0.6,
+              0.5,
+              0.4,
+              1
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "invalid": [
+    {
+      "name": "unknown-node",
+      "scenes": [
+        {
+          "id": "body",
+          "title": {
+            "en": "Body",
+            "de": "Körper"
+          },
+          "nodes": [
+            "hull-body",
+            "hull-arm",
+            "skin-shared",
+            "ghost"
+          ]
+        },
+        {
+          "id": "structure",
+          "title": {
+            "en": "Structure",
+            "de": "Tragwerk"
+          },
+          "nodes": [
+            "frame-body",
+            "frame-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "thermal",
+          "title": {
+            "en": "Thermal",
+            "de": "Thermik"
+          },
+          "nodes": [
+            "region-a",
+            "skin-thermal"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "code": "unknown-node",
+          "path": "/scenes/0/nodes/3"
+        }
+      ]
+    },
+    {
+      "name": "duplicate-scene-id",
+      "scenes": [
+        {
+          "id": "body",
+          "title": {
+            "en": "Body",
+            "de": "Körper"
+          },
+          "nodes": [
+            "hull-body",
+            "hull-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "body",
+          "title": {
+            "en": "Structure",
+            "de": "Tragwerk"
+          },
+          "nodes": [
+            "frame-body",
+            "frame-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "thermal",
+          "title": {
+            "en": "Thermal",
+            "de": "Thermik"
+          },
+          "nodes": [
+            "region-a",
+            "skin-thermal"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "code": "duplicate-id",
+          "path": "/scenes/1/id"
+        }
+      ]
+    },
+    {
+      "name": "duplicate-node-in-scene",
+      "scenes": [
+        {
+          "id": "body",
+          "title": {
+            "en": "Body",
+            "de": "Körper"
+          },
+          "nodes": [
+            "hull-body",
+            "hull-arm",
+            "skin-shared",
+            "hull-body"
+          ]
+        },
+        {
+          "id": "structure",
+          "title": {
+            "en": "Structure",
+            "de": "Tragwerk"
+          },
+          "nodes": [
+            "frame-body",
+            "frame-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "thermal",
+          "title": {
+            "en": "Thermal",
+            "de": "Thermik"
+          },
+          "nodes": [
+            "region-a",
+            "skin-thermal"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "code": "duplicate-id",
+          "path": "/scenes/0/nodes/3"
+        }
+      ]
+    },
+    {
+      "name": "unscened-node",
+      "scenes": [
+        {
+          "id": "body",
+          "title": {
+            "en": "Body",
+            "de": "Körper"
+          },
+          "nodes": [
+            "hull-body",
+            "hull-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "structure",
+          "title": {
+            "en": "Structure",
+            "de": "Tragwerk"
+          },
+          "nodes": [
+            "frame-body",
+            "frame-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "thermal",
+          "title": {
+            "en": "Thermal",
+            "de": "Thermik"
+          },
+          "nodes": [
+            "skin-thermal"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "code": "unscened-node",
+          "path": "/nodes/8"
+        }
+      ]
+    },
+    {
+      "name": "empty-scene",
+      "scenes": [
+        {
+          "id": "body",
+          "title": {
+            "en": "Body",
+            "de": "Körper"
+          },
+          "nodes": [
+            "hull-body",
+            "hull-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "structure",
+          "title": {
+            "en": "Structure",
+            "de": "Tragwerk"
+          },
+          "nodes": [
+            "frame-body",
+            "frame-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "thermal",
+          "title": {
+            "en": "Thermal",
+            "de": "Thermik"
+          },
+          "nodes": []
+        }
+      ],
+      "issues": [
+        {
+          "code": "empty-scene",
+          "path": "/scenes/2/nodes"
+        },
+        {
+          "code": "unscened-node",
+          "path": "/nodes/8"
+        },
+        {
+          "code": "unscened-node",
+          "path": "/nodes/9"
+        }
+      ]
+    },
+    {
+      "name": "bad-slug",
+      "scenes": [
+        {
+          "id": "Body 1",
+          "title": {
+            "en": "Body",
+            "de": "Körper"
+          },
+          "nodes": [
+            "hull-body",
+            "hull-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "structure",
+          "title": {
+            "en": "Structure",
+            "de": "Tragwerk"
+          },
+          "nodes": [
+            "frame-body",
+            "frame-arm",
+            "skin-shared"
+          ]
+        },
+        {
+          "id": "thermal",
+          "title": {
+            "en": "Thermal",
+            "de": "Thermik"
+          },
+          "nodes": [
+            "region-a",
+            "skin-thermal"
+          ]
+        }
+      ],
+      "issues": [
+        {
+          "code": "bad-slug",
+          "path": "/scenes/0/id"
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "closure": {
+      "body": [
+        "root",
+        "spine",
+        "arm",
+        "hull-body",
+        "hull-arm",
+        "skin-shared"
+      ],
+      "structure": [
+        "root",
+        "spine",
+        "arm",
+        "frame-body",
+        "frame-arm",
+        "skin-shared"
+      ],
+      "thermal": [
+        "root",
+        "spine",
+        "arm",
+        "region-a",
+        "skin-thermal"
+      ]
+    },
+    "solids": {
+      "body": [
+        "hull-torso",
+        "hull-upper-arm",
+        "shared-skin"
+      ],
+      "structure": [
+        "frame-column",
+        "frame-beam",
+        "shared-skin"
+      ],
+      "thermal": [
+        "region-core",
+        "thermal-skin"
+      ]
+    },
+    "resolvedSceneNodes": {
+      "body": [
+        "hull-body",
+        "hull-arm",
+        "skin-shared",
+        "skinned-body-structure"
+      ],
+      "structure": [
+        "frame-body",
+        "frame-arm",
+        "skin-shared",
+        "skinned-body-structure"
+      ],
+      "thermal": [
+        "region-a",
+        "skin-thermal",
+        "skinned-thermal"
+      ]
+    },
+    "skinnedNodes": [
+      "skinned-body-structure",
+      "skinned-thermal"
+    ],
+    "glb": {
+      "all": "0e759bd285421fc032676d46efa90ec061ed7d2f623cdc4e314631d70bc73363",
+      "perScene": {
+        "body": "0dcbc4fdb9e89adf088049d340f60c897019cfb0fcca241a6079ac59e02c2d50",
+        "structure": "fa5dcaab2a06afe03c099b9311a47f900b4dcf26a9bbeea02c96862ba2ebb520",
+        "thermal": "5b1d1f5c41fa4cd56f7dda7b32ddd56c1259ba64906e55305f98ab4955a95241"
+      },
+      "posed": "aa0216ab4ac33c929b2987eeac529f8c388c56a6a4b716905a7913230999e7ea"
+    },
+    "fbx": {
+      "body": "4d722a57c532ec281b6ad3e8d87af303b68edb344a05818c66a1170495394934",
+      "structure": "465c492548c85a19430a5162b9abb29e40cbd2fe01fbf6a12e543d16b95e1bd7",
+      "thermal": "502476de57b9d09138c6ff6ac341d1cf9dea17f5ad12332d7913bc3746c1b23c"
+    },
+    "bounds": {
+      "body": {
+        "rest": {
+          "min": [
+            -0.2,
+            0.6,
+            -0.15
+          ],
+          "max": [
+            0.95,
+            1.4,
+            0.15
+          ]
+        },
+        "bent": {
+          "min": [
+            -0.2,
+            0.6,
+            -0.15
+          ],
+          "max": [
+            0.8319091464119601,
+            1.4,
+            0.15
+          ]
+        }
+      },
+      "structure": {
+        "rest": {
+          "min": [
+            -0.05,
+            0.55,
+            -0.09906859460363308
+          ],
+          "max": [
+            0.9,
+            1.45,
+            0.1
+          ]
+        },
+        "bent": {
+          "min": [
+            -0.05,
+            0.55,
+            -0.09906859460363308
+          ],
+          "max": [
+            0.7856433283551831,
+            1.45,
+            0.1
+          ]
+        }
+      },
+      "thermal": {
+        "rest": {
+          "min": [
+            -0.15,
+            0.92,
+            0.15
+          ],
+          "max": [
+            0.58,
+            1.35,
+            0.44999999999999996
+          ]
+        },
+        "bent": {
+          "min": [
+            -0.15,
+            0.9209849327523889,
+            0.15
+          ],
+          "max": [
+            0.5790150672476111,
+            1.35,
+            0.44999999999999996
+          ]
+        }
+      }
+    }
+  }
+}

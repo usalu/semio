@@ -1,0 +1,31 @@
+{
+  "at": "2026-11-15T03:32:13.413732+00:00",
+  "phase": "tools setup still running; no native try started",
+  "latest15": [
+    "[script] repository:command \u00b7 Checking declared package providers: 3947 edges",
+    "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"javascript-source-provider:3985\",\"mode\":\"shared\",\"elapsedMs\":6713.8770409999415}}",
+    "[script] repository:command \u00b7 Checking declared package providers: 3985 edges",
+    "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"javascript-source-provider:4057\",\"mode\":\"shared\",\"elapsedMs\":6963.968915999867}}",
+    "[script] repository:command \u00b7 Checking declared package providers: 4057 edges",
+    "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"javascript-source-provider:4200\",\"mode\":\"shared\",\"elapsedMs\":7220.025332999881}}",
+    "[script] repository:command \u00b7 Checking declared package providers: 4200 edges",
+    "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"javascript-source-provider:4260\",\"mode\":\"shared\",\"elapsedMs\":7479.7015829999}}",
+    "[script] repository:command \u00b7 Checking declared package providers: 4260 edges",
+    "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"javascript-source-provider:4303\",\"mode\":\"shared\",\"elapsedMs\":7730.248499999987}}",
+    "[script] repository:command \u00b7 Checking declared package providers: 4303 edges",
+    "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"javascript-source-provider:4365\",\"mode\":\"shared\",\"elapsedMs\":7985.415249999845}}",
+    "[script] repository:command \u00b7 Checking declared package providers: 4365 edges",
+    "[script] {\"owner\":\"repository:build\",\"command\":\"repository:command\",\"stage\":\"running\",\"activity\":{\"resource\":\"javascript-source-provider:4659\",\"mode\":\"shared\",\"elapsedMs\":8235.66033299989}}",
+    "[script] repository:command \u00b7 Checking declared package providers: 4659 edges"
+  ],
+  "latest_provider_checks": [
+    "[script] repository:command \u00b7 Checking declared package providers: 3947 edges",
+    "[script] repository:command \u00b7 Checking declared package providers: 3985 edges",
+    "[script] repository:command \u00b7 Checking declared package providers: 4057 edges",
+    "[script] repository:command \u00b7 Checking declared package providers: 4200 edges",
+    "[script] repository:command \u00b7 Checking declared package providers: 4260 edges",
+    "[script] repository:command \u00b7 Checking declared package providers: 4303 edges",
+    "[script] repository:command \u00b7 Checking declared package providers: 4365 edges",
+    "[script] repository:command \u00b7 Checking declared package providers: 4659 edges"
+  ]
+}

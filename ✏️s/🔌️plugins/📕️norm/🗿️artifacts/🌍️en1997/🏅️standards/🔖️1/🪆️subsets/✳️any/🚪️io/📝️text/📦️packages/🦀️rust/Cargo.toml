@@ -38,7 +38,7 @@ semio-s-artifact-norm-en1997-mut-investigation = { workspace = true }
 semio-s-artifact-norm-en1997-mut-ground = { workspace = true }
 semio-s-artifact-norm-en1997-mut-characteristic-basis = { workspace = true }
 semio-s-artifact-norm-en1997-mut-ground-investigation = { workspace = true }
-semio-s-artifact-norm-en1997-mut-ground-investigation-reading = { workspace = true }
+semio-s-artifact-norm-en1997-mut-ground-reading = { workspace = true }
 semio-s-artifact-norm-en1997-mut-placements = { workspace = true }
 semio-s-artifact-norm-en1997-mut-nested-rows = { workspace = true }
 semio-s-artifact-norm-en1997-mut-layer = { workspace = true }

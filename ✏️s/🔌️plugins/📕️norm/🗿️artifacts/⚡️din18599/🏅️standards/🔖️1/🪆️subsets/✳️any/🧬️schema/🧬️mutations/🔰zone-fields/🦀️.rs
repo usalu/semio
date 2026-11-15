@@ -17,10 +17,10 @@ pub mod change_zone_volume_m3;
 pub mod change_zone_theta_i_heat_c;
 #[path = "../🟥change-zone-theta-i-cool-c/🦀️.rs"]
 pub mod change_zone_theta_i_cool_c;
-#[path = "../🟧change-zone-internal-gains-w-m2/🦀️.rs"]
-pub mod change_zone_internal_gains_w_m2;
-#[path = "../🟨change-zone-lighting-power-w-m2/🦀️.rs"]
-pub mod change_zone_lighting_power_w_m2;
+#[path = "../🟧change-zone-internal-gains-wm2/🦀️.rs"]
+pub mod change_zone_internal_gains_wm2;
+#[path = "../🟨change-zone-lighting-power-wm2/🦀️.rs"]
+pub mod change_zone_lighting_power_wm2;
 #[path = "../🧊change-zone-thermal-mass/🦀️.rs"]
 pub mod change_zone_thermal_mass;
 //#endregion 🪢️Mounts

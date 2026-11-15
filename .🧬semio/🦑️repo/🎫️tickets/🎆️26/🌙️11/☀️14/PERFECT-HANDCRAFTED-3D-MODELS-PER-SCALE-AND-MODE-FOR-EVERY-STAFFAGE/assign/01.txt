@@ -1,0 +1,8 @@
+🌳️vegetation/agave
+🌳️vegetation/apple-tree
+🌳️vegetation/bamboo-clump
+🌳️vegetation/date-palm
+🌳️vegetation/english-oak
+🌳️vegetation/hornbeam-hedge
+🌳️vegetation/hosta-clump
+🌳️vegetation/ivy-on-trellis

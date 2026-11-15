@@ -444,6 +444,7 @@ type En1998FoundationPatch {
   pileMomentRdNm: Float
   baseFrictionAngleDeg: Float
   basePorePressurePa: Float
+  pileAxialLoadN: String
 }
 type En1998RetainingWallDelta {
   removed: [En1998RetainingWallRemoval!]!

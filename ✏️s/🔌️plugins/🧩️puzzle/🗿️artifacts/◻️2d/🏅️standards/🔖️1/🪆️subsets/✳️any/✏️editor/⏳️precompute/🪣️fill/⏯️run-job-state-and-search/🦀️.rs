@@ -28,7 +28,7 @@ pub(super) struct FillRunLive {
 /// ♻️ The owners one `Puzzle2dFillRunJob` still holds once its search and capture are closed, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct Puzzle2dFillRunOwners {
-    pub(super) document: Option<Arc<Puzzle2dPlaySnapshot>>,
+    pub(super) document: Option<semio_framework_value::retirement::arc_custody::ArcLease<Puzzle2dPlaySnapshot>>,
     pub(super) kinds: Vec<Value>,
     pub(super) writer: ToolRunTickWriter,
     pub(super) replay: Option<FillRunReplay>,

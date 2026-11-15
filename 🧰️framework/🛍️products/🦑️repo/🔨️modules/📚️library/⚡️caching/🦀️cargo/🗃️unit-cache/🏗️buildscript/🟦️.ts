@@ -7,6 +7,7 @@ import {acquireUnitClaimV1,type ClaimV1} from "../🔒️lock/🟦️.ts";
 import {digestFileV1,emitUnitEventV1,lookupBuildRunV1,publishBuildRunV1,restoreBuildRunV1,type UnitEventV1} from "../💾️store/🟦️.ts";
 import {jobserverChildEnvironmentV1,jobserverClosedMessageV1,jobserverPlanV1,jobserverProbeShellV1,jobserverStdioV1,shellQuoteV1} from "../🎰️jobserver/🟦️.ts";
 import {isMainModuleV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import {exitWithStatusOfV1} from "../🏁️exit/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -84,4 +85,4 @@ export async function runBuildScriptV1(real:string,args:readonly string[],enviro
 /** 🏁️ What the stand-in runs: the real executable is the first argument, the arguments Cargo passed follow. Resolves to the exit status. */
 export function runBuildScriptMainV1(argv:readonly string[],environment:Environment,cwd:string):Promise<number>{return runBuildScriptV1(argv[0]!,argv.slice(1),environment,cwd);}
 
-if(isMainModuleV1(import.meta.url))runBuildScriptMainV1(process.argv.slice(2),process.env,process.cwd()).then(status=>{process.exitCode=status;});
+if(isMainModuleV1(import.meta.url))exitWithStatusOfV1(()=>runBuildScriptMainV1(process.argv.slice(2),process.env,process.cwd()));

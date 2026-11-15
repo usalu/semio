@@ -11,6 +11,8 @@ Python composition requires explicit `language` and `audience`, for example `com
 
 The curriculum JSON is the source of truth for complete lessons, selected chapters and chapter composition tools. Lesson wrappers delegate to the shared runtime; they contain no independent Manim playlists.
 
+Every energy video opens with its roadmap (Fahrplan): the first segment of its first chapter is `Beat1_Fahrplan` from `<family>/🎬️clip/🗺️roadmap`, a scene that only declares narration, steps (name, pictogram, key symbols), optional hand-over chips and is drawn by the shared `🏗️authoring/🗺️roadmap` builder. The roadmap is never the chapter poster (the last segment is, unless the manifest declares one).
+
 A segment selects a complete source scene or an inclusive sequence of its narration clauses:
 
 ```json
@@ -25,7 +27,9 @@ Clause keys must exist in the source scene's ordered `NARRATION`. The renderer r
 
 Every script/scene pair renders once per run, even when multiple lessons select different parts. Repeated selections share one excerpt. Source, settings and trace fingerprints prevent stale reuse; interrupted outputs never receive completed provenance. Progress and keyboard cancellation cover rendering and selection.
 
-Use `--chapter Heating_05_Solar` with `--video heating` to render that declared chapter. The Python lesson wrapper exposes `compose(chapters=[...], **settings)` through the same execution plan. Omit chapter selection for the complete lesson with its institutional intro.
+Use `--chapter Heating_05_Solar` with `--video heating` to render that declared chapter. The Python lesson wrapper exposes `compose(chapters=[...], **settings)` through the same execution plan. Omit chapter selection for the complete lesson.
+
+Every overview card (course, topic, lesson, chapter, and the blurred levels behind them) shows a real poster frame of its chapter, never a placeholder. A chapter's poster is one Manim frame (`--save_last_frame`) of the end state of its last segment, or of the manifest chapter's `poster` (`segment`, and `animation` to stop after that Manim animation; a partial `clauses` segment needs one). A lesson card uses the poster of its `poster.chapter` (default: its first chapter); topic and course cards use the first poster below them. Posters are rendered before the lessons, cached by source fingerprint in the shared teaching cache (`posters/<profile>/<language>/<audience>`, one OS file lock per poster so concurrent renders wait instead of repeating), and a missing one fails the render. Code: `🪟️presentation/🖼️posters`.
 
 Thermal mass comes from the earlier physics video: heating selects the storage example and winter application; cooling selects the daily lag and summer application. The later energy-balance video selects the heating calculation's existing system-loss sequence before its distinct detailed system analysis. Their obsolete independent explanations are removed.
 

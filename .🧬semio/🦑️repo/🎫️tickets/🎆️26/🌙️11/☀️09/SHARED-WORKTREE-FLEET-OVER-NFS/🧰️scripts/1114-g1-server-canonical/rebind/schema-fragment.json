@@ -1,0 +1,125 @@
+{
+  "AncestryRelocation": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "directory",
+      "movedFrom",
+      "movedTo"
+    ],
+    "properties": {
+      "directory": {
+        "$ref": "#/definitions/AncestryRelocationPath"
+      },
+      "movedFrom": {
+        "$ref": "#/definitions/AncestryRelocationPath"
+      },
+      "movedTo": {
+        "$ref": "#/definitions/AncestryRelocationPath"
+      }
+    }
+  },
+  "AncestryRelocationPath": {
+    "type": "string",
+    "minLength": 1,
+    "maxLength": 4096
+  },
+  "AncestryRebinding": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "status",
+      "published",
+      "current"
+    ],
+    "properties": {
+      "status": {
+        "enum": [
+          "rebound",
+          "current"
+        ]
+      },
+      "published": {
+        "$ref": "#/definitions/Ancestry"
+      },
+      "current": {
+        "$ref": "#/definitions/Ancestry"
+      }
+    }
+  },
+  "AncestryRelocationCase": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "anchor",
+      "fault",
+      "accepted"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 96
+      },
+      "anchor": {
+        "enum": [
+          "worktree",
+          "partition"
+        ]
+      },
+      "fault": {
+        "enum": [
+          "none",
+          "copied-image",
+          "linked-image",
+          "resized-image",
+          "foreign-ancestry",
+          "other-origin",
+          "aliased-origin",
+          "attached-root",
+          "replaced-root",
+          "pending-publication",
+          "malformed-receipt",
+          "already-current"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      },
+      "failure": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 96
+      }
+    }
+  },
+  "AncestryRebindProtocol": {
+    "const": {
+      "maximumReceiptBytes": 4096,
+      "temporarySuffix": ".rebind",
+      "hintName": "image-relocation.json",
+      "maximumHintBytes": 16384
+    }
+  },
+  "AncestryRelocationHint": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "version",
+      "movedFrom",
+      "movedTo"
+    ],
+    "properties": {
+      "version": {
+        "const": 1
+      },
+      "movedFrom": {
+        "$ref": "#/definitions/AncestryRelocationPath"
+      },
+      "movedTo": {
+        "$ref": "#/definitions/AncestryRelocationPath"
+      }
+    }
+  }
+}

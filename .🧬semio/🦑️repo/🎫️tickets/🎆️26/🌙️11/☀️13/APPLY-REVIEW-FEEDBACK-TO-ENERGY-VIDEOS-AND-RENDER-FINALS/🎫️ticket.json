@@ -1,0 +1,22 @@
+{
+  "title": "Apply Review Feedback to Energy Videos and Render Finals",
+  "emoji": "🎬",
+  "status": "open",
+  "description": "Apply the reviewer feedback (units notation, references, symbols per DIN 4108-6, roadmap placement, ventilation/cooling/heating scene corrections, UI introduction using real frames instead of ad hoc placeholders) to the architecture energy course videos and render them end to end as final videos.",
+  "goal": "🎯updatedtutorials",
+  "sessions": [
+    "934f2666-0534-404e-a554-ec57cf25b65c"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-13 05:15:42",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Apply the reviewer feedback (units notation, references, symbols per DIN 4108-6, roadmap placement, ventilation/cooling/heating scene corrections, UI introduction using real frames instead of ad hoc placeholders) to the architecture energy course videos and render them end to end as final videos.",
+      "llm": "opus-4-7"
+    }
+  ]
+}

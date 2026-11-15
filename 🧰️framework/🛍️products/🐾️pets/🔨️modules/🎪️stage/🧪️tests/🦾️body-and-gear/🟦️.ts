@@ -367,6 +367,19 @@ describe.each(COMPANIES)("gear of $name: walls, ladders, ropes and the edges of 
     expect(journey(play, craft(up, walker, { until: up.tick + FAR }), LADDER_IDLE + 1, walker).stage.ladders).toEqual([]);
   });
 
+  it("sets out for its ladder only along a way no other body occupies: one idle on the lane between the climber and the foot of the ladder keeps it from going, and one beyond the foot does not", () => {
+    const play = equipped(walker, ["climb", "ladder", "parachute"]);
+    const lane = (blocker: number): Stage => {
+      const stage = advance(play, openStage(3), [{ kind: "tuned", mode: "lively" }, carded([GROUND, SHELF], false), { kind: "summoned", species: [walker, company.hopper] }]);
+      const idle = (species: Slug, x: number): Partial<Actor> => ({ perch: "ground", x, y: GROUND.y0 - hoverOf(kindOf(play, species)), vx: 0, vy: 0, goal: x, activity: "idle", since: stage.tick, until: stage.tick + FAR, blink: stage.tick + FAR, partner: null, opacity: 1, leaving: false, faced: stage.tick });
+      return craft(craft(stage, walker, idle(walker, 1000)), company.hopper, idle(company.hopper, blocker));
+    };
+    const way = lane(300);
+    expect(sent(play, way, walker, perchOf(way, "shelf"))).not.toBeNull();
+    const blocked = lane(920);
+    expect(sent(play, blocked, walker, perchOf(blocked, "shelf"))).toBeNull();
+  });
+
   it("falls with a fright when an edge moves under its ladder and the ladder topples, and never lands hard with a parachute", () => {
     const play = equipped(walker, ["climb", "ladder", "parachute"]);
     const stage = standing(play, walker, [GROUND, SHELF], "ground", 1000, GROUND.y0, false);

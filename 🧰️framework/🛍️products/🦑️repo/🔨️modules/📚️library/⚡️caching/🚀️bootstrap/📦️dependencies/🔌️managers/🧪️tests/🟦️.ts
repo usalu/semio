@@ -281,7 +281,7 @@ describe("package manager seam: third-party cross checks",()=>{
     const help=manager.id==="go"?spawnSync("go",["help",...leading],{encoding:"utf8"}):spawnSync(manager.descriptor.executable,[...leading,"--help"],{encoding:"utf8"}),text=help.stdout+help.stderr;
     expect(leading.length).toBeGreaterThan(0);
     expect(help.status===0||text.length>0).toBe(true);
-    const options=manager.id==="npm"?spawnSync("npm",["config","ls","-l"],{encoding:"utf8"}).stdout:"";
+    const options=manager.id==="npm"?spawnSync("npm",["config","ls","-l"],{encoding:"utf8",cwd:process.platform==="win32"?process.env.TEMP:"/tmp"}).stdout:"";
     for(const flag of invocation.arguments.filter(word=>word.startsWith("--")).map(word=>word.split("=")[0]!))expect(text.includes(flag)||options.includes("\n"+flag.slice(2)+" = "),flag).toBe(true);
    }
  });
@@ -309,7 +309,7 @@ describe("package manager seam: neutrality laws",()=>{
  });
  test("only the catalog imports adapters, and adapters import nothing but the core, the formats and their own descriptor",()=>{
   const importsOf=(file:string)=>[...readFileSync(file,"utf8").matchAll(/from\s*"([^"]+)"/gu)].map(match=>match[1]!);
-  expect(importsOf(join(managersRoot,"🟦️.ts")).filter(path=>path.startsWith("."))).toEqual(["./🧬️schema/🔣️.json","./🔣️policy.json"]);
+  expect(importsOf(join(managersRoot,"🟦️.ts")).filter(path=>path.startsWith("."))).toEqual(["../../🛰️fleet-fetch/🪞️mirror/🟦️.ts","./🧬️schema/🔣️.json","./🔣️policy.json"]);
   for(const manager of builtInPackageManagersV1){
    const folder=readdirSync(managersRoot).find(name=>name.endsWith(manager.id)&&existsSync(join(managersRoot,name,"🟦️.ts")))!;
    const allowed=new Set(["../🟦️.ts","../📖️formats/🟦️.ts","./🔣️.json"]);

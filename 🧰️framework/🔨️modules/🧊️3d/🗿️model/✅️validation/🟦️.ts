@@ -2,7 +2,9 @@
  * @see ../🧬️schema/🔣️.json */
 import type { Issue, ModelDocument, Operation, Slug, Text } from "../🧬️schema/🟦️.ts";
 import { Pace, silentOperation } from "../⏱️operation/🟦️.ts";
-import { revolveOutline } from "../🔺️tessellation/🌀️revolved/🟦️.ts";
+import { revolveClosure, revolveOutline } from "../🔺️tessellation/🌀️revolved/🟦️.ts";
+import { taperFault } from "../🔺️tessellation/🏗️extrude/🟦️.ts";
+import { loftFault } from "../🔺️tessellation/🧵️loft/🟦️.ts";
 import { cleanRing, holesFault, ringFault } from "../🔺️tessellation/🔺️polygon/🟦️.ts";
 import * as portable from "../🧮️math/🎯️portable/🟦️.ts";
 
@@ -39,6 +41,12 @@ const MESSAGES: Record<string, Text> = {
   "bad-color": { en: "A colour component is out of range.", de: "Eine Farbkomponente liegt außerhalb des Bereichs." },
   "bad-channel": { en: "The channel keys and values are inconsistent.", de: "Die Kanalschlüssel und -werte sind inkonsistent." },
   "bad-times": { en: "Key times must strictly increase and lie within the duration.", de: "Schlüsselzeiten müssen streng steigen und in der Dauer liegen." },
+  "unscened-node": { en: "The node carries solids or a mesh but belongs to no scene.", de: "Der Knoten trägt Solids oder ein Mesh, gehört aber zu keiner Szene." },
+  "empty-scene": { en: "A scene needs at least one node.", de: "Eine Szene braucht mindestens einen Knoten." },
+  "revolve-implied-closure": { en: "This open revolve profile stays off the axis at both ends, so it is closed through the axis and gives a filled body, not a shell; repeat the first point as the last point to revolve the enclosed loop (wall, bead, ring).", de: "Dieses offene Rotationsprofil bleibt an beiden Enden von der Achse entfernt und wird deshalb über die Achse geschlossen: es ergibt einen gefüllten Körper, keine Schale; den ersten Punkt als letzten wiederholen, um die umschlossene Schleife zu drehen (Wand, Wulst, Ring)." },
+  "taper-degenerate": { en: "The taper collapses a face to a point or a speck (taperTo is [scale at from, scale at to]; use exactly 0 for an apex and a real size otherwise).", de: "Die Verjüngung lässt eine Fläche zu einem Punkt oder Fleck zusammenfallen (taperTo ist [Maßstab bei from, Maßstab bei to]; genau 0 für eine Spitze, sonst eine echte Größe)." },
+  "taper-uniform": { en: "Both taper factors are equal, so there is no taper, only a prism of the scaled profile (taperTo is [scale at from, scale at to], not a scale along u and v).", de: "Beide Verjüngungsfaktoren sind gleich: es gibt keine Verjüngung, nur ein Prisma des skalierten Profils (taperTo ist [Maßstab bei from, Maßstab bei to], kein Maßstab entlang u und v)." },
+  "loft-fold": { en: "Two consecutive loft sections overlap: the path turns back or bends tighter than the section is wide, so the skin crosses itself.", de: "Zwei aufeinanderfolgende Loft-Schnitte überlappen: der Pfad kehrt um oder biegt enger, als der Schnitt breit ist, die Haut durchdringt sich selbst." },
   "bad-duration": { en: "The duration must be positive.", de: "Die Dauer muss positiv sein." },
 };
 
@@ -73,6 +81,29 @@ export function validateModel(document: ModelDocument, operation: Operation = si
   ids("poses", document.poses);
   ids("animations", document.animations);
   const position = new Map(document.nodes.map((n, i) => [n.id, i]));
+  const scenes = doc.scenes;
+  if (scenes !== undefined && !Array.isArray(scenes)) error("bad-type", "/scenes");
+  else if (Array.isArray(scenes)) {
+    const listed = new Set<Slug>();
+    ids("scenes", document.scenes!);
+    document.scenes!.forEach((scene, i) => {
+      const p = `/scenes/${i}`;
+      if (!Array.isArray(scene.nodes)) return error("bad-type", `${p}/nodes`);
+      if (scene.nodes.length === 0) error("empty-scene", `${p}/nodes`);
+      const seen = new Set<Slug>();
+      scene.nodes.forEach((id, k) => {
+        if (typeof id !== "string" || !nodeIds.has(id)) error("unknown-node", `${p}/nodes/${k}`);
+        else if (seen.has(id)) error("duplicate-id", `${p}/nodes/${k}`);
+        seen.add(id);
+        listed.add(id);
+      });
+      if (scene.tags !== undefined && (!Array.isArray(scene.tags) || scene.tags.some((t) => typeof t !== "string" || !SLUG.test(t)))) error("bad-slug", `${p}/tags`);
+    });
+    if (scenes.length > 0) {
+      const carrying = new Set<Slug>(document.solids.map((s) => s.node));
+      document.nodes.forEach((n, i) => { if ((n.mesh !== undefined || carrying.has(n.id)) && !listed.has(n.id)) error("unscened-node", `/nodes/${i}`); });
+    }
+  }
 
   document.nodes.forEach((n, i) => {
     const p = `/nodes/${i}`;
@@ -139,6 +170,7 @@ export function validateModel(document: ModelDocument, operation: Operation = si
           const { points, loop } = revolveOutline(s.profile);
           if (points.length < 2 || ringFault(points, loop, (q) => q[1] <= 1e-9, pace)) error("self-intersection", `${p}/profile`);
         }
+        if (issues.length === mark && isRing(s.profile) && revolveClosure(s.profile).kind === "shell") add("warning", "revolve-implied-closure", `${p}/profile`);
         if (vec(s.axis, 3, `${p}/axis`) && portable.hypot(...s.axis) < 1e-9) error("invalid-dimension", `${p}/axis`);
         vec(s.origin, 3, `${p}/origin`);
         if (s.sweepRad !== undefined && !(s.sweepRad > 0 && s.sweepRad <= Math.PI * 2 + 1e-9)) error("invalid-dimension", `${p}/sweepRad`);
@@ -156,6 +188,10 @@ export function validateModel(document: ModelDocument, operation: Operation = si
         if (!["xy", "yz", "zx"].includes(s.plane)) error("invalid-dimension", `${p}/plane`);
         if (!isNum(s.from) || !isNum(s.to) || s.from === s.to) error("invalid-dimension", `${p}/to`);
         if (s.taperTo && (!vec(s.taperTo, 2, `${p}/taperTo`) || s.taperTo.some((x) => x < 0))) error("invalid-dimension", `${p}/taperTo`);
+        else if (s.taperTo) {
+          const fault = taperFault(s.taperTo);
+          if (fault) add("warning", fault === "uniform" ? "taper-uniform" : "taper-degenerate", `${p}/taperTo`);
+        }
         break;
       case "loft":
         if (!Array.isArray(s.sections) || s.sections.length < 2) error("invalid-dimension", `${p}/sections`);
@@ -166,6 +202,7 @@ export function validateModel(document: ModelDocument, operation: Operation = si
           if (sec.exponent !== undefined) positive(sec.exponent, `${p}/sections/${k}/exponent`);
           if (sec.rotation && vec(sec.rotation, 4, `${p}/sections/${k}/rotation`) && Math.abs(portable.hypot(...sec.rotation) - 1) > 1e-3) error("non-unit-quaternion", `${p}/sections/${k}/rotation`);
         });
+        if (issues.length === mark && s.sections.length >= 2 && loftFault(s.sections)) add("warning", "loft-fold", `${p}/sections`);
         break;
       default:
         error("bad-type", `${p}/kind`);

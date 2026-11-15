@@ -1,0 +1,4 @@
+started pid=493493 at 2026-11-15T12:23:56Z
+STOP at 2026-11-15T12:30:00Z: process of the run above 8 GB resident (9163576 KiB); sending one SIGINT to process group 493493
+one minute after SIGINT: alive=no
+ended at 2026-11-15T12:31:00Z peak_rss_kib=9156876 slice_peak_mb=8925 stop=process of the run above 8 GB resident (9163576 KiB)

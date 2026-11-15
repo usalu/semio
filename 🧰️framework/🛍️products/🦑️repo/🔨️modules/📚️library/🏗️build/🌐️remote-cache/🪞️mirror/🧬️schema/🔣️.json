@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.remote-cache/MirrorV1",
+  "title": "Pass-through package mirror of the cache server: public registries are fetched once per fleet, kept by request path and served to every machine that points its standard tool setting at it",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "prefix": "/mirror/",
+        "directory": "mirror",
+        "revalidateSeconds": 300,
+        "maximumBytes": 68719476736,
+        "upstreamTimeoutMilliseconds": 30000,
+        "upstreamIdleMilliseconds": 30000,
+        "lowWaterPercent": 90,
+        "pruneIntervalSeconds": 60,
+        "maximumMetadataBytes": 67108864,
+        "probePath": "/mirror/healthz",
+        "probeTimeoutMilliseconds": 1500,
+        "stateTtlSeconds": 60,
+        "maximumConcurrentUpstream": 8,
+        "maximumRedirects": 3,
+        "redirectSuffixes": [
+          "githubusercontent.com"
+        ],
+        "slotWaitMilliseconds": 20000,
+        "fallbackStatus": 307
+      }
+    },
+    "Ecosystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "upstream",
+        "immutable",
+        "tool"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z]{2,16}$"
+        },
+        "upstream": {
+          "type": "string",
+          "pattern": "^https://[a-z0-9.-]+$"
+        },
+        "immutable": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rewrite": {
+          "enum": [
+            "npm-tarball"
+          ]
+        },
+        "tool": {
+          "type": "string"
+        }
+      }
+    },
+    "Ecosystems": {
+      "const": [
+        {
+          "id": "rustup",
+          "upstream": "https://static.rust-lang.org",
+          "immutable": [
+            "^dist/[0-9]{4}-[0-9]{2}-[0-9]{2}/",
+            "^rustup/archive/"
+          ],
+          "tool": "RUSTUP_DIST_SERVER and RUSTUP_UPDATE_ROOT"
+        },
+        {
+          "id": "npm",
+          "upstream": "https://registry.npmjs.org",
+          "immutable": [
+            "/-/[^/]+\\.tgz$"
+          ],
+          "rewrite": "npm-tarball",
+          "tool": "BUN_CONFIG_REGISTRY"
+        },
+        {
+          "id": "go",
+          "upstream": "https://proxy.golang.org",
+          "immutable": [
+            "/@v/[^/]+\\.(info|mod|zip)$"
+          ],
+          "tool": "GOPROXY"
+        }
+      ]
+    },
+    "EntryMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "path",
+        "status",
+        "contentType",
+        "bytes",
+        "fetchedAtMs",
+        "immutable"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "status": {
+          "const": 200
+        },
+        "contentType": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "etag": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fetchedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "immutable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "checkedAtMs",
+        "base",
+        "healthy"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "checkedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "base": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "healthy": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "fallback": "The mirror could not fetch this file ({reason}); use the direct registry instead: {url}"
+        },
+        "de": {
+          "fallback": "Der Spiegel konnte diese Datei nicht holen ({reason}); verwende stattdessen die direkte Registry: {url}"
+        }
+      }
+    }
+  }
+}

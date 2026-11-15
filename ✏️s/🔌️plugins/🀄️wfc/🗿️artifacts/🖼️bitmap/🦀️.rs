@@ -19,7 +19,7 @@ pub use crate::schema::snapshot::WFC_BITMAP_DOCUMENT_SCHEMA;
 
 use crate::schema::snapshot::{BitmapColor, BitmapPinnedPixel};
 
-pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::{WFC_BITMAP_DIALECT};
+pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::{WFC_BITMAP_DIALECT};
 
 pub use semio_s_artifact_wfc_bitmap_bitmap::{artifact_kind};
 
@@ -192,7 +192,7 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::editor::bitmap::commands::set_active_example;
+            pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::editor::bitmap::commands::set_active_example;
             pub use semio_s_artifact_wfc_bitmap_pin_solution as pin_solution;
         }
 
@@ -218,7 +218,7 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod bitmap {
-        pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::viewer::bitmap::*;
+        pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::viewer::bitmap::*;
 
         pub use semio_s_artifact_wfc_bitmap_mut_family::viewer::bitmap::presence;
         pub use semio_s_artifact_wfc_bitmap_mut_family::viewer::bitmap::config;
@@ -244,7 +244,7 @@ pub mod viewer {
 /// four-colour meadow with a ground constraint. Each slug owns its own directory under
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/`, and the Rust builder there is the authority its
 /// `🗣️.dsl.semio` asset is printed from.
-pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::examples;
+pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::examples;
 //#endregion 📚️Examples
 
 /// 🪞️ Flat access from the artifact root, mirroring the sibling wfc artifacts: the subset's schema

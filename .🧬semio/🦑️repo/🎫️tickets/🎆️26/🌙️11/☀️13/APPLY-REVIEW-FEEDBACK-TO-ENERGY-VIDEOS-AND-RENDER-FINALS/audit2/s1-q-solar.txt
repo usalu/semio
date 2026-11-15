@@ -1,0 +1,14 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py:102: "glass_transmittance": _heating_solar.G_VALUE, "shading": 0.15, "irradiance": 800.0}
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:518: self.play(_ramp(g, G_TOT), run_time=0.8)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🔣️.cases.json:485: "glass_share": 0.7,
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🔣️.cases.json:486: "glass_transmittance": 0.6,
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🔣️.cases.json:487: "shading": 0.15,
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:1079: g_t.animate.set_value(G_VALUE), *sunny(1.6), run_time=1.6)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:115: # frame face width, g_⊥ = 0,60 from the energy split at the glass, F_S from the sunlit
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:120: G_WINTER = 400.0
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:121: FF_GLASS = 0.70
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:122: FW_INCIDENCE = 0.90
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:130: FS_WINTER = 0.80
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:131: FC_WINTER = 1.0
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2124: g_lbl = _m(tr(r"g_{\perp} = 0.50", r"g_{\perp} = 0{,}50"), np.array([4.6, 1.95, 0.0]), color=P_YELLOW)
+TOTAL 13

@@ -7,8 +7,6 @@ import{sealedPolicyV1}from"../🟦️.ts";
 import{adoptPartitionPinV1,releasePartitionPinV1}from"../🔀️partition/📌️retention/🟦️.ts";
 /** 🏷️ The first argument that starts the front door instead of a verb kernel. */
 export const sealedDoorRoleV1="--semio-role=door";
-/** 🔥️ Declares the storage image needed by the authenticated resident warm manifest. */
-export const sealedWarmStorageV1=()=>import("../../🔧️tools/💾️storage/🟦️.ts");
 const checkV1=(proof:CapturedBuildCommandProofV1)=>sealedPolicyV1.check.argument+proof.sha256;
 
 /** 🧪️ Checks the authenticated door and its loader before promotion. */

@@ -3256,7 +3256,7 @@
               ],
               "material": "brick",
               "kind": "path",
-              "d": "M 0 0 L 3 0 L 3 2.75 L 0 2.75 Z M 0.875 0.91667 L 2.125 0.91667 L 2.125 2.25 L 0.875 2.25 Z"
+              "d": "M 0 0 L 3 0 L 3 2.75 L 0 2.75 Z M 0.875 0.91667 L 0.875 2.25 L 2.125 2.25 L 2.125 0.91667 Z"
             },
             {
               "id": "lintel",
@@ -4148,296 +4148,1047 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "facing",
-          "kind": "extrude",
-          "bone": "wall",
-          "material": "brick",
-          "role": "body",
-          "tone": 0.55,
-          "region": "masonry-field",
-          "profile": [[0, 0], [3, 0], [3, 2.75], [0, 2.75]],
-          "plane": "xy",
-          "from": -0.2225,
-          "to": -0.1075,
-          "holes": [
-            [
-              [0.625, 2.5],
-              [2.375, 2.5],
-              [2.375, 2.25],
-              [2.125, 2.25],
-              [2.125, 0.91667],
-              [2.2, 0.91667],
-              [2.2, 0.83333],
-              [0.8, 0.83333],
-              [0.8, 0.91667],
-              [0.875, 0.91667],
-              [0.875, 2.25],
-              [0.625, 2.25]
-            ]
-          ]
-        },
-        {
-          "id": "fill",
-          "kind": "extrude",
-          "bone": "wall",
-          "material": "wool",
-          "role": "body",
-          "tone": 0.9,
-          "region": "masonry-field",
-          "profile": [[0, 0], [3, 0], [3, 2.75], [0, 2.75]],
-          "plane": "xy",
-          "from": -0.1075,
-          "to": 0.0325,
-          "holes": [
-            [
-              [0.625, 2.5],
-              [2.375, 2.5],
-              [2.375, 2.25],
-              [2.125, 2.25],
-              [2.125, 0.91667],
-              [2.2, 0.91667],
-              [2.2, 0.83333],
-              [0.8, 0.83333],
-              [0.8, 0.91667],
-              [0.875, 0.91667],
-              [0.875, 2.25],
-              [0.625, 2.25]
-            ]
-          ]
-        },
-        {
-          "id": "inner-leaf",
-          "kind": "extrude",
-          "bone": "wall",
-          "material": "block",
-          "role": "body",
-          "tone": 0.7,
-          "region": "masonry-field",
-          "profile": [[0, 0], [3, 0], [3, 2.75], [0, 2.75]],
-          "plane": "xy",
-          "from": 0.0325,
-          "to": 0.2075,
-          "holes": [
-            [
-              [0.625, 2.5],
-              [2.375, 2.5],
-              [2.375, 2.25],
-              [2.125, 2.25],
-              [2.125, 0.91667],
-              [2.2, 0.91667],
-              [2.2, 0.83333],
-              [0.8, 0.83333],
-              [0.8, 0.91667],
-              [0.875, 0.91667],
-              [0.875, 2.25],
-              [0.625, 2.25]
-            ]
-          ]
-        },
-        {
-          "id": "plaster",
-          "kind": "extrude",
-          "bone": "wall",
-          "material": "plaster",
-          "role": "body",
-          "tone": 0.85,
-          "region": "masonry-field",
-          "profile": [[0, 0], [3, 0], [3, 2.75], [0, 2.75]],
-          "plane": "xy",
-          "from": 0.2075,
-          "to": 0.2225,
-          "holes": [
-            [
-              [0.625, 2.5],
-              [2.375, 2.5],
-              [2.375, 2.25],
-              [2.125, 2.25],
-              [2.125, 0.91667],
-              [2.2, 0.91667],
-              [2.2, 0.83333],
-              [0.8, 0.83333],
-              [0.8, 0.91667],
-              [0.875, 0.91667],
-              [0.875, 2.25],
-              [0.625, 2.25]
-            ]
-          ]
-        },
-        {
-          "id": "lintel-shell",
-          "kind": "box",
-          "bone": "lintel",
-          "material": "concrete",
-          "role": "body",
-          "tone": 0.3,
-          "region": "lintel",
-          "size": [1.75, 0.25, 0.04],
-          "transform": {
-            "translation": [0.875, 0.125, -0.2025]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "facing",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "brick",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [
+                [0.625, 2.5],
+                [2.375, 2.5],
+                [2.375, 2.25],
+                [2.125, 2.25],
+                [2.125, 0.91667],
+                [2.2, 0.91667],
+                [2.2, 0.83333],
+                [0.8, 0.83333],
+                [0.8, 0.91667],
+                [0.875, 0.91667],
+                [0.875, 2.25],
+                [0.625, 2.25]
+              ]
+            ],
+            "plane": "xy",
+            "from": -0.2225,
+            "to": -0.1075
+          },
+          {
+            "id": "fill",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "wool",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [
+                [0.625, 2.5],
+                [2.375, 2.5],
+                [2.375, 2.25],
+                [2.125, 2.25],
+                [2.125, 0.91667],
+                [2.2, 0.91667],
+                [2.2, 0.83333],
+                [0.8, 0.83333],
+                [0.8, 0.91667],
+                [0.875, 0.91667],
+                [0.875, 2.25],
+                [0.625, 2.25]
+              ]
+            ],
+            "plane": "xy",
+            "from": -0.1075,
+            "to": 0.0325
+          },
+          {
+            "id": "inner-leaf",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "block",
+            "role": "body",
+            "tone": 0.7,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [
+                [0.625, 2.5],
+                [2.375, 2.5],
+                [2.375, 2.25],
+                [2.125, 2.25],
+                [2.125, 0.91667],
+                [2.2, 0.91667],
+                [2.2, 0.83333],
+                [0.8, 0.83333],
+                [0.8, 0.91667],
+                [0.875, 0.91667],
+                [0.875, 2.25],
+                [0.625, 2.25]
+              ]
+            ],
+            "plane": "xy",
+            "from": 0.0325,
+            "to": 0.2075
+          },
+          {
+            "id": "plaster",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "plaster",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [
+                [0.625, 2.5],
+                [2.375, 2.5],
+                [2.375, 2.25],
+                [2.125, 2.25],
+                [2.125, 0.91667],
+                [2.2, 0.91667],
+                [2.2, 0.83333],
+                [0.8, 0.83333],
+                [0.8, 0.91667],
+                [0.875, 0.91667],
+                [0.875, 2.25],
+                [0.625, 2.25]
+              ]
+            ],
+            "plane": "xy",
+            "from": 0.2075,
+            "to": 0.2225
+          },
+          {
+            "id": "lintel-shell",
+            "kind": "box",
+            "bone": "lintel",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.75, 0.25, 0.04],
+            "transform": {
+              "translation": [0.875, 0.125, -0.2025]
+            }
+          },
+          {
+            "id": "lintel-ins",
+            "kind": "box",
+            "bone": "lintel",
+            "material": "wool",
+            "role": "body",
+            "tone": 0.9,
+            "size": [1.75, 0.25, 0.08],
+            "transform": {
+              "translation": [0.875, 0.125, -0.1425]
+            }
+          },
+          {
+            "id": "lintel-inner",
+            "kind": "box",
+            "bone": "lintel",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.75, 0.25, 0.175],
+            "transform": {
+              "translation": [0.875, 0.125, -0.015]
+            }
+          },
+          {
+            "id": "lintel-plaster",
+            "kind": "box",
+            "bone": "lintel",
+            "material": "plaster",
+            "role": "body",
+            "tone": 0.85,
+            "size": [1.75, 0.25, 0.015],
+            "transform": {
+              "translation": [0.875, 0.125, 0.08]
+            }
+          },
+          {
+            "id": "lintel-back",
+            "kind": "box",
+            "bone": "wall",
+            "material": "block",
+            "role": "body",
+            "tone": 0.7,
+            "size": [1.75, 0.25, 0.12],
+            "transform": {
+              "translation": [1.5, 2.375, 0.1475]
+            }
+          },
+          {
+            "id": "lintel-back-plaster",
+            "kind": "box",
+            "bone": "wall",
+            "material": "plaster",
+            "role": "body",
+            "tone": 0.85,
+            "size": [1.75, 0.25, 0.015],
+            "transform": {
+              "translation": [1.5, 2.375, 0.215]
+            }
+          },
+          {
+            "id": "sill-shell",
+            "kind": "box",
+            "bone": "sill",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.4, 0.08334, 0.07],
+            "transform": {
+              "translation": [0.7, 0.04167, -0.1875]
+            }
+          },
+          {
+            "id": "sill-ins",
+            "kind": "box",
+            "bone": "sill",
+            "material": "wool",
+            "role": "body",
+            "tone": 0.9,
+            "size": [1.4, 0.08334, 0.08],
+            "transform": {
+              "translation": [0.7, 0.04167, -0.1125]
+            }
+          },
+          {
+            "id": "sill-block",
+            "kind": "box",
+            "bone": "sill",
+            "material": "block",
+            "role": "body",
+            "tone": 0.7,
+            "size": [1.4, 0.08334, 0.175],
+            "transform": {
+              "translation": [0.7, 0.04167, 0.015]
+            }
+          },
+          {
+            "id": "sill-plaster",
+            "kind": "box",
+            "bone": "sill",
+            "material": "plaster",
+            "role": "body",
+            "tone": 0.85,
+            "size": [1.4, 0.08334, 0.015],
+            "transform": {
+              "translation": [0.7, 0.04167, 0.11]
+            }
+          },
+          {
+            "id": "sill-back",
+            "kind": "box",
+            "bone": "wall",
+            "material": "block",
+            "role": "body",
+            "tone": 0.7,
+            "size": [1.4, 0.08334, 0.09],
+            "transform": {
+              "translation": [1.5, 0.875, 0.1625]
+            }
+          },
+          {
+            "id": "sill-back-plaster",
+            "kind": "box",
+            "bone": "wall",
+            "material": "plaster",
+            "role": "body",
+            "tone": 0.85,
+            "size": [1.4, 0.08334, 0.015],
+            "transform": {
+              "translation": [1.5, 0.875, 0.215]
+            }
           }
-        },
-        {
-          "id": "lintel-ins",
-          "kind": "box",
-          "bone": "lintel",
-          "material": "wool",
-          "role": "body",
-          "tone": 0.9,
-          "region": "lintel",
-          "size": [1.75, 0.25, 0.08],
-          "transform": {
-            "translation": [0.875, 0.125, -0.1425]
+        ],
+        "thermal": [
+          {
+            "id": "th-field-plaster",
+            "of": "plaster",
+            "region": "masonry-field",
+            "layer": "plaster"
+          },
+          {
+            "id": "th-field-inner-leaf",
+            "of": "inner-leaf",
+            "region": "masonry-field",
+            "layer": "inner-leaf"
+          },
+          {
+            "id": "th-field-fill",
+            "of": "fill",
+            "region": "masonry-field",
+            "layer": "fill"
+          },
+          {
+            "id": "th-field-facing",
+            "of": "facing",
+            "region": "masonry-field",
+            "layer": "facing",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
+          },
+          {
+            "id": "th-field-inner-leaf-lintel-back",
+            "of": "lintel-back",
+            "region": "masonry-field",
+            "layer": "inner-leaf"
+          },
+          {
+            "id": "th-field-plaster-lintel-back",
+            "of": "lintel-back-plaster",
+            "region": "masonry-field",
+            "layer": "plaster"
+          },
+          {
+            "id": "th-field-inner-leaf-sill-back",
+            "of": "sill-back",
+            "region": "masonry-field",
+            "layer": "inner-leaf"
+          },
+          {
+            "id": "th-field-plaster-sill-back",
+            "of": "sill-back-plaster",
+            "region": "masonry-field",
+            "layer": "plaster"
+          },
+          {
+            "id": "th-lintel-plaster",
+            "of": "lintel-plaster",
+            "region": "lintel",
+            "layer": "plaster"
+          },
+          {
+            "id": "th-lintel-lintel-inner",
+            "of": "lintel-inner",
+            "region": "lintel",
+            "layer": "lintel-inner"
+          },
+          {
+            "id": "th-lintel-lintel-ins",
+            "of": "lintel-ins",
+            "region": "lintel",
+            "layer": "lintel-ins"
+          },
+          {
+            "id": "th-lintel-lintel-shell",
+            "of": "lintel-shell",
+            "region": "lintel",
+            "layer": "lintel-shell",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
+          },
+          {
+            "id": "th-sill-plaster",
+            "of": "sill-plaster",
+            "region": "sill",
+            "layer": "plaster"
+          },
+          {
+            "id": "th-sill-sill-block",
+            "of": "sill-block",
+            "region": "sill",
+            "layer": "sill-block"
+          },
+          {
+            "id": "th-sill-sill-ins",
+            "of": "sill-ins",
+            "region": "sill",
+            "layer": "sill-ins"
+          },
+          {
+            "id": "th-sill-sill-concrete",
+            "of": "sill-shell",
+            "region": "sill",
+            "layer": "sill-concrete",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
           }
-        },
-        {
-          "id": "lintel-inner",
-          "kind": "box",
-          "bone": "lintel",
-          "material": "concrete",
-          "role": "body",
-          "tone": 0.3,
-          "region": "lintel",
-          "size": [1.75, 0.25, 0.175],
-          "transform": {
-            "translation": [0.875, 0.125, -0.015]
+        ],
+        "structure": [
+          {
+            "id": "member-wall-leaf",
+            "of": "inner-leaf",
+            "member": "wall",
+            "part": "member"
+          },
+          {
+            "id": "member-lintel-inner",
+            "of": "lintel-inner",
+            "member": "lintel",
+            "part": "member"
+          },
+          {
+            "id": "member-lintel-shell",
+            "of": "lintel-shell",
+            "member": "lintel",
+            "part": "member"
+          },
+          {
+            "id": "member-sill-block",
+            "of": "sill-block",
+            "member": "sill",
+            "part": "member"
+          },
+          {
+            "id": "joint-load-carrier",
+            "kind": "box",
+            "bone": "load-carrier",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.05, 0.05, 0.175],
+            "transform": {
+              "translation": [0.025, -0.025, 0.12]
+            },
+            "member": "load-carrier",
+            "part": "joint"
+          },
+          {
+            "id": "support-found-0-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.0075, 0.445],
+            "transform": {
+              "translation": [0.4, 0.00375, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-0"
+          },
+          {
+            "id": "support-found-1-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.0075, 0.445],
+            "transform": {
+              "translation": [1.5, 0.00375, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-1"
+          },
+          {
+            "id": "support-found-2-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.0075, 0.445],
+            "transform": {
+              "translation": [2.6, 0.00375, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-2"
           }
-        },
-        {
-          "id": "lintel-plaster",
-          "kind": "box",
-          "bone": "lintel",
-          "material": "plaster",
-          "role": "body",
-          "tone": 0.85,
-          "region": "lintel",
-          "size": [1.75, 0.25, 0.015],
-          "transform": {
-            "translation": [0.875, 0.125, 0.08]
+        ],
+        "decisions": [
+          {
+            "en": "Body: the cavity wall layer by layer as four extrusions with the window opening and the lintel and sill recesses as one hole (115 mm facing brick, 140 mm cavity wool, 175 mm block leaf, 15 mm plaster), the precast L-lintel with its 40 mm outer shell, 80 mm wool, 175 mm concrete beam and plaster, the sill with its 70 mm shell, wool, block and plaster, and the block and plaster that close the back of lintel and sill zones so the wall stays 445 mm thick everywhere.",
+            "de": "Körper: die zweischalige Wand Schicht für Schicht als vier Extrusionen mit Fensteröffnung sowie Sturz- und Sohlbankaussparungen als ein Loch (115 mm Vormauerziegel, 140 mm Kerndämmung, 175 mm Blockschale, 15 mm Putz), der Fertigteilsturz mit 40 mm Außenschale, 80 mm Wolle, 175 mm Betonbalken und Putz, die Sohlbank mit 70 mm Schale, Wolle, Block und Putz, sowie Block und Putz, die die Rückseite von Sturz- und Sohlbankzone schließen, sodass die Wand überall 445 mm dick bleibt."
+          },
+          {
+            "en": "Thermal: all three regions with every layer, innermost first, referenced from the body layers (masonry field: plaster, inner leaf, wool, facing, including the back pieces of the lintel and sill zones; lintel and sill with their own four layers). The outermost layer of every region (facing, lintel shell, sill concrete) counts its outer face only, the 1:50 area of the region is that one face; its edges and reveals are cuts and contacts of the continuing wall (`sectionFaces`).",
+            "de": "Thermisch: alle drei Regionen mit jeder Schicht, von innen nach außen, aus den Körperschichten referenziert (Mauerfeld: Putz, Innenschale, Wolle, Vormauerung, einschließlich der Rückstücke der Sturz- und Sohlbankzonen; Sturz und Sohlbank mit ihren eigenen vier Schichten). Die äußerste Schicht jeder Region (Vormauerung, Sturzschale, Sohlbankbeton) zählt nur ihre Außenfläche, die Fläche der Region bei 1:50 ist genau diese eine Fläche; ihre Ränder und Laibungen sind Schnitte und Kontakte der weiterlaufenden Wand (`sectionFaces`)."
+          },
+          {
+            "en": "Structure: the 175 mm block leaf with its opening as the wall member, the concrete beam and the 40 mm shell as the lintel members, the sill block as the sill member, a joint block at the load carrier on the wall head, and three contact pads at the foundation anchors.",
+            "de": "Tragwerk: die Blockschale von 175 mm mit ihrer Öffnung als Wandstab, der Betonbalken und die 40-mm-Schale als Sturzstäbe, der Sohlbankblock als Sohlbankstab, ein Gelenkblock am Lastträger auf dem Wandkopf und drei Kontaktplatten an den Fundamentankern."
           }
-        },
-        {
-          "id": "sill-shell",
-          "kind": "box",
-          "bone": "sill",
-          "material": "concrete",
-          "role": "body",
-          "tone": 0.3,
-          "region": "sill",
-          "size": [1.4, 0.08334, 0.07],
-          "transform": {
-            "translation": [0.7, 0.04167, -0.1875]
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "facing",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "brick",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [
+                [0.625, 2.5],
+                [2.375, 2.5],
+                [2.375, 2.25],
+                [2.125, 2.25],
+                [2.125, 0.91667],
+                [2.2, 0.91667],
+                [2.2, 0.83333],
+                [0.8, 0.83333],
+                [0.8, 0.91667],
+                [0.875, 0.91667],
+                [0.875, 2.25],
+                [0.625, 2.25]
+              ]
+            ],
+            "plane": "xy",
+            "from": -0.2225,
+            "to": -0.1075
+          },
+          {
+            "id": "fill",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "wool",
+            "role": "body",
+            "tone": 0.9,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [
+                [0.625, 2.5],
+                [2.375, 2.5],
+                [2.375, 2.25],
+                [2.125, 2.25],
+                [2.125, 0.91667],
+                [2.2, 0.91667],
+                [2.2, 0.83333],
+                [0.8, 0.83333],
+                [0.8, 0.91667],
+                [0.875, 0.91667],
+                [0.875, 2.25],
+                [0.625, 2.25]
+              ]
+            ],
+            "plane": "xy",
+            "from": -0.1075,
+            "to": 0.0325
+          },
+          {
+            "id": "inner-leaf",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "block",
+            "role": "body",
+            "tone": 0.7,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [
+                [0.625, 2.5],
+                [2.375, 2.5],
+                [2.375, 2.25],
+                [2.125, 2.25],
+                [2.125, 0.91667],
+                [2.2, 0.91667],
+                [2.2, 0.83333],
+                [0.8, 0.83333],
+                [0.8, 0.91667],
+                [0.875, 0.91667],
+                [0.875, 2.25],
+                [0.625, 2.25]
+              ]
+            ],
+            "plane": "xy",
+            "from": 0.0325,
+            "to": 0.2075
+          },
+          {
+            "id": "plaster",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "plaster",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [
+                [0.625, 2.5],
+                [2.375, 2.5],
+                [2.375, 2.25],
+                [2.125, 2.25],
+                [2.125, 0.91667],
+                [2.2, 0.91667],
+                [2.2, 0.83333],
+                [0.8, 0.83333],
+                [0.8, 0.91667],
+                [0.875, 0.91667],
+                [0.875, 2.25],
+                [0.625, 2.25]
+              ]
+            ],
+            "plane": "xy",
+            "from": 0.2075,
+            "to": 0.2225
+          },
+          {
+            "id": "lintel",
+            "kind": "box",
+            "bone": "lintel",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.75, 0.25, 0.31],
+            "transform": {
+              "translation": [0.875, 0.125, -0.0675]
+            }
+          },
+          {
+            "id": "lintel-back",
+            "kind": "box",
+            "bone": "wall",
+            "material": "block",
+            "role": "body",
+            "tone": 0.7,
+            "size": [1.75, 0.25, 0.135],
+            "transform": {
+              "translation": [1.5, 2.375, 0.155]
+            }
+          },
+          {
+            "id": "sill",
+            "kind": "box",
+            "bone": "sill",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.4, 0.08334, 0.34],
+            "transform": {
+              "translation": [0.7, 0.04167, -0.0525]
+            }
+          },
+          {
+            "id": "sill-back",
+            "kind": "box",
+            "bone": "wall",
+            "material": "block",
+            "role": "body",
+            "tone": 0.7,
+            "size": [1.4, 0.08334, 0.105],
+            "transform": {
+              "translation": [1.5, 0.875, 0.17]
+            }
           }
-        },
-        {
-          "id": "sill-ins",
-          "kind": "box",
-          "bone": "sill",
-          "material": "wool",
-          "role": "body",
-          "tone": 0.9,
-          "region": "sill",
-          "size": [1.4, 0.08334, 0.08],
-          "transform": {
-            "translation": [0.7, 0.04167, -0.1125]
+        ],
+        "thermal": [
+          {
+            "id": "th-field",
+            "of": "facing",
+            "region": "masonry-field",
+            "layer": "facing",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
+          },
+          {
+            "id": "th-field-leaf",
+            "of": "inner-leaf",
+            "region": "masonry-field",
+            "layer": "inner-leaf",
+            "sectionFaces": ["-u", "+u", "-v", "+v"]
+          },
+          {
+            "id": "th-lintel",
+            "of": "lintel",
+            "region": "lintel",
+            "layer": "lintel-shell",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
+          },
+          {
+            "id": "th-sill",
+            "of": "sill",
+            "region": "sill",
+            "layer": "sill-concrete",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
           }
-        },
-        {
-          "id": "sill-block",
-          "kind": "box",
-          "bone": "sill",
-          "material": "block",
-          "role": "body",
-          "tone": 0.7,
-          "region": "sill",
-          "size": [1.4, 0.08334, 0.175],
-          "transform": {
-            "translation": [0.7, 0.04167, 0.015]
+        ],
+        "structure": [
+          {
+            "id": "member-wall-leaf",
+            "of": "inner-leaf",
+            "member": "wall",
+            "part": "member"
+          },
+          {
+            "id": "member-lintel",
+            "of": "lintel",
+            "member": "lintel",
+            "part": "member"
+          },
+          {
+            "id": "member-sill",
+            "of": "sill",
+            "member": "sill",
+            "part": "member"
+          },
+          {
+            "id": "joint-load-carrier",
+            "kind": "box",
+            "bone": "load-carrier",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.05, 0.05, 0.175],
+            "transform": {
+              "translation": [0.025, -0.025, 0.12]
+            },
+            "member": "load-carrier",
+            "part": "joint"
+          },
+          {
+            "id": "support-found-0-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.015, 0.445],
+            "transform": {
+              "translation": [0.4, 0.0075, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-0"
+          },
+          {
+            "id": "support-found-1-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.015, 0.445],
+            "transform": {
+              "translation": [1.5, 0.0075, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-1"
+          },
+          {
+            "id": "support-found-2-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.015, 0.445],
+            "transform": {
+              "translation": [2.6, 0.0075, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-2"
           }
-        },
-        {
-          "id": "sill-plaster",
-          "kind": "box",
-          "bone": "sill",
-          "material": "plaster",
-          "role": "body",
-          "tone": 0.85,
-          "region": "sill",
-          "size": [1.4, 0.08334, 0.015],
-          "transform": {
-            "translation": [0.7, 0.04167, 0.11]
+        ],
+        "decisions": [
+          {
+            "en": "Body: the four wall layers stay (the drawing draws them at 1:100) but lintel and sill are single concrete pieces of 310 and 340 mm depth (shell, wool, beam and plaster merged) with one closing piece of block behind each, plaster included.",
+            "de": "Körper: die vier Wandschichten bleiben (die Zeichnung zeichnet sie bei 1:100), aber Sturz und Sohlbank sind einzelne Betonstücke von 310 und 340 mm Tiefe (Schale, Wolle, Balken und Putz zusammengefasst) mit je einem schließenden Blockstück dahinter, Putz eingeschlossen."
+          },
+          {
+            "en": "Thermal: layers are merged at this scale, each region counts its outer face only (`sectionFaces`): the facing brick for the field (the 1:100 drawing shows the facing) beside the inner leaf, which lies fully between plaster and wool and only gives its cut edges away, the merged lintel and sill pieces for their regions. Structure: one member per bone, the contact pads at 15 mm.",
+            "de": "Thermisch: die Schichten sind bei diesem Maßstab zusammengefasst, jede Region zählt nur ihre Außenfläche (`sectionFaces`): die Vormauerung für das Feld (die Zeichnung 1:100 zeigt die Vormauerung) neben der Innenschale, die ganz zwischen Putz und Wolle liegt und nur ihre Schnittkanten abgibt, die zusammengefassten Sturz- und Sohlbankstücke für ihre Regionen. Tragwerk: ein Stab je Knochen, die Kontaktplatten mit 15 mm."
           }
-        },
-        {
-          "id": "lintel-back",
-          "kind": "box",
-          "bone": "wall",
-          "material": "block",
-          "role": "body",
-          "tone": 0.7,
-          "region": "masonry-field",
-          "size": [1.75, 0.25, 0.12],
-          "transform": {
-            "translation": [1.5, 2.375, 0.1475]
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "field",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "brick",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [
+                [0.625, 2.5],
+                [2.375, 2.5],
+                [2.375, 2.25],
+                [2.125, 2.25],
+                [2.125, 0.91667],
+                [2.2, 0.91667],
+                [2.2, 0.83333],
+                [0.8, 0.83333],
+                [0.8, 0.91667],
+                [0.875, 0.91667],
+                [0.875, 2.25],
+                [0.625, 2.25]
+              ]
+            ],
+            "plane": "xy",
+            "from": -0.2225,
+            "to": 0.2225
+          },
+          {
+            "id": "lintel",
+            "kind": "box",
+            "bone": "lintel",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.75, 0.25, 0.445],
+            "transform": {
+              "translation": [0.875, 0.125, 0.0]
+            }
+          },
+          {
+            "id": "sill",
+            "kind": "box",
+            "bone": "sill",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.4, 0.08334, 0.445],
+            "transform": {
+              "translation": [0.7, 0.04167, 0.0]
+            }
           }
-        },
-        {
-          "id": "lintel-back-plaster",
-          "kind": "box",
-          "bone": "wall",
-          "material": "plaster",
-          "role": "body",
-          "tone": 0.85,
-          "region": "masonry-field",
-          "size": [1.75, 0.25, 0.015],
-          "transform": {
-            "translation": [1.5, 2.375, 0.215]
+        ],
+        "thermal": [
+          {
+            "id": "th-field",
+            "of": "field",
+            "region": "masonry-field",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
+          },
+          {
+            "id": "th-lintel",
+            "of": "lintel",
+            "region": "lintel",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
+          },
+          {
+            "id": "th-sill",
+            "of": "sill",
+            "region": "sill",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
           }
-        },
-        {
-          "id": "sill-back",
-          "kind": "box",
-          "bone": "wall",
-          "material": "block",
-          "role": "body",
-          "tone": 0.7,
-          "region": "masonry-field",
-          "size": [1.4, 0.08334, 0.09],
-          "transform": {
-            "translation": [1.5, 0.875, 0.1625]
+        ],
+        "structure": [
+          {
+            "id": "member-wall",
+            "of": "field",
+            "member": "wall",
+            "part": "member"
+          },
+          {
+            "id": "member-lintel",
+            "of": "lintel",
+            "member": "lintel",
+            "part": "member"
+          },
+          {
+            "id": "member-sill",
+            "of": "sill",
+            "member": "sill",
+            "part": "member"
+          },
+          {
+            "id": "support-found-0-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.03, 0.445],
+            "transform": {
+              "translation": [0.4, 0.015, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-0"
+          },
+          {
+            "id": "support-found-1-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.03, 0.445],
+            "transform": {
+              "translation": [1.5, 0.015, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-1"
+          },
+          {
+            "id": "support-found-2-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.03, 0.445],
+            "transform": {
+              "translation": [2.6, 0.015, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-2"
           }
-        },
-        {
-          "id": "sill-back-plaster",
-          "kind": "box",
-          "bone": "wall",
-          "material": "plaster",
-          "role": "body",
-          "tone": 0.85,
-          "region": "masonry-field",
-          "size": [1.4, 0.08334, 0.015],
-          "transform": {
-            "translation": [1.5, 0.875, 0.215]
+        ],
+        "decisions": [
+          {
+            "en": "Body: the wall is one brick-coloured extrusion of 445 mm with the opening and the two recesses, the lintel and the sill fill their recesses over the whole depth (the 1:200 drawing no longer shows layers).",
+            "de": "Körper: die Wand ist eine ziegelfarbene Extrusion von 445 mm mit Öffnung und den zwei Aussparungen, Sturz und Sohlbank füllen ihre Aussparungen über die ganze Tiefe (die Zeichnung 1:200 zeigt keine Schichten mehr)."
+          },
+          {
+            "en": "Thermal: one solid per region (layers are merged and not distinguished), each with its outer face only (`sectionFaces`). Structure: the whole wall mass is the member (the 175 mm leaf is not resolvable), lintel and sill as members; the load-carrier joint is merged into the wall head; pads at 30 mm.",
+            "de": "Thermisch: ein Körper je Region (Schichten sind zusammengefasst und nicht unterschieden), jeder mit nur seiner Außenfläche (`sectionFaces`). Tragwerk: die ganze Wandmasse ist der Stab (die Schale von 175 mm ist nicht auflösbar), Sturz und Sohlbank als Stäbe; das Lastträgergelenk ist im Wandkopf aufgegangen; Platten mit 30 mm."
           }
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The wall field is four z-layers (facing brick 115, mineral wool fill 140, block inner leaf 175, plaster 15 mm), each one extrude of the full wall outline with the window pocket as hole, so every construction layer is its own solid for the thermal view.",
-          "de": "Das Wandfeld besteht aus vier Schichten in z (Vormauerziegel 115, Kerndämmung 140, Blockinnenschale 175, Putz 15 mm); jede ist eine Extrusion des Wandumrisses mit der Fensteröffnung samt Lager als Loch, sodass jede Schicht ein eigener Körper für die thermische Ansicht ist."
-        },
-        {
-          "en": "Lintel and sill fill their pockets with their own layer sequence (concrete shell, wool, inner concrete or block, plaster) on their own bones; the remaining wall depth behind them is block and plaster of the masonry field.",
-          "de": "Sturz und Brüstungsband füllen ihre Aussparungen mit der eigenen Schichtfolge (Betonschale, Dämmung, Innenbeton bzw. Block, Putz) an den eigenen Knochen; die restliche Wandtiefe dahinter ist Block und Putz des Mauerwerksfeldes."
-        },
-        {
-          "en": "Brick courses and the zigzag fill hatching are 2D texture and are not modelled; the load carrier bone is a load point without volume.",
-          "de": "Ziegelschichten und die Zickzackschraffur der Dämmung sind 2D-Textur und nicht modelliert; der Lastträgerknochen ist ein Lastpunkt ohne Volumen."
-        }
-      ]
+        ]
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "body": [
+          {
+            "id": "field",
+            "kind": "extrude",
+            "bone": "wall",
+            "material": "brick",
+            "role": "body",
+            "tone": 0.55,
+            "profile": [[0.0, 0.0], [3.0, 0.0], [3.0, 2.75], [0.0, 2.75]],
+            "holes": [
+              [[0.875, 0.91667], [2.125, 0.91667], [2.125, 2.25], [0.875, 2.25]]
+            ],
+            "plane": "xy",
+            "from": -0.2225,
+            "to": 0.2225
+          },
+          {
+            "id": "lintel",
+            "kind": "box",
+            "bone": "lintel",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.75, 0.25, 0.445],
+            "transform": {
+              "translation": [0.875, 0.125, 0.0]
+            }
+          },
+          {
+            "id": "sill",
+            "kind": "box",
+            "bone": "sill",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.4, 0.08334, 0.34],
+            "transform": {
+              "translation": [0.7, 0.04167, 0.0]
+            }
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-field",
+            "of": "field",
+            "region": "masonry-field",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
+          },
+          {
+            "id": "th-lintel",
+            "of": "lintel",
+            "region": "lintel",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
+          },
+          {
+            "id": "th-sill",
+            "of": "sill",
+            "region": "sill",
+            "sectionFaces": ["-u", "+u", "-v", "+v", "+w"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-wall",
+            "of": "field",
+            "member": "wall",
+            "part": "member"
+          },
+          {
+            "id": "member-lintel",
+            "of": "lintel",
+            "member": "lintel",
+            "part": "member"
+          },
+          {
+            "id": "member-sill",
+            "of": "sill",
+            "member": "sill",
+            "part": "member"
+          },
+          {
+            "id": "support-found-0-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.075, 0.445],
+            "transform": {
+              "translation": [0.4, 0.0375, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-0"
+          },
+          {
+            "id": "support-found-1-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.075, 0.445],
+            "transform": {
+              "translation": [1.5, 0.0375, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-1"
+          },
+          {
+            "id": "support-found-2-pad",
+            "kind": "box",
+            "bone": "wall",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.075, 0.445],
+            "transform": {
+              "translation": [2.6, 0.0375, 0.0]
+            },
+            "member": "wall",
+            "part": "support",
+            "anchor": "found-2"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: the wall is one extrusion with the plain window opening of the 1:500 drawing; lintel and sill are 75 mm minimum pieces lying inside the wall mass (they keep their own bones; the recesses are no longer cut).",
+            "de": "Körper: die Wand ist eine Extrusion mit der glatten Fensteröffnung der Zeichnung 1:500; Sturz und Sohlbank sind Stücke ab 75 mm, die in der Wandmasse liegen (sie behalten ihre eigenen Knochen; die Aussparungen werden nicht mehr geschnitten)."
+          },
+          {
+            "en": "Thermal: one solid per region on the merged masses, each with its outer face only (`sectionFaces`). Structure: wall, lintel and sill members as before on the simpler opening, pads at the 75 mm feature.",
+            "de": "Thermisch: ein Körper je Region auf den zusammengefassten Massen, jeder mit nur seiner Außenfläche (`sectionFaces`). Tragwerk: Wand-, Sturz- und Sohlbankstab wie zuvor auf der einfacheren Öffnung, Platten mit der Einzelheit 75 mm."
+          }
+        ]
+      }
     },
     "presentation": {
       "defaultPose": "dead-load",

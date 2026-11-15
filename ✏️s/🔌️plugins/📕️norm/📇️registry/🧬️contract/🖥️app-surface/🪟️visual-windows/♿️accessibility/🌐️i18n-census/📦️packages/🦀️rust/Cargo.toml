@@ -1,0 +1,16 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-plugin-norm-i18n-census"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm i18n census: scans the Rust sources of the norm plugin for user-visible bilingual strings missing English or German"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

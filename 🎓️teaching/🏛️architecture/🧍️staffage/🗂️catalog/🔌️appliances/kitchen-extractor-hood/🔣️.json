@@ -207,7 +207,7 @@
         "id": "outlet",
         "bone": "chimney-top",
         "x": 0.14,
-        "y": 0.915,
+        "y": 0.365,
         "kind": "emitter",
         "title": {
           "en": "Duct collar on top of the chimney",
@@ -1789,7 +1789,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "filter-mesh",
-          "areaM2": 0.2,
+          "areaM2": 0.84,
           "characteristicLengthM": 0.46,
           "geometry": "horizontal-plate-down",
           "skyViewFactor": 0.4,
@@ -1859,7 +1859,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "stainless-steel",
-          "areaM2": 0.75,
+          "areaM2": 0.78,
           "characteristicLengthM": 0.7,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.4,
@@ -1928,192 +1928,1636 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "canopy",
-          "kind": "extrude",
-          "bone": "canopy",
-          "material": "stainless-steel",
-          "role": "body",
-          "tone": 0.55,
-          "region": "canopy",
-          "profile": [[0, 0.02], [0.5, 0.02], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
-          "plane": "xy",
-          "from": -0.45,
-          "to": 0.45
-        },
-        {
-          "id": "filter",
-          "kind": "extrude",
-          "bone": "canopy",
-          "material": "filter-mesh",
-          "role": "body",
-          "tone": 0.7,
-          "region": "filter",
-          "maxDenominator": 100,
-          "profile": [[-0.43, 0.02], [0.43, 0.02], [0.43, 0.48], [-0.43, 0.48]],
-          "plane": "zx",
-          "from": 0,
-          "to": 0.02,
-          "holes": [
-            [
-              [-0.17, 0.1],
-              [-0.17402, 0.115],
-              [-0.185, 0.12598],
-              [-0.2, 0.13],
-              [-0.215, 0.12598],
-              [-0.22598, 0.115],
-              [-0.23, 0.1],
-              [-0.22598, 0.085],
-              [-0.215, 0.07402],
-              [-0.2, 0.07],
-              [-0.185, 0.07402],
-              [-0.17402, 0.085]
-            ],
-            [
-              [0.23, 0.1],
-              [0.22598, 0.115],
-              [0.215, 0.12598],
-              [0.2, 0.13],
-              [0.185, 0.12598],
-              [0.17402, 0.115],
-              [0.17, 0.1],
-              [0.17402, 0.085],
-              [0.185, 0.07402],
-              [0.2, 0.07],
-              [0.215, 0.07402],
-              [0.22598, 0.085]
-            ],
-            [
-              [-0.17, 0.37],
-              [-0.17402, 0.385],
-              [-0.185, 0.39598],
-              [-0.2, 0.4],
-              [-0.215, 0.39598],
-              [-0.22598, 0.385],
-              [-0.23, 0.37],
-              [-0.22598, 0.355],
-              [-0.215, 0.34402],
-              [-0.2, 0.34],
-              [-0.185, 0.34402],
-              [-0.17402, 0.355]
-            ],
-            [
-              [0.23, 0.37],
-              [0.22598, 0.385],
-              [0.215, 0.39598],
-              [0.2, 0.4],
-              [0.185, 0.39598],
-              [0.17402, 0.385],
-              [0.17, 0.37],
-              [0.17402, 0.355],
-              [0.185, 0.34402],
-              [0.2, 0.34],
-              [0.215, 0.34402],
-              [0.22598, 0.355]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "canopy",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0.02], [0.5, 0.02], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": -0.44,
+            "to": 0.44,
+            "holes": [
+              [[0.01, 0.03], [0.49, 0.03], [0.49, 0.0568], [0.39485, 0.19], [0.01, 0.19]]
             ]
-          ]
-        },
-        {
-          "id": "lamp-l",
-          "kind": "revolve",
-          "bone": "canopy",
-          "material": "lamp-diffuser",
-          "role": "detail",
-          "tone": 0.95,
-          "region": "lamps",
-          "maxDenominator": 50,
-          "profile": [[0, 0.028], [0.0015, 0.029], [0.012, 0.029]],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [0.1, 0, -0.2]
           },
-          "repeat": {
-            "count": 2,
-            "translation": [0.27, 0, 0]
-          }
-        },
-        {
-          "id": "lamp-r",
-          "kind": "revolve",
-          "bone": "canopy",
-          "material": "lamp-diffuser",
-          "role": "detail",
-          "tone": 0.95,
-          "region": "lamps",
-          "maxDenominator": 50,
-          "profile": [[0, 0.028], [0.0015, 0.029], [0.012, 0.029]],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [0.1, 0, 0.2]
+          {
+            "id": "end-l",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0.02], [0.5, 0.02], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": -0.45,
+            "to": -0.44
           },
-          "repeat": {
-            "count": 2,
-            "translation": [0.27, 0, 0]
+          {
+            "id": "end-r",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0.02], [0.5, 0.02], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": 0.44,
+            "to": 0.45
+          },
+          {
+            "id": "filter",
+            "bone": "canopy",
+            "material": "filter-mesh",
+            "role": "body",
+            "tone": 0.5,
+            "kind": "extrude",
+            "profile": [[-0.43, 0.02], [0.43, 0.02], [0.43, 0.48], [-0.43, 0.48]],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.02,
+            "holes": [
+              [
+                [-0.17, 0.1],
+                [-0.17228, 0.11148],
+                [-0.17879, 0.12121],
+                [-0.18852, 0.12772],
+                [-0.2, 0.13],
+                [-0.21148, 0.12772],
+                [-0.22121, 0.12121],
+                [-0.22772, 0.11148],
+                [-0.23, 0.1],
+                [-0.22772, 0.08852],
+                [-0.22121, 0.07879],
+                [-0.21148, 0.07228],
+                [-0.2, 0.07],
+                [-0.18852, 0.07228],
+                [-0.17879, 0.07879],
+                [-0.17228, 0.08852]
+              ],
+              [
+                [-0.17, 0.37],
+                [-0.17228, 0.38148],
+                [-0.17879, 0.39121],
+                [-0.18852, 0.39772],
+                [-0.2, 0.4],
+                [-0.21148, 0.39772],
+                [-0.22121, 0.39121],
+                [-0.22772, 0.38148],
+                [-0.23, 0.37],
+                [-0.22772, 0.35852],
+                [-0.22121, 0.34879],
+                [-0.21148, 0.34228],
+                [-0.2, 0.34],
+                [-0.18852, 0.34228],
+                [-0.17879, 0.34879],
+                [-0.17228, 0.35852]
+              ],
+              [
+                [0.23, 0.1],
+                [0.22772, 0.11148],
+                [0.22121, 0.12121],
+                [0.21148, 0.12772],
+                [0.2, 0.13],
+                [0.18852, 0.12772],
+                [0.17879, 0.12121],
+                [0.17228, 0.11148],
+                [0.17, 0.1],
+                [0.17228, 0.08852],
+                [0.17879, 0.07879],
+                [0.18852, 0.07228],
+                [0.2, 0.07],
+                [0.21148, 0.07228],
+                [0.22121, 0.07879],
+                [0.22772, 0.08852]
+              ],
+              [
+                [0.23, 0.37],
+                [0.22772, 0.38148],
+                [0.22121, 0.39121],
+                [0.21148, 0.39772],
+                [0.2, 0.4],
+                [0.18852, 0.39772],
+                [0.17879, 0.39121],
+                [0.17228, 0.38148],
+                [0.17, 0.37],
+                [0.17228, 0.35852],
+                [0.17879, 0.34879],
+                [0.18852, 0.34228],
+                [0.2, 0.34],
+                [0.21148, 0.34228],
+                [0.22121, 0.34879],
+                [0.22772, 0.35852]
+              ]
+            ]
+          },
+          {
+            "id": "lamp-l",
+            "bone": "canopy",
+            "material": "lamp-diffuser",
+            "role": "detail",
+            "tone": 0.95,
+            "kind": "extrude",
+            "profile": [
+              [-0.2, 0.129],
+              [-0.19249, 0.12801],
+              [-0.1855, 0.12511],
+              [-0.17949, 0.12051],
+              [-0.17489, 0.1145],
+              [-0.17199, 0.10751],
+              [-0.171, 0.1],
+              [-0.17199, 0.09249],
+              [-0.17489, 0.0855],
+              [-0.17949, 0.07949],
+              [-0.1855, 0.07489],
+              [-0.19249, 0.07199],
+              [-0.2, 0.071],
+              [-0.20751, 0.07199],
+              [-0.2145, 0.07489],
+              [-0.22051, 0.07949],
+              [-0.22511, 0.0855],
+              [-0.22801, 0.09249],
+              [-0.229, 0.1],
+              [-0.22801, 0.10751],
+              [-0.22511, 0.1145],
+              [-0.22051, 0.12051],
+              [-0.2145, 0.12511],
+              [-0.20751, 0.12801]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.012,
+            "repeat": {
+              "count": 2,
+              "translation": [0.27, 0, 0]
+            }
+          },
+          {
+            "id": "lamp-r",
+            "bone": "canopy",
+            "material": "lamp-diffuser",
+            "role": "detail",
+            "tone": 0.95,
+            "kind": "extrude",
+            "profile": [
+              [0.2, 0.129],
+              [0.20751, 0.12801],
+              [0.2145, 0.12511],
+              [0.22051, 0.12051],
+              [0.22511, 0.1145],
+              [0.22801, 0.10751],
+              [0.229, 0.1],
+              [0.22801, 0.09249],
+              [0.22511, 0.0855],
+              [0.22051, 0.07949],
+              [0.2145, 0.07489],
+              [0.20751, 0.07199],
+              [0.2, 0.071],
+              [0.19249, 0.07199],
+              [0.1855, 0.07489],
+              [0.17949, 0.07949],
+              [0.17489, 0.0855],
+              [0.17199, 0.09249],
+              [0.171, 0.1],
+              [0.17199, 0.10751],
+              [0.17489, 0.1145],
+              [0.17949, 0.12051],
+              [0.1855, 0.12511],
+              [0.19249, 0.12801]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.012,
+            "repeat": {
+              "count": 2,
+              "translation": [0.27, 0, 0]
+            }
+          },
+          {
+            "id": "chimney-lower",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.148, 0.3],
+              [0.14941, 0.29941],
+              [0.15, 0.298],
+              [0.15, 0.002],
+              [0.14941, 0.00059],
+              [0.148, 0.0],
+              [-0.148, 0.0],
+              [-0.14941, 0.00059],
+              [-0.15, 0.002],
+              [-0.15, 0.298],
+              [-0.14941, 0.29941],
+              [-0.148, 0.3]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.35,
+            "holes": [
+              [
+                [0.1395, 0.29],
+                [0.13985, 0.28985],
+                [0.14, 0.2895],
+                [0.14, 0.0105],
+                [0.13985, 0.01015],
+                [0.1395, 0.01],
+                [-0.1395, 0.01],
+                [-0.13985, 0.01015],
+                [-0.14, 0.0105],
+                [-0.14, 0.2895],
+                [-0.13985, 0.28985],
+                [-0.1395, 0.29]
+              ]
+            ]
+          },
+          {
+            "id": "chimney-upper",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.138, 0.28],
+              [0.13941, 0.27941],
+              [0.14, 0.278],
+              [0.14, 0.002],
+              [0.13941, 0.00059],
+              [0.138, 0.0],
+              [-0.138, 0.0],
+              [-0.13941, 0.00059],
+              [-0.14, 0.002],
+              [-0.14, 0.278],
+              [-0.13941, 0.27941],
+              [-0.138, 0.28]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.35,
+            "holes": [
+              [
+                [0.1295, 0.27],
+                [0.12985, 0.26985],
+                [0.13, 0.2695],
+                [0.13, 0.0105],
+                [0.12985, 0.01015],
+                [0.1295, 0.01],
+                [-0.1295, 0.01],
+                [-0.12985, 0.01015],
+                [-0.13, 0.0105],
+                [-0.13, 0.2695],
+                [-0.12985, 0.26985],
+                [-0.1295, 0.27]
+              ]
+            ]
+          },
+          {
+            "id": "collar",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[-0.1, 0.04], [0.1, 0.04], [0.1, 0.24], [-0.1, 0.24]],
+            "plane": "zx",
+            "from": 0.35,
+            "to": 0.365,
+            "holes": [
+              [
+                [0.075, 0.14],
+                [0.07244, 0.15941],
+                [0.06495, 0.1775],
+                [0.05303, 0.19303],
+                [0.0375, 0.20495],
+                [0.01941, 0.21244],
+                [0.0, 0.215],
+                [-0.01941, 0.21244],
+                [-0.0375, 0.20495],
+                [-0.05303, 0.19303],
+                [-0.06495, 0.1775],
+                [-0.07244, 0.15941],
+                [-0.075, 0.14],
+                [-0.07244, 0.12059],
+                [-0.06495, 0.1025],
+                [-0.05303, 0.08697],
+                [-0.0375, 0.07505],
+                [-0.01941, 0.06756],
+                [-0.0, 0.065],
+                [0.01941, 0.06756],
+                [0.0375, 0.07505],
+                [0.05303, 0.08697],
+                [0.06495, 0.1025],
+                [0.07244, 0.12059]
+              ]
+            ]
           }
-        },
-        {
-          "id": "chimney-lower",
-          "kind": "box",
-          "bone": "chimney",
-          "material": "stainless-steel",
-          "role": "body",
-          "tone": 0.6,
-          "region": "chimney",
-          "size": [0.3, 0.35, 0.3],
-          "cornerRadius": 0.002,
-          "transform": {
-            "translation": [0.15, 0.175, 0]
+        ],
+        "thermal": [
+          {
+            "id": "th-canopy",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0.02], [0.5, 0.02], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": -0.45,
+            "to": 0.45,
+            "sectionFaces": ["-u"],
+            "region": "canopy"
+          },
+          {
+            "id": "th-filter",
+            "of": "filter",
+            "region": "filter",
+            "layer": "mesh"
+          },
+          {
+            "id": "th-lamp-l",
+            "of": "lamp-l",
+            "region": "lamps",
+            "layer": "diffuser"
+          },
+          {
+            "id": "th-lamp-r",
+            "of": "lamp-r",
+            "region": "lamps",
+            "layer": "diffuser"
+          },
+          {
+            "id": "th-chimney-lower",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "loft",
+            "sections": [
+              {
+                "at": [0.15, 0.35, 0],
+                "rx": 0.1512,
+                "ry": 0.1512,
+                "exponent": 12
+              },
+              {
+                "at": [0.15, 0.0, 0],
+                "rx": 0.1512,
+                "ry": 0.1512,
+                "exponent": 12
+              }
+            ],
+            "region": "chimney"
+          },
+          {
+            "id": "th-chimney-upper",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "loft",
+            "sections": [
+              {
+                "at": [0.14, 0.35, 0],
+                "rx": 0.1412,
+                "ry": 0.1412,
+                "exponent": 12
+              },
+              {
+                "at": [0.14, 0.0, 0],
+                "rx": 0.1412,
+                "ry": 0.1412,
+                "exponent": 12
+              }
+            ],
+            "region": "chimney"
+          },
+          {
+            "id": "th-collar",
+            "of": "collar",
+            "region": "chimney",
+            "layer": "tube"
+          },
+          {
+            "id": "th-extract",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.0, 0.215],
+              [0.01941, 0.21244],
+              [0.0375, 0.20495],
+              [0.05303, 0.19303],
+              [0.06495, 0.1775],
+              [0.07244, 0.15941],
+              [0.075, 0.14],
+              [0.07244, 0.12059],
+              [0.06495, 0.1025],
+              [0.05303, 0.08697],
+              [0.0375, 0.07505],
+              [0.01941, 0.06756],
+              [0.0, 0.065],
+              [-0.01941, 0.06756],
+              [-0.0375, 0.07505],
+              [-0.05303, 0.08697],
+              [-0.06495, 0.1025],
+              [-0.07244, 0.12059],
+              [-0.075, 0.14],
+              [-0.07244, 0.15941],
+              [-0.06495, 0.1775],
+              [-0.05303, 0.19303],
+              [-0.0375, 0.20495],
+              [-0.01941, 0.21244]
+            ],
+            "plane": "zx",
+            "from": 0.361,
+            "to": 0.369,
+            "sectionFaces": ["+v", "-v"],
+            "region": "chimney",
+            "tags": ["extract"]
           }
-        },
-        {
-          "id": "chimney-upper",
-          "kind": "box",
-          "bone": "chimney-top",
-          "material": "stainless-steel",
-          "role": "body",
-          "tone": 0.65,
-          "region": "chimney",
-          "size": [0.28, 0.35, 0.28],
-          "cornerRadius": 0.002,
-          "transform": {
-            "translation": [0.14, 0.175, 0]
+        ],
+        "structure": [
+          {
+            "id": "member-canopy-shell",
+            "of": "canopy",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-canopy-end-l",
+            "of": "end-l",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-canopy-end-r",
+            "of": "end-r",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-chimney-lower",
+            "of": "chimney-lower",
+            "member": "chimney",
+            "part": "member"
+          },
+          {
+            "id": "member-chimney-upper",
+            "of": "chimney-upper",
+            "member": "chimney-top",
+            "part": "member"
+          },
+          {
+            "id": "joint-canopy-chimney",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.148, 0.3],
+              [0.14941, 0.29941],
+              [0.15, 0.298],
+              [0.15, 0.002],
+              [0.14941, 0.00059],
+              [0.148, 0.0],
+              [-0.148, 0.0],
+              [-0.14941, 0.00059],
+              [-0.15, 0.002],
+              [-0.15, 0.298],
+              [-0.14941, 0.29941],
+              [-0.148, 0.3]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.008,
+            "holes": [
+              [
+                [0.1435, 0.294],
+                [0.14385, 0.29385],
+                [0.144, 0.2935],
+                [0.144, 0.0065],
+                [0.14385, 0.00615],
+                [0.1435, 0.006],
+                [-0.1435, 0.006],
+                [-0.14385, 0.00615],
+                [-0.144, 0.0065],
+                [-0.144, 0.2935],
+                [-0.14385, 0.29385],
+                [-0.1435, 0.294]
+              ]
+            ],
+            "member": "chimney",
+            "part": "joint"
+          },
+          {
+            "id": "joint-chimney-top",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.138, 0.28],
+              [0.13941, 0.27941],
+              [0.14, 0.278],
+              [0.14, 0.002],
+              [0.13941, 0.00059],
+              [0.138, 0.0],
+              [-0.138, 0.0],
+              [-0.13941, 0.00059],
+              [-0.14, 0.002],
+              [-0.14, 0.278],
+              [-0.13941, 0.27941],
+              [-0.138, 0.28]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.008,
+            "holes": [
+              [
+                [0.1335, 0.274],
+                [0.13385, 0.27385],
+                [0.134, 0.2735],
+                [0.134, 0.0065],
+                [0.13385, 0.00615],
+                [0.1335, 0.006],
+                [-0.1335, 0.006],
+                [-0.13385, 0.00615],
+                [-0.134, 0.0065],
+                [-0.134, 0.2735],
+                [-0.13385, 0.27385],
+                [-0.1335, 0.274]
+              ]
+            ],
+            "member": "chimney-top",
+            "part": "joint"
+          },
+          {
+            "id": "support-wall-hook",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.3,
+            "kind": "box",
+            "size": [0.02, 0.02, 0.3],
+            "transform": {
+              "translation": [0.01, 0.19, 0]
+            },
+            "anchor": "wall-hook",
+            "member": "canopy",
+            "part": "support"
+          },
+          {
+            "id": "support-wall-rest",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.3,
+            "kind": "box",
+            "size": [0.02, 0.02, 0.3],
+            "transform": {
+              "translation": [0.01, 0.03, 0]
+            },
+            "anchor": "wall-rest",
+            "member": "canopy",
+            "part": "support"
+          },
+          {
+            "id": "mass-canopy",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.6,
+            "kind": "ellipsoid",
+            "radii": [0.12, 0.06, 0.2],
+            "transform": {
+              "translation": [0.22, 0.1, 0]
+            },
+            "member": "canopy",
+            "part": "mass"
+          },
+          {
+            "id": "mass-chimney",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.6,
+            "kind": "ellipsoid",
+            "radii": [0.08, 0.08, 0.08],
+            "transform": {
+              "translation": [0.15, 0.17, 0]
+            },
+            "member": "chimney",
+            "part": "mass"
+          },
+          {
+            "id": "mass-chimney-top",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.6,
+            "kind": "ellipsoid",
+            "radii": [0.08, 0.08, 0.08],
+            "transform": {
+              "translation": [0.14, 0.17, 0]
+            },
+            "member": "chimney-top",
+            "part": "mass"
           }
-        },
-        {
-          "id": "collar",
-          "kind": "box",
-          "bone": "chimney-top",
-          "material": "stainless-steel",
-          "role": "body",
-          "tone": 0.45,
-          "region": "chimney",
-          "maxDenominator": 100,
-          "size": [0.2, 0.015, 0.2],
-          "cornerRadius": 0.002,
-          "transform": {
-            "translation": [0.14, 0.3575, 0]
+        ],
+        "decisions": [
+          {
+            "en": "Body: the canopy is now a real 10 mm sheet shell: a hollow trapezoid prism (the seed was a solid wedge) closed by two end walls, with the 20 mm filter plate under it carrying four lamp openings, the four 58 mm lamp discs in them, two chimney tubes (300 and 280 mm square, 10 mm walls, hollow) and the 15 mm duct collar plate with the 150 mm opening.",
+            "de": "Körper: die Haube ist jetzt eine echte 10-mm-Blechschale: ein hohles Trapezprisma (der Seed war ein massiver Keil), von zwei Stirnwänden geschlossen, darunter die 20 mm starke Filterplatte mit vier Lampenöffnungen, die vier 58-mm-Lampenscheiben darin, zwei Kaminrohre (300 und 280 mm quadratisch, 10 mm Wand, hohl) und die 15 mm starke Kragenplatte mit der 150-mm-Öffnung."
+          },
+          {
+            "en": "Thermal: the canopy is its outer prism (the back against the wall is excluded as the mounting plane), the filter and lamps reference body solids, the chimneys are uncapped skins on the outer faces so that the inside of the hollow tubes does not count, the collar a reference; the extract emitter is an 8 mm disc of the 150 mm collar diameter whose faces are openings (the anchor y of the outlet was 0.915 above the tube origin and is corrected to 0.365).",
+            "de": "Thermik: die Haube ist ihr Außenprisma (die Rückseite an der Wand entfällt als Montageebene), Filter und Lampen verweisen auf Körperkörper, die Kamine sind offene Häute auf den Außenflächen, damit die Innenseite der hohlen Rohre nicht zählt, der Kragen ein Verweis; der Abluft-Emitter ist eine 8-mm-Scheibe mit dem 150-mm-Kragendurchmesser, deren Flächen Öffnungen sind (das y des Auslass-Ankers lag mit 0,915 über dem Rohrursprung und ist auf 0,365 korrigiert)."
+          },
+          {
+            "en": "Structure: shell and end walls are the canopy member, both chimney tubes members, flange rings at the two fixed joints, the wall hook (pin, 0.3 m long) and the wall rest (roller) as 20 mm bars at the wall, and one mass each for motor, lower and upper chimney.",
+            "de": "Tragwerk: Schale und Stirnwände sind der Hauben-Stab, beide Kaminrohre Stäbe, Flanschringe an den beiden festen Gelenken, der Wandhaken (Festlager, 0,3 m lang) und die Wandanlage (Rollenlager) als 20-mm-Stäbe an der Wand und je eine Masse für Motor, unteren und oberen Kamin."
           }
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The canopy is the extrusion of its elevation profile (flat back at the wall, 140 mm sloped front panel) across the 0.9 m width drawn in front and plan; the chimney sections and the collar are square boxes of their plan footprints.",
-          "de": "Die Haube ist die Extrusion ihres Seitenprofils (flache Rückwand an der Wand, 140 mm geneigte Frontblende) über die in Vorderansicht und Grundriss gezeichnete Breite von 0,9 m; die Kaminteile und der Kragen sind quadratische Quader ihrer Grundrissflächen."
-        },
-        {
-          "en": "The grease filter is an extrusion of the filter outline with four round openings in which the four lamp discs sit: the two views draw lamps at two x positions and at two z positions, read as a 2 x 2 grid (two repeated pairs).",
-          "de": "Der Fettfilter ist eine Extrusion der Filterkontur mit vier runden Öffnungen, in denen die vier Lampenscheiben sitzen: die beiden Ansichten zeigen Lampen an zwei x-Lagen und an zwei z-Lagen, gelesen als Raster 2 x 2 (zwei wiederholte Paare)."
-        },
-        {
-          "en": "The canopy is modelled as a solid body (not a hollow shell); hairline details (panel edge, lip, seam) are not modelled.",
-          "de": "Die Haube ist als Vollkörper modelliert (keine Hohlschale); Haarliniendetails (Blendenkante, Lippe, Naht) werden nicht modelliert."
-        }
-      ]
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "canopy",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0.025], [0.5, 0.025], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": -0.435,
+            "to": 0.435,
+            "holes": [
+              [[0.015, 0.04], [0.485, 0.04], [0.485, 0.05519], [0.39228, 0.185], [0.015, 0.185]]
+            ]
+          },
+          {
+            "id": "end-l",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0.025], [0.5, 0.025], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": -0.45,
+            "to": -0.435
+          },
+          {
+            "id": "end-r",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0.025], [0.5, 0.025], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": 0.435,
+            "to": 0.45
+          },
+          {
+            "id": "filter",
+            "bone": "canopy",
+            "material": "filter-mesh",
+            "role": "body",
+            "tone": 0.5,
+            "kind": "extrude",
+            "profile": [[-0.43, 0.02], [0.43, 0.02], [0.43, 0.48], [-0.43, 0.48]],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.025,
+            "holes": [
+              [
+                [-0.167, 0.1],
+                [-0.17142, 0.1165],
+                [-0.1835, 0.12858],
+                [-0.2, 0.133],
+                [-0.2165, 0.12858],
+                [-0.22858, 0.1165],
+                [-0.233, 0.1],
+                [-0.22858, 0.0835],
+                [-0.2165, 0.07142],
+                [-0.2, 0.067],
+                [-0.1835, 0.07142],
+                [-0.17142, 0.0835]
+              ],
+              [
+                [-0.167, 0.37],
+                [-0.17142, 0.3865],
+                [-0.1835, 0.39858],
+                [-0.2, 0.403],
+                [-0.2165, 0.39858],
+                [-0.22858, 0.3865],
+                [-0.233, 0.37],
+                [-0.22858, 0.3535],
+                [-0.2165, 0.34142],
+                [-0.2, 0.337],
+                [-0.1835, 0.34142],
+                [-0.17142, 0.3535]
+              ],
+              [
+                [0.233, 0.1],
+                [0.22858, 0.1165],
+                [0.2165, 0.12858],
+                [0.2, 0.133],
+                [0.1835, 0.12858],
+                [0.17142, 0.1165],
+                [0.167, 0.1],
+                [0.17142, 0.0835],
+                [0.1835, 0.07142],
+                [0.2, 0.067],
+                [0.2165, 0.07142],
+                [0.22858, 0.0835]
+              ],
+              [
+                [0.233, 0.37],
+                [0.22858, 0.3865],
+                [0.2165, 0.39858],
+                [0.2, 0.403],
+                [0.1835, 0.39858],
+                [0.17142, 0.3865],
+                [0.167, 0.37],
+                [0.17142, 0.3535],
+                [0.1835, 0.34142],
+                [0.2, 0.337],
+                [0.2165, 0.34142],
+                [0.22858, 0.3535]
+              ]
+            ]
+          },
+          {
+            "id": "lamp-l",
+            "bone": "canopy",
+            "material": "lamp-diffuser",
+            "role": "detail",
+            "tone": 0.95,
+            "kind": "extrude",
+            "profile": [
+              [-0.2, 0.13],
+              [-0.19224, 0.12898],
+              [-0.185, 0.12598],
+              [-0.17879, 0.12121],
+              [-0.17402, 0.115],
+              [-0.17102, 0.10776],
+              [-0.17, 0.1],
+              [-0.17102, 0.09224],
+              [-0.17402, 0.085],
+              [-0.17879, 0.07879],
+              [-0.185, 0.07402],
+              [-0.19224, 0.07102],
+              [-0.2, 0.07],
+              [-0.20776, 0.07102],
+              [-0.215, 0.07402],
+              [-0.22121, 0.07879],
+              [-0.22598, 0.085],
+              [-0.22898, 0.09224],
+              [-0.23, 0.1],
+              [-0.22898, 0.10776],
+              [-0.22598, 0.115],
+              [-0.22121, 0.12121],
+              [-0.215, 0.12598],
+              [-0.20776, 0.12898]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.016,
+            "repeat": {
+              "count": 2,
+              "translation": [0.27, 0, 0]
+            }
+          },
+          {
+            "id": "lamp-r",
+            "bone": "canopy",
+            "material": "lamp-diffuser",
+            "role": "detail",
+            "tone": 0.95,
+            "kind": "extrude",
+            "profile": [
+              [0.2, 0.13],
+              [0.20776, 0.12898],
+              [0.215, 0.12598],
+              [0.22121, 0.12121],
+              [0.22598, 0.115],
+              [0.22898, 0.10776],
+              [0.23, 0.1],
+              [0.22898, 0.09224],
+              [0.22598, 0.085],
+              [0.22121, 0.07879],
+              [0.215, 0.07402],
+              [0.20776, 0.07102],
+              [0.2, 0.07],
+              [0.19224, 0.07102],
+              [0.185, 0.07402],
+              [0.17879, 0.07879],
+              [0.17402, 0.085],
+              [0.17102, 0.09224],
+              [0.17, 0.1],
+              [0.17102, 0.10776],
+              [0.17402, 0.115],
+              [0.17879, 0.12121],
+              [0.185, 0.12598],
+              [0.19224, 0.12898]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.016,
+            "repeat": {
+              "count": 2,
+              "translation": [0.27, 0, 0]
+            }
+          },
+          {
+            "id": "chimney-lower",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.148, 0.3],
+              [0.14941, 0.29941],
+              [0.15, 0.298],
+              [0.15, 0.002],
+              [0.14941, 0.00059],
+              [0.148, 0.0],
+              [-0.148, 0.0],
+              [-0.14941, 0.00059],
+              [-0.15, 0.002],
+              [-0.15, 0.298],
+              [-0.14941, 0.29941],
+              [-0.148, 0.3]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.35,
+            "holes": [
+              [
+                [0.1345, 0.285],
+                [0.13485, 0.28485],
+                [0.135, 0.2845],
+                [0.135, 0.0155],
+                [0.13485, 0.01515],
+                [0.1345, 0.015],
+                [-0.1345, 0.015],
+                [-0.13485, 0.01515],
+                [-0.135, 0.0155],
+                [-0.135, 0.2845],
+                [-0.13485, 0.28485],
+                [-0.1345, 0.285]
+              ]
+            ]
+          },
+          {
+            "id": "chimney-upper",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.133, 0.27],
+              [0.13441, 0.26941],
+              [0.135, 0.268],
+              [0.135, 0.002],
+              [0.13441, 0.00059],
+              [0.133, 0.0],
+              [-0.133, 0.0],
+              [-0.13441, 0.00059],
+              [-0.135, 0.002],
+              [-0.135, 0.268],
+              [-0.13441, 0.26941],
+              [-0.133, 0.27]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.35,
+            "holes": [
+              [
+                [0.1195, 0.255],
+                [0.11985, 0.25485],
+                [0.12, 0.2545],
+                [0.12, 0.0155],
+                [0.11985, 0.01515],
+                [0.1195, 0.015],
+                [-0.1195, 0.015],
+                [-0.11985, 0.01515],
+                [-0.12, 0.0155],
+                [-0.12, 0.2545],
+                [-0.11985, 0.25485],
+                [-0.1195, 0.255]
+              ]
+            ]
+          },
+          {
+            "id": "collar",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[-0.105, 0.03], [0.105, 0.03], [0.105, 0.24], [-0.105, 0.24]],
+            "plane": "zx",
+            "from": 0.35,
+            "to": 0.37,
+            "holes": [
+              [
+                [0.075, 0.135],
+                [0.06929, 0.1637],
+                [0.05303, 0.18803],
+                [0.0287, 0.20429],
+                [0.0, 0.21],
+                [-0.0287, 0.20429],
+                [-0.05303, 0.18803],
+                [-0.06929, 0.1637],
+                [-0.075, 0.135],
+                [-0.06929, 0.1063],
+                [-0.05303, 0.08197],
+                [-0.0287, 0.06571],
+                [-0.0, 0.06],
+                [0.0287, 0.06571],
+                [0.05303, 0.08197],
+                [0.06929, 0.1063]
+              ]
+            ]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-canopy",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0.025], [0.5, 0.025], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": -0.45,
+            "to": 0.45,
+            "sectionFaces": ["-u"],
+            "region": "canopy"
+          },
+          {
+            "id": "th-filter",
+            "of": "filter",
+            "region": "filter"
+          },
+          {
+            "id": "th-lamp-l",
+            "of": "lamp-l",
+            "region": "lamps"
+          },
+          {
+            "id": "th-lamp-r",
+            "of": "lamp-r",
+            "region": "lamps"
+          },
+          {
+            "id": "th-chimney-lower",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "loft",
+            "sections": [
+              {
+                "at": [0.15, 0.35, 0],
+                "rx": 0.1512,
+                "ry": 0.1512,
+                "exponent": 12
+              },
+              {
+                "at": [0.15, 0.0, 0],
+                "rx": 0.1512,
+                "ry": 0.1512,
+                "exponent": 12
+              }
+            ],
+            "region": "chimney"
+          },
+          {
+            "id": "th-chimney-upper",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "loft",
+            "sections": [
+              {
+                "at": [0.135, 0.35, 0],
+                "rx": 0.1362,
+                "ry": 0.1362,
+                "exponent": 12
+              },
+              {
+                "at": [0.135, 0.0, 0],
+                "rx": 0.1362,
+                "ry": 0.1362,
+                "exponent": 12
+              }
+            ],
+            "region": "chimney"
+          },
+          {
+            "id": "th-collar",
+            "of": "collar",
+            "region": "chimney"
+          },
+          {
+            "id": "th-extract",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.0, 0.21],
+              [0.0287, 0.20429],
+              [0.05303, 0.18803],
+              [0.06929, 0.1637],
+              [0.075, 0.135],
+              [0.06929, 0.1063],
+              [0.05303, 0.08197],
+              [0.0287, 0.06571],
+              [0.0, 0.06],
+              [-0.0287, 0.06571],
+              [-0.05303, 0.08197],
+              [-0.06929, 0.1063],
+              [-0.075, 0.135],
+              [-0.06929, 0.1637],
+              [-0.05303, 0.18803],
+              [-0.0287, 0.20429]
+            ],
+            "plane": "zx",
+            "from": 0.3575,
+            "to": 0.3725,
+            "sectionFaces": ["+v", "-v"],
+            "region": "chimney",
+            "tags": ["extract"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-canopy-shell",
+            "of": "canopy",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-canopy-end-l",
+            "of": "end-l",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-canopy-end-r",
+            "of": "end-r",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-chimney-lower",
+            "of": "chimney-lower",
+            "member": "chimney",
+            "part": "member"
+          },
+          {
+            "id": "member-chimney-upper",
+            "of": "chimney-upper",
+            "member": "chimney-top",
+            "part": "member"
+          },
+          {
+            "id": "joint-canopy-chimney",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.148, 0.3],
+              [0.14941, 0.29941],
+              [0.15, 0.298],
+              [0.15, 0.002],
+              [0.14941, 0.00059],
+              [0.148, 0.0],
+              [-0.148, 0.0],
+              [-0.14941, 0.00059],
+              [-0.15, 0.002],
+              [-0.15, 0.298],
+              [-0.14941, 0.29941],
+              [-0.148, 0.3]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.016,
+            "holes": [
+              [
+                [0.1435, 0.294],
+                [0.14385, 0.29385],
+                [0.144, 0.2935],
+                [0.144, 0.0065],
+                [0.14385, 0.00615],
+                [0.1435, 0.006],
+                [-0.1435, 0.006],
+                [-0.14385, 0.00615],
+                [-0.144, 0.0065],
+                [-0.144, 0.2935],
+                [-0.14385, 0.29385],
+                [-0.1435, 0.294]
+              ]
+            ],
+            "member": "chimney",
+            "part": "joint"
+          },
+          {
+            "id": "support-wall-hook",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.3,
+            "kind": "box",
+            "size": [0.02, 0.02, 0.3],
+            "transform": {
+              "translation": [0.01, 0.19, 0]
+            },
+            "anchor": "wall-hook",
+            "member": "canopy",
+            "part": "support"
+          },
+          {
+            "id": "support-wall-rest",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.3,
+            "kind": "box",
+            "size": [0.02, 0.02, 0.3],
+            "transform": {
+              "translation": [0.01, 0.03, 0]
+            },
+            "anchor": "wall-rest",
+            "member": "canopy",
+            "part": "support"
+          },
+          {
+            "id": "mass-canopy",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.6,
+            "kind": "ellipsoid",
+            "radii": [0.12, 0.06, 0.2],
+            "transform": {
+              "translation": [0.22, 0.1, 0]
+            },
+            "member": "canopy",
+            "part": "mass"
+          },
+          {
+            "id": "mass-chimney",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.6,
+            "kind": "ellipsoid",
+            "radii": [0.08, 0.08, 0.08],
+            "transform": {
+              "translation": [0.15, 0.17, 0]
+            },
+            "member": "chimney",
+            "part": "mass"
+          },
+          {
+            "id": "mass-chimney-top",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.6,
+            "kind": "ellipsoid",
+            "radii": [0.08, 0.08, 0.08],
+            "transform": {
+              "translation": [0.135, 0.17, 0]
+            },
+            "member": "chimney-top",
+            "part": "mass"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "1:100 keeps the hollow canopy (15 mm shell and end walls), the 25 mm perforated filter, four 60 mm lamp discs 16 mm deep, the two chimney tubes with 15 mm walls (the upper one 270 mm, as drawn) and the 20 mm collar plate. Smaller than 15 mm: plate lip, 20 mm flange of the lamp bezels, joint ring of the upper tube; filter holes are 12-gons.",
+            "de": "1:100 behält die hohle Haube (15-mm-Schale und Stirnwände), den 25 mm starken gelochten Filter, vier 60-mm-Lampenscheiben von 16 mm Tiefe, die beiden Kaminrohre mit 15 mm Wand (das obere 270 mm, wie gezeichnet) und die 20 mm starke Kragenplatte. Kleiner als 15 mm: Plattenlippe, Lampenrand, Gelenkring des oberen Rohres; die Filterlöcher sind 12-Ecke."
+          },
+          {
+            "en": "Thermal: the outer prism of the canopy, filter and lamps as references, chimney skins 1.2 mm outside the tube faces and the 15 mm extract disc; the exposed chimney surface leaves the back on the wall out.",
+            "de": "Thermik: das Außenprisma der Haube, Filter und Lampen als Verweise, Kaminhäute 1,2 mm außerhalb der Rohrflächen und die 15-mm-Abluftscheibe; die freie Kaminfläche lässt die Rückseite an der Wand weg."
+          },
+          {
+            "en": "Structure: shell, end walls and both tubes are the members, one flange ring remains (the upper joint is merged into the tube), hook and rest as 20 mm bars, three masses.",
+            "de": "Tragwerk: Schale, Stirnwände und beide Rohre sind die Stäbe, ein Flanschring bleibt (das obere Gelenk geht im Rohr auf), Haken und Anlage als 20-mm-Stäbe, drei Massen."
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "canopy",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0], [0.5, 0], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": -0.42,
+            "to": 0.42,
+            "holes": [
+              [[0.03, 0.03], [0.47, 0.03], [0.47, 0.05039], [0.38456, 0.17], [0.03, 0.17]]
+            ]
+          },
+          {
+            "id": "end-l",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0], [0.5, 0], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": -0.45,
+            "to": -0.42
+          },
+          {
+            "id": "end-r",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0], [0.5, 0], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": 0.42,
+            "to": 0.45
+          },
+          {
+            "id": "chimney-lower",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.148, 0.3],
+              [0.14941, 0.29941],
+              [0.15, 0.298],
+              [0.15, 0.002],
+              [0.14941, 0.00059],
+              [0.148, 0.0],
+              [-0.148, 0.0],
+              [-0.14941, 0.00059],
+              [-0.15, 0.002],
+              [-0.15, 0.298],
+              [-0.14941, 0.29941],
+              [-0.148, 0.3]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.35,
+            "holes": [
+              [
+                [0.1195, 0.27],
+                [0.11985, 0.26985],
+                [0.12, 0.2695],
+                [0.12, 0.0305],
+                [0.11985, 0.03015],
+                [0.1195, 0.03],
+                [-0.1195, 0.03],
+                [-0.11985, 0.03015],
+                [-0.12, 0.0305],
+                [-0.12, 0.2695],
+                [-0.11985, 0.26985],
+                [-0.1195, 0.27]
+              ]
+            ]
+          },
+          {
+            "id": "chimney-upper",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.148, 0.3],
+              [0.14941, 0.29941],
+              [0.15, 0.298],
+              [0.15, 0.002],
+              [0.14941, 0.00059],
+              [0.148, 0.0],
+              [-0.148, 0.0],
+              [-0.14941, 0.00059],
+              [-0.15, 0.002],
+              [-0.15, 0.298],
+              [-0.14941, 0.29941],
+              [-0.148, 0.3]
+            ],
+            "plane": "zx",
+            "from": 0.0,
+            "to": 0.37,
+            "holes": [
+              [
+                [0.1195, 0.27],
+                [0.11985, 0.26985],
+                [0.12, 0.2695],
+                [0.12, 0.0305],
+                [0.11985, 0.03015],
+                [0.1195, 0.03],
+                [-0.1195, 0.03],
+                [-0.11985, 0.03015],
+                [-0.12, 0.0305],
+                [-0.12, 0.2695],
+                [-0.11985, 0.26985],
+                [-0.1195, 0.27]
+              ]
+            ]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-canopy",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [[0, 0], [0.5, 0], [0.5, 0.06], [0.4, 0.2], [0, 0.2]],
+            "plane": "xy",
+            "from": -0.45,
+            "to": 0.45,
+            "sectionFaces": ["-u"],
+            "region": "canopy"
+          },
+          {
+            "id": "th-filter",
+            "bone": "canopy",
+            "material": "filter-mesh",
+            "role": "body",
+            "tone": 0.5,
+            "kind": "extrude",
+            "profile": [[-0.43, 0.0], [0.43, 0.0], [0.43, 0.46], [-0.43, 0.46]],
+            "plane": "zx",
+            "from": -0.0012,
+            "to": 0.03,
+            "region": "filter"
+          },
+          {
+            "id": "th-lamp-l",
+            "bone": "canopy",
+            "material": "lamp-diffuser",
+            "role": "detail",
+            "tone": 0.95,
+            "kind": "extrude",
+            "profile": [
+              [-0.2, 0.13],
+              [-0.185, 0.12598],
+              [-0.17402, 0.115],
+              [-0.17, 0.1],
+              [-0.17402, 0.085],
+              [-0.185, 0.07402],
+              [-0.2, 0.07],
+              [-0.215, 0.07402],
+              [-0.22598, 0.085],
+              [-0.23, 0.1],
+              [-0.22598, 0.115],
+              [-0.215, 0.12598]
+            ],
+            "plane": "zx",
+            "from": -0.0012,
+            "to": 0.0305,
+            "region": "lamps"
+          },
+          {
+            "id": "th-chimney-lower",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "loft",
+            "sections": [
+              {
+                "at": [0.15, 0.35, 0],
+                "rx": 0.1512,
+                "ry": 0.1512,
+                "exponent": 12
+              },
+              {
+                "at": [0.15, 0.0, 0],
+                "rx": 0.1512,
+                "ry": 0.1512,
+                "exponent": 12
+              }
+            ],
+            "region": "chimney"
+          },
+          {
+            "id": "th-chimney-upper",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.85,
+            "kind": "loft",
+            "sections": [
+              {
+                "at": [0.15, 0.37, 0],
+                "rx": 0.1512,
+                "ry": 0.1512,
+                "exponent": 12
+              },
+              {
+                "at": [0.15, 0.0, 0],
+                "rx": 0.1512,
+                "ry": 0.1512,
+                "exponent": 12
+              }
+            ],
+            "region": "chimney"
+          },
+          {
+            "id": "th-extract",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.85,
+            "kind": "extrude",
+            "profile": [
+              [0.0, 0.225],
+              [0.0375, 0.21495],
+              [0.06495, 0.1875],
+              [0.075, 0.15],
+              [0.06495, 0.1125],
+              [0.0375, 0.08505],
+              [0.0, 0.075],
+              [-0.0375, 0.08505],
+              [-0.06495, 0.1125],
+              [-0.075, 0.15],
+              [-0.06495, 0.1875],
+              [-0.0375, 0.21495]
+            ],
+            "plane": "zx",
+            "from": 0.355,
+            "to": 0.385,
+            "sectionFaces": ["+v", "-v"],
+            "region": "chimney",
+            "tags": ["extract"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-canopy-shell",
+            "of": "canopy",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-canopy-end-l",
+            "of": "end-l",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-canopy-end-r",
+            "of": "end-r",
+            "member": "canopy",
+            "part": "member"
+          },
+          {
+            "id": "member-chimney-lower",
+            "of": "chimney-lower",
+            "member": "chimney",
+            "part": "member"
+          },
+          {
+            "id": "member-chimney-upper",
+            "of": "chimney-upper",
+            "member": "chimney-top",
+            "part": "member"
+          },
+          {
+            "id": "support-wall-hook",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.3,
+            "kind": "box",
+            "size": [0.031, 0.031, 0.3],
+            "transform": {
+              "translation": [0.0155, 0.19, 0]
+            },
+            "anchor": "wall-hook",
+            "member": "canopy",
+            "part": "support"
+          },
+          {
+            "id": "support-wall-rest",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "body",
+            "tone": 0.3,
+            "kind": "box",
+            "size": [0.031, 0.031, 0.3],
+            "transform": {
+              "translation": [0.0155, 0.04, 0]
+            },
+            "anchor": "wall-rest",
+            "member": "canopy",
+            "part": "support"
+          },
+          {
+            "id": "mass-canopy",
+            "bone": "canopy",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.6,
+            "kind": "ellipsoid",
+            "radii": [0.12, 0.06, 0.2],
+            "transform": {
+              "translation": [0.22, 0.1, 0]
+            },
+            "member": "canopy",
+            "part": "mass"
+          },
+          {
+            "id": "mass-chimney",
+            "bone": "chimney",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.6,
+            "kind": "ellipsoid",
+            "radii": [0.08, 0.08, 0.08],
+            "transform": {
+              "translation": [0.15, 0.17, 0]
+            },
+            "member": "chimney",
+            "part": "mass"
+          },
+          {
+            "id": "mass-chimney-top",
+            "bone": "chimney-top",
+            "material": "stainless-steel",
+            "role": "detail",
+            "tone": 0.6,
+            "kind": "ellipsoid",
+            "radii": [0.08, 0.08, 0.08],
+            "transform": {
+              "translation": [0.15, 0.17, 0]
+            },
+            "member": "chimney-top",
+            "part": "mass"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "1:200 models canopy and chimney as three hollow masses of 30 mm sheet: the canopy (filter plate and lamps merged into its floor), the 300 mm lower tube and the 300 x 370 mm upper tube (collar merged). No joint rings.",
+            "de": "1:200 modelliert Haube und Kamin als drei hohle Massen aus 30-mm-Blech: die Haube (Filterplatte und Lampen gehen in ihrem Boden auf), das untere 300-mm-Rohr und das obere 300 x 370 mm Rohr (Kragen aufgegangen). Keine Gelenkringe."
+          },
+          {
+            "en": "Thermal: canopy prism, one filter plate and one lamp disc under the canopy floor, the two chimney skins and the 30 mm extract disc.",
+            "de": "Thermik: Haubenprisma, eine Filterplatte und eine Lampenscheibe unter dem Hauben-Boden, die beiden Kaminhäute und die 30-mm-Abluftscheibe."
+          },
+          {
+            "en": "Structure: the same five members as the bodies, 31 mm hook and rest, three masses.",
+            "de": "Tragwerk: dieselben fünf Stäbe wie die Körper, 31-mm-Haken und -Anlage, drei Massen."
+          }
+        ]
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500
+      }
     },
     "presentation": {
       "defaultPose": "extracting",

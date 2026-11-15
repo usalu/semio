@@ -1,7 +1,7 @@
 /** 📋️ Contract: module exporting `STYLING_PYTHON_POLICY_V1`, `StylingPythonRequestV1`, `readStylingPythonRequestV1`, `stylingPythonOutputV1` and more. */
 import{types}from"node:util";
 import{isAbsolute,join,resolve}from"node:path";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json" with { type: "json" };
 const requestSchema=structuredClone(schema.definitions.Request),wheelSchema=structuredClone(schema.definitions.WheelName);
 export const STYLING_PYTHON_POLICY_V1=Object.freeze({...schema.definitions.Policy.const,environmentKeys:Object.freeze([...schema.definitions.Policy.const.environmentKeys])});

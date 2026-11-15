@@ -1,0 +1,15 @@
+pre-run facts, taken 2026-11-14T23:40:05Z
+replica agent: running, started by me 0 times; health.json age 4 s
+replica code digest: "code":"eabbc92267329dbd39d8d05e0c8eceb1bcad083c0eea58c44805408a7d547bcc"; "bootVersion":6
+launcher: 1771439 -rwxr-xr-x 1 deck deck 20516143 2026-11-14 21:46:46.384754297 +0100 /home/deck/.local/bin/repo
+repo service host processes (pid ppid etime rss):
+2937655    1977       29:42 143724 /home
+last 8 lines of build-agent.log:
+2026-11-14T23:09:48.060Z worker sandbox: linux-sandbox confined network denied
+2026-11-14T23:09:48.066Z worker registered: 0f23375a-b90d-4786-9d88-f30674a6a5c7 cache http://192.168.178.70:6094
+2026-11-14T23:14:43.138Z graph-server: alive, 0 machines seen, 0 requests held, read none
+2026-11-14T23:19:43.327Z graph-server: alive, 0 machines seen, 0 requests held, read none
+2026-11-14T23:24:43.586Z graph-server: alive, 0 machines seen, 0 requests held, read none
+2026-11-14T23:29:43.837Z graph-server: alive, 0 machines seen, 0 requests held, read none
+2026-11-14T23:34:44.075Z graph-server: alive, 0 machines seen, 0 requests held, read none
+2026-11-14T23:39:44.337Z graph-server: alive, 0 machines seen, 0 requests held, read none

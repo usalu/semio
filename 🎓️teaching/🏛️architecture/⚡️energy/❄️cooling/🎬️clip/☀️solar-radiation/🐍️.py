@@ -49,8 +49,8 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 load_vo_timing = _manim_module.load_vo_timing
@@ -63,8 +63,7 @@ radiation_ray = _manim_module.radiation_ray
 ripples = _manim_module.ripples
 pulse_flashes = _manim_module.pulse_flashes
 
-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
-set_vo_language("de")
+# 🗣️ Measured clause durations live in vo_timing.json.
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -96,10 +95,10 @@ def _din_ref(text: str):
 _heating_solar = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🔥️heating.🎬️clip.☀️solar-gains.🐍️")
 
 
-def solar_cooling_example() -> dict[str, float]:
-    """🪟 Apply the earlier heating window to the summer design irradiance and external blind."""
-    values = {"area": _heating_solar.WIN_A, "glass_share": _heating_solar.FF_GLASS,
-              "glass_transmittance": _heating_solar.G_VALUE, "shading": 0.15, "irradiance": 800.0}
+def solar_cooling_example(area: float | None = None) -> dict[str, float]:
+    """🪟 Apply the earlier heating window (or ``area`` of glazing) to the summer design irradiance and the external blind ``F_C`` of DIN 4108-2."""
+    values = {"area": _heating_solar.WIN_A if area is None else area, "glass_share": _heating_solar.FF_GLASS,
+              "glass_transmittance": _heating_solar.G_VALUE, "shading": _heating_solar.FC_BLIND, "irradiance": 800.0}
     values["load"] = values["area"] * values["glass_share"] * values["glass_transmittance"] * values["shading"] * values["irradiance"]
     return values
 
@@ -172,21 +171,24 @@ def _facade_irradiance(name: str, h: float) -> float:
     if h <= 6.0 or h >= 18.0:
         return 0.0
     a, _ = _sun_angles(h)
-    return 950.0 * _sun_atten(h) * _facade_direct(name, h) + 110.0 * float(np.sin(a))
+    return 976.0 * _sun_atten(h) * _facade_direct(name, h) + 110.0 * float(np.sin(a))
 #endregion
 
 #endregion
 
 
-#region Beat1 – Maximum Solar Irradiance (I_S,max)
+#region Beat1 – Maximum Solar Irradiance (I_s,max)
 class Beat1_SolarIrradiance(Scene):
     NARRATION = [
         ("intro",
          "Now we tackle the most significant summer heat source: direct solar radiation.",
          "Die größte sommerliche Wärmequelle: direkte Sonnenstrahlung."),
+        ("em",
+         "Sunlight is an electromagnetic wave: visible light and infrared heat radiation carry its energy to the building.",
+         "Sonnenlicht ist eine elektromagnetische Welle: sichtbares Licht und infrarote Wärmestrahlung tragen die Energie zum Gebäude."),
         ("irradiance",
-         "Everything starts with the maximum solar irradiance, I S max, measured in watts per square meter.",
-         "Alles beginnt mit I S max — der maximalen Bestrahlungsstärke in Watt pro Quadratmeter."),
+         r"Everything starts with the maximum solar irradiance $I_{\mathrm{s,max}}$, measured in $\mathrm{W/m^2}$.",
+         r"Alles beginnt mit der maximalen Bestrahlungsstärke $I_{\mathrm{s,max}}$ in $\mathrm{W/m^2}$."),
         ("chart",
          "Sun: east–south–west. Facade power peaks east in the morning, south at noon, west in the afternoon; north stays low.",
          "Die Sonne wandert von Ost über Süd nach West und zeichnet die Kurven:\nOst am Morgen, Süd am Mittag, West am Nachmittag, Nord bleibt niedrig."),
@@ -197,7 +199,7 @@ class Beat1_SolarIrradiance(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Direct solar radiation", "Direkte Sonnenstrahlung"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-2078", "solar")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -233,9 +235,10 @@ class Beat1_SolarIrradiance(Scene):
             Text(str(v), font_size=LABEL_FONT_SIZE, color=P_WHITE).next_to(axes.c2p(6, v), LEFT, buff=0.14)
             for v in (300, 600, 900)
         ])
-        y_axis_name = math_label(r"\mathrm{W/m^{2}}", size=BODY_FONT_SIZE, color=P_PRIMARY)
-        y_axis_name.next_to(axes.c2p(6, 900), UP, buff=0.16).shift(LEFT * 0.15)
-        x_axis_name = Text(tr("Solar time", "Sonnenzeit"), font_size=BODY_FONT_SIZE, color=P_PRIMARY)
+        y_axis_name = math_label(tr(r"\text{Irradiance}\;\text{in}\;\mathrm{W/m^{2}}", r"\text{Bestrahlungsstärke}\;\text{in}\;\mathrm{W/m^{2}}"),
+                                 size=LABEL_FONT_SIZE + 2, color=P_PRIMARY)
+        y_axis_name.next_to(axes.c2p(6, 900), UP, buff=0.5, aligned_edge=LEFT).shift(LEFT * 0.4)
+        x_axis_name = Text(tr("Solar time in h", "Sonnenzeit in h"), font_size=BODY_FONT_SIZE, color=P_PRIMARY)
         x_axis_name.next_to(axes.c2p(12, 0), DOWN, buff=0.36)
 
         cube_c = np.array([-4.2, -1.3, 0.0])
@@ -321,19 +324,32 @@ class Beat1_SolarIrradiance(Scene):
             for n in colors
         ])
 
-        south_peak = int(round(max(float(_facade_irradiance("S", h)) for h in np.linspace(6.0, 18.0, 90))))
+        peak = int(round(max(float(_facade_irradiance(n, h)) for n in ("Horiz", "O", "S", "W", "N") for h in np.linspace(6.0, 18.0, 181))))
         peak_tr = ValueTracker(0.0)
         eq_row, eq_box, eq_items = math_panel([
-            ("i", r"I_{S,max}", P_YELLOW), (None, "=", P_WHITE),
-            (None, rf"{label_number(south_peak)}", P_YELLOW), (None, r"\;[\mathrm{W/m^{2}}]", P_PRIMARY),
+            ("i", r"I_{\mathrm{s,max}}", P_YELLOW), (None, "=", P_WHITE),
+            (None, rf"{label_number(peak)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}", P_YELLOW),
         ], size=BODY_FONT_SIZE, color=P_YELLOW)
+
+        first_start, first_hit = ray_paths[0][0], ray_paths[0][1]
+        em_dir = (first_hit - first_start) / np.linalg.norm(first_hit - first_start)
+        em_normal = np.array([-em_dir[1], em_dir[0], 0.0])
+        em_wave = ParametricFunction(
+            lambda t: first_start + em_dir * t + em_normal * 0.09 * np.sin(t * 9.0),
+            t_range=[0.0, 2.4], color=P_YELLOW, stroke_width=3.2,
+        )
+        em_label = Text(tr("Light + heat radiation:\nelectromagnetic wave", "Licht + Wärmestrahlung:\nelektromagnetische Welle"),
+                        font_size=LABEL_FONT_SIZE, color=P_YELLOW, line_spacing=0.8)
+        em_label.move_to(np.array([-4.9, 2.15, 0.0]))
 
         self.play(Create(building), run_time=1.6)
         self.play(FadeIn(sun, scale=0.7), run_time=1.0)
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.6 + 1.0)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "em"))
+        self.play(*[shine(r) for r in ray_sets], Create(em_wave), FadeIn(em_label), run_time=1.4)
+        hold_for(self, self.NARRATION, "em", used=1.4, during=sunshine)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "irradiance"))
-        self.play(*[shine(r) for r in ray_sets], run_time=1.4)
-        self.play(FadeIn(irr_anchor, shift=DOWN * 0.1), *sunshine(0.9), run_time=0.9)
+        self.play(FadeIn(irr_anchor, shift=DOWN * 0.1), FadeOut(em_wave), FadeOut(em_label), *sunshine(0.9), run_time=0.9)
         hold_for(self, self.NARRATION, "irradiance", during=sunshine)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "chart"))
@@ -352,19 +368,19 @@ class Beat1_SolarIrradiance(Scene):
         self.play(FadeIn(path_tags), FadeIn(compass), run_time=0.5)
         sun.add_updater(lambda m: m.move_to(sun_screen(h_tr.get_value())))
         i_read = math_readout(
-            lambda: rf"I_{{S,max}} = {label_number(peak_tr.get_value())}",
-            np.array([2.15, 2.28, 0.0]),
-            size=LABEL_FONT_SIZE, color=P_CYAN, edge="left",
+            lambda: rf"I_{{\mathrm{{s,max}}}} = {label_number(peak_tr.get_value())}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}",
+            np.array([6.4, 2.0, 0.0]),
+            size=LABEL_FONT_SIZE, color=P_CYAN, edge="right",
         )
 
         def _raise_peak(_mob):
-            peak_tr.set_value(max(peak_tr.get_value(), _facade_irradiance("S", h_tr.get_value())))
+            peak_tr.set_value(max(peak_tr.get_value(), *(_facade_irradiance(n, h_tr.get_value()) for n in colors)))
 
         i_read.add_updater(_raise_peak)
         self.add(live_curves, time_cursor, i_read)
         self.play(h_tr.animate.set_value(18.0), run_time=8.0, rate_func=linear)
         i_read.remove_updater(_raise_peak)
-        peak_tr.set_value(south_peak)
+        peak_tr.set_value(peak)
         sun.clear_updaters()
         for face in faces.values():
             face.clear_updaters()
@@ -395,18 +411,18 @@ class Beat1_SolarIrradiance(Scene):
 
 
 
-#region Beat5 – Final Solar Cooling Load (Q̇_S,tr)
+#region Beat5 – Final Solar Cooling Load (Q̇_S)
 class Beat5_SolarCoolingLoad(Scene):
     NARRATION = [
         ("intro",
-         "Solar load: irradiance × gross area × three dimensionless factors—frame, shading, glass transmittance.",
-         "Mit dem Fenster aus dem Heizvideo: Bestrahlungsstärke mal Fläche, Glasanteil, Verschattung und g-Wert."),
+         r"Solar load: irradiance times area, times glazed fraction $F_{\mathrm{F}}$, sun protection $F_{\mathrm{C}}$ and solar energy transmittance $g_\perp$.",
+         r"Mit dem Fenster aus dem Heizvideo: Bestrahlungsstärke mal Fläche, mal Glasanteil $F_{\mathrm{F}}$, Sonnenschutz $F_{\mathrm{C}}$ und Gesamtenergiedurchlassgrad $g_\perp$."),
         ("result",
-         "This is Q-dot S,tr — the solar cooling load through the glazing.",
-         "Das ist Q-Punkt-S,tr — die solare Kühllast durch die Verglasung."),
+         r"This is the solar cooling load $\dot{Q}_{\mathrm{S}}$ through the glazing: about $97\,\mathrm{W}$ for this window.",
+         r"Das ist die solare Kühllast $\dot{Q}_{\mathrm{S}}$ durch die Verglasung: etwa $97\,\mathrm{W}$ für dieses Fenster."),
         ("meaning",
-         "It is the precise thermal wattage our mechanical system must actively remove to prevent the room from overheating.",
-         "Genau diese Leistung muss die Anlage aktiv abführen."),
+         "It is the heat flow our cooling technology must actively remove to prevent the room from overheating.",
+         "Genau diesen Wärmestrom muss die Kühltechnik aktiv abführen."),
     ]
 
     def construct(self):
@@ -414,7 +430,7 @@ class Beat5_SolarCoolingLoad(Scene):
         example = solar_cooling_example()
 
         subtitle = section_heading(tr("Solar cooling load", "Solare Kühllast"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("din-4108-2", "fc")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -433,13 +449,13 @@ class Beat5_SolarCoolingLoad(Scene):
                     pulse_flashes(ray_paths, P_YELLOW, repeats=max(1, int(rt / 1.6)))]
 
         eq_row, eq_box, eq_items = math_panel([
-            ("q", r"\dot{Q}_{S,tr}", P_YELLOW), (None, "=", P_WHITE),
+            ("q", r"\dot{Q}_{\mathrm{S}}", P_YELLOW), (None, "=", P_WHITE),
             ("A", "A", P_BLUE), (None, r"\cdot", P_WHITE),
-            ("ff", r"F_{f}", P_WHITE), (None, r"\cdot", P_WHITE),
-            ("fv", r"F_{sh}", P_TEAL), (None, r"\cdot", P_WHITE),
-            ("g", r"g", P_RED), (None, r"\cdot", P_WHITE),
-            ("i", r"I_{S,max}", P_YELLOW),
-            (None, r"\;[\mathrm{W}]", P_PRIMARY),
+            ("ff", r"F_{\mathrm{F}}", P_WHITE), (None, r"\cdot", P_WHITE),
+            ("fv", r"F_{\mathrm{C}}", P_TEAL), (None, r"\cdot", P_WHITE),
+            ("g", r"g_\perp", P_RED), (None, r"\cdot", P_WHITE),
+            ("i", r"I_{\mathrm{s,max}}", P_YELLOW),
+            (None, r"\quad\dot{Q}_{\mathrm{S}}\;\text{in}\;\mathrm{W}", P_PRIMARY),
         ], color=P_YELLOW, buff=0.12)
 
         self.play(Create(room["group"]), run_time=1.8)
@@ -477,11 +493,11 @@ class Beat5_SolarCoolingLoad(Scene):
         self.play(FadeIn(area), run_time=0.5)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "result"))
         self.play(Create(eq_box), FadeIn(eq_row), Indicate(room["glass"], color=P_BLUE), *solar_load(0.8), run_time=0.8)
-        ff_read = _factor_read(lambda: rf"F_{{f}} = {label_number(ff_tr.get_value(), 2)}", P_WHITE)
+        ff_read = _factor_read(lambda: rf"F_{{\mathrm{{F}}}} = {label_number(ff_tr.get_value(), 2)}", P_WHITE)
         self.add(ff_read)
         self.play(Create(frame), ff_tr.animate.set_value(ff_target), *solar_load(1.0), run_time=1.0)
         self.play(FadeOut(ff_read), run_time=0.2)
-        fv_read = _factor_read(lambda: rf"F_{{sh}} = {label_number(fv_tr.get_value(), 2)}", P_TEAL)
+        fv_read = _factor_read(lambda: rf"F_{{\mathrm{{C}}}} = {label_number(fv_tr.get_value(), 2)}", P_TEAL)
         self.add(fv_read)
         slats.shift(UP * 1.1).set_opacity(0)
         self.add(slats)
@@ -492,7 +508,8 @@ class Beat5_SolarCoolingLoad(Scene):
             run_time=1.2,
         )
         self.play(FadeOut(fv_read), run_time=0.2)
-        g_read = _factor_read(lambda: rf"g = {label_number(g_tr.get_value(), 2)}", P_RED)
+        g_read = math_readout(lambda: rf"g_\perp = {label_number(g_tr.get_value(), 2)}",
+                              np.array([gx + 0.3, win_mid_y, 0.0]), size=BODY_FONT_SIZE, color=P_RED, edge="left")
         self.add(g_read)
         self.play(
             room["glass"].animate.set_fill(P_ORANGE, opacity=0.45),
@@ -501,11 +518,15 @@ class Beat5_SolarCoolingLoad(Scene):
             run_time=1.0,
         )
         self.play(FadeOut(g_read), run_time=0.2)
-        i_read = _factor_read(lambda: rf"I_{{S,max}} = {label_number(i_tr.get_value())}", P_YELLOW)
+        i_read = _factor_read(lambda: rf"I_{{\mathrm{{s,max}}}} = {label_number(i_tr.get_value())}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}", P_YELLOW)
         self.add(i_read)
         self.play(Indicate(sun, color=P_YELLOW), i_tr.animate.set_value(example["irradiance"]), *solar_load(1.0), run_time=1.0)
         self.play(FadeOut(i_read), run_time=0.2)
-        result = math_label(rf"\dot{{Q}}_{{S,tr}} = {label_number(example['load'], 1)}\,\mathrm{{W}}", read_at + DOWN * 0.7, size=BODY_FONT_SIZE, color=P_YELLOW, edge="right")
+        result = math_label(
+            rf"\dot{{Q}}_{{\mathrm{{S}}}} = {label_number(example['area'], 2)}\,\mathrm{{m^2}} \cdot {label_number(example['glass_share'], 2)}"
+            rf" \cdot {label_number(example['shading'], 2)} \cdot {label_number(example['glass_transmittance'], 2)}"
+            rf" \cdot {label_number(example['irradiance'])}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^2}}}} \approx {label_number(round(example['load']))}\,\mathrm{{W}}",
+            read_at + DOWN * 0.7, size=LABEL_FONT_SIZE + 2, color=P_YELLOW, edge="right")
         self.play(FadeIn(result), run_time=0.5)
         ring = highlight_param(eq_items, "q", color=P_YELLOW)
         self.play(Create(ring), room["air"].animate.set_fill(P_RED, opacity=0.16), *solar_load(0.8), run_time=0.8)

@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "scene": "Beat1_Fahrplan",
+  "frame_span": 13.4,
+  "videos": [
+    {
+      "id": "physical_fundamentals",
+      "family": "🧲️physics",
+      "steps": ["leistung", "erhaltung", "waermepumpe", "strahlung", "masse", "latent"],
+      "bracket_last": null,
+      "handovers": [],
+      "receives": {}
+    },
+    {
+      "id": "ventilation",
+      "family": "🌬️ventilation",
+      "steps": ["bedarf", "menge", "waerme", "natuerlich", "mechanisch", "uebergabe"],
+      "bracket_last": 4,
+      "handovers": ["Heizung", "Kühlung"],
+      "receives": {}
+    },
+    {
+      "id": "heating",
+      "family": "🔥️heating",
+      "steps": ["grundlagen", "leitung", "lueftung", "intern", "solar", "bilanz"],
+      "bracket_last": null,
+      "handovers": ["Energiebilanz"],
+      "receives": {"lueftung": ["Lüftung"]}
+    },
+    {
+      "id": "cooling",
+      "family": "❄️cooling",
+      "steps": ["vergleich", "intern", "transmission", "solar", "system", "strategie"],
+      "bracket_last": null,
+      "handovers": ["Energiebilanz"],
+      "receives": {"transmission": ["Lüftung"]}
+    },
+    {
+      "id": "energy_balance",
+      "family": "📊️demand",
+      "steps": ["bilanz", "regelwerk", "leistung", "anlage", "primaer", "ausweis", "praxis"],
+      "bracket_last": null,
+      "handovers": [],
+      "receives": {"bilanz": ["Heizung", "Kühlung"]}
+    }
+  ],
+  "rejected": [
+    {"reason": "narration keys differ from the steps", "narration_keys": ["intro", "a", "x"], "step_keys": ["a", "b"]},
+    {"reason": "no intro clause", "narration_keys": ["a", "b"], "step_keys": ["a", "b"]},
+    {"reason": "a single step is no roadmap", "narration_keys": ["intro", "a"], "step_keys": ["a"]}
+  ]
+}

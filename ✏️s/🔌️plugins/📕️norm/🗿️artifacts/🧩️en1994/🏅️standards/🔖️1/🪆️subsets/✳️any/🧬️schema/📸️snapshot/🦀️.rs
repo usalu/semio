@@ -96,6 +96,13 @@ pub struct En1994Snapshot {
     pub cases: Vec<CaseRow>,
 }
 
+/// 🌱 Initial subject of a live evaluation session: the worked example.
+impl Default for En1994Snapshot {
+    fn default() -> Self {
+        Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En)
+    }
+}
+
 impl En1994Snapshot {
     /// 🌱 The showcase building document of the given annex; the annex is a normative choice and never defaulted.
     pub fn example(annex: AnnexChoice) -> Self {

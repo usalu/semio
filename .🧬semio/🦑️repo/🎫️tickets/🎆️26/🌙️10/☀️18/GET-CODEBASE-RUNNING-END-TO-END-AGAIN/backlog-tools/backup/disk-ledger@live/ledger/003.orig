@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "maximumBytes": 105226698752,
+  "maximumControlBytes": 1048576,
+  "elastic": {
+    "graph": {
+      "needBytes": 3221225472,
+      "headroomPercent": 300,
+      "hostFreeReservePercent": 50,
+      "alignBytes": 1073741824,
+      "automatic": true,
+      "pressureFreeBytes": 1073741824,
+      "maximumBytes": 25769803776
+    },
+    "products": {
+      "needBytes": 22548578304,
+      "headroomPercent": 50,
+      "hostFreeReservePercent": 50,
+      "alignBytes": 1073741824,
+      "automatic": true,
+      "pressureFreeBytes": 2147483648,
+      "maximumBytes": 42949672960
+    },
+    "rust": {
+      "needBytes": 51539607552,
+      "headroomPercent": 25,
+      "hostFreeReservePercent": 50,
+      "alignBytes": 1073741824,
+      "automatic": true,
+      "pressureFreeBytes": 6442450944,
+      "maximumBytes": 68719476736
+    }
+  },
+  "partitions": {
+    "rust": {
+      "directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed",
+      "capacityBytes": 51539607552,
+      "maximumLogicalBytes": 51538558976
+    },
+    "tools": {
+      "directory": ".cache/b/t",
+      "capacityBytes": 8589934592,
+      "maximumLogicalBytes": 68719476736
+    },
+    "graph": {
+      "directory": ".cache/b/g",
+      "capacityBytes": 6442450944,
+      "maximumLogicalBytes": 6441402368
+    },
+    "dependencies": {
+      "directory": ".cache/b/d",
+      "capacityBytes": 8589934592,
+      "maximumLogicalBytes": 8588886016
+    },
+    "products": {
+      "directory": ".cache/b/p",
+      "capacityBytes": 25769803776,
+      "maximumLogicalBytes": 25768755200
+    },
+    "diagnostics": {
+      "directory": ".cache/b/o",
+      "capacityBytes": 2147483648,
+      "maximumLogicalBytes": 2146435072
+    },
+    "nx": {
+      "directory": ".cache/b/n",
+      "capacityBytes": 1610612736,
+      "maximumArtifactBytes": 536870912,
+      "maximumLogicalBytes": 1609564160
+    },
+    "leases": {
+      "directory": ".cache/b/l",
+      "capacityBytes": 67108864,
+      "maximumLogicalBytes": 62914560
+    }
+  }
+}

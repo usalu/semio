@@ -112,8 +112,29 @@ pub fn bracketed_root(mut f: impl FnMut(f64) -> f64, mut lo: f64, mut hi: f64, m
             }
             side = 1;
         }
-        if (hi - lo).abs() <= STEP_TOLERANCE * (1.0 + x.abs()) || (i > 0 && (x - previous).abs() <= STEP_TOLERANCE * (1.0 + x.abs())) {
+        let width = STEP_TOLERANCE * (1.0 + x.abs());
+        if (hi - lo).abs() <= width {
             break;
+        }
+        if i > 0 && (x - previous).abs() <= width {
+            let probe = if value < 0.0 { x + width } else { x - width };
+            let beyond = f(probe);
+            if (value < 0.0) == (beyond < 0.0) {
+                if value < 0.0 {
+                    lo = probe;
+                    f_lo = beyond;
+                } else {
+                    hi = probe;
+                    f_hi = beyond;
+                }
+            } else {
+                if value < 0.0 {
+                    hi = probe;
+                } else {
+                    lo = probe;
+                }
+                break;
+            }
         }
     }
     0.5 * (lo + hi)

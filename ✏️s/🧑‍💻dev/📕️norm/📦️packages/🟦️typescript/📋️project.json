@@ -4,7 +4,7 @@
   "sourceRoot": "✏️s/🧑‍💻dev/📕️norm",
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/*",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🧑‍💻dev/🤖️generated\"" }, "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/**/*"
     ]

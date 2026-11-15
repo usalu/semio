@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-15T02:11:27.760161+00:00",
+  "round": 14,
+  "phase": "Waiting for replica status fleet agreement before first try; no round-14 bootstrap started.",
+  "code": "d399114215f574cd93e191090e959fc4f901cfe0f2cd44963ab8d2b8d4046284",
+  "replica_pid": 18021,
+  "status_session": 32698,
+  "last_native_rc": 75
+}

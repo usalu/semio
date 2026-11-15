@@ -1,6 +1,6 @@
 /** 🧬️ The owned contract of the model viewer: GPU-ready scene buffers, the per-frame draw list and the render backend interface that WebGL2, a software rasteriser and any later backend (WebGPU) implement. Domain-neutral, engine-neutral, no runtime dependency.
  * @see ../../🧬️schema/🟦️.ts */
-import type { Issue, ModelDocument, Operation, PrimitiveSolid, Slug } from "../../🧬️schema/🟦️.ts";
+import type { Issue, ModelDocument, Operation, PrimitiveSolid, Slug, Text } from "../../🧬️schema/🟦️.ts";
 import type { PoseSelector } from "../../🦴️mechanism/🟦️.ts";
 import type { V3 } from "../../🧮️math/🟦️.ts";
 
@@ -31,7 +31,12 @@ export type ScenePrimitive = {
   readonly bounds: Bounds;
   readonly tags: readonly Slug[];
   readonly solids: readonly PrimitiveSolid[];
+  readonly scenes: readonly number[];
 };
+/** 🎞️ One model scene of the prepared document: its mesh-carrying nodes as indices into `Scene.nodeIds` (an implicit scene holds every node that carries a mesh). */
+export type SceneSet = { readonly id: Slug; readonly title: Text; readonly nodes: ReadonlySet<number> };
+/** 👁️ Whether a primitive belongs to the scene `sceneIndex` (`-1`: every scene). */
+export const inScene = (primitive: Pick<ScenePrimitive, "scenes">, sceneIndex: number): boolean => sceneIndex < 0 || primitive.scenes.includes(sceneIndex);
 /** 🪢️ A skin: joint node indices and inverse bind matrices; `paletteOffset` is its first row in the joint palette. */
 export type SceneSkin = { readonly id: Slug; readonly jointNodes: Int32Array; readonly inverseBind: Float32Array; readonly paletteOffset: number };
 /** 🌈️ A material of the document with its source values. */
@@ -53,6 +58,7 @@ export type Scene = {
   readonly primitives: readonly ScenePrimitive[];
   readonly skins: readonly SceneSkin[];
   readonly jointCount: number;
+  readonly scenes: readonly SceneSet[];
 };
 
 /** 🎬️ One entry of the draw list. `pass`: 0 opaque triangles, 1 blended triangles back to front, 2 lines. `matrixOffset` indexes `Frame.matrices`; skinned draws point at the trailing identity. `paletteOffset` is the first palette row of the skin, `-1` when rigid. */
@@ -73,6 +79,7 @@ export type Frame = {
   drawCount: number;
   light: Light;
   issues: Issue[];
+  sceneIndex: number;
 };
 
 /** 🖌️ Appearance of one render: straight (non-premultiplied) sRGB background rgba. */

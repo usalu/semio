@@ -335,7 +335,8 @@
       "pileLowerVsMS": 0.0,
       "pileMomentRdNm": 0.0,
       "baseFrictionAngleDeg": 0.0,
-      "basePorePressurePa": 0.0
+      "basePorePressurePa": 0.0,
+      "pileAxialLoadN": 0.0
     },
     {
       "id": "pad-1",
@@ -369,7 +370,8 @@
       "pileLowerVsMS": 0.0,
       "pileMomentRdNm": 0.0,
       "baseFrictionAngleDeg": 0.0,
-      "basePorePressurePa": 0.0
+      "basePorePressurePa": 0.0,
+      "pileAxialLoadN": 0.0
     },
     {
       "id": "pad-2",
@@ -403,7 +405,8 @@
       "pileLowerVsMS": 0.0,
       "pileMomentRdNm": 0.0,
       "baseFrictionAngleDeg": 0.0,
-      "basePorePressurePa": 0.0
+      "basePorePressurePa": 0.0,
+      "pileAxialLoadN": 0.0
     }
   ],
   "retainingWalls": [

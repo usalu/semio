@@ -35,6 +35,8 @@ semio-framework-value-derive = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 pack = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
 
 [features]
 test-support = ["dep:serde", "semio-s-plugin-norm-compliance/test-support"]

@@ -1,0 +1,19 @@
+{
+  "useful": 100,
+  "stages": {"emission": 1.04, "distribution": 1.08, "storage": 1.06, "gas": 1.18, "heatPump": 0.26},
+  "final": {"gas": 140, "heatPump": 31},
+  "factors": {"gas": 1.1, "electricity": 1.8, "wood": 0.2, "ambient": 0.0},
+  "primary": {"gas": 154, "heatPump": 56},
+  "plantFigure": {"gas": 1.54, "heatPump": 0.56},
+  "heatPumpSplit": {"ambient": 74, "electricity": 26, "losses": 5},
+  "limit": {"reference": 120, "share": 0.55, "value": 66},
+  "forbiddenPatterns": [
+    "\\[\\\\mathrm\\{[^}]*\\}\\]",
+    "\\\\;\\[\\\\mathrm",
+    "Delta[- ]?Theta",
+    "Eta h",
+    "\\bRho\\b",
+    "\\be_p\\b",
+    "\\bf_p\\b"
+  ]
+}

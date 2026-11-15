@@ -69,7 +69,8 @@
           "pileLowerVsMS": null,
           "pileMomentRdNm": null,
           "baseFrictionAngleDeg": null,
-          "basePorePressurePa": null
+          "basePorePressurePa": null,
+          "pileAxialLoadN": null
         }
       }
     ]

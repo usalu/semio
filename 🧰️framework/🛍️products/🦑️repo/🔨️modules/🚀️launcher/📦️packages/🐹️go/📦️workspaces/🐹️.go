@@ -270,7 +270,7 @@ func PrepareWorkspacePackageLinks(ctx context.Context, root string, policy Works
 	if err != nil {
 		return err
 	}
-	if namespace.Kind == "managed" {
+	if namespace.Kind == "managed" || namespace.Kind == "detached" {
 		return ctx.Err()
 	}
 	var manifest struct {

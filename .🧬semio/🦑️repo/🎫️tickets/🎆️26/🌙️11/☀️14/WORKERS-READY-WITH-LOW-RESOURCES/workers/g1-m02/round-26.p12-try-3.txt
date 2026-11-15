@@ -1,0 +1,27 @@
+service log: /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-e468a514b885.log
+closure entries before: 41997
+2026-11-15T08:42:38Z no slice worker
+2026-11-15T08:42:43Z no slice worker
+2026-11-15T08:42:48Z no slice worker
+2026-11-15T08:42:53Z no slice worker
+2026-11-15T08:42:58Z no slice worker
+2026-11-15T08:43:03Z pid=98054 rss=1383MB footprint=[bun [98054]: 64-bit    Footprint: 154 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:43:08Z pid=98054 rss=1424MB footprint=[bun [98054]: 64-bit    Footprint: 177 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:43:13Z pid=98054 rss=2002MB footprint=[bun [98054]: 64-bit    Footprint: 287 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:43:18Z pid=98054 rss=2562MB footprint=[bun [98054]: 64-bit    Footprint: 609 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:43:23Z pid=98054 rss=2670MB footprint=[bun [98054]: 64-bit    Footprint: 425 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left]
+2026-11-15T08:43:28Z pid=98054 rss=2670MB footprint=[bun [98054]: 64-bit    Footprint: 425 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left]
+2026-11-15T08:43:33Z pid=98054 rss=2671MB footprint=[bun [98054]: 64-bit    Footprint: 382 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 1449 MB, resident 2671 MB)]
+2026-11-15T08:43:38Z pid=98054 rss=2927MB footprint=[bun [98054]: 64-bit    Footprint: 571 MB (16384 bytes per page)] last=[graph: worker processes were not used because they differ from this process (identity differs: records (file:/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️scr]
+2026-11-15T08:43:44Z pid=98054 rss=3631MB footprint=[bun [98054]: 64-bit    Footprint: 502 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 479 s ago, estimated time left: about 1 min]
+2026-11-15T08:43:49Z pid=98054 rss=3673MB footprint=[bun [98054]: 64-bit    Footprint: 476 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1526 of 562 MB reserved, 1 projects running): @semio-tech/repo-test needs 4763 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise ]
+2026-11-15T08:43:54Z pid=98054 rss=3937MB footprint=[bun [98054]: 64-bit    Footprint: 665 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 496 s ago, estimated time left: about 1 min]
+2026-11-15T08:43:59Z pid=98054 rss=5091MB footprint=[bun [98054]: 64-bit    Footprint: 862 MB (16384 bytes per page)] last=[graph: project @semio-tech/framework-renderer-wgpu (language:cargo) grew by 3003 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is ]
+2026-11-15T08:44:04Z pid=98054 rss=5635MB footprint=[bun [98054]: 64-bit    Footprint: 1054 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): @semio-tech/repo-contributors-go needs 4763 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, o]
+2026-11-15T08:44:09Z pid=98054 rss=7327MB footprint=[bun [98054]: 64-bit    Footprint: 1889 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): @semio-tech/print needs 4763 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the ru]
+2026-11-15T08:44:14Z pid=98054 rss=6861MB footprint=[bun [98054]: 64-bit    Footprint: 8972 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): @semio-tech/repo-test-dotnet needs 1038 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, other]
+2026-11-15T08:44:19Z pid=98054 rss=3421MB footprint=[bun [98054]: 64-bit    Footprint: 10 GB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 133 MB (released 0 MB)]
+2026-11-15T08:44:24Z no slice worker
+2026-11-15T08:44:29Z no slice worker
+2026-11-15T08:44:34Z no slice worker
+closure entries after: 41997

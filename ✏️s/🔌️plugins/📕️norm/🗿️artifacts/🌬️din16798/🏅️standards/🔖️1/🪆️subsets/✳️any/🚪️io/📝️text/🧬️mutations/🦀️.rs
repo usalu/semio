@@ -1,6 +1,6 @@
 //! ⚡️ DIN EN 16798 — hand-rolled OpText/OpBinary for `Din16798Mutation`.
 
-use semio_s_artifact_norm_din16798_mutations::Din16798Mutation;
+use crate::Din16798Mutation;
 
 use semio_s_artifact_norm_din16798_mut_building::change_annex::ChangeAnnex;
 use semio_s_artifact_norm_din16798_mut_building::change_theta_rm::ChangeThetaRm;
@@ -320,8 +320,8 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::mutations::*;
-use semio_s_artifact_norm_din16798_mutations::*;
+use crate::text::*;
+use crate::*;
 use semio_s_artifact_norm_din16798_diff::Din16798Diff;
 use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 use semio_s_artifact_norm_din16798_mut_building::change_annex;
@@ -379,7 +379,7 @@ pub fn decode_din16798_mutation_json(text: &str) -> Result<Din16798Mutation, Str
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
 }
 }
-pub use crate::mutations::mutations_codec::*;
+pub use crate::text::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

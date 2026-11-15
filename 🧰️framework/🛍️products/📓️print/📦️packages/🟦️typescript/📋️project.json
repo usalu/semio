@@ -399,7 +399,13 @@
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test viz fixtures",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        "fonts",
+        "deps-tectonic",
+        "deps-tex",
+        "generate"
+      ]
     },
     "test-native-grammar": {
       "metadata": {

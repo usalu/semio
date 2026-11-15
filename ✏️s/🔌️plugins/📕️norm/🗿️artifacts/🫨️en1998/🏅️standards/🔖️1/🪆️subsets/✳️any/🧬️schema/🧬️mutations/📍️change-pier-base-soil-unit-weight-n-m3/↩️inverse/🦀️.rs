@@ -1,4 +1,4 @@
-//! ↩️ `change-pier-base-soil-unit-weight-n-m3` inverse: restores the previous `soil_unit_weight_n_m3`.
+//! ↩️ `change-pier-base-soil-unit-weight-nm3` inverse: restores the previous `soil_unit_weight_n_m3`.
 
 use crate::change_pier_base_soil_unit_weight_n_m3::ChangePierBaseSoilUnitWeightNM3;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

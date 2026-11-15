@@ -104,7 +104,7 @@
       "description": "The bounds, switches and tokens of the repository's own cache server (repo remote-cache serve). The store is finite: it evicts least recently used entries beyond maximumBytes and entries idle for more than maximumAgeDays. actionResults says how far uploaded Bazel action results are checked: off, structure (a well-formed message) or complete (additionally every blob they name is stored, and a result is answered only while that holds).",
       "type": "object",
       "additionalProperties": false,
-      "required": ["host", "port", "directory", "maximumBytes", "maximumEntryBytes", "maximumAgeDays", "readOnly", "tls", "actionResults", "maximumActionResultBytes", "maintenanceSeconds", "environment", "tokenEnvironment"],
+      "required": ["host", "port", "fleetDirectory", "directory", "maximumBytes", "maximumEntryBytes", "maximumAgeDays", "readOnly", "tls", "actionResults", "maximumActionResultBytes", "maintenanceSeconds", "graceSeconds", "environment", "tokenEnvironment"],
       "properties": {
         "host": { "type": "string", "minLength": 1, "maxLength": 253 },
         "port": { "type": "integer", "minimum": 0, "maximum": 65535 },
@@ -130,7 +130,9 @@
         },
         "actionResults": { "enum": ["off", "structure", "complete"] },
         "maximumActionResultBytes": { "type": "integer", "minimum": 1024, "maximum": 67108864 },
+        "fleetDirectory": { "description": "Where that server keeps its index, relative to the worktree: local state of the group server, never replicated.", "type": "string", "minLength": 1 },
         "maintenanceSeconds": { "description": "How often a running server re-reads its directory, so entries collected by another process stop counting; 0 switches it off.", "type": "integer", "minimum": 0, "maximum": 86400 },
+        "graceSeconds": { "description": "How long a superseded entry (an older key of a slot whose newer key was stored) stays readable before it is reclaimed; 0 reclaims at the next collection.", "type": "integer", "minimum": 0, "maximum": 604800 },
         "environment": {
           "type": "object",
           "additionalProperties": false,
@@ -173,6 +175,7 @@
         "mechanism": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
         "applied": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "unsupported": { "type": "array", "uniqueItems": true, "items": { "enum": ["compression", "download", "timeoutSeconds", "retries"] } },
+        "localOnly": { "description": "Present when the tool stays local although a cache is configured, with the reason in both languages.", "type": "string", "minLength": 1, "maxLength": 600 },
         "uploadEnforcedBy": { "description": "client: the tool itself withholds uploads. server: the tool cannot, so uploads are only prevented by a read-only token on the server. none: uploads are wanted.", "enum": ["client", "server", "none"] }
       }
     },
@@ -193,7 +196,7 @@
       "description": "What repo remote-cache status prints: the client contract, how both build tools render it, one probe per protocol, what the running server reports about itself and what the local store directory holds.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "configured", "contract", "effectiveUpload", "token", "renderings", "probes", "server", "store"],
+      "required": ["version", "configured", "contract", "effectiveUpload", "token", "renderings", "probes", "server", "store", "resolution", "remote"],
       "properties": {
         "version": { "const": 1 },
         "configured": { "type": "boolean" },
@@ -242,6 +245,43 @@
               }
             }
           ]
+        },
+        "resolution": {
+          "description": "Where the endpoint and the token came from: the environment, or the fleet facts of the group store (with their generation and how the refresh ended).",
+          "oneOf": [
+            { "const": null },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["endpointFrom", "tokenFrom", "factsGeneration", "factsState"],
+              "properties": {
+                "endpointFrom": { "enum": ["environment", "fleet-facts"] },
+                "tokenFrom": { "enum": ["environment", "fleet-identity", "none"] },
+                "factsGeneration": { "oneOf": [{ "const": null }, { "type": "integer", "minimum": 1 }] },
+                "factsState": { "enum": ["none", "fresh", "checked", "updated", "stale", "absent"] }
+              }
+            }
+          ]
+        },
+        "remote": {
+          "description": "The truth about the server: whether it answers, whether it accepts the token on every protocol, and the entries and bytes the server itself counts (null while it does not answer a status request).",
+          "oneOf": [
+            { "const": null },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["endpoint", "reachable", "authorised", "entries", "bytes", "maximumBytes", "fleetGeneration"],
+              "properties": {
+                "endpoint": { "$ref": "#/definitions/Endpoint" },
+                "reachable": { "type": "boolean" },
+                "authorised": { "type": "boolean" },
+                "entries": { "oneOf": [{ "const": null }, { "type": "integer", "minimum": 0 }] },
+                "bytes": { "oneOf": [{ "const": null }, { "type": "integer", "minimum": 0 }] },
+                "maximumBytes": { "oneOf": [{ "const": null }, { "type": "integer", "minimum": 1 }] },
+                "fleetGeneration": { "oneOf": [{ "const": null }, { "type": "integer", "minimum": 1 }] }
+              }
+            }
+          ]
         }
       }
     },
@@ -269,6 +309,16 @@
         "protocols": { "const": ["bazel-http", "nx-self-hosted"] },
         "entries": { "type": "integer", "minimum": 0 },
         "bytes": { "type": "integer", "minimum": 0 },
+        "evicted": {
+          "description": "Entries and bytes the server's retention removed since it started (age, budget, superseded slot, dangling).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["entries", "bytes"],
+          "properties": {
+            "entries": { "type": "integer", "minimum": 0 },
+            "bytes": { "type": "integer", "minimum": 0 }
+          }
+        },
         "reservedBytes": { "type": "integer", "minimum": 0 },
         "maximumBytes": { "type": "integer", "minimum": 1 },
         "maximumEntryBytes": { "type": "integer", "minimum": 1 },
@@ -284,7 +334,61 @@
             "nx": { "$ref": "#/definitions/Counter" }
           }
         },
-        "startedAt": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$" }
+        "startedAt": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{3}Z$" },
+        "fleet": {
+          "description": "The fleet identities this server trusts: how many origins of the group store are usable, retired, in conflict with their pinned key, invalid or not yet registered, and how often requests were refused, by reason (never a key, a name or a secret); null while the server runs without fleet identities.",
+          "oneOf": [
+            { "const": null },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["origins", "denied"],
+              "properties": {
+                "origins": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+                "denied": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } }
+              }
+            }
+          ]
+        },
+        "divergences": {
+          "description": "Unit keys that two origins stored differently: the count and the latest rows. The first entry stays, the later write was refused; both digests are evidence of nondeterminism or an attack.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["count", "recent"],
+          "properties": {
+            "count": { "type": "integer", "minimum": 0 },
+            "recent": {
+              "type": "array",
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["namespace", "kind", "key", "keptOrigin", "keptSha256", "refusedOrigin", "refusedSha256", "atMs"],
+                "properties": {
+                  "namespace": { "type": "string" },
+                  "kind": { "enum": ["ac", "cas", "nx"] },
+                  "key": { "type": "string" },
+                  "keptOrigin": { "type": "string" },
+                  "keptSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                  "refusedOrigin": { "type": "string" },
+                  "refusedSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                  "atMs": { "type": "integer", "minimum": 0 }
+                }
+              }
+            }
+          }
+        },
+        "claims": {
+          "description": "The fleet single-flight claim table: live claims, waiters of a long poll and the age in seconds of the oldest live claim.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["active", "waiting", "oldestSeconds"],
+          "properties": {
+            "active": { "type": "integer", "minimum": 0 },
+            "waiting": { "type": "integer", "minimum": 0 },
+            "oldestSeconds": { "type": "integer", "minimum": 0 }
+          }
+        }
       }
     },
     "StoreBounds": {
@@ -305,14 +409,15 @@
       "properties": { "entries": { "type": "integer", "minimum": 0 }, "bytes": { "type": "integer", "minimum": 0 } }
     },
     "Removed": {
-      "description": "What a collection removes, or would remove, by reason: dangling (unusable action results), age (idle for too long) and budget (least recently used beyond the bound).",
+      "description": "What a collection removes, or would remove, by reason: dangling (unusable action results), superseded (a newer key of the slot replaced it and the grace passed), age (idle for too long, entries without a slot) and budget (least valuable beyond the bound).",
       "type": "object",
       "additionalProperties": false,
-      "required": ["entries", "bytes", "dangling", "age", "budget"],
+      "required": ["entries", "bytes", "dangling", "superseded", "age", "budget"],
       "properties": {
         "entries": { "type": "integer", "minimum": 0 },
         "bytes": { "type": "integer", "minimum": 0 },
         "dangling": { "type": "integer", "minimum": 0 },
+        "superseded": { "type": "integer", "minimum": 0 },
         "age": { "type": "integer", "minimum": 0 },
         "budget": { "type": "integer", "minimum": 0 }
       }
@@ -321,13 +426,15 @@
       "description": "What one collection of a store directory did or, for a plan, would do.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "dryRun", "scanned", "removed", "remaining"],
+      "required": ["version", "dryRun", "scanned", "removed", "remaining", "reclaimed", "deferred"],
       "properties": {
         "version": { "const": 1 },
         "dryRun": { "type": "boolean" },
         "scanned": { "$ref": "#/definitions/Fill" },
         "removed": { "$ref": "#/definitions/Removed" },
-        "remaining": { "$ref": "#/definitions/Fill" }
+        "remaining": { "$ref": "#/definitions/Fill" },
+        "reclaimed": { "description": "Blobs of the host store that no remaining entry references any more, and their bytes.", "$ref": "#/definitions/Fill" },
+        "deferred": { "description": "true when a running server owns the directory and supersession was left to its own collector.", "type": "boolean" }
       }
     },
     "GcResult": {
@@ -347,14 +454,16 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["version", "dryRun", "directory", "scanned", "removed", "remaining"],
+          "required": ["version", "dryRun", "directory", "scanned", "removed", "remaining", "reclaimed", "deferred"],
           "properties": {
             "version": { "const": 1 },
             "dryRun": { "type": "boolean" },
             "directory": { "type": "string", "minLength": 1 },
             "scanned": { "$ref": "#/definitions/Fill" },
             "removed": { "$ref": "#/definitions/Removed" },
-            "remaining": { "$ref": "#/definitions/Fill" }
+            "remaining": { "$ref": "#/definitions/Fill" },
+            "reclaimed": { "$ref": "#/definitions/Fill" },
+            "deferred": { "type": "boolean" }
           }
         }
       ]

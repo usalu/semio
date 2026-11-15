@@ -80,6 +80,8 @@ impl<T, const N: usize> UiFixedList<T, N> {
         self.storage.place_reserved(source, bytes)
     }
     pub fn next_release_allocation_bytes(&self)->Result<usize,PagedListError>{self.storage.next_release_allocation_bytes()}
+    /// 📐️ Borrows the original header copy the selected physical release writes.
+    pub fn next_release_copy_byte_demand(&self)->Result<usize,PagedListError>{self.storage.next_release_copy_byte_demand()}
     /// 🪜️ Borrows the original native page path depth before logical removal.
     pub fn next_pop_depth_demand(&self)->Result<usize,PagedListError>{self.storage.next_pop_depth_demand()}
     /// 👣️ Borrows the original native page path depth before physical release.

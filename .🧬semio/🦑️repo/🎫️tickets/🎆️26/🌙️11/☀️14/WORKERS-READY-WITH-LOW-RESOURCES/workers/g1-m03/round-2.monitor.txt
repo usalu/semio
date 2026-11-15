@@ -1,0 +1,9 @@
+try 1 started pid=83606 2026-11-14T16:00:38Z log=/Users/ueli/native-bootstrap-round-2.log
+try 1 ended 2026-11-14T16:21:41Z native_rc=1 stopped=0
+round ended 2026-11-14T16:21:41Z
+try 1 was a fleet refusal (service log reference 20faee18: graph-wanted.expired wanted 703 arrived 0 seconds 902 missing 703 local 192); the runner did not see it in the bootstrap log; try 2 after 230 s 2026-11-14T16:22:22Z
+try 2 started pid=95070 2026-11-14T16:26:12Z log=/Users/ueli/native-bootstrap-round-2-try-2.log service=/var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-38cdf415c7fb.log from line 1190
+try 2 ended 2026-11-14T16:46:17Z native_rc=1 stopped=0 fleet_refusal=1
+try 2 fleet refusal: waiting 300 s 2026-11-14T16:46:17Z
+try 3 started pid=6454 2026-11-14T16:51:17Z log=/Users/ueli/native-bootstrap-round-2-try-3.log service=/var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-38cdf415c7fb.log from line 2277
+round 3 posted: runner stopped and one SIGINT to process group 6454 (try 3) 2026-11-14T16:56:14Z

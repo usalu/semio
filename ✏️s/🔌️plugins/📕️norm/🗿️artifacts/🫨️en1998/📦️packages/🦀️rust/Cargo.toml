@@ -39,7 +39,6 @@ semio-framework-pack-json = { workspace = true }
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
-semio-s-artifact-norm-en1998-edit-rules = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true, features = ["test-support"] }
 semio-s-artifact-norm-en1998-mutations = { workspace = true, features = ["test-support"] }
 semio-s-artifact-norm-en1998-mutations-demo = { workspace = true }

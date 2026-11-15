@@ -1,0 +1,4641 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "foot-left",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.34,
+      0.09,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.045,
+       0.43
+      ]
+     }
+    },
+    {
+     "id": "foot-right",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.34,
+      0.09,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.045,
+       -0.43
+      ]
+     }
+    },
+    {
+     "id": "base-tray",
+     "kind": "box",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.45,
+      0.07,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "compressor-panel",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.45,
+      0.17,
+      1.1
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.0,
+       0.235,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "coil",
+     "kind": "box",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.22,
+      0.86,
+      1.06
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0.85,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "rear-wall",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.015,
+      1.09,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.2175,
+       0.865,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-wall",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.45,
+      0.015,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.4025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "side-wall-left",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.225,
+       0.32
+      ],
+      [
+       0.225,
+       0.32
+      ],
+      [
+       0.225,
+       1.41
+      ],
+      [
+       -0.225,
+       1.41
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.13,
+        0.42
+       ],
+       [
+        0.09,
+        0.42
+       ],
+       [
+        0.09,
+        1.28
+       ],
+       [
+        -0.13,
+        1.28
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.535,
+     "to": 0.55
+    },
+    {
+     "id": "side-wall-right",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.225,
+       0.32
+      ],
+      [
+       0.225,
+       0.32
+      ],
+      [
+       0.225,
+       1.41
+      ],
+      [
+       -0.225,
+       1.41
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.13,
+        0.42
+       ],
+       [
+        0.09,
+        0.42
+       ],
+       [
+        0.09,
+        1.28
+       ],
+       [
+        -0.13,
+        1.28
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.55,
+     "to": -0.535
+    },
+    {
+     "id": "front-panel",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.32,
+       -0.55
+      ],
+      [
+       1.41,
+       -0.55
+      ],
+      [
+       1.41,
+       0.55
+      ],
+      [
+       0.32,
+       0.55
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.8,
+        0.45
+       ],
+       [
+        0.86438,
+        0.44366
+       ],
+       [
+        0.92629,
+        0.42488
+       ],
+       [
+        0.98334,
+        0.39438
+       ],
+       [
+        1.03335,
+        0.35335
+       ],
+       [
+        1.07438,
+        0.30334
+       ],
+       [
+        1.10488,
+        0.24629
+       ],
+       [
+        1.12366,
+        0.18438
+       ],
+       [
+        1.13,
+        0.12
+       ],
+       [
+        1.12366,
+        0.05562
+       ],
+       [
+        1.10488,
+        -0.00629
+       ],
+       [
+        1.07438,
+        -0.06334
+       ],
+       [
+        1.03335,
+        -0.11335
+       ],
+       [
+        0.98334,
+        -0.15438
+       ],
+       [
+        0.92629,
+        -0.18488
+       ],
+       [
+        0.86438,
+        -0.20366
+       ],
+       [
+        0.8,
+        -0.21
+       ],
+       [
+        0.73562,
+        -0.20366
+       ],
+       [
+        0.67371,
+        -0.18488
+       ],
+       [
+        0.61666,
+        -0.15438
+       ],
+       [
+        0.56665,
+        -0.11335
+       ],
+       [
+        0.52562,
+        -0.06334
+       ],
+       [
+        0.49512,
+        -0.00629
+       ],
+       [
+        0.47634,
+        0.05562
+       ],
+       [
+        0.47,
+        0.12
+       ],
+       [
+        0.47634,
+        0.18438
+       ],
+       [
+        0.49512,
+        0.24629
+       ],
+       [
+        0.52562,
+        0.30334
+       ],
+       [
+        0.56665,
+        0.35335
+       ],
+       [
+        0.61666,
+        0.39438
+       ],
+       [
+        0.67371,
+        0.42488
+       ],
+       [
+        0.73562,
+        0.44366
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.205,
+     "to": 0.225
+    },
+    {
+     "id": "panel-handle",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.04,
+      0.1,
+      0.008
+     ],
+     "cornerRadius": 0.003,
+     "transform": {
+      "translation": [
+       0.12,
+       0.85,
+       -0.5525
+      ]
+     }
+    },
+    {
+     "id": "fan-motor",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.055
+      ],
+      [
+       0.18,
+       0.055
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -0.02,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "motor-stay",
+     "kind": "box",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.02,
+      1.09,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.03,
+       0.865,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "fan-hub",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.07
+      ],
+      [
+       0.05,
+       0.07
+      ],
+      [
+       0.068,
+       0.045
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.16,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "fan-blade",
+     "kind": "loft",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        0.19,
+        0.85292,
+        0.15775
+       ],
+       "rx": 0.02,
+       "ry": 0.004,
+       "exponent": 2.4,
+       "rotation": [
+        -0.38617,
+        -0.24602,
+        -0.47767,
+        0.74979
+       ]
+      },
+      {
+       "at": [
+        0.19,
+        0.88955,
+        0.18388
+       ],
+       "rx": 0.036,
+       "ry": 0.004,
+       "exponent": 2.4,
+       "rotation": [
+        -0.38617,
+        -0.24602,
+        -0.47767,
+        0.74979
+       ]
+      },
+      {
+       "at": [
+        0.19,
+        0.9384,
+        0.21872
+       ],
+       "rx": 0.043,
+       "ry": 0.004,
+       "exponent": 2.4,
+       "rotation": [
+        -0.38617,
+        -0.24602,
+        -0.47767,
+        0.74979
+       ]
+      },
+      {
+       "at": [
+        0.19,
+        0.97911,
+        0.24775
+       ],
+       "rx": 0.036,
+       "ry": 0.004,
+       "exponent": 2.4,
+       "rotation": [
+        -0.38617,
+        -0.24602,
+        -0.47767,
+        0.74979
+       ]
+      },
+      {
+       "at": [
+        0.19,
+        1.0133,
+        0.27214
+       ],
+       "rx": 0.018,
+       "ry": 0.004,
+       "exponent": 2.4,
+       "rotation": [
+        -0.38617,
+        -0.24602,
+        -0.47767,
+        0.74979
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 5,
+      "rotationRad": -1.25664,
+      "rotationAxis": [
+       1,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.19,
+       0.8,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "guard-rim",
+     "kind": "capsule",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.222,
+      0.8,
+      0.465
+     ],
+     "p1": [
+      0.222,
+      0.74009,
+      0.45976
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "repeat": {
+      "count": 36,
+      "rotationRad": 0.17453,
+      "rotationAxis": [
+       1,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.222,
+       0.8,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "fan-ring-outer",
+     "kind": "capsule",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.26,
+      0.8,
+      0.39
+     ],
+     "p1": [
+      0.26,
+      0.73012,
+      0.3808
+     ],
+     "r0": 0.004,
+     "r1": 0.004,
+     "repeat": {
+      "count": 24,
+      "rotationRad": 0.2618,
+      "rotationAxis": [
+       1,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.26,
+       0.8,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "fan-ring-inner",
+     "kind": "capsule",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.26,
+      0.8,
+      0.31
+     ],
+     "p1": [
+      0.26,
+      0.75082,
+      0.30353
+     ],
+     "r0": 0.004,
+     "r1": 0.004,
+     "repeat": {
+      "count": 24,
+      "rotationRad": 0.2618,
+      "rotationAxis": [
+       1,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.26,
+       0.8,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "guard-cap",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.07
+      ],
+      [
+       0.012,
+       0.07
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.25,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "guard-spoke",
+     "kind": "capsule",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "slender": true,
+     "p0": [
+      0.26,
+      0.8,
+      0.19
+     ],
+     "p1": [
+      0.26,
+      0.8,
+      0.42
+     ],
+     "r0": 0.003,
+     "r1": 0.003,
+     "repeat": {
+      "count": 8,
+      "rotationRad": 0.7854,
+      "rotationAxis": [
+       1,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.26,
+       0.8,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "guard-bell",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.8,
+       0.465
+      ],
+      [
+       0.84503,
+       0.46205
+      ],
+      [
+       0.88929,
+       0.45324
+      ],
+      [
+       0.93203,
+       0.43874
+      ],
+      [
+       0.9725,
+       0.41878
+      ],
+      [
+       1.01002,
+       0.39371
+      ],
+      [
+       1.04395,
+       0.36395
+      ],
+      [
+       1.07371,
+       0.33002
+      ],
+      [
+       1.09878,
+       0.2925
+      ],
+      [
+       1.11874,
+       0.25203
+      ],
+      [
+       1.13324,
+       0.20929
+      ],
+      [
+       1.14205,
+       0.16503
+      ],
+      [
+       1.145,
+       0.12
+      ],
+      [
+       1.14205,
+       0.07497
+      ],
+      [
+       1.13324,
+       0.03071
+      ],
+      [
+       1.11874,
+       -0.01203
+      ],
+      [
+       1.09878,
+       -0.0525
+      ],
+      [
+       1.07371,
+       -0.09002
+      ],
+      [
+       1.04395,
+       -0.12395
+      ],
+      [
+       1.01002,
+       -0.15371
+      ],
+      [
+       0.9725,
+       -0.17878
+      ],
+      [
+       0.93203,
+       -0.19874
+      ],
+      [
+       0.88929,
+       -0.21324
+      ],
+      [
+       0.84503,
+       -0.22205
+      ],
+      [
+       0.8,
+       -0.225
+      ],
+      [
+       0.75497,
+       -0.22205
+      ],
+      [
+       0.71071,
+       -0.21324
+      ],
+      [
+       0.66797,
+       -0.19874
+      ],
+      [
+       0.6275,
+       -0.17878
+      ],
+      [
+       0.58998,
+       -0.15371
+      ],
+      [
+       0.55605,
+       -0.12395
+      ],
+      [
+       0.52629,
+       -0.09002
+      ],
+      [
+       0.50122,
+       -0.0525
+      ],
+      [
+       0.48126,
+       -0.01203
+      ],
+      [
+       0.46676,
+       0.03071
+      ],
+      [
+       0.45795,
+       0.07497
+      ],
+      [
+       0.455,
+       0.12
+      ],
+      [
+       0.45795,
+       0.16503
+      ],
+      [
+       0.46676,
+       0.20929
+      ],
+      [
+       0.48126,
+       0.25203
+      ],
+      [
+       0.50122,
+       0.2925
+      ],
+      [
+       0.52629,
+       0.33002
+      ],
+      [
+       0.55605,
+       0.36395
+      ],
+      [
+       0.58998,
+       0.39371
+      ],
+      [
+       0.6275,
+       0.41878
+      ],
+      [
+       0.66797,
+       0.43874
+      ],
+      [
+       0.71071,
+       0.45324
+      ],
+      [
+       0.75497,
+       0.46205
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.8,
+        0.4575
+       ],
+       [
+        0.84405,
+        0.45461
+       ],
+       [
+        0.88735,
+        0.446
+       ],
+       [
+        0.92916,
+        0.43181
+       ],
+       [
+        0.96875,
+        0.41228
+       ],
+       [
+        1.00546,
+        0.38776
+       ],
+       [
+        1.03865,
+        0.35865
+       ],
+       [
+        1.06776,
+        0.32546
+       ],
+       [
+        1.09228,
+        0.28875
+       ],
+       [
+        1.11181,
+        0.24916
+       ],
+       [
+        1.126,
+        0.20735
+       ],
+       [
+        1.13461,
+        0.16405
+       ],
+       [
+        1.1375,
+        0.12
+       ],
+       [
+        1.13461,
+        0.07595
+       ],
+       [
+        1.126,
+        0.03265
+       ],
+       [
+        1.11181,
+        -0.00916
+       ],
+       [
+        1.09228,
+        -0.04875
+       ],
+       [
+        1.06776,
+        -0.08546
+       ],
+       [
+        1.03865,
+        -0.11865
+       ],
+       [
+        1.00546,
+        -0.14776
+       ],
+       [
+        0.96875,
+        -0.17228
+       ],
+       [
+        0.92916,
+        -0.19181
+       ],
+       [
+        0.88735,
+        -0.206
+       ],
+       [
+        0.84405,
+        -0.21461
+       ],
+       [
+        0.8,
+        -0.2175
+       ],
+       [
+        0.75595,
+        -0.21461
+       ],
+       [
+        0.71265,
+        -0.206
+       ],
+       [
+        0.67084,
+        -0.19181
+       ],
+       [
+        0.63125,
+        -0.17228
+       ],
+       [
+        0.59454,
+        -0.14776
+       ],
+       [
+        0.56135,
+        -0.11865
+       ],
+       [
+        0.53224,
+        -0.08546
+       ],
+       [
+        0.50772,
+        -0.04875
+       ],
+       [
+        0.48819,
+        -0.00916
+       ],
+       [
+        0.474,
+        0.03265
+       ],
+       [
+        0.46539,
+        0.07595
+       ],
+       [
+        0.4625,
+        0.12
+       ],
+       [
+        0.46539,
+        0.16405
+       ],
+       [
+        0.474,
+        0.20735
+       ],
+       [
+        0.48819,
+        0.24916
+       ],
+       [
+        0.50772,
+        0.28875
+       ],
+       [
+        0.53224,
+        0.32546
+       ],
+       [
+        0.56135,
+        0.35865
+       ],
+       [
+        0.59454,
+        0.38776
+       ],
+       [
+        0.63125,
+        0.41228
+       ],
+       [
+        0.67084,
+        0.43181
+       ],
+       [
+        0.71265,
+        0.446
+       ],
+       [
+        0.75595,
+        0.45461
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.222,
+     "to": 0.26
+    },
+    {
+     "id": "lid",
+     "kind": "box",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.47,
+      0.04,
+      1.12
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.235,
+       -0.02,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "lid-hinge-front",
+     "kind": "revolve",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.25,
+       0.02
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.02,
+      -0.02,
+      0.25
+     ]
+    },
+    {
+     "id": "lid-hinge-rear",
+     "kind": "revolve",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.25,
+       0.02
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.02,
+      -0.02,
+      -0.5
+     ]
+    },
+    {
+     "id": "vane",
+     "kind": "box",
+     "bone": "vane",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.24,
+      0.05,
+      0.72
+     ],
+     "cornerRadius": 0.016,
+     "transform": {
+      "translation": [
+       0.1,
+       0.0,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "vane-hinge",
+     "kind": "revolve",
+     "bone": "vane",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.012
+      ],
+      [
+       0.72,
+       0.012
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.24
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-foot-left",
+     "of": "foot-left",
+     "region": "feet"
+    },
+    {
+     "id": "th-foot-right",
+     "of": "foot-right",
+     "region": "feet"
+    },
+    {
+     "id": "th-base-tray",
+     "of": "base-tray",
+     "region": "base-tray"
+    },
+    {
+     "id": "th-compressor-panel",
+     "of": "compressor-panel",
+     "region": "compressor-casing"
+    },
+    {
+     "id": "th-coil",
+     "of": "coil",
+     "region": "coil-guard"
+    },
+    {
+     "id": "th-rear-wall",
+     "of": "rear-wall",
+     "region": "casing"
+    },
+    {
+     "id": "th-top-wall",
+     "of": "top-wall",
+     "region": "casing"
+    },
+    {
+     "id": "th-side-wall-left",
+     "of": "side-wall-left",
+     "region": "casing"
+    },
+    {
+     "id": "th-side-wall-right",
+     "of": "side-wall-right",
+     "region": "casing"
+    },
+    {
+     "id": "th-front-panel",
+     "of": "front-panel",
+     "region": "casing"
+    },
+    {
+     "id": "th-panel-handle",
+     "of": "panel-handle",
+     "region": "casing"
+    },
+    {
+     "id": "th-fan-motor",
+     "of": "fan-motor",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-motor-stay",
+     "of": "motor-stay",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-fan-hub",
+     "of": "fan-hub",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-fan-blade",
+     "of": "fan-blade",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-guard-rim",
+     "of": "guard-rim",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-fan-ring-outer",
+     "of": "fan-ring-outer",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-fan-ring-inner",
+     "of": "fan-ring-inner",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-guard-cap",
+     "of": "guard-cap",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-guard-spoke",
+     "of": "guard-spoke",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-guard-bell",
+     "of": "guard-bell",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-lid",
+     "of": "lid",
+     "region": "top-lid"
+    },
+    {
+     "id": "th-lid-hinge-front",
+     "of": "lid-hinge-front",
+     "region": "top-lid"
+    },
+    {
+     "id": "th-lid-hinge-rear",
+     "of": "lid-hinge-rear",
+     "region": "top-lid"
+    },
+    {
+     "id": "th-vane",
+     "of": "vane",
+     "region": "discharge-vane"
+    },
+    {
+     "id": "th-vane-hinge",
+     "of": "vane-hinge",
+     "region": "discharge-vane"
+    },
+    {
+     "id": "th-discharge-heating",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "fan-guard",
+     "tags": [
+      "discharge-heating"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.25
+      ],
+      [
+       0.00772,
+       0.25
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.262,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "th-discharge-cooling",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "fan-guard",
+     "tags": [
+      "discharge-cooling"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.25
+      ],
+      [
+       0.00773,
+       0.25
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.26972,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "th-defrost-vapour",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "coil-guard",
+     "tags": [
+      "defrost-vapour"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.2
+      ],
+      [
+       0.00772,
+       0.2
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      -0.035,
+      1.3,
+      0.0
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-foot-left",
+     "of": "foot-left",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-right",
+     "of": "foot-right",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-base-tray",
+     "of": "base-tray",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-compressor-panel",
+     "of": "compressor-panel",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-coil",
+     "of": "coil",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-rear-wall",
+     "of": "rear-wall",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-top-wall",
+     "of": "top-wall",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-side-wall-left",
+     "of": "side-wall-left",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-side-wall-right",
+     "of": "side-wall-right",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-front-panel",
+     "of": "front-panel",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-lid",
+     "of": "lid",
+     "member": "lid",
+     "part": "member"
+    },
+    {
+     "id": "member-vane",
+     "of": "vane",
+     "member": "vane",
+     "part": "member"
+    },
+    {
+     "id": "joint-lid-hinge-front",
+     "of": "lid-hinge-front",
+     "member": "lid",
+     "part": "joint"
+    },
+    {
+     "id": "joint-lid-hinge-rear",
+     "of": "lid-hinge-rear",
+     "member": "lid",
+     "part": "joint"
+    },
+    {
+     "id": "joint-vane-hinge",
+     "of": "vane-hinge",
+     "member": "vane",
+     "part": "joint"
+    },
+    {
+     "id": "support-contact-l",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "support",
+     "anchor": "contact-l",
+     "size": [
+      0.34,
+      0.0077,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.00385,
+       0.43
+      ]
+     }
+    },
+    {
+     "id": "support-contact-r",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "support",
+     "anchor": "contact-r",
+     "size": [
+      0.34,
+      0.0077,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.00385,
+       -0.43
+      ]
+     }
+    },
+    {
+     "id": "mass-unit",
+     "kind": "ellipsoid",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "mass",
+     "radii": [
+      0.12,
+      0.25,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.6,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "The casing is a thin-walled shell of 15 mm rear and top walls, two side walls with the coil window and a 20 mm front panel with the round fan opening, standing on a base tray and the compressor compartment; the coil block behind the windows and the fan behind the opening are modelled, so the unit can be looked into. The fan has five pitched blades as one loft with a rotational repeat about the fan axis (centre z 0.12, y 0.8 as in the front view), a spinner hub and a motor on a stay; the wire guard is a rim ring, two rings, eight spokes and twelve skirt rods, the spokes true size 6 mm slender wires and the rods 7.6 mm.",
+     "de": "Das Geh\u00e4use ist eine d\u00fcnnwandige H\u00fclle aus 15 mm dicker R\u00fcck- und Deckwand, zwei Seitenw\u00e4nden mit Registerfenster und einem 20 mm dicken Frontblech mit runder Ventilator\u00f6ffnung auf Bodenblech und Verdichterfach; Registerblock hinter den Fenstern und Ventilator hinter der \u00d6ffnung sind modelliert, man kann also hineinsehen. Der Ventilator hat f\u00fcnf angestellte Fl\u00fcgel als ein Loft mit Rotationswiederholung um die Ventilatorachse (Mitte z 0,12, y 0,8 wie in der Vorderansicht), eine Nabe mit Haube und einen Motor an einer Strebe; das Drahtgitter besteht aus Randring, zwei Ringen, acht Speichen und zw\u00f6lf Mantelst\u00e4ben, Speichen als schlanke 6-mm-Dr\u00e4hte in Originalgr\u00f6\u00dfe und die St\u00e4be mit 7,6 mm."
+    },
+    {
+     "en": "The fan guard is a rolled rim, two wire rings, eight spokes, a cap and a 38 mm bell-mouth sleeve (a thin tube): the sleeve fills the 45 mm depth that the elevation draws as a solid guard profile, so the side silhouette no longer shows a 35 mm hole between the casing and the rings; the conical skirt rods of the first version are gone. The contact anchors now describe the two rubber feet of the drawings (0.34 m by 0.18 m, left and right), and the two support pads lie under exactly those feet.",
+     "de": "Das L\u00fcftergitter besteht aus gerolltem Rand, zwei Drahtringen, acht Speichen, einer Kappe und einer 38 mm tiefen Einlaufh\u00fclse (ein d\u00fcnnes Rohr): die H\u00fclse f\u00fcllt die 45 mm Tiefe, die die Seitenansicht als massives Gitterprofil zeichnet, sodass die Seitenansicht keine 35-mm-L\u00fccke zwischen Geh\u00e4use und Ringen mehr zeigt; die kegeligen Mantelst\u00e4be der ersten Fassung entfallen. Die Aufstandsanker beschreiben jetzt die zwei Gummif\u00fc\u00dfe der Zeichnungen (0,34 m mal 0,18 m, links und rechts), und die zwei Auflager liegen genau unter diesen F\u00fc\u00dfen."
+    },
+    {
+     "en": "The lid and the vane carry their hinge rods on their own bones so they swing about the rig axes without leaving the casing; the lid and vane are 56 mm and 24 mm wider than the casing as drawn; two rubber feet carry the unit.",
+     "de": "Deckel und Lamelle tragen ihre Scharnierstangen auf den eigenen Knochen und schwenken um die Achsen des Rigs, ohne das Geh\u00e4use zu verlassen; Deckel und Lamelle sind wie gezeichnet 56 mm und 24 mm breiter als das Geh\u00e4use; zwei Gummif\u00fc\u00dfe tragen das Ger\u00e4t."
+    },
+    {
+     "en": "Thermal: every region is one thin skin, so each thermal solid references its body solid (casing walls and handle, coil block, compressor panel, tray, fan parts, lid, vane, feet); the heating and cooling discharges are two 7.7 mm discs of 500 mm in front of the guard and the defrost vapour a 400 mm disc at the coil top, each tagged with its emitter id on the region it leaves from.",
+     "de": "Thermik: Jede Region ist eine d\u00fcnne Haut, daher verweist jeder Thermikk\u00f6rper auf seinen K\u00f6rper (Geh\u00e4usew\u00e4nde und Griff, Registerblock, Verdichterblech, Wanne, Ventilatorteile, Deckel, Lamelle, F\u00fc\u00dfe); die Heiz- und K\u00fchlausblasung sind zwei 7,7 mm dicke Scheiben von 500 mm vor dem Gitter und der Abtaudampf eine 400-mm-Scheibe an der Registeroberseite, jeweils mit der Emitter-Id an der Region markiert, aus der sie austreten."
+    },
+    {
+     "en": "Structure: walls, front panel, tray, compressor compartment, coil block, lid, vane and feet carry the load; the lid knuckles and the vane rod are the hinge joints, two 340 mm by 180 mm pads sit under the feet at the two contact anchors and one mass of 141 kg sits in the middle of the casing.",
+     "de": "Tragwerk: W\u00e4nde, Frontblech, Wanne, Verdichterfach, Registerblock, Deckel, Lamelle und F\u00fc\u00dfe tragen die Last; die Deckelknoten und die Lamellenstange sind die Scharniergelenke, zwei Auflager von 340 mm mal 180 mm sitzen unter den F\u00fc\u00dfen an den beiden Aufstandsankern, eine Masse von 141 kg sitzt in der Geh\u00e4usemitte."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "foot-left",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.34,
+      0.09,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.045,
+       0.43
+      ]
+     }
+    },
+    {
+     "id": "foot-right",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.34,
+      0.09,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.045,
+       -0.43
+      ]
+     }
+    },
+    {
+     "id": "base-tray",
+     "kind": "box",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.45,
+      0.07,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "compressor-panel",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.45,
+      0.17,
+      1.1
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.0,
+       0.235,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "coil",
+     "kind": "box",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.22,
+      0.86,
+      1.06
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0.85,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "rear-wall",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.02,
+      1.09,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.215,
+       0.865,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-wall",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.45,
+      0.02,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.4,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "side-wall-left",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.225,
+       0.32
+      ],
+      [
+       0.225,
+       0.32
+      ],
+      [
+       0.225,
+       1.41
+      ],
+      [
+       -0.225,
+       1.41
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.13,
+        0.42
+       ],
+       [
+        0.09,
+        0.42
+       ],
+       [
+        0.09,
+        1.28
+       ],
+       [
+        -0.13,
+        1.28
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.53,
+     "to": 0.55
+    },
+    {
+     "id": "side-wall-right",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.225,
+       0.32
+      ],
+      [
+       0.225,
+       0.32
+      ],
+      [
+       0.225,
+       1.41
+      ],
+      [
+       -0.225,
+       1.41
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.13,
+        0.42
+       ],
+       [
+        0.09,
+        0.42
+       ],
+       [
+        0.09,
+        1.28
+       ],
+       [
+        -0.13,
+        1.28
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.55,
+     "to": -0.53
+    },
+    {
+     "id": "front-panel",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.32,
+       -0.55
+      ],
+      [
+       1.41,
+       -0.55
+      ],
+      [
+       1.41,
+       0.55
+      ],
+      [
+       0.32,
+       0.55
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.8,
+        0.45
+       ],
+       [
+        0.86438,
+        0.44366
+       ],
+       [
+        0.92629,
+        0.42488
+       ],
+       [
+        0.98334,
+        0.39438
+       ],
+       [
+        1.03335,
+        0.35335
+       ],
+       [
+        1.07438,
+        0.30334
+       ],
+       [
+        1.10488,
+        0.24629
+       ],
+       [
+        1.12366,
+        0.18438
+       ],
+       [
+        1.13,
+        0.12
+       ],
+       [
+        1.12366,
+        0.05562
+       ],
+       [
+        1.10488,
+        -0.00629
+       ],
+       [
+        1.07438,
+        -0.06334
+       ],
+       [
+        1.03335,
+        -0.11335
+       ],
+       [
+        0.98334,
+        -0.15438
+       ],
+       [
+        0.92629,
+        -0.18488
+       ],
+       [
+        0.86438,
+        -0.20366
+       ],
+       [
+        0.8,
+        -0.21
+       ],
+       [
+        0.73562,
+        -0.20366
+       ],
+       [
+        0.67371,
+        -0.18488
+       ],
+       [
+        0.61666,
+        -0.15438
+       ],
+       [
+        0.56665,
+        -0.11335
+       ],
+       [
+        0.52562,
+        -0.06334
+       ],
+       [
+        0.49512,
+        -0.00629
+       ],
+       [
+        0.47634,
+        0.05562
+       ],
+       [
+        0.47,
+        0.12
+       ],
+       [
+        0.47634,
+        0.18438
+       ],
+       [
+        0.49512,
+        0.24629
+       ],
+       [
+        0.52562,
+        0.30334
+       ],
+       [
+        0.56665,
+        0.35335
+       ],
+       [
+        0.61666,
+        0.39438
+       ],
+       [
+        0.67371,
+        0.42488
+       ],
+       [
+        0.73562,
+        0.44366
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.2,
+     "to": 0.225
+    },
+    {
+     "id": "fan-motor",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.055
+      ],
+      [
+       0.18,
+       0.055
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -0.02,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "fan-hub",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.07
+      ],
+      [
+       0.05,
+       0.07
+      ],
+      [
+       0.068,
+       0.045
+      ],
+      [
+       0.075,
+       0.0
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.16,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "fan-blade",
+     "kind": "loft",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        0.19,
+        0.85292,
+        0.15775
+       ],
+       "rx": 0.02,
+       "ry": 0.0078,
+       "exponent": 2.4,
+       "rotation": [
+        -0.38617,
+        -0.24602,
+        -0.47767,
+        0.74979
+       ]
+      },
+      {
+       "at": [
+        0.19,
+        0.88955,
+        0.18388
+       ],
+       "rx": 0.036,
+       "ry": 0.0078,
+       "exponent": 2.4,
+       "rotation": [
+        -0.38617,
+        -0.24602,
+        -0.47767,
+        0.74979
+       ]
+      },
+      {
+       "at": [
+        0.19,
+        0.9384,
+        0.21872
+       ],
+       "rx": 0.043,
+       "ry": 0.0078,
+       "exponent": 2.4,
+       "rotation": [
+        -0.38617,
+        -0.24602,
+        -0.47767,
+        0.74979
+       ]
+      },
+      {
+       "at": [
+        0.19,
+        0.97911,
+        0.24775
+       ],
+       "rx": 0.036,
+       "ry": 0.0078,
+       "exponent": 2.4,
+       "rotation": [
+        -0.38617,
+        -0.24602,
+        -0.47767,
+        0.74979
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 5,
+      "rotationRad": -1.25664,
+      "rotationAxis": [
+       1,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.19,
+       0.8,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "guard-rim",
+     "kind": "capsule",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0.222,
+      0.8,
+      0.465
+     ],
+     "p1": [
+      0.222,
+      0.71071,
+      0.45324
+     ],
+     "r0": 0.0155,
+     "r1": 0.0155,
+     "repeat": {
+      "count": 24,
+      "rotationRad": 0.2618,
+      "rotationAxis": [
+       1,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.222,
+       0.8,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "fan-ring",
+     "kind": "capsule",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.26,
+      0.8,
+      0.36
+     ],
+     "p1": [
+      0.26,
+      0.71792,
+      0.34553
+     ],
+     "r0": 0.0155,
+     "r1": 0.0155,
+     "repeat": {
+      "count": 18,
+      "rotationRad": 0.34907,
+      "rotationAxis": [
+       1,
+       0.0,
+       0.0
+      ],
+      "origin": [
+       0.26,
+       0.8,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "guard-cap",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.07
+      ],
+      [
+       0.022,
+       0.07
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.24,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "guard-bell",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.8,
+       0.465
+      ],
+      [
+       0.84503,
+       0.46205
+      ],
+      [
+       0.88929,
+       0.45324
+      ],
+      [
+       0.93203,
+       0.43874
+      ],
+      [
+       0.9725,
+       0.41878
+      ],
+      [
+       1.01002,
+       0.39371
+      ],
+      [
+       1.04395,
+       0.36395
+      ],
+      [
+       1.07371,
+       0.33002
+      ],
+      [
+       1.09878,
+       0.2925
+      ],
+      [
+       1.11874,
+       0.25203
+      ],
+      [
+       1.13324,
+       0.20929
+      ],
+      [
+       1.14205,
+       0.16503
+      ],
+      [
+       1.145,
+       0.12
+      ],
+      [
+       1.14205,
+       0.07497
+      ],
+      [
+       1.13324,
+       0.03071
+      ],
+      [
+       1.11874,
+       -0.01203
+      ],
+      [
+       1.09878,
+       -0.0525
+      ],
+      [
+       1.07371,
+       -0.09002
+      ],
+      [
+       1.04395,
+       -0.12395
+      ],
+      [
+       1.01002,
+       -0.15371
+      ],
+      [
+       0.9725,
+       -0.17878
+      ],
+      [
+       0.93203,
+       -0.19874
+      ],
+      [
+       0.88929,
+       -0.21324
+      ],
+      [
+       0.84503,
+       -0.22205
+      ],
+      [
+       0.8,
+       -0.225
+      ],
+      [
+       0.75497,
+       -0.22205
+      ],
+      [
+       0.71071,
+       -0.21324
+      ],
+      [
+       0.66797,
+       -0.19874
+      ],
+      [
+       0.6275,
+       -0.17878
+      ],
+      [
+       0.58998,
+       -0.15371
+      ],
+      [
+       0.55605,
+       -0.12395
+      ],
+      [
+       0.52629,
+       -0.09002
+      ],
+      [
+       0.50122,
+       -0.0525
+      ],
+      [
+       0.48126,
+       -0.01203
+      ],
+      [
+       0.46676,
+       0.03071
+      ],
+      [
+       0.45795,
+       0.07497
+      ],
+      [
+       0.455,
+       0.12
+      ],
+      [
+       0.45795,
+       0.16503
+      ],
+      [
+       0.46676,
+       0.20929
+      ],
+      [
+       0.48126,
+       0.25203
+      ],
+      [
+       0.50122,
+       0.2925
+      ],
+      [
+       0.52629,
+       0.33002
+      ],
+      [
+       0.55605,
+       0.36395
+      ],
+      [
+       0.58998,
+       0.39371
+      ],
+      [
+       0.6275,
+       0.41878
+      ],
+      [
+       0.66797,
+       0.43874
+      ],
+      [
+       0.71071,
+       0.45324
+      ],
+      [
+       0.75497,
+       0.46205
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.8,
+        0.4495
+       ],
+       [
+        0.84301,
+        0.44668
+       ],
+       [
+        0.88528,
+        0.43827
+       ],
+       [
+        0.92609,
+        0.42442
+       ],
+       [
+        0.96475,
+        0.40536
+       ],
+       [
+        1.00059,
+        0.38141
+       ],
+       [
+        1.03299,
+        0.35299
+       ],
+       [
+        1.06141,
+        0.32059
+       ],
+       [
+        1.08536,
+        0.28475
+       ],
+       [
+        1.10442,
+        0.24609
+       ],
+       [
+        1.11827,
+        0.20528
+       ],
+       [
+        1.12668,
+        0.16301
+       ],
+       [
+        1.1295,
+        0.12
+       ],
+       [
+        1.12668,
+        0.07699
+       ],
+       [
+        1.11827,
+        0.03472
+       ],
+       [
+        1.10442,
+        -0.00609
+       ],
+       [
+        1.08536,
+        -0.04475
+       ],
+       [
+        1.06141,
+        -0.08059
+       ],
+       [
+        1.03299,
+        -0.11299
+       ],
+       [
+        1.00059,
+        -0.14141
+       ],
+       [
+        0.96475,
+        -0.16536
+       ],
+       [
+        0.92609,
+        -0.18442
+       ],
+       [
+        0.88528,
+        -0.19827
+       ],
+       [
+        0.84301,
+        -0.20668
+       ],
+       [
+        0.8,
+        -0.2095
+       ],
+       [
+        0.75699,
+        -0.20668
+       ],
+       [
+        0.71472,
+        -0.19827
+       ],
+       [
+        0.67391,
+        -0.18442
+       ],
+       [
+        0.63525,
+        -0.16536
+       ],
+       [
+        0.59941,
+        -0.14141
+       ],
+       [
+        0.56701,
+        -0.11299
+       ],
+       [
+        0.53859,
+        -0.08059
+       ],
+       [
+        0.51464,
+        -0.04475
+       ],
+       [
+        0.49558,
+        -0.00609
+       ],
+       [
+        0.48173,
+        0.03472
+       ],
+       [
+        0.47332,
+        0.07699
+       ],
+       [
+        0.4705,
+        0.12
+       ],
+       [
+        0.47332,
+        0.16301
+       ],
+       [
+        0.48173,
+        0.20528
+       ],
+       [
+        0.49558,
+        0.24609
+       ],
+       [
+        0.51464,
+        0.28475
+       ],
+       [
+        0.53859,
+        0.32059
+       ],
+       [
+        0.56701,
+        0.35299
+       ],
+       [
+        0.59941,
+        0.38141
+       ],
+       [
+        0.63525,
+        0.40536
+       ],
+       [
+        0.67391,
+        0.42442
+       ],
+       [
+        0.71472,
+        0.43827
+       ],
+       [
+        0.75699,
+        0.44668
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.222,
+     "to": 0.26
+    },
+    {
+     "id": "lid",
+     "kind": "box",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.47,
+      0.04,
+      1.12
+     ],
+     "cornerRadius": 0.01,
+     "transform": {
+      "translation": [
+       0.235,
+       -0.02,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "lid-hinge-front",
+     "kind": "revolve",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0155
+      ],
+      [
+       0.25,
+       0.0155
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.02,
+      -0.02,
+      0.25
+     ]
+    },
+    {
+     "id": "lid-hinge-rear",
+     "kind": "revolve",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0155
+      ],
+      [
+       0.25,
+       0.0155
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.02,
+      -0.02,
+      -0.5
+     ]
+    },
+    {
+     "id": "vane",
+     "kind": "box",
+     "bone": "vane",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.24,
+      0.05,
+      0.72
+     ],
+     "cornerRadius": 0.02,
+     "transform": {
+      "translation": [
+       0.1,
+       0.0,
+       0.12
+      ]
+     }
+    },
+    {
+     "id": "vane-hinge",
+     "kind": "revolve",
+     "bone": "vane",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0155
+      ],
+      [
+       0.72,
+       0.0155
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.24
+     ],
+     "slender": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-foot-left",
+     "of": "foot-left",
+     "region": "feet"
+    },
+    {
+     "id": "th-foot-right",
+     "of": "foot-right",
+     "region": "feet"
+    },
+    {
+     "id": "th-base-tray",
+     "of": "base-tray",
+     "region": "base-tray"
+    },
+    {
+     "id": "th-compressor-panel",
+     "of": "compressor-panel",
+     "region": "compressor-casing"
+    },
+    {
+     "id": "th-coil",
+     "of": "coil",
+     "region": "coil-guard"
+    },
+    {
+     "id": "th-rear-wall",
+     "of": "rear-wall",
+     "region": "casing"
+    },
+    {
+     "id": "th-top-wall",
+     "of": "top-wall",
+     "region": "casing"
+    },
+    {
+     "id": "th-side-wall-left",
+     "of": "side-wall-left",
+     "region": "casing"
+    },
+    {
+     "id": "th-side-wall-right",
+     "of": "side-wall-right",
+     "region": "casing"
+    },
+    {
+     "id": "th-front-panel",
+     "of": "front-panel",
+     "region": "casing"
+    },
+    {
+     "id": "th-fan-motor",
+     "of": "fan-motor",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-fan-hub",
+     "of": "fan-hub",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-fan-blade",
+     "of": "fan-blade",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-guard-rim",
+     "of": "guard-rim",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-fan-ring",
+     "of": "fan-ring",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-guard-cap",
+     "of": "guard-cap",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-guard-bell",
+     "of": "guard-bell",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-lid",
+     "of": "lid",
+     "region": "top-lid"
+    },
+    {
+     "id": "th-lid-hinge-front",
+     "of": "lid-hinge-front",
+     "region": "top-lid"
+    },
+    {
+     "id": "th-lid-hinge-rear",
+     "of": "lid-hinge-rear",
+     "region": "top-lid"
+    },
+    {
+     "id": "th-vane",
+     "of": "vane",
+     "region": "discharge-vane"
+    },
+    {
+     "id": "th-vane-hinge",
+     "of": "vane-hinge",
+     "region": "discharge-vane"
+    },
+    {
+     "id": "th-discharge-heating",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "fan-guard",
+     "tags": [
+      "discharge-heating"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.25
+      ],
+      [
+       0.01597,
+       0.25
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.262,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "th-discharge-cooling",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "fan-guard",
+     "tags": [
+      "discharge-cooling"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.25
+      ],
+      [
+       0.01597,
+       0.25
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.27797,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "th-defrost-vapour",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "coil-guard",
+     "tags": [
+      "defrost-vapour"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.2
+      ],
+      [
+       0.01597,
+       0.2
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      -0.035,
+      1.3,
+      0.0
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-foot-left",
+     "of": "foot-left",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-right",
+     "of": "foot-right",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-base-tray",
+     "of": "base-tray",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-compressor-panel",
+     "of": "compressor-panel",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-coil",
+     "of": "coil",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-rear-wall",
+     "of": "rear-wall",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-top-wall",
+     "of": "top-wall",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-side-wall-left",
+     "of": "side-wall-left",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-side-wall-right",
+     "of": "side-wall-right",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-front-panel",
+     "of": "front-panel",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-lid",
+     "of": "lid",
+     "member": "lid",
+     "part": "member"
+    },
+    {
+     "id": "member-vane",
+     "of": "vane",
+     "member": "vane",
+     "part": "member"
+    },
+    {
+     "id": "joint-lid-hinge-front",
+     "of": "lid-hinge-front",
+     "member": "lid",
+     "part": "joint"
+    },
+    {
+     "id": "joint-vane-hinge",
+     "of": "vane-hinge",
+     "member": "vane",
+     "part": "joint"
+    },
+    {
+     "id": "support-contact-l",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "support",
+     "anchor": "contact-l",
+     "size": [
+      0.34,
+      0.0155,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.00775,
+       0.43
+      ]
+     }
+    },
+    {
+     "id": "support-contact-r",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "support",
+     "anchor": "contact-r",
+     "size": [
+      0.34,
+      0.0155,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.00775,
+       -0.43
+      ]
+     }
+    },
+    {
+     "id": "mass-unit",
+     "kind": "ellipsoid",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "mass",
+     "radii": [
+      0.12,
+      0.25,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.6,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:100 the shell keeps the same parts with 20 mm walls and a 25 mm front panel, the five blades have 15.6 mm thick sections and four sections each, the wire guard is reduced to the rim and one 31 mm ring (spokes, skirt rods, motor stay, handle and the second ring are below 15 mm), hinge rods are 31 mm.",
+     "de": "Bei 1:100 beh\u00e4lt die H\u00fclle dieselben Teile mit 20 mm W\u00e4nden und 25 mm Frontblech, die f\u00fcnf Fl\u00fcgel haben 15,6 mm dicke Schnitte und je vier Schnitte, das Drahtgitter schrumpft auf den Randring und einen 31-mm-Ring (Speichen, Mantelst\u00e4be, Motorstrebe, Griff und der zweite Ring liegen unter 15 mm), Scharnierstangen sind 31 mm dick."
+    },
+    {
+     "en": "The bell-mouth sleeve of 1:50 stays as a 38 mm tube of 15.5 mm wall.",
+     "de": "Die Einlaufh\u00fclse von 1:50 bleibt als 38-mm-Rohr mit 15,5 mm Wand."
+    },
+    {
+     "en": "Thermal: as at 1:50 for the remaining parts; the emitter discs are 15.5 mm thick.",
+     "de": "Thermik: wie bei 1:50 f\u00fcr die verbleibenden Teile; die Emitterscheiben sind 15,5 mm dick."
+    },
+    {
+     "en": "Structure: the same members as at 1:50 without the removed parts, one lid knuckle (the rear knuckle shares the front joint axis), joints and masses sized to 15 mm, pads 15.5 mm thick.",
+     "de": "Tragwerk: dieselben St\u00e4be wie bei 1:50 ohne die entfallenen Teile, ein Deckelknoten (der hintere teilt die Achse des vorderen), Gelenke und Massen auf 15 mm bemessen, Auflager 15,5 mm dick."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "foot-left",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.34,
+      0.09,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.045,
+       0.43
+      ]
+     }
+    },
+    {
+     "id": "foot-right",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.34,
+      0.09,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.045,
+       -0.43
+      ]
+     }
+    },
+    {
+     "id": "base-tray",
+     "kind": "box",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.45,
+      0.07,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "compressor-panel",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.45,
+      0.17,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.235,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "coil",
+     "kind": "box",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      0.22,
+      0.86,
+      1.06
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0.85,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "rear-wall",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.031,
+      1.09,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.2095,
+       0.865,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-wall",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.45,
+      0.031,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.3945,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "side-wall-left",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.225,
+       0.32
+      ],
+      [
+       0.225,
+       0.32
+      ],
+      [
+       0.225,
+       1.41
+      ],
+      [
+       -0.225,
+       1.41
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.519,
+     "to": 0.55
+    },
+    {
+     "id": "side-wall-right",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.225,
+       0.32
+      ],
+      [
+       0.225,
+       0.32
+      ],
+      [
+       0.225,
+       1.41
+      ],
+      [
+       -0.225,
+       1.41
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.55,
+     "to": -0.519
+    },
+    {
+     "id": "front-panel",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.32,
+       -0.55
+      ],
+      [
+       1.41,
+       -0.55
+      ],
+      [
+       1.41,
+       0.55
+      ],
+      [
+       0.32,
+       0.55
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.194,
+     "to": 0.225
+    },
+    {
+     "id": "fan-guard",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.35
+      ],
+      [
+       0.045,
+       0.35
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.215,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "lid",
+     "kind": "box",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.47,
+      0.05,
+      1.12
+     ],
+     "transform": {
+      "translation": [
+       0.235,
+       -0.025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "vane",
+     "kind": "box",
+     "bone": "vane",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.24,
+      0.06,
+      0.72
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.0,
+       0.12
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-foot-left",
+     "of": "foot-left",
+     "region": "feet"
+    },
+    {
+     "id": "th-foot-right",
+     "of": "foot-right",
+     "region": "feet"
+    },
+    {
+     "id": "th-base-tray",
+     "of": "base-tray",
+     "region": "base-tray"
+    },
+    {
+     "id": "th-compressor-panel",
+     "of": "compressor-panel",
+     "region": "compressor-casing"
+    },
+    {
+     "id": "th-coil",
+     "of": "coil",
+     "region": "coil-guard"
+    },
+    {
+     "id": "th-rear-wall",
+     "of": "rear-wall",
+     "region": "casing"
+    },
+    {
+     "id": "th-top-wall",
+     "of": "top-wall",
+     "region": "casing"
+    },
+    {
+     "id": "th-side-wall-left",
+     "of": "side-wall-left",
+     "region": "casing"
+    },
+    {
+     "id": "th-side-wall-right",
+     "of": "side-wall-right",
+     "region": "casing"
+    },
+    {
+     "id": "th-front-panel",
+     "of": "front-panel",
+     "region": "casing"
+    },
+    {
+     "id": "th-fan-guard",
+     "of": "fan-guard",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-lid",
+     "of": "lid",
+     "region": "top-lid"
+    },
+    {
+     "id": "th-vane",
+     "of": "vane",
+     "region": "discharge-vane"
+    },
+    {
+     "id": "th-discharge-heating",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "fan-guard",
+     "tags": [
+      "discharge-heating"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.25
+      ],
+      [
+       0.03193,
+       0.25
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.262,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "th-discharge-cooling",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "fan-guard",
+     "tags": [
+      "discharge-cooling"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.25
+      ],
+      [
+       0.03193,
+       0.25
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.29393,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "th-defrost-vapour",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "coil-guard",
+     "tags": [
+      "defrost-vapour"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.2
+      ],
+      [
+       0.03193,
+       0.2
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      -0.035,
+      1.3,
+      0.0
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-foot-left",
+     "of": "foot-left",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-right",
+     "of": "foot-right",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-base-tray",
+     "of": "base-tray",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-compressor-panel",
+     "of": "compressor-panel",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-coil",
+     "of": "coil",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-rear-wall",
+     "of": "rear-wall",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-top-wall",
+     "of": "top-wall",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-side-wall-left",
+     "of": "side-wall-left",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-side-wall-right",
+     "of": "side-wall-right",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-front-panel",
+     "of": "front-panel",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-lid",
+     "of": "lid",
+     "member": "lid",
+     "part": "member"
+    },
+    {
+     "id": "member-vane",
+     "of": "vane",
+     "member": "vane",
+     "part": "member"
+    },
+    {
+     "id": "joint-vane-hinge",
+     "kind": "revolve",
+     "bone": "vane",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "vane",
+     "part": "joint",
+     "profile": [
+      [
+       0.0,
+       0.0186
+      ],
+      [
+       0.64,
+       0.0186
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.2
+     ]
+    },
+    {
+     "id": "joint-lid-hinge",
+     "kind": "revolve",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "lid",
+     "part": "joint",
+     "profile": [
+      [
+       0.0,
+       0.0217
+      ],
+      [
+       0.25,
+       0.0217
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.02,
+      -0.02,
+      0.25
+     ]
+    },
+    {
+     "id": "support-contact-l",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "support",
+     "anchor": "contact-l",
+     "size": [
+      0.34,
+      0.031,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0155,
+       0.43
+      ]
+     }
+    },
+    {
+     "id": "support-contact-r",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "support",
+     "anchor": "contact-r",
+     "size": [
+      0.34,
+      0.031,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0155,
+       -0.43
+      ]
+     }
+    },
+    {
+     "id": "mass-unit",
+     "kind": "ellipsoid",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "mass",
+     "radii": [
+      0.12,
+      0.25,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.6,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:200 the unit is a plain box shell (30 mm walls, solid front panel) with the base tray, compressor compartment and coil block inside; the fan opening, blades, hub, rings, spokes, handle and hinge rods are gone and the fan is one 45 mm deep guard disc of 700 mm in front of the panel as the 1:200 drawing shows it; lid and vane are plain 50 and 60 mm plates.",
+     "de": "Bei 1:200 ist das Ger\u00e4t eine glatte Kastenh\u00fclle (30 mm W\u00e4nde, geschlossenes Frontblech) mit Wanne, Verdichterfach und Registerblock innen; Ventilator\u00f6ffnung, Fl\u00fcgel, Nabe, Ringe, Speichen, Griff und Scharnierstangen entfallen, und der Ventilator ist eine 45 mm tiefe Gitterscheibe von 700 mm vor dem Blech, wie die 1:200-Zeichnung sie zeigt; Deckel und Lamelle sind glatte Platten von 50 und 60 mm."
+    },
+    {
+     "en": "Thermal: references to the body parts; the fan-guard region is the disc; discharge and defrost emitters are 31 mm discs in front of the disc and at the coil top.",
+     "de": "Thermik: Verweise auf die K\u00f6rperteile; die Region fan-guard ist die Scheibe; Ausblas- und Abtau-Emitter sind 31 mm dicke Scheiben vor der Scheibe und an der Registeroberseite."
+    },
+    {
+     "en": "Structure: shell walls, tray, compressor compartment, coil, lid and vane as members, one hinge rod each for lid and vane as joints, two 31 mm pads under the feet and one mass.",
+     "de": "Tragwerk: H\u00fcllenw\u00e4nde, Wanne, Verdichterfach, Register, Deckel und Lamelle als St\u00e4be, je eine Scharnierstange f\u00fcr Deckel und Lamelle als Gelenk, zwei 31 mm dicke Auflager unter den F\u00fc\u00dfen und eine Masse."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "foot-left",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.34,
+      0.09,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.045,
+       0.43
+      ]
+     }
+    },
+    {
+     "id": "foot-right",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.34,
+      0.09,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.045,
+       -0.43
+      ]
+     }
+    },
+    {
+     "id": "base-tray",
+     "kind": "box",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.45,
+      0.0755,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1275,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "compressor-panel",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.45,
+      0.155,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.2425,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "rear-wall",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.0755,
+      1.03,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.18725,
+       0.835,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-wall",
+     "kind": "box",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.45,
+      0.0755,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.31225,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "side-wall-left",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.225,
+       0.32
+      ],
+      [
+       0.225,
+       0.32
+      ],
+      [
+       0.225,
+       1.35
+      ],
+      [
+       -0.225,
+       1.35
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.4745,
+     "to": 0.55
+    },
+    {
+     "id": "side-wall-right",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.225,
+       0.32
+      ],
+      [
+       0.225,
+       0.32
+      ],
+      [
+       0.225,
+       1.35
+      ],
+      [
+       -0.225,
+       1.35
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.55,
+     "to": -0.4745
+    },
+    {
+     "id": "front-panel",
+     "kind": "extrude",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.32,
+       -0.55
+      ],
+      [
+       1.35,
+       -0.55
+      ],
+      [
+       1.35,
+       0.55
+      ],
+      [
+       0.32,
+       0.55
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.1495,
+     "to": 0.225
+    },
+    {
+     "id": "fan-disc",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.35
+      ],
+      [
+       0.0755,
+       0.35
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.1845,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "lid",
+     "kind": "box",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.47,
+      0.1,
+      1.12
+     ],
+     "transform": {
+      "translation": [
+       0.235,
+       -0.05,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "vane",
+     "kind": "box",
+     "bone": "vane",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.24,
+      0.12,
+      0.72
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.0,
+       0.12
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-foot-left",
+     "of": "foot-left",
+     "region": "feet"
+    },
+    {
+     "id": "th-foot-right",
+     "of": "foot-right",
+     "region": "feet"
+    },
+    {
+     "id": "th-base-tray",
+     "of": "base-tray",
+     "region": "base-tray"
+    },
+    {
+     "id": "th-compressor-panel",
+     "of": "compressor-panel",
+     "region": "compressor-casing"
+    },
+    {
+     "id": "th-rear-wall",
+     "of": "rear-wall",
+     "region": "casing"
+    },
+    {
+     "id": "th-top-wall",
+     "of": "top-wall",
+     "region": "casing"
+    },
+    {
+     "id": "th-side-wall-left",
+     "of": "side-wall-left",
+     "region": "casing"
+    },
+    {
+     "id": "th-side-wall-right",
+     "of": "side-wall-right",
+     "region": "casing"
+    },
+    {
+     "id": "th-front-panel",
+     "of": "front-panel",
+     "region": "casing"
+    },
+    {
+     "id": "th-fan-disc",
+     "of": "fan-disc",
+     "region": "fan-guard"
+    },
+    {
+     "id": "th-lid",
+     "of": "lid",
+     "region": "top-lid"
+    },
+    {
+     "id": "th-vane",
+     "of": "vane",
+     "region": "discharge-vane"
+    },
+    {
+     "id": "th-coil",
+     "kind": "box",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "region": "coil-guard",
+     "size": [
+      0.22,
+      0.86,
+      1.06
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0.85,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "th-discharge-heating",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "fan-guard",
+     "tags": [
+      "discharge-heating"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.25
+      ],
+      [
+       0.07776,
+       0.25
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.262,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "th-discharge-cooling",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "fan-guard",
+     "tags": [
+      "discharge-cooling"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.25
+      ],
+      [
+       0.07777,
+       0.25
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.33976,
+      0.8,
+      0.12
+     ]
+    },
+    {
+     "id": "th-defrost-vapour",
+     "kind": "revolve",
+     "bone": "unit",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.5,
+     "region": "coil-guard",
+     "tags": [
+      "defrost-vapour"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.2
+      ],
+      [
+       0.07777,
+       0.2
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      -0.035,
+      1.3,
+      0.0
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-foot-left",
+     "of": "foot-left",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-foot-right",
+     "of": "foot-right",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-base-tray",
+     "of": "base-tray",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-compressor-panel",
+     "of": "compressor-panel",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-rear-wall",
+     "of": "rear-wall",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-top-wall",
+     "of": "top-wall",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-side-wall-left",
+     "of": "side-wall-left",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-side-wall-right",
+     "of": "side-wall-right",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-front-panel",
+     "of": "front-panel",
+     "member": "unit",
+     "part": "member"
+    },
+    {
+     "id": "member-lid",
+     "of": "lid",
+     "member": "lid",
+     "part": "member"
+    },
+    {
+     "id": "member-vane",
+     "of": "vane",
+     "member": "vane",
+     "part": "member"
+    },
+    {
+     "id": "joint-vane-hinge",
+     "kind": "revolve",
+     "bone": "vane",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "vane",
+     "part": "joint",
+     "profile": [
+      [
+       0.0,
+       0.0453
+      ],
+      [
+       0.64,
+       0.0453
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.2
+     ]
+    },
+    {
+     "id": "joint-lid-hinge",
+     "kind": "revolve",
+     "bone": "lid",
+     "material": "powder-coat",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "lid",
+     "part": "joint",
+     "profile": [
+      [
+       0.0,
+       0.05285
+      ],
+      [
+       0.25,
+       0.05285
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.02,
+      -0.02,
+      0.25
+     ]
+    },
+    {
+     "id": "support-contact-l",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "support",
+     "anchor": "contact-l",
+     "size": [
+      0.34,
+      0.0755,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.03775,
+       0.43
+      ]
+     }
+    },
+    {
+     "id": "support-contact-r",
+     "kind": "box",
+     "bone": "unit",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "support",
+     "anchor": "contact-r",
+     "size": [
+      0.34,
+      0.0755,
+      0.18
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.03775,
+       -0.43
+      ]
+     }
+    },
+    {
+     "id": "mass-unit",
+     "kind": "ellipsoid",
+     "bone": "unit",
+     "material": "powder-coat",
+     "role": "body",
+     "tone": 0.2,
+     "member": "unit",
+     "part": "mass",
+     "radii": [
+      0.12,
+      0.25,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.6,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:500 the unit is one 485 mm deep block (the casing with its walls, panels and fan guard merged, as the 1:500 drawing does), two rubber feet of 90 mm, a 700 mm fan disc on the front face, a 100 mm lid plate and a 120 mm vane plate; walls, the shell opening, blades, rings, hinge rods and all fittings vanish into the block.",
+     "de": "Bei 1:500 ist das Ger\u00e4t ein 485 mm tiefer Block (Geh\u00e4use mit W\u00e4nden, Blechen und L\u00fcftergitter verschmolzen, wie die 1:500-Zeichnung), zwei 90-mm-Gummif\u00fc\u00dfe, eine 700-mm-L\u00fcfterscheibe an der Frontfl\u00e4che, eine 100 mm dicke Deckelplatte und eine 120 mm dicke Lamellenplatte; W\u00e4nde, Geh\u00e4use\u00f6ffnung, Fl\u00fcgel, Ringe, Scharnierstangen und alle Beschl\u00e4ge gehen im Block auf."
+    },
+    {
+     "en": "Minimal: the thermal list is already the smallest complete set, one solid per region plus the three emitters.",
+     "de": "Minimal: Die Thermikliste ist bereits der kleinste vollst\u00e4ndige Satz, ein K\u00f6rper je Region plus die drei Emitter."
+    },
+    {
+     "en": "Thermal: coil, tray and compressor compartment have no surface in the block and are real solids inside it; the other regions reference the block, disc, plates and feet; emitters are 75 mm discs.",
+     "de": "Thermik: Register, Wanne und Verdichterfach haben im Block keine Oberfl\u00e4che und sind echte K\u00f6rper in ihm; die \u00fcbrigen Regionen verweisen auf Block, Scheibe, Platten und F\u00fc\u00dfe; Emitter sind 75 mm dicke Scheiben."
+    },
+    {
+     "en": "Structure: block, lid, vane and feet are the members, hinge joints are 75 mm rods, two 75 mm pads under the feet and one mass in the block centre.",
+     "de": "Tragwerk: Block, Deckel, Lamelle und F\u00fc\u00dfe sind die St\u00e4be, Scharniergelenke sind 75-mm-Stangen, zwei 75 mm dicke Auflager unter den F\u00fc\u00dfen und eine Masse in der Blockmitte."
+    }
+   ]
+  }
+ }
+}

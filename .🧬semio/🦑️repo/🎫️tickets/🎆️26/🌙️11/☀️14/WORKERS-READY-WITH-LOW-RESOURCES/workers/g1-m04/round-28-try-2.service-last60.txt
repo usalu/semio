@@ -1,0 +1,60 @@
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:74:681:1:10:repo-storybook|project|10|0:waiting|1176|1163|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 74 of 681 projects · 1 running, longest 10 s: repo-storybook (project, 10 s, 0 rows) · waiting for memory headroom (1176 of 1163 MB reserved)
+graph: waiting for memory headroom (1176 of 1275 MB reserved, 1 projects running): repo-schema-commands needs 1176 MB and has waited 11 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 2520 s
+[repository:command] still running after 2530 s
+graph: project repo-storybook (project) grew by 8030 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (8030 of 1163 MB reserved, 1 projects running): repo-schema-commands needs 1176 MB and has waited 29 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:74:681:1:25:repo-storybook|project|25|0:waiting|8030|1163|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 74 of 681 projects · 1 running, longest 25 s: repo-storybook (project, 25 s, 0 rows) · waiting for memory headroom (8030 of 1163 MB reserved)
+graph: 0 of 703 projects arrived from the fleet, 74 inferred here, 629 left; the server last progressed 697 s ago, estimated time left: about 10 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:74:681:2:30:repo-storybook|project|30|0,repo-schema-commands|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 74 of 681 projects · 2 running, longest 30 s: repo-storybook (project, 30 s, 0 rows), repo-schema-commands (project, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repo] still working after 2540 s; last phase started: source.served
+[repository:command] still running after 2540 s
+[repository:command] still running after 2550 s
+[repository:command] still running after 2560 s
+[repo] still working after 2570 s; last phase started: source.served
+[repository:command] still running after 2570 s
+[repository:command] still running after 2580 s
+graph: project repo-schema-commands (project) grew by 10073 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (10073 of 1037 MB reserved, 1 projects running): repo-storybook needs 1176 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:74:681:2:80:repo-storybook|project|80|0,repo-schema-commands|project|50|0:waiting|10073|1037|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 74 of 681 projects · 2 running, longest 80 s: repo-storybook (project, 80 s, 0 rows), repo-schema-commands (project, 50 s, 0 rows) · waiting for memory headroom (10073 of 1037 MB reserved)
+graph: 0 of 703 projects arrived from the fleet, 74 inferred here, 629 left; the server last progressed 744 s ago, estimated time left: about 10 min
+[repository:command] still running after 2590 s
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:74:681:1:55:repo-schema-commands|project|55|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 74 of 681 projects · 1 running, longest 55 s: repo-schema-commands (project, 55 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] build:command-source-packages · Resolving the packages of command sources
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+graph: waiting for memory headroom (1176 of 779 MB reserved, 1 projects running): repo-nx-output-custody needs 901 MB and has waited 2 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:74:681:2:55:repo-schema-commands|project|55|0,repo-policy|project|0|0:waiting|1176|779|language%3Atypescript","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 74 of 681 projects · 2 running, longest 55 s: repo-schema-commands (project, 55 s, 0 rows), repo-policy (project, 0 s, 0 rows) · waiting for memory headroom (1176 of 779 MB reserved)
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repo] still working after 2600 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:74:681:2:60:repo-schema-commands|project|60|0,repo-policy|project|5|0:waiting|1176|779|language%3Atypescript","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 74 of 681 projects · 2 running, longest 60 s: repo-schema-commands (project, 60 s, 0 rows), repo-policy (project, 5 s, 0 rows) · waiting for memory headroom (1176 of 779 MB reserved)
+graph: waiting for memory headroom (1176 of 1095 MB reserved, 1 projects running): repo-schema-commands needs 1176 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 74 inferred here, 629 left; the server last progressed 754 s ago, estimated time left: about 10 min
+[repository:command] still running after 2600 s
+[repository:command] still running after 2610 s
+[repository:command] still running after 2620 s
+[repo] still working after 2630 s; last phase started: source.served
+[repository:command] still running after 2630 s

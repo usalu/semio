@@ -252,9 +252,14 @@ export interface Progress {
 
 export type MechanicsErrorKind = "cancelled" | "invalid" | "singular" | "unstable" | "noPositiveEigenvalue" | "noConvergence";
 
+export interface MechanicsText {
+  en: string;
+  de: string;
+}
+
 export interface MechanicsError {
   kind: MechanicsErrorKind;
-  message: string;
+  message: MechanicsText;
   node: string;
   dof: number;
 }

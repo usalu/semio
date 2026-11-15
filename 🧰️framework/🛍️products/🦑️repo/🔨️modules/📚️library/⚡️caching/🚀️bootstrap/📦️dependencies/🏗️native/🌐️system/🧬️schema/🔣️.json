@@ -5,7 +5,8 @@
   "required": [
     "version",
     "order",
-    "packages"
+    "packages",
+    "chromium"
   ],
   "properties": {
     "version": {
@@ -112,9 +113,71 @@
         }
       ],
       "additionalItems": false
+    },
+    "chromium": {
+      "$ref": "#/definitions/Chromium"
     }
   },
   "definitions": {
+    "Chromium": {
+      "description": "The digest pins of the Playwright Chromium downloads, one per OS, architecture and Playwright browser revision. An empty list means no digest is recorded: a machine that downloads Chromium has to fill it (sha256 and bytes of the archive it fetched from `url`); a pinned download is then a fleet blob like every other pinned tool download.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "downloads"
+      ],
+      "properties": {
+        "downloads": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/definitions/ChromiumDownload"
+          }
+        }
+      }
+    },
+    "ChromiumDownload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "architecture",
+        "revision",
+        "url",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
     "Case": {
       "type": "object",
       "additionalProperties": false,

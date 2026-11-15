@@ -69,7 +69,9 @@ test("the outermost command answers every policy vector like the independent ora
    expect(launches.map(launch=>launch.SEMIO_STALE_REEXEC),row.id).toEqual([String(expected.nextAttempt)]);
    expect(written.join(""),row.id).toContain(expected.announced==="loadfailure"?"edited by another process while this command loaded it":expected.announced==="editfailure"?"kept editing /w/a.tex while this command read it (its bytes changed)":"Restarting with the current implementation ("+expected.nextAttempt+" of "+protocol.maximumReexecutions+")");
   }else expect(launches.length,row.id).toBe(0);
-  if(expected.status==="exhausted")expect(written.join(""),row.id).toContain(formatStampTextV1("en","final"));
+  if(expected.status==="exhausted")expect(written.join(""),row.id).toContain(formatStampTextV1("en","final"))
+  if(expected.status==="exhausted"&&row.origin==="edit")expect(written.join(""),row.id).toContain(formatStampTextV1("en","finalcause",{cause:"/w/a.tex (bytes)"}));
+  if(expected.status==="exhausted"&&row.origin==="exit")expect(written.join(""),row.id).not.toContain("last restart was asked for");
  }
 });
 

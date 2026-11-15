@@ -1,4 +1,5 @@
 import {linuxHostLibcV1} from "../../../../🎛️commands/🔧️setup/🟦️.ts";
+import{fleetFetchContextV1,pinnedFetchV1}from"../../🛰️fleet-fetch/🟦️.ts";
 import{withRepositoryToolingOperationV1}from"../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{ToolingHeadroomRefusalV1}from"../🧹️retention/📏️headroom/🟦️.ts";
@@ -87,7 +88,7 @@ async function prepareBunOwnedV1(workspace:string,version:string,store:Repositor
     const staging=mkdtempSync(join(base,".prepare-")),deadline=new AbortController(),watch=setInterval(()=>{try{checkResourceLeaseControl(control);}catch(error){deadline.abort(error);}},25),progress = setInterval(() => console.log(`Acquiring pinned Bun ${version}…`), 10000);
     try {
       console.log(`Acquiring pinned Bun ${version} for ${row.platform}/${row.arch}…`);
-      const response = await fetch(`${manifest.release}/${row.archive}`, { signal:AbortSignal.any([signal,deadline.signal]) });
+      const response = await pinnedFetchV1(fleetFetchContextV1(process.env, workspace), {url:`${manifest.release}/${row.archive}`, sha256:row.sha256, bytes:row.bytes}, { signal:AbortSignal.any([signal,deadline.signal]) });
       if (!response.ok || !response.body) throw new Error(`Bun download failed: ${response.status}`);
       const chunks: Buffer[] = [], hash = createHash("sha256"), reader = response.body.getReader(); let size = 0;
       try { for (let read = await reader.read(); !read.done; read = await reader.read()) { checkResourceLeaseControl(control); size += read.value.length; if (size > row.bytes) throw new Error("Bun archive exceeds its pinned size"); const chunk = Buffer.from(read.value); chunks.push(chunk); hash.update(chunk); } }

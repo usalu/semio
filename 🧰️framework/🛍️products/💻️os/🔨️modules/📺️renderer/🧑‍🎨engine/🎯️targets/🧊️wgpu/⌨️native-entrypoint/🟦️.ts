@@ -83,7 +83,7 @@ export async function runMcpScript(context: Readonly<{ root: string; repoRoot: s
   const controller=new AbortController(),cancel=()=>controller.abort();
   const phaseControl=createIssuedResourceControlV1(context.invocation,"native:mcp",0,controller.signal);
   process.once("SIGINT",cancel);process.once("SIGTERM",cancel);
-  try {await withRepositoryExecutablePinV1({workspace:context.repoRoot,invocation:context.invocation,phaseControl,source:binary},async(executable,actualControl)=>{await runOwnedCommand(executable,[transport,...args],context.repoRoot,"native:mcp",compilerAdmissionBudgetV1(actualControl),{env:process.env,signal:actualControl.signal});checkResourceLeaseControl(actualControl);});}
+  try {await withRepositoryExecutablePinV1({workspace:context.repoRoot,invocation:context.invocation,phaseControl,source:binary},async(executable,actualControl)=>{await runOwnedCommand(executable,[transport,...args],context.repoRoot,"native:mcp",0,{deadline:actualControl,env:process.env,signal:actualControl.signal});checkResourceLeaseControl(actualControl);});}
   finally {process.removeListener("SIGINT",cancel);process.removeListener("SIGTERM",cancel);}
 }
 

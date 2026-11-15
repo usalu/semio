@@ -1,0 +1,8 @@
+🔌️appliances/ceiling-diffuser
+🔌️appliances/circulation-pump
+🔌️appliances/decentralised-hrv-fan
+🔌️appliances/desktop-monitor
+🔌️appliances/duct-fan
+🔌️appliances/electric-fan-heater
+🔌️appliances/electric-kettle
+🔌️appliances/electricity-meter

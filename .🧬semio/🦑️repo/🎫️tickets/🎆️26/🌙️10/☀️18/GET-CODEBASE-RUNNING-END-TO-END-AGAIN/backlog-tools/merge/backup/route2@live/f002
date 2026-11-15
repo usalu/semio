@@ -1,0 +1,184 @@
+{
+ "version": 1,
+ "chunk": 65536,
+ "cases": [
+  {
+   "name": "a small file is captured whole",
+   "kind": "file",
+   "size": 11,
+   "maximum": 1024,
+   "remaining": 5000,
+   "ok": true,
+   "remainingAfter": 4989,
+   "checks": 2
+  },
+  {
+   "name": "an empty file is captured as empty bytes",
+   "kind": "file",
+   "size": 0,
+   "maximum": 1024,
+   "remaining": 5000,
+   "ok": true,
+   "remainingAfter": 5000,
+   "checks": 1
+  },
+  {
+   "name": "a file of exactly the maximum is admitted",
+   "kind": "file",
+   "size": 1024,
+   "maximum": 1024,
+   "remaining": 5000,
+   "ok": true,
+   "remainingAfter": 3976,
+   "checks": 2
+  },
+  {
+   "name": "a file one byte over the maximum is refused",
+   "kind": "file",
+   "size": 1025,
+   "maximum": 1024,
+   "remaining": 5000,
+   "error": "over the 1024-byte bound",
+   "remainingAfter": 5000,
+   "checks": 1
+  },
+  {
+   "name": "a file that fills the aggregate budget exactly is admitted",
+   "kind": "file",
+   "size": 700,
+   "maximum": 1024,
+   "remaining": 700,
+   "ok": true,
+   "remainingAfter": 0,
+   "checks": 2
+  },
+  {
+   "name": "a file that does not fit the aggregate budget is refused and leaves it intact",
+   "kind": "file",
+   "size": 701,
+   "maximum": 1024,
+   "remaining": 700,
+   "error": "file changed or exceeds aggregate bound",
+   "remainingAfter": 700,
+   "checks": 1
+  },
+  {
+   "name": "a file of one chunk is read in one step",
+   "kind": "file",
+   "size": 65536,
+   "maximum": 1048576,
+   "remaining": 1048576,
+   "ok": true,
+   "remainingAfter": 983040,
+   "checks": 2
+  },
+  {
+   "name": "a file of one chunk and one byte is read in two steps",
+   "kind": "file",
+   "size": 65537,
+   "maximum": 1048576,
+   "remaining": 1048576,
+   "ok": true,
+   "remainingAfter": 983039,
+   "checks": 3
+  },
+  {
+   "name": "a file of three and a half chunks is read in four steps",
+   "kind": "file",
+   "size": 229376,
+   "maximum": 4194304,
+   "remaining": 4194304,
+   "ok": true,
+   "remainingAfter": 3964928,
+   "checks": 5
+  },
+  {
+   "name": "a symbolic link to a file is refused",
+   "kind": "symlink",
+   "size": 5,
+   "maximum": 1024,
+   "remaining": 5000,
+   "error": "not a regular file",
+   "remainingAfter": 5000,
+   "checks": 1
+  },
+  {
+   "name": "a directory is refused",
+   "kind": "directory",
+   "size": 0,
+   "maximum": 1024,
+   "remaining": 5000,
+   "error": "not a regular file",
+   "remainingAfter": 5000,
+   "checks": 1
+  },
+  {
+   "name": "a missing file is refused by the file system",
+   "kind": "missing",
+   "size": 0,
+   "maximum": 1024,
+   "remaining": 5000,
+   "errorCode": "ENOENT",
+   "remainingAfter": 5000,
+   "checks": 1
+  },
+  {
+   "name": "a cancelled capture stops before any file system access",
+   "kind": "file",
+   "size": 5,
+   "maximum": 1024,
+   "remaining": 5000,
+   "cancelAt": 1,
+   "error": "cancelled at check 1",
+   "remainingAfter": 5000,
+   "checks": 1
+  },
+  {
+   "name": "a capture cancelled between chunks stops after the budget was spent",
+   "kind": "file",
+   "size": 131072,
+   "maximum": 1048576,
+   "remaining": 1048576,
+   "cancelAt": 3,
+   "error": "cancelled at check 3",
+   "remainingAfter": 917504,
+   "checks": 3
+  },
+  {
+   "name": "a file appended to between chunks is reported as changed",
+   "kind": "file",
+   "size": 131072,
+   "maximum": 1048576,
+   "remaining": 1048576,
+   "mutateAt": 3,
+   "mutation": "append",
+   "error": "file changed while reading",
+   "remainingAfter": 917504,
+   "checks": 3
+  },
+  {
+   "name": "a file rewritten in place between chunks is reported as changed",
+   "kind": "file",
+   "size": 131072,
+   "maximum": 1048576,
+   "remaining": 1048576,
+   "mutateAt": 3,
+   "mutation": "touch",
+   "error": "file changed while reading",
+   "remainingAfter": 917504,
+   "checks": 3
+  },
+  {
+   "name": "a file truncated between chunks is reported as shortened after one more checkpoint",
+   "kind": "file",
+   "size": 131072,
+   "maximum": 1048576,
+   "remaining": 1048576,
+   "mutateAt": 3,
+   "mutation": "truncate",
+   "error": "file shortened",
+   "remainingAfter": 917504,
+   "checks": 4
+  }
+ ]
+}

@@ -10,7 +10,7 @@ pub mod cas {
     pub use semio_s_artifact_mathematical_equation_snapshot::cas::expr;
     pub use semio_s_artifact_mathematical_equation_snapshot::cas::visit;
     pub use semio_s_artifact_mathematical_equation_snapshot::cas::polybridge;
-    pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::cas::simplify;
+    pub use semio_s_artifact_mathematical_equation_update_graph::cas::simplify;
     pub use semio_s_artifact_mathematical_equation_mut_family::cas::integrate;
     #[path = "../../../../💡️inferences/🌿️cas-internals/➕️sums/🦀️.rs"]
     pub mod sums;
@@ -55,7 +55,7 @@ pub mod standards {
                     #[path = "."]
                     pub mod mutations {
                         pub use semio_s_artifact_mathematical_equation_inferences::standards::v1::subsets::graph::schema::mutations::change_graph_directed;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm;
                         pub use semio_s_artifact_mathematical_equation_mut_family::standards::v1::subsets::graph::schema::mutations::create_node;
                         pub use semio_s_artifact_mathematical_equation_mut_family::standards::v1::subsets::graph::schema::mutations::delete_node;
                         #[path = "."]
@@ -70,24 +70,24 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod move_nodes {
-                            pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::move_nodes::*;
-                            pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::move_nodes::*;
+                            pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::move_nodes::*;
+                            pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::move_nodes::*;
                             #[cfg(test)]
                             #[path = "../../../../../../🕸️graph/🧬️schema/🧬️mutations/🚚️move-nodes/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod tests;
                         }
                         #[path = "."]
                         pub mod set_node_positions {
-                            pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::set_node_positions::*;
-                            pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::set_node_positions::*;
+                            pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::set_node_positions::*;
+                            pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::set_node_positions::*;
                             #[cfg(test)]
                             #[path = "../../../../../../🕸️graph/🧬️schema/🧬️mutations/📍️set-node-positions/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod tests;
                         }
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::change_node_label;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::move_node;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::connect_nodes;
-                        pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::standards::v1::subsets::graph::schema::mutations::disconnect_nodes;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::change_node_label;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::move_node;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::connect_nodes;
+                        pub use semio_s_artifact_mathematical_equation_update_graph::standards::v1::subsets::graph::schema::mutations::disconnect_nodes;
                         #[cfg(test)]
                         #[path = "../../../../../../🕸️graph/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod leaf_tests;

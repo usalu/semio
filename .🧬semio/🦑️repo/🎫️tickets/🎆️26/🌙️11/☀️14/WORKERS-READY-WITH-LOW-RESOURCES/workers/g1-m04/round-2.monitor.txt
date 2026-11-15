@@ -1,0 +1,4 @@
+started pid=2082449 at 2026-11-14T16:00:09Z
+HARD STOP at 2026-11-14T16:07:40Z: memory pressure (PSI full avg10 27.87 %); sending one SIGINT to process group 2082449
+one minute after SIGINT: alive=no
+ended at 2026-11-14T16:08:41Z wait_rc=0 peak_rss_kib=7571404 hard_stop=memory pressure (PSI full avg10 27.87 %)

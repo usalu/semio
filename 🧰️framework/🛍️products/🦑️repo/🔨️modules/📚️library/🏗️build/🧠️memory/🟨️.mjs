@@ -1,13 +1,16 @@
 import{BUILD_HOST_CAPACITY_POLICY_V1}from"../🌡️host-capacity/🎛️control/🟦️.ts";
 import{readLiveHostCapacityReservationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
-import{totalmem,freemem}from"node:os";
+import{totalmem}from"node:os";
+import{hostAvailableBytesV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
+import{hostProfileV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
 import{mkdirSync,readFileSync,renameSync,writeFileSync}from"node:fs";
-import{execFileSync}from"node:child_process";
 import{dirname}from"node:path";
-import{cgroupMemoryHeadroomV1}from"../🧱️job-limits/🐧️cgroup/🟦️.ts";
+import{cgroupMachineLimitBytesV1,cgroupMemoryHeadroomV1}from"../🧱️job-limits/🐧️cgroup/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {runtimeCollectGarbageV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
+import {createOwnerScopeV1} from "./🎯️owner-scope/🟨️.mjs";
+import {footprintGateV1,footprintPulseV1} from "./🦶️footprint/🟨️.mjs";
 
 /** 🧊️ Freezes a declaration recursively. */
 const freeze=value=>{if(value!==null&&typeof value==="object"){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
@@ -33,11 +36,47 @@ export function renderGraphMemoryMessagesV1(key,fields,environment){
  });
 }
 
-/** 🖥️ The memory of the host in megabytes as this process may use it (the container limit when one applies), 0 when unknown. */
+/** ⛔️ The typed refusal of a graph read that can neither wait for headroom nor run: the project at the head needs more than one project is granted here. It carries the exit code 75 (temporary failure: try again later or let the fleet infer it) and what it needs and is granted.
+ * @see ./🧬️schema/🔣️.json */
+export class GraphMemoryRefusedErrorV1 extends Error{
+ constructor(detail){
+  super(detail.message);
+  this.name="GraphMemoryRefusedErrorV1";this.code="BUILD_GRAPH_MEMORY_REFUSED";this.exitCode=P.refusalExitCode;this.detail=Object.freeze({key:detail.key,needBytes:detail.needBytes,availableBytes:detail.availableBytes,freeBytes:detail.freeBytes,seconds:detail.seconds});
+ }
+}
+
+/** 🛰️ A project the fleet took over while it waited for headroom: the caller reads its rows from the fleet instead of inferring it here. */
+export class GraphOwnerFleetErrorV1 extends Error{
+ constructor(key){super("Graph project taken over by the fleet: "+key);this.name="GraphOwnerFleetErrorV1";this.code="BUILD_GRAPH_OWNER_FLEET";this.detail=Object.freeze({key});}
+}
+
+/** 🔎️ The typed refusal in `error` or its causes (a failure tag wraps errors), else undefined: the command entry ends the command with its `exitCode` (75) and prints its message in both languages.
+ * @see GraphMemoryRefusedErrorV1 */
+export function graphMemoryRefusalOfV1(error,depth=6){
+ if(typeof error!=="object"||error===null||depth<0)return undefined;
+ if(error instanceof GraphMemoryRefusedErrorV1||error.code==="BUILD_GRAPH_MEMORY_REFUSED")return error;
+ return graphMemoryRefusalOfV1(error.cause,depth-1);
+}
+
+/** 🖥️ The memory of the host in megabytes as this process may use it (the container limit when one applies, a smaller declared machine when `SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES` names one), 0 when unknown. */
 export function hostMemoryMegabytesV1(){
  const total=totalmem(),limit=typeof process.constrainedMemory==="function"?process.constrainedMemory():0;
  const bytes=Number.isFinite(limit)&&limit>0&&limit<total?limit:total;
- return Number.isFinite(bytes)&&bytes>0?Math.floor(bytes/MEGABYTE):0;
+ return Number.isFinite(bytes)&&bytes>0?hostProfileV1(process.env,{totalMegabytes:Math.floor(bytes/MEGABYTE),cores:1,declared:false}).totalMegabytes:0;
+}
+
+/** 🧱️ The hard memory limit of the service's own cgroup, derived from the machine like the plan guard (`serviceHostShare` of the physical memory, never below `serviceMinimumMegabytes`), never a fixed number: a service of a 16 GB worker is limited to 9.5 GB, not to the 4 GB a constant gave. It is written at every start of the service (`prepareServiceGroupV1`), so a group that an older revision created with another limit is corrected by the next start without root.
+ * @see ./🧬️schema/🔣️.json */
+export function graphServiceLimitMegabytesV1(hostMegabytes,policy=P){
+ const host=Number.isFinite(hostMegabytes)&&hostMegabytes>0?Math.floor(hostMegabytes):0;
+ return Math.max(policy.serviceMinimumMegabytes,Math.floor(host*policy.serviceHostShare));
+}
+
+/** 🔭️ What a fleet read judges the machine by: its physical memory (a declared smaller machine counts as declared), bounded only by a cgroup limit ABOVE the groups this system creates for its own processes (`cgroupMachineLimitBytesV1`), never by `process.constrainedMemory()`, which inside the graph service is the service's own hard budget and made a 16 GB Linux worker a 4 GB machine (`it can give about 0 MB per project`). `availableMegabytes` is the kernel's available memory (Linux `MemAvailable`, macOS the `vm_stat` reading), bounded by the machine limit; it is printed with the plan, no decision depends on it. */
+export function fleetHostReadingV1({ports,total=totalmem,environment=process.env,limit=cgroupMachineLimitBytesV1,available=hostAvailableBytesV1}={}){
+ const physical=hostProfileV1(environment,{totalMegabytes:Math.floor(total()/MEGABYTE),cores:1,declared:false}).totalMegabytes,bound=limit(ports),limitMegabytes=Number.isFinite(bound)&&bound>0?Math.floor(bound/MEGABYTE):null,free=available();
+ const hostMegabytes=limitMegabytes===null?physical:Math.min(physical,limitMegabytes);
+ return Object.freeze({physicalMegabytes:physical,limitMegabytes,hostMegabytes,availableMegabytes:Number.isFinite(free)?Math.min(hostMegabytes,Math.floor(free/MEGABYTE)):null});
 }
 
 /** 🎫️ Partitions the qualified live reservation between the graph parent, fixed overhead and owned workers; an enlarged carried tool envelope cannot fund additional memory. An explicit parent budget leaves one minimum owned worker when the reservation can pay for that worker beside the parent, so a scaled-down grant still infers outside the parent. */
@@ -74,33 +113,11 @@ export function createMemoryPortsV1(){
  });
 }
 
-/** 🍎️ The memory a macOS host can give out in bytes from the text of `vm_stat`: the free and the inactive pages (the file cache the kernel returns on demand); `os.freemem()` counts the free pages alone, which on a host that runs for days is a few megabytes whatever is reclaimable, so a governor reading it would see no headroom ever. Undefined for a text that names no page size, free or inactive count. */
-export function darwinAvailableBytesV1(text){
- const size=/page size of (\d+) bytes/u.exec(text),pages=name=>{const found=new RegExp("^"+name+":\\s+(\\d+)\\.","mu").exec(text);return found?Number(found[1]):undefined;},free=pages("Pages free"),inactive=pages("Pages inactive");
- return size&&free!==undefined&&inactive!==undefined?(free+inactive)*Number(size[1]):undefined;
-}
-
-/** 🐧️ The memory a Linux host can give out in bytes from the text of `/proc/meminfo` (`MemAvailable`), undefined where the kernel does not report it. */
-export function linuxAvailableBytesV1(text){
- const found=/^MemAvailable:\s+(\d+)\s+kB/mu.exec(text);
- return found?Number(found[1])*1024:undefined;
-}
-
-/** 🌡️ The reader of the memory the host can still give out: `MemAvailable` on Linux, free plus inactive pages on macOS (`vm_stat`), the operating system's own free memory elsewhere and wherever the platform source cannot be read; an answer is kept for `maximumAgeMilliseconds` so a governor that samples every few hundred milliseconds does not start a process per sample. The sources are ports. */
-export function createAvailableMemoryV1({platform=process.platform,read=path=>readFileSync(path,"utf8"),run=()=>execFileSync("vm_stat",{encoding:"utf8",timeout:2000}),free=freemem,now=()=>performance.now(),maximumAgeMilliseconds=1000}={}){
- let at=-Infinity,value=0;
- const source=()=>{try{if(platform==="linux")return linuxAvailableBytesV1(read("/proc/meminfo"));if(platform==="darwin")return darwinAvailableBytesV1(run());}catch{}return undefined;};
- return()=>{const time=now();if(time-at>=maximumAgeMilliseconds||at===-Infinity){const found=source();value=Number.isFinite(found)&&found>=0?found:free();at=time;}return value;};
-}
-
-/** 🌡️ The reader of this host. */
-export const availableMemoryBytesV1=createAvailableMemoryV1();
-
 /** 📏️ The bytes the service process and its pool may still take: where the environment declares a memory limit (`SEMIO_GRAPH_MEMORY_LIMIT_MB`, a private harness or a platform without cgroups) that limit less the resident memory of this process, otherwise the headroom of the cgroup they share (`memory.max` of the smallest enclosing limit minus `memory.current`) less the safety margin, a declared share of the limit; where no cgroup is readable the host answers with its total and free memory under the same margin. */
-export function serviceMemoryHeadroomBytesV1({ports,policy=P,cgroup=cgroupMemoryHeadroomV1,free=availableMemoryBytesV1,total=totalmem,environment=process.env,usage=()=>process.memoryUsage().rss}={}){
+export function serviceMemoryHeadroomBytesV1({ports,policy=P,cgroup=cgroupMemoryHeadroomV1,free=hostAvailableBytesV1,total=totalmem,environment=process.env,usage=()=>footprintGateV1()?.footprintBytes()??process.memoryUsage().rss}={}){
  const declared=Number(environment[policy.limitEnvironment]);
  if(Number.isFinite(declared)&&declared>0){const limit=declared*MEGABYTE;return Math.floor(limit-usage()-limit*policy.safetyMarginBasisPoints/10000);}
- const reading=cgroup(ports),limit=reading!==undefined&&Number.isFinite(reading.limitBytes)?reading.limitBytes:total(),current=reading!==undefined?reading.currentBytes:total()-free();
+ const reading=cgroup(ports),limit=reading!==undefined&&Number.isFinite(reading.limitBytes)?reading.limitBytes:total(),current=reading!==undefined?reading.currentBytes:total()-(free()??total());
  return Math.floor(limit-current-limit*policy.safetyMarginBasisPoints/10000);
 }
 
@@ -131,46 +148,84 @@ export function graphOwnerAdmissionV1({headroom,running,inflight,estimate,learne
 
 /**
  * 🚦️ Admits project inferences against the headroom the service has left, soundly before any cost is learned: the estimate of an in-flight owner is the larger of the learned peak of its kind (else the declared guess) and the growth observed since it started (the measured growth of the headroom split between the running owners in proportion to what each is still expected to take); one more owner starts only when the measured headroom less the remaining estimates covers its own estimate; an owner of a kind without a learned peak runs alone until one of that kind completes; the peak of a kind is the largest growth of its last `peakSamples` completed owners (ageing: an outlier leaves the window after that many completions) and persists as those samples through the `peaks` port; when `attributable` is given, that growth is the change of this process, never what other processes took from the headroom; one owner always runs, so nothing deadlocks.
- * @param {{workers:number;headroom:()=>number;attributable?:()=>number;estimateBytes?:number;decide?:(decision:{key:string;used:number;budget:number;kind?:string})=>void;peaks?:{read:()=>Record<string,number[]>;write:(peaks:Record<string,number[]>)=>void};sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Record<string,string|undefined>;policy?:typeof GRAPH_MEMORY_POLICY_V1}} options
+ * Every task receives `{away,scope}` (`scope` is the owner's stop flag, see `createOwnerScopeV1`): `away(work)` gives the owner slot back to the queue while `work` waits for something that costs this process nothing (a worker process inferring the project), so the admission bounds what the process holds, not what the workers hold. The slot is taken again when the work ends, so a task never runs its own code outside a slot.
+ * What an owner is expected to take is the larger of the learned peak of its kind and the cost recorded for its own key (`estimate`), so a kind learned from shares of concurrent owners never admits more owners than the recorded costs allow; a sample taken while owners ran together only raises the learned peak of its kind. An owner that comes back from `away` is admitted again by the same law (a free slot, the headroom less the remaining estimates covering its estimate, or nobody else running), so the owners that wait for workers never return into the process all at once.
+ * The wait is bounded: when at most one owner runs and the head of the queue has waited `waitBoundMilliseconds`, the smallest pending owner is admitted if its estimate fits the grant of one owner (`ownerLimitBytes`, else `grantMegabytes`), otherwise every waiter fails with {@link GraphMemoryRefusedErrorV1} (exit code 75); with a `fleet` port, after `fleetFallbackMilliseconds` the fleet is asked for the pending keys and the owners it takes fail with {@link GraphOwnerFleetErrorV1}.
+ * ONE project can be the problem: with `ownerLimitBytes` (or the `limitBytes` of one `run`, the grant of an owner that runs alone) the governor ENFORCES what it measures. An owner whose growth passes the limit (its own growth when it runs alone, else its attributed share) is first confirmed by a full collection (garbage is not growth; at most one per `stopCollectMinimumMilliseconds`), and when it still passes, its scope is marked exceeded, so its inference stops at the next yield point with `GraphOwnerTooHeavyErrorV1`, nothing it took is learned into its kind (one heavy owner must not make every owner of the kind heavy), and `costs.record` receives what it took, stopped or not, under its `key`.
+ * @param {{workers:number;headroom:()=>number;attributable?:()=>number;measure?:()=>number;collect?:()=>void;ownerLimitBytes?:number;onStop?:(stop:{key:string;kind:string;takenBytes:number;limitBytes:number;seconds:number})=>void;costs?:{record:(row:{key:string;kind:string;takenBytes:number;seconds:number;stopped:boolean})=>void};estimateBytes?:number;decide?:(decision:{key:string;used:number;budget:number;kind?:string})=>void;peaks?:{read:()=>Record<string,number[]>;write:(peaks:Record<string,number[]>)=>void};sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Record<string,string|undefined>;policy?:typeof GRAPH_MEMORY_POLICY_V1}} options
  */
-export function createMemoryGovernorV1({workers,headroom,attributable,estimateBytes=P.initialOwnerMegabytes*MEGABYTE,peaks,sleep=defaultSleep,now=()=>performance.now(),signal,report,decide,environment={},policy=P}){
+export function createMemoryGovernorV1({workers,headroom,attributable,measure,collect,hold,ownerLimitBytes=Infinity,onStop,costs,fleet,estimate,estimateBytes=P.initialOwnerMegabytes*MEGABYTE,peaks,sleep=defaultSleep,now=()=>performance.now(),signal,report,decide,environment={},policy=P}){
  if(!Number.isSafeInteger(workers)||workers<1||typeof headroom!=="function"||!(estimateBytes>0))throw Error("Positive worker count, headroom reading and owner estimate required");
- const queue=[],owners=new Set(),stats={waits:0,waitedMilliseconds:0,peakOwners:0},learned=new Map(Object.entries(peaks?.read()??{}).filter(([,samples])=>Array.isArray(samples)&&samples.length>0&&samples.every(bytes=>Number.isFinite(bytes)&&bytes>=0)).map(([kind,samples])=>[kind,samples.slice(-policy.peakSamples)]));
- let last=headroom(),own=attributable?.(),timer,pumping=false,serialSaid=false,lastReport=-Infinity,lastAdmit=-Infinity;
+ const ceilingOf=kind=>(String(kind).startsWith("root:")?policy.peakCeilingMegabytes:policy.grantMegabytes)*MEGABYTE;
+ const queue=[],owners=new Set(),stats={waits:0,waitedMilliseconds:0,peakOwners:0,stops:0},learned=new Map(Object.entries(peaks?.read()??{}).filter(([,samples])=>Array.isArray(samples)&&samples.length>0&&samples.every(bytes=>Number.isFinite(bytes)&&bytes>=0)).map(([kind,samples])=>[kind,samples.slice(-policy.peakSamples).map(bytes=>Math.min(bytes,ceilingOf(kind)))]));
+ let last=headroom(),own=attributable?.(),timer,pumping=false,serialSaid=false,lastReport=-Infinity,lastAdmit=-Infinity,lastCollect=-Infinity,lastDone=-Infinity,fleetAsked=false,resuming=0;
+ const grantBytes=ownerLimitBytes<Infinity?ownerLimitBytes:policy.grantMegabytes*MEGABYTE;
   const say=(key,fields)=>{decide?.({key,used:fields.used,budget:fields.budget,kind:fields.kind});for(const line of renderGraphMemoryMessagesV1(key,{running:owners.size,kind:"",...fields},environment))report?.(line);};
- const megabytes=bytes=>Math.round(bytes/MEGABYTE),peakOf=kind=>learned.has(kind)?Math.max(...learned.get(kind)):estimateBytes,largestLearned=()=>Math.max(0,...[...learned.values()].map(samples=>Math.max(...samples)));
+ const megabytes=bytes=>Math.round(bytes/MEGABYTE),peakOf=kind=>learned.has(kind)?Math.max(...learned.get(kind)):estimateBytes,recordedOf=row=>{if(row.key===undefined||estimate===undefined)return undefined;try{const bytes=estimate(row.key,row.kind);return Number.isFinite(bytes)&&bytes>0?bytes:undefined;}catch{return undefined;}},costOf=row=>Math.max(peakOf(row.kind),recordedOf(row)??0),knownOf=row=>learned.has(row.kind)||recordedOf(row)!==undefined,largestLearned=()=>Math.max(0,...[...learned.values()].map(samples=>Math.max(...samples)));
+ const describeOf=(row,since,used,budget)=>({key:row.key??row.kind,kind:row.kind,seconds:Math.round((now()-since)/1000),need:megabytes(costOf(row)),limit:Math.round(policy.waitBoundMilliseconds/1000),available:megabytes(grantBytes),count:queue.length,used:megabytes(used),budget:megabytes(budget)});
+ const growthOf=owner=>Math.max(0,(owners.size===1&&measure!==undefined?Math.max(0,measure()-owner.startBytes):owner.net)-owner.scope.credited);
+ const enforce=()=>{
+  for(const owner of owners){
+   const limitBytes=owner.limitBytes??ownerLimitBytes;
+   if(!(limitBytes<Infinity)||owner.scope.exceeded!==undefined||growthOf(owner)<=limitBytes)continue;
+   if(collect!==undefined){if(now()-lastCollect<policy.stopCollectMinimumMilliseconds)continue;lastCollect=now();collect();if(growthOf(owner)<=limitBytes)continue;}
+   const takenBytes=Math.max(owner.taken,growthOf(owner)),seconds=(now()-owner.since)/1000;
+   owner.scope.exceed({takenBytes,limitBytes});owner.stopped=true;stats.stops++;
+   say("stopped",{key:owner.key,kind:owner.kind,used:megabytes(takenBytes),budget:megabytes(limitBytes)});
+   onStop?.({key:owner.key,kind:owner.kind,takenBytes,limitBytes,seconds});
+  }
+ };
  const sample=()=>{
   const free=headroom();
+  if(owners.size>1)for(const owner of owners)owner.shared=true;
   const grown=attributable===undefined?undefined:(()=>{const now=attributable(),change=now-own;own=now;return change;})();
   if(owners.size===0){last=free;return free;}
   let delta=last-free;last=free;
   if(grown!==undefined)delta=delta>0?Math.min(delta,Math.max(0,grown)):Math.max(delta,Math.min(0,grown));
-  const room=[...owners].map(owner=>Math.max(0,peakOf(owner.kind)-owner.taken)),open=room.reduce((sum,value)=>sum+value,0);
-  [...owners].forEach((owner,index)=>{owner.net=Math.max(0,owner.net+(delta>0&&open>0?delta*room[index]/open:delta/owners.size));owner.taken=Math.max(owner.taken,owner.net);});
+  const room=[...owners].map(owner=>Math.max(0,costOf(owner)-owner.taken)),open=room.reduce((sum,value)=>sum+value,0);
+  [...owners].forEach((owner,index)=>{owner.net=Math.max(0,owner.net+(delta>0&&open>0?delta*room[index]/open:delta/owners.size));owner.taken=Math.max(owner.taken,owner.net-owner.scope.credited);});
+  enforce();
   return free;
  };
- const inflight=()=>[...owners].map(owner=>({estimate:peakOf(owner.kind),taken:owner.taken}));
+ const inflight=()=>[...owners].map(owner=>({estimate:costOf(owner),taken:owner.taken}));
  const fail=error=>{for(const waiter of queue.splice(0))waiter.reject(error);};
  const pump=async()=>{
   if(pumping)return;pumping=true;
   try{
-   while(queue.length&&owners.size<workers){
+   while(queue.length&&owners.size<workers&&resuming===0){
     signal?.throwIfAborted();
     const spacing=lastAdmit+policy.admitMinimumMilliseconds-now();
     if(owners.size>0&&spacing>0){await sleep(spacing,signal);continue;}
-    const free=sample(),next=queue[0],known=learned.has(next.kind),estimate=peakOf(next.kind),state={headroom:free,running:owners.size,inflight:inflight(),estimate,learned:known};
-    if(graphOwnerAdmissionV1(state)){
+    if(owners.size>0&&hold?.()===true){await sleep(policy.admitMinimumMilliseconds,signal);continue;}
+    const free=sample(),head=queue[0],waitedMilliseconds=now()-Math.max(head.since,lastAdmit,lastDone),shown=Math.max(0,free);
+    let next=head,known=knownOf(next),estimate=costOf(next),state={headroom:free,running:owners.size,inflight:inflight(),estimate,learned:known},forced=false;
+    const describe=()=>({key:next.key??next.kind,kind:next.kind,seconds:Math.round((now()-Math.max(head.since,lastAdmit,lastDone))/1000),need:megabytes(estimate),limit:Math.round(policy.waitBoundMilliseconds/1000),available:megabytes(grantBytes),count:queue.length});
+    if(!graphOwnerAdmissionV1(state)){
+     if(fleet!==undefined&&!fleetAsked&&waitedMilliseconds>=policy.fleetFallbackMilliseconds){
+      fleetAsked=true;const keys=queue.map(row=>row.key??row.kind);say("fleet",{...describe(),used:megabytes(estimate),budget:megabytes(shown)});
+      let taken=[];try{taken=[...await Promise.race([Promise.resolve(fleet({keys,seconds:Math.round(waitedMilliseconds/1000)})),sleep(policy.fleetAskMilliseconds,signal).then(()=>[])])??[]];}catch(error){signal?.throwIfAborted();}
+      for(const row of queue.splice(0)){if(taken.includes(row.key??row.kind))row.reject(new GraphOwnerFleetErrorV1(row.key??row.kind));else queue.push(row);}
+      continue;
+     }
+     if(owners.size<=1&&waitedMilliseconds>=policy.waitBoundMilliseconds){
+      next=queue.reduce((best,row)=>costOf(row)<costOf(best)?row:best,head);known=knownOf(next);estimate=costOf(next);state={...state,estimate,learned:known};
+      const fields={...describe(),used:megabytes(estimate),budget:megabytes(shown)};
+      if(estimate>grantBytes){say("refused",fields);throw new GraphMemoryRefusedErrorV1({key:fields.key,needBytes:estimate,availableBytes:grantBytes,freeBytes:shown,seconds:fields.seconds,message:renderGraphMemoryMessagesV1("refused",{running:owners.size,...fields},environment).join("\n")});}
+      forced=true;say("admittedAlone",fields);
+     }
+    }
+    if(forced||graphOwnerAdmissionV1(state)){
      if(owners.size===0&&free<estimate){if(!serialSaid){serialSaid=true;say("serial",{used:megabytes(estimate),budget:megabytes(free)});}}
      else if(serialSaid){serialSaid=false;say("resumed",{used:megabytes(estimate),budget:megabytes(free)});}
-     queue.shift();const owner={kind:next.kind,taken:0,net:0};owners.add(owner);next.owner=owner;stats.peakOwners=Math.max(stats.peakOwners,owners.size);lastAdmit=now();
+     queue.splice(queue.indexOf(next),1);const owner={kind:next.kind,key:next.key,limitBytes:next.limitBytes,taken:0,net:0,since:now(),startBytes:measure?.()??0,scope:createOwnerScopeV1(next.key??next.kind),stopped:false};owners.add(owner);next.owner=owner;stats.peakOwners=Math.max(stats.peakOwners,owners.size);lastAdmit=now();
      if(next.waited){stats.waits++;stats.waitedMilliseconds+=now()-next.since;}
      next.resolve(owner);continue;
     }
     for(const waiter of queue)waiter.waited=true;
     if(now()-lastReport>=policy.progressMilliseconds){
      lastReport=now();
-     if(!known)say("learning",{kind:next.kind,used:megabytes(estimate),budget:megabytes(free)});
-     else say("waiting",{used:megabytes(state.inflight.reduce((sum,row)=>sum+Math.max(row.estimate,row.taken),0)),budget:megabytes(free+state.inflight.reduce((sum,row)=>sum+row.taken,0))});
+     if(!known)say("learning",{...describe(),used:megabytes(estimate),budget:megabytes(shown)});
+     else say("waiting",{...describe(),used:megabytes(state.inflight.reduce((sum,row)=>sum+Math.max(row.estimate,row.taken),0)),budget:megabytes(Math.max(0,free+state.inflight.reduce((sum,row)=>sum+row.taken,0)))});
     }
     await sleep(policy.pollMilliseconds,signal);
    }
@@ -180,25 +235,70 @@ export function createMemoryGovernorV1({workers,headroom,attributable,estimateBy
  const onAbort=()=>fail(signal.reason);
  signal?.addEventListener("abort",onAbort,{once:true});
  return Object.freeze({
-  async run(task,{kind="owner"}={}){
+  async run(task,{kind="owner",key,limitBytes}={}){
    signal?.throwIfAborted();
-   const owner=await new Promise((resolve,reject)=>{queue.push({kind,resolve,reject,since:now(),waited:false});pump();});
+   const owner=await new Promise((resolve,reject)=>{queue.push({kind,key,limitBytes,resolve,reject,since:now(),waited:false});pump();});
    if(timer===undefined){timer=setInterval(sample,policy.pollMilliseconds);timer.unref?.();}
-   try{return await task();}
+   const resume=async()=>{
+    const since=now();resuming++;
+    try{
+     while(owners.size>0){
+      const free=sample(),inflightNow=inflight();
+      if(owners.size<workers&&graphOwnerAdmissionV1({headroom:free,running:owners.size,inflight:inflightNow,estimate:costOf(owner),learned:true}))return;
+      if(now()-lastReport>=policy.progressMilliseconds){lastReport=now();say("waiting",describeOf(owner,since,inflightNow.reduce((sum,row)=>sum+Math.max(row.estimate,row.taken),0),Math.max(0,free+inflightNow.reduce((sum,row)=>sum+row.taken,0))));}
+      await sleep(policy.pollMilliseconds,signal);
+     }
+    }finally{resuming--;}
+   };
+   const away=async work=>{owners.delete(owner);if(queue.length)pump();let value;try{value=await work();}catch(error){owners.add(owner);throw error;}try{await resume();}finally{owners.add(owner);if(queue.length)pump();}return value;};
+   try{return await task({away,scope:owner.scope});}
    finally{
-    sample();
-    learned.set(owner.kind,[...(learned.get(owner.kind)??[]),owner.taken].slice(-policy.peakSamples));peaks?.write(Object.fromEntries(learned));
+    sample();lastDone=now();
+    if(key!==undefined)try{costs?.record({key,kind:owner.kind,takenBytes:Math.max(owner.taken,owner.stopped&&measure!==undefined?Math.max(0,measure()-owner.startBytes-owner.scope.credited):0),seconds:(now()-owner.since)/1000,stopped:owner.stopped});}catch{}
+    if(!owner.stopped){const samples=learned.get(owner.kind)??[];if(!owner.shared||samples.length===0||owner.taken>Math.max(...samples)){learned.set(owner.kind,[...samples,Math.min(owner.taken,ceilingOf(owner.kind))].slice(-policy.peakSamples));peaks?.write(Object.fromEntries(learned));}}
     owners.delete(owner);if(owners.size===0&&timer!==undefined){clearInterval(timer);timer=undefined;}if(queue.length)pump();
    }
   },
   pressure:()=>headroom()<policy.hostAvailableFloorMegabytes*MEGABYTE,
-  stats:()=>({waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),peakOwners:stats.peakOwners,ownerCostMegabytes:megabytes(Math.max(estimateBytes*(learned.size===0?1:0),largestLearned())),kinds:Object.fromEntries([...learned].map(([kind,samples])=>[kind,megabytes(Math.max(...samples))]))}),
+  stats:()=>({stops:stats.stops,waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),peakOwners:stats.peakOwners,ownerCostMegabytes:megabytes(Math.max(estimateBytes*(learned.size===0?1:0),largestLearned())),kinds:Object.fromEntries([...learned].map(([kind,samples])=>[kind,megabytes(Math.max(...samples))]))}),
   dispose:()=>{signal?.removeEventListener("abort",onAbort);clearInterval(timer);timer=undefined;},
  });
 }
 
 /** 🛂️ The governor of the project inference of the service: the headroom is the cgroup headroom of the service (see {@link serviceMemoryHeadroomBytesV1}), shared by the process and its pool. */
-export function createGraphParentMemoryGovernorV1(options){return createMemoryGovernorV1({...options,headroom:options.headroom??(()=>serviceMemoryHeadroomBytesV1({policy:options.policy??P})),attributable:options.attributable??(options.headroom===undefined&&cgroupMemoryHeadroomV1()===undefined?createMemoryPortsV1().sample:undefined)});}
+export function createGraphParentMemoryGovernorV1(options){
+ const ports=options.ports??createMemoryPortsV1(),host=options.headroom??(()=>serviceMemoryHeadroomBytesV1({policy:options.policy??P})),budget=options.budgetBytes,baseline=options.baselineBytes??0;
+ return createMemoryGovernorV1({...options,hold:options.hold??(()=>{const gate=footprintGateV1();return gate!==undefined&&gate.headroomBytes()<0;}),measure:options.measure??ports.sample,collect:options.collect??ports.collect,headroom:budget===undefined?host:()=>Math.min(host(),budget-(ports.sample()-baseline)),attributable:options.attributable??(options.headroom===undefined&&cgroupMemoryHeadroomV1()===undefined?ports.sample:undefined)});
+}
+
+/** 📐️ (A machine of at least `serveHostMegabytes` serves the fleet's graph, so its parent may grow by `serveHostShare` of the memory: six to eight inferences at once inside its grant.) The managed bytes the parent of a graph read may add to what it already holds when a read starts (the growth the governor and the collector measure against the managed bytes at their creation, so a parent that keeps a large resident state is not held to one project at a time): the declared budget (`parentManagedMegabytes`, about half of the physical footprint the parent should keep under 4 GB), less when the capacity grant of the run leaves the parent a smaller share; never below the minimum budget of the governor. */
+export function graphParentManagedBytesV1(environment=process.env,policy=P){
+ let megabytes=policy.parentManagedMegabytes;
+ const host=hostMemoryMegabytesV1();if(host>0)megabytes=host>=policy.serveHostMegabytes?Math.max(megabytes,Math.floor(host*policy.serveHostShare)):Math.min(megabytes,Math.floor(host*policy.parentHostShare));
+ try{const allocation=graphMemoryAllocationV1(environment,policy);if(allocation.qualified)megabytes=Math.min(megabytes,allocation.parentMegabytes);}catch{}
+ return Math.max(policy.minimumBudgetMegabytes,megabytes)*MEGABYTE;
+}
+
+/**
+ * 🧹️ The collector of the graph parent: JavaScriptCore keeps what the parent allocated for many projects until a collection runs, and the physical footprint (macOS `phys_footprint`) holds all of it, so after every `collectEveryProjects` finished projects it reads the managed bytes (constant time) and runs one full collection when they passed the trigger (`collectAboveMegabytes`, then `collectGrowthMegabytes` above what survived the last collection, never twice within `collectMinimumIntervalMilliseconds`); the trigger never follows the resident set, which a collection does not lower. `finish` collects at the end of a wave and answers what the wave held (peak and surviving managed bytes, collections), `headroomBytes` is what the budget leaves.
+ * @param {{ports?:{sample:()=>number;collect:()=>void};policy?:typeof GRAPH_MEMORY_POLICY_V1;budgetBytes?:number;now?:()=>number}} [options]
+ */
+export function createParentCollectorV1({ports=createMemoryPortsV1(),policy=P,budgetBytes=policy.parentManagedMegabytes*MEGABYTE,baselineBytes=ports.sample(),now=()=>performance.now()}={}){
+ const above=policy.collectAboveMegabytes*MEGABYTE,growth=policy.collectGrowthMegabytes*MEGABYTE;
+ let since=0,next=above,lastAt=-Infinity,peak=0,live=0,collections=0,milliseconds=0;
+ const note=bytes=>{if(bytes>peak)peak=bytes;return bytes;};
+ const run=()=>{const started=now();ports.collect();lastAt=now();milliseconds+=lastAt-started;collections++;live=ports.sample();next=Math.max(above,live+growth);return live;};
+ return Object.freeze({
+  afterProject(){
+   if(++since<policy.collectEveryProjects)return false;
+   since=0;
+   if(note(ports.sample())<next||now()-lastAt<policy.collectMinimumIntervalMilliseconds)return false;
+   run();return true;
+  },
+  finish(){note(ports.sample());run();const row=Object.freeze({peakBytes:peak,liveBytes:live,collections,collectMilliseconds:Math.round(milliseconds)});peak=live;collections=0;milliseconds=0;return row;},
+  headroomBytes:()=>budgetBytes-(note(ports.sample())-baselineBytes),
+ });
+}
 
 /**
  * 🧶️ Creates a bounded table that makes equal long strings one instance: equal paths, input lists and keys of thousands of projects cost memory once. A table over its character bound is cleared, never grown.
@@ -226,6 +326,7 @@ export function createStringInternerV1({maximumCharacters=P.maximumInternedChara
  * @returns {T}
  */
 export function internJsonStringsV1(value,interner){
+ footprintPulseV1();
  const pending=[value];
  while(pending.length){
   const item=pending.pop();

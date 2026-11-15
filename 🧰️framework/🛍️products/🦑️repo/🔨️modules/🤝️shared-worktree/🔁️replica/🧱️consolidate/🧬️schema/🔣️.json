@@ -1,0 +1,25 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/consolidate/v1",
+ "title": "Shared worktree git pack consolidation: the outcome of one run",
+ "definitions": {
+  "Consolidation": {
+   "description": "What one consolidation run did. outcome: nothing (one pack, no waste), planned (dry run), consolidated (new pack published, covered packs retired), locked (another run holds the lock), space (not enough free space, nothing written), unpublished (the new pack stayed local until the wait ended: nothing retired), failed (git failed: nothing retired). retired counts pack stems removed; bytesFreed is the pack directory size before minus after; pack is the stem of the new pack.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "outcome", "packsBefore", "bytesBefore", "retired", "bytesFreed"],
+   "properties": {
+    "version": {"type": "integer", "const": 1},
+    "outcome": {"type": "string", "enum": ["nothing", "planned", "consolidated", "locked", "space", "unpublished", "failed"]},
+    "packsBefore": {"type": "integer", "minimum": 0},
+    "bytesBefore": {"type": "integer", "minimum": 0},
+    "packsAfter": {"type": "integer", "minimum": 0},
+    "bytesAfter": {"type": "integer", "minimum": 0},
+    "retired": {"type": "integer", "minimum": 0},
+    "bytesFreed": {"type": "integer", "minimum": 0},
+    "pack": {"type": "string", "pattern": "^pack-[0-9a-f]{40}$"},
+    "objects": {"type": "integer", "minimum": 0}
+   }
+  }
+ }
+}

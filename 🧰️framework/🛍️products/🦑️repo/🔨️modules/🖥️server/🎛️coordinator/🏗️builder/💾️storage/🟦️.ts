@@ -1,11 +1,11 @@
-import{type ResourceLeaseControl}from"@semio-tech/process/leases";
+import{type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {join,isAbsolute} from "node:path";
 import {mkdir,mkdtemp,rm} from "node:fs/promises";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
-import {requireMaterializedPathV1} from "@semio-tech/process/leases";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireMaterializedPathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {ScriptInvocation} from "@semio-tech/process/routing/invocation";
-import { withRepositoryCacheStoreV1, type RepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
+import { withRepositoryCacheStoreV1, type RepositoryCacheStoreV1 } from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🗂️ Owns coordinator output, warm compiler state and isolated live scratch in one fixed product filesystem. */

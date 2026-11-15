@@ -1,0 +1,10 @@
+{
+  "origin": "g1-m08",
+  "round": 18,
+  "native_rc": 75,
+  "ready": false,
+  "failed": [
+    "workspace:setup"
+  ],
+  "at": "2026-11-15T04:13:44Z"
+}

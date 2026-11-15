@@ -1,4 +1,4 @@
-//! 📍️ `change-critical-region-restr-bar-space` diff: patches `restrained_bar_spacing_m` of the addressed critical_region row.
+//! 📍️ `change-critical-region-restrained-bar-spacing-m` diff: patches `restrained_bar_spacing_m` of the addressed critical_region row.
 
 use crate::change_critical_region_restr_bar_space::ChangeCriticalRegionRestrainedBarSpacingM;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998CriticalRegionDelta, En1998CriticalRegionPatch};

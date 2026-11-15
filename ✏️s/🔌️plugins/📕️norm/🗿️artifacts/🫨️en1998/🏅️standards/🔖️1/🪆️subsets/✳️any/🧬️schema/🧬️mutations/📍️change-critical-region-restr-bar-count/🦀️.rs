@@ -1,4 +1,4 @@
-//! 📍️ `change-critical-region-restr-bar-count` mutation leaf.
+//! 📍️ `change-critical-region-restrained-bar-count` mutation leaf.
 
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
@@ -17,7 +17,7 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeCriticalRegionRest
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "critical-region-restrained-bar-count",
-        kind: "change-critical-region-restr-bar-count",
+        kind: "change-critical-region-restrained-bar-count",
         record: "ChangeCriticalRegionRestrainedBarCount",
     };
 

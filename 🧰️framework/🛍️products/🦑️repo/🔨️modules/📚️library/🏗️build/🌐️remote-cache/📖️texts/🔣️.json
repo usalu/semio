@@ -3,8 +3,8 @@
   "languages": ["en", "de"],
   "messages": {
     "error.syntax": {
-      "en": "Expected repo remote-cache serve|status|gc.",
-      "de": "Erwartet wird repo remote-cache serve|status|gc."
+      "en": "Expected repo remote-cache serve|status|gc|rotate.",
+      "de": "Erwartet wird repo remote-cache serve|status|gc|rotate."
     },
     "error.option": {
       "en": "Unknown option for remote-cache {operation}: {option}",
@@ -37,6 +37,34 @@
     "error.busy": {
       "en": "Another remote cache server already uses {directory}.",
       "de": "Ein anderer Remote-Cache-Server benutzt {directory} bereits."
+    },
+    "serve.fleet": {
+      "en": "Fleet cache facts published at {path}: generation {generation}, {endpoints} endpoint(s).",
+      "de": "Flotten-Cache-Fakten veröffentlicht unter {path}: Generation {generation}, {endpoints} Endpunkt(e)."
+    },
+    "serve.fleet-failed": {
+      "en": "The fleet cache facts could not be published: {reason}",
+      "de": "Die Flotten-Cache-Fakten konnten nicht veröffentlicht werden: {reason}"
+    },
+    "rotate.done": {
+      "en": "Fleet signing keys of {origin} rotated to sequence {sequence}; {published}.",
+      "de": "Flotten-Signaturschlüssel von {origin} auf Folge {sequence} erneuert; {published}."
+    },
+    "rotate.published": {
+      "en": "registration published to the group store",
+      "de": "Registrierung im Gruppenspeicher veröffentlicht"
+    },
+    "rotate.local": {
+      "en": "registration kept locally (the group store was not reachable, it is published with the next build)",
+      "de": "Registrierung lokal behalten (der Gruppenspeicher war nicht erreichbar, sie wird mit dem nächsten Build veröffentlicht)"
+    },
+    "rotate.not-joined": {
+      "en": "This machine has not joined a fleet group (.cache/f/machine.json); nothing was rotated.",
+      "de": "Dieser Rechner gehört keiner Flottengruppe an (.cache/f/machine.json); es wurde nichts erneuert."
+    },
+    "error.fleet-interface": {
+      "en": "--host fleet needs an address of this machine inside the fleet network {network}; set SEMIO_FLEET_NETWORK or pass the address itself.",
+      "de": "--host fleet braucht eine Adresse dieses Rechners im Flottennetz {network}; setze SEMIO_FLEET_NETWORK oder gib die Adresse selbst an."
     },
     "serve.open": {
       "en": "Opening the cache store {directory}",
@@ -90,6 +118,10 @@
       "en": "Evicted {entries} entries ({bytes}).",
       "de": "{entries} Einträge verdrängt ({bytes})."
     },
+    "serve.reclaimed": {
+      "en": "Reclaimed {entries} blobs ({bytes}) nobody references any more.",
+      "de": "{entries} Blobs ({bytes}) zurückgewonnen, die niemand mehr referenziert."
+    },
     "serve.stopped": {
       "en": "The remote cache stopped.",
       "de": "Der Remote-Cache wurde beendet."
@@ -115,12 +147,16 @@
       "de": "Ein anderer Sammler hält {lock}; nichts wurde entfernt."
     },
     "gc.summary.plan": {
-      "en": "Would remove {entries} of {total} entries ({bytes}): {age} idle too long, {budget} over the bound, {dangling} dangling; {remaining} entries ({left}) would remain.",
-      "de": "Würde {entries} von {total} Einträgen entfernen ({bytes}): {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist; {remaining} Einträge ({left}) blieben."
+      "en": "Would remove {entries} of {total} entries ({bytes}): {superseded} superseded, {age} idle too long, {budget} over the bound, {dangling} dangling, plus {blobs} unreferenced blobs ({freed}); {remaining} entries ({left}) would remain.",
+      "de": "Würde {entries} von {total} Einträgen entfernen ({bytes}): {superseded} verdrängt, {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist, dazu {blobs} unreferenzierte Blobs ({freed}); {remaining} Einträge ({left}) blieben."
     },
     "gc.summary.apply": {
-      "en": "Removed {entries} of {total} entries ({bytes}): {age} idle too long, {budget} over the bound, {dangling} dangling; {remaining} entries ({left}) remain.",
-      "de": "{entries} von {total} Einträgen entfernt ({bytes}): {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist; {remaining} Einträge ({left}) bleiben."
+      "en": "Removed {entries} of {total} entries ({bytes}): {superseded} superseded, {age} idle too long, {budget} over the bound, {dangling} dangling, plus {blobs} unreferenced blobs ({freed}); {remaining} entries ({left}) remain.",
+      "de": "{entries} von {total} Einträgen entfernt ({bytes}): {superseded} verdrängt, {age} zu lange ungenutzt, {budget} über der Grenze, {dangling} verwaist, dazu {blobs} unreferenzierte Blobs ({freed}); {remaining} Einträge ({left}) bleiben."
+    },
+    "gc.deferred": {
+      "en": "A server is running here: it holds the claims, so superseded entries were left to its own collector.",
+      "de": "Hier läuft ein Server: er hält die Claims, deshalb überlässt dieser Lauf die verdrängten Einträge seinem eigenen Sammler."
     },
     "gc.cancelled": {
       "en": "Cancelled; entries removed so far stay removed.",
@@ -129,6 +165,10 @@
     "status.off": {
       "en": "The remote cache is off: set SEMIO_REMOTE_CACHE_ENDPOINT to an http or https origin.",
       "de": "Der Remote-Cache ist aus: Setze SEMIO_REMOTE_CACHE_ENDPOINT auf einen http- oder https-Ursprung."
+    },
+    "warning.unreachable": {
+      "en": "Warning: the remote cache {endpoint} is unreachable or refuses access; this run uses the local cache only.",
+      "de": "Warnung: Der Remote-Cache {endpoint} ist nicht erreichbar oder verweigert den Zugriff; dieser Lauf nutzt nur den lokalen Cache."
     }
   }
 }

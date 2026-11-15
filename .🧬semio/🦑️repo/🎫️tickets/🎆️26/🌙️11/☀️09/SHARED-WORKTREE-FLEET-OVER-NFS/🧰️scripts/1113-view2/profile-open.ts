@@ -1,0 +1,26 @@
+import {heapStats} from "bun:jsc";
+const [moduleRoot,mirror]=process.argv.slice(2) as [string,string];
+const {openReplicaV1,checkpointReplicaV1,closeReplicaV1,foldedDirectories,orderedKeys}=await import(`${moduleRoot}/🔁️replica/🟦️.ts`);
+const {clashKeyV1}=await import(`${moduleRoot}/🔁️replica/⚖️clash/🟦️.ts`);
+const mb=(n:number)=>(n/1048576).toFixed(0);
+const show=(label:string)=>{(globalThis as any).Bun.gc(true);const m=process.memoryUsage(),h=heapStats();console.log(label.padEnd(28),"rss",mb(m.rss),"heapUsed",mb(m.heapUsed),"strings",(h.objectTypeCounts as any).string??0,"maxRSS",mb(process.resourceUsage().maxRSS*1024));};
+show("start");
+const machine=JSON.parse(await Bun.file(`${mirror}/.cache/f/machine.json`).text());
+const replica=await openReplicaV1({worktree:mirror,storeRoot:machine.storeRoot,originId:machine.originId,groupId:machine.groupId,lock:false});
+show("opened");
+let t=performance.now();
+const index=foldedDirectories(replica);
+console.log("foldedDirectories ms",(performance.now()-t).toFixed(0));
+show("foldedDirectories built");
+console.log("sample",index.get("🧰️framework"),index.get("nothing"),index.get(clashKeyV1("🧰️framework/🛍️products")));
+t=performance.now();
+const live:number[]=[],texts:string[]=[];
+for(const id of replica.files.ids())if(replica.files.operationAt(id)!=="delete"){live.push(id);texts.push(clashKeyV1(replica.book.name(id)));}
+let ordered=orderedKeys(live,texts);
+console.log("ordered ms",(performance.now()-t).toFixed(0),ordered.order.length);
+show("ordered built");
+ordered=undefined as any;live.length=0;texts.length=0;
+show("released");
+await checkpointReplicaV1(replica);
+show("after checkpoint");
+await closeReplicaV1(replica);

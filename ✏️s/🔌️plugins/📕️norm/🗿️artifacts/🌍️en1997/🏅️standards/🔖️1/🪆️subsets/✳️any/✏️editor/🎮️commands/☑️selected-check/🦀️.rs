@@ -32,7 +32,4 @@ pub fn handle(_payload: &SetSelectedCheckIndex, _doc: &ArtifactView<'_, En1997Sn
 //#endregion 🔖️Handler
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

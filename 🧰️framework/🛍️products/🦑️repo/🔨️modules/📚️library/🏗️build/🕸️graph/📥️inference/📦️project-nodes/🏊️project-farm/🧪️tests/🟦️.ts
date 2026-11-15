@@ -1,5 +1,5 @@
 /** 🏊️ Contract: the project farm. The plan, the languages, the texts and the heap environment of the farm equal an independent model; a pool of real worker processes answers the same for any worker count, completion order and crash; the leaves staged by any number of workers are adopted into one tree whose digest is the same for every worker count, assignment and order (and the digest of the independent model), however many adopters race for the same leaf. */
-import {afterAll,expect,test} from "bun:test";
+import {afterAll,afterEach,expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,statSync,writeFileSync} from "node:fs";
 import {uptime} from "node:os";
@@ -13,7 +13,7 @@ import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../🏊️pool/🧬️schema/🔣️.json";
 import {awaitGrowingV1,recycleReasonV1,choosePoolV1,grantedPoolV1,ownGrantPoolV1,GRAPH_FARM_MESSAGES_V1,GRAPH_FARM_POLICY_V1,createFarmV1,graphFarmRuntimeEnvironmentV1,planGraphFarmV1,renderGraphFarmMessagesV1,selectGraphFarmLanguagesV1} from "../🏊️pool/🟨️.mjs";
 import {EventEmitter} from "node:events";
-import {openProjectFarmV1} from "../🟨️.mjs";
+import {closeProjectFarmsV1,openProjectFarmV1} from "../🟨️.mjs";
 import {inferenceRecordIdentityV1} from "../../../../../👁️observation/🟨️.mjs";
 import {graphFarmIdentityV1} from "../🪆️captured/🟨️.mjs";
 import {adoptStagedGraphLeavesV1} from "../../../../../📥️inputs/🟨️.mjs";
@@ -23,6 +23,7 @@ const here=dirname(fileURLToPath(import.meta.url)),python=testPythonV1(),oracle=
 const ask=(command:string)=>JSON.parse(Bun.spawnSync([python!,"-I",oracle,fixturePath,schemaPath,command]).stdout.toString());
 const roots:string[]=[],scratch=()=>{const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Owned test artifacts directory required");mkdirSync(artifacts,{recursive:true});const root=mkdtempSync(join(realpathSync(artifacts),"f-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
+afterEach(async()=>{await closeProjectFarmsV1();});
 const sha=(data:string|Buffer)=>createHash("sha256").update(data).digest("hex");
 const worker=join(here,"..","👷️worker","🟨️.mjs"),service=pathToFileURL(join(here,"🧫️fixtures","🛰️service","🟨️.mjs")).href,adopter=join(here,"🧫️fixtures","🛰️adopter","🟨️.mjs");
 const corpus=fixture.corpus;
@@ -65,7 +66,7 @@ test("the heap environment of a worker equals the independent model for every ru
 
 test("the worker pools a process starts equal the independent model: the pool of its own grant, the pool of any host grant and the pool that takes the next job",()=>{
  const expected=ask("pools");
- fixture.pools.own.forEach((row,index)=>{expect(ownGrantPoolV1(row.environment),row.name).toEqual(expected.own[index]??undefined);expect(expected.own[index],row.name).toEqual(row.expect);});
+ fixture.pools.own.forEach((row,index)=>{if((row as {refused?:boolean}).refused)expect(()=>ownGrantPoolV1(row.environment),row.name).toThrow();else expect(ownGrantPoolV1(row.environment),row.name).toEqual(expected.own[index]??undefined);expect(expected.own[index],row.name).toEqual(row.expect);});
  fixture.pools.granted.forEach((row,index)=>{expect(grantedPoolV1(row.granted??undefined),row.name).toEqual(expected.granted[index]??undefined);expect(expected.granted[index],row.name).toEqual(row.expect);});
  fixture.pools.choose.forEach((row,index)=>{expect(choosePoolV1(row.pools),row.name).toBe(expected.choose[index]);expect(row.expect,row.name).toBe(expected.choose[index]);});
  expect(GRAPH_FARM_POLICY_V1.ownWorkers).toBeGreaterThanOrEqual(1);expect(GRAPH_FARM_POLICY_V1.minimumGrantedWorkers).toBe(1);
@@ -113,7 +114,7 @@ test("a worker whose identity differs disables the pool and every job is lost, n
 },60000);
 
 test("a worker over its memory is replaced after its job and every process that left is reported to reclaim what it left",async()=>{
- const gone:string[]=[],pool=farm({workers:1,megabytes:1,retired:(slot:number,generation:number)=>gone.push(slot+":"+generation)});
+ const gone:string[]=[],pool=farm({workers:1,megabytes:1,policy:{...GRAPH_FARM_POLICY_V1,recycleCeilingFactor:0},retired:(slot:number,generation:number)=>gone.push(slot+":"+generation)});
  for(let n=0;n<3;n++)expect(((await pool.run({kind:"echo",n})).reply as {n:number}).n).toBe(n);
  expect(pool.stats().recycled).toBe(3);
  await pool.close();
@@ -231,13 +232,13 @@ test("a loop started while the others are awaited is awaited too, and a rejectio
  await expect(awaitGrowingV1(failing)).rejects.toThrow("loop failed");
 });
 
-/** 🧪️ A scripted child process: answers `init` with the identity of this implementation and every `run` with an empty reply, so the farm wiring runs without the real inference. */
+/** 🧪️ A scripted child process: announces the identity of this implementation and every `run` with an empty reply, so the farm wiring runs without the real inference. */
 class ScriptedChild extends EventEmitter{
  connected=true;exitCode:number|null=null;signalCode:string|null=null;jobs:number[]=[];
- constructor(readonly tag:string,readonly log:string[]){super();}
+ constructor(readonly tag:string,readonly log:string[]){super();setImmediate(()=>this.announce());}
+ announce(){this.emit("message",{type:"ready",pid:1,identity:graphFarmIdentityV1(inferenceRecordIdentityV1())});}
  send(message:{type:string;id?:number}){
-  if(message.type==="init")setImmediate(()=>this.emit("message",{type:"ready",pid:1,identity:graphFarmIdentityV1(inferenceRecordIdentityV1())}));
-  else if(message.type==="run"){this.jobs.push(message.id!);this.log.push(this.tag+":run");setImmediate(()=>this.emit("message",{type:"result",id:message.id,reply:{names:[],cpuMilliseconds:1},rssMegabytes:1}));}
+  if(message.type==="run"){this.jobs.push(message.id!);this.log.push(this.tag+":run");setImmediate(()=>this.emit("message",{type:"result",id:message.id,reply:{names:[],cpuMilliseconds:1},rssMegabytes:1}));}
   else if(message.type==="shutdown"){this.exitCode=0;setImmediate(()=>this.emit("exit"));}
   return true;
  }
@@ -247,31 +248,42 @@ class ScriptedChild extends EventEmitter{
 test("the farm starts the worker its own capacity grant pays for, accepts a host grant of one worker as a second pool, and sends jobs to the pool with an idle worker",async()=>{
  const root=scratch(),log:string[]=[],children:ScriptedChild[]=[],lines:string[]=[];
  let grant!:(value:{jobs:number;megabytes:number}|undefined)=>void;
- const released:string[]=[];
+ const released:string[]=[],asked:number[]=[];
  const open=(environment:Record<string,string>)=>openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment,processed:()=>24,cores:10,write:line=>lines.push(line),
   spawnProcess:((_command:string,_args:readonly string[],options:{env:Record<string,string>})=>{const child=new ScriptedChild(String(children.length),log);children.push(child);return child;}) as never,
-  request:(() => ({granted:new Promise<{jobs:number;megabytes:number}|undefined>(done=>{grant=done;}),release:()=>{released.push("host");}})) as never})!;
+  request:(((input:{preferredJobs:number}) => {asked.push(input.preferredJobs);let cancel!:(value:undefined)=>void;const granted=new Promise<{jobs:number;megabytes:number}|undefined>(done=>{grant=done;cancel=done;});return {granted,release:()=>{released.push("host");cancel(undefined);}};}) as never)})!;
  const id="farm_live_0001",capacity=join(root,"capacity"),plan=JSON.stringify({version:1,id,jobs:1,cpu:1,memoryMegabytes:2048,fixedMegabytes:1536,floorMegabytes:1981});
  mkdirSync(join(capacity,"grants"),{recursive:true});
  writeFileSync(join(capacity,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:7168,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
+
  const farm=open({LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan});
  const job=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)});
+
  for(let index=0;index<23;index++)expect(await farm.prepare(job("miss"+index))).toBe(false);
  expect(children.length).toBe(0);
+
  expect(await farm.prepare(job("engage"))).toBe(false);
  expect(children.length).toBe(1);
  expect(lines.some(line=>line.includes("inside the capacity grant of this process (2048 MB)"))).toBe(true);
+
  const loops=await new Promise<number>(done=>farm.onReady(done));
  expect(loops).toBe(GRAPH_FARM_POLICY_V1.loopsPerWorker);
+
  await farm.prepare(job("first"));
  expect(log).toEqual(["0:run"]);
+
  grant({jobs:1,megabytes:3584});await Bun.sleep(50);
  const grown=await new Promise<number>(done=>farm.onReady(total=>{if(total>loops)done(total);}));
  expect(grown).toBe(2*GRAPH_FARM_POLICY_V1.loopsPerWorker);expect(children.length).toBe(2);
+
  await Promise.all([farm.prepare(job("a")),farm.prepare(job("b"))]);
  expect(log.filter(entry=>entry==="1:run").length).toBeGreaterThanOrEqual(1);
+
  await farm.close();
- expect(released).toEqual(["host"]);
+ expect(released,"the pools outlive the construction").toEqual([]);
+ await closeProjectFarmsV1();
+ expect(released).toEqual(["host","host"]);
+ expect(asked.length).toBe(2);expect(asked[1]).toBe(asked[0]!-2);
  expect(lines.some(line=>line.includes("3 of 566")||line.includes("projects inferred by 2 worker processes"))).toBe(true);
 });
 
@@ -288,9 +300,9 @@ test("a cold generation starts the owned worker before a quarter of the projects
  expect(await farm.prepare(job)).toBe(false);
  await new Promise<number>(done=>farm.onReady(done));
  await farm.prepare(job);
- expect(log).toEqual(["cold:run"]);
+ expect(log,"the first project waited for the worker the grant pays for and ran on it").toEqual(["cold:run","cold:run"]);
  grant(undefined);
- await farm.close();
+ await farm.close();await closeProjectFarmsV1();
 });
 
 test("a farm without a capacity grant of its own and a host that grants nothing infers in the parent, and a host grant of zero jobs starts no pool",async()=>{
@@ -330,3 +342,102 @@ test("a worker without a measured baseline is still recycled by the memory ratio
  rows.forEach((row,index)=>expect(recycleReasonV1(row as never)??null,JSON.stringify(row)).toBe(expected[index]));
  expect(expected.filter(value=>value==="memory").length).toBeGreaterThan(3);
 });
+
+class SilentChild extends ScriptedChild{override announce(){}override send(){return true;}}
+class GatedChild extends ScriptedChild{constructor(tag:string,log:string[],readonly gate:Promise<void>){super(tag,log);}override announce(){void this.gate.then(()=>super.announce());}}
+
+const grantFile=(root:string,id:string)=>{
+ const capacity=join(root,"capacity"),plan=JSON.stringify({version:1,id,jobs:1,cpu:1,memoryMegabytes:2048,fixedMegabytes:1536,floorMegabytes:1981});
+ mkdirSync(join(capacity,"grants"),{recursive:true});
+ writeFileSync(join(capacity,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:7168,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
+ return {LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan};
+};
+const pendingRequest=(released:string[]=[])=>(()=>{let cancel!:(value:undefined)=>void;return{granted:new Promise<undefined>(done=>{cancel=done;}),release:()=>{released.push("host");cancel(undefined);}};}) as never;
+const holdJob=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)});
+const session=(root:string,extra:Record<string,unknown>={})=>({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],cores:10,...extra});
+
+test("while the workers start, the parent infers no project: every project waits for the pool and is adopted from the workers once it is ready",async()=>{
+ const root=scratch(),children:ScriptedChild[]=[],log:string[]=[],lines:string[]=[];let open!:()=>void;const gate=new Promise<void>(done=>{open=done;});
+ const farm=openProjectFarmV1({...session(root),environment:grantFile(root,"farm_hold_00001"),processed:()=>400,write:line=>lines.push(line),engage:true,
+  spawnProcess:(()=>{const child=new GatedChild("held",log,gate);children.push(child);return child;}) as never,request:(()=>{let cancel!:(value:undefined)=>void;return{granted:new Promise<undefined>(done=>{cancel=done;}),release:()=>cancel(undefined)};}) as never})!;
+ expect("parentWhileStarting" in GRAPH_FARM_POLICY_V1).toBe(false);
+ expect(lines.filter(line=>line.includes("holds them for the workers")).length,"told once, and only once something is held").toBe(0);
+ const held=Array.from({length:8},(_,index)=>{let settled=false;const promise=farm.prepare(holdJob("held"+index)).then(value=>{settled=true;return value;});return{promise,settled:()=>settled};});
+ await Bun.sleep(300);
+ expect(held.every(row=>!row.settled()),"eight projects wait for the pool, none is inferred by the parent").toBe(true);
+ expect(lines.filter(line=>line.includes("holds them for the workers for at most 190 s")).length).toBe(1);
+ const ready=new Promise<number>(done=>farm.onReady(done));open();await ready;
+ expect(await Promise.all(held.map(row=>row.promise))).toEqual(Array(8).fill(false));
+ expect(log.filter(entry=>entry==="held:run").length,"the pool took all of them").toBe(8);
+ await farm.close();
+},60000);
+
+test("a pool that never comes releases the held projects after one wait of the declared length, and later projects do not wait again; the host's answer is waited for the shorter declared time",async()=>{
+ const policy={...GRAPH_FARM_POLICY_V1,holdMilliseconds:300,grantWaitMilliseconds:200},root=scratch(),lines:string[]=[];
+ const farm=openProjectFarmV1({...session(root),policy,environment:grantFile(root,"farm_hold_00002"),processed:()=>400,write:line=>lines.push(line),engage:true,
+  spawnProcess:(()=>new SilentChild("never",[])) as never,request:pendingRequest()})!;
+ const started=Date.now();
+ expect(await farm.prepare(holdJob("c"))).toBe(false);
+ expect(Date.now()-started).toBeGreaterThanOrEqual(policy.holdMilliseconds-50);
+ const again=Date.now();expect(await farm.prepare(holdJob("d"))).toBe(false);expect(Date.now()-again,"after one wait nothing waits again").toBeLessThan(150);
+ await farm.close();
+ const bare=scratch(),quiet=openProjectFarmV1({...session(bare),policy,environment:{LANG:"en_US.UTF-8"},processed:()=>400,write:()=>undefined,engage:true,spawnProcess:(()=>{throw new Error("no worker may start");}) as never,request:pendingRequest()})!;
+ const waited=Date.now();expect(await quiet.prepare(holdJob("e"))).toBe(false);
+ expect(Date.now()-waited).toBeGreaterThanOrEqual(policy.grantWaitMilliseconds-50);expect(Date.now()-waited).toBeLessThan(policy.holdMilliseconds+500);
+ await quiet.close();
+},30000);
+
+test("the worker pools belong to the session: the next construction of the session uses the workers that are running, a changed session retires them, and closing the farms ends the workers and returns the grants",async()=>{
+ const root=scratch(),children:ScriptedChild[]=[],log:string[]=[],lines:string[]=[],released:string[]=[];
+ const environment=grantFile(root,"farm_hub_000001"),make=(extra:Record<string,unknown>={})=>openProjectFarmV1({...session(root,extra),environment,processed:()=>400,write:line=>lines.push(line),engage:true,
+  spawnProcess:(()=>{const child=new ScriptedChild(String(children.length),log);children.push(child);return child;}) as never,request:pendingRequest(released)})!;
+ const first=make();
+ const loops=await new Promise<number>(done=>first.onReady(done));
+ expect(loops).toBe(GRAPH_FARM_POLICY_V1.loopsPerWorker);
+ await first.prepare(holdJob("a"));await first.close();
+ expect(children.length).toBe(1);expect(children[0]!.exitCode,"the worker keeps running when its construction ends").toBeNull();
+ const second=make();
+ expect(await new Promise<number>(done=>second.onReady(done)),"ready at once, nothing to start").toBe(loops);
+ expect(lines.some(line=>line.includes("worker processes of the earlier waves are ready; the 566 projects of this wave go to them"))).toBe(true);
+ await second.prepare(holdJob("b"));
+ expect(children.length,"no second worker was started").toBe(1);expect(log).toEqual(["0:run","0:run"]);
+ await second.close();
+ const other=make({contracts:{changed:{outputs:["x"],inputs:["y"]}}});
+ await Bun.sleep(30);
+ expect(children[0]!.exitCode,"a changed session retires the pools of the old one").toBe(0);expect(children.length).toBe(2);
+ await other.close();
+ await closeProjectFarmsV1();
+ expect(children[1]!.exitCode).toBe(0);
+},30000);
+
+test("a real worker starts from its environment while the event loop of the parent is blocked, so the parent never delays it",async()=>{
+ const root=scratch(),opened=join(root,"opened.txt"),pool=farm({workers:2,session:{identity:"law",openedFile:opened}});
+ const blocked=Date.now()+2500;while(Date.now()<blocked){}
+ const stamps=readFileSync(opened,"utf8").trim().split("\n").map(Number);
+ expect(stamps.length,"both workers opened their session during the block").toBe(2);
+ for(const stamp of stamps)expect(stamp).toBeLessThan(blocked);
+ expect(await pool.ready).toBe(true);
+ const outcomes=await Promise.all([3,4,5,6].map(n=>pool.run({kind:"echo",n})));
+ const expected=JSON.parse(Bun.spawnSync([python!,"-I","-c","import json\nprint(json.dumps([(n*n+7)%1013 for n in [3,4,5,6]]))"]).stdout.toString());
+ expect(outcomes.map(outcome=>(outcome.reply as {value:number}).value)).toEqual(expected);
+ await pool.close();
+},60000);
+
+test("a job whose construction is cancelled is settled as aborted, retires its worker without counting a lost process, and the pool goes on",async()=>{
+ const pool=farm({workers:1}),controller=new AbortController();
+ const first=pool.run({kind:"echo",n:1}),pid=((await first).reply as {pid:number}).pid;
+ const pending=pool.run({kind:"hang",n:2},{signal:controller.signal});await Bun.sleep(100);
+ controller.abort();
+ expect((await pending).lost).toBe("aborted");
+ const after=(await pool.run({kind:"echo",n:3})).reply as {pid:number;value:number};
+ expect(after.value).toBe((3*3+7)%1013);expect(after.pid).not.toBe(pid);
+ expect(pool.stats().restarts,"a cancelled job is no lost process").toBe(0);expect(pool.stats().lost).toBe(0);
+ await pool.close();
+},60000);
+
+test("a worker that boots above its budget but does not grow is kept, one that grows past the ceiling over its first reply is replaced",async()=>{
+ const pool=farm({workers:1,megabytes:1});
+ for(let n=0;n<3;n++)expect(((await pool.run({kind:"echo",n})).reply as {n:number}).n).toBe(n);
+ expect(pool.stats().recycled).toBe(0);
+ await pool.close();
+},60000);

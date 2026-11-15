@@ -1,0 +1,45 @@
+--- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs	2026-11-13 23:31:24
++++ /Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs	2026-11-14 00:56:22
+@@ -1109,6 +1109,7 @@
+ /** ⚖️ The verdict on one stored layer of an entry: read from the store batch by batch (no layer is cached parsed), checked row by row, remembered per validation round and digest so every entry that names the layer reads it once; a lost layer does not hold. */
+ const layerVerdictsV1 = new WeakMap();
+ async function storedLayerHoldsAsyncV1(entry, digest, step) {
++  {const h=globalThis.__hc??={};h.layerCalls=(h.layerCalls??0)+1;if(!(closurePassV1??observationRoundV1()))h.layerNoRound=(h.layerNoRound??0)+1;} // [DEBUG] hitcost
+   const round = closurePassV1 ?? observationRoundV1(), verdicts = round ? layerVerdictsV1.get(round) ?? layerVerdictsV1.set(round, new Map()).get(round) : undefined, known = verdicts?.get(digest);
+   if (known !== undefined) return known;
+   let holds = true;
+@@ -1129,7 +1130,7 @@
+ async function closureEntryHoldsAsyncV1(entry, scripts) {
+   const round = closurePassV1 ?? observationRoundV1();
+   if (round && entry.checked?.round === round) return entry.checked.holds;
+-  closureCountsV1.checked++;
++  closureCountsV1.checked++;{const h=globalThis.__hc??={};h.entryChecks=(h.entryChecks??0)+1;if(!round)h.entryNoRound=(h.entryNoRound??0)+1;} // [DEBUG] hitcost
+   const step = cooperativeStepV1(scripts, "build:closure-entry-rows");
+   let holds = (entry.layers !== undefined || entry.digests !== undefined) && await observationRowsHoldAsyncV1(entry.rows, step);
+   if (holds && entry.layers) for (const layer of entry.layers) if (!await observationLayerHoldsAsyncV1(layer, step)) { holds = false; break; }
+@@ -1162,8 +1163,9 @@
+   if (!flight) {
+     const scripts = closureScriptsV1.get(workspaceRoot);
+     if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
+-    const store = closureStoreOfV1(workspaceRoot), derive = () => observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)).then(async ({ value, rows, layers }) => { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; });
+-    flight = (store ? store.load(id) : Promise.resolve(undefined)).then(async stored => { const entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null }; if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) { closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; } if (entry) closureCountsV1.stale++; return derive(); }).then(entry => entry, error => { const facts = error?.code === "BUILD_SOURCE_UNPARSEABLE" ? detachedFailureV1(error) : undefined; if (facts) closureFailuresV1.set(id, { error, rows: facts.rows, layers: facts.layers, checked: null }); throw error; }).finally(() => closureInflightV1.delete(id));
++    const store = closureStoreOfV1(workspaceRoot), derive = () => { const t0 = performance.now(), h = globalThis.__hc ??= {}; return derive0().finally(() => { h.deriveN = (h.deriveN ?? 0) + 1; h.deriveMs = Math.round((h.deriveMs ?? 0) + performance.now() - t0); }); }, derive0 = () => observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)).then(async ({ value, rows, layers }) => { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; });
++    {const h=globalThis.__hc??={};const m=h.loadIds??={};m[id]=(m[id]??0)+1;h.loadsTotal=(h.loadsTotal??0)+1;h.distinct=Object.keys(m).length;h.cache=closureEntriesV1.stats?.();h.knownMiss=(h.knownMiss??0)+(known?1:0);} // [DEBUG] hitcost
++    flight = (store ? store.load(id) : Promise.resolve(undefined)).then(async stored => { const entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null }; if (entry && await (async () => { const t0 = performance.now(), ok = await closureEntryHoldsAsyncV1(entry, scripts), h = globalThis.__hc ??= {}; h.holdN = (h.holdN ?? 0) + 1; h.holdMs = Math.round((h.holdMs ?? 0) + performance.now() - t0); return ok; })()) { closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; } if (entry) closureCountsV1.stale++; return derive(); }).then(entry => entry, error => { const facts = error?.code === "BUILD_SOURCE_UNPARSEABLE" ? detachedFailureV1(error) : undefined; if (facts) closureFailuresV1.set(id, { error, rows: facts.rows, layers: facts.layers, checked: null }); throw error; }).finally(() => closureInflightV1.delete(id));
+     closureInflightV1.set(id, flight);
+   }
+   return flight;
+@@ -1237,11 +1239,9 @@
+ 
+ registerClosureProviderV1({
+   answer(path) {
+-    return answerV1(path);
++    const t0=performance.now();try{return answerV1(path);}finally{const h=globalThis.__hc??={};h.answerCalls=(h.answerCalls??0)+1;h.answerMs=Math.round((h.answerMs??0)+performance.now()-t0);} // [DEBUG] hitcost
+   },
+-  settle(paths, value) {
+-    return settleV1(paths, value);
+-  },
++  async settle(paths, value) { const t0=performance.now();try{return await settleV1(paths, value);}finally{const h=globalThis.__hc??={};h.settleCalls=(h.settleCalls??0)+1;h.settleMs=Math.round((h.settleMs??0)+performance.now()-t0);} }, // [DEBUG] hitcost
+ });
+ function answerV1(path) {
+     let workspaceRoot, key, query;

@@ -2,7 +2,7 @@
   "root": "🎓️teaching",
   "file_name": "🐍️.py",
   "clip_folder": "🎬️clip",
-  "skip_folders": ["🧪️tests", ".venv", "node_modules", "__pycache__"],
+  "skip_folders": ["🧪️tests", ".venv", "node_modules", "__pycache__", "site-packages", ".🧬semio"],
   "forbidden_names": ["person_glyph", "seated_person_glyph", "object_silhouette", "lamp_glyph", "respiration_parts"],
   "forbidden_casts": ["ventilation-need-occupant-mirrored", "ventilation-volume-office-worker", "ventilation-volume-student", "heating-calculation-radiator", "heating-calculation-radiator-mirrored", "optimization-room-radiator", "standing", "walking", "radiator", "seated-reader", "shared-radiator", "shared-watt-bulb", "shared-watt-monitor", "shared-watt-vacuum"],
   "rule_a": {

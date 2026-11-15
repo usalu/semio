@@ -1,4 +1,4 @@
-import budget from "../../📏️budget/🧬️schema/🔣️.json";
+import budget from "../../📏️budget/🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🧶️ Preserves exact UTF8 text in existing bounded scalar pages. */
 export function splitUiTextChunks(source:string,maximumBytes:number):string[]{

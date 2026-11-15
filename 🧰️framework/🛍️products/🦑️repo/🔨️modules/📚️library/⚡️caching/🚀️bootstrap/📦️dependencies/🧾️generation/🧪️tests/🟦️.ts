@@ -3,7 +3,7 @@ import {javascriptInstallSchemaV1 as materializedInstallSchema} from "../../💾
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
 import {withCurrentBunWorkspaceOwnershipV1,readBunWorkspaceListingProjectionV1} from "../../../../../🗂️workspaces/🟦️bun/🟦️.ts";
-import {chmodSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,readlinkSync,realpathSync,renameSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
+import {chmodSync,lchownSync,lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,readlinkSync,realpathSync,renameSync,rmSync,symlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
@@ -323,8 +323,8 @@ test("generation receipt: the frontier and the seal equal an independent Python 
 
 test("generation receipt: stamp and anchor equal the provider walk's own formulas and the storage laws stay pinned",()=>{
  const storage=readFileSync(new URL("../../💾️storage/🟦️.ts",import.meta.url),"utf8"),install=materializedInstallSchema;
- expect(storage).toContain('keys=["dev","ino","mode","nlink","size","mtimeNs","ctimeNs"]as const');
- expect(storage).toContain("stamp=(row:BigIntStats)=>JSON.stringify(keys.map(key=>String(row[key])))");
+ expect(storage).toContain('fields=[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,link?0n:row.ctimeNs]');
+ expect(storage).toContain("const stamp=javascriptDependencyStampV1,anchor=(row:BigIntStats)=>");
  expect(storage).toContain("anchor=(row:BigIntStats)=>JSON.stringify(protocol.ancestorFields.map((key:string)=>String(row[key as keyof BigIntStats])))");
  expect(storage).toContain("if(process.env.NODE_OPTIONS||process.env.BUN_OPTIONS||process.execArgv.some(value=>/^--(?:conditions|preserve-symlinks)(?:=|$)/u.test(value)))throw Error(\"Closed declared execution conditions required\")");
  expect(install.$defs.SourceOwnerExecutionProtocol.const.ancestorFields).toEqual(protocol.anchorFields);
@@ -432,3 +432,20 @@ test("generation receipt glue: a captured complete walk verifies under real read
   expect(await glue.verifyJavascriptDependencyGenerationReceiptV1(root,context,phase,".",subject)).toMatchObject({status:"mismatch",class:"receipt-invalid"});
  }finally{rmSync(root,{recursive:true,force:true});}
 }),60000);
+
+test("generation receipt: the stamp of a symbolic link equals the provider walk's stamp and survives an attribute bump, so a captured receipt verifies what the walk observed",async()=>{
+ const{javascriptDependencyStampV1}=await import("../../💾️storage/🟦️.ts"),directory=mkdtempSync(join(tmpdir(),"m4-link-stamp-"));
+ try{
+  const target=join(directory,"target"),link=join(directory,"link");mkdirSync(target);symlinkSync(target,link);
+  const walk=(path:string)=>JSON.parse(javascriptDependencyStampV1(lstatSync(path,{bigint:true}) as never)) as string[],ours=(path:string)=>generationStampV1(lstatSync(path,{bigint:true})).split(":");
+  expect(ours(link)).toEqual(walk(link));expect(ours(link)[6]).toBe("0");
+  const before=generationStampV1(lstatSync(link,{bigint:true}));
+  await new Promise(resolve=>setTimeout(resolve,20));lchownSync(link,process.getuid!(),process.getgid!());
+  expect(lstatSync(link,{bigint:true}).ctimeNs).toBeGreaterThan(0n);
+  expect(generationStampV1(lstatSync(link,{bigint:true}))).toBe(before);
+  const python=spawnSync("python3",["-I","-c","import os,sys;s=os.lstat(sys.argv[1]);print(':'.join(map(str,[s.st_dev,s.st_ino,s.st_mode,s.st_nlink,s.st_size,s.st_mtime_ns,0])))",link],{encoding:"utf8"});
+  if(python.status===0)expect(python.stdout.trim()).toBe(before);
+  const file=join(directory,"file");writeFileSync(file,"x");const f=lstatSync(file,{bigint:true});
+  expect(generationStampV1(f).split(":")[6]).toBe(String(f.ctimeNs));
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});

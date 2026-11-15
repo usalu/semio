@@ -10,6 +10,21 @@
     "en": "A heating element warms the air.",
     "de": "Ein Heizelement erwärmt die Luft."
   },
+  "mathClauses": [
+    [
+      "delta",
+      "The difference $\\Delta\\theta$ drives the flow.",
+      "Die Differenz $\\Delta\\theta$ treibt den Strom an."
+    ]
+  ],
+  "mathExpected": {
+    "en": "The difference $\\Delta\\theta$ drives the flow.",
+    "de": "Die Differenz $\\Delta\\theta$ treibt den Strom an."
+  },
+  "mathWords": {
+    "en": 6,
+    "de": 7
+  },
   "readingWordsPerSecond": 1.6,
   "minimumSeconds": 1.5
 }

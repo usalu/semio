@@ -8,7 +8,7 @@
 //!
 //! 🧱️ This crate is the thin public facade of the split app-surface crates, bottom to top:
 //! `foundation` (ids, value paths, field meta, report tree, store macros), `viewport3d` (scene lowering),
-//! `visual-chrome` (2D diagrams, accessibility, themes, device profiles, manifest, interaction domain),
+//! `visual-chrome` (2D diagrams, accessibility, device profiles, manifest, interaction domain), `themes` (built-in and user theme bundles),
 //! `live-core` (lanes, direct manipulation, edit rules, dispatch), `panels` (checks, properties, outliner,
 //! selection mirror, catalogue, toolbar, lane overlays) and `live-editor` (retained commands, tool jobs,
 //! editor wiring, oracles). The old `viewport3d` module path keeps its toolbar and lane overlays.

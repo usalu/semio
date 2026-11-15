@@ -13,6 +13,11 @@ use scene::projection_kit::design_case::forms;
 use scene::projection_kit::{self, base_id, loc, unit, entity_ref, utilisation_words};
 use std::collections::BTreeSet;
 
+/// 📏 Magnitude of the action with `id` (G_k, Q_k, A_d or a_Ek), zero when the id is unknown.
+pub fn raw_value(d: &model::En1990Snapshot, id: &str) -> f64 {
+    d.permanents.iter().find(|a| a.id == id).map(|a| a.gk).or_else(|| d.variables.iter().find(|a| a.id == id).map(|a| a.qk)).or_else(|| d.accidentals.iter().find(|a| a.id == id).map(|a| a.ad)).or_else(|| d.seismics.iter().find(|a| a.id == id).map(|a| a.a_ek)).unwrap_or(0.0)
+}
+
 pub const LAYER_MEMBERS: &str = "members";
 pub const LAYER_DECKS: &str = "decks";
 pub const LAYER_LOADS: &str = "loads";

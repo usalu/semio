@@ -861,6 +861,7 @@
         "maximumNameBytes": 255,
         "maximumDirectoryEntries": 65536,
         "maximumLinkBytes": 4096,
+        "maximumErrnoAttempts": 4,
         "maximumDirectoryRecordBytes": 1048,
         "maximumReadBytes": 65536,
         "numericDescriptor": "private",

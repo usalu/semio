@@ -1,0 +1,6 @@
+🛋️furniture/bar-stool
+🛋️furniture/bookshelf
+🛋️furniture/cafe-chair
+🛋️furniture/dining-table
+🛋️furniture/folding-deck-chair
+🛋️furniture/height-adjustable-desk

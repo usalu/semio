@@ -55,5 +55,11 @@
         "release": false
       }
     }
-  ]
+  ],
+  "admission": {
+    "operations": 100,
+    "maximumPendingOperations": 32,
+    "expectedCompleted": 100,
+    "closedRefuses": true
+  }
 }

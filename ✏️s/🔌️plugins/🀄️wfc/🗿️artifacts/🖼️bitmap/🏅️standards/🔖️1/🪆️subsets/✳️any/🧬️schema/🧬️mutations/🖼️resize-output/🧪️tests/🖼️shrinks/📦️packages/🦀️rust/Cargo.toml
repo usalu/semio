@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-s-artifact-wfc-bitmap-tests-shrinks-the-output-and-cascades-a-pin"
+name = "semio-s-artifact-wfc-bitmap-tests-shrinks-output-pin"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Component crate of semio-s-artifact-wfc-bitmap: tests-shrinks-the-output-and-cascades-a-pin"
+description = "Component crate of semio-s-artifact-wfc-bitmap: tests-shrinks-output-pin"
 
 [package.metadata.semio]
 role = "library"

@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use semio_s_artifact_norm_din4108_mutations::Din4108Mutation;
+use crate::Din4108Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -26,8 +26,8 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use crate::binary::mutations::*;
-use semio_s_artifact_norm_din4108_mutations::Din4108Mutation;
+use crate::binary::*;
+use crate::Din4108Mutation;
 use semio_s_artifact_norm_din4108_mut_building::{change_climate_zone, change_usage, change_t_int_c, change_rh_int, change_airtightness_n50, change_has_mechanical_ventilation, change_bb2_details_conform};
 use semio_s_artifact_norm_din4108_mut_zones::{insert_zone, remove_zone, change_zone_floor_area, change_zone_heaviness, change_zone_night_ventilation};
 use semio_s_artifact_norm_din4108_mut_windows::{insert_zone_window, remove_zone_window, change_zone_window_area, change_zone_window_g_value, change_zone_window_shading_fc, change_zone_window_orientation, change_zone_window_inclination_deg};
@@ -35,7 +35,7 @@ use semio_s_artifact_norm_din4108_mut_elements::{insert_element, remove_element,
 use semio_s_artifact_norm_din4108_mut_layers::{insert_layer, remove_layer, reorder_layers, change_layer_thickness, change_layer_lambda, change_layer_mu, change_layer_material_id, change_layer_application_type, change_layer_compressive_class};
 use semio_s_artifact_norm_din4108_mut_thermal_bridge::{insert_thermal_bridge, remove_thermal_bridge, change_thermal_bridge_psi, change_thermal_bridge_length, change_thermal_bridge_bb2_type};
 #[cfg(test)] use protocol::OpText;
-use crate::text::mutations::{Din4108MutationDsl, din4108_mutation_to_dsl, din4108_mutation_from_dsl};
+use crate::text::{Din4108MutationDsl, din4108_mutation_to_dsl, din4108_mutation_from_dsl};
 
 impl OpBinary for Din4108MutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -55,3 +55,5 @@ impl OpBinary for Din4108Mutation {
     }
 }
 }
+
+dsl::original_pack_value_operation_receiving!(crate::Din4108Mutation);

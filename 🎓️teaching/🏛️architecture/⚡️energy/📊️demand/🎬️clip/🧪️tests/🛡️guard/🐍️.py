@@ -42,10 +42,11 @@ class DemandTransitionGuard(unittest.TestCase):
 
     def test_fixture_covers_every_demand_clip(self):
         folders = {path.parent.name for path in DEMAND.glob("*/🐍️.py")}
-        self.assertEqual(set(FIXTURE["clips"]), folders)
+        self.assertEqual({*FIXTURE["clips"], *FIXTURE["shared"]}, folders)
+        self.assertFalse(set(FIXTURE["clips"]) & set(FIXTURE["shared"]))
 
     def test_no_direct_shape_transform_remains(self):
-        found = [f"{clip}:{node.lineno} {called_name(node)}" for clip in FIXTURE["clips"] for node in ast.walk(tree(clip)) if isinstance(node, ast.Call) and called_name(node) in FIXTURE["forbidden"]]
+        found = [f"{clip}:{node.lineno} {called_name(node)}" for clip in [*FIXTURE["clips"], *FIXTURE["shared"]] for node in ast.walk(tree(clip)) if isinstance(node, ast.Call) and called_name(node) in FIXTURE["forbidden"]]
         self.assertEqual(found, [], "declare these as transitions in the clip's 🔀️transitions/🔣️.json and play them with stage.transition")
 
     def test_become_is_only_analytical_or_one_shot(self):

@@ -1,0 +1,677 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "absent on both sides",
+   "local": null,
+   "remote": null,
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": null,
+   "reason": null
+  },
+  {
+   "name": "fleet file missing locally",
+   "local": null,
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "materialise",
+   "reason": null
+  },
+  {
+   "name": "fleet link missing locally",
+   "local": null,
+   "remote": {
+    "operation": "link",
+    "target": "x",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "materialise",
+   "reason": null
+  },
+  {
+   "name": "fleet delete and absent locally",
+   "local": null,
+   "remote": {
+    "operation": "delete",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": null,
+   "reason": null
+  },
+  {
+   "name": "local file the fleet never had",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": null,
+   "evidence": {
+    "seen": null,
+    "base": "absent",
+    "fleetSince": false
+   },
+   "expect": "publish",
+   "reason": null
+  },
+  {
+   "name": "local link the fleet never had",
+   "local": {
+    "kind": "link",
+    "mtimeMs": 1700000001000,
+    "target": "x"
+   },
+   "remote": null,
+   "evidence": {
+    "seen": null,
+    "base": "absent",
+    "fleetSince": false
+   },
+   "expect": "publish",
+   "reason": null
+  },
+  {
+   "name": "identical content",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1699999999000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "same",
+   "reason": null
+  },
+  {
+   "name": "identical content with a far future modification time is still the same",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 4102444800000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "same",
+   "reason": null
+  },
+  {
+   "name": "identical link",
+   "local": {
+    "kind": "link",
+    "mtimeMs": 1700000001000,
+    "target": "x"
+   },
+   "remote": {
+    "operation": "link",
+    "target": "x",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "same",
+   "reason": null
+  },
+  {
+   "name": "incident: an old version of a fleet file with a fresh modification time is stale (journal)",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 4102444800000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": "journal",
+    "base": "differs",
+    "fleetSince": true
+   },
+   "expect": "stale",
+   "reason": "journal"
+  },
+  {
+   "name": "an old version found in the fleet's git history is stale",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 4102444800000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": "git",
+    "base": "differs",
+    "fleetSince": true
+   },
+   "expect": "stale",
+   "reason": "git"
+  },
+  {
+   "name": "incident: a file unchanged since the base while the fleet moved on is stale even with a fresh modification time",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 4102444800000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "equal",
+    "fleetSince": true
+   },
+   "expect": "stale",
+   "reason": "base"
+  },
+  {
+   "name": "incident: a resurrected delete (the content the fleet had before) is stale",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 4102444800000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "delete",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": "journal",
+    "base": "differs",
+    "fleetSince": true
+   },
+   "expect": "stale",
+   "reason": "journal"
+  },
+  {
+   "name": "a file the fleet deleted and that is unchanged since the base is stale",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "delete",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "equal",
+    "fleetSince": true
+   },
+   "expect": "stale",
+   "reason": "base"
+  },
+  {
+   "name": "a file edited here and deleted by the fleet is a conflict",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "delete",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "differs",
+    "fleetSince": true
+   },
+   "expect": "conflict",
+   "reason": "deleted-by-fleet"
+  },
+  {
+   "name": "a new file at a path the fleet deleted, the base never had it, is published",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "delete",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "absent",
+    "fleetSince": false
+   },
+   "expect": "publish",
+   "reason": null
+  },
+  {
+   "name": "an edit on top of a fleet version that did not change since the base is an edit",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "differs",
+    "fleetSince": false
+   },
+   "expect": "edit",
+   "reason": "fleet-unchanged"
+  },
+  {
+   "name": "an old modification time does not stop an edit",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "differs",
+    "fleetSince": false
+   },
+   "expect": "edit",
+   "reason": "fleet-unchanged"
+  },
+  {
+   "name": "both sides changed since the base is a conflict",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "differs",
+    "fleetSince": true
+   },
+   "expect": "conflict",
+   "reason": "both-changed"
+  },
+  {
+   "name": "a newer modification time does not win a conflict",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 4102444800000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "differs",
+    "fleetSince": true
+   },
+   "expect": "conflict",
+   "reason": "both-changed"
+  },
+  {
+   "name": "without a base every difference is a conflict",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "conflict",
+   "reason": "no-base"
+  },
+  {
+   "name": "both sides added the path is a conflict",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "absent",
+    "fleetSince": true
+   },
+   "expect": "conflict",
+   "reason": "both-changed"
+  },
+  {
+   "name": "a link edited here and in the fleet is a conflict",
+   "local": {
+    "kind": "link",
+    "mtimeMs": 1700000001000,
+    "target": "x"
+   },
+   "remote": {
+    "operation": "link",
+    "target": "y",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "differs",
+    "fleetSince": true
+   },
+   "expect": "conflict",
+   "reason": "both-changed"
+  },
+  {
+   "name": "a link that differs from the fleet's, fleet unchanged, is an edit",
+   "local": {
+    "kind": "link",
+    "mtimeMs": 1700000001000,
+    "target": "x"
+   },
+   "remote": {
+    "operation": "link",
+    "target": "y",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "differs",
+    "fleetSince": false
+   },
+   "expect": "edit",
+   "reason": "fleet-unchanged"
+  },
+  {
+   "name": "a file at a path the fleet does not hold whose content its history had is stale",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": null,
+   "evidence": {
+    "seen": "git",
+    "base": "absent",
+    "fleetSince": false
+   },
+   "expect": "stale",
+   "reason": "git"
+  },
+  {
+   "name": "a file at a path the fleet does not hold, unchanged since the base, is published",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": null,
+   "evidence": {
+    "seen": null,
+    "base": "equal",
+    "fleetSince": null
+   },
+   "expect": "publish",
+   "reason": null
+  },
+  {
+   "name": "history beats an unchanged fleet: a known old version is stale even when the fleet did not move",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": "journal",
+    "base": "differs",
+    "fleetSince": false
+   },
+   "expect": "stale",
+   "reason": "journal"
+  },
+  {
+   "name": "a local link against a fleet file that differs, no base, is a conflict",
+   "local": {
+    "kind": "link",
+    "mtimeMs": 1700000001000,
+    "target": "x"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server"
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "conflict",
+   "reason": "no-base"
+  },
+  {
+   "name": "identical content and the same executable bit is the same",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "executable": true
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server",
+    "executable": true
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "same",
+   "reason": null
+  },
+  {
+   "name": "identical content on a machine that cannot read the executable bit is the same",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server",
+    "executable": true
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "same",
+   "reason": null
+  },
+  {
+   "name": "incident: identical content whose executable bit the fleet cleared since is stale (journal), not the same",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "executable": true
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server",
+    "executable": false
+   },
+   "evidence": {
+    "seen": "journal",
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "stale",
+   "reason": "journal"
+  },
+  {
+   "name": "identical content whose executable bit is unchanged since the base while the fleet changed it is stale",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "executable": false
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server",
+    "executable": true
+   },
+   "evidence": {
+    "seen": null,
+    "base": "equal",
+    "fleetSince": null
+   },
+   "expect": "stale",
+   "reason": "base"
+  },
+  {
+   "name": "an executable bit set here on a fleet version that did not change since the base is an edit",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "executable": true
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server",
+    "executable": false
+   },
+   "evidence": {
+    "seen": null,
+    "base": "differs",
+    "fleetSince": false
+   },
+   "expect": "edit",
+   "reason": "fleet-unchanged"
+  },
+  {
+   "name": "an executable bit changed here and in the fleet since the base is a conflict",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "executable": true
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server",
+    "executable": false
+   },
+   "evidence": {
+    "seen": null,
+    "base": "differs",
+    "fleetSince": true
+   },
+   "expect": "conflict",
+   "reason": "both-changed"
+  },
+  {
+   "name": "an executable bit that differs without a base is a conflict",
+   "local": {
+    "kind": "file",
+    "mtimeMs": 1700000001000,
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "executable": true
+   },
+   "remote": {
+    "operation": "put",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "hlc": "1700000000000-000000-g1-server",
+    "executable": false
+   },
+   "evidence": {
+    "seen": null,
+    "base": "unknown",
+    "fleetSince": null
+   },
+   "expect": "conflict",
+   "reason": "no-base"
+  }
+ ]
+}

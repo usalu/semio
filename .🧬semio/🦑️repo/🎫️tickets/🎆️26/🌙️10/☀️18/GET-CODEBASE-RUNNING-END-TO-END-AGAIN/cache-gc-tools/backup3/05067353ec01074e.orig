@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumBytes",
+    "maximumControlBytes",
+    "partitions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 68719476736
+    },
+    "maximumControlBytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 1048576
+    },
+    "partitions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rust",
+        "tools",
+        "graph",
+        "dependencies",
+        "products",
+        "diagnostics",
+        "nx",
+        "leases"
+      ],
+      "properties": {
+        "rust": {
+          "$ref": "#/$defs/partition"
+        },
+        "tools": {
+          "$ref": "#/$defs/partition"
+        },
+        "graph": {
+          "$ref": "#/$defs/partition"
+        },
+        "dependencies": {
+          "$ref": "#/$defs/partition"
+        },
+        "products": {
+          "$ref": "#/$defs/partition"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/partition"
+        },
+        "nx": {
+          "$ref": "#/$defs/partition"
+        },
+        "leases": {
+          "$ref": "#/$defs/partition"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "filesystemOverhead": {
+      "const": {
+        "tinyCapacityBytes": 268435456
+      }
+    },
+    "ordinaryMaintenance": {
+      "const": {
+        "version": 1,
+        "mode": "queued",
+        "maximumWaitMilliseconds": 1800000
+      }
+    },
+    "partition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "capacityBytes",
+        "maximumLogicalBytes"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 68719476736
+        },
+        "maximumArtifactBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 68719476736
+        },
+        "maximumLogicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 68719476736
+        }
+      }
+    },
+    "logicalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "maximumLogicalBytes",
+        "missing",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumLogicalBytes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "missing": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

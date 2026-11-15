@@ -8,6 +8,7 @@
   "Asset",
   "AssetDocument",
   "AuthoredRepresentation",
+  "AuthoredVolume",
   "BodyPhysiology",
   "Bone",
   "BoneOffset",
@@ -56,6 +57,7 @@
   "Rig",
   "ScalarTrack",
   "ScaleDenominator",
+  "ScaleVolume",
   "Section",
   "SegmentMass",
   "Shape",
@@ -63,6 +65,7 @@
   "ShapeRole",
   "Slug",
   "StructuralModel",
+  "StructuralSolid",
   "SupportType",
   "SymbolRepresentation",
   "Text",
@@ -71,14 +74,16 @@
   "ThermalModel",
   "ThermalModelKind",
   "ThermalRegion",
+  "ThermalSolid",
   "UnavailableRepresentation",
+  "UnavailableVolume",
   "Vector2",
   "Vector3",
   "Viewpoint",
-  "Volume",
   "VolumeRepeat",
   "VolumeSolid",
-  "VolumeTransform"
+  "VolumeTransform",
+  "Volumes"
  ],
  "invalid": [
   {

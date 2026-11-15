@@ -1,0 +1,8 @@
+try 1 started pid=81179 2026-11-15T01:41:16Z log=/Users/ueli/native-bootstrap-round-13.log
+try 1 ended 2026-11-15T01:47:53Z native_rc=75 stopped=0 retry_wording=0 closure_missing=0 failed=[] other=[]
+try 1: next try after 180 s
+try 2 started pid=87960 2026-11-15T01:50:53Z log=/Users/ueli/native-bootstrap-round-13-try-2.log
+try 2 hard stop 2026-11-15T02:16:31Z: memory pressure level 2 in six samples in a row; one SIGINT to process group 87960
+try 2 ended 2026-11-15T02:17:05Z native_rc=1 stopped=1 retry_wording=0 closure_missing=0 failed=[] other=[Internal error: Original Script process interrupted]
+try 2: next try after 180 s
+round 14 posted: runner stopped during the wait before try 3 (no bootstrap was running) 2026-11-15T02:17:52Z

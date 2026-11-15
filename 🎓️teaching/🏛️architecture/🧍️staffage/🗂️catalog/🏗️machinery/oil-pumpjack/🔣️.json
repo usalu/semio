@@ -1111,9 +1111,9 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": -1.1,
+       "x": -1.0,
        "y": 0.3,
-       "w": 2.2,
+       "w": 2.0,
        "h": 0.25,
        "region": "base",
        "material": "painted-steel"
@@ -3420,9 +3420,9 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": -1.1,
+       "x": -1.0,
        "y": 0.3,
-       "w": 2.2,
+       "w": 2.0,
        "h": 0.25,
        "region": "base",
        "material": "painted-steel"
@@ -5242,9 +5242,9 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": -1.1,
+       "x": -1.0,
        "y": 0.3,
-       "w": 2.2,
+       "w": 2.0,
        "h": 0.25,
        "region": "base",
        "material": "painted-steel"
@@ -6935,9 +6935,9 @@
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": -1.1,
+       "x": -1.0,
        "y": 0.3,
-       "w": 2.2,
+       "w": 2.0,
        "h": 0.25,
        "region": "base",
        "material": "painted-steel"
@@ -9444,7 +9444,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "concrete",
-     "areaM2": 14,
+     "areaM2": 84.9,
      "characteristicLengthM": 7.8,
      "geometry": "horizontal-plate-up",
      "skyViewFactor": 0.8,
@@ -9477,7 +9477,7 @@
      "kind": "surface",
      "model": "operating",
      "material": "painted-steel",
-     "areaM2": 2.6,
+     "areaM2": 1.45,
      "characteristicLengthM": 1.3,
      "geometry": "cylinder",
      "skyViewFactor": 0.4,
@@ -9514,7 +9514,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "painted-steel",
-     "areaM2": 38,
+     "areaM2": 47,
      "characteristicLengthM": 5,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.7,
@@ -9547,7 +9547,7 @@
      "kind": "engine",
      "model": "operating",
      "material": "cast-iron",
-     "areaM2": 6.5,
+     "areaM2": 10.28,
      "characteristicLengthM": 1.4,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.4,
@@ -9584,7 +9584,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "cast-iron",
-     "areaM2": 6,
+     "areaM2": 9.7,
      "characteristicLengthM": 2.2,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.7,
@@ -9617,7 +9617,7 @@
      "kind": "engine",
      "model": "operating",
      "material": "motor-steel",
-     "areaM2": 2.6,
+     "areaM2": 7.0,
      "characteristicLengthM": 1.1,
      "geometry": "cylinder",
      "skyViewFactor": 0.4,
@@ -9674,661 +9674,4415 @@
    ],
    "clinical": false
   },
-  "volume": {
-    "status": "authored",
-    "solids": [
-      {
-        "id": "slab",
-        "kind": "box",
-        "bone": "base",
-        "material": "concrete",
-        "role": "body",
-        "tone": 0.82,
-        "region": "base",
-        "size": [7.8, 0.3, 2.4],
-        "transform": {
-          "translation": [2.0, 0.15, 0.0]
-        }
-      },
-      {
-        "id": "skid-rail",
-        "kind": "box",
-        "bone": "skid",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.5,
-        "region": "base",
-        "size": [7.2, 0.25, 0.15],
-        "transform": {
-          "translation": [3.6, 0.125, 1.025]
-        },
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -2.05]
-        }
-      },
-      {
-        "id": "skid-cross",
-        "kind": "box",
-        "bone": "skid",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.5,
-        "region": "base",
-        "size": [0.15, 0.25, 2.2],
-        "transform": {
-          "translation": [0.075, 0.125, 0.0]
-        },
-        "repeat": {
-          "count": 5,
-          "translation": [1.78, 0.0, 0.0]
-        }
-      },
-      {
-        "id": "wellhead-base",
-        "kind": "revolve",
-        "bone": "base",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.55,
-        "region": "wellhead",
-        "maxDenominator": 100,
-        "profile": [[0.0, 0.17], [0.5, 0.17]],
-        "axis": [0.0, 1.0, 0.0],
-        "origin": [-3.0, 0.0, 0.0]
-      },
-      {
-        "id": "wellhead-valve",
-        "kind": "revolve",
-        "bone": "base",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.7,
-        "region": "wellhead",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.1], [0.5, 0.1]],
-        "axis": [0.0, 1.0, 0.0],
-        "origin": [-3.0, 0.5, 0.0]
-      },
-      {
-        "id": "stuffing-box",
-        "kind": "revolve",
-        "bone": "base",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.45,
-        "region": "wellhead",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.08], [0.28, 0.08]],
-        "axis": [0.0, 1.0, 0.0],
-        "origin": [-3.0, 1.0, 0.0]
-      },
-      {
-        "id": "flowline",
-        "kind": "revolve",
-        "bone": "base",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.55,
-        "region": "wellhead",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.06], [0.83, 0.06]],
-        "axis": [1.0, 0.0, 0.0],
-        "origin": [-2.83, 0.68, 0.0]
-      },
-      {
-        "id": "polished-rod",
-        "kind": "revolve",
-        "bone": "rod",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.9,
-        "region": "steel",
-        "profile": [[0.0, 0.03], [1.82, 0.03]],
-        "axis": [0.0, 1.0, 0.0],
-        "origin": [0.0, -1.9, 0.0]
-      },
-      {
-        "id": "bridle",
-        "kind": "capsule",
-        "bone": "rod",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.9,
-        "region": "steel",
-        "p0": [0.0, 0.08, 0.08],
-        "p1": [0.0, 1.22, 0.08],
-        "r0": 0.012,
-        "r1": 0.012,
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -0.16]
-        }
-      },
-      {
-        "id": "carrier",
-        "kind": "box",
-        "bone": "rod",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.3,
-        "region": "steel",
-        "size": [0.6, 0.16, 0.3],
-        "transform": {
-          "translation": [0.0, 0.0, 0.0]
-        }
-      },
-      {
-        "id": "leg-fl",
-        "kind": "loft",
-        "bone": "post",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.62,
-        "region": "steel",
-        "sections": [
-          {
-            "at": [-1.48, 0.0, 0.87],
-            "rx": 0.09,
-            "ry": 0.1,
-            "exponent": 3.0,
-            "rotation": [0.63608, 0.43065, 0.53018, -0.35895]
-          },
-          {
-            "at": [-0.04, 3.6, 0.16],
-            "rx": 0.09,
-            "ry": 0.1,
-            "exponent": 3.0,
-            "rotation": [0.63608, 0.43065, 0.53018, -0.35895]
+  "volumes": {
+    "50": {
+      "status": "authored",
+      "denominator": 50,
+      "body": [
+        {
+          "id": "slab",
+          "kind": "box",
+          "bone": "base",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.82,
+          "size": [7.8, 0.3, 2.4],
+          "transform": {
+            "translation": [2.0, 0.15, 0.0]
           }
-        ],
-        "capStart": true,
-        "capEnd": true
-      },
-      {
-        "id": "leg-fr",
-        "kind": "loft",
-        "bone": "post",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.62,
-        "region": "steel",
-        "sections": [
-          {
-            "at": [-1.48, 0.0, -0.87],
-            "rx": 0.09,
-            "ry": 0.1,
-            "exponent": 3.0,
-            "rotation": [0.53018, 0.35895, 0.63608, -0.43065]
+        },
+        {
+          "id": "skid-beam-l",
+          "kind": "extrude",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [
+            [0.0, 0.75],
+            [0.0, 0.95],
+            [0.015, 0.95],
+            [0.015, 0.856],
+            [0.225, 0.856],
+            [0.225, 0.95],
+            [0.24, 0.95],
+            [0.24, 0.75],
+            [0.225, 0.75],
+            [0.225, 0.844],
+            [0.015, 0.844],
+            [0.015, 0.75]
+          ],
+          "plane": "yz",
+          "from": 0.0,
+          "to": 7.2
+        },
+        {
+          "id": "skid-beam-r",
+          "kind": "extrude",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [
+            [0.0, -0.95],
+            [0.0, -0.75],
+            [0.015, -0.75],
+            [0.015, -0.844],
+            [0.225, -0.844],
+            [0.225, -0.75],
+            [0.24, -0.75],
+            [0.24, -0.95],
+            [0.225, -0.95],
+            [0.225, -0.856],
+            [0.015, -0.856],
+            [0.015, -0.95]
+          ],
+          "plane": "yz",
+          "from": 0.0,
+          "to": 7.2
+        },
+        {
+          "id": "skid-cross",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [0.15, 0.22, 1.5],
+          "transform": {
+            "translation": [0.3, 0.12, 0.0]
           },
-          {
-            "at": [-0.04, 3.6, -0.16],
-            "rx": 0.09,
-            "ry": 0.1,
-            "exponent": 3.0,
-            "rotation": [0.53018, 0.35895, 0.63608, -0.43065]
+          "repeat": {
+            "count": 5,
+            "translation": [1.6, 0.0, 0.0]
           }
-        ],
-        "capStart": true,
-        "capEnd": true
-      },
-      {
-        "id": "leg-rl",
-        "kind": "loft",
-        "bone": "post",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.62,
-        "region": "steel",
-        "sections": [
-          {
-            "at": [1.48, 0.0, 0.87],
-            "rx": 0.09,
-            "ry": 0.1,
-            "exponent": 3.0,
-            "rotation": [-0.43065, -0.63608, -0.35895, 0.53018]
+        },
+        {
+          "id": "skid-deck",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [7.2, 0.01, 2.0],
+          "transform": {
+            "translation": [3.6, 0.245, 0.0]
+          }
+        },
+        {
+          "id": "wellhead-base",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "profile": [[0.0, 0.17], [0.5, 0.17]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 0.0, 0.0]
+        },
+        {
+          "id": "wellhead-flange",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "profile": [[0.0, 0.2], [0.03, 0.2]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 0.5, 0.0]
+        },
+        {
+          "id": "wellhead-valve",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "profile": [[0.0, 0.1], [0.5, 0.1]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 0.5, 0.0]
+        },
+        {
+          "id": "stuffing-box",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "profile": [[0.0, 0.08], [0.28, 0.08]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 1.0, 0.0]
+        },
+        {
+          "id": "flowline",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "profile": [[0.0, 0.06], [0.83, 0.06]],
+          "axis": [1.0, 0.0, 0.0],
+          "origin": [-2.83, 0.68, 0.0]
+        },
+        {
+          "id": "polished-rod",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "slender": true,
+          "profile": [[0.0, 0.025], [3.12, 0.025]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 1.28, 0.0]
+        },
+        {
+          "id": "leg-fl",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [-1.528, -0.12, 0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 6,
+              "rotation": [0.63641, 0.43087, 0.52979, -0.35868]
+            },
+            {
+              "at": [-0.04, 3.6, 0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 6,
+              "rotation": [0.63641, 0.43087, 0.52979, -0.35868]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-fr",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [-1.528, -0.12, -0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 6,
+              "rotation": [0.52979, 0.35868, 0.63641, -0.43087]
+            },
+            {
+              "at": [-0.04, 3.6, -0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 6,
+              "rotation": [0.52979, 0.35868, 0.63641, -0.43087]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-rl",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [1.528, -0.12, 0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 6,
+              "rotation": [-0.43087, -0.63641, -0.35868, 0.52979]
+            },
+            {
+              "at": [0.04, 3.6, 0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 6,
+              "rotation": [-0.43087, -0.63641, -0.35868, 0.52979]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-rr",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [1.528, -0.12, -0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 6,
+              "rotation": [-0.35868, -0.52979, -0.43087, 0.63641]
+            },
+            {
+              "at": [0.04, 3.6, -0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 6,
+              "rotation": [-0.35868, -0.52979, -0.43087, 0.63641]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "brace-x-l",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [1.9, 0.16, 0.1],
+          "transform": {
+            "translation": [0.0, 1.13, 0.65]
+          }
+        },
+        {
+          "id": "brace-x-r",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [1.9, 0.16, 0.1],
+          "transform": {
+            "translation": [0.0, 1.13, -0.65]
+          }
+        },
+        {
+          "id": "brace-z-f",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.1, 0.16, 1.24],
+          "transform": {
+            "translation": [-1.03, 1.13, 0.0]
+          }
+        },
+        {
+          "id": "brace-z-r",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.1, 0.16, 1.24],
+          "transform": {
+            "translation": [1.03, 1.13, 0.0]
+          }
+        },
+        {
+          "id": "saddle",
+          "kind": "revolve",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.16], [0.56, 0.16]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 3.73, -0.28]
+        },
+        {
+          "id": "beam-web",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, -0.2], [-2.15, 0.22], [-1, 0.32], [1, 0.32], [2.8, 0.18], [2.8, -0.18], [1, -0.32], [-1, -0.32]],
+          "plane": "xy",
+          "from": -0.02,
+          "to": 0.02
+        },
+        {
+          "id": "beam-flange-top",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, 0.22], [-1, 0.32], [1, 0.32], [2.8, 0.18], [2.8, 0.14], [1, 0.28], [-1, 0.28], [-2.15, 0.18]],
+          "plane": "xy",
+          "from": -0.18,
+          "to": 0.18
+        },
+        {
+          "id": "beam-flange-bottom",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, -0.16], [-1, -0.28], [1, -0.28], [2.8, -0.14], [2.8, -0.18], [1, -0.32], [-1, -0.32], [-2.15, -0.2]],
+          "plane": "xy",
+          "from": -0.18,
+          "to": 0.18
+        },
+        {
+          "id": "horsehead-face",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.77908, -1.02606],
+            [-2.85778, -0.77646],
+            [-2.91442, -0.52094],
+            [-2.94858, -0.26147],
+            [-2.96, 0.0],
+            [-2.94858, 0.26147],
+            [-2.91442, 0.52094],
+            [-2.85778, 0.77646],
+            [-2.77908, 1.02606]
+          ],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cheek-l",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.1, -0.45],
+            [-2.1, 0.45]
+          ],
+          "plane": "xy",
+          "from": 0.31,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cheek-r",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.1, -0.45],
+            [-2.1, 0.45]
+          ],
+          "plane": "xy",
+          "from": -0.35,
+          "to": -0.31
+        },
+        {
+          "id": "horsehead-cap-top",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [[-2.81908, 1.02606], [-2.1, 0.45], [-2.1, 0.41], [-2.81908, 0.98606]],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cap-bottom",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [[-2.81908, -1.02606], [-2.1, -0.45], [-2.1, -0.41], [-2.81908, -0.98606]],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "centre-bearing",
+          "kind": "revolve",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.2], [0.6, 0.2]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 0.0, -0.3]
+        },
+        {
+          "id": "tail-pin",
+          "kind": "revolve",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.14], [0.6, 0.14]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [2.7, 0.0, -0.3]
+        },
+        {
+          "id": "horsehead-web",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.15,
+          "profile": [
+            [-2.54734, 0.73044],
+            [-2.60421, 0.4905],
+            [-2.63853, 0.24632],
+            [-2.65, 0.0],
+            [-2.63853, -0.24632],
+            [-2.60421, -0.4905],
+            [-2.54734, -0.73044],
+            [-2.3, -0.3],
+            [-2.3, 0.3]
+          ],
+          "plane": "xy",
+          "from": -0.015,
+          "to": 0.015
+        },
+        {
+          "id": "pitman-l",
+          "kind": "box",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.14, 2.65, 0.15],
+          "cornerRadius": 0.02,
+          "transform": {
+            "translation": [0.0, -1.325, 0.575]
+          }
+        },
+        {
+          "id": "pitman-eye-l",
+          "kind": "revolve",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.12], [0.15, 0.12]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, -2.65, 0.5]
+        },
+        {
+          "id": "pitman-r",
+          "kind": "box",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.14, 2.65, 0.15],
+          "cornerRadius": 0.02,
+          "transform": {
+            "translation": [0.0, -1.325, -0.575]
+          }
+        },
+        {
+          "id": "pitman-eye-r",
+          "kind": "revolve",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.12], [0.15, 0.12]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, -2.65, -0.65]
+        },
+        {
+          "id": "carrier",
+          "kind": "box",
+          "bone": "rod",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [0.6, 0.16, 0.3],
+          "transform": {
+            "translation": [0.0, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "crank-hub",
+          "kind": "revolve",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.2], [1.6, 0.2]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 0.0, -0.8]
+        },
+        {
+          "id": "crank-arm-l",
+          "kind": "box",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.58,
+          "size": [0.95, 0.28, 0.25],
+          "transform": {
+            "translation": [0.475, 0.0, 0.575]
+          }
+        },
+        {
+          "id": "counterweight-l",
+          "kind": "extrude",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [
+            [-0.88257, 0.68954],
+            [-0.98428, 0.53442],
+            [-1.05898, 0.36464],
+            [-1.10464, 0.18485],
+            [-1.12, 0.0],
+            [-1.10464, -0.18485],
+            [-1.05898, -0.36464],
+            [-0.98428, -0.53442],
+            [-0.88257, -0.68954],
+            [-0.2758, -0.21548],
+            [-0.33093, -0.11395],
+            [-0.35, 0.0],
+            [-0.33093, 0.11395],
+            [-0.2758, 0.21548]
+          ],
+          "plane": "xy",
+          "from": 0.45,
+          "to": 0.7
+        },
+        {
+          "id": "crank-pin-l",
+          "kind": "revolve",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.25,
+          "profile": [[0.0, 0.1], [0.25, 0.1]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.85, 0.0, 0.45]
+        },
+        {
+          "id": "crank-arm-r",
+          "kind": "box",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.58,
+          "size": [0.95, 0.28, 0.25],
+          "transform": {
+            "translation": [0.475, 0.0, -0.575]
+          }
+        },
+        {
+          "id": "counterweight-r",
+          "kind": "extrude",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [
+            [-0.88257, 0.68954],
+            [-0.98428, 0.53442],
+            [-1.05898, 0.36464],
+            [-1.10464, 0.18485],
+            [-1.12, 0.0],
+            [-1.10464, -0.18485],
+            [-1.05898, -0.36464],
+            [-0.98428, -0.53442],
+            [-0.88257, -0.68954],
+            [-0.2758, -0.21548],
+            [-0.33093, -0.11395],
+            [-0.35, 0.0],
+            [-0.33093, 0.11395],
+            [-0.2758, 0.21548]
+          ],
+          "plane": "xy",
+          "from": -0.7,
+          "to": -0.45
+        },
+        {
+          "id": "crank-pin-r",
+          "kind": "revolve",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.25,
+          "profile": [[0.0, 0.1], [0.25, 0.1]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.85, 0.0, -0.7]
+        },
+        {
+          "id": "gearbox",
+          "kind": "box",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.62,
+          "size": [1.4, 1.3, 1.2],
+          "cornerRadius": 0.1,
+          "transform": {
+            "translation": [0.0, -0.4, 0.0]
+          }
+        },
+        {
+          "id": "pedestal",
+          "kind": "box",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.1, 0.15, 1.1],
+          "transform": {
+            "translation": [0.0, -1.125, 0.0]
+          }
+        },
+        {
+          "id": "belt-guard-ring",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "holes": [
+            [[0.7075, -0.16069], [1.7425, -0.53526], [1.7425, -0.96305], [0.7075, -1.04191]]
+          ],
+          "plane": "xy",
+          "from": -0.95,
+          "to": -0.6
+        },
+        {
+          "id": "belt-guard-plate-out",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "plane": "xy",
+          "from": -0.95,
+          "to": -0.9425
+        },
+        {
+          "id": "belt-guard-plate-in",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "plane": "xy",
+          "from": -0.6075,
+          "to": -0.6
+        },
+        {
+          "id": "motor",
+          "kind": "loft",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.68,
+          "sections": [
+            {
+              "at": [-0.55, 0.1, 0.0],
+              "rx": 0.4,
+              "ry": 0.35,
+              "exponent": 6,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            },
+            {
+              "at": [0.55, 0.1, 0.0],
+              "rx": 0.4,
+              "ry": 0.35,
+              "exponent": 6,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "motor-feet",
+          "kind": "box",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.0, 0.1, 0.9],
+          "transform": {
+            "translation": [0.0, -0.3, 0.0]
+          }
+        },
+        {
+          "id": "motor-cowl",
+          "kind": "loft",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.5,
+          "sections": [
+            {
+              "at": [0.55, 0.1, 0.0],
+              "rx": 0.3,
+              "ry": 0.25,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            },
+            {
+              "at": [0.75, 0.1, 0.0],
+              "rx": 0.3,
+              "ry": 0.25,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "terminal-box",
+          "kind": "box",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [0.3, 0.2, 0.3],
+          "transform": {
+            "translation": [0.0, 0.55, 0.0]
+          }
+        },
+        {
+          "id": "motor-sheave",
+          "kind": "revolve",
+          "bone": "motor",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.2], [0.15, 0.2]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [-0.65, 0.1, -0.85]
+        }
+      ],
+      "thermal": [
+        {
+          "id": "th-slab",
+          "of": "slab",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-beam-l",
+          "of": "skid-beam-l",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-beam-r",
+          "of": "skid-beam-r",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-cross",
+          "of": "skid-cross",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-deck",
+          "of": "skid-deck",
+          "region": "base"
+        },
+        {
+          "id": "th-wellhead-base",
+          "of": "wellhead-base",
+          "region": "wellhead"
+        },
+        {
+          "id": "th-wellhead-flange",
+          "of": "wellhead-flange",
+          "region": "wellhead"
+        },
+        {
+          "id": "th-wellhead-valve",
+          "of": "wellhead-valve",
+          "region": "wellhead"
+        },
+        {
+          "id": "th-stuffing-box",
+          "of": "stuffing-box",
+          "region": "wellhead"
+        },
+        {
+          "id": "th-flowline",
+          "of": "flowline",
+          "region": "wellhead"
+        },
+        {
+          "id": "th-polished-rod",
+          "of": "polished-rod",
+          "region": "steel",
+          "slender": true
+        },
+        {
+          "id": "th-leg-fl",
+          "of": "leg-fl",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-fr",
+          "of": "leg-fr",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-rl",
+          "of": "leg-rl",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-rr",
+          "of": "leg-rr",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-x-l",
+          "of": "brace-x-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-x-r",
+          "of": "brace-x-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-z-f",
+          "of": "brace-z-f",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-z-r",
+          "of": "brace-z-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-saddle",
+          "of": "saddle",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-web",
+          "of": "beam-web",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-flange-top",
+          "of": "beam-flange-top",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-flange-bottom",
+          "of": "beam-flange-bottom",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-face",
+          "of": "horsehead-face",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cheek-l",
+          "of": "horsehead-cheek-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cheek-r",
+          "of": "horsehead-cheek-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cap-top",
+          "of": "horsehead-cap-top",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cap-bottom",
+          "of": "horsehead-cap-bottom",
+          "region": "steel"
+        },
+        {
+          "id": "th-centre-bearing",
+          "of": "centre-bearing",
+          "region": "steel"
+        },
+        {
+          "id": "th-tail-pin",
+          "of": "tail-pin",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-web",
+          "of": "horsehead-web",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-l",
+          "of": "pitman-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-eye-l",
+          "of": "pitman-eye-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-r",
+          "of": "pitman-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-eye-r",
+          "of": "pitman-eye-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-carrier",
+          "of": "carrier",
+          "region": "steel"
+        },
+        {
+          "id": "th-crank-hub",
+          "of": "crank-hub",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-arm-l",
+          "of": "crank-arm-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-counterweight-l",
+          "of": "counterweight-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-pin-l",
+          "of": "crank-pin-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-arm-r",
+          "of": "crank-arm-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-counterweight-r",
+          "of": "counterweight-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-pin-r",
+          "of": "crank-pin-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-gearbox",
+          "of": "gearbox",
+          "region": "gearbox"
+        },
+        {
+          "id": "th-pedestal",
+          "of": "pedestal",
+          "region": "gearbox"
+        },
+        {
+          "id": "th-belt-guard-ring",
+          "of": "belt-guard-ring",
+          "region": "steel"
+        },
+        {
+          "id": "th-belt-guard-plate-out",
+          "of": "belt-guard-plate-out",
+          "region": "steel"
+        },
+        {
+          "id": "th-belt-guard-plate-in",
+          "of": "belt-guard-plate-in",
+          "region": "steel"
+        },
+        {
+          "id": "th-motor",
+          "of": "motor",
+          "region": "motor"
+        },
+        {
+          "id": "th-motor-feet",
+          "of": "motor-feet",
+          "region": "motor"
+        },
+        {
+          "id": "th-motor-cowl",
+          "of": "motor-cowl",
+          "region": "motor"
+        },
+        {
+          "id": "th-terminal-box",
+          "of": "terminal-box",
+          "region": "motor"
+        },
+        {
+          "id": "th-motor-sheave",
+          "of": "motor-sheave",
+          "region": "steel"
+        }
+      ],
+      "structure": [
+        {
+          "id": "member-leg-fl",
+          "of": "leg-fl",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-fr",
+          "of": "leg-fr",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-rl",
+          "of": "leg-rl",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-rr",
+          "of": "leg-rr",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-x-l",
+          "of": "brace-x-l",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-x-r",
+          "of": "brace-x-r",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-z-f",
+          "of": "brace-z-f",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-z-r",
+          "of": "brace-z-r",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-web",
+          "of": "beam-web",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-flange-top",
+          "of": "beam-flange-top",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-flange-bottom",
+          "of": "beam-flange-bottom",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-pitman-l",
+          "of": "pitman-l",
+          "member": "pitman",
+          "part": "member"
+        },
+        {
+          "id": "member-crank-arm-l",
+          "of": "crank-arm-l",
+          "member": "crank",
+          "part": "member"
+        },
+        {
+          "id": "member-pitman-r",
+          "of": "pitman-r",
+          "member": "pitman",
+          "part": "member"
+        },
+        {
+          "id": "member-crank-arm-r",
+          "of": "crank-arm-r",
+          "member": "crank",
+          "part": "member"
+        },
+        {
+          "id": "member-carrier",
+          "of": "carrier",
+          "member": "rod",
+          "part": "member"
+        },
+        {
+          "id": "member-polished-rod",
+          "of": "polished-rod",
+          "member": "base",
+          "part": "member",
+          "slender": true
+        },
+        {
+          "id": "member-gearbox",
+          "of": "gearbox",
+          "member": "gearbox",
+          "part": "member"
+        },
+        {
+          "id": "member-motor",
+          "of": "motor",
+          "member": "motor",
+          "part": "member"
+        },
+        {
+          "id": "member-slab",
+          "of": "slab",
+          "member": "base",
+          "part": "member"
+        },
+        {
+          "id": "member-skid-beam-l",
+          "of": "skid-beam-l",
+          "member": "skid",
+          "part": "member"
+        },
+        {
+          "id": "member-skid-beam-r",
+          "of": "skid-beam-r",
+          "member": "skid",
+          "part": "member"
+        },
+        {
+          "id": "joint-centre-bearing",
+          "of": "centre-bearing",
+          "member": "beam",
+          "part": "joint"
+        },
+        {
+          "id": "joint-tail-pin",
+          "of": "tail-pin",
+          "member": "beam",
+          "part": "joint"
+        },
+        {
+          "id": "joint-crank-hub",
+          "of": "crank-hub",
+          "member": "crank",
+          "part": "joint"
+        },
+        {
+          "id": "joint-saddle",
+          "of": "saddle",
+          "member": "post",
+          "part": "joint"
+        },
+        {
+          "id": "mass-counterweight-l",
+          "of": "counterweight-l",
+          "member": "crank",
+          "part": "mass"
+        },
+        {
+          "id": "mass-counterweight-r",
+          "of": "counterweight-r",
+          "member": "crank",
+          "part": "mass"
+        },
+        {
+          "id": "mass-base",
+          "kind": "box",
+          "bone": "base",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.4,
+          "member": "base",
+          "part": "mass",
+          "size": [6.6, 0.2, 2.0],
+          "transform": {
+            "translation": [2.0, 0.15, 0.0]
+          }
+        },
+        {
+          "id": "mass-gearbox",
+          "kind": "ellipsoid",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "member": "gearbox",
+          "part": "mass",
+          "radii": [0.5, 0.4, 0.4],
+          "transform": {
+            "translation": [0.0, -0.4, 0.0]
+          }
+        },
+        {
+          "id": "mass-motor",
+          "kind": "ellipsoid",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.4,
+          "member": "motor",
+          "part": "mass",
+          "radii": [0.3, 0.25, 0.25],
+          "transform": {
+            "translation": [0.0, 0.1, 0.0]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Detailed model of the unit in its mid-stroke pose: concrete slab; skid of two 240 mm I-beams (15 mm flanges, 12 mm web) with five cross members and a 10 mm deck; wellhead as base, flange, valve, stuffing box and flowline cylinders with the 50 mm polished rod as a slender solid; four inclined legs as rounded-rectangle lofts from the foot corners (+-1.48 m, +-0.875 m) to the saddle, two braces along x and two along z at 1.68 m, saddle bearing; walking beam as a 40 mm web plus two 40 mm flange plates along its outline with centre bearing and tail pin; horsehead as a curved face plate, two cheeks, two cap plates and a web; two pitman arms with eyes, rod carrier; cast gearbox with rounded edges on its pedestal, belt guard as a ring and two 7.5 mm plates, barrel-shaped motor with feet, cowl, terminal box and sheave; crank hub, two arms, two pins and two cast counterweight crescents.",
+          "de": "Detailmodell der Anlage in der Pose Hubmitte: Betonplatte; Rahmen aus zwei Doppel-T-Trägern von 240 mm (Flansche 15 mm, Steg 12 mm) mit fünf Querträgern und einem Deckblech von 10 mm; Bohrlochkopf aus Fuß, Flansch, Ventil, Stopfbuchse und Flowline als Zylinder mit der 50-mm-Polierstange als schlankem Körper; vier geneigte Beine als Lofts mit gerundetem Rechteck von den Fußecken (+-1,48 m, +-0,875 m) zum Sattel, zwei Streben in x und zwei in z bei 1,68 m, Sattellager; Balancier aus 40-mm-Steg und zwei 40-mm-Flanschplatten entlang des Umrisses mit Mittellager und Schwanzbolzen; Pferdekopf als gekrümmte Frontplatte, zwei Wangen, zwei Deckplatten und ein Steg; zwei Schubstangen mit Augen, Stangenträger; gegossenes Getriebe mit gerundeten Kanten auf seinem Sockel, Riemenschutz aus Ring und zwei 7,5-mm-Platten, tonnenförmiger Motor mit Füßen, Haube, Klemmkasten und Riemenscheibe; Kurbelnabe, zwei Arme, zwei Bolzen und zwei gegossene Gegengewichtssicheln."
+        },
+        {
+          "en": "Thermal: every body solid is referenced by the region its 2D shape names (each region has one layer, so no nested shells), no hidden regions and no emitters. Structure: legs, braces, web and flanges of the beam, pitman arms, crank arms, polished rod, rod carrier, gearbox housing, motor, slab and skid beams are members; saddle, centre bearing, tail pin and crank hub are joints; the counterweights and compact boxes and ellipsoids inside slab, gearbox and motor are masses; the asset declares no supports.",
+          "de": "Thermik: Jeder Körper ist durch die Region seiner 2D-Form verwiesen (jede Region hat eine Schicht, daher keine verschachtelten Schalen), keine versteckten Regionen, keine Emitter. Tragwerk: Beine, Streben, Steg und Flansche des Balanciers, Schubstangen, Kurbelarme, Polierstange, Stangenträger, Getriebegehäuse, Motor, Platte und Rahmenträger sind Stäbe; Sattel, Mittellager, Schwanzbolzen und Kurbelnabe sind Gelenke; die Gegengewichte sowie kompakte Kästen und Ellipsoide in Platte, Getriebe und Motor sind Massen; das Asset nennt keine Auflager."
+        }
+      ]
+    },
+    "100": {
+      "status": "authored",
+      "denominator": 100,
+      "body": [
+        {
+          "id": "slab",
+          "kind": "box",
+          "bone": "base",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.82,
+          "size": [7.8, 0.3, 2.4],
+          "transform": {
+            "translation": [2.0, 0.15, 0.0]
+          }
+        },
+        {
+          "id": "skid-beam",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [7.2, 0.235, 0.2],
+          "transform": {
+            "translation": [3.6, 0.1175, 0.85]
           },
-          {
-            "at": [0.04, 3.6, 0.16],
-            "rx": 0.09,
-            "ry": 0.1,
-            "exponent": 3.0,
-            "rotation": [-0.43065, -0.63608, -0.35895, 0.53018]
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -1.7]
           }
-        ],
-        "capStart": true,
-        "capEnd": true
-      },
-      {
-        "id": "leg-rr",
-        "kind": "loft",
-        "bone": "post",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.62,
-        "region": "steel",
-        "sections": [
-          {
-            "at": [1.48, 0.0, -0.87],
-            "rx": 0.09,
-            "ry": 0.1,
-            "exponent": 3.0,
-            "rotation": [-0.35895, -0.53018, -0.43065, 0.63608]
+        },
+        {
+          "id": "skid-cross",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [0.15, 0.215, 1.5],
+          "transform": {
+            "translation": [0.3, 0.1175, 0.0]
           },
-          {
-            "at": [0.04, 3.6, -0.16],
-            "rx": 0.09,
-            "ry": 0.1,
-            "exponent": 3.0,
-            "rotation": [-0.35895, -0.53018, -0.43065, 0.63608]
+          "repeat": {
+            "count": 5,
+            "translation": [1.6, 0.0, 0.0]
           }
-        ],
-        "capStart": true,
-        "capEnd": true
-      },
-      {
-        "id": "brace-side",
-        "kind": "box",
-        "bone": "post",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.55,
-        "region": "steel",
-        "size": [1.9, 0.16, 0.1],
-        "transform": {
-          "translation": [0.0, 1.13, 0.647]
         },
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -1.294]
-        }
-      },
-      {
-        "id": "brace-end",
-        "kind": "box",
-        "bone": "post",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.55,
-        "region": "steel",
-        "maxDenominator": 200,
-        "size": [0.1, 0.16, 1.24],
-        "transform": {
-          "translation": [-1.028, 1.13, 0.0]
+        {
+          "id": "skid-deck",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [7.2, 0.015, 2.0],
+          "transform": {
+            "translation": [3.6, 0.2425, 0.0]
+          }
         },
-        "repeat": {
-          "count": 2,
-          "translation": [2.056, 0.0, 0.0]
-        }
-      },
-      {
-        "id": "saddle",
-        "kind": "revolve",
-        "bone": "post",
-        "material": "painted-steel",
-        "role": "detail",
-        "tone": 0.3,
-        "region": "steel",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.16], [0.56, 0.16]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [0.0, 3.73, -0.28]
-      },
-      {
-        "id": "beam",
-        "kind": "extrude",
-        "bone": "beam",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.7,
-        "region": "steel",
-        "profile": [[-2.15, -0.2], [-2.15, 0.22], [-1, 0.32], [1, 0.32], [2.8, 0.18], [2.8, -0.18], [1, -0.32], [-1, -0.32]],
-        "plane": "xy",
-        "from": -0.18,
-        "to": 0.18
-      },
-      {
-        "id": "horsehead-cheek",
-        "kind": "extrude",
-        "bone": "beam",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.78,
-        "region": "steel",
-        "profile": [
-          [-2.81908, 1.02606],
-          [-2.89778, 0.77646],
-          [-2.95442, 0.52094],
-          [-2.98858, 0.26147],
-          [-3, 0.0],
-          [-2.98858, -0.26147],
-          [-2.95442, -0.52094],
-          [-2.89778, -0.77646],
-          [-2.81908, -1.02606],
-          [-2.1, -0.45],
-          [-2.1, 0.45]
-        ],
-        "plane": "xy",
-        "from": 0.2,
-        "to": 0.35,
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -0.55]
-        }
-      },
-      {
-        "id": "horsehead-web",
-        "kind": "extrude",
-        "bone": "beam",
-        "material": "painted-steel",
-        "role": "detail",
-        "tone": 0.15,
-        "region": "steel",
-        "maxDenominator": 50,
-        "profile": [
-          [-2.54734, 0.73044],
-          [-2.60421, 0.4905],
-          [-2.63853, 0.24632],
-          [-2.65, 0.0],
-          [-2.63853, -0.24632],
-          [-2.60421, -0.4905],
-          [-2.54734, -0.73044],
-          [-2.3, -0.3],
-          [-2.3, 0.3]
-        ],
-        "plane": "xy",
-        "from": -0.2,
-        "to": 0.2
-      },
-      {
-        "id": "centre-bearing",
-        "kind": "revolve",
-        "bone": "beam",
-        "material": "painted-steel",
-        "role": "detail",
-        "tone": 0.3,
-        "region": "steel",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.2], [0.6, 0.2]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [0.0, 0.0, -0.3]
-      },
-      {
-        "id": "tail-pin",
-        "kind": "revolve",
-        "bone": "beam",
-        "material": "painted-steel",
-        "role": "detail",
-        "tone": 0.3,
-        "region": "steel",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.14], [0.6, 0.14]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [2.7, 0.0, -0.3]
-      },
-      {
-        "id": "pitman",
-        "kind": "box",
-        "bone": "pitman",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.6,
-        "region": "steel",
-        "size": [0.14, 2.65, 0.15],
-        "transform": {
-          "translation": [0.0, -1.325, 0.575]
+        {
+          "id": "wellhead-base",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "profile": [[0.0, 0.17], [0.5, 0.17]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 0.0, 0.0]
         },
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -1.15]
-        }
-      },
-      {
-        "id": "pitman-eye",
-        "kind": "revolve",
-        "bone": "pitman",
-        "material": "painted-steel",
-        "role": "detail",
-        "tone": 0.3,
-        "region": "steel",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.12], [0.15, 0.12]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [0.0, -2.65, 0.5],
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -1.15]
-        }
-      },
-      {
-        "id": "gearbox",
-        "kind": "box",
-        "bone": "gearbox",
-        "material": "cast-iron",
-        "role": "body",
-        "tone": 0.62,
-        "region": "gearbox",
-        "size": [1.4, 1.3, 1.2],
-        "cornerRadius": 0.05,
-        "transform": {
-          "translation": [0.0, -0.4, 0.0]
-        }
-      },
-      {
-        "id": "pedestal",
-        "kind": "box",
-        "bone": "gearbox",
-        "material": "cast-iron",
-        "role": "body",
-        "tone": 0.5,
-        "region": "gearbox",
-        "size": [1.1, 0.15, 1.1],
-        "transform": {
-          "translation": [0.0, -1.125, 0.0]
-        }
-      },
-      {
-        "id": "belt-guard",
-        "kind": "extrude",
-        "bone": "gearbox",
-        "material": "painted-steel",
-        "role": "body",
-        "tone": 0.45,
-        "region": "steel",
-        "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
-        "plane": "xy",
-        "from": -0.95,
-        "to": -0.6
-      },
-      {
-        "id": "counterweight",
-        "kind": "extrude",
-        "bone": "crank",
-        "material": "cast-iron",
-        "role": "body",
-        "tone": 0.4,
-        "region": "crank",
-        "profile": [
-          [-0.88257, 0.68954],
-          [-0.98428, 0.53442],
-          [-1.05898, 0.36464],
-          [-1.10464, 0.18485],
-          [-1.12, 0.0],
-          [-1.10464, -0.18485],
-          [-1.05898, -0.36464],
-          [-0.98428, -0.53442],
-          [-0.88257, -0.68954],
-          [-0.2758, -0.21548],
-          [-0.33093, -0.11395],
-          [-0.35, 0.0],
-          [-0.33093, 0.11395],
-          [-0.2758, 0.21548]
-        ],
-        "plane": "xy",
-        "from": 0.45,
-        "to": 0.7,
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -1.15]
-        }
-      },
-      {
-        "id": "crank-arm",
-        "kind": "box",
-        "bone": "crank",
-        "material": "cast-iron",
-        "role": "body",
-        "tone": 0.58,
-        "region": "crank",
-        "size": [0.95, 0.28, 0.25],
-        "transform": {
-          "translation": [0.475, 0.0, 0.575]
+        {
+          "id": "wellhead-top",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "profile": [[0.0, 0.1], [0.78, 0.1]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 0.5, 0.0]
         },
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -1.15]
+        {
+          "id": "polished-rod",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "slender": true,
+          "profile": [[0.0, 0.025], [3.12, 0.025]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 1.28, 0.0]
+        },
+        {
+          "id": "leg-fl",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [-1.528, -0.12, 0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 5,
+              "rotation": [0.63641, 0.43087, 0.52979, -0.35868]
+            },
+            {
+              "at": [-0.04, 3.6, 0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 5,
+              "rotation": [0.63641, 0.43087, 0.52979, -0.35868]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-fr",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [-1.528, -0.12, -0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 5,
+              "rotation": [0.52979, 0.35868, 0.63641, -0.43087]
+            },
+            {
+              "at": [-0.04, 3.6, -0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 5,
+              "rotation": [0.52979, 0.35868, 0.63641, -0.43087]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-rl",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [1.528, -0.12, 0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 5,
+              "rotation": [-0.43087, -0.63641, -0.35868, 0.52979]
+            },
+            {
+              "at": [0.04, 3.6, 0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 5,
+              "rotation": [-0.43087, -0.63641, -0.35868, 0.52979]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-rr",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [1.528, -0.12, -0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 5,
+              "rotation": [-0.35868, -0.52979, -0.43087, 0.63641]
+            },
+            {
+              "at": [0.04, 3.6, -0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 5,
+              "rotation": [-0.35868, -0.52979, -0.43087, 0.63641]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "brace-x-l",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [1.9, 0.16, 0.1],
+          "transform": {
+            "translation": [0.0, 1.13, 0.65]
+          }
+        },
+        {
+          "id": "brace-x-r",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [1.9, 0.16, 0.1],
+          "transform": {
+            "translation": [0.0, 1.13, -0.65]
+          }
+        },
+        {
+          "id": "brace-z-f",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.1, 0.16, 1.24],
+          "transform": {
+            "translation": [-1.03, 1.13, 0.0]
+          }
+        },
+        {
+          "id": "brace-z-r",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.1, 0.16, 1.24],
+          "transform": {
+            "translation": [1.03, 1.13, 0.0]
+          }
+        },
+        {
+          "id": "beam-web",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, -0.2], [-2.15, 0.22], [-1, 0.32], [1, 0.32], [2.8, 0.18], [2.8, -0.18], [1, -0.32], [-1, -0.32]],
+          "plane": "xy",
+          "from": -0.025,
+          "to": 0.025
+        },
+        {
+          "id": "beam-flange-top",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, 0.22], [-1, 0.32], [1, 0.32], [2.8, 0.18], [2.8, 0.13], [1, 0.27], [-1, 0.27], [-2.15, 0.17]],
+          "plane": "xy",
+          "from": -0.18,
+          "to": 0.18
+        },
+        {
+          "id": "beam-flange-bottom",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, -0.15], [-1, -0.27], [1, -0.27], [2.8, -0.13], [2.8, -0.18], [1, -0.32], [-1, -0.32], [-2.15, -0.2]],
+          "plane": "xy",
+          "from": -0.18,
+          "to": 0.18
+        },
+        {
+          "id": "horsehead-face",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.76908, -1.02606],
+            [-2.84778, -0.77646],
+            [-2.90442, -0.52094],
+            [-2.93858, -0.26147],
+            [-2.95, 0.0],
+            [-2.93858, 0.26147],
+            [-2.90442, 0.52094],
+            [-2.84778, 0.77646],
+            [-2.76908, 1.02606]
+          ],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cheek-l",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.1, -0.45],
+            [-2.1, 0.45]
+          ],
+          "plane": "xy",
+          "from": 0.3,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cheek-r",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.1, -0.45],
+            [-2.1, 0.45]
+          ],
+          "plane": "xy",
+          "from": -0.35,
+          "to": -0.3
+        },
+        {
+          "id": "horsehead-cap-top",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [[-2.81908, 1.02606], [-2.1, 0.45], [-2.1, 0.4], [-2.81908, 0.97606]],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cap-bottom",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [[-2.81908, -1.02606], [-2.1, -0.45], [-2.1, -0.4], [-2.81908, -0.97606]],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "centre-bearing",
+          "kind": "revolve",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.2], [0.6, 0.2]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 0.0, -0.3]
+        },
+        {
+          "id": "pitman-l",
+          "kind": "box",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.14, 2.65, 0.15],
+          "transform": {
+            "translation": [0.0, -1.325, 0.575]
+          }
+        },
+        {
+          "id": "pitman-eye-l",
+          "kind": "revolve",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.12], [0.15, 0.12]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, -2.65, 0.5]
+        },
+        {
+          "id": "pitman-r",
+          "kind": "box",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.14, 2.65, 0.15],
+          "transform": {
+            "translation": [0.0, -1.325, -0.575]
+          }
+        },
+        {
+          "id": "pitman-eye-r",
+          "kind": "revolve",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.12], [0.15, 0.12]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, -2.65, -0.65]
+        },
+        {
+          "id": "carrier",
+          "kind": "box",
+          "bone": "rod",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [0.6, 0.16, 0.3],
+          "transform": {
+            "translation": [0.0, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "crank-hub",
+          "kind": "revolve",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.14], [1.6, 0.14]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 0.0, -0.8]
+        },
+        {
+          "id": "crank-arm-l",
+          "kind": "box",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.58,
+          "size": [0.95, 0.28, 0.25],
+          "transform": {
+            "translation": [0.475, 0.0, 0.575]
+          }
+        },
+        {
+          "id": "counterweight-l",
+          "kind": "extrude",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [
+            [-0.88257, 0.68954],
+            [-0.98428, 0.53442],
+            [-1.05898, 0.36464],
+            [-1.10464, 0.18485],
+            [-1.12, 0.0],
+            [-1.10464, -0.18485],
+            [-1.05898, -0.36464],
+            [-0.98428, -0.53442],
+            [-0.88257, -0.68954],
+            [-0.2758, -0.21548],
+            [-0.33093, -0.11395],
+            [-0.35, 0.0],
+            [-0.33093, 0.11395],
+            [-0.2758, 0.21548]
+          ],
+          "plane": "xy",
+          "from": 0.45,
+          "to": 0.7
+        },
+        {
+          "id": "crank-pin-l",
+          "kind": "revolve",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.25,
+          "profile": [[0.0, 0.1], [0.25, 0.1]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.85, 0.0, 0.45]
+        },
+        {
+          "id": "crank-arm-r",
+          "kind": "box",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.58,
+          "size": [0.95, 0.28, 0.25],
+          "transform": {
+            "translation": [0.475, 0.0, -0.575]
+          }
+        },
+        {
+          "id": "counterweight-r",
+          "kind": "extrude",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [
+            [-0.88257, 0.68954],
+            [-0.98428, 0.53442],
+            [-1.05898, 0.36464],
+            [-1.10464, 0.18485],
+            [-1.12, 0.0],
+            [-1.10464, -0.18485],
+            [-1.05898, -0.36464],
+            [-0.98428, -0.53442],
+            [-0.88257, -0.68954],
+            [-0.2758, -0.21548],
+            [-0.33093, -0.11395],
+            [-0.35, 0.0],
+            [-0.33093, 0.11395],
+            [-0.2758, 0.21548]
+          ],
+          "plane": "xy",
+          "from": -0.7,
+          "to": -0.45
+        },
+        {
+          "id": "crank-pin-r",
+          "kind": "revolve",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.25,
+          "profile": [[0.0, 0.1], [0.25, 0.1]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.85, 0.0, -0.7]
+        },
+        {
+          "id": "gearbox",
+          "kind": "box",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.62,
+          "size": [1.4, 1.3, 1.2],
+          "cornerRadius": 0.1,
+          "transform": {
+            "translation": [0.0, -0.4, 0.0]
+          }
+        },
+        {
+          "id": "pedestal",
+          "kind": "box",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.1, 0.15, 1.1],
+          "transform": {
+            "translation": [0.0, -1.125, 0.0]
+          }
+        },
+        {
+          "id": "belt-guard-ring",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "holes": [
+            [[0.715, -0.17138], [1.735, -0.54052], [1.735, -0.9561], [0.715, -1.03381]]
+          ],
+          "plane": "xy",
+          "from": -0.95,
+          "to": -0.6
+        },
+        {
+          "id": "belt-guard-plate-out",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "plane": "xy",
+          "from": -0.95,
+          "to": -0.935
+        },
+        {
+          "id": "belt-guard-plate-in",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "plane": "xy",
+          "from": -0.615,
+          "to": -0.6
+        },
+        {
+          "id": "motor",
+          "kind": "loft",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.68,
+          "sections": [
+            {
+              "at": [-0.55, 0.1, 0.0],
+              "rx": 0.4,
+              "ry": 0.35,
+              "exponent": 6,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            },
+            {
+              "at": [0.55, 0.1, 0.0],
+              "rx": 0.4,
+              "ry": 0.35,
+              "exponent": 6,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "motor-feet",
+          "kind": "box",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.0, 0.1, 0.9],
+          "transform": {
+            "translation": [0.0, -0.3, 0.0]
+          }
+        },
+        {
+          "id": "motor-cowl",
+          "kind": "loft",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.5,
+          "sections": [
+            {
+              "at": [0.55, 0.1, 0.0],
+              "rx": 0.3,
+              "ry": 0.25,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            },
+            {
+              "at": [0.75, 0.1, 0.0],
+              "rx": 0.3,
+              "ry": 0.25,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
         }
-      },
-      {
-        "id": "crank-pin",
-        "kind": "revolve",
-        "bone": "crank",
-        "material": "cast-iron",
-        "role": "detail",
-        "tone": 0.25,
-        "region": "crank",
-        "maxDenominator": 100,
-        "profile": [[0.0, 0.1], [0.25, 0.1]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [0.85, 0.0, 0.45],
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -1.15]
+      ],
+      "thermal": [
+        {
+          "id": "th-slab",
+          "of": "slab",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-beam",
+          "of": "skid-beam",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-cross",
+          "of": "skid-cross",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-deck",
+          "of": "skid-deck",
+          "region": "base"
+        },
+        {
+          "id": "th-wellhead-base",
+          "of": "wellhead-base",
+          "region": "wellhead"
+        },
+        {
+          "id": "th-wellhead-top",
+          "of": "wellhead-top",
+          "region": "wellhead"
+        },
+        {
+          "id": "th-polished-rod",
+          "of": "polished-rod",
+          "region": "steel",
+          "slender": true
+        },
+        {
+          "id": "th-leg-fl",
+          "of": "leg-fl",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-fr",
+          "of": "leg-fr",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-rl",
+          "of": "leg-rl",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-rr",
+          "of": "leg-rr",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-x-l",
+          "of": "brace-x-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-x-r",
+          "of": "brace-x-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-z-f",
+          "of": "brace-z-f",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-z-r",
+          "of": "brace-z-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-web",
+          "of": "beam-web",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-flange-top",
+          "of": "beam-flange-top",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-flange-bottom",
+          "of": "beam-flange-bottom",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-face",
+          "of": "horsehead-face",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cheek-l",
+          "of": "horsehead-cheek-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cheek-r",
+          "of": "horsehead-cheek-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cap-top",
+          "of": "horsehead-cap-top",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cap-bottom",
+          "of": "horsehead-cap-bottom",
+          "region": "steel"
+        },
+        {
+          "id": "th-centre-bearing",
+          "of": "centre-bearing",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-l",
+          "of": "pitman-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-eye-l",
+          "of": "pitman-eye-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-r",
+          "of": "pitman-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-eye-r",
+          "of": "pitman-eye-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-carrier",
+          "of": "carrier",
+          "region": "steel"
+        },
+        {
+          "id": "th-crank-hub",
+          "of": "crank-hub",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-arm-l",
+          "of": "crank-arm-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-counterweight-l",
+          "of": "counterweight-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-pin-l",
+          "of": "crank-pin-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-arm-r",
+          "of": "crank-arm-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-counterweight-r",
+          "of": "counterweight-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-pin-r",
+          "of": "crank-pin-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-gearbox",
+          "of": "gearbox",
+          "region": "gearbox"
+        },
+        {
+          "id": "th-pedestal",
+          "of": "pedestal",
+          "region": "gearbox"
+        },
+        {
+          "id": "th-belt-guard-ring",
+          "of": "belt-guard-ring",
+          "region": "steel"
+        },
+        {
+          "id": "th-belt-guard-plate-out",
+          "of": "belt-guard-plate-out",
+          "region": "steel"
+        },
+        {
+          "id": "th-belt-guard-plate-in",
+          "of": "belt-guard-plate-in",
+          "region": "steel"
+        },
+        {
+          "id": "th-motor",
+          "of": "motor",
+          "region": "motor"
+        },
+        {
+          "id": "th-motor-feet",
+          "of": "motor-feet",
+          "region": "motor"
+        },
+        {
+          "id": "th-motor-cowl",
+          "of": "motor-cowl",
+          "region": "motor"
         }
-      },
-      {
-        "id": "crank-hub",
-        "kind": "revolve",
-        "bone": "crank",
-        "material": "cast-iron",
-        "role": "detail",
-        "tone": 0.3,
-        "region": "crank",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.2], [1.6, 0.2]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [0.0, 0.0, -0.8]
-      },
-      {
-        "id": "motor",
-        "kind": "box",
-        "bone": "motor",
-        "material": "motor-steel",
-        "role": "body",
-        "tone": 0.68,
-        "region": "motor",
-        "size": [1.1, 0.7, 0.8],
-        "cornerRadius": 0.06,
-        "transform": {
-          "translation": [0.0, 0.1, 0.0]
+      ],
+      "structure": [
+        {
+          "id": "member-leg-fl",
+          "of": "leg-fl",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-fr",
+          "of": "leg-fr",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-rl",
+          "of": "leg-rl",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-rr",
+          "of": "leg-rr",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-x-l",
+          "of": "brace-x-l",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-x-r",
+          "of": "brace-x-r",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-z-f",
+          "of": "brace-z-f",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-z-r",
+          "of": "brace-z-r",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-web",
+          "of": "beam-web",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-flange-top",
+          "of": "beam-flange-top",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-flange-bottom",
+          "of": "beam-flange-bottom",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-pitman-l",
+          "of": "pitman-l",
+          "member": "pitman",
+          "part": "member"
+        },
+        {
+          "id": "member-crank-arm-l",
+          "of": "crank-arm-l",
+          "member": "crank",
+          "part": "member"
+        },
+        {
+          "id": "member-pitman-r",
+          "of": "pitman-r",
+          "member": "pitman",
+          "part": "member"
+        },
+        {
+          "id": "member-crank-arm-r",
+          "of": "crank-arm-r",
+          "member": "crank",
+          "part": "member"
+        },
+        {
+          "id": "member-carrier",
+          "of": "carrier",
+          "member": "rod",
+          "part": "member"
+        },
+        {
+          "id": "member-polished-rod",
+          "of": "polished-rod",
+          "member": "base",
+          "part": "member",
+          "slender": true
+        },
+        {
+          "id": "member-gearbox",
+          "of": "gearbox",
+          "member": "gearbox",
+          "part": "member"
+        },
+        {
+          "id": "member-motor",
+          "of": "motor",
+          "member": "motor",
+          "part": "member"
+        },
+        {
+          "id": "member-slab",
+          "of": "slab",
+          "member": "base",
+          "part": "member"
+        },
+        {
+          "id": "member-skid-beam",
+          "of": "skid-beam",
+          "member": "skid",
+          "part": "member"
+        },
+        {
+          "id": "joint-centre-bearing",
+          "of": "centre-bearing",
+          "member": "beam",
+          "part": "joint"
+        },
+        {
+          "id": "joint-crank-hub",
+          "of": "crank-hub",
+          "member": "crank",
+          "part": "joint"
+        },
+        {
+          "id": "joint-crank",
+          "of": "crank-pin-l",
+          "member": "crank",
+          "part": "joint"
+        },
+        {
+          "id": "mass-counterweight-l",
+          "of": "counterweight-l",
+          "member": "crank",
+          "part": "mass"
+        },
+        {
+          "id": "mass-counterweight-r",
+          "of": "counterweight-r",
+          "member": "crank",
+          "part": "mass"
+        },
+        {
+          "id": "mass-base",
+          "kind": "box",
+          "bone": "base",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.4,
+          "member": "base",
+          "part": "mass",
+          "size": [6.4, 0.2, 1.9],
+          "transform": {
+            "translation": [2.0, 0.15, 0.0]
+          }
+        },
+        {
+          "id": "mass-gearbox",
+          "kind": "ellipsoid",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "member": "gearbox",
+          "part": "mass",
+          "radii": [0.5, 0.38, 0.38],
+          "transform": {
+            "translation": [0.0, -0.4, 0.0]
+          }
+        },
+        {
+          "id": "mass-motor",
+          "kind": "ellipsoid",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.4,
+          "member": "motor",
+          "part": "mass",
+          "radii": [0.3, 0.24, 0.24],
+          "transform": {
+            "translation": [0.0, 0.1, 0.0]
+          }
         }
-      },
-      {
-        "id": "motor-feet",
-        "kind": "box",
-        "bone": "motor",
-        "material": "motor-steel",
-        "role": "body",
-        "tone": 0.5,
-        "region": "motor",
-        "size": [1.0, 0.1, 0.9],
-        "transform": {
-          "translation": [0.0, -0.3, 0.0]
+      ],
+      "decisions": [
+        {
+          "en": "Redrawn against 1:100: the skid is two box beams of 0.2 x 0.235 m with five cross members and a 15 mm deck, the beam is web, top and bottom flange of 50 mm, the horsehead face plate, cheeks and caps are 50 mm, the wellhead is a base and a 0.2 m top cylinder (no flowline, as drawn), crank hub 0.28 m, belt guard plates 15 mm; legs are rounded-rectangle lofts; no saddle, tail pin or horsehead web.",
+          "de": "Neu gezeichnet gegen 1:100: Der Rahmen besteht aus zwei Trägern von 0,2 x 0,235 m mit fünf Querträgern und 15-mm-Deckblech, der Balancier aus Steg, Ober- und Unterflansch von 50 mm, Frontplatte, Wangen und Deckplatten des Pferdekopfs sind 50 mm, der Bohrlochkopf ist ein Fuß und ein 0,2-m-Zylinder oben (wie gezeichnet ohne Flowline), die Kurbelnabe 0,28 m, die Riemenschutzplatten 15 mm; die Beine sind Lofts mit gerundetem Rechteck; kein Sattel, kein Schwanzbolzen, kein Pferdekopfsteg."
+        },
+        {
+          "en": "Thermal and structure derived from the body like at 1:50; the structure keeps the legs, braces, beam parts, arms, housing and motor as members, the centre bearing and one crank pin as joints, and smaller masses than 1:50.",
+          "de": "Thermik und Tragwerk wie bei 1:50 aus dem Körper abgeleitet; das Tragwerk behält Beine, Streben, Balancierteile, Arme, Gehäuse und Motor als Stäbe, das Mittellager und einen Kurbelbolzen als Gelenke und kleinere Massen als bei 1:50."
         }
-      },
-      {
-        "id": "motor-cowl",
-        "kind": "box",
-        "bone": "motor",
-        "material": "motor-steel",
-        "role": "body",
-        "tone": 0.5,
-        "region": "motor",
-        "size": [0.2, 0.5, 0.6],
-        "cornerRadius": 0.04,
-        "transform": {
-          "translation": [0.65, 0.1, 0.0]
+      ]
+    },
+    "200": {
+      "status": "authored",
+      "denominator": 200,
+      "body": [
+        {
+          "id": "slab",
+          "kind": "box",
+          "bone": "base",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.82,
+          "size": [7.8, 0.3, 2.4],
+          "transform": {
+            "translation": [2.0, 0.15, 0.0]
+          }
+        },
+        {
+          "id": "skid-beam",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [7.2, 0.22, 0.2],
+          "transform": {
+            "translation": [3.6, 0.11, 0.85]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -1.7]
+          }
+        },
+        {
+          "id": "skid-cross",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [0.15, 0.2, 1.5],
+          "transform": {
+            "translation": [0.3, 0.11, 0.0]
+          },
+          "repeat": {
+            "count": 5,
+            "translation": [1.6, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "skid-deck",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [7.2, 0.03, 2.0],
+          "transform": {
+            "translation": [3.6, 0.235, 0.0]
+          }
+        },
+        {
+          "id": "wellhead",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "profile": [[0.0, 0.15], [1.28, 0.15]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 0.0, 0.0]
+        },
+        {
+          "id": "polished-rod",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "slender": true,
+          "profile": [[0.0, 0.025], [3.12, 0.025]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 1.28, 0.0]
+        },
+        {
+          "id": "leg-fl",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [-1.528, -0.12, 0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 4,
+              "rotation": [0.63641, 0.43087, 0.52979, -0.35868]
+            },
+            {
+              "at": [-0.04, 3.6, 0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 4,
+              "rotation": [0.63641, 0.43087, 0.52979, -0.35868]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-fr",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [-1.528, -0.12, -0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 4,
+              "rotation": [0.52979, 0.35868, 0.63641, -0.43087]
+            },
+            {
+              "at": [-0.04, 3.6, -0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 4,
+              "rotation": [0.52979, 0.35868, 0.63641, -0.43087]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-rl",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [1.528, -0.12, 0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 4,
+              "rotation": [-0.43087, -0.63641, -0.35868, 0.52979]
+            },
+            {
+              "at": [0.04, 3.6, 0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 4,
+              "rotation": [-0.43087, -0.63641, -0.35868, 0.52979]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-rr",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [1.528, -0.12, -0.8988],
+              "rx": 0.075,
+              "ry": 0.11,
+              "exponent": 4,
+              "rotation": [-0.35868, -0.52979, -0.43087, 0.63641]
+            },
+            {
+              "at": [0.04, 3.6, -0.16],
+              "rx": 0.06,
+              "ry": 0.093,
+              "exponent": 4,
+              "rotation": [-0.35868, -0.52979, -0.43087, 0.63641]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "brace-x-l",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [1.9, 0.16, 0.1],
+          "transform": {
+            "translation": [0.0, 1.13, 0.65]
+          }
+        },
+        {
+          "id": "brace-x-r",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [1.9, 0.16, 0.1],
+          "transform": {
+            "translation": [0.0, 1.13, -0.65]
+          }
+        },
+        {
+          "id": "brace-z-f",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.1, 0.16, 1.24],
+          "transform": {
+            "translation": [-1.03, 1.13, 0.0]
+          }
+        },
+        {
+          "id": "brace-z-r",
+          "kind": "box",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.55,
+          "size": [0.1, 0.16, 1.24],
+          "transform": {
+            "translation": [1.03, 1.13, 0.0]
+          }
+        },
+        {
+          "id": "beam-web",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, -0.2], [-2.15, 0.22], [-1, 0.32], [1, 0.32], [2.8, 0.18], [2.8, -0.18], [1, -0.32], [-1, -0.32]],
+          "plane": "xy",
+          "from": -0.03,
+          "to": 0.03
+        },
+        {
+          "id": "beam-flange-top",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, 0.22], [-1, 0.32], [1, 0.32], [2.8, 0.18], [2.8, 0.12], [1, 0.26], [-1, 0.26], [-2.15, 0.16]],
+          "plane": "xy",
+          "from": -0.18,
+          "to": 0.18
+        },
+        {
+          "id": "beam-flange-bottom",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, -0.14], [-1, -0.26], [1, -0.26], [2.8, -0.12], [2.8, -0.18], [1, -0.32], [-1, -0.32], [-2.15, -0.2]],
+          "plane": "xy",
+          "from": -0.18,
+          "to": 0.18
+        },
+        {
+          "id": "horsehead-face",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.74908, -1.02606],
+            [-2.82778, -0.77646],
+            [-2.88442, -0.52094],
+            [-2.91858, -0.26147],
+            [-2.93, 0.0],
+            [-2.91858, 0.26147],
+            [-2.88442, 0.52094],
+            [-2.82778, 0.77646],
+            [-2.74908, 1.02606]
+          ],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cheek-l",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.1, -0.45],
+            [-2.1, 0.45]
+          ],
+          "plane": "xy",
+          "from": 0.28,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cheek-r",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.1, -0.45],
+            [-2.1, 0.45]
+          ],
+          "plane": "xy",
+          "from": -0.35,
+          "to": -0.28
+        },
+        {
+          "id": "horsehead-cap-top",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [[-2.81908, 1.02606], [-2.1, 0.45], [-2.1, 0.38], [-2.81908, 0.95606]],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cap-bottom",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [[-2.81908, -1.02606], [-2.1, -0.45], [-2.1, -0.38], [-2.81908, -0.95606]],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "pitman-l",
+          "kind": "box",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.14, 2.65, 0.15],
+          "transform": {
+            "translation": [0.0, -1.325, 0.575]
+          }
+        },
+        {
+          "id": "pitman-r",
+          "kind": "box",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.14, 2.65, 0.15],
+          "transform": {
+            "translation": [0.0, -1.325, -0.575]
+          }
+        },
+        {
+          "id": "carrier",
+          "kind": "box",
+          "bone": "rod",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [0.6, 0.16, 0.3],
+          "transform": {
+            "translation": [0.0, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "crank-hub",
+          "kind": "revolve",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.3,
+          "profile": [[0.0, 0.14], [1.6, 0.14]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 0.0, -0.8]
+        },
+        {
+          "id": "crank-arm-l",
+          "kind": "box",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.58,
+          "size": [0.95, 0.28, 0.25],
+          "transform": {
+            "translation": [0.475, 0.0, 0.575]
+          }
+        },
+        {
+          "id": "counterweight-l",
+          "kind": "extrude",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [
+            [-0.88257, 0.68954],
+            [-0.98428, 0.53442],
+            [-1.05898, 0.36464],
+            [-1.10464, 0.18485],
+            [-1.12, 0.0],
+            [-1.10464, -0.18485],
+            [-1.05898, -0.36464],
+            [-0.98428, -0.53442],
+            [-0.88257, -0.68954],
+            [-0.2758, -0.21548],
+            [-0.33093, -0.11395],
+            [-0.35, 0.0],
+            [-0.33093, 0.11395],
+            [-0.2758, 0.21548]
+          ],
+          "plane": "xy",
+          "from": 0.45,
+          "to": 0.7
+        },
+        {
+          "id": "crank-arm-r",
+          "kind": "box",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.58,
+          "size": [0.95, 0.28, 0.25],
+          "transform": {
+            "translation": [0.475, 0.0, -0.575]
+          }
+        },
+        {
+          "id": "counterweight-r",
+          "kind": "extrude",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [
+            [-0.88257, 0.68954],
+            [-0.98428, 0.53442],
+            [-1.05898, 0.36464],
+            [-1.10464, 0.18485],
+            [-1.12, 0.0],
+            [-1.10464, -0.18485],
+            [-1.05898, -0.36464],
+            [-0.98428, -0.53442],
+            [-0.88257, -0.68954],
+            [-0.2758, -0.21548],
+            [-0.33093, -0.11395],
+            [-0.35, 0.0],
+            [-0.33093, 0.11395],
+            [-0.2758, 0.21548]
+          ],
+          "plane": "xy",
+          "from": -0.7,
+          "to": -0.45
+        },
+        {
+          "id": "gearbox",
+          "kind": "box",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.62,
+          "size": [1.4, 1.3, 1.2],
+          "transform": {
+            "translation": [0.0, -0.4, 0.0]
+          }
+        },
+        {
+          "id": "pedestal",
+          "kind": "box",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.1, 0.15, 1.1],
+          "transform": {
+            "translation": [0.0, -1.125, 0.0]
+          }
+        },
+        {
+          "id": "belt-guard-ring",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "holes": [
+            [[0.73, -0.19276], [1.72, -0.55105], [1.72, -0.9422], [0.73, -1.01763]]
+          ],
+          "plane": "xy",
+          "from": -0.95,
+          "to": -0.6
+        },
+        {
+          "id": "belt-guard-plate-out",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "plane": "xy",
+          "from": -0.95,
+          "to": -0.92
+        },
+        {
+          "id": "belt-guard-plate-in",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "plane": "xy",
+          "from": -0.63,
+          "to": -0.6
+        },
+        {
+          "id": "motor",
+          "kind": "loft",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.68,
+          "sections": [
+            {
+              "at": [-0.55, 0.1, 0.0],
+              "rx": 0.4,
+              "ry": 0.35,
+              "exponent": 6,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            },
+            {
+              "at": [0.55, 0.1, 0.0],
+              "rx": 0.4,
+              "ry": 0.35,
+              "exponent": 6,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "motor-feet",
+          "kind": "box",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.0, 0.1, 0.9],
+          "transform": {
+            "translation": [0.0, -0.3, 0.0]
+          }
+        },
+        {
+          "id": "motor-cowl",
+          "kind": "loft",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.5,
+          "sections": [
+            {
+              "at": [0.55, 0.1, 0.0],
+              "rx": 0.3,
+              "ry": 0.25,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            },
+            {
+              "at": [0.75, 0.1, 0.0],
+              "rx": 0.3,
+              "ry": 0.25,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
         }
-      },
-      {
-        "id": "terminal-box",
-        "kind": "box",
-        "bone": "motor",
-        "material": "motor-steel",
-        "role": "body",
-        "tone": 0.5,
-        "region": "motor",
-        "maxDenominator": 50,
-        "size": [0.3, 0.2, 0.3],
-        "cornerRadius": 0.01,
-        "transform": {
-          "translation": [0.0, 0.55, 0.0]
+      ],
+      "thermal": [
+        {
+          "id": "th-slab",
+          "of": "slab",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-beam",
+          "of": "skid-beam",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-cross",
+          "of": "skid-cross",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-deck",
+          "of": "skid-deck",
+          "region": "base"
+        },
+        {
+          "id": "th-wellhead",
+          "of": "wellhead",
+          "region": "wellhead"
+        },
+        {
+          "id": "th-polished-rod",
+          "of": "polished-rod",
+          "region": "steel",
+          "slender": true
+        },
+        {
+          "id": "th-leg-fl",
+          "of": "leg-fl",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-fr",
+          "of": "leg-fr",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-rl",
+          "of": "leg-rl",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-rr",
+          "of": "leg-rr",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-x-l",
+          "of": "brace-x-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-x-r",
+          "of": "brace-x-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-z-f",
+          "of": "brace-z-f",
+          "region": "steel"
+        },
+        {
+          "id": "th-brace-z-r",
+          "of": "brace-z-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-web",
+          "of": "beam-web",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-flange-top",
+          "of": "beam-flange-top",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-flange-bottom",
+          "of": "beam-flange-bottom",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-face",
+          "of": "horsehead-face",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cheek-l",
+          "of": "horsehead-cheek-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cheek-r",
+          "of": "horsehead-cheek-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cap-top",
+          "of": "horsehead-cap-top",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cap-bottom",
+          "of": "horsehead-cap-bottom",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-l",
+          "of": "pitman-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-r",
+          "of": "pitman-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-carrier",
+          "of": "carrier",
+          "region": "steel"
+        },
+        {
+          "id": "th-crank-hub",
+          "of": "crank-hub",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-arm-l",
+          "of": "crank-arm-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-counterweight-l",
+          "of": "counterweight-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-arm-r",
+          "of": "crank-arm-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-counterweight-r",
+          "of": "counterweight-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-gearbox",
+          "of": "gearbox",
+          "region": "gearbox"
+        },
+        {
+          "id": "th-pedestal",
+          "of": "pedestal",
+          "region": "gearbox"
+        },
+        {
+          "id": "th-belt-guard-ring",
+          "of": "belt-guard-ring",
+          "region": "steel"
+        },
+        {
+          "id": "th-belt-guard-plate-out",
+          "of": "belt-guard-plate-out",
+          "region": "steel"
+        },
+        {
+          "id": "th-belt-guard-plate-in",
+          "of": "belt-guard-plate-in",
+          "region": "steel"
+        },
+        {
+          "id": "th-motor",
+          "of": "motor",
+          "region": "motor"
+        },
+        {
+          "id": "th-motor-feet",
+          "of": "motor-feet",
+          "region": "motor"
+        },
+        {
+          "id": "th-motor-cowl",
+          "of": "motor-cowl",
+          "region": "motor"
         }
-      },
-      {
-        "id": "sheave-bracket",
-        "kind": "box",
-        "bone": "motor",
-        "material": "motor-steel",
-        "role": "detail",
-        "tone": 0.4,
-        "region": "motor",
-        "size": [0.3, 0.2, 0.3],
-        "transform": {
-          "translation": [-0.55, 0.1, -0.55]
+      ],
+      "structure": [
+        {
+          "id": "member-leg-fl",
+          "of": "leg-fl",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-fr",
+          "of": "leg-fr",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-rl",
+          "of": "leg-rl",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-rr",
+          "of": "leg-rr",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-x-l",
+          "of": "brace-x-l",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-x-r",
+          "of": "brace-x-r",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-z-f",
+          "of": "brace-z-f",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-brace-z-r",
+          "of": "brace-z-r",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-web",
+          "of": "beam-web",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-flange-top",
+          "of": "beam-flange-top",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-flange-bottom",
+          "of": "beam-flange-bottom",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-pitman-l",
+          "of": "pitman-l",
+          "member": "pitman",
+          "part": "member"
+        },
+        {
+          "id": "member-crank-arm-l",
+          "of": "crank-arm-l",
+          "member": "crank",
+          "part": "member"
+        },
+        {
+          "id": "member-pitman-r",
+          "of": "pitman-r",
+          "member": "pitman",
+          "part": "member"
+        },
+        {
+          "id": "member-crank-arm-r",
+          "of": "crank-arm-r",
+          "member": "crank",
+          "part": "member"
+        },
+        {
+          "id": "member-carrier",
+          "of": "carrier",
+          "member": "rod",
+          "part": "member"
+        },
+        {
+          "id": "member-polished-rod",
+          "of": "polished-rod",
+          "member": "base",
+          "part": "member",
+          "slender": true
+        },
+        {
+          "id": "member-gearbox",
+          "of": "gearbox",
+          "member": "gearbox",
+          "part": "member"
+        },
+        {
+          "id": "member-motor",
+          "of": "motor",
+          "member": "motor",
+          "part": "member"
+        },
+        {
+          "id": "member-slab",
+          "of": "slab",
+          "member": "base",
+          "part": "member"
+        },
+        {
+          "id": "member-skid-beam",
+          "of": "skid-beam",
+          "member": "skid",
+          "part": "member"
+        },
+        {
+          "id": "joint-crank-hub",
+          "of": "crank-hub",
+          "member": "crank",
+          "part": "joint"
+        },
+        {
+          "id": "joint-beam",
+          "kind": "revolve",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "member": "beam",
+          "part": "joint",
+          "profile": [[0.0, 0.22], [0.6, 0.22]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 0.0, -0.3]
+        },
+        {
+          "id": "joint-crank",
+          "kind": "revolve",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.3,
+          "member": "crank",
+          "part": "joint",
+          "profile": [[0.0, 0.22], [1.0, 0.22]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 0.0, -0.5]
+        },
+        {
+          "id": "mass-counterweight-l",
+          "of": "counterweight-l",
+          "member": "crank",
+          "part": "mass"
+        },
+        {
+          "id": "mass-counterweight-r",
+          "of": "counterweight-r",
+          "member": "crank",
+          "part": "mass"
+        },
+        {
+          "id": "mass-base",
+          "kind": "box",
+          "bone": "base",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.4,
+          "member": "base",
+          "part": "mass",
+          "size": [6.2, 0.2, 1.8],
+          "transform": {
+            "translation": [2.0, 0.15, 0.0]
+          }
+        },
+        {
+          "id": "mass-gearbox",
+          "kind": "ellipsoid",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "member": "gearbox",
+          "part": "mass",
+          "radii": [0.48, 0.36, 0.36],
+          "transform": {
+            "translation": [0.0, -0.4, 0.0]
+          }
+        },
+        {
+          "id": "mass-motor",
+          "kind": "ellipsoid",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.4,
+          "member": "motor",
+          "part": "mass",
+          "radii": [0.28, 0.23, 0.23],
+          "transform": {
+            "translation": [0.0, 0.1, 0.0]
+          }
         }
-      },
-      {
-        "id": "motor-sheave",
-        "kind": "revolve",
-        "bone": "motor",
-        "material": "painted-steel",
-        "role": "detail",
-        "tone": 0.3,
-        "region": "steel",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.2], [0.15, 0.2]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [-0.65, 0.1, -0.85]
-      },
-      {
-        "id": "sheave-hub",
-        "kind": "revolve",
-        "bone": "motor",
-        "material": "painted-steel",
-        "role": "detail",
-        "tone": 0.3,
-        "region": "steel",
-        "maxDenominator": 50,
-        "profile": [[0.0, 0.05], [0.25, 0.05]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [-0.65, 0.1, -0.7]
-      }
-    ],
-    "decisions": [
-      {
-        "en": "The Samson post is four slanted tube-like legs (rounded-square lofts) from the skid to the saddle, joined by a rectangular brace frame at 1.68 m; leg positions are derived from the elevation polygon (x), the plan capsule (axis in x and z) and the front polygon (z) together.",
-        "de": "Der Samsonbock besteht aus vier schraegen rohrartigen Beinen (Lofts mit abgerundetem Quadratprofil) von der Schlitten bis zum Sattel, verbunden durch einen rechteckigen Verstrebungsrahmen bei 1,68 m; die Beinlage folgt zugleich dem Polygon der Ansicht (x), der Kapsel des Grundrisses (Achse in x und z) und dem Polygon der Vorderansicht (z)."
-      },
-      {
-        "en": "The horsehead is two cheek plates (z 0.2 to 0.35, repeated) around a narrower web, so the arc reads as a grooved face; the polished rod and the two bridle cables are bound to the rod bone with the carrier bar, not to the base as in the 2D drawing, so they travel with the stroke (the 2D rod stays put in every pose). The bridle top stays within 0.2 m of the horsehead arc in every pose.",
-        "de": "Der Pferdekopf besteht aus zwei Wangenplatten (z 0,2 bis 0,35, gespiegelt) um einen schmaleren Steg, so liest sich der Bogen als gerillte Flaeche; Polierstange und die zwei Seile sind mit der Traverse auf den Knochen rod gebunden und nicht wie in der 2D-Zeichnung an die Basis, damit sie den Hub mitmachen (die 2D-Stange bleibt in jeder Pose stehen). Das Seilende bleibt in jeder Pose innerhalb von 0,2 m am Pferdekopfbogen."
-      },
-      {
-        "en": "Pitman rods, crank arms, counterweight sectors and crank pins exist as left and right solids with a mirror repeat; the rest pose has all bone angles 0 so the crank pin (x 3.55) and the pitman eye (x 2.7) do not meet at rest, they meet in the authored poses where the rig closes the linkage (checked). The skid is 2.2 m wide as in the front view (plan: 2.0 m).",
-        "de": "Schubstangen, Kurbelarme, Gegengewichtssektoren und Kurbelzapfen sind links und rechts je ein Koerper mit Spiegelwiederholung; die Ruhelage hat alle Knochenwinkel 0, daher treffen sich Kurbelzapfen (x 3,55) und Schubstangenauge (x 2,7) in Ruhe nicht, sie treffen sich in den autorisierten Posen, in denen das Rig das Gestaenge schliesst (geprueft). Der Schlitten ist 2,2 m breit wie in der Vorderansicht (Grundriss: 2,0 m)."
-      }
-    ]
+      ],
+      "decisions": [
+        {
+          "en": "Redrawn against 1:200: skid beams, cross members and a 30 mm deck, beam web and flanges of 60 mm, horsehead plates of 70 mm, the wellhead one 0.3 m cylinder, no bearings, pins or eyes; belt guard ring and plates of 30 mm; legs, braces, arms, counterweights and crank arms as at 1:100 in simpler sections.",
+          "de": "Neu gezeichnet gegen 1:200: Rahmenträger, Querträger und 30-mm-Deckblech, Balanciersteg und Flansche 60 mm, Pferdekopfplatten 70 mm, der Bohrlochkopf ein Zylinder von 0,3 m, keine Lager, Bolzen oder Augen; Riemenschutz aus Ring und Platten von 30 mm; Beine, Streben, Arme, Gegengewichte und Kurbelarme wie bei 1:100 in einfacheren Querschnitten."
+        },
+        {
+          "en": "Thermal and structure derived from the body; joints are 440 mm cylinders at beam and crank, masses of the base, gearbox and motor are smaller than at 1:100.",
+          "de": "Thermik und Tragwerk aus dem Körper abgeleitet; die Gelenke sind 440-mm-Zylinder an Balancier und Kurbel, die Massen von Platte, Getriebe und Motor kleiner als bei 1:100."
+        }
+      ]
+    },
+    "500": {
+      "status": "authored",
+      "denominator": 500,
+      "body": [
+        {
+          "id": "slab",
+          "kind": "box",
+          "bone": "base",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.82,
+          "size": [7.8, 0.3, 2.4],
+          "transform": {
+            "translation": [2.0, 0.15, 0.0]
+          }
+        },
+        {
+          "id": "skid-beam",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [7.2, 0.175, 0.2],
+          "transform": {
+            "translation": [3.6, 0.0875, 0.85]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -1.7]
+          }
+        },
+        {
+          "id": "skid-cross",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [0.15, 0.155, 1.5],
+          "transform": {
+            "translation": [0.3, 0.0875, 0.0]
+          },
+          "repeat": {
+            "count": 5,
+            "translation": [1.6, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "skid-deck",
+          "kind": "box",
+          "bone": "skid",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [7.2, 0.075, 2.0],
+          "transform": {
+            "translation": [3.6, 0.2125, 0.0]
+          }
+        },
+        {
+          "id": "wellhead",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "profile": [[0.0, 0.17], [1.28, 0.17]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 0.0, 0.0]
+        },
+        {
+          "id": "polished-rod",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "painted-steel",
+          "role": "body",
+          "slender": true,
+          "profile": [[0.0, 0.05], [3.12, 0.05]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [-3.0, 1.28, 0.0]
+        },
+        {
+          "id": "leg-fl",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [-1.528, -0.12, 0.8988],
+              "rx": 0.075,
+              "ry": 0.125,
+              "exponent": 4,
+              "rotation": [0.63641, 0.43087, 0.52979, -0.35868]
+            },
+            {
+              "at": [-0.04, 3.6, 0.16],
+              "rx": 0.06,
+              "ry": 0.105,
+              "exponent": 4,
+              "rotation": [0.63641, 0.43087, 0.52979, -0.35868]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-fr",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [-1.528, -0.12, -0.8988],
+              "rx": 0.075,
+              "ry": 0.125,
+              "exponent": 4,
+              "rotation": [0.52979, 0.35868, 0.63641, -0.43087]
+            },
+            {
+              "at": [-0.04, 3.6, -0.16],
+              "rx": 0.06,
+              "ry": 0.105,
+              "exponent": 4,
+              "rotation": [0.52979, 0.35868, 0.63641, -0.43087]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-rl",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [1.528, -0.12, 0.8988],
+              "rx": 0.075,
+              "ry": 0.125,
+              "exponent": 4,
+              "rotation": [-0.43087, -0.63641, -0.35868, 0.52979]
+            },
+            {
+              "at": [0.04, 3.6, 0.16],
+              "rx": 0.06,
+              "ry": 0.105,
+              "exponent": 4,
+              "rotation": [-0.43087, -0.63641, -0.35868, 0.52979]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "leg-rr",
+          "kind": "loft",
+          "bone": "post",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.62,
+          "sections": [
+            {
+              "at": [1.528, -0.12, -0.8988],
+              "rx": 0.075,
+              "ry": 0.125,
+              "exponent": 4,
+              "rotation": [-0.35868, -0.52979, -0.43087, 0.63641]
+            },
+            {
+              "at": [0.04, 3.6, -0.16],
+              "rx": 0.06,
+              "ry": 0.105,
+              "exponent": 4,
+              "rotation": [-0.35868, -0.52979, -0.43087, 0.63641]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "beam-web",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, -0.2], [-2.15, 0.22], [-1, 0.32], [1, 0.32], [2.8, 0.18], [2.8, -0.18], [1, -0.32], [-1, -0.32]],
+          "plane": "xy",
+          "from": -0.06,
+          "to": 0.06
+        },
+        {
+          "id": "beam-flange-top",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, 0.22], [-1, 0.32], [1, 0.32], [2.8, 0.18], [2.8, 0.08], [1, 0.22], [-1, 0.22], [-2.15, 0.12]],
+          "plane": "xy",
+          "from": -0.18,
+          "to": 0.18
+        },
+        {
+          "id": "beam-flange-bottom",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "profile": [[-2.15, -0.1], [-1, -0.22], [1, -0.22], [2.8, -0.08], [2.8, -0.18], [1, -0.32], [-1, -0.32], [-2.15, -0.2]],
+          "plane": "xy",
+          "from": -0.18,
+          "to": 0.18
+        },
+        {
+          "id": "horsehead-face",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.71908, -1.02606],
+            [-2.79778, -0.77646],
+            [-2.85442, -0.52094],
+            [-2.88858, -0.26147],
+            [-2.9, 0.0],
+            [-2.88858, 0.26147],
+            [-2.85442, 0.52094],
+            [-2.79778, 0.77646],
+            [-2.71908, 1.02606]
+          ],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cheek-l",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.1, -0.45],
+            [-2.1, 0.45]
+          ],
+          "plane": "xy",
+          "from": 0.25,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cheek-r",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [
+            [-2.81908, 1.02606],
+            [-2.89778, 0.77646],
+            [-2.95442, 0.52094],
+            [-2.98858, 0.26147],
+            [-3, 0.0],
+            [-2.98858, -0.26147],
+            [-2.95442, -0.52094],
+            [-2.89778, -0.77646],
+            [-2.81908, -1.02606],
+            [-2.1, -0.45],
+            [-2.1, 0.45]
+          ],
+          "plane": "xy",
+          "from": -0.35,
+          "to": -0.25
+        },
+        {
+          "id": "horsehead-cap-top",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [[-2.81908, 1.02606], [-2.1, 0.45], [-2.1, 0.35], [-2.81908, 0.92606]],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "horsehead-cap-bottom",
+          "kind": "extrude",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.78,
+          "profile": [[-2.81908, -1.02606], [-2.1, -0.45], [-2.1, -0.35], [-2.81908, -0.92606]],
+          "plane": "xy",
+          "from": -0.35,
+          "to": 0.35
+        },
+        {
+          "id": "pitman-l",
+          "kind": "box",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.2, 2.65, 0.15],
+          "transform": {
+            "translation": [0.0, -1.325, 0.575]
+          }
+        },
+        {
+          "id": "pitman-r",
+          "kind": "box",
+          "bone": "pitman",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.6,
+          "size": [0.2, 2.65, 0.15],
+          "transform": {
+            "translation": [0.0, -1.325, -0.575]
+          }
+        },
+        {
+          "id": "carrier",
+          "kind": "box",
+          "bone": "rod",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "size": [0.6, 0.16, 0.3],
+          "transform": {
+            "translation": [0.0, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "crank-arm-l",
+          "kind": "box",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.58,
+          "size": [0.95, 0.28, 0.25],
+          "transform": {
+            "translation": [0.475, 0.0, 0.575]
+          }
+        },
+        {
+          "id": "counterweight-l",
+          "kind": "extrude",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [
+            [-0.88257, 0.68954],
+            [-0.98428, 0.53442],
+            [-1.05898, 0.36464],
+            [-1.10464, 0.18485],
+            [-1.12, 0.0],
+            [-1.10464, -0.18485],
+            [-1.05898, -0.36464],
+            [-0.98428, -0.53442],
+            [-0.88257, -0.68954],
+            [-0.2758, -0.21548],
+            [-0.33093, -0.11395],
+            [-0.35, 0.0],
+            [-0.33093, 0.11395],
+            [-0.2758, 0.21548]
+          ],
+          "plane": "xy",
+          "from": 0.45,
+          "to": 0.7
+        },
+        {
+          "id": "crank-arm-r",
+          "kind": "box",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.58,
+          "size": [0.95, 0.28, 0.25],
+          "transform": {
+            "translation": [0.475, 0.0, -0.575]
+          }
+        },
+        {
+          "id": "counterweight-r",
+          "kind": "extrude",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [
+            [-0.88257, 0.68954],
+            [-0.98428, 0.53442],
+            [-1.05898, 0.36464],
+            [-1.10464, 0.18485],
+            [-1.12, 0.0],
+            [-1.10464, -0.18485],
+            [-1.05898, -0.36464],
+            [-0.98428, -0.53442],
+            [-0.88257, -0.68954],
+            [-0.2758, -0.21548],
+            [-0.33093, -0.11395],
+            [-0.35, 0.0],
+            [-0.33093, 0.11395],
+            [-0.2758, 0.21548]
+          ],
+          "plane": "xy",
+          "from": -0.7,
+          "to": -0.45
+        },
+        {
+          "id": "gearbox",
+          "kind": "box",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.62,
+          "size": [1.4, 1.3, 1.2],
+          "transform": {
+            "translation": [0.0, -0.4, 0.0]
+          }
+        },
+        {
+          "id": "pedestal",
+          "kind": "box",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.1, 0.15, 1.1],
+          "transform": {
+            "translation": [0.0, -1.125, 0.0]
+          }
+        },
+        {
+          "id": "belt-guard-ring",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "holes": [
+            [[0.775, -0.2569], [1.675, -0.58262], [1.675, -0.9005], [0.775, -0.96907]]
+          ],
+          "plane": "xy",
+          "from": -0.95,
+          "to": -0.6
+        },
+        {
+          "id": "belt-guard-plate-out",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "plane": "xy",
+          "from": -0.95,
+          "to": -0.875
+        },
+        {
+          "id": "belt-guard-plate-in",
+          "kind": "extrude",
+          "bone": "gearbox",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.45,
+          "profile": [[0.7, -0.15], [1.75, -0.53], [1.75, -0.97], [0.7, -1.05]],
+          "plane": "xy",
+          "from": -0.675,
+          "to": -0.6
+        },
+        {
+          "id": "motor",
+          "kind": "loft",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.68,
+          "sections": [
+            {
+              "at": [-0.55, 0.1, 0.0],
+              "rx": 0.4,
+              "ry": 0.35,
+              "exponent": 6,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            },
+            {
+              "at": [0.55, 0.1, 0.0],
+              "rx": 0.4,
+              "ry": 0.35,
+              "exponent": 6,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "motor-feet",
+          "kind": "box",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.0, 0.1, 0.9],
+          "transform": {
+            "translation": [0.0, -0.3, 0.0]
+          }
+        },
+        {
+          "id": "motor-cowl",
+          "kind": "loft",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.5,
+          "sections": [
+            {
+              "at": [0.55, 0.1, 0.0],
+              "rx": 0.3,
+              "ry": 0.25,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            },
+            {
+              "at": [0.75, 0.1, 0.0],
+              "rx": 0.3,
+              "ry": 0.25,
+              "rotation": [0.70711, 0.0, 0.70711, 0.0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        }
+      ],
+      "thermal": [
+        {
+          "id": "th-slab",
+          "of": "slab",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-beam",
+          "of": "skid-beam",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-cross",
+          "of": "skid-cross",
+          "region": "base"
+        },
+        {
+          "id": "th-skid-deck",
+          "of": "skid-deck",
+          "region": "base"
+        },
+        {
+          "id": "th-wellhead",
+          "of": "wellhead",
+          "region": "wellhead"
+        },
+        {
+          "id": "th-polished-rod",
+          "of": "polished-rod",
+          "region": "steel",
+          "slender": true
+        },
+        {
+          "id": "th-leg-fl",
+          "of": "leg-fl",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-fr",
+          "of": "leg-fr",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-rl",
+          "of": "leg-rl",
+          "region": "steel"
+        },
+        {
+          "id": "th-leg-rr",
+          "of": "leg-rr",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-web",
+          "of": "beam-web",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-flange-top",
+          "of": "beam-flange-top",
+          "region": "steel"
+        },
+        {
+          "id": "th-beam-flange-bottom",
+          "of": "beam-flange-bottom",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-face",
+          "of": "horsehead-face",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cheek-l",
+          "of": "horsehead-cheek-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cheek-r",
+          "of": "horsehead-cheek-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cap-top",
+          "of": "horsehead-cap-top",
+          "region": "steel"
+        },
+        {
+          "id": "th-horsehead-cap-bottom",
+          "of": "horsehead-cap-bottom",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-l",
+          "of": "pitman-l",
+          "region": "steel"
+        },
+        {
+          "id": "th-pitman-r",
+          "of": "pitman-r",
+          "region": "steel"
+        },
+        {
+          "id": "th-carrier",
+          "of": "carrier",
+          "region": "steel"
+        },
+        {
+          "id": "th-crank-arm-l",
+          "of": "crank-arm-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-counterweight-l",
+          "of": "counterweight-l",
+          "region": "crank"
+        },
+        {
+          "id": "th-crank-arm-r",
+          "of": "crank-arm-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-counterweight-r",
+          "of": "counterweight-r",
+          "region": "crank"
+        },
+        {
+          "id": "th-gearbox",
+          "of": "gearbox",
+          "region": "gearbox"
+        },
+        {
+          "id": "th-pedestal",
+          "of": "pedestal",
+          "region": "gearbox"
+        },
+        {
+          "id": "th-belt-guard-ring",
+          "of": "belt-guard-ring",
+          "region": "steel"
+        },
+        {
+          "id": "th-belt-guard-plate-out",
+          "of": "belt-guard-plate-out",
+          "region": "steel"
+        },
+        {
+          "id": "th-belt-guard-plate-in",
+          "of": "belt-guard-plate-in",
+          "region": "steel"
+        },
+        {
+          "id": "th-motor",
+          "of": "motor",
+          "region": "motor"
+        },
+        {
+          "id": "th-motor-feet",
+          "of": "motor-feet",
+          "region": "motor"
+        },
+        {
+          "id": "th-motor-cowl",
+          "of": "motor-cowl",
+          "region": "motor"
+        }
+      ],
+      "structure": [
+        {
+          "id": "member-leg-fl",
+          "of": "leg-fl",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-fr",
+          "of": "leg-fr",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-rl",
+          "of": "leg-rl",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-leg-rr",
+          "of": "leg-rr",
+          "member": "post",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-web",
+          "of": "beam-web",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-flange-top",
+          "of": "beam-flange-top",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-beam-flange-bottom",
+          "of": "beam-flange-bottom",
+          "member": "beam",
+          "part": "member"
+        },
+        {
+          "id": "member-pitman-l",
+          "of": "pitman-l",
+          "member": "pitman",
+          "part": "member"
+        },
+        {
+          "id": "member-crank-arm-l",
+          "of": "crank-arm-l",
+          "member": "crank",
+          "part": "member"
+        },
+        {
+          "id": "member-pitman-r",
+          "of": "pitman-r",
+          "member": "pitman",
+          "part": "member"
+        },
+        {
+          "id": "member-crank-arm-r",
+          "of": "crank-arm-r",
+          "member": "crank",
+          "part": "member"
+        },
+        {
+          "id": "member-carrier",
+          "of": "carrier",
+          "member": "rod",
+          "part": "member"
+        },
+        {
+          "id": "member-polished-rod",
+          "of": "polished-rod",
+          "member": "base",
+          "part": "member",
+          "slender": true
+        },
+        {
+          "id": "member-gearbox",
+          "of": "gearbox",
+          "member": "gearbox",
+          "part": "member"
+        },
+        {
+          "id": "member-motor",
+          "of": "motor",
+          "member": "motor",
+          "part": "member"
+        },
+        {
+          "id": "member-slab",
+          "of": "slab",
+          "member": "base",
+          "part": "member"
+        },
+        {
+          "id": "member-skid-beam",
+          "of": "skid-beam",
+          "member": "skid",
+          "part": "member"
+        },
+        {
+          "id": "joint-beam",
+          "kind": "revolve",
+          "bone": "beam",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.3,
+          "member": "beam",
+          "part": "joint",
+          "profile": [[0.0, 0.25], [0.6, 0.25]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 0.0, -0.3]
+        },
+        {
+          "id": "joint-crank",
+          "kind": "revolve",
+          "bone": "crank",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.3,
+          "member": "crank",
+          "part": "joint",
+          "profile": [[0.0, 0.25], [1.0, 0.25]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.0, 0.0, -0.5]
+        },
+        {
+          "id": "mass-counterweight-l",
+          "of": "counterweight-l",
+          "member": "crank",
+          "part": "mass"
+        },
+        {
+          "id": "mass-counterweight-r",
+          "of": "counterweight-r",
+          "member": "crank",
+          "part": "mass"
+        },
+        {
+          "id": "mass-base",
+          "kind": "box",
+          "bone": "base",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.4,
+          "member": "base",
+          "part": "mass",
+          "size": [6.0, 0.2, 1.7],
+          "transform": {
+            "translation": [2.0, 0.15, 0.0]
+          }
+        },
+        {
+          "id": "mass-gearbox",
+          "kind": "ellipsoid",
+          "bone": "gearbox",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.4,
+          "member": "gearbox",
+          "part": "mass",
+          "radii": [0.45, 0.35, 0.35],
+          "transform": {
+            "translation": [0.0, -0.4, 0.0]
+          }
+        },
+        {
+          "id": "mass-motor",
+          "kind": "ellipsoid",
+          "bone": "motor",
+          "material": "motor-steel",
+          "role": "body",
+          "tone": 0.4,
+          "member": "motor",
+          "part": "mass",
+          "radii": [0.26, 0.22, 0.22],
+          "transform": {
+            "translation": [0.0, 0.1, 0.0]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Merged masses: skid of two 175 mm beams, cross members and a 75 mm deck, beam web 120 mm and flanges 100 mm, horsehead plates 100 mm, polished rod 100 mm, belt guard plates 75 mm, legs 0.12 m wide; pitman arms 0.2 m wide as drawn; no braces, bearings or eyes.",
+          "de": "Zusammengefasste Massen: Rahmen aus zwei Trägern von 175 mm, Querträgern und 75-mm-Deckblech, Balanciersteg 120 mm und Flansche 100 mm, Pferdekopfplatten 100 mm, Polierstange 100 mm, Riemenschutzplatten 75 mm, Beine 0,12 m breit; Schubstangen 0,2 m breit wie gezeichnet; keine Streben, Lager oder Augen."
+        },
+        {
+          "en": "Thermal and structure derived from the body; the joints are 500 mm cylinders, the masses smaller again.",
+          "de": "Thermik und Tragwerk aus dem Körper abgeleitet; die Gelenke sind 500-mm-Zylinder, die Massen nochmals kleiner."
+        }
+      ]
+    }
   },
   "presentation": {
    "defaultPose": "mid-stroke",

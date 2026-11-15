@@ -108,11 +108,11 @@ pub mod editor {
         pub use semio_s_artifact_trinity_rewriting_layout::editor::rewriting::terminology;
         #[path = "."]
         pub mod commands {
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::node_graph_edit;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::node_graph_edit;
             pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::set_lhs;
             pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::add_rule_clause_command;
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::set_active_example;
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::add_working_node_command;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::set_active_example;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::add_working_node_command;
             pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::commands::set_lod_mode;
         }
         #[path = "."]

@@ -7,11 +7,9 @@ extern crate semio_framework_schema as framework_schema;
 #[path = "📸️snapshot/🦀️.rs"]
 pub mod snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_norm_din16798_mutations::text as mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_norm_din16798_diff::text as diff;
 
 #[path = "💡️inferences/🦀️.rs"]
 pub mod inferences;

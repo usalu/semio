@@ -1,0 +1,7 @@
+🐕️animals/dairy-cow
+🐕️animals/domestic-cat
+🐕️animals/goat
+🐕️animals/hedgehog
+🐕️animals/herring-gull
+🐕️animals/horse
+🐕️animals/labrador-dog

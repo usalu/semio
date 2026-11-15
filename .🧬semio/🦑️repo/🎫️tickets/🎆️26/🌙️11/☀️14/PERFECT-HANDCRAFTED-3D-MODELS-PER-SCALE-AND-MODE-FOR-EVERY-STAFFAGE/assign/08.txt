@@ -1,0 +1,7 @@
+👤️humans/parent-carrying-toddler
+👤️humans/parent-with-stroller
+👤️humans/person-cooking
+👤️humans/person-on-crutches
+👤️humans/person-with-rollator
+👤️humans/person-with-umbrella
+👤️humans/person-with-white-cane

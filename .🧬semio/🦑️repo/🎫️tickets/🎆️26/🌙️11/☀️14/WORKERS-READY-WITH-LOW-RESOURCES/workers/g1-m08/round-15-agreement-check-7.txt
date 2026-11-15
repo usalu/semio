@@ -1,0 +1,27 @@
+Replica g1-m08 of group g1, store /Volumes/semio-store: reachable
+Synchronization: on
+Daemon: running (pid 30350)
+284136 files tracked; queued: 10 incoming, ? outgoing; 27 overwritten files kept in .cache/f/lost
+The manifest is not verified against the tree yet; build tools check every file themselves until a sweep has completed.
+Recurring failures of kind refused: 1 times, last 51 s ago.
+Recurring failures of kind loop-blocked-restart: 10 times, last 86 s ago.
+Sidecar build-agent: running (process 30600, 0 restart(s), 33 s in this state, last exit -).
+Sidecar build-scheduler: off on this machine (process -, 0 restart(s), 66 s in this state, last exit -).
+Sidecar build-cache: off on this machine (process -, 0 restart(s), 66 s in this state, last exit -).
+Journal: 12.59 MiB in 14 segments of 10 origins.
+Newest snapshot by g1-m08: 530s old, 90.49 MiB.
+Reclaimable now: 4 journal segments (4.89 MiB).
+Last compaction 62690s ago: 861 blobs (27.00 GiB) removed; 88 blobs (129.23 MiB) were still too young.
+Git state: shared (stage and commits replicate); stage tree 5c75c44d73137807925a4f37dfbb0a95529a546e.
+Background tiers, last pass (cost, duty cycle of one core): hot 5 ms 1.5%, directory sweep 489 ms 10%, file sweep -, tree walk -, git view 31770 ms 5%.
+Latency over the last 6 publishes and 65 applies: publish p50 2801 ms, p95 130347 ms; apply p50 567 ms, p95 3451 ms.
+g1-m01: 1 events (398 B) behind, last event 3s ago
+g1-m02: 0 events (0 B) behind, last event 11s ago
+g1-m03: 2 events (808 B) behind, last event 2s ago
+g1-m04: 1 events (397 B) behind, last event 1s ago
+g1-m05: 0 events (0 B) behind, last event 3538s ago
+g1-m06: 0 events (0 B) behind, last event 7730s ago
+g1-m07: 0 events (0 B) behind, last event 4s ago
+g1-m08: 0 events (0 B) behind, last event 1s ago
+g1-m10: 0 events (0 B) behind, last event 72s ago
+g1-server: 0 events (0 B) behind, last event 382s ago

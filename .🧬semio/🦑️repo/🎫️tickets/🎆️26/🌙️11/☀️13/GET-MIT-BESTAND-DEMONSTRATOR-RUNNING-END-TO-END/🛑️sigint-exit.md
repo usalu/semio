@@ -1,0 +1,5 @@
+- SIGINT now throws `ScriptProcessInterruptedV1` (code `SCRIPT_PROCESS_INTERRUPTED`, `🏃️process/🛑️interruption/🟦️.ts`) and the routing rejection handler rethrows that typed error instead of the raw abort error.
+- `reportBoundaryErrorV1` (`🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts`) recognises it by code and sets exit status 130 without an "Internal error" line; other errors are unchanged.
+- Test: boundary case added in `📣️progress/🧪️tests/🟦️.ts` (en and de, plus a plain same-message Error still reported as internal, exit 1); 23 of 23 pass via `repo tools exec bun -- test ./🟦️.ts`.
+- Routing suite `🧭️routing/🧪️tests/🟦️.ts`: 47 pass, 1 unrelated deadline-millisecond flake (passes alone; not touched by this change).
+- Files changed: `🏃️process/🛑️interruption/🟦️.ts` (new), `🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts`, `🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts`, `🏃️process/🏗️build/🗣️language/📣️progress/🧪️tests/🟦️.ts`.

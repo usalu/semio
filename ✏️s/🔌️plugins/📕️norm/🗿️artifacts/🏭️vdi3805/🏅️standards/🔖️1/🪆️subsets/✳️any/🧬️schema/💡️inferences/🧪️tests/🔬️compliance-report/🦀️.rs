@@ -138,7 +138,7 @@ async fn edition_profile_legacy_missing_keys_fails() {
     doc.catalog.products[0].sheet = SheetId(8);
     doc.catalog.products[0].configuration.attributes = SheetAttributes::Generic(GenericAttributes::default());
     doc.catalog.products[0].records.retain(|r| r.family.0 == RecordFamilyId::R100);
-    doc.edition_profile.insert("8".into(), EditionProfileChoice::Current);
+    doc.edition_profile.cold_insert("8".into(), EditionProfileChoice::Current);
     let report = evaluate(&doc);
     let fail = report.checks.iter().find(|c| c.id.contains("edition_profile") || c.id.contains("8.profile") || c.id.contains("8.mandatory"));
     assert!(fail.is_some_and(|c| c.status == CheckStatus::Fail), "expected profile/mandatory Fail, got {:?}", report.checks.iter().map(|c| (&c.id, c.status)).collect::<Vec<_>>());
@@ -286,7 +286,7 @@ async fn edition_profile_fail_remedy_is_applicable_on_attribute_leaf() {
     doc.catalog.products[0].sheet = SheetId(8);
     doc.catalog.products[0].configuration.attributes = SheetAttributes::Generic(GenericAttributes::default());
     doc.catalog.products[0].records.retain(|r| r.family.0 == RecordFamilyId::R100);
-    doc.edition_profile.insert("8".into(), EditionProfileChoice::Current);
+    doc.edition_profile.cold_insert("8".into(), EditionProfileChoice::Current);
     let report = evaluate(&doc);
     let fail = report
         .checks

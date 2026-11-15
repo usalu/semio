@@ -25,10 +25,10 @@ Feature: The axonometric view depicts the 3D volume in the seven representations
 
   @capability-axonometric-pens
   Scenario: Pens, level of detail and scale
-    Given the authored pens of each preset scale and the solids that have a maxDenominator
+    Given the authored pens and the individually authored volume of each preset scale
     When lines and fills are drawn
     Then every line has the pen of its solid's role times 1, 1/2 or none by view and scale
-    And a solid shown only at 1:50 is absent at 1:100, the overall dimension is the true height and the ground outline is to scale along the axes
+    And each scale draws its own body solids (a 1:50 solid that is merged at 1:100 is absent there), the thermal view the thermal solids and the forces view the structure solids of the scale, the overall dimension is the true height and the ground outline is to scale along the axes
 
   @capability-axonometric-pose
   Scenario: The volume is posed by the evaluated state

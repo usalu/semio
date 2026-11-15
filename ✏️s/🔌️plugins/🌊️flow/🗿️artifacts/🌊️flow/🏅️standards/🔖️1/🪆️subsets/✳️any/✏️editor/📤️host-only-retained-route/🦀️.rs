@@ -38,8 +38,8 @@ fn flow_host_wire_view(payload: &FlowHostEffectPayload) -> Result<store::os_pack
 
 pub struct FlowHostEffectJob {
     pub(super) payload: Option<Arc<FlowHostEffectPayload>>,
-    payload_close: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<FlowHostEffectPayload>>,
-    decoder_close: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<FlowHostEffectPayload>>,
+    payload_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<FlowHostEffectPayload>>>,
+    decoder_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<FlowHostEffectPayload>>>,
     completion_refusal: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin::ArtifactToolCompletionRejection<semio_plugin::EditorApp<FlowPlayApp>>>>,
     pub(super) input: Option<semio_framework_action_bus::RetainedToolWireInput>,
     decoder: Option<store::os_pack::record::scalar_witness::ScalarRecordWireWitness<FlowHostEffectPayload>>,
@@ -132,18 +132,36 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{let result=(||{
-            use semio_framework_job::InteractiveJobCloseStep as Close;use semio_framework_value::{RetainedCloneProgress as Progress,RetainedCloneStep};
-            if !self.closing||grant.maximum_items==0{return Ok(Close::Blocked)}let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return Err(error)};
-            if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Close::Blocked)}
-            if let Some(owner)=self.completion_refusal.as_mut(){if owner.terminal_is_empty(){self.completion_refusal=None;return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}return Ok(match owner.step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>return Err(error)})}
-            if let Some(input)=self.input.as_mut(){let step=input.close_step(grant)?;if input.terminal_is_empty(){self.input=None;}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress:Progress{copied_items:progress.copied_items.max(1),..progress}},step=>step})}
-            if let Some(decoder)=self.decoder.as_mut(){decoder.begin_close();let root=decoder.take_root().expect("original decoder owns its original payload Arc");assert!(self.payload.as_ref().is_some_and(|payload|Arc::ptr_eq(payload,&root)));assert!(decoder.terminal_is_empty());self.decoder=None;self.decoder_close=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(root));return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}
+        use semio_framework_job::InteractiveJobCloseStep as Close;use semio_plugin::PluginLifecycleStep as Step;use semio_framework_value::RetainedCloneProgress as Progress;
+        use semio_framework_value::retirement::{arc_custody::ArcLease,controlled::ControlledRetirement};
+        if !self.closing{return Ok(Close::Blocked)}
+        let grant=cx.retained_grant();let demand=self.close_demands(grant.maximum_copy_bytes)?;
+        let local=Progress{copied_items:1,..Default::default()};
+        let step=semio_plugin::app::original_lifecycle_effect_step(cx,grant,demand,|_,effect|{
+            let body=effect.grant().maximum_copy_bytes;
+            if let Some(owner)=self.completion_refusal.as_mut(){
+                if owner.terminal_is_empty(){semio_plugin::app::plugin_pay_unit(effect)?;self.completion_refusal=None;return Ok((Step::Progress(local),false))}
+                return Ok((Step::Progress(semio_plugin::app::plugin_settle_poll(owner.step(body,effect))?.progress()),false))
+            }
+            if let Some(input)=self.input.as_mut(){
+                let step=semio_plugin::app::plugin_unit_step(effect,|grant|input.close_step(grant))?;
+                if input.terminal_is_empty(){self.input=None;}
+                return Ok((match step{Close::Complete{progress}=>Step::Progress(Progress{copied_items:progress.copied_items.max(1),..progress}),Close::Pending{progress}=>Step::Progress(progress),Close::Blocked=>Step::Progress(Default::default())},false))
+            }
+            if let Some(decoder)=self.decoder.as_mut(){
+                semio_plugin::app::plugin_pay_unit(effect)?;
+                decoder.begin_close();let root=decoder.take_root().expect("original decoder owns its original payload Arc");assert!(self.payload.as_ref().is_some_and(|payload|Arc::ptr_eq(payload,&root)));assert!(decoder.terminal_is_empty());self.decoder=None;self.decoder_close=Some(ControlledRetirement::retain(ArcLease::new(root)));
+                return Ok((Step::Progress(local),false))
+            }
             let owner=if self.decoder_close.is_some(){&mut self.decoder_close}else{&mut self.payload_close};
-            if let Some(cursor)=owner.as_mut(){if cursor.terminal_is_empty(){*owner=None;return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}return Ok(match cursor.step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>return Err(error)})}
-            if let Some(payload)=self.payload.take(){self.payload_close=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(payload));return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}
-            Ok(Close::Complete{progress:Default::default()})
-        })();let work=u64::from(matches!(&result,Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}) if *progress!=Default::default()));semio_framework_value::RetainedWorkOutcome{result,work}})
+            if let Some(cursor)=owner.as_mut(){
+                if cursor.terminal_is_empty(){semio_plugin::app::plugin_pay_unit(effect)?;*owner=None;return Ok((Step::Progress(local),false))}
+                return Ok((Step::Progress(semio_plugin::app::plugin_settle_poll(cursor.step(body,effect))?.progress()),false))
+            }
+            if let Some(payload)=self.payload.take(){semio_plugin::app::plugin_pay_unit(effect)?;self.payload_close=Some(ControlledRetirement::retain(ArcLease::new(payload)));return Ok((Step::Progress(local),false))}
+            Ok((Step::Complete(Default::default()),self.terminal_is_empty()))
+        })?;
+        Ok(match step{Step::Progress(progress)=>Close::Pending{progress},Step::Complete(progress)=>Close::Complete{progress},_=>Close::Blocked})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}
@@ -200,7 +218,7 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFactory {
 }
 
 /// 🧳️ Builds the host-only job from the original request, taking its wire owner into the decoder when the command arrived over the wire.
-pub(super) fn flow_build_host_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<FlowPlayApp>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+pub(super) fn flow_build_host_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<FlowPlayApp>>>, output: &mut Option<semio_plugin::ErasedToolJob>, construction: &mut semio_plugin::__job::OriginalConstructionAdmission, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
     use semio_plugin::__value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
     let original = request.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Flow host-only request is absent"))?;
     if original.tool_id.as_str()!=original.command.command_id(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow job changed its declared command route").into())}
@@ -217,7 +235,7 @@ pub(super) fn flow_build_host_job(request: &mut Option<semio_plugin::ArtifactOwn
         return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Flow host-only job rejects checkpoint or oversized wire owner").into());
     }
     let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes: 0, capacity_bytes: std::mem::size_of::<FlowHostEffectJob>() + std::mem::size_of::<FlowHostEffectPayload>(), release_bytes: 0, depth: 1 };
-    semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
+    semio_framework::action_bus::admit_original_tool_construction_settled(cx, construction, output, demand, |_| {
         let mut taken = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Flow host-only request is absent"))?;
         let input = taken.input.take();
         let payload = FlowHostEffectPayload { command: FlowCommand::clone(&taken.command), snapshot: taken.snapshot, config: Arc::new(main::config::from_snapshot(taken.window_config.as_ref())), history: taken.history, children: taken.context.children.clone(), instance_owner: taken.instance_operation_owner, completion: taken.completion };

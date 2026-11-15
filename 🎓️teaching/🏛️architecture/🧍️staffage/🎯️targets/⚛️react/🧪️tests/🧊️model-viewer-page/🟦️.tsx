@@ -105,7 +105,7 @@ describe("🎚️ the viewer", () => {
   });
 
   it("says in words that an asset without a volume has no axonometric view and no 3D model, and keeps both choices in place", () => {
-    const bare = { ...sampleFigure, volume: undefined } as never;
+    const bare = { ...sampleFigure, volumes: Object.fromEntries([50, 100, 200, 500].map((s) => [`${s}`, { status: "unavailable", denominator: s }])) } as never;
     const resolutions = resolveFigure(bare, 100, "en");
     for (const viewpoint of ["axonometric", "model"] as const) {
       const resolution = resolutions[viewpoint];

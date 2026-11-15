@@ -443,8 +443,8 @@ pub fn check_minimum_r(element: &EnvelopeElement, usage: &str, t_int_c: f64) -> 
     builder.build()
 }
 
-/// ✅️ Interior surface temperature factor f_Rsi = 1 − R_si/R_T ≥ 0.70 with R_si = 0.25 m²K/W at θ_i = 20 °C and θ_e = −5 °C (DIN 4108-2 §6.2 mould criterion).
-pub fn check_f_rsi(element: &EnvelopeElement) -> CheckResult {
+/// ✅️ Interior surface temperature factor f_Rsi = 1 − R_si/R_T ≥ [`f_rsi_minimum`] of the document's room climate (`t_int_c`, `rh_int`; 0.70 at 20 °C / 50 %) with R_si = 0.25 m²K/W and θ_e = −5 °C (DIN 4108-2 §6.2 mould criterion).
+pub fn check_f_rsi(element: &EnvelopeElement, t_int_c: f64, rh_int: f64) -> CheckResult {
     let subject = SubjectRef::new(
         &element.id,
         entity_path("elements", &element.id),
@@ -464,7 +464,8 @@ pub fn check_f_rsi(element: &EnvelopeElement) -> CheckResult {
     }
     let (_, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
     let r_si = R_SI_MOULD;
-    let (t_int_c, t_ext_c) = (MOULD_T_INT_C, MOULD_T_EXT_C);
+    let t_ext_c = MOULD_T_EXT_C;
+    let f_min = f_rsi_minimum(t_int_c, rh_int);
     let r_t = total_resistance(&element.layers, r_si, r_se);
     let f_rsi = 1.0 - r_si / r_t;
     let theta_si = t_ext_c + f_rsi * (t_int_c - t_ext_c);
@@ -475,14 +476,14 @@ pub fn check_f_rsi(element: &EnvelopeElement) -> CheckResult {
         subject,
         loc("Mould criterion f_Rsi", "Schimmelpilzkriterium f_Rsi"),
     )
-    .minimum(Quantity::new(QuantityKind::Dimensionless, f_rsi), Quantity::new(QuantityKind::Dimensionless, F_RSI_MINIMUM))
+    .minimum(Quantity::new(QuantityKind::Dimensionless, f_rsi), Quantity::new(QuantityKind::Dimensionless, f_min))
     .annex(AnnexChoice::De)
     .explanation(loc(
         &format!("f_Rsi = 1 − R_si/R_T = {f_rsi:.3} with R_si = {r_si:.2} m²K/W (θ_i={t_int_c:.1} °C, θ_e={t_ext_c:.1} °C, θ_si={theta_si:.1} °C)."),
         &format!("f_Rsi = 1 − R_si/R_T = {f_rsi:.3} mit R_si = {r_si:.2} m²K/W (θ_i={t_int_c:.1} °C, θ_e={t_ext_c:.1} °C, θ_si={theta_si:.1} °C)."),
     ));
-    if f_rsi < F_RSI_MINIMUM {
-        let r_needed = r_si / (1.0 - F_RSI_MINIMUM);
+    if f_rsi < f_min {
+        let r_needed = r_si / (1.0 - f_min);
         if let Some((idx, d_req)) = required_insulation_thickness(&element.layers, r_si, r_se, r_needed) {
             let layer = &element.layers[idx];
             builder = builder.remedy(Remedy::at_least(
@@ -495,13 +496,13 @@ pub fn check_f_rsi(element: &EnvelopeElement) -> CheckResult {
                 Quantity::length_m(d_req),
                 loc(
                     &format!(
-                        "Increase insulation '{}' from {:.0} mm to ≥ {:.0} mm so f_Rsi ≥ 0.70.",
+                        "Increase insulation '{}' from {:.0} mm to ≥ {:.0} mm so f_Rsi ≥ {f_min:.2}.",
                         layer.id,
                         layer.thickness_m * 1000.0,
                         d_req * 1000.0
                     ),
                     &format!(
-                        "Dämmstärke '{}' von {:.0} mm auf ≥ {:.0} mm erhöhen, damit f_Rsi ≥ 0,70.",
+                        "Dämmstärke '{}' von {:.0} mm auf ≥ {:.0} mm erhöhen, damit f_Rsi ≥ {f_min:.2}.",
                         layer.id,
                         layer.thickness_m * 1000.0,
                         d_req * 1000.0

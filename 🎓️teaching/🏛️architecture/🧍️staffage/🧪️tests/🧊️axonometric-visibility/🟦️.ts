@@ -226,7 +226,7 @@ describe("🧊️ the visible surfaces of the sample figure equal the kernel vie
 
   it("agrees on at least 99 % of the covered pixels, surface by surface", async () => {
     const pose = "stand";
-    const doc = await modelOf(asset, { scale: SCALE, poses: [pose], clips: [], views: [] });
+    const doc = await modelOf(asset, { scale: SCALE, poses: [pose], clips: [], view: "light-solid" });
     const resolved = await tessellate(doc, qualityAt(SCALE));
     const surfaces = surfacesAt(asset, SCALE);
     const palette = surfaces.map((surface, i) => ({ surface: surface.id, rgb: [40 + ((i * 53) % 200), 30 + ((i * 97) % 210), 20 + ((i * 29) % 220)] as [number, number, number] }));

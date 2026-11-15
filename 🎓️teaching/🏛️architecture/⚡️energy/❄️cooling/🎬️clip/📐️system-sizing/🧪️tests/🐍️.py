@@ -33,5 +33,24 @@ class SizingCaptions(unittest.TestCase):
                         self.assertGreater(VISUALS.caption_bar(english).width, 0)
 
 
+class SizingChain(unittest.TestCase):
+    """🔗 The numbers on screen follow one chain from the chart peak to the duct area."""
+
+    def test_chain_matches_independent_arithmetic(self):
+        chain = CASES["chain"]
+        sizing = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.❄️cooling.🎬️clip.📐️system-sizing.🐍️")
+        load = chain["areaM2"] * chain["glassShare"] * chain["blind"] * chain["gPerp"] * chain["irradianceWM2"]
+        self.assertEqual(round(load, -1), chain["loadW"])
+        self.assertEqual(sizing.W_SOLAR, chain["loadW"])
+        self.assertAlmostEqual(sizing.Q_V_R_SOLAR, chain["loadW"] / 1000 / (1.2 * 1.0 * chain["supplyLiftK"]), places=6)
+        self.assertEqual(round(sizing.Q_V_R_SOLAR, 3), chain["airflowM3S"])
+        self.assertEqual(round(sizing.A_SOLAR, 4), chain["ductAreaM2"])
+
+    def test_chart_peak_is_the_design_irradiance(self):
+        solar = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.❄️cooling.🎬️clip.☀️solar-radiation.🐍️")
+        peak = max(solar._facade_irradiance(name, hour) for name in ("Horiz", "O", "S", "W", "N") for hour in range(6, 19))
+        self.assertEqual(round(peak), CASES["chain"]["irradianceWM2"])
+
+
 if __name__ == "__main__":
     unittest.main()

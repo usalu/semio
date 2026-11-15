@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-critical-region-steel-fyd",
-  "semanticKind": "change-critical-region-steel-fyd",
+  "semanticKind": "change-critical-region-steel-design-yield-mpa",
   "displayName": "Change critical region: design yield strength of the longitudinal steel",
   "emoji": "📍️",
   "aggregateVariant": "ChangeCriticalRegionSteelDesignYieldMpa",

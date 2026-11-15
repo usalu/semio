@@ -1,0 +1,33 @@
+service log: /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-e468a514b885.log
+closure entries before: 41997
+2026-11-15T08:37:00Z no slice worker
+2026-11-15T08:37:05Z no slice worker
+2026-11-15T08:37:10Z no slice worker
+2026-11-15T08:37:15Z no slice worker
+2026-11-15T08:37:20Z pid=95650 rss=1186MB footprint=[bun [95650]: 64-bit    Footprint: 162 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:37:25Z pid=95650 rss=1495MB footprint=[bun [95650]: 64-bit    Footprint: 205 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:37:30Z pid=95650 rss=1990MB footprint=[bun [95650]: 64-bit    Footprint: 273 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:37:35Z pid=95650 rss=2042MB footprint=[bun [95650]: 64-bit    Footprint: 294 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:37:41Z pid=95650 rss=2631MB footprint=[bun [95650]: 64-bit    Footprint: 589 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:37:46Z pid=95650 rss=2645MB footprint=[bun [95650]: 64-bit    Footprint: 385 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:37:51Z pid=95650 rss=2929MB footprint=[bun [95650]: 64-bit    Footprint: 552 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.]
+2026-11-15T08:37:56Z pid=95650 rss=3246MB footprint=[bun [95650]: 64-bit    Footprint: 375 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left]
+2026-11-15T08:38:01Z pid=95650 rss=3246MB footprint=[bun [95650]: 64-bit    Footprint: 375 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left]
+2026-11-15T08:38:06Z pid=95650 rss=3335MB footprint=[bun [95650]: 64-bit    Footprint: 432 MB (16384 bytes per page)] last=[graph: inferring projects with 3 worker processes (1536 MB each)]
+2026-11-15T08:38:11Z pid=95650 rss=3495MB footprint=[bun [95650]: 64-bit    Footprint: 367 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 153 s ago, estimated time left: about 1 min]
+2026-11-15T08:38:16Z pid=95650 rss=4982MB footprint=[bun [95650]: 64-bit    Footprint: 1261 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2463 of 1628 MB reserved, 1 projects running): @semio-tech/framework-process needs 2463 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, o]
+2026-11-15T08:38:21Z pid=95650 rss=5794MB footprint=[bun [95650]: 64-bit    Footprint: 1126 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (3207 of 1628 MB reserved, 1 projects running): @semio-tech/framework-process needs 2463 MB and has waited 12 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, ]
+2026-11-15T08:38:26Z pid=95650 rss=6832MB footprint=[bun [95650]: 64-bit    Footprint: 1469 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 164 s ago, estimated time left: about 1 min]
+2026-11-15T08:38:31Z pid=95650 rss=7835MB footprint=[bun [95650]: 64-bit    Footprint: 1227 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 164 s ago, estimated time left: about 1 min]
+2026-11-15T08:38:36Z pid=95650 rss=8085MB footprint=[bun [95650]: 64-bit    Footprint: 1437 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 2 inferred here, 47 left; the server last progressed 171 s ago, estimated time left: about 1 min]
+2026-11-15T08:38:41Z pid=95650 rss=8039MB footprint=[bun [95650]: 64-bit    Footprint: 1222 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2997 of 3121 MB reserved, 1 projects running): @semio-tech/framework-renderer-wgpu needs 1526 MB and has waited 19 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T08:38:47Z pid=95650 rss=8151MB footprint=[bun [95650]: 64-bit    Footprint: 1284 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (3219 of 821 MB reserved, 1 projects running): @semio-tech/framework-renderer-wgpu needs 1526 MB and has waited 24 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T08:38:52Z pid=95650 rss=8040MB footprint=[bun [95650]: 64-bit    Footprint: 1958 MB (16384 bytes per page)] last=[graph: 0 of 49 projects arrived from the fleet, 3 inferred here, 46 left; the server last progressed 194 s ago, estimated time left: about 1 min]
+2026-11-15T08:38:57Z pid=95650 rss=8231MB footprint=[bun [95650]: 64-bit    Footprint: 3793 MB (16384 bytes per page)] last=[graph: project @semio-tech/framework-renderer-wgpu (language:cargo) grew by 1987 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is ]
+2026-11-15T08:39:02Z pid=95650 rss=8636MB footprint=[bun [95650]: 64-bit    Footprint: 5716 MB (16384 bytes per page)] last=[graph: project @semio-tech/framework-renderer-wgpu (language:cargo) grew by 1987 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is ]
+2026-11-15T08:39:07Z pid=95650 rss=5568MB footprint=[bun [95650]: 64-bit    Footprint: 8918 MB (16384 bytes per page)] last=[graph: project @semio-tech/framework-renderer-wgpu (language:cargo) grew by 1987 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is ]
+2026-11-15T08:39:12Z no slice worker
+2026-11-15T08:39:17Z no slice worker
+2026-11-15T08:39:22Z no slice worker
+2026-11-15T08:39:27Z no slice worker
+closure entries after: 41997

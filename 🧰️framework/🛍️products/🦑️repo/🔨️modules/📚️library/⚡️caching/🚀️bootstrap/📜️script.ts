@@ -1,6 +1,6 @@
 #!/usr/bin/env repo
 import{withRepositoryCompilerRuntimeEntriesV1}from"../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
-import{dependencyReadmissionV1}from"../../🏗️build/📥️source/🔏️closure/🔁️dependencies/🟦️.ts";
+import{projectionAdmissionV1}from"../../🏗️build/📥️source/🔏️closure/🔁️dependencies/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {createNxBootstrapCapabilitiesV1,readNxBootstrapAuthoringCapabilitiesV1} from "./📥️caller/🟦️.ts";
 import{isToolingHeadroomRefusalV1,type ToolingHeadroomRefusalV1}from"./🛠️tools/🧹️retention/📏️headroom/🟦️.ts";
@@ -17,9 +17,9 @@ import {nxHostResourceSettingsV1} from "./🛠️tools/🌡️host-capacity/🟦
 import nxExecutors from "../../📦️packages/🟦️typescript/📋️executors.json" with { type: "json" };
 import {readWorkerPolicyV1,planWorkersV1,currentWorkerHostV1,readWorkerSwitchV1} from "../../🏗️build/👷️workers/🟦️.ts";
 import {nxBatchCapableV1,nxWorkerSettingsV1} from "./🛠️tools/👷️workers/🟦️.ts";
-import {resolveRemoteCacheContractV1} from "../../🏗️build/🌐️remote-cache/🟦️.ts";
+import {resolveRemoteCacheV1} from "../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {nxRemoteCacheV1} from "./🛠️tools/🌐️remote-cache/🟦️.ts";
-import {createNxFailureTailV1,settleNxRunV1,type NxFailureTailV1} from "../../🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts";
+import {createNxFailureTailV1,settleNxRunReportedV1,type NxFailureTailV1} from "../../🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts";
 import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundNxNamespaceV1} from "../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { createScriptProcessEnvelope, readScriptProcessEnvelope, scriptProcessEnvironment, SCRIPT_PROCESS_INVOCATION_ENV, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -251,7 +251,8 @@ export function nxBuildEnvironmentV1(root:string,environment:NodeJS.ProcessEnv):
  env.NX_PARALLEL=hostPlan?nxHostResourceSettingsV1(hostPlan).environment.NX_PARALLEL:environment.SEMIO_BUILD_PARALLEL??environment.NX_PARALLEL??workers.environment.NX_PARALLEL;
  if(workers.environment.NX_BATCH_MODE!==undefined)env.NX_BATCH_MODE??=workers.environment.NX_BATCH_MODE;
  if(environment.SEMIO_BUILD_GRAPH_DIGEST){env.NX_FORCE_REUSE_CACHED_GRAPH="false";delete env.SEMIO_NX_GRAPH_SEAL_REUSE;}
- Object.assign(env,nxRemoteCacheV1(resolveRemoteCacheContractV1(environment),environment).environment);
+ const remote=resolveRemoteCacheV1({...environment,SEMIO_WORKSPACE_ROOT:root});
+ Object.assign(env,nxRemoteCacheV1(remote?.contract,remote?.environment??environment).environment);
  return env;
 }
 
@@ -444,19 +445,26 @@ export class NxScript extends Script {
     const invocation = resolveNxInvocation(segments,{...process.env,SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode},this.root), children: ReturnType<typeof spawnNxProcess>[] = [], spooling: Promise<void>[] = [];
     const toolingIdentity=basename(dirname(tooling.modulePath));if(!/^[a-f0-9]{64}$/u.test(toolingIdentity))throw new Error("Original loaded Nx tooling receipt required");
     return withNxToolingUseV1(nxToolingUseStorageV1(this.root),{identity:toolingIdentity,toolkitRoot:dirname(tooling.modulePath),invocation:this.invocation},phaseControl,async(_witness,actualPhase)=>{
-    const hold:{release?:()=>Promise<void>}={};
+    const hold:{release?:()=>Promise<void>;stopFlight?:()=>Promise<void>;settleSlots?:()=>Promise<unknown>}={};
     try{
     const check=()=>checkResourceLeaseControl(actualPhase);check();
-    const projection=createRequire(import.meta.url)("../../🟨️.mjs"),admitProjection=()=>{check();if(projection.nxBuildDependencyImplementationChangesV1().length)throw dependencyReadmissionV1();check();};admitProjection();
-    const implementationIdentity=projection.nxBuildDependencyImplementationV1();
+    const projection=createRequire(import.meta.url)("../../🟨️.mjs"),admission=projectionAdmissionV1(projection),admitProjection=()=>{check();admission.admit();check();};admitProjection();
+    const implementationIdentity=admission.identity();
     const env = await nxCacheEnvironmentV1(this.root,pinnedNxRuntimeEnvironment(nxToolingEnvironmentV1(nxBuildEnvironmentV1(this.root,devToolingEnv({ ...invocation.env, SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode,CARGO_NET_OFFLINE:String(readNativeCallerAuthorityV1(this.invocation.capabilities).network.offline), NX_ISOLATE_PLUGINS: process.env.NX_ISOLATE_PLUGINS ?? "false", NODE_PATH: tooling.modulePath, SEMIO_NX_TOOLING_ROOT: dirname(tooling.modulePath), SEMIO_NX_IMPLEMENTATION_IDENTITY: implementationIdentity, NX_WORKSPACE_DATA_DIRECTORY: invocation.env.NX_WORKSPACE_DATA_DIRECTORY || process.env.NX_WORKSPACE_DATA_DIRECTORY, NX_SOCKET_DIR: invocation.env.NX_SOCKET_DIR || process.env.NX_SOCKET_DIR, NX_DAEMON_SOCKET_DIR: undefined, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined })),toolingIdentity), tooling.bun));
     Object.assign(env,buildBackendProcessEnvironmentV1("nx",env));
     Object.assign(env,await(await import("../../🏗️build/🌐️remote-cache/🧶️nx/🟦️.ts")).nxRemoteCacheEnvironmentV1(env));
+    {
+      const flightModule=await import("../../🏗️build/🌐️remote-cache/🧶️nx/🚦️single-flight/🟦️.ts"),flight=await flightModule.routeNxThroughFlightV1(env,{report:event=>{process.stderr.write((["en","de"] as const).map(language=>"[nx-flight] "+flightModule.nxFlightTextV1(language,event)).join("\n")+"\n");}}).catch(()=>undefined);
+      if(flight){
+        const sinceMs=Date.now();Object.assign(env,flight.environment());hold.stopFlight=()=>flight.stop();
+        hold.settleSlots=async()=>(await import("../../🏗️build/🌐️remote-cache/🧶️nx/🪢️slot-settle/🟦️.ts")).settleNxSlotsV1({root:this.root,environment:env,flight,sinceMs});
+      }
+    }
     if(bind){const namespace=await bind(toolingIdentity,env.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity);hold.release=namespace.release;Object.assign(env,namespace.environment);}
     if(env.NX_DAEMON===undefined&&!invocation.watch&&invocation.args[0]!=="watch"){const admission=await import("../🕸️graph/🏁️startup/🚏️admission/🟦️.ts").then(owner=>owner.nxDaemonAdmissionV1(this.root,env,actualPhase.signal)).catch(()=>({enabled:false,reason:"refused"}));env.NX_DAEMON=admission.enabled?"true":"false";if(profileBootstrap)console.log(`[nx] Daemon ${admission.enabled?"enabled":"off"} (${admission.reason})`);}
     const{projectOwnedNxProcessEnvelopeV1}=await import("../../🏗️build/🔧️tools/🧶️nx/📨️envelope/🟦️.ts"),carried=projectOwnedNxProcessEnvelopeV1(this.root,this.invocation,invocation.args);env[SCRIPT_PROCESS_INVOCATION_ENV]=scriptProcessEnvironment(carried,env)[SCRIPT_PROCESS_INVOCATION_ENV];
     let cancelled: NodeJS.Signals | undefined, cancellationDeadline = 0, watchFailure = 0, finishing = false;
-    let pendingGeneration:import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts").NxGenerationClaimV1|undefined;
+    let pendingGeneration:import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts").NxGenerationClaimV1|undefined,nxFleet:import("../../🏗️build/🪪️graph-state/🧶️nx/🟦️.ts").NxFleetV1|undefined,receiptWritten=false;
     let force: ReturnType<typeof setTimeout> | undefined, watcher: ReturnType<typeof spawnNxProcess> | undefined;
     const descendants = new Set<number>();
     const captureDescendants = (): void => {
@@ -534,7 +542,9 @@ export class NxScript extends Script {
         const sourceMembership=env.SEMIO_BUILD_GRAPH_DIGEST?undefined:await graphSeal.nxGraphSourceMembershipV2(this.root,actualPhase.signal).catch(error=>{if(profileBootstrap)sayBootstrapV1("nx.graph-membership-fallback",{reason:String(error instanceof Error?error.message:String(error))});return undefined;});
         const generationClaim=env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch?await generationOwner.nxGenerationClaimV1(this.root,env).catch(()=>undefined):undefined,generation=generationClaim!==undefined&&await generationOwner.nxGenerationHoldsV1(this.root,workspaceData,generationClaim,actualPhase.signal).catch(()=>false);
         pendingGeneration=generationClaim!==undefined&&!generation?generationClaim:undefined;
-        const sealed=generation||!env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch&&env.NX_DAEMON!=="true"&&await graphSeal.nxGraphSealHolds(this.root,workspaceData,actualPhase.signal,sourceMembership?.digest).catch(()=>false);
+        const fleetInstalled=pendingGeneration!==undefined?await(async()=>{const owner=await import("../../🏗️build/🪪️graph-state/🧶️nx/🟦️.ts");nxFleet=await owner.beginNxFleetV1({root:this.root,environment:env,claim:pendingGeneration!,directory:workspaceData,manifestFile:env.SEMIO_BUILD_GRAPH_PATH,signal:actualPhase.signal,say:owner.graphSayV1(env),waitLimitMilliseconds:600000,fund:async<T>(extraBytes:number,body:()=>Promise<T>)=>(await import("../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts")).withNxGraphAuxiliaryCapacityV1(this.root,env,{version:1,extraBytes},body)});return nxFleet.installed;})().catch(()=>false):false;
+        if(fleetInstalled)pendingGeneration=undefined;
+        const sealed=generation||fleetInstalled||!env.SEMIO_BUILD_GRAPH_DIGEST&&!inheritedReuse&&!invocation.watch&&env.NX_DAEMON!=="true"&&await graphSeal.nxGraphSealHolds(this.root,workspaceData,actualPhase.signal,sourceMembership?.digest).catch(()=>false);
         if(profileBootstrap)sayBootstrapV1("nx.graph-observation-selected-sealed-elapsedms",{sealed:String(sealed),elapsedMs:String(Math.round(performance.now()-sealStarted))});
         if(!inheritedReuse){env.NX_FORCE_REUSE_CACHED_GRAPH=sealed?"true":"false";env.SEMIO_NX_GRAPH_SEAL_REUSE=sealed?"true":"false";}
         check();
@@ -579,7 +589,7 @@ export class NxScript extends Script {
           env.NX_DAEMON = "false"; attemptStart = Date.now(); completed = launch(invocation.args);
           code = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
         }
-        if (code !== 0 && !cancelled && !invocation.watch) code = await settleNxRunV1({ code, tail: graphChanges.get(completed)?.output.text() ?? "" }, invocation.args.join(" "), async () => {
+        if (code !== 0 && !cancelled && !invocation.watch) code = await settleNxRunReportedV1({ code, tail: graphChanges.get(completed)?.output.text() ?? "" }, invocation.args.join(" "), async () => {
           check(); attemptStart = Date.now(); completed = launch(invocation.args);
           const next = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
           return { code: next, tail: graphChanges.get(completed)?.output.text() ?? "" };
@@ -588,7 +598,9 @@ export class NxScript extends Script {
           const{withNxGraphAuxiliaryCapacityV1}=await import("../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts"),generationOwner=await import("../🕸️graph/🔏️seal/📌️generation/🟦️.ts"),claim=pendingGeneration;
           const written=await withNxGraphAuxiliaryCapacityV1(this.root,env,{version:1,extraBytes:8192},()=>generationOwner.writeNxGenerationReceiptV1(this.root,env.NX_WORKSPACE_DATA_DIRECTORY!,claim,actualPhase.signal)).catch(error=>{if(profileBootstrap)sayBootstrapV1("nx.generation-receipt-refused",{reason:String(error instanceof Error?error.message:String(error))});return false;});
           if(profileBootstrap)sayBootstrapV1("nx.generation-receipt-written",{written:String(written)});
+          receiptWritten=written;
         }
+        await nxFleet?.finish(receiptWritten).catch(()=>undefined);
         await Promise.all(spooling);
         process.exitCode=watchFailure||(cancelled?cancelled==="SIGINT"?130:143:code);
       } else process.exitCode=cancelled==="SIGINT"?130:143;
@@ -597,6 +609,7 @@ export class NxScript extends Script {
       else throw error;
     } finally {
       finishing = true;
+      void nxFleet?.finish(false).catch(()=>undefined);
       if (invocation.watch && children.length && !cancelled) stop("SIGTERM");
       if (cancelled && process.platform !== "win32") {
         const alive = (child: ReturnType<typeof spawnNxProcess>): boolean => { try { if (child.pid) { process.kill(-child.pid, 0); return true; } } catch {} return false; };
@@ -612,7 +625,7 @@ export class NxScript extends Script {
       process.removeListener("SIGINT", interrupt);
       process.removeListener("SIGTERM", terminate);
     }
-    }finally{await hold.release?.();}
+    }finally{await hold.settleSlots?.().catch(()=>undefined);await hold.stopFlight?.().catch(()=>undefined);await hold.release?.();}
     });
   }
 }

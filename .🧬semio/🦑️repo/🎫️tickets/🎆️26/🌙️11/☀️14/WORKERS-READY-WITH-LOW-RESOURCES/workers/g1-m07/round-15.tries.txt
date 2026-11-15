@@ -1,0 +1,3 @@
+try 1 ended 2026-11-15T03:22:11Z native_rc=75 hard_stop=0 moving_lines=0 closure_missing_lines=0 sig=[The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to N MB, more than the N MB this machine gives a plan. It was stopped before the host ran shor]
+try 2 ended 2026-11-15T03:38:24Z native_rc=4 hard_stop=0 moving_lines=0 closure_missing_lines=0 sig=[  --strict                                        doctor: exit with status N for warnings as well as errors. (used by: doctor)]
+driver ended 2026-11-15T03:38:24Z at try 2

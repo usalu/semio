@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Boundary law corpus of the scheduling table",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "checkoutFromTests",
+    "cargoScript",
+    "minimumLeaving",
+    "introduced",
+    "enforced",
+    "debt",
+    "members"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "checkoutFromTests": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cargoScript": {
+      "type": "string",
+      "minLength": 1
+    },
+    "minimumLeaving": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "enforced": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "uniqueItems": true
+    },
+    "debt": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "members": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "enum": [
+          "scheduling",
+          "mixed",
+          "keyed"
+        ]
+      }
+    },
+    "introduced": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { createIssuedResourceControlV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{fleetFetchContextV1,pinnedFetchV1}from"../../🛰️fleet-fetch/🟦️.ts";
 import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { open } from "node:fs/promises";
@@ -91,7 +92,7 @@ export async function prepareBinaryen(workspace: string, store:RepositoryTooling
     const progress = setInterval(() => console.log(`Preparing Binaryen ${manifest.version}…`), 10000);
     try {
       console.log(`Downloading pinned Binaryen ${manifest.version} for ${row.platform}/${row.architecture}…`);
-      const response = await fetch(`${manifest.release}/${row.archive}`, { signal });
+      const response = await pinnedFetchV1(fleetFetchContextV1(process.env, workspace), {url:`${manifest.release}/${row.archive}`, sha256:row.sha256, bytes:row.bytes}, { signal });
       if (!response.ok || !response.body) throw new Error(`Binaryen download failed: ${response.status}`);
       const archive = join(temporary, "binaryen.tar.gz"), file = await open(archive, "wx"), hash = createHash("sha256");
       let bytes = 0;

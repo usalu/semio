@@ -18,7 +18,7 @@ pub const LAYER_LOADS: &str = "loads";
 pub const LAYER_SUPPORTS: &str = "supports";
 pub const LAYER_ANNOTATIONS: &str = "annotations";
 
-const LAYERS: [(&str, &str, &str); 14] = [
+const LAYERS: [(&str, &str, &str); 15] = [
     (LAYER_MEMBERS, "Extrusions", "Strangpressprofile"),
     (LAYER_HAZ, "Heat-affected zones", "Wärmeeinflusszonen"),
     (LAYER_EFFECTIVE, "Effective sections", "Wirksame Querschnitte"),

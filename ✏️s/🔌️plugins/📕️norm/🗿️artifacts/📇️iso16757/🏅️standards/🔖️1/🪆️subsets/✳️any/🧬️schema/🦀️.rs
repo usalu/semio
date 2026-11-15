@@ -8,9 +8,7 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use std::collections::BTreeMap;
-
-use semio_s_artifact_norm_iso16757_model::CatalogueValue;
+use semio_s_artifact_norm_iso16757_model::{CatalogueValue, IdMap};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -32,7 +30,7 @@ pub struct Iso16757Artifact {
     #[state(artifact)]
     pub part_number_rule: semio_s_artifact_norm_iso16757_model::part_5::PartNumberRule,
     #[state(artifact)]
-    pub part_number_inputs: BTreeMap<String, CatalogueValue>,
+    pub part_number_inputs: IdMap<CatalogueValue>,
     #[state(artifact)]
     pub script_limits: semio_s_artifact_norm_iso16757_model::part_5::ScriptLimits,
     #[state(artifact)]

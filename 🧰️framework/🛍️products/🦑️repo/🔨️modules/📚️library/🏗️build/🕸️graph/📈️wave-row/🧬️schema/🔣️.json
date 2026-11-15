@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:wave-row:v1",
+  "title": "Progress row of a published graph wave / Fortschrittszeile einer veröffentlichten Graph-Welle",
+  "description": "EN: A graph read that the graph server runs (SEMIO_GRAPH_WAVE_ROWS=1) writes one machine readable row to its stderr after every published wave: the generation, the projects done of the projects stale at the start of the read, the seconds since the previous wave, what the parent holds (physical footprint of the read process, the managed memory that survived the collection at the end of the wave, the peak of managed memory during the wave and the projects that ran at that peak), the collections and the farm of the wave (projects sent to workers, adopted, failed, lost). The server words the row in one line of its log (Texts), so a refresh can be followed without attaching to it. DE: Ein Graph-Lauf, den der Graph-Server startet (SEMIO_GRAPH_WAVE_ROWS=1), schreibt nach jeder veröffentlichten Welle eine maschinenlesbare Zeile auf seinen Fehlerkanal: die Generation, die erledigten Projekte von denen, die beim Start des Laufs veraltet waren, die Sekunden seit der vorigen Welle, was der Elternprozess hält (physischer Fußabdruck des Lauf-Prozesses, der nach der Speicherbereinigung am Wellenende überlebende verwaltete Speicher, der Höchstwert des verwalteten Speichers während der Welle und die Projekte, die dabei liefen), die Speicherbereinigungen und die Farm der Welle (an Arbeiter gegebene, übernommene, fehlgeschlagene, verlorene Projekte). Der Server formuliert die Zeile in einer Zeile seines Protokolls (Texts), so lässt sich ein Refresh verfolgen, ohne sich anzuhängen.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "marker": "[graph-wave] ",
+        "environment": "SEMIO_GRAPH_WAVE_ROWS",
+        "maximumPeakProjects": 4,
+        "maximumPhases": 24,
+        "languages": ["en", "de"]
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "generation", "done", "total", "seconds", "parentMegabytes", "managedMegabytes", "peakMegabytes", "peakProjects", "collections", "collectMilliseconds", "farm"],
+      "properties": {
+        "version": { "const": 1 },
+        "generation": { "type": "integer", "minimum": 0 },
+        "done": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 },
+        "seconds": { "type": "integer", "minimum": 0 },
+        "parentMegabytes": { "type": ["integer", "null"], "minimum": 0 },
+        "managedMegabytes": { "type": "integer", "minimum": 0 },
+        "peakMegabytes": { "type": "integer", "minimum": 0 },
+        "peakProjects": { "type": "array", "maxItems": 4, "items": { "type": "string", "minLength": 1, "maxLength": 512 } },
+        "collections": { "type": "integer", "minimum": 0 },
+        "collectMilliseconds": { "type": "integer", "minimum": 0 },
+        "phases": { "type": "object", "maxProperties": 24, "propertyNames": { "minLength": 1, "maxLength": 64 }, "additionalProperties": { "type": "integer", "minimum": 0 } },
+        "farm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["workers", "projects", "adopted", "failed", "lost", "declined"],
+          "properties": {
+            "workers": { "type": "integer", "minimum": 0 },
+            "projects": { "type": "integer", "minimum": 0 },
+            "adopted": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 },
+            "lost": { "type": "integer", "minimum": 0 },
+            "declined": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "wave": "graph-server: wave {generation} published: {done} of {total} projects, {seconds} s since the last, parent {parent} MB (managed {managed} MB after the collection, peak {peak} MB{peakAt}, {collections} collections), farm: {adopted} of {projects} projects adopted, {failed} failed, {lost} lost, {workers} workers",
+          "peakAt": " at {projects}",
+          "phases": ", phases: {list}",
+          "unread": "unread"
+        },
+        "de": {
+          "wave": "graph-server: Welle {generation} veröffentlicht: {done} von {total} Projekten, {seconds} s seit der letzten, Elternprozess {parent} MB (verwaltet {managed} MB nach der Bereinigung, Höchstwert {peak} MB{peakAt}, {collections} Bereinigungen), Farm: {adopted} von {projects} Projekten übernommen, {failed} fehlgeschlagen, {lost} verloren, {workers} Arbeiter",
+          "peakAt": " bei {projects}",
+          "phases": ", Phasen: {list}",
+          "unread": "unlesbar"
+        }
+      }
+    }
+  }
+}

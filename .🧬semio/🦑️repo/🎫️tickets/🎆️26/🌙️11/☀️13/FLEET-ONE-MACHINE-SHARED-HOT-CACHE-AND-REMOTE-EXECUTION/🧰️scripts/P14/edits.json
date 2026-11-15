@@ -1,0 +1,422 @@
+[
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "import{fetchGraphEntryV1,publishGraphEntryV1,type GraphFleetClientV1}from\"../🛰️exchange/🟦️.ts\";",
+  "new": "import{fetchGraphEntryV1,publishGraphEntryV1,type GraphFleetClientV1}from\"../🛰️exchange/🟦️.ts\";\nimport{servesPlatformV1}from\"../🌍️platform-class/🟦️.ts\";",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 🔑️ The exchange state a machine's request lives under: one slot per requester and platform, so a newer request replaces the older one and a reader finds it by the requester alone. */\nexport function wantedStateV1(requester:string,platform:string):GraphStateV1{\n return Object.freeze({version:1,frame:Object.freeze({kind:\"project-inference\" as const,tooling:sha(\"project-wanted\"),implementation:sha(requester),platform,extra:Object.freeze({wanted:\"1\"})}),names:ZERO,content:ZERO,files:0,contentFiles:0,digest:sha(JSON.stringify([\"project-wanted\",requester,platform]))}) as GraphStateV1;\n}",
+  "new": "/** 🔑️ The exchange state a machine's request lives under: one slot per requester, whatever its platform (the request carries the platform), so a newer request replaces the older one and every serving machine finds it by the requester alone; a slot per platform was read by machines of one platform only, and nobody read the slot of a Linux worker among macOS machines. */\nexport function wantedStateV1(requester:string):GraphStateV1{\n return Object.freeze({version:1,frame:Object.freeze({kind:\"project-inference\" as const,tooling:sha(\"project-wanted\"),implementation:sha(requester),platform:\"neutral\",extra:Object.freeze({wanted:\"1\"})}),names:ZERO,content:ZERO,files:0,contentFiles:0,digest:sha(JSON.stringify([\"project-wanted\",requester]))}) as GraphStateV1;\n}",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "state:wantedStateV1(input.requester,input.platform)",
+  "new": "state:wantedStateV1(input.requester)",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "export async function readWantedV1(input:Readonly<{client:GraphFleetClientV1;requester:string;platform:string;now?:()=>number}>):Promise<WantedRequestV1|undefined>{\n const found=await fetchGraphEntryV1(input.client,wantedStateV1(input.requester,input.platform));",
+  "new": "export async function readWantedV1(input:Readonly<{client:GraphFleetClientV1;requester:string;now?:()=>number}>):Promise<WantedRequestV1|undefined>{\n const found=await fetchGraphEntryV1(input.client,wantedStateV1(input.requester));",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "request.requester===input.requester&&request.platform===input.platform&&request.expiresMs",
+  "new": "request.requester===input.requester&&request.expiresMs",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "known(key:string):boolean;graphKey?():Promise<string>;",
+  "new": "known(key:string):boolean;graphKey?():Promise<string>;foreign?(request:WantedRequestV1):void;",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "  const request=await readWantedV1({client:input.client,requester,platform:input.platform,...(input.now===undefined?{}:{now:input.now})});\n  if(request===undefined||(input.graphKey!==undefined&&request.graphKey!==await input.graphKey()))continue;",
+  "new": "  const request=await readWantedV1({client:input.client,requester,...(input.now===undefined?{}:{now:input.now})});\n  if(request===undefined)continue;\n  if(!servesPlatformV1(input.platform,request.platform)){input.foreign?.(request);continue;}\n  if(input.graphKey!==undefined&&request.graphKey!==await input.graphKey())continue;",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "the live request of the same graph state (when `graphKey` is given) whose claim",
+  "new": "the live request of a machine of its own platform class (a request of another class goes to `foreign` and is left to a machine of that class) of the same graph state (when `graphKey` is given) whose claim",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 🔑️ The exchange state of the answer to one requester: the projects the serving machine finished for it, replaced by every newer answer. */\nexport function servedStateV1(requester:string,platform:string):GraphStateV1{\n return Object.freeze({version:1,frame:Object.freeze({kind:\"project-inference\" as const,tooling:sha(\"project-served\"),implementation:sha(requester),platform,extra:Object.freeze({served:\"1\"})}),names:ZERO,content:ZERO,files:0,contentFiles:0,digest:sha(JSON.stringify([\"project-served\",requester,platform]))}) as GraphStateV1;\n}",
+  "new": "/** 🔑️ The exchange state of the answer to one requester, whatever its platform: the projects the serving machine finished for it, replaced by every newer answer. */\nexport function servedStateV1(requester:string):GraphStateV1{\n return Object.freeze({version:1,frame:Object.freeze({kind:\"project-inference\" as const,tooling:sha(\"project-served\"),implementation:sha(requester),platform:\"neutral\",extra:Object.freeze({served:\"1\"})}),names:ZERO,content:ZERO,files:0,contentFiles:0,digest:sha(JSON.stringify([\"project-served\",requester]))}) as GraphStateV1;\n}",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "state:servedStateV1(input.request.requester,input.request.platform)",
+  "new": "state:servedStateV1(input.request.requester)",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "export async function readServedV1(input:Readonly<{client:GraphFleetClientV1;requester:string;platform:string}>):Promise<WantedServedV1|undefined>{\n const found=await fetchGraphEntryV1(input.client,servedStateV1(input.requester,input.platform));",
+  "new": "export async function readServedV1(input:Readonly<{client:GraphFleetClientV1;requester:string}>):Promise<WantedServedV1|undefined>{\n const found=await fetchGraphEntryV1(input.client,servedStateV1(input.requester));",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "return served.requester===input.requester&&served.platform===input.platform?served:undefined;",
+  "new": "return served.requester===input.requester?served:undefined;",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 🗣️ One message of the texts table in one language. */",
+  "new": "/** 🎚️ The memory a machine can give to inferring projects: half of its memory, less when less is available now (less the floor the others keep), and never what the small first booking of the process that asks says: the inference itself is admitted by the capacity gate later (measured: a 16 GB worker asked with 2048 MB, had a grant of 0 MB per project and a wave of 0 projects, so every project was refused), and a project that outgrows its grant is stopped by the memory governor. Swap is neither added nor subtracted: the available memory of a Linux host is `MemAvailable`, which has no swap in it. */\nexport function fleetAdmittedMegabytesV1(input:Readonly<{hostMegabytes:number;availableMegabytes?:number}>,policy:WantedPolicyV1=wantedPolicyV1):number{\n const half=Math.floor(input.hostMegabytes/2);\n return input.availableMegabytes===undefined||!Number.isFinite(input.availableMegabytes)?half:Math.max(0,Math.min(half,Math.floor(input.availableMegabytes-policy.availableFloorMegabytes)));\n}\n\n/** 🗣️ One message of the texts table in one language. */",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json",
+  "kind": "literal",
+  "old": "        \"serveHeadroomMegabytes\": 9400\n      }",
+  "new": "        \"serveHeadroomMegabytes\": 9400,\n        \"availableFloorMegabytes\": 2048\n      }",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json",
+  "kind": "literal",
+  "old": "\"alive\": \"graph-server: alive, {requesters} machines seen, {held} requests held, read {reading}\",",
+  "new": "\"alive\": \"graph-server: alive, {requesters} machines seen, {held} requests held, {foreign} of other platform classes left to others, read {reading}\",\n          \"foreign\": \"graph-server: {count} stale projects of {requester} ({platform}) are left to a machine of the class {class}; this machine serves the class {own}\",\n          \"class\": \"graph: this machine is {platform} (class {class}); only machines of that class serve its request, and their graph server logs 'serving' for it\",",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧬️schema/🔣️.json",
+  "kind": "literal",
+  "old": "\"alive\": \"Graph-Server: lebt, {requesters} Maschinen gesehen, {held} Anfragen gehalten, Lesen {reading}\",",
+  "new": "\"alive\": \"Graph-Server: lebt, {requesters} Maschinen gesehen, {held} Anfragen gehalten, {foreign} anderer Plattformklassen anderen überlassen, Lesen {reading}\",\n          \"foreign\": \"Graph-Server: {count} veraltete Projekte von {requester} ({platform}) bleiben einer Maschine der Klasse {class} überlassen; diese Maschine bedient die Klasse {own}\",\n          \"class\": \"Graph: diese Maschine ist {platform} (Klasse {class}); ihre Anfrage bedienen nur Maschinen dieser Klasse, deren Graph-Server meldet dafür 'bediene'\",",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts",
+  "kind": "literal",
+  "old": "import schema from\"../🧬️schema/🔣️.json\"with{type:\"json\"};",
+  "new": "import schema from\"../🧬️schema/🔣️.json\"with{type:\"json\"};\nimport{platformClassV1}from\"../../🌍️platform-class/🟦️.ts\";",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts",
+  "kind": "literal",
+  "old": "tick=0,seen=0,costsKey=\"\",costsAt=-Infinity;",
+  "new": "tick=0,seen=0,costsKey=\"\",costsAt=-Infinity;\n const foreignNow=new Map<string,string>(),toldForeign=new Set<string>(),noteForeign=(request:WantedRequestV1)=>{foreignNow.set(request.requester,request.platform);const key=wantedClaimKeyV1(request);if(toldForeign.has(key))return;toldForeign.add(key);input.say(wantedTextV1(\"foreign\",language,{count:request.projects.length,requester:request.requester,platform:request.platform,class:platformClassV1(request.platform),own:platformClassV1(input.platform)}));};",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts",
+  "kind": "literal",
+  "old": "   if(now()>=holdUntil&&(input.mayServe===undefined||await input.mayServe())){",
+  "new": "   foreignNow.clear();\n   if(now()>=holdUntil&&(input.mayServe===undefined||await input.mayServe())){",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts",
+  "kind": "literal",
+  "old": "platform:input.platform,requesters:await input.requesters()",
+  "new": "platform:input.platform,foreign:noteForeign,requesters:await input.requesters()",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts",
+  "kind": "literal",
+  "old": "held:held.size,reading:running===undefined?\"none\":running.reason}",
+  "new": "held:held.size,foreign:foreignNow.size,reading:running===undefined?\"none\":running.reason}",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts",
+  "kind": "literal",
+  "old": "publishOwnerCostsV1({client:input.client,server:input.owner,platform:input.platform,table})",
+  "new": "publishOwnerCostsV1({client:input.client,server:input.owner,table})",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🛠️server/🟦️.ts",
+  "kind": "literal",
+  "old": "a machine with headroom. A machine that may not serve",
+  "new": "a machine with headroom. It serves the requests of every machine of its platform class (a slot is per requester, the request names the platform) and counts the others. A machine that may not serve",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts",
+  "kind": "literal",
+  "old": "import schema from\"../🧬️schema/🔣️.json\"with{type:\"json\"};",
+  "new": "import schema from\"../🧬️schema/🔣️.json\"with{type:\"json\"};\nimport{platformClassV1}from\"../../🌍️platform-class/🟦️.ts\";",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts",
+  "kind": "literal",
+  "old": "readServedV1({client:input.client!,requester:input.requester,platform:input.platform})",
+  "new": "readServedV1({client:input.client!,requester:input.requester})",
+  "count": 2
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts",
+  "kind": "literal",
+  "old": "  input.say(heavyMissing.length>0?ownerCostTextV1(\"refused\"",
+  "new": "  input.say(wantedTextV1(\"class\",language,{platform:input.platform,class:platformClassV1(input.platform)}));\n  input.say(heavyMissing.length>0?ownerCostTextV1(\"refused\"",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 🔑️ The exchange state the fleet's table lives under, one slot per platform. */\nexport function ownerCostStateV1(platform:string):GraphStateV1{\n return Object.freeze({version:1,frame:Object.freeze({kind:\"project-inference\" as const,tooling:sha(\"project-costs\"),implementation:sha(\"fleet\"),platform,extra:Object.freeze({costs:\"1\"})}),names:ZERO,content:ZERO,files:0,contentFiles:0,digest:sha(JSON.stringify([\"project-costs\",platform]))}) as GraphStateV1;\n}",
+  "new": "/** 🔑️ The exchange state the fleet's table lives under, one slot for every platform: the cost of inferring a project is a property of the project, measured by the serving machine and read by every worker. */\nexport function ownerCostStateV1():GraphStateV1{\n return Object.freeze({version:1,frame:Object.freeze({kind:\"project-inference\" as const,tooling:sha(\"project-costs\"),implementation:sha(\"fleet\"),platform:\"neutral\",extra:Object.freeze({costs:\"1\"})}),names:ZERO,content:ZERO,files:0,contentFiles:0,digest:sha(JSON.stringify([\"project-costs\"]))}) as GraphStateV1;\n}",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts",
+  "kind": "literal",
+  "old": "export async function publishOwnerCostsV1(input:Readonly<{client:GraphFleetClientV1;server:string;platform:string;table:OwnerCostTableV1}>)",
+  "new": "export async function publishOwnerCostsV1(input:Readonly<{client:GraphFleetClientV1;server:string;table:OwnerCostTableV1}>)",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts",
+  "kind": "literal",
+  "old": "state:ownerCostStateV1(input.platform)",
+  "new": "state:ownerCostStateV1()",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts",
+  "kind": "literal",
+  "old": "export async function readOwnerCostsV1(input:Readonly<{client:GraphFleetClientV1;platform:string}>)",
+  "new": "export async function readOwnerCostsV1(input:Readonly<{client:GraphFleetClientV1}>)",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts",
+  "kind": "literal",
+  "old": "fetchGraphEntryV1(input.client,ownerCostStateV1(input.platform))",
+  "new": "fetchGraphEntryV1(input.client,ownerCostStateV1())",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 🏋️ Splits owners by weight: heavy is every owner whose estimate does not fit the grant (never inferred on this machine, however few they are), light the rest. The heavy ones come heaviest first. */\nexport function classifyOwnersV1(names:readonly string[],estimate:(name:string)=>OwnerEstimateV1,grant:OwnerGrantV1):OwnerClassesV1{\n const heavy:HeavyOwnerV1[]=[],light:string[]=[];\n for(const name of names){const row=estimate(name);if(row.megabytes>grant.managedMegabytes)heavy.push({name,megabytes:row.megabytes,source:row.source});else light.push(name);}\n return{heavy:heavy.sort((a,b)=>b.megabytes-a.megabytes||(a.name<b.name?-1:a.name>b.name?1:0)),light};\n}",
+  "new": "/** 🏋️ Splits owners by weight: heavy is a MEASURED property of a named owner (its own recorded samples or the seed of a declared heavy owner) whose cost does not fit the grant; it is never inferred on this machine, however few they are. An owner nobody measured is light whatever the grant is (the cost of its kind or the unknown cost only orders the serving machine's work): measured on a 16 GB worker, a grant of 0 MB at a small booking turned all 517 stale projects into heavy ones, 820 MB of an unknown project being more than nothing. A light owner that outgrows the grant is stopped by the memory governor, recorded under its name and heavy from then on. The heavy ones come heaviest first. */\nexport function classifyOwnersV1(names:readonly string[],estimate:(name:string)=>OwnerEstimateV1,grant:OwnerGrantV1,policy:OwnerCostPolicyV1=ownerCostPolicyV1):OwnerClassesV1{\n const heavy:HeavyOwnerV1[]=[],light:string[]=[],measured=policy.heavySources as readonly string[];\n for(const name of names){const row=estimate(name);if(row.megabytes>grant.managedMegabytes&&measured.includes(row.source))heavy.push({name,megabytes:row.megabytes,source:row.source});else light.push(name);}\n return{heavy:heavy.sort((a,b)=>b.megabytes-a.megabytes||(a.name<b.name?-1:a.name>b.name?1:0)),light};\n}",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🧬️schema/🔣️.json",
+  "kind": "literal",
+  "old": "          \"@semio-tech/framework-os-kernel\": 3838\n        },",
+  "new": "          \"@semio-tech/framework-os-kernel\": 3838,\n          \"workspace\": 3100\n        },",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🧬️schema/🔣️.json",
+  "kind": "literal",
+  "old": "        \"flushMilliseconds\": 2000\n      }",
+  "new": "        \"flushMilliseconds\": 2000,\n        \"heavySources\": [\"recorded\", \"seed\"]\n      }",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🤝️prefetch/🟦️.ts",
+  "kind": "literal",
+  "old": "const half=Math.floor(memory.hostMemoryMegabytesV1()/2),explicit=Number(environment[memory.GRAPH_MEMORY_POLICY_V1.budgetEnvironment]),admittedMegabytes=Number.isFinite(explicit)&&explicit>0?Math.min(half,Math.floor(explicit/memory.GRAPH_MEMORY_POLICY_V1.grantShare)):half;",
+  "new": "const{fleetAdmittedMegabytesV1}=await import(\"../../🪪️graph-state/🙋️wanted/🟦️.ts\"),{hostAvailableBytesV1}=await import(\"../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts\"),available=(input.available??hostAvailableBytesV1)(),admittedMegabytes=fleetAdmittedMegabytesV1({hostMegabytes:memory.hostMemoryMegabytesV1(),...available===undefined?{}:{availableMegabytes:Math.floor(available/1048576)}});",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🤝️prefetch/🟦️.ts",
+  "kind": "literal",
+  "old": "export async function fleetReadStaleGenerationV1(input:{root:string;request:GenerationPrefetchRequestV1;invocation:ScriptInvocation;language:\"en\"|\"de\";environment?:NodeJS.ProcessEnv}):Promise<void> {",
+  "new": "export async function fleetReadStaleGenerationV1(input:{root:string;request:GenerationPrefetchRequestV1;invocation:ScriptInvocation;language:\"en\"|\"de\";environment?:NodeJS.ProcessEnv;available?:()=>number|undefined}):Promise<void> {",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🤝️prefetch/🟦️.ts",
+  "kind": "literal",
+  "old": "cost.readOwnerCostsV1({client,platform:graphPlatformV1()})",
+  "new": "cost.readOwnerCostsV1({client})",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🤝️prefetch/🟦️.ts",
+  "kind": "literal",
+  "old": "The admitted memory is half of what the host has (a declared smaller machine counts as declared), lowered to the grant a slice pool load runs under when it has one (the quiet forecast grant of a command says nothing about what the machine can give):",
+  "new": "The admitted memory is half of what the host has (a declared smaller machine counts as declared), lowered to what is available now less a floor (`fleetAdmittedMegabytesV1`), never to the grant of the slice pool load that asks (a 2048 MB booking left a 16 GB worker a grant of 0 MB per project and a wave of 0 projects):",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🟦️.ts",
+  "kind": "literal",
+  "old": "import{graphPlatformV1,type GraphStateV1}from\"../🟦️.ts\";",
+  "new": "import{graphPlatformV1,type GraphStateV1}from\"../🟦️.ts\";\nimport{recordPlatformV1}from\"../🌍️platform-class/🟦️.ts\";\nimport{dependencyGenerationV1,localRowsV1,portableRowsV1,type ObservationRowV1}from\"./🧳️portable/🟦️.ts\";",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🟦️.ts",
+  "kind": "literal",
+  "old": "the digest of the record key (inference revision and the project's own identity) with the root replaced by the token, the platform, and one slot per project",
+  "new": "the digest of the record key (inference revision and the project's own identity) with the root replaced by the token, the platform class (`posix-shared` for macOS and Linux, the exact platform for Windows and for a project whose key names a host-bound declaration), and one slot per project",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🟦️.ts",
+  "kind": "literal",
+  "old": "digest=sha(JSON.stringify([\"project-inference\",neutral(input.keyText),input.platform,neutral(input.fleet)]));",
+  "new": "platform=recordPlatformV1(input.keyText,input.platform),digest=sha(JSON.stringify([\"project-inference\",neutral(input.keyText),platform,neutral(input.fleet)]));",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🟦️.ts",
+  "kind": "literal",
+  "old": "implementation:ZERO,platform:input.platform,extra:Object.freeze({})",
+  "new": "implementation:ZERO,platform,extra:Object.freeze({})",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🟦️.ts",
+  "kind": "literal",
+  "old": "const portable=info.exportRecord();if(portable===undefined)return undefined;return[{name:\"record\",bytes:neutralizeRootV1(Buffer.from(JSON.stringify(portable)),input.root)}];",
+  "new": "const portable=info.exportRecord() as {observations:readonly ObservationRowV1[]}|undefined;if(portable===undefined)return undefined;return[{name:\"record\",bytes:neutralizeRootV1(Buffer.from(JSON.stringify({...portable,observations:portableRowsV1(portable.observations,input.root)})),input.root)}];",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🟦️.ts",
+  "kind": "literal",
+  "old": "const ok=await info.import(JSON.parse(Buffer.from(expandRootV1(document.bytes,input.root)).toString(\"utf8\")));",
+  "new": "const shared=JSON.parse(Buffer.from(expandRootV1(document.bytes,input.root)).toString(\"utf8\")) as {observations:readonly ObservationRowV1[]},ok=await info.import({...shared,observations:localRowsV1(shared.observations,dependencyGenerationV1(input.root))});",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🟦️.ts",
+  "kind": "literal",
+  "old": "  expect(await readWantedV1({client:reader,requester:\"g1-m03\",platform:\"linux-x64\"})).toBeUndefined();\n",
+  "new": "  expect((await readWantedV1({client:reader,requester:\"g1-m03\"}))?.platform).toBe(\"darwin-arm64\");\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🟦️.ts",
+  "kind": "literal",
+  "old": "a request is read back by requester and platform,",
+  "new": "a request is read back by its requester alone whatever the platform of the reader,",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🛠️server/🟦️.ts",
+  "kind": "literal",
+  "old": "expect(lines).toEqual([wantedTextV1(\"alive\",\"en\",{requesters:2,held:0,reading:\"none\"}),wantedTextV1(\"alive\",\"en\",{requesters:2,held:0,reading:\"none\"})]);",
+  "new": "expect(lines).toEqual([wantedTextV1(\"alive\",\"en\",{requesters:2,held:0,foreign:0,reading:\"none\"}),wantedTextV1(\"alive\",\"en\",{requesters:2,held:0,foreign:0,reading:\"none\"})]);",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🟦️.ts",
+  "kind": "regex",
+  "old": "((?:readWantedV1|readServedV1)\\(\\{[^}]*?),platform:(?:\"[^\"]*\"|PLATFORM)",
+  "new": "\\1",
+  "count": 5
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/📖️read/🟦️.ts",
+  "kind": "regex",
+  "old": "((?:readWantedV1|readServedV1)\\(\\{[^}]*?),platform:(?:\"[^\"]*\"|PLATFORM)",
+  "new": "\\1",
+  "count": 6
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🛠️server/🟦️.ts",
+  "kind": "regex",
+  "old": "((?:readWantedV1|readServedV1)\\(\\{[^}]*?),platform:(?:\"[^\"]*\"|PLATFORM)",
+  "new": "\\1",
+  "count": 5
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🛠️server/💰️priority/🟦️.ts",
+  "kind": "regex",
+  "old": "((?:readWantedV1|readServedV1)\\(\\{[^}]*?),platform:(?:\"[^\"]*\"|PLATFORM)",
+  "new": "\\1",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🧪️tests/🛠️server/💰️priority/🟦️.ts",
+  "kind": "regex",
+  "old": "readOwnerCostsV1\\(\\{client:reader,platform:PLATFORM\\}",
+  "new": "readOwnerCostsV1({client:reader}",
+  "count": 2
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🧪️tests/🟦️.ts",
+  "kind": "literal",
+  "old": "readOwnerCostsV1({client,platform:\"darwin-arm64\"})",
+  "new": "readOwnerCostsV1({client})",
+  "count": 2
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🧪️tests/🟦️.ts",
+  "kind": "literal",
+  "old": "publishOwnerCostsV1({client,server:\"g1-server\",platform:\"darwin-arm64\",table})",
+  "new": "publishOwnerCostsV1({client,server:\"g1-server\",table})",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🧪️tests/🟦️.ts",
+  "kind": "literal",
+  "old": "  expect(await readOwnerCostsV1({client,platform:\"linux-x64\"})).toBeUndefined();\n",
+  "new": "",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/💰️cost/🧪️tests/🟦️.ts",
+  "kind": "literal",
+  "old": "expect(estimateOwnerCostV1(table,\"workspace\",\"root:language:cargo\")).toEqual({megabytes:3100,source:\"kind\"});",
+  "new": "expect(estimateOwnerCostV1(table,\"workspace\",\"root:language:cargo\")).toEqual({megabytes:3100,source:\"seed\"});\n expect(estimateOwnerCostV1(table,\"another-root\",\"root:language:cargo\")).toEqual({megabytes:3100,source:\"kind\"});",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧪️tests/🟦️.ts",
+  "kind": "literal",
+  "old": "expect(projectRecordStateV1({...edit,platform:\"linux-x64\"}).digest).not.toBe(a.digest);",
+  "new": "expect(projectRecordStateV1({...edit,platform:\"linux-x64\"}).digest).toBe(a.digest);expect(projectRecordStateV1({...edit,platform:\"win32-x64\"}).digest).not.toBe(a.digest);",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📦️project-records/🧪️tests/🟦️.ts",
+  "kind": "literal",
+  "old": "differs when the key, the platform or the project differs",
+  "new": "differs when the key, the platform class or the project differs",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🙋️fleet-read/🟦️.ts",
+  "kind": "literal",
+  "old": "prepare?:(root:string)=>void){",
+  "new": "prepare?:(root:string)=>void,available?:number){",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🙋️fleet-read/🟦️.ts",
+  "kind": "literal",
+  "old": "...environment}});return{lines,error:undefined};}",
+  "new": "...environment},available:()=>available});return{lines,error:undefined};}",
+  "count": 1
+ }
+]

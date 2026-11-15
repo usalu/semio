@@ -1,0 +1,104 @@
+## stall at 2026-11-15T06:57:41Z, last line: Reading the project graph slice : flush 1 of 1.
+## last 60 lines of /var/folders/xq/z6t8hmcd0qj871bx0sj7pbn80000gn/T//semio-repo/501/host-b814083e21d9.log
+[repo] still working after 5038 s; last phase started: source.served
+[repository:command] still running after 5036 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5046 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5056 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repo] still working after 5068 s; last phase started: source.served
+[repository:command] still running after 5066 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5076 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5086 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repo] still working after 5098 s; last phase started: source.served
+[repository:command] still running after 5096 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5106 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5116 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repo] still working after 5128 s; last phase started: source.served
+[repository:command] still running after 5126 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5136 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5146 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repo] still working after 5158 s; last phase started: source.served
+[repository:command] still running after 5156 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5166 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5176 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repo] still working after 5188 s; last phase started: source.served
+[repository:command] still running after 5186 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+[repository:command] still running after 5196 s
+graph: waiting for the fleet: 0 of 676 projects arrived
+graph: the fleet did not deliver 5 too heavy project(s) (@semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB)); this machine infers them itself, one at a time and alone after the others, each with up to about 8428 MB
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":65}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"resource-retirement-inventory:128","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":155}}
+[repository:command] still running after 5206 s
+[repo] still working after 5218 s; last phase started: source.served
+[repository:command] still running after 5216 s
+[repository:command] still running after 5226 s
+[repository:command] still running after 5236 s
+[repo] still working after 5248 s; last phase started: source.served
+[repository:command] still running after 5246 s
+[repository:command] still running after 5256 s
+[repository:command] still running after 5266 s
+[repo] still working after 5278 s; last phase started: source.served
+[repository:command] still running after 5276 s
+[repository:command] still running after 5286 s
+[repository:command] still running after 5296 s
+[repo] still working after 5308 s; last phase started: source.served
+[repository:command] still running after 5306 s
+## ps of the service and its children
+22112 70812    752       39:44 bash .M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m07/drive-round.sh 21 1 4
+22123 22112   2192       39:44 bash /Users/ueli/Documents/semio/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m07/p12-sampler.sh /Users/ueli/Documents/semio/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM
+22125 22112  42528       39:44 bash /Users/ueli/Documents/semio/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m07/run-round.sh 21 1
+22134 22125    752       39:44 bash /Users/ueli/Documents/semio/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O14/WORKERS-READY-WITH-LOW-RESOURCES/native-bootstrap.sh /Users/ueli/native-bootstrap-round-21.log
+22146 22134   1104       39:44 bash /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^TM-)M-oM-8M^Onative/M-pM^_M-%M->M-oM-8M^Obootstrap/M-pM^_M^PM^ZM-oM-8M^O.sh setup
+22147 22134    208       39:44 tee /Users/ueli/Documents/semio/.cache/f/native-bootstrap.log
+37614     1   1120       30:07 /bin/sh /Users/ueli/Library/Application Support/semio/fleet/entry/boot.sh run
+37634 37614  20768       30:07 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs run
+37640 37634 875760       30:07 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M-$M^]M-oM-8M^Oshared-worktree/M-pM^_M^TM^AM-oM-8M^Oreplica/M-pM^_M^[M^_M-oM-8M^Osupervisor/M-pM^_M^_M-&
+48187 22146  62656       23:07 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+48226     1  58192       23:06 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+48420 48226 199152       23:00 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex
+48816 48420 991520       22:48 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^OM-!M-oM-8M^Oresident/M-pM^_M^OM^WM-oM-8M^O
+50672     1   1104       21:36 sh -c repo cargo --store=shared --configuration=prototype --parallelism=3 -- test -p semio-s-artifact-norm-din4108-mutations --test mutation_vectors > /Users/ueli/Documents/semio/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O10/GET-NORM-PLUGIN-WORKING-END-TO-END/M-pM^_M^WM^Q
+50675 50672  59328       21:36 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+50832 50675 300128       21:30 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex
+52832 50832  49264       20:26 /Users/ueli/Documents/semio/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/cargo test -p semio-s-artifact-norm-din4108-mutations --test mutation_vectors --profile prototype --config profile.prototype.inherits="dev" --config profile.prototype.opt-level=0 --config profile.prototype.debug=1 --config profile.prototype.codegen-units
+54594     1   1120       19:34 bash .M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O10/GET-NORM-PLUGIN-WORKING-END-TO-END/wave-tests-ws.sh d4108-snap test din4108 --lib -- sqlite_snapshot document_text_round_trips
+54599 54594  62400       19:34 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+55872 55871    128       18:55 timeout 3500 repo cargo --store=shared --configuration=prototype --parallelism=3 -- test --no-fail-fast --lib -p semio-plugin-job-receiving -p semio-plugin-job -p semio-plugin-reactor-jobs -p semio-plugin-instance-initialization -p semio-plugin-instance-typed-ops -p semio-plugin-surface-fixture
+55873 55872  88160       18:55 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+56611     1  34512    01:28:31 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+56642 56611 239408    01:28:29 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex
+57555 45768    752    01:27:46 /bin/zsh -c source /Users/ueli/.claude/shell-snapshots/snapshot-zsh-1794716226100-qyysux.sh 2>/dev/null || true && \builtin setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL NO_BRACE_CCL NO_MAGIC_EQUAL_SUBST 2>/dev/null || true && { \builtin unalias -- 'which'; \builtin unset -f -- 'which'; } >/dev/null 2>&1 || true && { \builtin unalias -- 'unsetenv'; \builtin unset -f -- '
+57556 57555    720    01:27:46 bash .M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O10/GET-NORM-PLUGIN-WORKING-END-TO-END/describe-norm.sh describe15
+57564 57556  44608    01:27:46 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+57565 57556    208    01:27:46 tee /Users/ueli/Documents/semio/.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O10/GET-NORM-PLUGIN-WORKING-END-TO-END/M-pM^_M^WM^QM-oM-8M^Ogenerated/describe15.log
+61170 54599 323696       15:54 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex
+61966 61170  49776       15:27 /Users/ueli/Documents/semio/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/bin/cargo test --no-fail-fast --workspace --lib --profile prototype --config profile.prototype.inherits="dev" --config profile.prototype.opt-level=0 --config profile.prototype.debug=1 --config profile.prototype.codegen-units=256 --config profile.prototype.in
+62806 56642 1370064       15:01 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^OM-!M-oM-8M^Oresident/M-pM^_M^OM^WM-oM-8M^
+70812     1    720    02:23:58 bash -c bash '.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M-oM-8M^O14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m07/tools-setup-round-16.sh'; bash '.M-pM^_M-'M-,semio/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^NM-+M-oM-8M^Otickets/M-pM^_M^NM^FM-oM-8M^O26/M-pM^_M^LM^YM-oM-8M^O11/M-bM^XM^@M
+78233 83057  66752       06:54 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^LM^PM-oM-8M^Oremote-execution/M-pM^_M^[M-0M-oM
+78238 78233  73936       06:53 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^LM^PM-oM-8M^Oremote-execution/M-pM^_M^[M-0M-oM
+80064 80063    192       05:52 timeout 7200 repo cargo --store=shared --configuration=prototype -- test -p semio-s-plugin-norm-app-surface-visual-chrome --lib --no-fail-fast -- diagrams2d::tests::golden
+80065 80064  82896       05:52 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+83057     1  16384    01:10:58 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^LM^PM-oM-8M^Oremote-execution/M-pM^_M^[M-0M-oM
+84944     1 114240       02:59 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/.cache/b/r/m/u/sealed/a16806c8a46e7750/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-bM^ZM-!M-oM-8M^Ocaching/M-pM^_M-&M^@M-oM-8M^Ocargo/M-pM^_M^WM^CM-oM-8M^
+89949 61966  73040       00:08 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/.cache/b/r/m/u/sealed/a16806c8a46e7750/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-bM^ZM-!M-oM-8M^Ocaching/M-pM^_M-&M^@M-oM-8M^Ocargo/M-pM^_M^WM^CM-oM-8M^
+90093 52832  65840       00:03 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/.cache/b/r/m/u/sealed/a16806c8a46e7750/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-bM^ZM-!M-oM-8M^Ocaching/M-pM^_M-&M^@M-oM-8M^Ocargo/M-pM^_M^WM^CM-oM-8M^
+90105 90093   3168       00:02 /Users/ueli/Documents/semio/.cache/b/r/m/t/p/prototype/semio-build-scheduler rustc --crate-name semio_plugin_instance_children --edition=2021 /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M^RM-;M-oM-8M^Oos/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^TM^LM-oM-8M^Oplugin/M-pM^_M-'M-5M-oM-8M^Oinstance/M-pM^_M-*M^FM-oM-8M^Ochildr
+90106 90105  96512       00:02 rustc --crate-name semio_plugin_instance_children --edition=2021 /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M^RM-;M-oM-8M^Oos/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^TM^LM-oM-8M^Oplugin/M-pM^_M-'M-5M-oM-8M^Oinstance/M-pM^_M-*M^FM-oM-8M^Ochildren/M-pM^_M^SM-&M-oM-8M^Opackages/M-pM^_M-&M^@M-oM-8M^Orust/../../M-pM^_M-&M^@

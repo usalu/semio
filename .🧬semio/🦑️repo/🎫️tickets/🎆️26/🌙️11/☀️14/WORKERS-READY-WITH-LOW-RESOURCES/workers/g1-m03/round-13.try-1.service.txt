@@ -1,0 +1,69 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-007c265f8fa9.log (lines after 0)
+graph: refreshing 125 projects (generation 75)
+graph: plan stage inference starts (managed 1136 MB, resident 2910 MB)
+graph: project @semio-tech/framework-process (project) grew by 2441 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: plan stage inference grew the plan by 4985 MB, more than the 4915 MB this machine gives a plan; it is stopped before the host runs short of memory
+2026-11-15T01:47:34.826Z graph-plan-too-heavy {"stage":"inference","megabytes":6766,"limit":6553,"worker":{"heapMb":1073.8,"extraMb":714.8,"objectCount":5837471,"objectTypes":[{"type":"string","count":2719592},{"type":"Array","count":967658},{"type":"Object","count":931632},{"type":"Set","count":160498},{"type":"WeakRef","count":101745},{"type":"Structure","count":39005},{"type":"Cell Butterfly","count":34293},{"type":"Function","count":29542}],"at":1794707224446}}
+-- last 30 lines when the try ended
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:10:48:1:15:%40semio-tech%2Fframework-process|project|15|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 10 of 48 projects · 1 running, longest 15 s: @semio-tech/framework-process (project, 15 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:11:48:2:15:%40semio-tech%2Fframework-process|project|15|0,%40semio-tech%2Fframework-replication-rs|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 11 of 48 projects · 2 running, longest 15 s: @semio-tech/framework-process (project, 15 s, 0 rows), @semio-tech/framework-replication-rs (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:11:125:2:15:%40semio-tech%2Fframework-process|project|15|0,%40semio-tech%2Fframework-replication-rs|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (1442 of -2072 MB reserved, 1 projects running)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+graph: plan stage inference grew the plan by 4985 MB, more than the 4915 MB this machine gives a plan; it is stopped before the host runs short of memory
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[capacity] waiting 27s for exec: not enough free memory (need 1536 MB; -847 MB spare above the 2048 MB floor, load 9.03; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 9732 MB), graph-farm (running, 1 job(s), 1536 MB), workspace:setup (quiet, 1 job(s), 49 MB)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+2026-11-15T01:47:34.826Z graph-plan-too-heavy {"stage":"inference","megabytes":6766,"limit":6553,"worker":{"heapMb":1073.8,"extraMb":714.8,"objectCount":5837471,"objectTypes":[{"type":"string","count":2719592},{"type":"Array","count":967658},{"type":"Object","count":931632},{"type":"Set","count":160498},{"type":"WeakRef","count":101745},{"type":"Structure","count":39005},{"type":"Cell Butterfly","count":34293},{"type":"Function","count":29542}],"at":1794707224446}}
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+graph: a worker process was lost (exited); its project is inferred again
+[repository:command] still running after 340 s
+[repo] still working after 350 s; last phase started: source.served
+[repository:command] still running after 350 s
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ac6bfe8f337c.log (lines after 26884)
+-- last 30 lines when the try ended
+[repository:command] still running after 4141 s
+[repository:command] still running after 4151 s
+[repo] still working after 4160 s; last phase started: source.served
+[repository:command] still running after 4161 s
+[repository:command] still running after 4171 s
+[repository:command] still running after 4181 s
+[repo] still working after 4190 s; last phase started: source.served
+[repository:command] still running after 4191 s
+[repository:command] still running after 4201 s
+[repository:command] still running after 4211 s
+[repo] still working after 4220 s; last phase started: source.served
+[repository:command] still running after 4221 s
+[repository:command] still running after 4231 s
+[repository:command] still running after 4241 s
+[repo] still working after 4250 s; last phase started: source.served
+[repository:command] still running after 4251 s
+[repository:command] still running after 4261 s
+[repository:command] still running after 4271 s
+[repo] still working after 4280 s; last phase started: source.served
+[repository:command] still running after 4281 s
+[repository:command] still running after 4291 s
+[repository:command] still running after 4301 s
+[repo] still working after 4310 s; last phase started: source.served
+[repository:command] still running after 4311 s
+[repository:command] still running after 4321 s
+[repository:command] still running after 4331 s
+[repo] still working after 4340 s; last phase started: source.served
+[repository:command] still running after 4341 s
+2026-11-15T01:43:04.624Z shutdown superseded
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}

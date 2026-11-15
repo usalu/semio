@@ -182,25 +182,25 @@ pub fn parse_change_isolation_system_strength_n(args: &Args) -> Result<ChangeIso
     Ok(ChangeIsolationSystemStrengthN { id: dec_json(&arg("id")?)?, new_strength_n: dec_json(&arg("new-strength-n")?)? })
 }
 
-/// ✍️ Prints `change-isolation-system-stiffness` as an op-text line.
+/// ✍️ Prints `change-isolation-system-stiffness-n-per-m` as an op-text line.
 pub fn print_change_isolation_system_stiffness(p: &ChangeIsolationSystemStiffnessNPerM) -> String {
-    format!("change-isolation-system-stiffness id={} new-stiffness-n-per-m={}", enc_json(&p.id), enc_json(&p.new_stiffness_n_per_m))
+    format!("change-isolation-system-stiffness-n-per-m id={} new-stiffness-n-per-m={}", enc_json(&p.id), enc_json(&p.new_stiffness_n_per_m))
 }
 
-/// 📖 Parses the arguments of `change-isolation-system-stiffness`.
+/// 📖 Parses the arguments of `change-isolation-system-stiffness-n-per-m`.
 pub fn parse_change_isolation_system_stiffness(args: &Args) -> Result<ChangeIsolationSystemStiffnessNPerM, String> {
-    let arg = |k: &str| required(args, "change-isolation-system-stiffness", k);
+    let arg = |k: &str| required(args, "change-isolation-system-stiffness-n-per-m", k);
     Ok(ChangeIsolationSystemStiffnessNPerM { id: dec_json(&arg("id")?)?, new_stiffness_n_per_m: dec_json(&arg("new-stiffness-n-per-m")?)? })
 }
 
-/// ✍️ Prints `change-isolation-system-yield-disp-m` as an op-text line.
+/// ✍️ Prints `change-isolation-system-yield-displacement-m` as an op-text line.
 pub fn print_change_isolation_system_yield_disp_m(p: &ChangeIsolationSystemYieldDisplacementM) -> String {
-    format!("change-isolation-system-yield-disp-m id={} new-yield-displacement-m={}", enc_json(&p.id), enc_json(&p.new_yield_displacement_m))
+    format!("change-isolation-system-yield-displacement-m id={} new-yield-displacement-m={}", enc_json(&p.id), enc_json(&p.new_yield_displacement_m))
 }
 
-/// 📖 Parses the arguments of `change-isolation-system-yield-disp-m`.
+/// 📖 Parses the arguments of `change-isolation-system-yield-displacement-m`.
 pub fn parse_change_isolation_system_yield_disp_m(args: &Args) -> Result<ChangeIsolationSystemYieldDisplacementM, String> {
-    let arg = |k: &str| required(args, "change-isolation-system-yield-disp-m", k);
+    let arg = |k: &str| required(args, "change-isolation-system-yield-displacement-m", k);
     Ok(ChangeIsolationSystemYieldDisplacementM { id: dec_json(&arg("id")?)?, new_yield_displacement_m: dec_json(&arg("new-yield-displacement-m")?)? })
 }
 
@@ -270,25 +270,25 @@ pub fn parse_change_pier_base_radius_m(args: &Args) -> Result<ChangePierBaseRadi
     Ok(ChangePierBaseRadiusM { id: dec_json(&arg("id")?)?, new_radius_m: dec_json(&arg("new-radius-m")?)? })
 }
 
-/// ✍️ Prints `change-pier-base-soil-vs-m-s` as an op-text line.
+/// ✍️ Prints `change-pier-base-soil-vs-ms` as an op-text line.
 pub fn print_change_pier_base_soil_vs_m_s(p: &ChangePierBaseSoilVsMS) -> String {
-    format!("change-pier-base-soil-vs-m-s id={} new-soil-vs-m-s={}", enc_json(&p.id), enc_json(&p.new_soil_vs_m_s))
+    format!("change-pier-base-soil-vs-ms id={} new-soil-vs-m-s={}", enc_json(&p.id), enc_json(&p.new_soil_vs_m_s))
 }
 
-/// 📖 Parses the arguments of `change-pier-base-soil-vs-m-s`.
+/// 📖 Parses the arguments of `change-pier-base-soil-vs-ms`.
 pub fn parse_change_pier_base_soil_vs_m_s(args: &Args) -> Result<ChangePierBaseSoilVsMS, String> {
-    let arg = |k: &str| required(args, "change-pier-base-soil-vs-m-s", k);
+    let arg = |k: &str| required(args, "change-pier-base-soil-vs-ms", k);
     Ok(ChangePierBaseSoilVsMS { id: dec_json(&arg("id")?)?, new_soil_vs_m_s: dec_json(&arg("new-soil-vs-m-s")?)? })
 }
 
-/// ✍️ Prints `change-pier-base-soil-unit-weight-n-m3` as an op-text line.
+/// ✍️ Prints `change-pier-base-soil-unit-weight-nm3` as an op-text line.
 pub fn print_change_pier_base_soil_unit_weight_n_m3(p: &ChangePierBaseSoilUnitWeightNM3) -> String {
-    format!("change-pier-base-soil-unit-weight-n-m3 id={} new-soil-unit-weight-n-m3={}", enc_json(&p.id), enc_json(&p.new_soil_unit_weight_n_m3))
+    format!("change-pier-base-soil-unit-weight-nm3 id={} new-soil-unit-weight-n-m3={}", enc_json(&p.id), enc_json(&p.new_soil_unit_weight_n_m3))
 }
 
-/// 📖 Parses the arguments of `change-pier-base-soil-unit-weight-n-m3`.
+/// 📖 Parses the arguments of `change-pier-base-soil-unit-weight-nm3`.
 pub fn parse_change_pier_base_soil_unit_weight_n_m3(args: &Args) -> Result<ChangePierBaseSoilUnitWeightNM3, String> {
-    let arg = |k: &str| required(args, "change-pier-base-soil-unit-weight-n-m3", k);
+    let arg = |k: &str| required(args, "change-pier-base-soil-unit-weight-nm3", k);
     Ok(ChangePierBaseSoilUnitWeightNM3 { id: dec_json(&arg("id")?)?, new_soil_unit_weight_n_m3: dec_json(&arg("new-soil-unit-weight-n-m3")?)? })
 }
 
@@ -424,69 +424,69 @@ pub fn parse_change_critical_region_axial_force_n(args: &Args) -> Result<ChangeC
     Ok(ChangeCriticalRegionAxialForceN { id: dec_json(&arg("id")?)?, new_axial_force_n: dec_json(&arg("new-axial-force-n")?)? })
 }
 
-/// ✍️ Prints `change-critical-region-concrete-fcd` as an op-text line.
+/// ✍️ Prints `change-critical-region-concrete-design-strength-mpa` as an op-text line.
 pub fn print_change_critical_region_concrete_fcd(p: &ChangeCriticalRegionConcreteDesignStrengthMpa) -> String {
-    format!("change-critical-region-concrete-fcd id={} new-concrete-design-strength-mpa={}", enc_json(&p.id), enc_json(&p.new_concrete_design_strength_mpa))
+    format!("change-critical-region-concrete-design-strength-mpa id={} new-concrete-design-strength-mpa={}", enc_json(&p.id), enc_json(&p.new_concrete_design_strength_mpa))
 }
 
-/// 📖 Parses the arguments of `change-critical-region-concrete-fcd`.
+/// 📖 Parses the arguments of `change-critical-region-concrete-design-strength-mpa`.
 pub fn parse_change_critical_region_concrete_fcd(args: &Args) -> Result<ChangeCriticalRegionConcreteDesignStrengthMpa, String> {
-    let arg = |k: &str| required(args, "change-critical-region-concrete-fcd", k);
+    let arg = |k: &str| required(args, "change-critical-region-concrete-design-strength-mpa", k);
     Ok(ChangeCriticalRegionConcreteDesignStrengthMpa { id: dec_json(&arg("id")?)?, new_concrete_design_strength_mpa: dec_json(&arg("new-concrete-design-strength-mpa")?)? })
 }
 
-/// ✍️ Prints `change-critical-region-steel-fyd` as an op-text line.
+/// ✍️ Prints `change-critical-region-steel-design-yield-mpa` as an op-text line.
 pub fn print_change_critical_region_steel_fyd(p: &ChangeCriticalRegionSteelDesignYieldMpa) -> String {
-    format!("change-critical-region-steel-fyd id={} new-steel-design-yield-mpa={}", enc_json(&p.id), enc_json(&p.new_steel_design_yield_mpa))
+    format!("change-critical-region-steel-design-yield-mpa id={} new-steel-design-yield-mpa={}", enc_json(&p.id), enc_json(&p.new_steel_design_yield_mpa))
 }
 
-/// 📖 Parses the arguments of `change-critical-region-steel-fyd`.
+/// 📖 Parses the arguments of `change-critical-region-steel-design-yield-mpa`.
 pub fn parse_change_critical_region_steel_fyd(args: &Args) -> Result<ChangeCriticalRegionSteelDesignYieldMpa, String> {
-    let arg = |k: &str| required(args, "change-critical-region-steel-fyd", k);
+    let arg = |k: &str| required(args, "change-critical-region-steel-design-yield-mpa", k);
     Ok(ChangeCriticalRegionSteelDesignYieldMpa { id: dec_json(&arg("id")?)?, new_steel_design_yield_mpa: dec_json(&arg("new-steel-design-yield-mpa")?)? })
 }
 
-/// ✍️ Prints `change-critical-region-hoop-fywd` as an op-text line.
+/// ✍️ Prints `change-critical-region-hoop-design-yield-mpa` as an op-text line.
 pub fn print_change_critical_region_hoop_fywd(p: &ChangeCriticalRegionHoopDesignYieldMpa) -> String {
-    format!("change-critical-region-hoop-fywd id={} new-hoop-design-yield-mpa={}", enc_json(&p.id), enc_json(&p.new_hoop_design_yield_mpa))
+    format!("change-critical-region-hoop-design-yield-mpa id={} new-hoop-design-yield-mpa={}", enc_json(&p.id), enc_json(&p.new_hoop_design_yield_mpa))
 }
 
-/// 📖 Parses the arguments of `change-critical-region-hoop-fywd`.
+/// 📖 Parses the arguments of `change-critical-region-hoop-design-yield-mpa`.
 pub fn parse_change_critical_region_hoop_fywd(args: &Args) -> Result<ChangeCriticalRegionHoopDesignYieldMpa, String> {
-    let arg = |k: &str| required(args, "change-critical-region-hoop-fywd", k);
+    let arg = |k: &str| required(args, "change-critical-region-hoop-design-yield-mpa", k);
     Ok(ChangeCriticalRegionHoopDesignYieldMpa { id: dec_json(&arg("id")?)?, new_hoop_design_yield_mpa: dec_json(&arg("new-hoop-design-yield-mpa")?)? })
 }
 
-/// ✍️ Prints `change-critical-region-long-steel-area` as an op-text line.
+/// ✍️ Prints `change-critical-region-longitudinal-steel-area-m2` as an op-text line.
 pub fn print_change_critical_region_long_steel_area(p: &ChangeCriticalRegionLongitudinalSteelAreaM2) -> String {
-    format!("change-critical-region-long-steel-area id={} new-longitudinal-steel-area-m2={}", enc_json(&p.id), enc_json(&p.new_longitudinal_steel_area_m2))
+    format!("change-critical-region-longitudinal-steel-area-m2 id={} new-longitudinal-steel-area-m2={}", enc_json(&p.id), enc_json(&p.new_longitudinal_steel_area_m2))
 }
 
-/// 📖 Parses the arguments of `change-critical-region-long-steel-area`.
+/// 📖 Parses the arguments of `change-critical-region-longitudinal-steel-area-m2`.
 pub fn parse_change_critical_region_long_steel_area(args: &Args) -> Result<ChangeCriticalRegionLongitudinalSteelAreaM2, String> {
-    let arg = |k: &str| required(args, "change-critical-region-long-steel-area", k);
+    let arg = |k: &str| required(args, "change-critical-region-longitudinal-steel-area-m2", k);
     Ok(ChangeCriticalRegionLongitudinalSteelAreaM2 { id: dec_json(&arg("id")?)?, new_longitudinal_steel_area_m2: dec_json(&arg("new-longitudinal-steel-area-m2")?)? })
 }
 
-/// ✍️ Prints `change-critical-region-long-bar-dia` as an op-text line.
+/// ✍️ Prints `change-critical-region-longitudinal-bar-diameter-m` as an op-text line.
 pub fn print_change_critical_region_long_bar_dia(p: &ChangeCriticalRegionLongitudinalBarDiameterM) -> String {
-    format!("change-critical-region-long-bar-dia id={} new-longitudinal-bar-diameter-m={}", enc_json(&p.id), enc_json(&p.new_longitudinal_bar_diameter_m))
+    format!("change-critical-region-longitudinal-bar-diameter-m id={} new-longitudinal-bar-diameter-m={}", enc_json(&p.id), enc_json(&p.new_longitudinal_bar_diameter_m))
 }
 
-/// 📖 Parses the arguments of `change-critical-region-long-bar-dia`.
+/// 📖 Parses the arguments of `change-critical-region-longitudinal-bar-diameter-m`.
 pub fn parse_change_critical_region_long_bar_dia(args: &Args) -> Result<ChangeCriticalRegionLongitudinalBarDiameterM, String> {
-    let arg = |k: &str| required(args, "change-critical-region-long-bar-dia", k);
+    let arg = |k: &str| required(args, "change-critical-region-longitudinal-bar-diameter-m", k);
     Ok(ChangeCriticalRegionLongitudinalBarDiameterM { id: dec_json(&arg("id")?)?, new_longitudinal_bar_diameter_m: dec_json(&arg("new-longitudinal-bar-diameter-m")?)? })
 }
 
-/// ✍️ Prints `change-critical-region-long-bar-max` as an op-text line.
+/// ✍️ Prints `change-critical-region-longitudinal-bar-max-diameter-m` as an op-text line.
 pub fn print_change_critical_region_long_bar_max(p: &ChangeCriticalRegionLongitudinalBarMaxDiameterM) -> String {
-    format!("change-critical-region-long-bar-max id={} new-longitudinal-bar-max-diameter-m={}", enc_json(&p.id), enc_json(&p.new_longitudinal_bar_max_diameter_m))
+    format!("change-critical-region-longitudinal-bar-max-diameter-m id={} new-longitudinal-bar-max-diameter-m={}", enc_json(&p.id), enc_json(&p.new_longitudinal_bar_max_diameter_m))
 }
 
-/// 📖 Parses the arguments of `change-critical-region-long-bar-max`.
+/// 📖 Parses the arguments of `change-critical-region-longitudinal-bar-max-diameter-m`.
 pub fn parse_change_critical_region_long_bar_max(args: &Args) -> Result<ChangeCriticalRegionLongitudinalBarMaxDiameterM, String> {
-    let arg = |k: &str| required(args, "change-critical-region-long-bar-max", k);
+    let arg = |k: &str| required(args, "change-critical-region-longitudinal-bar-max-diameter-m", k);
     Ok(ChangeCriticalRegionLongitudinalBarMaxDiameterM { id: dec_json(&arg("id")?)?, new_longitudinal_bar_max_diameter_m: dec_json(&arg("new-longitudinal-bar-max-diameter-m")?)? })
 }
 
@@ -534,24 +534,24 @@ pub fn parse_change_critical_region_hoop_legs_y(args: &Args) -> Result<ChangeCri
     Ok(ChangeCriticalRegionHoopLegsY { id: dec_json(&arg("id")?)?, new_hoop_legs_y: dec_json(&arg("new-hoop-legs-y")?)? })
 }
 
-/// ✍️ Prints `change-critical-region-restr-bar-count` as an op-text line.
+/// ✍️ Prints `change-critical-region-restrained-bar-count` as an op-text line.
 pub fn print_change_critical_region_restr_bar_count(p: &ChangeCriticalRegionRestrainedBarCount) -> String {
-    format!("change-critical-region-restr-bar-count id={} new-restrained-bar-count={}", enc_json(&p.id), enc_json(&p.new_restrained_bar_count))
+    format!("change-critical-region-restrained-bar-count id={} new-restrained-bar-count={}", enc_json(&p.id), enc_json(&p.new_restrained_bar_count))
 }
 
-/// 📖 Parses the arguments of `change-critical-region-restr-bar-count`.
+/// 📖 Parses the arguments of `change-critical-region-restrained-bar-count`.
 pub fn parse_change_critical_region_restr_bar_count(args: &Args) -> Result<ChangeCriticalRegionRestrainedBarCount, String> {
-    let arg = |k: &str| required(args, "change-critical-region-restr-bar-count", k);
+    let arg = |k: &str| required(args, "change-critical-region-restrained-bar-count", k);
     Ok(ChangeCriticalRegionRestrainedBarCount { id: dec_json(&arg("id")?)?, new_restrained_bar_count: dec_json(&arg("new-restrained-bar-count")?)? })
 }
 
-/// ✍️ Prints `change-critical-region-restr-bar-space` as an op-text line.
+/// ✍️ Prints `change-critical-region-restrained-bar-spacing-m` as an op-text line.
 pub fn print_change_critical_region_restr_bar_space(p: &ChangeCriticalRegionRestrainedBarSpacingM) -> String {
-    format!("change-critical-region-restr-bar-space id={} new-restrained-bar-spacing-m={}", enc_json(&p.id), enc_json(&p.new_restrained_bar_spacing_m))
+    format!("change-critical-region-restrained-bar-spacing-m id={} new-restrained-bar-spacing-m={}", enc_json(&p.id), enc_json(&p.new_restrained_bar_spacing_m))
 }
 
-/// 📖 Parses the arguments of `change-critical-region-restr-bar-space`.
+/// 📖 Parses the arguments of `change-critical-region-restrained-bar-spacing-m`.
 pub fn parse_change_critical_region_restr_bar_space(args: &Args) -> Result<ChangeCriticalRegionRestrainedBarSpacingM, String> {
-    let arg = |k: &str| required(args, "change-critical-region-restr-bar-space", k);
+    let arg = |k: &str| required(args, "change-critical-region-restrained-bar-spacing-m", k);
     Ok(ChangeCriticalRegionRestrainedBarSpacingM { id: dec_json(&arg("id")?)?, new_restrained_bar_spacing_m: dec_json(&arg("new-restrained-bar-spacing-m")?)? })
 }

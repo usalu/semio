@@ -14,7 +14,8 @@
     "🔨️modules/🖨️tectonic-template-compilation/🟦️.ts": [
       "@semio-tech/process",
       "@semio-tech/repo-lib",
-      "@semio-tech/schema-validator-ts"
+      "@semio-tech/schema-validator-ts",
+      "sharp"
     ],
     "🔨️modules/🎨print-design-token-paints/🟦️.ts": [
       "@semio-tech/process",
@@ -23,7 +24,8 @@
     "🔨️modules/🖨️tectonic-template-compilation/📜️script.ts": [
       "@semio-tech/process",
       "@semio-tech/repo-lib",
-      "@semio-tech/schema-validator-ts"
+      "@semio-tech/schema-validator-ts",
+      "sharp"
     ],
     "🔨️modules/🎨print-design-token-paints/📜️script.ts": [
       "@semio-tech/process",
@@ -35,6 +37,7 @@
       "sources": [
         "🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🗜️representation/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/🌐️http/🟦️.ts",
@@ -61,6 +64,8 @@
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🖼️resources/🖼️raster/🔌️sharp/🟦️.ts",
+        "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🖼️resources/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🪟️panels/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🪟️panels/🧬️schema/🔣️.json"
@@ -85,6 +90,7 @@
       "sources": [
         "🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🗜️representation/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/🌐️http/🟦️.ts",
@@ -112,6 +118,8 @@
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🖼️resources/🖼️raster/🔌️sharp/🟦️.ts",
+        "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🖼️resources/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🪟️panels/🟦️.ts",
         "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🪟️panels/🧬️schema/🔣️.json"

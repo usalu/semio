@@ -1,0 +1,11 @@
+try 1 started pid=65462 2026-11-14T22:05:49Z log=/Users/ueli/native-bootstrap-round-9.log
+try 1 ended 2026-11-14T22:26:22Z native_rc=75 stopped=0 fleet_refusal=1 retry_wording=0 failed=[]
+try 1 refusal: waiting 120 s
+try 2 started pid=77145 2026-11-14T22:28:22Z log=/Users/ueli/native-bootstrap-round-9-try-2.log
+try 2 ended 2026-11-14T22:54:55Z native_rc=75 stopped=0 fleet_refusal=1 retry_wording=0 failed=[]
+try 2 refusal: waiting 120 s
+try 3 started pid=91357 2026-11-14T22:56:55Z log=/Users/ueli/native-bootstrap-round-9-try-3.log
+try 3 ended 2026-11-14T22:57:55Z native_rc=4 stopped=0 fleet_refusal=0 retry_wording=0 failed=[]
+try 3 consent (native_rc=4): neither the launcher nor the caller can read the worktree; no further try
+round ended 2026-11-14T22:57:55Z
+wait for round > 9 started 2026-11-14T22:59:03Z

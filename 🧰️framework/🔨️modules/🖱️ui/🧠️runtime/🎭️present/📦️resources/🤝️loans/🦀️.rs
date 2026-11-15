@@ -151,7 +151,7 @@ impl UiNativeResourceLoans {
     pub fn close_demands(&self, _work: usize) -> Result<RetirementDemand, UiNativeResourceFailure> {
         if self.pending.is_some() || self.source.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if self.rows.len() != 0 { return Ok(RetirementDemand { depth: self.rows.next_pop_depth_demand().map_err(UiNativeResourceFailure::Storage)?, ..Default::default() }); }
-        Ok(RetirementDemand { release_bytes: self.rows.next_release_allocation_bytes().map_err(UiNativeResourceFailure::Storage)?, depth: self.rows.next_release_depth_demand().map_err(UiNativeResourceFailure::Storage)?, ..Default::default() })
+        Ok(RetirementDemand { copy_bytes:self.rows.next_release_copy_byte_demand().map_err(UiNativeResourceFailure::Storage)?,release_bytes:self.rows.next_release_allocation_bytes().map_err(UiNativeResourceFailure::Storage)?, depth: self.rows.next_release_depth_demand().map_err(UiNativeResourceFailure::Storage)?, ..Default::default() })
     }
 
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<Mesh3dOwnershipStep, UiNativeResourceFailure> {

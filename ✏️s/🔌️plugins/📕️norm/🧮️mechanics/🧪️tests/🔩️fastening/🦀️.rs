@@ -1,4 +1,4 @@
-use crate::fastening::*;
+use semio_s_plugin_norm_mechanics::fastening::*;
 use semio_s_plugin_norm_compliance::python_oracle;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;

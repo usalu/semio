@@ -204,6 +204,8 @@
    "type": "object",
    "additionalProperties": false,
    "required": [
+    "folds",
+    "git",
     "ignore",
     "links",
     "paths",
@@ -230,6 +232,104 @@
      "items": {
       "$ref": "#/definitions/LinkCase"
      }
+    },
+    "git": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/GitCase"
+     }
+    },
+    "folds": {
+     "type": "array",
+     "items": {
+      "$ref": "#/definitions/FoldCase"
+     }
+    }
+   }
+  },
+  "FoldCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "a",
+    "b",
+    "note",
+    "same"
+   ],
+   "properties": {
+    "a": {
+     "type": "string",
+     "minLength": 1
+    },
+    "b": {
+     "type": "string",
+     "minLength": 1
+    },
+    "same": {
+     "type": "boolean"
+    },
+    "note": {
+     "type": "string",
+     "minLength": 1
+    }
+   }
+  },
+  "FoldTable": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "icu",
+    "map",
+    "unicode",
+    "version"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "unicode": {
+     "type": "string",
+     "minLength": 1
+    },
+    "icu": {
+     "type": "string",
+     "minLength": 1
+    },
+    "map": {
+     "type": "array",
+     "items": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+       {
+        "type": "integer",
+        "minimum": 128,
+        "maximum": 1114111
+       },
+       {
+        "type": "string",
+        "minLength": 1
+       }
+      ]
+     }
+    }
+   }
+  },
+  "GitCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "path",
+    "shared"
+   ],
+   "properties": {
+    "path": {
+     "type": "string",
+     "minLength": 1
+    },
+    "shared": {
+     "type": "boolean"
     }
    }
   }

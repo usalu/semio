@@ -7,6 +7,7 @@ import fixture from "./🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {javascriptInstallSchemaV1} from "../../../../../../../../🚀️bootstrap/📦️dependencies/💾️storage/🧱️schemas/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {refuseCachingV1} from "../../../../../../../../📖️texts/🟦️.ts";
 
 import {materializeSchemaV1,schemaViewV1} from "../../../../../../../../🚀️bootstrap/📦️dependencies/🔌️managers/🧩️materialize/🟦️.ts";
 import {packageManagerRegistryV1} from "../../../../../../../../🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
@@ -14,7 +15,7 @@ import {packageManagerRegistryV1} from "../../../../../../../../🚀️bootstrap
 const selectedSchema=materializeSchemaV1(schema,schemaViewV1(javascriptInstallSchemaV1.$defs.ManagerProtocol.manager.descriptor)) as typeof schema;
 const wire={...selectedSchema,$defs:{...selectedSchema.$defs,SelectedRetirementSnapshot:javascriptInstallSchemaV1.$defs.SelectedRetirementSnapshot,SelectedRetirementResult:javascriptInstallSchemaV1.$defs.SelectedRetirementResult}};
 function sourceFunctions(names:string[],selected=selectedSchema):Record<string,(...args:any[])=>any>{
- const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("retirement.ts",source,ts.ScriptTarget.Latest,true),nodes=names.map(name=>{const node=tree.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text===name);expect(node).toBeDefined();return node!;}),ports={validateJsonSchemaSubset,retirementWireSchema:wire,retirementProtocol:selected.$defs.Protocol.const,retirementSchema:schema,materializeSchemaV1,schemaViewV1};
+ const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("retirement.ts",source,ts.ScriptTarget.Latest,true),nodes=names.map(name=>{const node=tree.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text===name);expect(node).toBeDefined();return node!;}),ports={validateJsonSchemaSubset,refuseCachingV1,retirementWireSchema:wire,retirementProtocol:selected.$defs.Protocol.const,retirementSchema:schema,materializeSchemaV1,schemaViewV1};
  return new Function(...Object.keys(ports),ts.transpileModule(nodes.map(row=>row.getText(tree)).join("\n")+";return{"+names.join(",")+"};",{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText)(...Object.values(ports));
 }
 
@@ -59,7 +60,7 @@ test("driver settlement DATA cannot change exact selection funding or effect kin
 
 test("production driver calls genuine owners with a fresh parent for every phase",async()=>{
  const owner=await import("../🟦️.ts");expect(typeof owner.retireObsoleteRepositoryDependencyGenerationsV1).toBe("function");const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("driver.ts",source,ts.ScriptTarget.Latest,true),node=tree.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text==="retireObsoleteRepositoryDependencyGenerationsV1")!,calls:string[]=[];const visit=(value:ts.Node)=>{if(ts.isCallExpression(value))calls.push(value.expression.getText(tree));ts.forEachChild(value,visit);};visit(node);
- expect(node.parameters).toHaveLength(2);expect(calls.filter(name=>name==="observeRepositoryDependencyMaintenanceParentV1")).toHaveLength(3);expect(calls.filter(name=>name==="planSelectedRepositoryDependencyGenerationsV1")).toHaveLength(1);expect(calls.filter(name=>name==="maintainSelectedRepositoryDependencyGenerationV1")).toHaveLength(2);expect(node.getText(tree)).toContain("parent:beforeObserve.parent");expect(node.getText(tree)).toContain("parent:beforeRetire.parent");expect(node.getText(tree)).not.toContain("maximumWorkspaceBytes");expect(ts.transpileModule(source,{reportDiagnostics:true,compilerOptions:{target:ts.ScriptTarget.ES2022}}).diagnostics?.filter(row=>row.category===ts.DiagnosticCategory.Error)??[]).toEqual([]);
+ expect(node.parameters).toHaveLength(3);expect(node.getText(tree)).toContain("parent:(await owners.observe(invocation,control)).parent");expect(calls.filter(name=>name==="owners.observe")).toHaveLength(3);expect(calls.filter(name=>name==="owners.plan")).toHaveLength(1);expect(calls.filter(name=>name==="owners.maintain")).toHaveLength(2);expect(source).toContain("observe:observeRepositoryDependencyMaintenanceParentV1,plan:planSelectedRepositoryDependencyGenerationsV1,maintain:maintainSelectedRepositoryDependencyGenerationV1");expect(node.getText(tree)).not.toContain("maximumWorkspaceBytes");expect(ts.transpileModule(source,{reportDiagnostics:true,compilerOptions:{target:ts.ScriptTarget.ES2022}}).diagnostics?.filter(row=>row.category===ts.DiagnosticCategory.Error)??[]).toEqual([]);
 });
 
 

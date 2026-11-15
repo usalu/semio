@@ -1,0 +1,13 @@
+import {readFileSync} from "node:fs";
+const B="/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/";
+const G=await import(B+"🟨️.mjs");
+const {createEpochDoubtV1,rowDependenciesV1}=await import(B+"🔎️doubt/🟨️.mjs");
+const {createDirectoryStampsV1}=await import(B+"🗂️directory-stamps/🟨️.mjs");
+const root="/Users/Shared/semio",dir=root+"/.cache/b/g/m/generations";
+const pointer=JSON.parse(readFileSync(dir+"/current.json","utf8")),manifest=JSON.parse(readFileSync(dir+"/m/"+(pointer.manifest)+".json","utf8"));
+const view=G.openPackedFactIndexV1(readFileSync(dir+"/x/"+manifest.factIndex+".facts.br"),512*1048576,"t");
+let t=performance.now();const lap=(n:string)=>{const x=performance.now();console.log(n,Math.round(x-t),"ms");t=x;};
+const wanted=new Set(),ignored=new Set();for(let i=0;i<view.rows.length;i++)rowDependenciesV1(view.rows[i],wanted,ignored);lap("dependencies of all rows: dirs "+wanted.size+" files "+ignored.size);
+const stamps=createDirectoryStampsV1({file:"/private/tmp/claude-501/-Users-ueli-Documents-semio/9f6d3d77-cfd2-486b-942c-2101ee51a1fb/scratchpad/AB/stamps.tmp"});
+const r=await stamps.classify([...wanted],{observedAt:Date.now()});lap("stamps.classify "+r.measured.size);
+await stamps.save(r.measured);lap("save");

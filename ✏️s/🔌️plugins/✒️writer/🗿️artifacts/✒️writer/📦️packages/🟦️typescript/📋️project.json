@@ -9,7 +9,7 @@
   ],
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*.{ts,tsx,json,semio,wit,sql}",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🤖️generated\"" }, "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/**/*",

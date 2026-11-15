@@ -1,0 +1,7 @@
+[build]
+rustflags = ["-Z", "threads=0"]
+[unstable]
+embed-metadata = "DoNotEmbed"
+build-dir-new-layout = true
+checksum-freshness = true
+fine-grain-locking = true

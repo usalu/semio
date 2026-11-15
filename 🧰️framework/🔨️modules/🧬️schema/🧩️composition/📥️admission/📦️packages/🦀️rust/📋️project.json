@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/composition-admission-rs",
-  "namedInputs": {
+  "namedInputs": { "default": ["{projectRoot}/**/*", "sharedGlobals", { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🔨️modules/🧬️schema/🤖️generated\"" }],
     "reads": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*"
     ],

@@ -84,14 +84,12 @@ export function createEpochDoubtV1({stamps,statFile=path=>stat(path).catch(()=>u
    await settle(wantedPaths,files,signal,async path=>{const found=await statFile(path);files.set(path,found?.isFile?.()?[found.size,found.mtimeMs,found.ctimeMs,Number(found.ino)]:null);},progress,"files");
    return Uint8Array.from(rows,row=>doubtful(row)?1:0);
   },
-  /** 💾️ After the check: keeps the stamps of the directories whose rows were all verified to hold (`verified(id)`) and none stale, so the next pass vouches for them. */
+  /** 💾️ After the check: keeps the stamps of the directories whose rows were all verified to hold and none stale, so the next pass vouches for them; only the rows that were not verified and the stale ones are read, never the rows that held. */
   async settled({rows,ids,stale}){
-   const selected=new Uint8Array(rows.length),verified=id=>selected[id]===1,exclude=new Set();for(const id of ids)selected[id]=1;
-   for(let id=0;id<rows.length;id++){
-    const row=rows[id],own=new Set(),paths=new Set();rowDependenciesV1(row,own,paths);
-    if(!own.size)continue;
-    if(!verified(id)||stale.has(id))for(const path of own)exclude.add(path);
-   }
+   const selected=new Uint8Array(rows.length),exclude=new Set(),forget=id=>{const own=new Set();rowDependenciesV1(rows[id],own,new Set());for(const path of own)exclude.add(path);};
+   for(const id of ids)selected[id]=1;
+   for(let id=0;id<rows.length;id++)if(selected[id]!==1)forget(id);
+   for(const id of stale)if(selected[id]===1)forget(id);
    return stamps.save(measured,exclude);
   },
   /** 📦️ After a generation is published: stamps every directory its structural rows look into, as far as it was untouched since `observedAt` (before the facts were observed), so a fresh process vouches for those directories at once. */
@@ -105,13 +103,13 @@ export function createEpochDoubtV1({stamps,statFile=path=>stat(path).catch(()=>u
  });
 }
 
-/** 🔢️ Keeps the ids whose row is doubtful: `doubt.classify(rows)` answers 1 for a row that must be checked, 0 for one a journal or a stamp vouches for. Cancellable, reports `{phase:"doubt",done,total}`. */
+/** 🔢️ Keeps the ids whose row is doubtful: `doubt.classify(rows)` answers 1 for a row that must be checked, 0 for one a journal or a stamp vouches for; `doubt.classifyIds(index,ids)` answers the same from the kind and the path string of a lazily opened index, so no row and no fact is decoded for a row the journal vouches for. Cancellable, reports `{phase:"doubt",done,total}`. */
 export async function selectDoubtfulRowsV1(index,ids,doubt,{signal,progress,chunk}){
- const kept=[],yielder=createYielderV1();let done=0;
+ const kept=[],yielder=createYielderV1(),byIds=typeof doubt.classifyIds==="function"&&typeof index.rowPathIdOf==="function";let done=0;
  await progress?.({phase:"doubt",done:0,total:ids.length});
  for(let at=0;at<ids.length;at+=chunk){
   signal?.throwIfAborted();await yielder();
-  const part=ids.slice(at,at+chunk),flags=await doubt.classify(part.map(id=>index.rows[id]),{signal,progress});
+  const part=ids.slice(at,at+chunk),flags=byIds?await doubt.classifyIds(index,part,{signal,progress}):await doubt.classify(part.map(id=>index.rows[id]),{signal,progress});
   for(let offset=0;offset<part.length;offset++)if(flags[offset])kept.push(part[offset]);
   done+=part.length;await progress?.({phase:"doubt",done,total:ids.length});
  }

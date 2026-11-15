@@ -1,17 +1,19 @@
-/** 🧊️ The 3D volume of a staffage asset as a neutral `semio.model/v1` model.
+/** 🧊️ The 3D volume of a staffage asset as neutral `semio.model/v1` models, one individually authored model per scale and mode.
  *
- * `modelOf(asset, options, operation)` builds the procedural {@link ModelDocument} of an asset: the nodes are the rig bones at rest in the neutral frame (right-handed, +Y up, +Z ahead, +X left, metres, radians, quaternions) with the joints as mechanism, the solids are the `asset.volume` solids carried from the bone-local `(u, v, w)` frame (see ./🧊️solids),
- * the poses are the asset poses and the animations the asset clips sampled with `evaluate`, and the variants are the seven views of the 2D depiction as looks of one geometry (see ./🎨️looks, ./🌡️thermal, ./🏗️structure, ./🪧️glyphs).
- * One source of truth: bone frames, thermal fields, structural results and emitter states come from `evaluate`, `solveThermalAt`, `solveStructure` and `solveTransport`, and the colours from the shared `thermalPaint` and `memberPaint` of the 2D views; nothing is solved twice or differently.
+ * `asset.volumes[scale]` holds three lists, each drawn against the 2D shapes of its own scale: `body` carries the tone views (`dark-line`, `dark-solid`, `light-line`, `light-solid`), `thermal` the `thermal` view (one material per thermal region and layer, painted from the solved field, animated per clip) and `structure` the `forces` and `moments` views (member solids painted by N or M per member, plus the generated glyphs).
+ * {@link modelOf} builds the procedural model of one scale and one view: the nodes are the rig bones at rest in the neutral frame (right-handed, +Y up, +Z ahead, +X left, metres, radians, quaternions) with the joints as mechanism, the solids are the list of the view's mode carried from the bone-local `(u, v, w)` frame (see ./🧊️solids),
+ * the poses are the asset poses, the animations the asset clips sampled with `evaluate`, and the variants are the views of that mode as looks of one geometry. {@link modelOfAsset} builds one document with one kernel scene per authored scale and mode (`s50-body`, `s50-thermal`, `s50-structure`, `s100-body`, …) over the one skeleton, the seven views as variants over all scenes.
+ * A scale that is not authored is refused by name (`model-scale-unavailable`), never answered by another scale.
+ * One source of truth: bone frames, thermal fields, structural results and emitter states come from `evaluate`, `solveThermalAt`, `solveStructure` and `solveTransport`, and the colours from the shared `thermalPaint` and `memberPaint` of the 2D views; nothing is solved twice or differently, and the analyses are solved once per instant for every scale and mode.
  *
  * Progress and cancellation flow through the kernel `Operation`: every evaluated frame reports and checks, and the work yields to the event loop between frames.
  *
- * @see ../../🧬️schema/🟦️.ts — `Volume`
+ * @see ../../🧬️schema/🟦️.ts — `Volumes`
  * @see ../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts — the neutral kernel
  */
-import type { Asset, Slug, Text } from "../../🧬️schema/🟦️.ts";
-import { CancelledError, silentOperation, type Animation, type Channel, type Material, type ModelDocument, type Node, type Operation, type Pose, type Solid, type TransformPatch } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
-import { VIEWS, type DisplayRange, type EvaluatedState, type EvaluationQuery, type ForceQuantity, type ThermalQuantity, type View } from "../🔗️contracts/🟦️.ts";
+import type { Asset, AuthoredVolume, Slug, Text } from "../../🧬️schema/🟦️.ts";
+import { CancelledError, silentOperation, type Animation, type Channel, type Material, type ModelDocument, type Node, type Operation, type Pose, type Primitive, type Scene, type Solid, type TransformPatch, type Variant } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+import { MODES, VIEWS, VIEWS_OF, modeOf, sceneIdOf, type DisplayRange, type EvaluatedState, type EvaluationQuery, type ForceQuantity, type Mode, type ThermalQuantity, type View } from "../🔗️contracts/🟦️.ts";
 import { THEMES, type Theme } from "../🎨️depiction/🖍️palette/🟦️.ts";
 import { VIEW_TITLES } from "../🎨️depiction/🟦️.ts";
 import { eligibleBones, longestArrowMm } from "../🎨️depiction/🏗️structural-view/🟦️.ts";
@@ -24,39 +26,41 @@ import { type LookSpec, type Paint, type Surface, baseMaterial, linearOf, lineLo
 import { type Triple } from "./🧭️frame/🟦️.ts";
 import { type Analytic, type FrameData, type FrameSetup, Slots, frameDataOf, glyphOf, glyphPaintOf } from "./🧷️frames/🟦️.ts";
 import { ModelRequestError } from "./🚫️refusal/🟦️.ts";
-import { HIDDEN, glyphEdgeOf } from "./🪧️glyphs/🟦️.ts";
-import { solidOf, shownSolids } from "./🧊️solids/🟦️.ts";
-import { skeletonOf, placementsOf } from "./🦴️skeleton/🟦️.ts";
+import { HIDDEN, glyphEdgeOf, modelSizing } from "./🪧️glyphs/🟦️.ts";
+import { authoredAt, authoredScales, listOf, solidOf } from "./🧊️solids/🟦️.ts";
+import { skeletonOf, placementsOf, type Placement } from "./🦴️skeleton/🟦️.ts";
 import { memberLook } from "./🏗️structure/🟦️.ts";
 import { thermalLook } from "./🌡️thermal/🟦️.ts";
 
 export { ModelRequestError, MODEL_REFUSALS, type ModelRefusal } from "./🚫️refusal/🟦️.ts";
 export { frameTimes, eventsOf } from "./🎞️clips/🟦️.ts";
-export { regionsOfSolid, shownAt, shownSolids, solidOf } from "./🧊️solids/🟦️.ts";
+export { SCALE_KEYS, authoredAt, authoredScales, listOf, solidOf, type ListSolid } from "./🧊️solids/🟦️.ts";
+export { MODES, VIEWS_OF, modeOf, sceneIdOf, type Mode } from "../🔗️contracts/🟦️.ts";
 export { toNeutral, pseudoToNeutral, basisOf, quaternionOf } from "./🧭️frame/🟦️.ts";
 export { skeletonOf, restPlacements, placementsOf, outOfPlaneBones, jointOf } from "./🦴️skeleton/🟦️.ts";
 export { hexOf, linearOf, surfacesOf, type Surface, type Paint } from "./🎨️looks/🟦️.ts";
-export { edgeMaterialOf, glyphEdgeOf } from "./🪧️glyphs/🟦️.ts";
 
-/** ⚙️ What one model contains.
- * - `scale`: the preset or custom denominator (1:`scale`) the model is made for: it filters the solids by `maxDenominator` and sizes the glyphs in paper millimetres.
+/** ⚙️ What the analytic looks of any model read besides the asset.
  * - `at`: the static state of the document (colours of the analytic variants, glyph placements): a pose or a clip instant; default the first named pose.
  * - `poses`, `clips`: which named poses and clips become poses and animations; default every one (`"all"`), `[]` none.
- * - `views`: which of the seven views become variants; default all.
- * - `environment`, `thermalSpanK`: the environment of the thermal view (a preset environment or a timeline) and the span ±K around the air temperature of its scale (absent: the shared absolute range), as in the 2D views.
+ * - `environment`, `thermalSpanK`: the environment of the thermal view (a preset environment or a timeline) and the span ±K around the air temperature (absent: the shared absolute range), as in the 2D views.
  * - `thermalQuantity` (default surface temperature), `forceQuantity` (default axial force) and `theme` (default light) of the analytic views. */
-export type ModelOptions = {
-  readonly scale: number;
+export type SharedModelOptions = {
   readonly at?: EvaluationQuery;
   readonly poses?: readonly Slug[] | "all";
   readonly clips?: readonly Slug[] | "all";
-  readonly views?: readonly View[];
   readonly environment?: EnvironmentInput;
   readonly thermalSpanK?: number;
   readonly thermalQuantity?: ThermalQuantity;
   readonly forceQuantity?: ForceQuantity;
   readonly theme?: Theme;
 };
+
+/** ⚙️ What one model contains: the preset denominator `scale` (1:`scale`, a key of `asset.volumes`; it sizes the glyphs in paper millimetres) and the `view` whose mode, and with it whose list of solids, the model is made of; the model carries every view of that mode as a variant. */
+export type ModelOptions = SharedModelOptions & { readonly scale: number; readonly view: View };
+
+/** ⚙️ What the one document of an asset contains: the authored `scales` to include (default every authored scale; an unavailable one is refused) besides the {@link SharedModelOptions}. */
+export type AssetModelOptions = SharedModelOptions & { readonly scales?: readonly number[] };
 
 const yieldToLoop = (): Promise<void> => new Promise((done) => setTimeout(done, 0));
 
@@ -68,13 +72,21 @@ const withNeutral = (patch: TransformPatch | undefined, base: Local): Local => (
 
 const rgba = (paint: Paint): number[] => [...linearOf(paint.hex), paint.alpha];
 
-/** 🗿️ The procedural neutral model of an asset; see {@link ModelOptions}. Throws {@link ModelRequestError} for an asset without volume or an unknown pose or clip, `CancelledError` when the operation was cancelled. */
-export async function modelOf(asset: Asset, options: ModelOptions, operation: Operation = silentOperation): Promise<ModelDocument> {
-  const volume = asset.volume;
-  if (volume === undefined) throw new ModelRequestError("model-no-volume", asset.id);
-  if (!(options.scale > 0) || !Number.isFinite(options.scale)) throw new ModelRequestError("model-bad-option", "scale");
-  const views = options.views ?? VIEWS;
-  const theme: Theme = options.theme ?? "light";
+const ANALYTIC_VIEWS: ReadonlySet<View> = new Set(["thermal", "forces", "moments"]);
+
+type Instant = { readonly query: EvaluationQuery; readonly state: EvaluatedState; readonly analytic: Analytic };
+type Instants = {
+  readonly at: EvaluationQuery;
+  readonly poseIds: readonly Slug[];
+  readonly clipIds: readonly Slug[];
+  readonly staticInstant: Instant;
+  readonly poses: readonly { readonly pose: Slug; readonly state: EvaluatedState }[];
+  readonly clips: readonly { readonly clip: Slug; readonly times: readonly number[]; readonly instants: readonly Instant[] }[];
+};
+
+type Resolved = { readonly at: EvaluationQuery; readonly poseIds: readonly Slug[]; readonly clipIds: readonly Slug[] };
+
+function resolveRequest(asset: Asset, options: SharedModelOptions): Resolved {
   const named = asset.poses.filter((p) => p.key !== true);
   const first = named[0];
   const at: EvaluationQuery | undefined = options.at ?? (first === undefined ? undefined : { kind: "pose", pose: first.id });
@@ -83,45 +95,15 @@ export async function modelOf(asset: Asset, options: ModelOptions, operation: Op
   for (const id of poseIds) if (!asset.poses.some((p) => p.id === id)) throw new ModelRequestError("model-unknown-pose", id);
   const clipIds = options.clips === undefined || options.clips === "all" ? asset.clips.map((c) => c.id) : options.clips;
   for (const id of clipIds) if (!asset.clips.some((c) => c.id === id)) throw new ModelRequestError("model-unknown-clip", id);
+  return { at, poseIds, clipIds };
+}
 
-  const mm = options.scale / 1000;
-  const solids = shownSolids(volume, options.scale);
-  const { surfaces, of } = surfacesOf(solids);
-  const range: DisplayRange = options.thermalSpanK === undefined ? { mode: "shared" } : { mode: "span", spanK: options.thermalSpanK };
-  const heightM = asset.dimensions.heightM;
-  const wantsThermal = views.includes("thermal");
-  const wantsForces = views.includes("forces");
-  const wantsMoments = views.includes("moments");
-  const wantsStructure = wantsForces || wantsMoments;
-  const eligible = eligibleBones(asset, heightM);
+const boneFramesOf = (state: EvaluatedState): Record<Slug, EvaluatedState["bones"][Slug]["frame"]> => Object.fromEntries(Object.entries(state.bones).map(([bone, b]) => [bone, b.frame]));
+
+/** ⏱️ Evaluates and analyses every instant the models share (static state, poses, clip frames): the analyses are solved once whatever the number of scales and modes. */
+async function instantsOf(asset: Asset, request: Resolved, options: SharedModelOptions, wants: { readonly thermal: boolean; readonly structure: boolean }, operation: Operation): Promise<Instants> {
   const session = thermalSession();
-  const paperHeightMm = heightM / mm;
-  const longestMm = longestArrowMm(paperHeightMm);
-
-  const staticLooks: Partial<Record<"dark-solid" | "light-solid" | "dark-line" | "light-line", LookSpec>> = {
-    "dark-solid": solidLook("dark", "dark-solid", surfaces),
-    "light-solid": solidLook("light", "light-solid", surfaces),
-    "dark-line": lineLook("dark", "dark-line"),
-    "light-line": lineLook("light", "light-line"),
-  };
-  const thermal = wantsThermal ? thermalLook(asset, { quantity: options.thermalQuantity ?? "surface-temperature", range, theme }, surfaces) : undefined;
-  const forces = wantsForces ? memberLook(asset, { view: "forces", quantity: options.forceQuantity ?? "axial", range: { mode: "shared" }, theme, eligible }, surfaces) : undefined;
-  const moments = wantsMoments ? memberLook(asset, { view: "moments", quantity: "moment", range: { mode: "shared" }, theme, eligible }, surfaces) : undefined;
-
-  const slots = new Slots();
-  const frameSetup: FrameSetup = { asset, views, theme, mm, longestMm, looks: { thermal, forces, moments, fixed: staticLooks }, slots };
-
-  async function analyse(query: EvaluationQuery, state: EvaluatedState): Promise<Analytic> {
-    const out: Analytic = {};
-    if (wantsThermal) out.thermal = solveThermalAt(asset, query, options.environment, { session });
-    if (wantsStructure) out.structure = solveStructure(state);
-    if (wantsThermal && asset.thermal.emitters.length > 0) out.emitters = solveTransport(asset, query, out.thermal!.environment, { maxAgeS: 0.5, pathlines: false, streamlines: false }).emitters;
-    return out;
-  }
-
-  const frameOf = (state: EvaluatedState, analytic: Analytic): FrameData => frameDataOf(frameSetup, state, analytic);
-
-  const total = 1 + poseIds.length + clipIds.reduce((n, id) => n + frameTimes(asset.clips.find((c) => c.id === id)!).length, 0);
+  const total = 1 + request.poseIds.length + request.clipIds.reduce((n, id) => n + frameTimes(asset.clips.find((c) => c.id === id)!).length, 0);
   let done = 0;
   const step = async (): Promise<void> => {
     if (operation.cancelled()) throw new CancelledError();
@@ -130,41 +112,80 @@ export async function modelOf(asset: Asset, options: ModelOptions, operation: Op
     if (operation.cancelled()) throw new CancelledError();
     done += 1;
   };
-
+  const analyse = (query: EvaluationQuery, state: EvaluatedState): Instant => {
+    const analytic: Analytic = {};
+    if (wants.thermal) analytic.thermal = solveThermalAt(asset, query, options.environment, { session });
+    if (wants.structure) analytic.structure = solveStructure(state);
+    if (wants.thermal && asset.thermal.emitters.length > 0) analytic.emitters = solveTransport(asset, query, analytic.thermal!.environment, { maxAgeS: 0.5, pathlines: false, streamlines: false }).emitters;
+    return { query, state, analytic };
+  };
   await step();
-  const staticState = evaluate(asset, at);
-  const staticFrame = frameOf(staticState, await analyse(at, staticState));
-
-  const poseFrames: { pose: Slug; frame: FrameData }[] = [];
-  for (const id of poseIds) {
+  const staticInstant = analyse(request.at, evaluate(asset, request.at));
+  const poses: { pose: Slug; state: EvaluatedState }[] = [];
+  for (const id of request.poseIds) {
     await step();
-    const query: EvaluationQuery = { kind: "pose", pose: id };
-    const isStatic = at.kind === "pose" && at.pose === id;
-    if (isStatic) {
-      poseFrames.push({ pose: id, frame: staticFrame });
-      continue;
-    }
-    const state = evaluate(asset, query);
-    poseFrames.push({ pose: id, frame: { locals: placementsOf(asset, Object.fromEntries(Object.entries(state.bones).map(([bone, b]) => [bone, b.frame]))), paints: new Map(), glyphs: new Map(), glyphPaints: new Map() } });
+    const isStatic = request.at.kind === "pose" && request.at.pose === id;
+    poses.push({ pose: id, state: isStatic ? staticInstant.state : evaluate(asset, { kind: "pose", pose: id }) });
   }
-
-  const clipFrames: { clip: Slug; times: number[]; frames: FrameData[] }[] = [];
-  for (const id of clipIds) {
+  const clips: { clip: Slug; times: number[]; instants: Instant[] }[] = [];
+  for (const id of request.clipIds) {
     const clip = asset.clips.find((c) => c.id === id)!;
     const times = frameTimes(clip);
-    const frames: FrameData[] = [];
+    const instants: Instant[] = [];
     for (const timeS of times) {
       await step();
       const query: EvaluationQuery = { kind: "clip", clip: id, timeS };
-      const state = evaluate(asset, query);
-      frames.push(frameOf(state, await analyse(query, state)));
+      instants.push(analyse(query, evaluate(asset, query)));
     }
-    clipFrames.push({ clip: id, times, frames });
+    clips.push({ clip: id, times, instants });
   }
+  return { ...request, staticInstant, poses, clips };
+}
 
-  const skeleton = skeletonOf(asset);
-  const nodes: Node[] = [...skeleton];
-  const modelSolids: Solid[] = solids.map((s) => solidOf(s, of.get(s.id)!.id));
+/** 🧩️ The geometry, materials, variants, glyphs, glyph poses and colour channels of one scale and mode, in the ids of a single model (no scene prefix yet). */
+type Fragment = {
+  readonly mode: Mode;
+  readonly scale: number;
+  readonly solids: Solid[];
+  readonly nodes: Node[];
+  readonly materials: Material[];
+  readonly variants: readonly Variant[];
+  readonly poses: ReadonlyMap<Slug, Record<Slug, TransformPatch>>;
+  readonly channels: ReadonlyMap<Slug, Channel[]>;
+  readonly notes: readonly Text[];
+};
+
+function titleOfSurface(asset: Asset, surface: Surface): Text {
+  const bone = asset.rig.bones.find((b) => b.id === surface.bone)?.title;
+  if (bone === undefined) throw new ModelRequestError("model-unknown-bone", `${asset.id}/${surface.bone}`);
+  const suffix = surface.part === undefined ? surface.role : `${surface.part}`;
+  return { en: `${bone.en} (${suffix})`, de: `${bone.de} (${suffix})` };
+}
+
+/** 🏭️ The fragment of a scale and mode: the list of solids, its surfaces and base materials, the looks of the mode's views bound as variants, the glyphs the mode's analyses need and their placements and colours at every instant. */
+function fragmentOf(asset: Asset, volume: AuthoredVolume, mode: Mode, instants: Instants, options: SharedModelOptions): Fragment {
+  const scale = volume.denominator;
+  const theme: Theme = options.theme ?? "light";
+  const views = VIEWS_OF[mode];
+  const list = listOf(volume, mode);
+  const { surfaces, of } = surfacesOf(list);
+  const mm = scale / 1000;
+  const range: DisplayRange = options.thermalSpanK === undefined ? { mode: "shared" } : { mode: "span", spanK: options.thermalSpanK };
+  const eligible = eligibleBones(asset, asset.dimensions.heightM);
+  const longestMm = longestArrowMm(asset.dimensions.heightM / mm);
+  const fixed: Partial<Record<"dark-solid" | "light-solid" | "dark-line" | "light-line", LookSpec>> = mode === "body" ? { "dark-solid": solidLook("dark", "dark-solid", surfaces), "light-solid": solidLook("light", "light-solid", surfaces), "dark-line": lineLook("dark", "dark-line"), "light-line": lineLook("light", "light-line") } : {};
+  const thermal = mode === "thermal" ? thermalLook(asset, { quantity: options.thermalQuantity ?? "surface-temperature", range, theme }, surfaces) : undefined;
+  const forces = mode === "structure" ? memberLook(asset, { view: "forces", quantity: options.forceQuantity ?? "axial", range: { mode: "shared" }, theme, eligible }, surfaces) : undefined;
+  const moments = mode === "structure" ? memberLook(asset, { view: "moments", quantity: "moment", range: { mode: "shared" }, theme, eligible }, surfaces) : undefined;
+  const slots = new Slots();
+  const setup: FrameSetup = { asset, views, theme, mm, longestMm, sizing: modelSizing(mm, Math.max(asset.dimensions.heightM, asset.dimensions.widthM, asset.dimensions.depthM), longestMm), looks: { thermal, forces, moments, fixed }, slots };
+  const frameOf = (instant: Instant): FrameData => frameDataOf(setup, instant.state, instant.analytic);
+
+  const staticFrame = frameOf(instants.staticInstant);
+  const clipFrames = instants.clips.map((c) => ({ clip: c.clip, times: c.times, frames: c.instants.map(frameOf) }));
+
+  const nodes: Node[] = [];
+  const solids: Solid[] = list.map((s) => solidOf(s, of.get(s.id)!.id));
   const materials: Material[] = surfaces.map((s) => baseMaterial(s, titleOfSurface(asset, s)));
   const hidden = { hex: "#000000", alpha: 0 } as const;
   const addGlyphMaterial = (id: Slug, title: Text): void => {
@@ -174,25 +195,26 @@ export async function modelOf(asset: Asset, options: ModelOptions, operation: Op
     const s = slots.map.get(root)!;
     addGlyphMaterial(s.material, { en: `Glyph ${s.kind} ${s.detail}`, de: `Glyphe ${s.kind} ${s.detail}` });
     addGlyphMaterial(glyphEdgeOf(s.material), { en: `Glyph edge ${s.kind} ${s.detail}`, de: `Glyphenkante ${s.kind} ${s.detail}` });
-    const made = glyphOf(root, s, mm, staticFrame.glyphs);
+    const made = glyphOf(root, s, setup.sizing!, staticFrame.glyphs);
     nodes.push(...made.nodes);
-    modelSolids.push(...made.solids);
+    solids.push(...made.solids);
   }
 
   const edgeBase = "edge";
-  materials.push(materialOf(edgeBase, { en: "Feature edge", de: "Kante" }, { hex: THEMES.light.ink, alpha: options.scale <= 100 ? 1 : 0 }, true));
+  materials.push(materialOf(edgeBase, { en: "Feature edge", de: "Kante" }, { hex: THEMES.light.ink, alpha: scale <= 100 ? 1 : 0 }, true));
 
+  const lookOf = (view: View): LookSpec<never> => (view === "thermal" ? thermal : view === "forces" ? forces : view === "moments" ? moments : fixed[view as "dark-solid"]) as unknown as LookSpec<never>;
   const variants = views.map((view) => {
     const bindings: Record<Slug, Slug> = {};
     const paints = staticFrame.paints.get(view);
-    const look = (view === "thermal" ? thermal : view === "forces" ? forces : view === "moments" ? moments : staticLooks[view]) as LookSpec<never> | undefined;
-    const ids = materialIds(view, surfaces, look!);
-    for (const s of surfaces) bindings[s.id] = ids.get(look!.keyOf(s))!;
+    const look = lookOf(view);
+    const ids = materialIds(view, surfaces, look);
+    for (const s of surfaces) bindings[s.id] = ids.get(look.keyOf(s))!;
     for (const [key, id] of ids) {
-      const rep = surfaces.find((s) => look!.keyOf(s) === key)!;
-      materials.push(materialOf(id, look!.titleOf(key, rep), paints!.get(key)!, look!.unlit));
+      const rep = surfaces.find((s) => look.keyOf(s) === key)!;
+      materials.push(materialOf(id, look.titleOf(key, rep), paints!.get(key)!, look.unlit));
     }
-    const edgeVisible = view.endsWith("-line") || view === "thermal" || view === "forces" || view === "moments" || options.scale <= 100;
+    const edgeVisible = view.endsWith("-line") || ANALYTIC_VIEWS.has(view) || scale <= 100;
     const edgeTheme: Theme = view.startsWith("dark") ? "dark" : view.startsWith("light") ? "light" : theme;
     const edgeId = `${view}-edge`;
     materials.push(materialOf(edgeId, { en: "Feature edge", de: "Kante" }, { hex: THEMES[edgeTheme].ink, alpha: edgeVisible ? 1 : 0 }, true));
@@ -202,49 +224,40 @@ export async function modelOf(asset: Asset, options: ModelOptions, operation: Op
       const mine = (view === "forces" && (s.kind === "arrow" || s.kind === "mass")) || (view === "moments" && s.kind === "arc") || (view === "thermal" && s.kind === "emitter");
       if (!mine) continue;
       const id = `${view}-${s.material}`;
-      if (!materials.some((m) => m.id === id)) {
-        const paint = glyphPaintOf(s, theme, staticFrame.glyphPaints);
-        materials.push(materialOf(id, { en: `Glyph ${s.detail}`, de: `Glyphe ${s.detail}` }, paint));
-      }
+      if (!materials.some((m) => m.id === id)) materials.push(materialOf(id, { en: `Glyph ${s.detail}`, de: `Glyphe ${s.detail}` }, glyphPaintOf(s, theme, staticFrame.glyphPaints)));
       bindings[s.material] = id;
       bindings[glyphEdgeOf(s.material)] = edgeId;
     }
     return variantOf(view, VIEW_TITLES[view], bindings);
   });
 
+  const glyphIds = nodes.filter((n) => n.tags?.includes("glyph")).map((n) => n.id);
   const baseOf = new Map(nodes.map((n) => [n.id, n]));
   const localOf = (id: Slug): Local => ({ translation: baseOf.get(id)!.translation as Triple, rotation: baseOf.get(id)!.rotation as Local["rotation"], scale: baseOf.get(id)!.scale as Triple });
-  const glyphIds = nodes.filter((n) => n.tags?.includes("glyph")).map((n) => n.id);
-  const boneIds = skeleton.map((n) => n.id);
 
-  const poses: Pose[] = poseFrames.map(({ pose, frame }) => {
-    const source = asset.poses.find((p) => p.id === pose)!;
+  const poses = new Map<Slug, Record<Slug, TransformPatch>>();
+  for (const { pose } of instants.poses) {
+    const isStatic = instants.at.kind === "pose" && instants.at.pose === pose;
     const patches: Record<Slug, TransformPatch> = {};
-    for (const id of boneIds) patches[id] = { translation: frame.locals[id]!.translation, rotation: frame.locals[id]!.rotation };
-    const isStatic = frame === staticFrame;
-    for (const id of glyphIds) if (!isStatic) patches[id] = { scale: HIDDEN };
-    return { id: pose, title: source.title, nodes: patches };
-  });
+    if (!isStatic) for (const id of glyphIds) patches[id] = { scale: HIDDEN };
+    poses.set(pose, patches);
+  }
 
-  const animations: Animation[] = clipFrames.map(({ clip: id, times, frames }) => {
-    const clip = asset.clips.find((c) => c.id === id)!;
-    const channels: Channel[] = [];
-    for (const bone of boneIds) {
-      const base = localOf(bone);
-      channels.push(...nodeChannels(bone, times, frames.map((f) => ({ translation: f.locals[bone]!.translation, rotation: f.locals[bone]!.rotation, scale: base.scale })), base, bone === asset.rig.root ? ["translation"] : []));
-    }
+  const channels = new Map<Slug, Channel[]>();
+  for (const { clip, times, frames } of clipFrames) {
+    const out: Channel[] = [];
     for (const node of glyphIds) {
       const base = localOf(node);
-      channels.push(...nodeChannels(node, times, frames.map((f) => withNeutral(f.glyphs.get(node), base)), base));
+      out.push(...nodeChannels(node, times, frames.map((f) => withNeutral(f.glyphs.get(node), base)), base));
     }
     for (const view of views) {
-      if (view !== "thermal" && view !== "forces" && view !== "moments") continue;
-      const look = (view === "thermal" ? thermal : view === "forces" ? forces : moments) as LookSpec<never>;
+      if (!ANALYTIC_VIEWS.has(view)) continue;
+      const look = lookOf(view);
       const ids = materialIds(view, surfaces, look);
       const staticPaints = staticFrame.paints.get(view)!;
       for (const [key, materialId] of ids) {
         const channel = colourChannel(materialId, times, frames.map((f) => rgba(f.paints.get(view)?.get(key) ?? staticPaints.get(key)!)), rgba(staticPaints.get(key)!));
-        if (channel !== null) channels.push(channel);
+        if (channel !== null) out.push(channel);
       }
       if (view === "thermal") {
         for (const root of slots.order) {
@@ -252,32 +265,156 @@ export async function modelOf(asset: Asset, options: ModelOptions, operation: Op
           if (s.kind !== "emitter") continue;
           const staticPaint = glyphPaintOf(s, theme, staticFrame.glyphPaints);
           const channel = colourChannel(`thermal-${s.material}`, times, frames.map((f) => rgba(f.glyphPaints.get(s.material) ?? staticPaint)), rgba(staticPaint));
-          if (channel !== null) channels.push(channel);
+          if (channel !== null) out.push(channel);
         }
       }
     }
-    return animationOf(clip, channels);
-  });
+    channels.set(clip, out);
+  }
+  return { mode, scale, solids, nodes, materials, variants, poses, channels, notes: volume.decisions };
+}
 
+/** 🦴️ The skeleton shared by every scene: bone nodes, the bone patches of every pose and the bone channels of every clip (root translation always, as the root moves). */
+function skeletonModel(asset: Asset, instants: Instants): { readonly nodes: Node[]; readonly poseBones: ReadonlyMap<Slug, Record<Slug, TransformPatch>>; readonly clipBones: ReadonlyMap<Slug, Channel[]> } {
+  const nodes = skeletonOf(asset);
+  const boneIds = nodes.map((n) => n.id);
+  const baseOf = new Map(nodes.map((n) => [n.id, n]));
+  const localsOf = (state: EvaluatedState): Record<Slug, Placement> => placementsOf(asset, boneFramesOf(state));
+  const poseBones = new Map<Slug, Record<Slug, TransformPatch>>();
+  for (const { pose, state } of instants.poses) {
+    const locals = localsOf(state);
+    const patches: Record<Slug, TransformPatch> = {};
+    for (const id of boneIds) patches[id] = { translation: locals[id]!.translation, rotation: locals[id]!.rotation };
+    poseBones.set(pose, patches);
+  }
+  const clipBones = new Map<Slug, Channel[]>();
+  for (const { clip, times, instants: frames } of instants.clips) {
+    const locals = frames.map((f) => localsOf(f.state));
+    const out: Channel[] = [];
+    for (const bone of boneIds) {
+      const node = baseOf.get(bone)!;
+      const base: Local = { translation: node.translation as Triple, rotation: node.rotation as Local["rotation"], scale: node.scale as Triple };
+      out.push(...nodeChannels(bone, times, locals.map((l) => ({ translation: l[bone]!.translation, rotation: l[bone]!.rotation, scale: base.scale })), base, bone === asset.rig.root ? ["translation"] : []));
+    }
+    clipBones.set(clip, out);
+  }
+  return { nodes, poseBones, clipBones };
+}
+
+const prefixed = (scene: Slug, id: Slug): Slug => `${scene}-${id}`;
+
+/** 🪪️ A fragment in the ids of scene `scene`: every solid, material, glyph node and colour channel target gets the prefix `<scene>-`, and every solid rides on an identity child node `<scene>-<bone>` of its bone (the kernel's scene-specific mesh node), so scenes share the skeleton and nothing else. */
+function scoped(fragment: Fragment, scene: Slug, bones: ReadonlySet<Slug>): { readonly nodes: Node[]; readonly solids: Solid[]; readonly materials: Material[]; readonly variants: readonly Variant[]; readonly poses: ReadonlyMap<Slug, Record<Slug, TransformPatch>>; readonly channels: ReadonlyMap<Slug, Channel[]> } {
+  const p = (id: Slug): Slug => prefixed(scene, id);
+  const used = new Set<Slug>();
+  const solids: Solid[] = fragment.solids.map((s) => {
+    used.add(s.node);
+    return { ...s, id: p(s.id), node: p(s.node), material: p(s.material) } as Solid;
+  });
+  const meshNodes: Node[] = [...used].filter((n) => bones.has(n)).map((bone) => ({ id: p(bone), parent: bone, translation: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1], tags: ["scene-mesh", scene] }));
+  const glyphs: Node[] = fragment.nodes.map((n) => ({ ...n, id: p(n.id), parent: n.parent === null ? null : p(n.parent) }));
+  const materials: Material[] = fragment.materials.map((m) => ({ ...m, id: p(m.id) }));
+  const variants: Variant[] = fragment.variants.map((v) => ({ ...v, bindings: Object.fromEntries(Object.entries(v.bindings).map(([from, to]) => [p(from), p(to)])) }));
+  const rekey = (patches: Record<Slug, TransformPatch>): Record<Slug, TransformPatch> => Object.fromEntries(Object.entries(patches).map(([id, patch]) => [p(id), patch]));
+  const poses = new Map([...fragment.poses].map(([id, patches]) => [id, rekey(patches)] as const));
+  const retarget = (channel: Channel): Channel => ("node" in channel.target ? { ...channel, target: { ...channel.target, node: p(channel.target.node) } } : { ...channel, target: { ...channel.target, material: p(channel.target.material) } });
+  const channels = new Map([...fragment.channels].map(([id, list]) => [id, list.map(retarget)] as const));
+  return { nodes: [...meshNodes, ...glyphs], solids, materials, variants, poses, channels };
+}
+
+function titleOfPose(asset: Asset, id: Slug): Text {
+  return asset.poses.find((p) => p.id === id)!.title;
+}
+
+const MODE_TITLES: Readonly<Record<Mode, Text>> = { body: { en: "body", de: "Körper" }, thermal: { en: "thermal", de: "thermisch" }, structure: { en: "structure", de: "Tragwerk" } };
+
+/** 🗿️ The procedural neutral model of one scale and mode of an asset; see {@link ModelOptions}. Throws {@link ModelRequestError} for a scale that is not authored, an unknown pose or clip, `CancelledError` when the operation was cancelled. */
+export async function modelOf(asset: Asset, options: ModelOptions, operation: Operation = silentOperation): Promise<ModelDocument> {
+  if (!(options.scale > 0) || !Number.isFinite(options.scale)) throw new ModelRequestError("model-bad-option", "scale");
+  const volume = authoredAt(asset.volumes, options.scale, asset.id);
+  const mode = modeOf(options.view);
+  const request = resolveRequest(asset, options);
+  const instants = await instantsOf(asset, request, options, { thermal: mode === "thermal", structure: mode === "structure" }, operation);
+  const skeleton = skeletonModel(asset, instants);
+  const fragment = fragmentOf(asset, volume, mode, instants, options);
+  const poses: Pose[] = instants.poses.map(({ pose }) => ({ id: pose, title: titleOfPose(asset, pose), nodes: { ...skeleton.poseBones.get(pose)!, ...fragment.poses.get(pose)! } }));
+  const animations: Animation[] = instants.clips.map(({ clip }) => animationOf(asset.clips.find((c) => c.id === clip)!, [...skeleton.clipBones.get(clip)!, ...(fragment.channels.get(clip) ?? [])]));
   operation.report(1);
   return {
     version: "semio.model/v1",
     id: asset.id,
     title: asset.title,
-    provenance: { generator: "staffage volume/v1", source: asset.id, notes: volume.decisions },
-    nodes,
-    solids: modelSolids,
+    provenance: { generator: "staffage volume/v2", source: asset.id, notes: fragment.notes },
+    nodes: [...skeleton.nodes, ...fragment.nodes],
+    solids: fragment.solids,
     meshes: [],
     skins: [],
-    materials,
-    variants,
+    materials: fragment.materials,
+    variants: [...fragment.variants],
     poses,
     animations,
   };
 }
 
-function titleOfSurface(asset: Asset, surface: Surface): Text {
-  const bone = asset.rig.bones.find((b) => b.id === surface.bone)?.title;
-  if (bone === undefined) throw new ModelRequestError("model-unknown-bone", `${asset.id}/${surface.bone}`);
-  return { en: `${bone.en} (${surface.role})`, de: `${bone.de} (${surface.role})` };
+/** 🏛️ The one procedural model of an asset with every requested authored scale: one kernel scene per scale and mode (`s50-body`, `s50-thermal`, `s50-structure`, …) over the one skeleton, all seven views as variants over every scene (a view recolours the scenes of its mode and leaves the other scenes at their base look), the poses and clips once. Throws {@link ModelRequestError} for a requested scale that is not authored (`model-scale-unavailable`) and for an asset with no authored scale (`model-no-authored-scale`). */
+export async function modelOfAsset(asset: Asset, options: AssetModelOptions = {}, operation: Operation = silentOperation): Promise<ModelDocument> {
+  const scales = options.scales ?? authoredScales(asset.volumes);
+  if (scales.length === 0) throw new ModelRequestError("model-no-authored-scale", asset.id);
+  const volumes = scales.map((scale) => authoredAt(asset.volumes, scale, asset.id));
+  const request = resolveRequest(asset, options);
+  const instants = await instantsOf(asset, request, options, { thermal: true, structure: true }, operation);
+  const skeleton = skeletonModel(asset, instants);
+  const bones = new Set(skeleton.nodes.map((n) => n.id));
+  const scenes: Scene[] = [];
+  const nodes: Node[] = [...skeleton.nodes];
+  const glyphNodes: Node[] = [];
+  const solids: Solid[] = [];
+  const materials: Material[] = [];
+  const variantBindings = new Map<View, { title: Text; bindings: Record<Slug, Slug> }>(VIEWS.map((view) => [view, { title: VIEW_TITLES[view], bindings: {} }]));
+  const poseGlyphs = new Map<Slug, Record<Slug, TransformPatch>>(instants.poses.map(({ pose }) => [pose, {}]));
+  const clipChannels = new Map<Slug, Channel[]>(instants.clips.map(({ clip }) => [clip, []]));
+  const notes: Text[] = [];
+  for (const volume of volumes) {
+    for (const mode of MODES) {
+      if (operation.cancelled()) throw new CancelledError();
+      await yieldToLoop();
+      const id = sceneIdOf(volume.denominator, mode);
+      const fragment = fragmentOf(asset, volume, mode, instants, options);
+      const scene = scoped(fragment, id, bones);
+      for (const node of scene.nodes) (node.tags?.includes("glyph") === true ? glyphNodes : nodes).push(node);
+      solids.push(...scene.solids);
+      materials.push(...scene.materials);
+      for (const variant of scene.variants) Object.assign(variantBindings.get(variant.id as View)!.bindings, variant.bindings);
+      for (const [pose, patches] of scene.poses) Object.assign(poseGlyphs.get(pose)!, patches);
+      for (const [clip, list] of scene.channels) clipChannels.get(clip)!.push(...list);
+      scenes.push({ id, title: { en: `1:${volume.denominator} ${MODE_TITLES[mode].en}`, de: `1:${volume.denominator} ${MODE_TITLES[mode].de}` }, nodes: [...new Set(scene.solids.map((s) => s.node))], tags: [`scale-${volume.denominator}`, mode] });
+      if (mode === "body") notes.push(...fragment.notes.map((t) => ({ en: `1:${volume.denominator}: ${t.en}`, de: `1:${volume.denominator}: ${t.de}` })));
+    }
+  }
+  nodes.push(...glyphNodes);
+  const poses: Pose[] = instants.poses.map(({ pose }) => ({ id: pose, title: titleOfPose(asset, pose), nodes: { ...skeleton.poseBones.get(pose)!, ...poseGlyphs.get(pose)! } }));
+  const animations: Animation[] = instants.clips.map(({ clip }) => animationOf(asset.clips.find((c) => c.id === clip)!, [...skeleton.clipBones.get(clip)!, ...clipChannels.get(clip)!]));
+  operation.report(1);
+  return {
+    version: "semio.model/v1",
+    id: asset.id,
+    title: asset.title,
+    provenance: { generator: "staffage volume/v2", source: asset.id, notes },
+    nodes,
+    solids,
+    meshes: [],
+    skins: [],
+    materials,
+    variants: VIEWS.map((view) => variantOf(view, variantBindings.get(view)!.title, variantBindings.get(view)!.bindings)),
+    poses,
+    animations,
+    scenes,
+  };
+}
+
+/** 🌟️ The edge material of the feature-edge pass for the primitives of a procedural document: the base `edge` material of the primitive's scene (`<scene>-edge`; plain `edge` without scenes), except for the primitives of glyph solids, whose edges follow their own glyph material ({@link glyphEdgeOf}). */
+export function edgeMaterialOf(document: ModelDocument): (source: Primitive) => Slug {
+  const glyphs = new Set(document.solids.filter((solid) => solid.tags?.includes("glyph") === true).map((solid) => solid.material));
+  const prefixes = (document.scenes ?? []).map((scene) => `${scene.id}-`);
+  return (source) => (glyphs.has(source.material) ? glyphEdgeOf(source.material) : `${prefixes.find((prefix) => source.material.startsWith(prefix)) ?? ""}edge`);
 }

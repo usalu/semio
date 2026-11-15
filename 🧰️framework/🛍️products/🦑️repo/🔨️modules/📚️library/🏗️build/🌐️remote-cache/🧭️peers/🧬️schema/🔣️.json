@@ -1,0 +1,41 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/build/remote-cache/peers/v1",
+ "title": "Fleet peers: the relayed exchange between group servers (a read request and its answer, both content-addressed and therefore relayable)",
+ "definitions": {
+  "Group": {"type": "string", "pattern": "^[a-z][a-z0-9]{0,15}$"},
+  "Path": {
+   "description": "The read that a group server asks of the cache of a peer group: a GET path of the cache protocol (/<instance>/ac/<sha256>, /<instance>/cas/<sha256> or /<instance>/v1/cache/<key>). Nothing else is ever relayed.",
+   "type": "string",
+   "pattern": "^/([a-z0-9][a-z0-9._-]{0,63}/)?(ac/[0-9a-f]{64}|cas/[0-9a-f]{64}|v1/cache/[a-z0-9_-]{1,128})$"
+  },
+  "Request": {
+   "description": "Written by the asking server into its own store at v1/fleet/exchange/<to>/requests/<id>.json; the peer reads it through its read-only mount of that store.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "id", "from", "to", "path", "createdMs"],
+   "properties": {
+    "version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[0-9a-f]{24}$"},
+    "from": {"$ref": "#/definitions/Group"},
+    "to": {"$ref": "#/definitions/Group"},
+    "path": {"$ref": "#/definitions/Path"},
+    "createdMs": {"type": "integer", "minimum": 0}
+   }
+  },
+  "Answer": {
+   "description": "Written by the answering server into its own store at v1/fleet/exchange/<from>/answers/<id>.json, after its body <id>.bin; `sha256` and `size` describe the body (absent without a body).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "id", "status", "atMs"],
+   "properties": {
+    "version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[0-9a-f]{24}$"},
+    "status": {"type": "integer", "minimum": 100, "maximum": 599},
+    "size": {"type": "integer", "minimum": 0},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "atMs": {"type": "integer", "minimum": 0}
+   }
+  }
+ }
+}

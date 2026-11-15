@@ -137,6 +137,13 @@
             "$ref": "#/$defs/Node"
           }
         },
+        "scenes": {
+          "description": "Named sets of mesh-carrying nodes (see Scene); optional.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Scene"
+          }
+        },
         "solids": {
           "type": "array",
           "items": {
@@ -506,7 +513,7 @@
       }
     },
     "RevolveSolid": {
-      "description": "A profile [axial, radial] revolved about an axis through origin.",
+      "description": "A profile [axial, radial] revolved about an axis through origin (radial is clamped at 0). Closing rule: a profile whose first point equals its last point (at least three distinct points) is a closed loop and the solid is the body enclosed by the loop, the axis plays no part, so a shell, tube wall, bead or ring is a loop; an open profile is always closed through the axis, its end points dropped perpendicularly onto the axis, and the solid is everything between the polyline and the axis, so an open profile that stays off the axis at both ends gives a filled body, never a shell (validation finding revolve-implied-closure warns when the straight chord from its last to its first point would have closed it into a simple loop). A sweep below a full turn is closed by flat faces.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -596,7 +603,7 @@
       }
     },
     "ExtrudeSolid": {
-      "description": "A polygon (with holes) on a plane extruded from one coordinate to another, optionally tapered.",
+      "description": "A polygon (with holes) on a plane extruded from one coordinate to another, optionally tapered. taperTo = [scale at from, scale at to]: the profile, holes included, is multiplied by the first number at the coordinate from and by the second at the coordinate to, about the area centroid of the outer ring (not the origin of the plane), linearly in between. It is not a scale along u and v: [1, 0] is a pyramid or cone with its apex at to (no cap there), [1, 0.5] narrows to half, equal factors such as [0.5, 0.5] are no taper but a prism of the scaled profile (validation findings taper-uniform and taper-degenerate).",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -739,7 +746,7 @@
       }
     },
     "LoftSolid": {
-      "description": "Superelliptic sections |x/rx|^n + |y/ry|^n = 1 (n = exponent, default 2 = ellipse) lofted in order. A section with rotation lies in the x, y plane of that rotation (absolute); a section without rotation lies perpendicular to the path tangent at its at (central difference of the neighbouring sections, one-sided at the ends), its x axis being the node X axis projected perpendicular to the tangent (fallback Z) and its y axis tangent x x, the same frame lateralScale uses on capsules and revolves. Sections with and without rotation may be mixed.",
+      "description": "Superelliptic sections |x/rx|^n + |y/ry|^n = 1 (n = exponent, default 2 = ellipse) lofted in order. The sections are the path in order of travel: whatever their order, the bends of the path and the handedness of a section rotation, the surface is oriented outward (counter-clockwise seen from outside, positive signed volume when both caps are on; with a cap off the tube is open and its faces still look outward). Two consecutive sections that overlap (the path turns back or bends tighter than the section is wide) are reported as loft-fold. A section with rotation lies in the x, y plane of that rotation (absolute); a section without rotation lies perpendicular to the path tangent at its at (central difference of the neighbouring sections, one-sided at the ends), its x axis being the node X axis projected perpendicular to the tangent (fallback Z) and its y axis tangent x x, the same frame lateralScale uses on capsules and revolves. Sections with and without rotation may be mixed.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1059,6 +1066,38 @@
             "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
           },
           "additionalProperties": {
+            "$ref": "#/$defs/Slug"
+          }
+        }
+      }
+    },
+    "Scene": {
+      "description": "A named set of mesh-carrying nodes over the one shared skeleton of the document. A node listed in several scenes shares its solids and meshes across them; a bone that carries different solids per scene has one identity child node per scene. A document without scenes (or with an empty list) behaves as one implicit scene holding every node that carries a solid or a mesh.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "nodes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Slug"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
             "$ref": "#/$defs/Slug"
           }
         }

@@ -289,7 +289,7 @@ pub(crate) fn case_ref(case: &model::CaseRow) -> EntityRef {
 /// 🆔️ Every document entity in outliner order: the members, the connections and the catalogue cases; their sub-entities (`id:tag`) are projected with them.
 pub fn entities_of(document: &model::En1995Snapshot) -> Vec<EntityRef> {
     let cases = document.cases.iter().map(case_ref).collect::<Vec<_>>();
-    let of = |collection: &'static str, ids: Vec<&str>| ENTITY_KINDS.iter().find(|k| k.collection == collection).into_iter().flat_map(|k| ids.into_iter().map(|id| entity_ref(k.scene_kind, id, collection))).collect::<Vec<_>>();
+    let of = |collection: &'static str, ids: Vec<&str>| ENTITY_KINDS.iter().find(|k| k.collection == collection).map_or_else(Vec::new, |k| ids.into_iter().map(|id| entity_ref(k.scene_kind, id, collection)).collect::<Vec<_>>());
     [of("members", document.members.iter().map(|e| e.id.as_str()).collect()), of("connections", document.connections.iter().map(|e| e.id.as_str()).collect()), cases, of("tapers", document.tapers.iter().map(|e| e.id.as_str()).collect()), of("cutouts", document.cutouts.iter().map(|e| e.id.as_str()).collect()), of("fasteners", document.fasteners.iter().map(|e| e.id.as_str()).collect()), of("panels", document.panels.iter().map(|e| e.id.as_str()).collect()), of("floors", document.floors.iter().map(|e| e.id.as_str()).collect()), of("diaphragms", document.diaphragms.iter().map(|e| e.id.as_str()).collect()), of("trusses", document.trusses.iter().map(|e| e.id.as_str()).collect()), of("bracings", document.bracings.iter().map(|e| e.id.as_str()).collect()), of("decks", document.decks.iter().map(|e| e.id.as_str()).collect())].concat()
 }
 

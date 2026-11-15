@@ -1,0 +1,12 @@
+import { openCtx, drawn } from "./kit-lib.ts";
+import { meshesAt, projectedPoints } from "./volumes-lib.ts";
+const [spec, sc, view, id] = [process.argv[2]!, Number(process.argv[3]), process.argv[4] as any, process.argv[5]!];
+const c = openCtx(spec, sc);
+const s = c.vol.body.filter((x: any) => x.id === id);
+const m = meshesAt(c.m, sc, s);
+const pts = projectedPoints(view, m);
+const bb = (ps: { x: number; y: number }[]) => [Math.min(...ps.map((p) => p.x)), Math.max(...ps.map((p) => p.x)), Math.min(...ps.map((p) => p.y)), Math.max(...ps.map((p) => p.y))].map((x) => x.toFixed(3)).join(" ");
+console.log("3D", bb(pts));
+for (const d of drawn(c, view)) if (d.id === id) console.log("2D", bb(d.rings.flat()));
+const slab = (ps: { x: number; y: number }[], y0: number, y1: number) => { const q = ps.filter((p) => p.y >= y0 && p.y < y1); return q.length ? `x ${Math.min(...q.map((p) => p.x)).toFixed(3)}..${Math.max(...q.map((p) => p.x)).toFixed(3)}` : "-"; };
+for (let y = 0; y < 0.8; y += 0.1) console.log("y", y.toFixed(1), "3D", slab(pts, y, y + 0.1), "2D", slab(drawn(c, view).filter((d) => d.id === id).flatMap((d) => d.rings.flat()), y, y + 0.1));

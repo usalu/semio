@@ -123,7 +123,6 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/⚠️error/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🔤️json/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🚰️source/**/Cargo.toml",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🔀️dispatch/**/Cargo.toml",
@@ -133,12 +132,16 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/⏱️failure-owner/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/**/Cargo.toml",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📇️registry/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/⏱️context/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/⚠️failure/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/**/Cargo.toml",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/📒️book/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/📄️payload-pages-and-ledger/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/📬️outcome/🎟️descriptor/**/Cargo.toml",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🪙️escrow/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧵️job/📬️outcome/🚦️result/**/Cargo.toml",
@@ -153,6 +156,7 @@
     "assignment": [
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📐️parametric/📝️assignment/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🏙️typology/📝️assignment/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🏗️builder/📖️assignments/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/dist/**/*",
@@ -247,7 +251,9 @@
         "@teaching/architecture-course:build-parametrization-en",
         "@teaching/architecture-course:build-parametrization-de",
         "@teaching/architecture-course:build-typology-en",
-        "@teaching/architecture-course:build-typology-de"
+        "@teaching/architecture-course:build-typology-de",
+        "@teaching/architecture-course:build-heating-cooling-en",
+        "@teaching/architecture-course:build-heating-cooling-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -297,7 +303,9 @@
         "@teaching/architecture-course:build-parametrization-en",
         "@teaching/architecture-course:build-parametrization-de",
         "@teaching/architecture-course:build-typology-en",
-        "@teaching/architecture-course:build-typology-de"
+        "@teaching/architecture-course:build-typology-de",
+        "@teaching/architecture-course:build-heating-cooling-en",
+        "@teaching/architecture-course:build-heating-cooling-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -321,7 +329,9 @@
         "@teaching/architecture-course:build-parametrization-en",
         "@teaching/architecture-course:build-parametrization-de",
         "@teaching/architecture-course:build-typology-en",
-        "@teaching/architecture-course:build-typology-de"
+        "@teaching/architecture-course:build-typology-de",
+        "@teaching/architecture-course:build-heating-cooling-en",
+        "@teaching/architecture-course:build-heating-cooling-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -641,7 +651,9 @@
         "@teaching/architecture-course:build-parametrization-en",
         "@teaching/architecture-course:build-parametrization-de",
         "@teaching/architecture-course:build-typology-en",
-        "@teaching/architecture-course:build-typology-de"
+        "@teaching/architecture-course:build-typology-de",
+        "@teaching/architecture-course:build-heating-cooling-en",
+        "@teaching/architecture-course:build-heating-cooling-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -1083,6 +1095,56 @@
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts build-typology-de",
+        "forwardAllArgs": false
+      }
+    },
+    "build-heating-cooling-en": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [
+        "@semio-tech/print:fonts",
+        "@semio-tech/print:deps-tectonic",
+        "@semio-tech/print:deps-tex",
+        "@semio-tech/print:generate"
+      ],
+      "inputs": [
+        "default",
+        "assignment",
+        {
+          "env": "SEMIO_BUILD_MODE"
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/course/architecture-energy-heating-cooling-en"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts build-heating-cooling-en",
+        "forwardAllArgs": false
+      }
+    },
+    "build-heating-cooling-de": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [
+        "@semio-tech/print:fonts",
+        "@semio-tech/print:deps-tectonic",
+        "@semio-tech/print:deps-tex",
+        "@semio-tech/print:generate"
+      ],
+      "inputs": [
+        "default",
+        "assignment",
+        {
+          "env": "SEMIO_BUILD_MODE"
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/course/architecture-energy-heating-cooling-de"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts build-heating-cooling-de",
         "forwardAllArgs": false
       }
     },

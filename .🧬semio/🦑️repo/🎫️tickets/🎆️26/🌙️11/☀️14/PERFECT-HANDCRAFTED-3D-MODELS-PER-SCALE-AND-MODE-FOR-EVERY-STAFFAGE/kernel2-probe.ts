@@ -1,0 +1,18 @@
+import { tessellateSolid } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🔺️tessellation/🟦️.ts";
+const Q = { chordM: 0.001, minSegments: 24, maxSegments: 64 };
+const vol = (g: any) => { let v = 0; const p = g.positions; for (let t = 0; t < g.indices.length; t += 3) { const q = [0,1,2].map((k) => g.indices[t+k]*3); const a=[p[q[0]],p[q[0]+1],p[q[0]+2]],b=[p[q[1]],p[q[1]+1],p[q[1]+2]],c=[p[q[2]],p[q[2]+1],p[q[2]+2]]; v += (a[0]*(b[1]*c[2]-b[2]*c[1]) - a[1]*(b[0]*c[2]-b[2]*c[0]) + a[2]*(b[0]*c[1]-b[1]*c[0]))/6; } return v; };
+const mk = (sections: any[]) => ({ id: "l", kind: "loft", node: "n", material: "m", sections, capStart: true, capEnd: true } as any);
+const arc = [0, 1, 2, 3, 4, 5, 6].map((i) => { const a = (Math.PI * i) / 6; return { at: [0, Math.sin(a) * 0.5 - (i > 3 ? (i - 3) * 0.25 : 0), Math.cos(a) * 0.5], rx: 0.03, ry: 0.03 }; });
+console.log("straight", vol(tessellateSolid(mk([{ at: [0,0,0], rx: .1, ry: .1 }, { at: [0,0,1], rx: .1, ry: .1 }]), Q)));
+console.log("down", vol(tessellateSolid(mk([{ at: [0,1,0], rx: .1, ry: .1 }, { at: [0,0,0], rx: .1, ry: .1 }]), Q)));
+console.log("x", vol(tessellateSolid(mk([{ at: [0,0,0], rx: .1, ry: .1 }, { at: [1,0,0], rx: .1, ry: .1 }]), Q)));
+const hook = [[0,0,0],[0,0.3,0],[0,0.5,0.2],[0,0.4,0.4],[0,0.2,0.5]].map((at) => ({ at, rx: .03, ry: .03 }));
+console.log("hook", vol(tessellateSolid(mk(hook), Q)), "rev", vol(tessellateSolid(mk([...hook].reverse()), Q)));
+const arch = [[0,0,0],[0,0.4,0.1],[0,0.6,0.3],[0,0.6,0.6],[0,0.4,0.8],[0,0,0.9]].map((at) => ({ at, rx: .03, ry: .03 }));
+console.log("arch", vol(tessellateSolid(mk(arch), Q)), "rev", vol(tessellateSolid(mk([...arch].reverse()), Q)));
+const rot = (q: number[]) => [{ at: [0,0,0], rx: .1, ry: .1, rotation: q }, { at: [0,0,1], rx: .1, ry: .1, rotation: q }];
+console.log("rot identity", vol(tessellateSolid(mk(rot([0,0,0,1])), Q)), "rot flipX(180 about x)", vol(tessellateSolid(mk(rot([1,0,0,0])), Q)), "about y", vol(tessellateSolid(mk(rot([0,1,0,0])), Q)));
+const nozzle = [[0,0.5,0],[0,0.6,0.1],[0,0.2,0.3],[0,0,0.4]].map((at) => ({ at, rx: .03, ry: .03 }));
+console.log("net-down", vol(tessellateSolid(mk(nozzle), Q)), "rev", vol(tessellateSolid(mk([...nozzle].reverse()), Q)));
+const stagger = [{ at: [0,0,0], rx: .1, ry: .1, rotation: [0,0,0,1] }, { at: [0,0,1], rx: .1, ry: .1 }, { at: [0,0,2], rx: .1, ry: .1, rotation: [1,0,0,0] }];
+console.log("mixed", vol(tessellateSolid(mk(stagger), Q)));

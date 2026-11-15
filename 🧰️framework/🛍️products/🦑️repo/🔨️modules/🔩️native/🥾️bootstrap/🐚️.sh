@@ -298,7 +298,7 @@ ensure_uv() {
     done
     return 0
   fi
-  log "Installing uv $version…"
+  log "Installing uv ${version}…"
   local download
   download="$(mktemp -d)"
   fetch_pinned "$row" "$download/uv.tar.gz" || {
@@ -888,7 +888,7 @@ ensure_node() {
     }
     archive="$(pin_field "$row" url)"
     archive="${archive##*/}"
-    log "Installing Node.js $version into $root…"
+    log "Installing Node.js $version into ${root}…"
     download="$(mktemp -d)"
     fetch_pinned "$row" "$download/$archive" || {
       rm -rf "$download"
@@ -1180,7 +1180,7 @@ ensure_dotnet() {
     log "No pinned dotnet-install script in $PINS_FILE."
     return 1
   }
-  log "Installing .NET SDK $sdk into $DOTNET_ROOT…"
+  log "Installing .NET SDK $sdk into ${DOTNET_ROOT}…"
   installer="$(mktemp)"
   fetch_pinned "$row" "$installer" || {
     rm -f "$installer"
@@ -1212,6 +1212,12 @@ link_user_tool() {
     return 0
   fi
   mkdir -p "$LOCAL_BIN"
+  if [ "$(readlink "$LOCAL_BIN/$name" 2>/dev/null || true)" = "$source" ]; then
+    return 0
+  fi
+  if [ "$name" = repo ] && [ -f "$LOCAL_BIN/$name" ] && [ ! -L "$LOCAL_BIN/$name" ]; then
+    return 0
+  fi
   ln -sfn "$source" "$LOCAL_BIN/$name"
 }
 
@@ -1280,14 +1286,14 @@ repo_bootstrap() {
   cd "$REPO_ROOT"
   export SEMIO_WORKSPACE_ROOT="$REPO_ROOT"
   log "Installing the native repository command…"
-  repo run repo-mcp:install || return 1
+  repo run repo-mcp:install || return $?
   export PATH="$LOCAL_BIN:$PATH"
   hash -r
   repo --help >/dev/null || return 1
   log "Installing the dependency scopes (the planner of every later run needs them)…"
-  repo dependencies sync --all || return 1
+  repo dependencies sync --all || return $?
   log "workspace:setup…"
-  repo run workspace:setup || return 1
+  repo run workspace:setup || return $?
   repo run @semio-tech/repo-developer-tools:setup-debugger || log "Native debugger setup needs noninteractive install privileges or a working LLDB already on PATH. Setup continues."
 
 }

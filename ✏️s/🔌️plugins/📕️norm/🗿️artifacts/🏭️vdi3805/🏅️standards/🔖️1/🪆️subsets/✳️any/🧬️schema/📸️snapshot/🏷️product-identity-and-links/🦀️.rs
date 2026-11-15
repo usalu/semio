@@ -1,7 +1,7 @@
 //! 🏷️ Product identity and links of the VDI 3805 snapshot: the extension bag, the product identity, the manufacturer file and the accessory and composition links. See [`super`].
 
 use super::record_families::BuildingSystemNumber;
-use std::collections::BTreeMap;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 
 /// 🧩️ Typed extension bag (`string → string`) matching JSON Schema `ExtensionFields.fields`.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ExtensionBag {
-    pub fields: BTreeMap<String, String>,
+    pub fields: RetainedOrderedMap<String, String>,
 }
 
 /// 🆔️ Product identity within a manufacturer catalogue.

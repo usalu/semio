@@ -1,0 +1,200 @@
+  repo conformance list
+      List the conformance scenarios.
+  repo units plan --for=go
+      Plan the Go units of the checkout.
+  repo bench list
+      List the performance objectives.
+  repo dependencies lock --all
+      Regenerate the lock after editing a package.json.
+  repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
+      Type-check one crate in the shared store.
+  repo cache status
+      Show every cache partition and area against its budget.
+  repo remote-cache serve
+      Serve a local remote cache on 127.0.0.1:6090.
+  repo capacity status
+      See how much memory the machine has left above its floor and who holds it.
+  repo leases status
+      See who holds the repository's leases, who waits behind whom and for how long.
+  repo fleet status
+      See at a glance who runs what, who waits for what and for how long, and what the disk and memory budgets look like.
+  repo scheduler status
+      See what runs and waits in the global queue and every agent's share.
+  repo service host status
+      Show the one service of this machine, its memory and how many workspaces it serves.
+  repo remote-execution serve
+      Run the service with the shared store and one local worker: gRPC for build tools on 127.0.0.1:8980, HTTP for workers, status and the fleet load table on 127.0.0.1:8981; hermetic Bazel actions can then run remotely.
+  repo doctor
+      See who waits for whom, what is slow and what is broken, with the command that fixes each finding.
+  repo session status
+      See which agent session this command belongs to and what it holds.
+
+Native commands of the repository (repo <command> --help):
+  mcp [kind]                           Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)
+  graphql [query]                      Execute a GraphQL query
+  test [testable-id-or-uri]...         Run tests for given entities
+  ticket                               Ticket management commands
+  todo                                 Todo management commands
+  goal                                 Goal management commands
+  contributor                          Contributor management commands
+  folder                               Folder management commands
+  file                                 File management commands
+  section                              Section management commands
+  move <source> <target>               Move an artifact from source to target
+  integrate [source] [target]          Integrate source code into a target file section
+  extract [source] [target]            Extract a section from a source file into a target file
+  rename <old> <new> [scope]           Rename a token across non-gitignored files (all case variants)
+  sync                                 Synchronize monorepo artifacts
+  search [query]                       Search monorepo tree
+  list [query]                         Stream a flat list of monorepo items
+  query [keywords]                     Keyword search across monorepo resources
+  tree                                 Show a repository tree
+  export [output]                      Export repo data to an event log
+  hook <event> <client>                Run a lifecycle hook (git or agent)
+  mermaid <visualization>              Generate mermaid diagram strings
+  loc                                  Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)
+  technology                           Manage technologies
+  bundle                               Bundle management commands
+  analyze [scope]                      Analyze codebase for breachs
+  entity-emojis                        List all entity-identifying emojis
+  configure                            Remove blocking git hooks; repo config files are edited manually
+  micro-commit [subcommand] [args...]  Micro-commit workflow (reset, prepare-commit-msg, stage, diff, prepare)
+  benchmark                            Run benchmarks for all ecosystems
+  update [target]                      Update dependencies (npm, python, rust, go, dotnet)
+  auth                                 Server authentication
+  autofix [scope]                      Apply autofixes for breachs
+  statute                              Statute management commands
+  checkpoint                           Checkpoint management commands
+  interaction                          Interaction management commands
+  draft                                Draft management commands
+  definition                           Definition management commands
+  dashboard [arguments]                Human control plane (not for agents).
+  dev mcp stdio os [arguments]         MCP server of the OS over stdio.
+[repo] Installed native repository command: /Users/ueli/.local/bin/repo
+[semio] Installing the dependency scopes (the planner of every later run needs them)…
+[capacity] dependencies: sized at 33% of the default from 16 earlier run(s) of its class, at least 4720 MB because of its plan phase
+[capacity] admitted dependencies: 1 job(s), 4720 MB reserved (7306 MB available, 2048 MB floor)
+[capacity] dependencies: sized at 33% of the default from 16 earlier run(s) of its class, at least 4720 MB because of its plan phase
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[DATA] Store dependency sync stale {"version":1,"purpose":"current-store-dependency-sync-stale","reason":"obsolete-generations"}
+[repo] still working after 5 s; last phase started: source.served
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+[repo] still working after 20 s; last phase started: source.served
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:482688 (exclusive, 16 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:578432 (exclusive, 17 s)
+[repository:command] still running after 20 s
+[repository:command] still running after 30 s
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:578752 (exclusive, 15 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:674496 (exclusive, 17 s)
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 877 edges
+[script] bun:dependency-storage · Checking declared package providers: 3796 edges
+[script] bun:dependency-storage · Checking declared package providers: 6600 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[repository:command] still running after 40 s
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:674816 (exclusive, 21 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:744256 (exclusive, 23 s)
+[repo] still working after 50 s; last phase started: source.served
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:770880 (exclusive, 27 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:866624 (exclusive, 28 s)
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 953 edges
+[script] bun:dependency-storage · Checking declared package providers: 3893 edges
+[repository:command] still running after 50 s
+[script] bun:dependency-storage · Checking declared package providers: 6871 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 274 edges
+[script] bun:dependency-storage · Checking declared package providers: 2495 edges
+[script] bun:dependency-storage · Checking declared package providers: 6022 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[repository:command] still running after 60 s
+[repository:command] still running after 70 s
+[repo] still working after 80 s; last phase started: source.served
+[repository:command] still running after 80 s
+[script] bun:dependency-storage remains active on dependencies:store-ownership:membership:866688 (exclusive, 37 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:1443392 (exclusive, 63 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:1539200 (exclusive, 64 s)
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 1170 edges
+[script] bun:dependency-storage · Checking declared package providers: 4075 edges
+[script] bun:dependency-storage · Checking declared package providers: 7300 edges
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:1539520 (exclusive, 69 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:1563200 (exclusive, 70 s)
+[repository:command] still running after 90 s
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:1635264 (exclusive, 71 s)
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 1092 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 1092 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 1363 edges
+[script] bun:dependency-storage · Checking declared package providers: 3931 edges
+[script] bun:dependency-storage · Checking declared package providers: 3931 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 1255 edges
+[script] bun:dependency-storage · Checking declared package providers: 2201 edges
+[script] bun:dependency-storage · Checking declared package providers: 3693 edges
+[script] bun:dependency-storage · Checking declared package providers: 3931 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2044 edges
+[script] bun:dependency-storage · Checking declared package providers: 2491 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2491 edges
+[script] bun:dependency-storage · Checking declared package providers: 2491 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2475 edges
+[script] bun:dependency-storage · Checking declared package providers: 3965 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 3917 edges
+[script] bun:dependency-storage · Checking declared package providers: 3965 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 707 edges
+[repository:command] still running after 100 s
+[script] bun:dependency-storage · Checking declared package providers: 2010 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2010 edges
+[script] bun:dependency-storage · Checking declared package providers: 2010 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2196 edges
+[script] bun:dependency-storage · Checking declared package providers: 3916 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2956 edges
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:1635328 (exclusive, 84 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:1635584 (exclusive, 84 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:1731328 (exclusive, 85 s)
+[script] bun:dependency-storage · Checking declared package providers: 3916 edges
+[repo] still working after 110 s; last phase started: source.served
+[repository:command] still running after 110 s
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:1731392 (exclusive, 93 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:1731648 (exclusive, 93 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:1827392 (exclusive, 95 s)
+[repository:command] still running after 120 s
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 1649 edges
+[script] bun:dependency-storage · Checking declared package providers: 4121 edges
+[script] bun:dependency-storage · Checking declared package providers: 7477 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2877 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[repository:command] still running after 130 s
+[repo] still working after 140 s; last phase started: source.served
+[repository:command] still running after 140 s
+[repository:command] still running after 150 s
+[DATA] Store dependency concurrency {"version":1,"purpose":"dependency-concurrency-event","event":"kept","count":6}
+Kept 6 superseded dependency generation(s) that are pinned, recent or the rollback target.
+[semio] workspace:setup…
+[capacity] run: sized at 46% of the default from 3 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 2048 MB reserved (7137 MB available, 2048 MB floor)
+Starting the repo graph service for this host.
+A macOS dialog waits for your answer: "repo would like to access files in your Documents folder" (/Users/ueli/.local/share/semio/launcher/bin/repo). Click "Allow" in the session of the logged-in user (or switch on Documents Folder for `repo` under System Settings, Privacy & Security, Files & Folders), then run the command again. /Users/ueli/Documents/semio cannot be read before that.
+end 2026-11-14T21:02:20Z
+native_rc=4

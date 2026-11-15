@@ -1,0 +1,14 @@
+[
+  {
+    "at": "2026-11-14T18:00:30Z",
+    "elapsed_s": 35.565,
+    "source": "host-6feebb05efe3.log",
+    "line": "[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (6140 MB available, 2048 MB floor)"
+  },
+  {
+    "at": "2026-11-14T18:00:30Z",
+    "elapsed_s": 35.565,
+    "source": "host-6feebb05efe3.log",
+    "line": "2026-11-14T18:00:29.409Z request-failed e07192d7 Error: Relative filesystem fstatat failed (EPERM)"
+  }
+]

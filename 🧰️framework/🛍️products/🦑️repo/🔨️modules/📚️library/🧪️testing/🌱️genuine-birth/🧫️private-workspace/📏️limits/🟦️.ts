@@ -1,4 +1,4 @@
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 /** 💰️ Bounded data for the existing native child grant and complete separated capture. */
 export interface PrivateNativeFundingV1{readonly maximumMilliseconds:number;readonly maximumBytes:number;readonly maximumLines:number}

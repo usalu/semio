@@ -30,4 +30,6 @@ impl protocol::OpBinary for En1990Mutation {
         semio_s_artifact_norm_contract::payload_op_binary::decode::<semio_s_artifact_norm_en1990_model::En1990Snapshot, _>(include_str!("📡️.protocol.semio"), bytes)
     }
 }
+
+semio_os_kernel::original_pack_value_operation_receiving!(En1990Mutation);
 }

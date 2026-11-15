@@ -1,4 +1,5 @@
 import {buildModePolicy,type BuildMode} from "../../🏗️build/🎚️mode/🟦️.ts";
+import {withProvisionedPythonV1} from "../../🏗️build/🧰️toolchains/🟦️.ts";
 import policySchema from "./🧬️schema/🔣️.json" with {type:"json"};
 import { statSync, readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join, isAbsolute } from "node:path";
@@ -197,7 +198,7 @@ export interface CargoTestAdmissionV1 {readonly assertion?:(run:()=>Promise<void
 async function admitCargoExecutionV1(request:CargoTestRequestV1,policy:CargoTestPolicyV1,admission:CargoTestAdmissionV1,compilerArgs:readonly string[]):Promise<Readonly<{environment:Readonly<Record<string,string|undefined>>;metadata:unknown}>>{
  const control=admission?.control,storage=admission?.storage;if(!control)throw Error("Original Cargo test admission required");checkResourceLeaseControl(control);requireNativeStorageReservationV1(storage,control);if(storage.allocation.kind!=="compiler-workspace")throw Error("Compiler workspace reservation required");await storage.recheck();
  for(const path of [policy.targetDirectory,policy.buildDirectory,policy.artifactDirectory,...(policy.coveragePath?[policy.coveragePath]:[])])requireNativeStoragePathV1(storage.backing.root,path);
- const original=request.environment??process.env,env:Record<string,string|undefined>={...original,CARGO_TARGET_DIR:policy.targetDirectory,CARGO_BUILD_BUILD_DIR:policy.buildDirectory,RUST_MIN_STACK:original.RUST_MIN_STACK??policy.rustMinStack};
+ const original=withProvisionedPythonV1(request.environment??process.env,admission.workspaceRoot),env:Record<string,string|undefined>={...original,CARGO_TARGET_DIR:policy.targetDirectory,CARGO_BUILD_BUILD_DIR:policy.buildDirectory,RUST_MIN_STACK:original.RUST_MIN_STACK??policy.rustMinStack};
  for(const name of ["CARGO_HOME","TMPDIR","TMP","TEMP"]){const path=env[name];if(!path)throw Error("Bounded original Cargo environment required: "+name);requireNativeStoragePathV1(storage.backing.root,path);}
  const{graph,metadata}=await captureCargoCompilationPlanV1({workspaceRoot:admission.workspaceRoot,cwd:request.cwd,program:"cargo",prefix:[],args:compilerArgs,environment:env,maximumOutputBytes:cargoPlanningOutputBytesV1},control,admission.planningPort??actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,admission.workspaceRoot,admission.sourceBoundary,control,admission.sourcePort??actualCargoSourceAdmissionPortV1(env,request.cwd,storage),admission.sourceMemo);await storage.recheck();return{environment:env,metadata};
 }

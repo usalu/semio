@@ -132,6 +132,13 @@ pub struct En1993Snapshot {
     pub fastened_joints: Vec<FastenedJoint>,
 }
 
+/// 🌱 Initial subject of a live evaluation session: the worked example.
+impl Default for En1993Snapshot {
+    fn default() -> Self {
+        Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En)
+    }
+}
+
 impl En1993Snapshot {
     /// 📸️ Reference EN 1993 subject under the explicitly chosen annex; the annex is never defaulted.
     pub fn example(annex: semio_s_plugin_norm_compliance::AnnexChoice) -> Self {
@@ -982,7 +989,7 @@ impl En1993Snapshot {
         end_plate.stiffness_ratio = 0.2;
         end_plate.transformation_parameter = 1.0;
         end_plate.assumed_class = StiffnessClass::Rigid;
-        let mut base_plate = SteelJoint { plate_fy: 0.0, plate_width: 0.0, bolt_to_web: 0.0, extension_to_flange: 0.0, extension_edge: 0.0, alpha_factor: 0.0, bolt_stress_area: 0.0, bolt_grip_length: 0.0, column_flange_thickness: 0.0, column_web_thickness: 0.0, column_web_depth: 0.0, column_web_shear_area: 0.0, column_root_radius: 0.0, column_fy: 0.0, column_web_stress: 0.0, beam_flange_thickness: 0.0, compression_lever: 0.0, moment_demand: 0.0, beam_moment_resistance: 0.0, column_moment_resistance: 0.0, beam_inertia: 0.0, beam_span: 0.0, braced_frame: 0, stiffness_ratio: 0.0, transformation_parameter: 0.0, assumed_class: StiffnessClass::Unset, base_plate_length: 0.0, concrete_fcd: 0.0, concrete_modulus: 0.0, concrete_area_a0: 0.0, concrete_area_a1: 0.0, joint_coefficient: 0.0, anchor_area: 0.0, anchor_length: 0.0, base_normal_force: 0.0, base_moment: 0.0, base_lever_left: 0.0, base_lever_right: 0.0, beam_web_thickness: 0.0, beam_web_fy: 0.0, weld_force_longitudinal: 0.0, weld_force_transverse: 0.0, id: "joint-bp".into(), kind: JointKind::BasePlate, bolt_class: "8.8".into(), bolt_rows: 1, bolts_per_row: 2, edge_distance: 0.05, plate_thickness: 0.03, ..template };
+        let mut base_plate = SteelJoint { plate_fy: 0.0, plate_width: 0.0, bolt_to_web: 0.0, extension_to_flange: 0.0, extension_edge: 0.0, alpha_factor: 0.0, bolt_stress_area: 0.0, bolt_grip_length: 0.0, column_flange_thickness: 0.0, column_web_thickness: 0.0, column_web_depth: 0.0, column_web_shear_area: 0.0, column_root_radius: 0.0, column_fy: 0.0, column_web_stress: 0.0, beam_flange_thickness: 0.0, compression_lever: 0.0, moment_demand: 0.0, beam_moment_resistance: 0.0, column_moment_resistance: 0.0, beam_inertia: 0.0, beam_span: 0.0, braced_frame: 0, stiffness_ratio: 0.0, transformation_parameter: 0.0, assumed_class: StiffnessClass::Unset, base_plate_length: 0.0, concrete_fcd: 0.0, concrete_modulus: 0.0, concrete_area_a0: 0.0, concrete_area_a1: 0.0, joint_coefficient: 0.0, anchor_area: 0.0, anchor_length: 0.0, base_normal_force: 0.0, base_moment: 0.0, base_lever_left: 0.0, base_lever_right: 0.0, beam_web_thickness: 0.0, beam_web_fy: 0.0, weld_force_longitudinal: 0.0, weld_force_transverse: 0.0, id: "joint-bp".into(), kind: JointKind::BasePlate, bolt_class: "8.8".into(), bolt_rows: 1, bolts_per_row: 2, edge_distance: 0.05, plate_thickness: 0.03, ..template.clone() };
         base_plate.plate_fy = 355000000.0;
         base_plate.plate_width = 0.3;
         base_plate.bolt_to_web = 0.05;

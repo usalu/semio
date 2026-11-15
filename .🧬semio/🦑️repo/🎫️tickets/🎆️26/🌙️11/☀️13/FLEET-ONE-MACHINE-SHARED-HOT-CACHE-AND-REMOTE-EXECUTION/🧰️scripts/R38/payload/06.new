@@ -1,0 +1,140 @@
+/** 🏗 Composition root of `repo service host --foreground`: binds the graph loader to the per-host service and ties its lifetime to the process signals. */
+import {spawn,spawnSync} from "node:child_process";
+import {createHash} from "node:crypto";
+import {basename,dirname,join} from "node:path";
+import {mkdirSync,openSync,readdirSync,rmSync} from "node:fs";
+import {homedir} from "node:os";
+import {createHostServiceV1} from "../../🏛️service/🌐️host/🟨️.mjs";
+import {serviceRouteV1} from "../../🏛️service/🧯️failure/🟨️.mjs";
+import {createGraphPlannerPortV1} from "../../🔌️ports/🧭️plan/🟨️.mjs";
+import {HOST_POLICY_V1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
+import {hostEndpointsV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
+import {fleetHostReadingV1,graphServiceHeapBytesV1,graphServiceLimitMegabytesV1} from "../../../🧠️memory/🟨️.mjs";
+import {settleGraphMemoryV1} from "../../../🧠️memory/🧽️settle/🟨️.mjs";
+import {placeServiceOutsideJobsV1,prepareServiceGroupV1,releaseOwnServiceGroupV1,runsInServiceGroupV1,serviceLaunchArgumentsV1,sweepEmptyServiceGroupsV1} from "../../../🧱️job-limits/🐧️cgroup/🟦️.ts";
+import {appendServiceExitRowV1} from "../../🧾️exit-log/🟨️.mjs";
+import {ACCESS_PROOF_VERSION_V1,accessDirectoryV1,consentIdentityV1,createMountReproofV1,launchdRefusalV1,launcherDigestV1,probeConsentV1,protectedFolderOfV1,sampleAccessInChildV1,writeAccessReceiptV1} from "../../🔐️consent/🟨️.mjs";
+import {ensureLauncherConsentV1,launchdRouteV1,listServiceJobsV1,startViaLaunchdV1} from "./🍎️launchd/🟨️.mjs";
+import {createResponsibilityWatchV1} from "../../🔐️consent/🧷️responsibility/🟨️.mjs";
+import {fileURLToPath} from "node:url";
+
+const processLivesV1=pid=>{try{process.kill(pid,0);return true;}catch(error){return error?.code==="EPERM";}};
+
+/** 🪵️ One service log line on stderr, which the detached service redirects to its log file. */
+export function writeHostServiceLogV1(event,detail){process.stderr.write(new Date().toISOString()+" "+event+(detail===undefined?"":" "+detail)+"\n");}
+
+const receiptOfV1=({environment,platform,access,state,folder,error,place})=>{
+ const root=access.root??process.cwd(),accessPlatform=access.platform??platform,home=access.home??homedir(),identity=consentIdentityV1({platform:accessPlatform,home,environment});
+ const directory=access.directory??accessDirectoryV1(root,{platform:accessPlatform,home,environment});
+ try{
+  if(state==="unprotected")rmSync(join(directory,"service.json"),{force:true});
+  else writeAccessReceiptV1(directory,{version:1,role:"service",pid:process.pid,state,root,folder,identity:identity?.path??"",at:Date.now(),route:serviceRouteV1(environment),ppid:process.ppid,...error?{error}:{},...place?{place}:{},...identity&&launcherDigestV1(identity.path)?{launcherSha256:launcherDigestV1(identity.path)}:{}});
+ }catch{}
+};
+
+/** 🔐️ Probes the checkout before anything is bound: a service without the macOS file access consent leaves its receipt and a typed exit row (`access-denied`, the state, the folder and the checkout, read by the client that waits for it) and ends with exit status 4 instead of staying alive in a denied state; with the consent it leaves the receipt that says so and goes on (`undefined`), where none is needed it removes an old receipt and goes on. `access` = `{root,platform,home,directory,probe,timeoutMilliseconds}` replaces the working directory, the system, the receipt folder and the probe in tests. */
+async function gateConsentV1({runtime,environment,platform,log,access}){
+ const root=access.root??process.cwd(),accessPlatform=access.platform??platform,home=access.home??homedir();
+ const first=await(access.probe??(path=>probeConsentV1(path,{platform:accessPlatform,home,timeoutMilliseconds:access.timeoutMilliseconds,...access.list?{list:access.list}:{},...access.stat?{stat:access.stat}:{}})))(root),childProbe=access.childProbe??(access.probe===undefined?path=>sampleAccessInChildV1(path,{environment}):undefined),refusedByChild=first.state==="ok"&&first.folder&&childProbe?await childProbe(root):undefined;
+ const found=refusedByChild?{state:"denied",folder:first.folder,error:refusedByChild.error,place:refusedByChild.place}:first;
+ receiptOfV1({environment,platform,access,state:found.state,folder:found.folder,error:found.error,place:found.place});
+ if(found.state!=="denied"&&found.state!=="waiting")return undefined;
+ const route=serviceRouteV1(environment);
+ log("access-denied",found.state+" "+found.folder+" "+root+(found.place?" place="+found.place:"")+(refusedByChild?" by=worker":"")+" route="+route+" pid="+process.pid+" ppid="+process.ppid);
+ try{mkdirSync(runtime.directory,{recursive:true,mode:0o700});}catch{}
+ appendServiceExitRowV1(runtime.directory,{event:"exit",at:Date.now(),pid:process.pid,reason:"access-denied",code:4,tag:runtime.tag,state:found.state,folder:found.folder,root,route,ppid:process.ppid,...found.place?{place:found.place}:{},...refusedByChild?{by:"worker"}:{}});
+ return 4;
+}
+
+/** ▶ Runs the host service until it closes; resolves the exit code (75 when the memory bound forced a restart, else 0). `loadGraph({root,signal})` returns the neutral build graph of one workspace. */
+export async function runHostForegroundV1({implementation,loadGraph,loadSlice,identify,stale,capture,taskState,environment=process.env,platform=process.platform,policy,signal,log=()=>{},admission,workerMemory=()=>[],workerBusy=()=>0,cache,reload,access={}}){
+ const runtime=hostEndpointsV1(implementation,environment,platform);
+ const gate=await gateConsentV1({runtime,environment,platform,log,access});
+ if(gate!==undefined)return gate;
+ const proofRoot=access.root??process.cwd(),proofPlatform=access.platform??platform,proofHome=access.home??homedir(),protectedRoot=protectedFolderOfV1(proofRoot,{platform:proofPlatform,home:proofHome})!==undefined,watch=createResponsibilityWatchV1(access.responsible?{ask:access.responsible}:{}),seen=protectedRoot?await watch.tick():{own:true};
+ const reproof=protectedFolderOfV1(proofRoot,{platform:proofPlatform,home:proofHome})!==undefined||access.signature?createMountReproofV1({root:proofRoot,...access.signature?{signature:access.signature}:{},probe:access.probe??(path=>probeConsentV1(path,{platform:proofPlatform,home:proofHome,timeoutMilliseconds:access.timeoutMilliseconds,...access.list?{list:access.list}:{},...access.stat?{stat:access.stat}:{}})),childProbe:access.childProbe??(access.probe===undefined?path=>sampleAccessInChildV1(path,{environment}):undefined)}):undefined;
+ if(reproof)await reproof.prime();
+ log("access-proof","version="+ACCESS_PROOF_VERSION_V1+" root="+proofRoot+" protected="+(protectedFolderOfV1(proofRoot,{platform:proofPlatform,home:proofHome})??"no")+" sample=ok reproof="+(reproof?"on":"off")+" route="+serviceRouteV1(environment)+" pid="+process.pid+" ppid="+process.ppid+(seen.responsible===undefined?"":" responsible="+seen.responsible));
+ const guard=load=>load===undefined||!reproof?load:async(...args)=>{
+  const{changed,found}=await reproof.check();
+  if(changed)log("access-proof","version="+ACCESS_PROOF_VERSION_V1+" repeated: a mount changed since the start "+(found?"and "+found.place+" is refused ("+found.error+(found.by==="worker"?", by=worker":"")+")":"and everything is readable")+" route="+serviceRouteV1(environment)+" pid="+process.pid+" ppid="+process.ppid);
+  if(found)throw Object.assign(Error("Relative filesystem fstatat failed (EPERM)"),{code:"EPERM",root:dirname(found.place),entry:basename(found.place)});
+  return load(...args);
+ };
+ const service=createHostServiceV1({runtime:{...runtime},implementation,...access.root?{access:{root:access.root,...access.platform?{platform:access.platform}:{},...access.home?{home:access.home}:{}}}:{},policy,log,ports:{planner:createGraphPlannerPortV1({loadGraph:guard(loadGraph),loadSlice:guard(loadSlice),identify,stale,capture,taskState}),...(admission?{admission}:{}),...(reload?{reload}:{}),settle:()=>settleGraphMemoryV1(),workers:{memory:workerMemory,active:workerBusy},cache:cache??{tick:async signal=>{const[{casEnforceTickV1},{casRootV1}]=await Promise.all([import("../../../🗄️cas/🚦️guard/🟦️.ts"),import("../../../🗄️cas/🗃️store/🟦️.ts")]);await casEnforceTickV1({root:casRootV1(environment,platform),signal});}}}});
+ let stopping,recorded=false;
+ const record=row=>{if(recorded)return;recorded=true;const usage=process.memoryUsage();appendServiceExitRowV1(runtime.directory,{event:"exit",at:Date.now(),pid:process.pid,...seen.responsible===undefined?{}:{responsible:seen.responsible},rssMegabytes:Math.round(usage.rss/1048576),heapMegabytes:Math.round(usage.heapUsed/1048576),workers:workerMemory(),workersBusy:workerBusy(),...row});releaseOwnServiceGroupV1();};
+ const crash=error=>{record({reason:"crash",error:error?.stack??String(error)});};
+ process.once("uncaughtException",error=>{crash(error);process.exit(1);});process.once("unhandledRejection",crash);
+ process.once("exit",code=>record({reason:"exit",code}));
+ const stop=(reason,detail={})=>{record({reason:"stop:"+reason,...detail});stopping??=service.stop(reason);void stopping.catch(()=>{});};
+ const terminate=()=>stop("SIGTERM"),interrupt=()=>stop("SIGINT"),abort=()=>stop("cancelled");
+ process.once("SIGTERM",terminate);process.once("SIGINT",interrupt);signal?.addEventListener("abort",abort,{once:true});
+ let responsibilityTimer;
+ try{
+  try{await service.start();}catch(error){if(error?.code==="running"){record({reason:"adopted",code:0});return 0;}throw error;}
+  if(!seen.own&&seen.responsible!==undefined){
+   responsibilityTimer=setInterval(()=>{void watch.tick().then(now=>{if(!now.lost||stopping!==undefined)return;log("responsible-gone","was="+now.was+" now="+now.now+" pid="+process.pid+": the app that held the file access of this service ended, so it is judged against its own runtime from now on; a client starts the next one under its own access / die App, deren Dateizugriff dieser Dienst trug, ist beendet, daher wird er ab jetzt als eigene Laufzeit beurteilt; ein Client startet den nächsten mit seinem eigenen Zugriff");stop("responsible-gone",{responsibleWas:now.was,responsibleNow:now.now});}).catch(()=>{});},Math.max(50,policy?.responsibilityCheckMilliseconds??HOST_POLICY_V1.responsibilityCheckMilliseconds));
+   responsibilityTimer.unref?.();
+  }
+  const reason=await service.closed,code=reason==="memory"?75:reason==="access-denied"?4:0;
+  record({reason:String(reason),code,tag:runtime.tag,route:serviceRouteV1(environment),...reason==="access-denied"?{root:access.root??process.cwd(),folder:protectedFolderOfV1(access.root??process.cwd(),{platform:access.platform??platform,home:access.home??homedir()})??""}:{}});
+  if(reason==="access-denied")receiptOfV1({environment,platform,access,state:"denied",folder:protectedFolderOfV1(access.root??process.cwd(),{platform:access.platform??platform,home:access.home??homedir()})??""});
+  return code;
+ }finally{
+  clearInterval(responsibilityTimer);signal?.removeEventListener("abort",abort);process.off("SIGTERM",terminate);process.off("SIGINT",interrupt);
+  await (stopping??service.stop("settled"));
+ }
+}
+
+/** 🧷️ What belongs to the client that happened to start the service and must not follow it: its capacity grant (released when the client ends) and the plan child of its own run. */
+const CLIENT_BOUND_ENVIRONMENT_V1=Object.freeze(["SEMIO_HOST_CAPACITY_GRANT","SEMIO_HOST_CAPACITY_PLAN","SEMIO_HOST_CAPACITY_PHASE_MARKS","SEMIO_BUILD_GRAPH_PLAN_OUT","SEMIO_BUILD_GRAPH_YIELD_TICKET","SEMIO_BUILD_REUSE_GRAPH","SEMIO_BUILD_GRAPH_PATH","SEMIO_BUILD_GRAPH_DIGEST"]);
+
+/** 🚫️ Why a service that a running service starts (`SEMIO_SERVICE_ROUTE_REQUIRED=launchd`, the reload) never starts directly on macOS below a protected folder: the direct child inherits the responsible app of the service that spawned it and loses the file access of the checkout the moment that one ends, so only a launchd job under the launcher may carry the service over; otherwise the next client starts it under its own access. */
+export const REPLACEMENT_REFUSAL_V1="A graph service is not started from inside a running service unless launchd runs it under the launcher: a direct child loses the file access of the checkout when the service that started it ends, so the next client starts it under its own access / Ein Graphdienst wird nicht aus einem laufenden Dienst gestartet, wenn ihn nicht launchd unter dem Launcher ausführt: ein direktes Kind verliert den Dateizugriff auf den Checkout, sobald der startende Dienst endet; der nächste Client startet ihn mit seinem eigenen Zugriff";
+
+/** 🙋️ Whether the calling process itself can list the checkout (a real read under the identity of the caller: the app that runs `repo` may hold the consent that the launcher does not hold yet). */
+function callerCanReadV1(root){
+ try{readdirSync(root);return true;}catch(error){return!(error?.code==="EPERM"||error?.code==="EACCES");}
+}
+
+/** 🚀 Starts the service detached from this process (on macOS, for a checkout below Documents, Desktop or Downloads, in this order: (a) as a launchd job whose program is the launcher `repo` when the launcher holds the consent; (b) when the launcher has no consent yet but the caller can read the checkout itself, directly, under the access of the caller, with one bilingual line that says what to click to make the service independent (the consent probe keeps waiting for that click, and a later service starts as (a)); (c) when neither can read, the client ends with exit 4 and the consent text; any failure of the launchd route spawns the service directly): `command` is the argument vector that runs the foreground host (`repo service host --foreground`); output goes to the service log. */
+export function spawnHostServiceV1({command,environment=process.env,cwd=process.cwd(),launchd={}}){
+ return({runtime})=>{
+  mkdirSync(runtime.directory,{recursive:true,mode:0o700});
+  const required=environment.SEMIO_SERVICE_ROUTE_REQUIRED==="launchd"&&protectedFolderOfV1(cwd,{platform:launchd.route?.platform??process.platform,...launchd.route?.home?{home:launchd.route.home}:{}})!==undefined,env={...environment,BUN_JSC_forceRAMSize:String(graphServiceHeapBytesV1()),[HOST_POLICY_V1.memoryPurge.environmentVariable]:String(HOST_POLICY_V1.memoryPurge.delayMilliseconds)};
+  for(const name of[...CLIENT_BOUND_ENVIRONMENT_V1,"SEMIO_SERVICE_ROUTE_REQUIRED"])delete env[name];
+  const refuseDirect=()=>{throw Error(REPLACEMENT_REFUSAL_V1);};
+  const linux=process.platform==="linux",name="graph-"+createHash("sha256").update(runtime.directory).digest("hex").slice(0,12),service={name,limitMegabytes:graphServiceLimitMegabytesV1(fleetHostReadingV1().hostMegabytes),softRatioBasisPoints:9000};
+  if(linux)sweepEmptyServiceGroupsV1("graph-",undefined);
+  const group=linux?prepareServiceGroupV1(service):undefined,argv=group?serviceLaunchArgumentsV1(join(group,"cgroup.procs"),command):command;
+  const eligible=launchdRouteV1({command,environment,cwd,runtimeDirectory:runtime.directory,tag:runtime.tag,...launchd.route}),remembered=eligible?(launchd.refused??launchdRefusalV1)(cwd):undefined,route=remembered?undefined:eligible;
+  if(remembered)process.stderr.write("The graph service runs under the access of the calling app: the launchd route was refused for "+(remembered.place||cwd)+" earlier since this machine started / Der Graphdienst läuft mit dem Zugriff der aufrufenden App: die launchd-Route wurde für "+(remembered.place||cwd)+" seit dem Start dieses Rechners bereits abgewiesen\n");
+  if(required&&!route)refuseDirect();
+  if(route){
+   const run=launchd.run??((program,args)=>{const result=spawnSync(program,args,{encoding:"utf8",timeout:10000});return{status:result.status??1,stdout:result.stdout??""};});
+   const consent=(launchd.ensure??ensureLauncherConsentV1)({root:cwd,probeScript:fileURLToPath(new URL("../../🔐️consent/🔎️probe/🟨️.mjs",import.meta.url)),run,environment,...launchd.consent});
+   if(required&&consent.state!=="ready")refuseDirect();
+   if(consent.state==="waiting"){
+    if((launchd.callerCanRead??callerCanReadV1)(cwd)){
+     process.stderr.write("The graph service runs under the access of the calling app because repo has no consent for "+(protectedFolderOfV1(cwd)??"this folder")+" yet; click Allow on the dialog \"repo would like to access files in your "+(protectedFolderOfV1(cwd)??"")+" folder\" to make it independent / Der Graphdienst läuft mit dem Zugriff der aufrufenden App, weil repo noch keine Erlaubnis für "+(protectedFolderOfV1(cwd)??"diesen Ordner")+" hat; klicke bei der Abfrage „repo möchte auf Dateien in deinem Ordner "+(protectedFolderOfV1(cwd)??"")+" zugreifen“ auf „Erlauben“, damit er unabhängig wird\n");
+    }else{
+     appendServiceExitRowV1(runtime.directory,{event:"exit",at:Date.now(),pid:process.pid,reason:"access-denied",code:4,tag:runtime.tag,state:"waiting",folder:protectedFolderOfV1(cwd)??"",root:cwd,...consent.changed?{changed:true}:{}});
+     return;
+    }
+   }
+   const outcome=consent.state==="waiting"?{started:false,reason:"the launcher has no consent yet"}:consent.state==="failed"?{started:false,reason:"the consent probe failed: "+consent.reason}:startViaLaunchdV1(route,{environment:{...env,SEMIO_SERVICE_ROUTE:"launchd"},log:runtime.log,run,...launchd.options});
+   if(outcome.started){appendServiceExitRowV1(runtime.directory,{event:"start",at:Date.now(),via:"launchd",label:route.label,placed:false});return{alive:()=>listServiceJobsV1(run).some(job=>job.label===route.label&&job.pid!==undefined)};}
+   if(required)refuseDirect();
+   if(consent.state!=="waiting")process.stderr.write("launchd did not run the graph service ("+outcome.reason+"); starting it directly / launchd hat den Graphdienst nicht gestartet ("+outcome.reason+"); er wird direkt gestartet\n");
+  }
+  const log=openSync(runtime.log,"a",0o600),child=spawn(argv[0],argv.slice(1),{cwd,env:{...env,SEMIO_SERVICE_ROUTE:"direct"},stdio:["ignore",log,log],detached:true,windowsHide:true});
+  child.unref();
+  if(child.pid===undefined)return;
+  let placed=group!==undefined&&runsInServiceGroupV1(child.pid,group);
+  for(let wait=0;group!==undefined&&!placed&&wait<20;wait++){Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,10);placed=runsInServiceGroupV1(child.pid,group);}
+  if(group!==undefined&&!placed)placed=placeServiceOutsideJobsV1(child.pid,service);
+  appendServiceExitRowV1(runtime.directory,{event:"start",at:Date.now(),pid:child.pid,...placed&&group?{cgroup:group,limitMegabytes:service.limitMegabytes}:{placed:false}});
+  return{alive:()=>processLivesV1(child.pid)};
+ };
+}

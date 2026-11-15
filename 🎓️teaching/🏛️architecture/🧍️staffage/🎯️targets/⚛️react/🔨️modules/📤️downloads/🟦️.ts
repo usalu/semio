@@ -115,12 +115,23 @@ function timeTag(seconds: number): string {
   return `t${seconds.toFixed(2).replace(".", "p")}`;
 }
 
-/** 🏷️ The file name of a 3D download: `<asset>_<pose|clip|bundle>_model_<representation|all>_1-<denominator>.<ext>`, the word `model` standing where a drawing names its viewpoint; a GLB and a model JSON hold every representation (`all`), an FBX the one it was made in. */
-export const spatialFilename = (asset: Asset, format: SpatialExportFormat, what: Slug, representation: View | "all", denominator: number): string => `${slug(asset.id)}_${slug(format === "model-zip" ? "bundle" : what)}_model_${representation}_1-${denominator}.${EXTENSION[format]}`;
+/** 🏷️ The file name of a 3D download, the very name the library, the batch and the command line give the same file: `<asset>.<pose>.glb` (every authored scale and mode as scenes), `<asset>.<pose>.pose.json` or `<asset>.<clip>.clip.json` (the multi-scene model), `<asset>.<clip>.s<scale>.<view>.fbx` (one clip at one scale in one view) and `<asset>.zip`. */
+export const spatialFilename = (asset: Asset, format: SpatialExportFormat, what: { readonly pose?: Slug; readonly clip?: Slug }, scale: number, view: View): string => {
+  switch (format) {
+    case "glb":
+      return library.glbName(asset.id, what.pose!);
+    case "fbx":
+      return library.fbxName(asset.id, what.clip!, scale, view);
+    case "model":
+      return what.pose === undefined ? library.modelName(asset.id, "clip", what.clip!) : library.modelName(asset.id, "pose", what.pose);
+    case "model-zip":
+      return library.zipName(asset.id);
+  }
+};
 
-/** 📏️ The export file name: `<asset>_<pose | clip-t…>_<viewpoint>_<representation>_1-<denominator>.<ext>`, so the outputs of the three viewpoints never collide; a 3D format is named by {@link spatialFilename}. */
+/** 📏️ The export file name: `<asset>_<pose | clip-t…>_<viewpoint>_<representation>_1-<denominator>.<ext>`, so the outputs of the three viewpoints never collide; a 3D format is named by {@link spatialFilename}, the name of the library. */
 export function exportFilename(asset: Asset, query: EvaluationQuery, request: DepictionRequest, format: ExportFormat, sheet: "single" | "all-views" = "single"): string {
-  if (isSpatialExport(format)) return spatialFilename(asset, format, query.kind === "pose" ? query.pose : query.kind === "clip" ? query.clip : "transition", format === "fbx" ? request.view : "all", request.scale.denominator);
+  if (isSpatialExport(format)) return spatialFilename(asset, format, query.kind === "pose" ? { pose: query.pose } : query.kind === "clip" ? { clip: query.clip } : {}, request.scale.denominator, request.view);
   const what = query.kind === "pose" ? query.pose : query.kind === "clip" ? (format === "png-sequence" || format === "mp4" || format === "webm" ? query.clip : `${query.clip}-${timeTag(query.timeS)}`) : `${query.from}-to-${query.to}`;
   const view = sheet === "all-views" && format === "pdf" ? "all-views" : request.view;
   return `${slug(asset.id)}_${slug(what)}_${request.viewpoint}_${view}_1-${request.scale.denominator}.${EXTENSION[format]}`;

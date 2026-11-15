@@ -1,12 +1,12 @@
-import {advanceScriptInvocation} from "@semio-tech/process/routing";
+import {advanceScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 import {readFileSync,mkdirSync,writeFileSync,existsSync} from "node:fs";
 import {join,dirname} from "node:path";
 import Ajv from "ajv";
-import {parseCatalogBuildContributionV1} from "@semio-tech/plugin-registry-publication/build";
-import {frameworkOsEngineSourceOwnersV1,frameworkOsEnginePackageNameV1} from "@semio-tech/framework-os-dev/builder/vite/artifacts/engines";
+import {parseCatalogBuildContributionV1} from "../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
+import {frameworkOsEngineSourceOwnersV1,frameworkOsEnginePackageNameV1} from "../../../../../../💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import corpus from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️schema.json" with {type:"json"};
 /** 🧊️ Authors disposable declared Source inputs for the actual catalog preparation factory. */

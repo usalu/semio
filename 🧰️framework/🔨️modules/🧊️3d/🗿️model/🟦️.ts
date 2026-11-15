@@ -2,7 +2,13 @@
  * @see 🧬️schema/🔣️.json */
 export type * from "./🧬️schema/🟦️.ts";
 export { CancelledError, Pace, silentOperation } from "./⏱️operation/🟦️.ts";
+export { scenesOf, selectScene, nodesOfScene, solidsOfScene, materialsOfScene, sceneIdsOfNodes, UnknownSceneError, type SceneOption } from "./🎞️scenes/🟦️.ts";
+export { boundsOf, type ModelBounds } from "./📐️bounds/🟦️.ts";
 export { validateModel } from "./✅️validation/🟦️.ts";
+export { meshIntegrity, outwardNormals, outwardOrientation, solidIntegrity, type IntegrityOptions, type MeshIntegrity } from "./🩻️integrity/🟦️.ts";
+export { revolveClosure, revolveOutline, type RevolveClosure } from "./🔺️tessellation/🌀️revolved/🟦️.ts";
+export { taperFault } from "./🔺️tessellation/🏗️extrude/🟦️.ts";
+export { loftFault, loftFrames } from "./🔺️tessellation/🧵️loft/🟦️.ts";
 export { tessellate, tessellateSolid, restWorldMatrices, ModelInvalidError } from "./🔺️tessellation/🟦️.ts";
 export { poseModel, sampleMaterials, type PoseSelector, type PoseResult, type LocalTransform } from "./🦴️mechanism/🟦️.ts";
 export { featureEdges } from "./📏️edges/🟦️.ts";

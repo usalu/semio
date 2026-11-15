@@ -1,0 +1,42 @@
+## /run/user/1000/semio-repo/1000/host-f1aa47bafc29.log
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.
+graph: 517 stale projects, 0 taken from the fleet, 68 too heavy for this machine (@semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 62 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 517
+graph: waiting for the fleet: 0 of 517 projects arrived
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: the fleet was asked for 517 stale projects and delivered 0 within 902 s; 517 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 62 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+graph: plan answered, managed 104 MB, resident 184 MB (released 2 MB)
+graph: nothing to wait for any longer: asked the fleet for 517 stale projects and received 246 within 1493 s, 271 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+graph: plan answered, managed 104 MB, resident 177 MB (released 0 MB)
+## last waiting line: graph: waiting for the fleet: 246 of 517 projects arrived
+## last 30 lines
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repository:command] still running after 2830 s
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repo] still working after 2840 s; last phase started: source.served
+[repository:command] still running after 2840 s
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repository:command] still running after 2850 s
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repository:command] still running after 2860 s
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repo] still working after 2870 s; last phase started: source.served
+[repository:command] still running after 2870 s
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repository:command] still running after 2880 s
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repository:command] still running after 2890 s
+[repo] still working after 2900 s; last phase started: source.served
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repository:command] still running after 2900 s
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repository:command] still running after 2910 s
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repository:command] still running after 2920 s
+[repo] still working after 2930 s; last phase started: source.served
+graph: waiting for the fleet: 246 of 517 projects arrived
+[repository:command] still running after 2930 s
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: asked the fleet for 517 stale projects and received 246 within 1493 s, 271 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-15T03:24:55.135Z graph-wanted-expired {"wanted":"517","arrived":"246","seconds":"1493","missing":"271","local":"0","heavy":""}
+graph: plan answered, managed 104 MB, resident 177 MB (released 0 MB)

@@ -1,4 +1,4 @@
-/** 🧊️ The catalog-wide silhouette guard: every one of the 152 assets, in `presentation.defaultPose` at 1:50, has a volume whose bounding box is within 8 % of `dimensions` on every axis and whose projection agrees with each depicted view with an IoU of at least 0.80. One physical body: the side elevation, the front elevation, the plan and the volume are projections of the same body.
+/** 🧊️ The catalog-wide silhouette guard: every one of the 152 assets, in `presentation.defaultPose` at every authored scale, has a body whose bounding box is within one smallest feature of `dimensions` on every axis, whose Hausdorff distance to the drawing is at most two features and whose projection agrees with each depicted view with an IoU of at least 0.92. One physical body: the side elevation, the front elevation, the plan and the volume are projections of the same body.
  *
  * The drawing side is what `evaluate` draws: filled shapes as areas, open strokes and unfilled outlines at the true width of the member they draw (taken from the volume), a declared section against the volume cut by its plane (the drawing must show every cut face and may show whatever remains visible beyond, thin outlines of the rest).
  *
@@ -12,7 +12,8 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { tessellateSolid } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
-import type { Asset } from "../../🧬️schema/🟦️.ts";
+import { SCALE_DENOMINATORS, type Asset } from "../../🧬️schema/🟦️.ts";
+import { featureOf } from "../../🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
 import { assetPathsFromFiles, readStreamedAsset } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
 import { GATE, Mask, VIEWPOINTS, cutLoops, measureAsset, memberOf } from "../🧰️support/🌓️silhouette/🟦️.ts";
 import { python } from "../🧰️support/🐍️.ts";
@@ -84,19 +85,27 @@ describe("🧊️ every asset of the catalog is one body in its three views and 
   });
 
   describe.each(entries.map((e) => [e.folder, e] as const))("%s", (_id, entry) => {
-    it("fills its dimensions within the gate and agrees with the volume in the elevation, the front and the plan, as sharp rasterises it", { timeout: 900_000 }, async () => {
+    it("fills its dimensions within one smallest feature and agrees with the body of every authored scale in the elevation, the front and the plan, as sharp rasterises it", { timeout: 900_000 }, async () => {
       const { asset } = (await readStreamedAsset(entry)) as { asset: Asset };
-      const m = measureAsset(asset);
       const dims = [asset.dimensions.widthM, asset.dimensions.heightM, asset.dimensions.depthM];
-      if (!exempt(asset.id, "bbox")) m.bboxError.forEach((e, k) => expect(Math.abs(e), `${asset.id} axis ${k}: ${m.bbox[k]} m against ${dims[k]} m`).toBeLessThanOrEqual(vectors.gate.bbox));
-      for (const view of VIEWPOINTS) {
-        const measured = m.views[view];
-        if (!exempt(asset.id, view)) expect(measured.iou, `${asset.id} ${view}${m.sections[view] === undefined ? "" : " (section)"}`).toBeGreaterThanOrEqual(vectors.gate.iou);
-        const reference = await sharpIou(measured);
-        expect(Math.abs(reference - measured.iou), `${asset.id} ${view}: sharp ${reference} against owned ${measured.iou}`).toBeLessThanOrEqual(vectors.gate.oracle);
-        if (vectors.exact.includes(asset.id)) {
-          const exact = exactIou(measured);
-          expect(Math.abs(exact - measured.iou), `${asset.id} ${view}: polygon-clipping ${exact} against owned ${measured.iou}`).toBeLessThanOrEqual(vectors.gate.oracle);
+      const scales = SCALE_DENOMINATORS.filter((d) => (asset.volumes as Record<string, { status: string }>)[String(d)]?.status === "authored");
+      expect(scales.length, `${asset.id} has no authored volume`).toBeGreaterThan(0);
+      for (const scale of scales) {
+        const feature = featureOf(scale);
+        const m = measureAsset(asset, scale, undefined, undefined, feature);
+        if (!exempt(asset.id, "bbox")) m.bbox.forEach((b, k) => expect(Math.abs(b - dims[k]!), `${asset.id} 1:${scale} axis ${k}: ${b} m against ${dims[k]} m`).toBeLessThanOrEqual(feature));
+        for (const view of VIEWPOINTS) {
+          const measured = m.views[view];
+          if (!exempt(asset.id, view)) {
+            expect(measured.iou, `${asset.id} 1:${scale} ${view}${m.sections[view] === undefined ? "" : " (section)"}`).toBeGreaterThanOrEqual(vectors.gate.iou);
+            expect(measured.hausdorffM, `${asset.id} 1:${scale} ${view} Hausdorff`).toBeLessThanOrEqual(2 * feature);
+          }
+          const reference = await sharpIou(measured);
+          expect(Math.abs(reference - measured.iou), `${asset.id} 1:${scale} ${view}: sharp ${reference} against owned ${measured.iou}`).toBeLessThanOrEqual(vectors.gate.oracle);
+          if (vectors.exact.includes(asset.id)) {
+            const exact = exactIou(measured);
+            expect(Math.abs(exact - measured.iou), `${asset.id} 1:${scale} ${view}: polygon-clipping ${exact} against owned ${measured.iou}`).toBeLessThanOrEqual(vectors.gate.oracle);
+          }
         }
       }
     });

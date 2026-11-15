@@ -104,7 +104,7 @@ impl MediaConstruction{
  /// 📏️ Quotes the next close move of the frame, its failure or that failure's retirement.
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.failure.is_some()||self.failure_close.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.failure,&self.failure_close,body)}
-  let close=self.admission.close_demand();if !self.admission.has_failure(){return Ok(close)}
+  let close=self.admission.close_demand();if !self.admission.failure_untaken(){return Ok(close)}
   let take=self.admission.take_failure_demand().physical();
   Ok(RetirementDemand{copy_bytes:take.copy_bytes.max(close.copy_bytes),capacity_bytes:take.capacity_bytes.max(close.capacity_bytes),release_bytes:take.release_bytes.max(close.release_bytes),depth:take.depth.max(close.depth)})
  }
@@ -113,7 +113,7 @@ impl MediaConstruction{
   if self.terminal_is_empty(){return Ok(None)}
   if self.failure.is_none()&&self.failure_close.is_none(){
    let before=cx.retained_progress();
-   if !(self.admission.has_failure()&&self.admission.take_failure_into_step(&mut self.failure,cx)?){self.admission.close_step(cx)?;}
+   if !(self.admission.failure_untaken()&&self.admission.take_failure_into_step(&mut self.failure,cx)?){self.admission.close_step(cx)?;}
    let after=cx.retained_progress();
    return Ok(Some(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))
   }

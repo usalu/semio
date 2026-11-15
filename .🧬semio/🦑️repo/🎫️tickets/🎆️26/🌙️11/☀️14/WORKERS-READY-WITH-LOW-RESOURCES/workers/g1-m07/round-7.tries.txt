@@ -1,0 +1,1 @@
+try 2 ended 2026-11-14T20:12:34Z native_rc=4 hard_stop=0 refusal_lines=0

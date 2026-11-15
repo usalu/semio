@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-s-artifact-trinity-rewriting-tests-narrows-the-lhs-pattern-to-a-shaft-neighbour"
+name = "semio-s-artifact-trinity-rewriting-tests-narrows-lhs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Component crate of semio-s-artifact-trinity-rewriting: tests-narrows-the-lhs-pattern-to-a-shaft-neighbour"
+description = "Component crate of semio-s-artifact-trinity-rewriting: tests-narrows-lhs"
 
 [package.metadata.semio]
 role = "library"

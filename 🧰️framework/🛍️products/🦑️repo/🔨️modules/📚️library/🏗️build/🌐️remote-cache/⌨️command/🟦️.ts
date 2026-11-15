@@ -1,7 +1,10 @@
 import {noticeLanguagesV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
-import {stat} from "node:fs/promises";
-import {isAbsolute,join,resolve} from "node:path";
-import {readRemoteCachePolicyV1,readRemoteCacheTokenV1,remoteCacheBaseUrlV1,remoteCacheEffectiveUploadV1,requireRemoteCacheShapeV1,resolveRemoteCacheContractV1,type RemoteCacheContractV1,type RemoteCacheRenderingV1} from "../🟦️.ts";
+import {readFile,stat} from "node:fs/promises";
+import {isAbsolute,join,relative,resolve} from "node:path";
+import {readRemoteCachePolicyV1,remoteCacheBaseUrlV1,remoteCacheEffectiveUploadV1,requireRemoteCacheShapeV1,type RemoteCacheContractV1,type RemoteCacheRenderingV1} from "../🟦️.ts";
+import {fleetCacheFactsPathV1,remoteCacheFetchV1,resolveAuthorisedRemoteCacheV1} from "../🛰️fleet/🟦️.ts";
+import {fleetGroupViewV1,fleetNetworkV1} from "../🛰️fleet/📣️publication/🟦️.ts";
+import {fleetInterfaceAddressV1,readFleetMachineV1,rotateFleetIdentityV1,syncFleetIdentityV1} from "../🛰️fleet/🪪️identity/🟦️.ts";
 import type {RemoteCacheValidationV1} from "../🔬️action-result/🟦️.ts";
 import {collectRemoteCacheDirectoryV1,scanRemoteCacheDirectoryV1,type RemoteCacheCollectionReportV1} from "../🧹️collector/🟦️.ts";
 import {RemoteCacheDirectoryBusyV1,startRemoteCacheServerV1,type RemoteCacheServerStatusV1} from "../🖥️server/🟦️.ts";
@@ -24,13 +27,14 @@ export type RemoteCacheCommandResultV1=Readonly<{exitCode:number;result?:unknown
 /** 🗣️ The languages of all messages; there is no default among them. */
 export type RemoteCacheLanguageV1="en"|"de";
 
-type Operation="serve"|"status"|"gc";
+type Operation="serve"|"status"|"gc"|"rotate";
 
 const LANGUAGES=texts.languages as readonly RemoteCacheLanguageV1[],
  OPTIONS:Readonly<Record<Operation,Readonly<{valued:readonly string[];plain:readonly string[]}>>>={
-  serve:{valued:["--port","--host","--directory","--max-bytes","--tls-certificate","--tls-key","--lang"],plain:["--read-only"]},
+  serve:{valued:["--port","--host","--directory","--max-bytes","--grace-seconds","--tls-certificate","--tls-key","--lang","--mirror-directory"],plain:["--read-only","--no-mirror"]},
   status:{valued:["--directory","--lang"],plain:[]},
-  gc:{valued:["--directory","--max-bytes","--lang"],plain:["--dry-run","--json"]}
+  gc:{valued:["--directory","--max-bytes","--grace-seconds","--current-keys","--lang"],plain:["--dry-run","--json"]},
+  rotate:{valued:["--lang"],plain:[]}
  };
 
 /** 💬️ Renders one catalogue message in one language. */
@@ -62,10 +66,10 @@ export function formatRemoteCacheBytesV1(bytes:number):string{
 /** 📝️ The closed arguments of one `remote-cache` operation: valued options by name and the plain flags that were given. */
 export type RemoteCacheArgumentsV1=Readonly<{operation:Operation;values:Readonly<Record<string,string>>;flags:ReadonlySet<string>}>;
 
-/** 🧭️ Reads `serve|status|gc` with its options (`--name value` or `--name=value`); every unknown, misplaced or repeated option is refused in both languages. */
+/** 🧭️ Reads `serve|status|gc|rotate` with its options (`--name value` or `--name=value`); every unknown, misplaced or repeated option is refused in both languages. */
 export function parseRemoteCacheArgumentsV1(args:readonly string[]):RemoteCacheArgumentsV1{
  const operation=args[0];
- if(operation!=="serve"&&operation!=="status"&&operation!=="gc")throw Error(both("error.syntax"));
+ if(operation!=="serve"&&operation!=="status"&&operation!=="gc"&&operation!=="rotate")throw Error(both("error.syntax"));
  const allowed=OPTIONS[operation],seen=new Set<string>(),values:Record<string,string>={},flags=new Set<string>();
  for(let index=1;index<args.length;index++){
   const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
@@ -88,6 +92,7 @@ const whole=(name:string,value:string,minimum:number,maximum:number):number=>{
 };
 
 const where=(root:string,path:string):string=>isAbsolute(path)?path:resolve(root,path);
+const inside=(root:string,path:string):boolean=>{const relation=relative(root,path);return relation===""||!relation.startsWith("..")&&!isAbsolute(relation);};
 
 function reporter(context:RemoteCacheCommandContextV1,languages:readonly RemoteCacheLanguageV1[]):(key:string,variables?:Readonly<Record<string,string|number>>)=>void{
  return (key,variables)=>{
@@ -109,19 +114,27 @@ export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCa
  if(switched!==undefined&&switched!=="true"&&switched!=="false")throw Error(both("error.option",{operation:"serve",option:`${names.readOnly}=${switched}`}));
  const certificate=flags["--tls-certificate"]??variable(names.tlsCertificate)??tls?.certificate,key=flags["--tls-key"]??variable(names.tlsKey)??tls?.key;
  if((certificate===undefined)!==(key===undefined))throw Error(both("error.tls"));
- const host=flags["--host"]??policy.host,tokens={read:read===""?undefined:read,write:write===""?undefined:write},loopback=["127.0.0.1","localhost","::1","[::1]"].includes(host);
- if(!loopback&&tokens.read===undefined&&tokens.write===undefined)throw Error(both("error.token"));
+ const asked=flags["--host"]??policy.host,bare={read:read===""?undefined:read,write:write===""?undefined:write};
  const directory=where(context.root,flags["--directory"]??policy.directory),maximumBytes=flags["--max-bytes"]===undefined?policy.maximumBytes:whole("--max-bytes",flags["--max-bytes"],1048576,Number.MAX_SAFE_INTEGER);
+ const machine=readFleetMachineV1(context.root),grouped=machine!==undefined&&machine.storeRoot!==undefined&&machine.originId===`${machine.group}-server`,network=grouped?await fleetNetworkV1(context.root,context.environment):undefined;
+ if(grouped)await syncFleetIdentityV1({root:context.root});
+ const fleetAddress=network===undefined?undefined:fleetInterfaceAddressV1(network);
+ const host=asked==="fleet"?fleetAddress??(()=>{throw Error(both("error.fleet-interface",{network:network??"?"}));})():["0.0.0.0","::","[::]"].includes(asked)&&fleetAddress!==undefined?fleetAddress:asked,loopback=["127.0.0.1","localhost","::1","[::1]"].includes(host);
+ const view=grouped?await fleetGroupViewV1(context.root,context.environment):undefined,fleet=grouped&&network!==undefined?{storeRoot:machine!.storeRoot!,group:machine!.group,...(view?.enforceNetwork===true?{networks:[network]}:{}),peerStores:view?.peerStores??{},root:context.root,inGroup:view?.inGroup??"sealed"}:undefined;
+ const tokens=bare;
+ if(!loopback&&tokens.read===undefined&&tokens.write===undefined&&fleet===undefined)throw Error(both("error.token"));
  await context.progress("remote-cache:open");say("serve.open",{directory});
  const{createCasStoreV1,casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),hostStore=createCasStoreV1({root:casRootV1(context.environment)});
  const server=await startRemoteCacheServerV1({
-  hostStore,directory,host,
+  hostStore,directory,host,...(fleet===undefined?{}:{fleet}),
   port:flags["--port"]===undefined?policy.port:whole("--port",flags["--port"],0,65535),
   maximumBytes,
   maximumEntryBytes:Math.min(policy.maximumEntryBytes,Math.floor(maximumBytes/2)),
   maximumAgeDays:policy.maximumAgeDays,
+  graceMilliseconds:(flags["--grace-seconds"]===undefined?policy.graceSeconds:whole("--grace-seconds",flags["--grace-seconds"],0,604800))*1000,
   defaultInstance:all.defaults.instance,
   tokens,readOnly,
+  ...(parsed.flags.has("--no-mirror")||(flags["--mirror-directory"]===undefined)?{}:{mirror:{directory:where(context.root,flags["--mirror-directory"]??join(directory,"mirror"))}}),
   tls:certificate===undefined||key===undefined?undefined:{certificate:where(context.root,certificate),key:where(context.root,key)},
   validation:policy.actionResults as RemoteCacheValidationV1,
   maximumActionResultBytes:policy.maximumActionResultBytes,
@@ -131,11 +144,12 @@ export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCa
    if(event.stage==="listening"){
     context.write(`[remote-cache] listening ${event.url}`);void context.progress("remote-cache:serving");
     say("serve.listening",{url:event.url,access:readOnly?"@serve.access.read-only":"@serve.access.read-write",transport:event.url.startsWith("https")?"@serve.transport.https":"@serve.transport.http",validation:"@serve.validation."+policy.actionResults});
-    if(tokens.read===undefined&&tokens.write===undefined)say("serve.open-access");
+    if(tokens.read===undefined&&tokens.write===undefined&&fleet===undefined)say("serve.open-access");
     say("serve.client",{url:event.url});
    }else if(event.stage==="scan")void context.progress("remote-cache:scan");
    else if(event.stage==="ready"){void context.progress("remote-cache:ready");say("serve.ready",{entries:event.entries,bytes:formatRemoteCacheBytesV1(event.bytes)});}
    else if(event.stage==="evict")say("serve.evicted",{entries:event.entries,bytes:formatRemoteCacheBytesV1(event.bytes)});
+   else if(event.stage==="reclaim")say("serve.reclaimed",{entries:event.entries,bytes:formatRemoteCacheBytesV1(event.bytes)});
    else if(event.stage==="stopped"){context.write("[remote-cache] stopped");say("serve.stopped");}
   }
  }).catch(error=>{throw error instanceof RemoteCacheDirectoryBusyV1?Error(both("error.busy",{directory:error.directory})):error;});
@@ -145,10 +159,10 @@ export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCa
 
 type Probe={protocol:RemoteCacheToolV1["protocol"];reachable:boolean;authorized:boolean;status:number|null;milliseconds:number};
 
-async function probeRemoteCacheV1(contract:RemoteCacheContractV1,tool:RemoteCacheToolV1,token:string|undefined,signal:AbortSignal):Promise<Probe>{
+async function probeRemoteCacheV1(contract:RemoteCacheContractV1,tool:RemoteCacheToolV1,call:typeof fetch,signal:AbortSignal):Promise<Probe>{
  const started=performance.now(),elapsed=()=>Math.round(performance.now()-started),combined=AbortSignal.any([signal,AbortSignal.timeout(contract.timeoutSeconds*1000)]);
  try{
-  const response=await fetch(remoteCacheBaseUrlV1(contract)+tool.probePath,{method:"GET",signal:combined,headers:token===undefined?{}:{authorization:`Bearer ${token}`}});
+  const response=await call(remoteCacheBaseUrlV1(contract)+tool.probePath,{method:"GET",signal:combined});
   await response.body?.cancel();
   return {protocol:tool.protocol,reachable:true,authorized:response.status===200||response.status===404,status:response.status,milliseconds:elapsed()};
  }catch(error){
@@ -157,9 +171,9 @@ async function probeRemoteCacheV1(contract:RemoteCacheContractV1,tool:RemoteCach
  }
 }
 
-async function askServerV1(contract:RemoteCacheContractV1,token:string|undefined,signal:AbortSignal):Promise<RemoteCacheServerStatusV1|null>{
+async function askServerV1(contract:RemoteCacheContractV1,call:typeof fetch,signal:AbortSignal):Promise<RemoteCacheServerStatusV1|null>{
  try{
-  const response=await fetch(`${contract.endpoint}/status`,{signal:AbortSignal.any([signal,AbortSignal.timeout(contract.timeoutSeconds*1000)]),headers:token===undefined?{}:{authorization:`Bearer ${token}`}});
+  const response=await call(`${contract.endpoint}/status`,{signal:AbortSignal.any([signal,AbortSignal.timeout(contract.timeoutSeconds*1000)])});
   if(response.status!==200){await response.body?.cancel();return null;}
   const document=await response.json();
   requireRemoteCacheShapeV1("ServerStatus",document,"Closed remote cache server status required");
@@ -170,9 +184,9 @@ async function askServerV1(contract:RemoteCacheContractV1,token:string|undefined
  }
 }
 
-/** 📋️ Prints the resolved contract, how both build tools render it, whether the endpoint answers on both protocols, what the running server reports about itself and what the local store directory holds; secrets never appear, only whether the token variable is set. */
+/** 📋️ Prints where the endpoint and the token came from (environment or fleet facts), the resolved contract, how both build tools render it, whether the endpoint answers and accepts the token on both protocols, what the running server itself reports (entries and bytes as the server counts them, never a guessed local directory) and, when asked for a directory, what that local store holds; secrets never appear, only whether a token is present and where it came from. */
 export async function remoteCacheStatusV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<unknown>{
- const parsed=parseRemoteCacheArgumentsV1(["status",...args]),all=readRemoteCachePolicyV1(),tools=await context.tools(),contract=resolveRemoteCacheContractV1(context.environment),directory=where(context.root,parsed.values["--directory"]??all.server.directory);
+ const parsed=parseRemoteCacheArgumentsV1(["status",...args]),all=readRemoteCachePolicyV1(),tools=await context.tools(),directory=where(context.root,parsed.values["--directory"]??all.server.directory);
  await context.progress("remote-cache:scan");
  const root=join(directory,"v1"),present=await stat(root).then(info=>info.isDirectory(),()=>false);
  let store=null;
@@ -181,12 +195,38 @@ export async function remoteCacheStatusV1(args:readonly string[],context:RemoteC
   let bytes=0;for(const row of index.values())bytes+=row.size;
   store={directory,entries:index.size,bytes,maximumBytes:all.server.maximumBytes};
  }
- if(contract===undefined)return {version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,store};
+ const found=await resolveAuthorisedRemoteCacheV1({...context.environment,SEMIO_WORKSPACE_ROOT:context.environment.SEMIO_WORKSPACE_ROOT??context.root},{root:context.root}),resolved=found.resolution;
+ if(resolved===undefined)return {version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,store,resolution:null,remote:null};
  await context.progress("remote-cache:probe");
- const token=readRemoteCacheTokenV1(contract,context.environment),probes:Probe[]=[],renderings:Record<string,RemoteCacheRenderingV1>={};
- for(const tool of tools){renderings[tool.tool]=tool.render(contract,context.environment);probes.push(await probeRemoteCacheV1(contract,tool,token,context.signal));}
- const status={version:1,configured:true,contract,effectiveUpload:remoteCacheEffectiveUploadV1(contract),token:{environment:contract.auth.tokenEnvironment,present:token!==undefined},renderings,probes,server:await askServerV1(contract,token,context.signal),store};
+ const contract=resolved.contract,token=resolved.token,probes:Probe[]=[],renderings:Record<string,RemoteCacheRenderingV1>={},call=remoteCacheFetchV1(resolved.environment,{root:context.root});
+ for(const tool of tools){renderings[tool.tool]=tool.render(contract,resolved.environment);probes.push(await probeRemoteCacheV1(contract,tool,call,context.signal));}
+ const server=await askServerV1(contract,call,context.signal);
+ const status={version:1,configured:true,contract,effectiveUpload:remoteCacheEffectiveUploadV1(contract),token:{environment:contract.auth.tokenEnvironment,present:token!==undefined},renderings,probes,server,store,
+  resolution:{endpointFrom:resolved.endpointFrom,tokenFrom:resolved.tokenFrom,factsGeneration:resolved.generation,factsState:found.refresh?.state??"none"},
+  remote:{endpoint:contract.endpoint,reachable:probes.some(probe=>probe.reachable),authorised:probes.length>0&&probes.every(probe=>probe.authorized),entries:server?.entries??null,bytes:server?.bytes??null,maximumBytes:server?.maximumBytes??null,fleetGeneration:resolved.generation}};
  requireRemoteCacheShapeV1("Status",status,"Closed remote cache status required");return status;
+}
+
+/** 🔄️ Rotates the signing keys of this machine: new keys for every role (the origin key stays, so servers keep recognising the machine), published to the machine's own directory of the group store at once. Servers pick the new registration up within seconds; requests signed with an old key are refused from then on. Run it on any machine whose keys may have leaked; to cut a machine off for good, retire its origin instead. */
+export async function rotateRemoteCacheV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<RemoteCacheCommandResultV1>{
+ const parsed=parseRemoteCacheArgumentsV1(["rotate",...args]),languages=remoteCacheLanguagesV1(parsed.values["--lang"],context.environment),say=reporter(context,languages),machine=readFleetMachineV1(context.root);
+ if(machine===undefined){say("rotate.not-joined");return {exitCode:1};}
+ const registration=await rotateFleetIdentityV1({root:context.root,originId:machine.originId,group:machine.group,roles:["cache-read","cache-write","submit","worker","admin"]});
+ const synced=await syncFleetIdentityV1({root:context.root});
+ say("rotate.done",{sequence:registration.sequence,origin:machine.originId,published:synced.published?"@rotate.published":"@rotate.local"});
+ return {exitCode:0};
+}
+
+/** 🪦️ The reclaim port of a collection from outside: the blobs no remaining entry references go to the host store, which applies its own protections. */
+async function hostReclaimV1(environment:Readonly<Record<string,string|undefined>>):Promise<(hashes:readonly string[],dryRun:boolean)=>Promise<{entries:number;bytes:number}>>{
+ const{createCasStoreV1,casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),{reclaimCasObjectsV1}=await import("../../🗄️cas/🪦️reclaim/🟦️.ts"),host=createCasStoreV1({root:casRootV1(environment)});
+ return async(hashes,dryRun)=>{const freed=await reclaimCasObjectsV1(host,hashes,{dryRun});return {entries:freed.entries,bytes:freed.bytes};};
+}
+
+/** 🧪️ The blob presence port of a collection from outside: the blobs of action results live in the host store, so a result is dangling only when the host store lacks one of them. */
+async function hostHasV1(environment:Readonly<Record<string,string|undefined>>):Promise<(hashes:readonly string[])=>Promise<readonly boolean[]>>{
+ const{createCasStoreV1,casRootV1}=await import("../../🗄️cas/🗃️store/🟦️.ts"),host=createCasStoreV1({root:casRootV1(environment)});
+ return hashes=>host.has(hashes);
 }
 
 /** 🧹️ Collects the store directory like a running server would, from outside: removes unusable action results, entries idle for too long and the least recently used entries beyond the bound, under the collector lock; `--dry-run` only plans. Progress is published and cancelling stops at the next checkpoint. */
@@ -194,6 +234,14 @@ export async function collectRemoteCacheV1(args:readonly string[],context:Remote
  const parsed=parseRemoteCacheArgumentsV1(["gc",...args]),languages=remoteCacheLanguagesV1(parsed.values["--lang"],context.environment),say=reporter(context,languages),policy=readRemoteCachePolicyV1().server;
  const directory=where(context.root,parsed.values["--directory"]??policy.directory),maximumBytes=parsed.values["--max-bytes"]===undefined?policy.maximumBytes:whole("--max-bytes",parsed.values["--max-bytes"],1048576,Number.MAX_SAFE_INTEGER),dryRun=parsed.flags.has("--dry-run"),json=parsed.flags.has("--json");
  const talk=json?()=>{}:say;
+ if(parsed.values["--current-keys"]!==undefined){
+  const{auditRemoteCacheDirectoryV1}=await import("../🏷️retention/🟦️.ts"),{readFile}=await import("node:fs/promises"),{requireSlotShapeV1,slotTextV1}=await import("../../🪢️slots/🟦️.ts");
+  const keys=new Set((await readFile(where(context.root,parsed.values["--current-keys"]),"utf8")).split("\n").map(line=>line.trim()).filter(line=>line!==""&&!line.startsWith("#")));
+  const audit=await auditRemoteCacheDirectoryV1(join(directory,"v1"),keys,{graceMilliseconds:(parsed.values["--grace-seconds"]===undefined?policy.graceSeconds:whole("--grace-seconds",parsed.values["--grace-seconds"],0,604800))*1000,signal:context.signal});
+  requireSlotShapeV1("AuditReport",audit,"Closed cache audit report required");
+  if(!json)for(const language of languages){context.write(slotTextV1("audit.title",language,{cache:directory,current:audit.current,grace:audit.grace,stray:audit.stray.length,unslotted:audit.unslotted}));for(const key of audit.stray)context.write(slotTextV1("audit.stray",language,{key}));}
+  return {exitCode:audit.stray.length>0?1:0,...(json?{result:audit}:{})};
+ }
  if(!await stat(join(directory,"v1")).then(info=>info.isDirectory(),()=>false)){
   talk("gc.absent",{directory});
   const absent={version:1,dryRun,directory,present:false};if(json)requireRemoteCacheShapeV1("GcResult",absent,"Closed remote cache gc result required");
@@ -202,14 +250,15 @@ export async function collectRemoteCacheV1(args:readonly string[],context:Remote
  talk("gc.start",{directory,bytes:formatRemoteCacheBytesV1(maximumBytes),days:policy.maximumAgeDays,mode:dryRun?"@gc.mode.plan":"@gc.mode.apply"});
  let report;
  try{
-  report=await collectRemoteCacheDirectoryV1({root:join(directory,"v1"),maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",signal:context.signal,onProgress:stage=>{void context.progress(`remote-cache:${stage}`);}});
+  report=await collectRemoteCacheDirectoryV1({root:join(directory,"v1"),maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",graceMilliseconds:(parsed.values["--grace-seconds"]===undefined?policy.graceSeconds:whole("--grace-seconds",parsed.values["--grace-seconds"],0,604800))*1000,reclaim:await hostReclaimV1(context.environment),hasBlobs:await hostHasV1(context.environment),signal:context.signal,onProgress:stage=>{void context.progress(`remote-cache:${stage}`);}});
  }catch(error){
   if(context.signal.aborted){talk("gc.cancelled");return {exitCode:130};}
   throw error;
  }
  if(report.locked){talk("gc.locked",{lock:report.lock});return {exitCode:1};}
  const value=report.value;
- talk(dryRun?"gc.summary.plan":"gc.summary.apply",{entries:value.removed.entries,total:value.scanned.entries,bytes:formatRemoteCacheBytesV1(value.removed.bytes),age:value.removed.age,budget:value.removed.budget,dangling:value.removed.dangling,remaining:value.remaining.entries,left:formatRemoteCacheBytesV1(value.remaining.bytes)});
+ talk(dryRun?"gc.summary.plan":"gc.summary.apply",{entries:value.removed.entries,total:value.scanned.entries,bytes:formatRemoteCacheBytesV1(value.removed.bytes),superseded:value.removed.superseded,age:value.removed.age,budget:value.removed.budget,dangling:value.removed.dangling,remaining:value.remaining.entries,left:formatRemoteCacheBytesV1(value.remaining.bytes),blobs:value.reclaimed.entries,freed:formatRemoteCacheBytesV1(value.reclaimed.bytes)});
+ if(value.deferred)talk("gc.deferred");
  const document={directory,...value};if(json)requireRemoteCacheShapeV1("GcResult",document,"Closed remote cache gc result required");
  return {exitCode:0,...(json?{result:document}:{})};
 }
@@ -218,16 +267,17 @@ export async function collectRemoteCacheV1(args:readonly string[],context:Remote
 export async function collectRemoteCacheForLedgerV1(workspace:string,dryRun:boolean,signal:AbortSignal):Promise<string>{
  const policy=readRemoteCachePolicyV1().server,root=join(where(workspace,policy.directory),"v1");
  if(!await stat(root).then(info=>info.isDirectory(),()=>false))return "absent";
- const outcome=await collectRemoteCacheDirectoryV1({root,maximumBytes:policy.maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",signal});
+ const outcome=await collectRemoteCacheDirectoryV1({root,maximumBytes:policy.maximumBytes,maximumAgeMilliseconds:policy.maximumAgeDays*86400000,dryRun,verifyResults:policy.actionResults==="complete",graceMilliseconds:policy.graceSeconds*1000,reclaim:await hostReclaimV1(process.env),hasBlobs:await hostHasV1(process.env),signal});
  if(outcome.locked)return `busy: ${outcome.lock}`;
  const report:RemoteCacheCollectionReportV1=outcome.value;
  return `${dryRun?"would remove":"removed"} ${report.removed.entries} of ${report.scanned.entries} entries (${formatRemoteCacheBytesV1(report.removed.bytes)})`;
 }
 
-/** 🎬️ Routes `remote-cache serve|status|gc`; `args` are the words after `remote-cache`. */
+/** 🎬️ Routes `remote-cache serve|status|gc|rotate`; `args` are the words after `remote-cache`. */
 export async function runRemoteCacheCommandV1(args:readonly string[],context:RemoteCacheCommandContextV1):Promise<RemoteCacheCommandResultV1>{
  const parsed=parseRemoteCacheArgumentsV1(args);
  if(parsed.operation==="serve")return serveRemoteCacheV1(args.slice(1),context);
  if(parsed.operation==="gc")return collectRemoteCacheV1(args.slice(1),context);
+ if(parsed.operation==="rotate")return rotateRemoteCacheV1(args.slice(1),context);
  return {exitCode:0,result:await remoteCacheStatusV1(args.slice(1),context)};
 }

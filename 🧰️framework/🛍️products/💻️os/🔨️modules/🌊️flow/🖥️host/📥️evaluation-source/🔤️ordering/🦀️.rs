@@ -42,14 +42,16 @@ impl FlowTextOrderingWork{
 
  pub fn begin_close(&mut self){self.closing=true;self.raw.begin_close()}
  pub fn close_demands(&self)->RetirementDemand{if !self.raw.terminal_is_empty(){self.raw.close_demands()}else{RetirementDemand{copy_bytes:size_of::<Option<semio_framework_job::OriginalSourceBinding>>()+size_of::<Option<(usize,usize,usize,usize)>>(),..fixed()}}}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.raw.terminal_is_empty(){return self.raw.close_step(g)}let d=self.close_demands();if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.origin=None;self.source=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_bytes:d.copy_bytes,..unit()})),work:1}}
+ /// 🧹️ Closes the comparator inside the close turn's own effect so the work it reports is charged to that effect.
+ pub fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{crate::close_by_grant(effect,|g|self.close_granted(RetainedCloneGrant{maximum_copy_bytes:body,..g}))}
+ fn close_granted(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.raw.terminal_is_empty(){return self.raw.close_step(g)}let d=self.close_demands();if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.origin=None;self.source=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_bytes:d.copy_bytes,..unit()})),work:1}}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.origin.is_none()&&self.source.is_none()&&self.raw.terminal_is_empty()}
 }
 impl Drop for FlowTextOrderingWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original context text ordering requires terminal operation and source")}}
 
 #[doc(hidden)] pub trait OrderingRetire:Send+'static{fn begin(&mut self);fn demand(&self)->RetirementDemand;fn close(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome;fn empty(&self)->bool;}
 impl OrderingRetire for OriginalTextOrdering{fn begin(&mut self){self.begin_close()}fn demand(&self)->RetirementDemand{self.close_demands()}fn close(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.close_step(g)}fn empty(&self)->bool{self.terminal_is_empty()}}
-impl OrderingRetire for FlowTextOrderingWork{fn begin(&mut self){self.begin_close()}fn demand(&self)->RetirementDemand{self.close_demands()}fn close(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.close_step(g)}fn empty(&self)->bool{self.terminal_is_empty()}}
+impl OrderingRetire for FlowTextOrderingWork{fn begin(&mut self){self.begin_close()}fn demand(&self)->RetirementDemand{self.close_demands()}fn close(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.close_granted(g)}fn empty(&self)->bool{self.terminal_is_empty()}}
 #[doc(hidden)] pub struct OrderingRetirement<T:OrderingRetire>{original:T}
 impl<T:OrderingRetire> semio_framework_value::retirement::RetirementCursor for OrderingRetirement<T>{
  fn next_demand(&self,_copy:usize)->Result<RetirementDemand,ValueError>{Ok(self.original.demand())}

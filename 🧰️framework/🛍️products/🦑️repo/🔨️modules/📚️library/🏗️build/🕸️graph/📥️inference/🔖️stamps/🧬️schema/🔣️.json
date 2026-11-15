@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio://repo/build/inference-stamps/v1",
   "title": "Graph inference protocol stamps",
-  "description": "The declared, versioned protocol of the graph inference. Every inferrer carries one stamp; a record or generation fact names the stamp of each inferrer that took part in its output (the format of the persisted project record carries its own stamp in the observation schema), never the bytes of the code that ran. Bump the stamp of an inferrer when the output of its code changes for the same inputs: the law over the output corpus fails until the stamp and the corpus digest move together. `scope` says who consumes the stamp: `project` every valid project record, `native` the projects with a native target, `environment` only the cross-project edges, `all` every record and the environment. `sources` lists the workspace path fragments of the code the stamp covers; `none` lists the fragments of infrastructure that never changes an output. Data files that match neither stay content facts.",
+  "description": "The declared, versioned protocol of the graph inference. Every inferrer carries one stamp; a record or generation fact names the stamp of each inferrer that took part in its output (the format of the persisted project record carries its own stamp in the observation schema), never the bytes of the code that ran. Bump the stamp of an inferrer when the output of its code changes for the same inputs: the law over the output corpus fails until the stamp and the corpus digest move together. `scope` says who consumes the stamp: `project` every valid project record, `native` the projects with a native target, `environment` only the cross-project edges, `all` every record and the environment. `sources` lists the workspace path fragments of the code the stamp covers; `none` lists the fragments of infrastructure that never changes an output. Data files that match neither stay content facts. `derived` names the inferrers whose effective stamp is the declared stamp plus a digest of what their code answers on the conformance corpus (`../🧮️conformance`): an edit that changes no answer leaves the stamp and re-infers nothing. While such a stamp is not available the sources of the inferrer count as content facts again.",
   "definitions": {
     "Protocol": {
       "const": {
@@ -74,7 +74,7 @@
             ]
           },
           "script-inputs": {
-            "stamp": "semio.graph-inferrer.script-inputs/3",
+            "stamp": "semio.graph-inferrer.script-inputs/4",
             "scope": "project",
             "sources": [
               "🏗️build/🕸️graph/📥️inference/🧭️script-inputs/",
@@ -169,8 +169,38 @@
               "🏗️build/🧭️selection/",
               "🏗️build/🧬️schema/"
             ]
+          },
+          "input-precision": {
+            "stamp": "semio.graph-inferrer.input-precision/1",
+            "scope": "project",
+            "sources": [
+              "🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+              "🏗️build/📥️inputs/🎯️precision/🧬️schema/"
+            ]
+          },
+          "package-managers": {
+            "stamp": "semio.graph-inferrer.package-managers/1",
+            "scope": "project",
+            "sources": [
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📖️formats/",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📦️npm/",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🦀️cargo/",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐹️go/",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🐍️uv/",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔷️dotnet/",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔣️catalog.json",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔣️policy.json",
+              "⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧬️schema/"
+            ]
           }
         },
+        "derived": [
+          "input-precision",
+          "package-managers"
+        ],
         "none": [
           "🏗️build/📥️inputs/💾️storage/",
           "⚡️caching/💾️storage/",
@@ -242,6 +272,7 @@
         "version",
         "scopes",
         "inferrers",
+        "derived",
         "none"
       ],
       "properties": {
@@ -272,6 +303,13 @@
         },
         "none": {
           "$ref": "#/definitions/Fragments"
+        },
+        "derived": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Id"
+          }
         }
       }
     }

@@ -34,7 +34,7 @@ export class PreferencesScript extends BundleScript {
 }
 export class TestScript extends BundleScript {
   private async bun(args:string[],label:string,options:DashboardExecutionOptions,env:NodeJS.ProcessEnv={}):Promise<void>{
-    await withPlannedTestWorkersV1("bun-test",process.env,label,()=>runOwnedCommand(process.execPath,["test",...args],this.repoRoot,label,compilerAdmissionBudgetV1(options.control),{env:scriptInvocationEnvironment(this.invocation,devToolingEnv(env)),signal:options.control.signal}),1);
+    await withPlannedTestWorkersV1("bun-test",process.env,label,()=>runOwnedCommand(process.execPath,["test",...args],this.repoRoot,label,0,{deadline:options.control,env:scriptInvocationEnvironment(this.invocation,devToolingEnv(env)),signal:options.control.signal}),1);
   }
 
   private async native(selection: { packages: string[]; extraArgs: string[] }, rest: string[]): Promise<void> {
@@ -122,7 +122,7 @@ async function battleWithInstalledDashboard(root:string,repoRoot:string,suite:st
   const dashboardRoot = join(root, "../..");
   const env=devToolingEnv({...repoTestArtifactEnvironment(repoRoot,`dashboard-${suite}`),SEMIO_TEST_CLI:dashboard});
   const suites:Record<string,string[]>={coverage:["🗺️coverage/🟦️.ts"],journeys:["🧭️journeys/🟦️.ts"],load:["🧭️journeys/🏋️load/🟦️.ts"],smoke:["🧭️journeys/💨️smoke/🟦️.ts"]};
-  for(const file of suites[suite]!)await runOwnedCommand(process.execPath,["test",join(dashboardRoot,"🧪️tests",file),"--timeout","3600000"],repoRoot,"dashboard:battle",compilerAdmissionBudgetV1(options.control),{env:scriptInvocationEnvironment(options.invocation,env),signal:options.control.signal});
+  for(const file of suites[suite]!)await runOwnedCommand(process.execPath,["test",join(dashboardRoot,"🧪️tests",file),"--timeout","3600000"],repoRoot,"dashboard:battle",0,{deadline:options.control,env:scriptInvocationEnvironment(options.invocation,env),signal:options.control.signal});
   const rust={journeys:"journeys",load:"load"}[suite];if(!rust)return;
   const manifest=join(dashboardRoot,"🧪️tests/🧭️journeys/📦️packages/🦀️rust/Cargo.toml");
   await runRepositoryCargoTestExecutableV1({version:1,manifest:relative(repoRoot,manifest).replaceAll("\\","/"),package:"semio-dashboard-journeys",test:rust,arguments:["--test-threads=1"]},repoRoot,options.invocation,env);

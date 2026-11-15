@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:project-records:portable:v1",
+  "title": "The observations of a project record that name the producer's machine and not the project's inputs",
+  "description": "A stored project record carries every filesystem fact its inference consumed, and a taker replays them against its own tree before it uses the record. Two kinds of fact name the producer's machine and not an input: (1) `lstat` of every directory above the checkout (`/`, `/Users`, `/Users/Shared`, or `/home`, `/home/deck`: the realpath walk of the TypeScript compiler), which holds on no machine with another checkout location, and (2) every path below `.cache/b/d/m/j/<id>/`, the dependency generation the inference tooling ran from (its id derives from the checkout and the platform, and every record holds exactly one). Measured on 2870 production records: 1824 of 1825 macOS records and 545 of 546 Linux records hold both kinds, so before this module a record produced under one checkout could not hold under another, and never on another platform. A record is published portable: the location rows are dropped (a directory above the checkout exists whenever the checkout does, so the fact cannot decide anything) and the generation id is replaced by a token; the taker puts its own generation in the token's place (the real path of its `node_modules`), so the rows are replayed against the tooling it runs from, whose identity the `field` row of the compiler (a package identity digest) still decides. A record that holds several generation ids, or a taker that has no generation, keeps rows that cannot hold, and the project is inferred locally.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "dependencyRoot", "token", "unavailable", "locationKinds", "probe"],
+      "properties": {
+        "version": {"const": 1},
+        "dependencyRoot": {"type": "string"},
+        "token": {"type": "string"},
+        "unavailable": {"type": "string"},
+        "locationKinds": {"type": "array", "items": {"type": "string"}},
+        "probe": {"type": "string"}
+      },
+      "const": {
+        "version": 1,
+        "dependencyRoot": ".cache/b/d/m/j",
+        "token": "\u27e6generation\u27e7",
+        "unavailable": "generation-unavailable",
+        "locationKinds": ["lstat"],
+        "probe": "node_modules"
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path"],
+      "properties": {"kind": {"type": "string"}, "path": {"type": "string"}, "fact": {}}
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "root", "rows", "portable", "generation", "local"],
+      "properties": {
+        "name": {"type": "string"},
+        "root": {"type": "string"},
+        "rows": {"type": "array", "items": {"$ref": "#/definitions/Row"}},
+        "portable": {"type": "array", "items": {"$ref": "#/definitions/Row"}},
+        "generation": {"type": ["string", "null"]},
+        "local": {"type": "array", "items": {"$ref": "#/definitions/Row"}}
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cases"],
+      "properties": {"cases": {"type": "array", "items": {"$ref": "#/definitions/Case"}}}
+    }
+  }
+}

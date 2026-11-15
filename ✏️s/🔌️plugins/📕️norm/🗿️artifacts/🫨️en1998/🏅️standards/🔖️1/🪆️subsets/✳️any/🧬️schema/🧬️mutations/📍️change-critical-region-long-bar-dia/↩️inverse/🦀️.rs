@@ -1,4 +1,4 @@
-//! ↩️ `change-critical-region-long-bar-dia` inverse: restores the previous `longitudinal_bar_diameter_m`.
+//! ↩️ `change-critical-region-longitudinal-bar-diameter-m` inverse: restores the previous `longitudinal_bar_diameter_m`.
 
 use crate::change_critical_region_long_bar_dia::ChangeCriticalRegionLongitudinalBarDiameterM;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

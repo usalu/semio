@@ -1,0 +1,51 @@
+{
+  "metrics": {"character": 1.0, "space": 1.0, "math": {"\\Delta\\theta": 2.0, "\\dot{Q}_{\\mathrm{V}}": 3.0, "\\frac{\\mathrm{W}}{\\mathrm{K}}": 4.0}},
+  "wrap": [
+    {
+      "text": "Treiber ist die Temperaturdifferenz $\\Delta\\theta$, innen minus außen.",
+      "maxWidth": 40,
+      "lines": ["Treiber ist die Temperaturdifferenz $\\Delta\\theta$,", "innen minus außen."]
+    },
+    {
+      "text": "Treiber ist die Temperaturdifferenz $\\Delta\\theta$, innen minus außen.",
+      "maxWidth": 200,
+      "lines": ["Treiber ist die Temperaturdifferenz $\\Delta\\theta$, innen minus außen."]
+    },
+    {
+      "text": "abc $\\Delta\\theta$-Wert def ghi",
+      "maxWidth": 9,
+      "lines": ["abc", "$\\Delta\\theta$-Wert", "def ghi"]
+    },
+    {
+      "text": "Der Strom $\\dot{Q}_{\\mathrm{V}}$ und $\\Delta\\theta$ fließen",
+      "maxWidth": 18,
+      "lines": ["Der Strom $\\dot{Q}_{\\mathrm{V}}$ und", "$\\Delta\\theta$ fließen"]
+    },
+    {
+      "text": "eins\nzwei drei",
+      "maxWidth": 50,
+      "lines": ["eins", "zwei drei"]
+    },
+    {
+      "text": "ein überlanges Wortungetüm",
+      "maxWidth": 5,
+      "lines": ["ein", "überlanges", "Wortungetüm"]
+    },
+    {
+      "text": "$\\Delta\\theta$ am Anfang",
+      "maxWidth": 10,
+      "lines": ["$\\Delta\\theta$ am", "Anfang"]
+    }
+  ],
+  "chunks": [
+    {
+      "text": "Wert $\\Delta\\theta$, danach $\\frac{\\mathrm{W}}{\\mathrm{K}}$ Ende",
+      "chunks": [["text", "Wert", false], ["math", "\\Delta\\theta", true], ["text", ", danach", false], ["math", "\\frac{\\mathrm{W}}{\\mathrm{K}}", true], ["text", "Ende", true]]
+    }
+  ],
+  "words": [
+    {"text": "Die Differenz $\\Delta\\theta$ wächst.", "words": 4},
+    {"text": "Ohne Formel hier", "words": 3},
+    {"text": "$\\Phi = U \\cdot A \\cdot \\Delta\\theta$", "words": 7}
+  ]
+}

@@ -85,6 +85,16 @@ for(const{id,index}of fixture.indexes)test("a lazily opened fact index equals th
  expect(lazy.rows.map(row=>row.path)).toEqual(full.rows.map(row=>row.path));
 });
 
+for(const{id,index}of fixture.indexes)test("row paths are answered by string id without reading the row: "+id,()=>{
+ const bytes=encodeFactIndexV1(index as never,{maximumBytes:limit}),lazy=openFactIndexV1(bytes,{maximumBytes:limit}),full=decodeFactIndexV1(bytes,{maximumBytes:limit}),ids=new Map<string,number>();
+ for(let row=0;row<full.rows.length;row++){
+  const at=lazy.rowPathIdOf(row),path=full.rows[row]!.path;
+  expect(at).toBeLessThan(lazy.stringCount);expect(lazy.textOf(at)).toBe(path);
+  expect(ids.get(path)??at).toBe(at);ids.set(path,at);
+ }
+ expect(lazy.rowsRead()).toBe(0);
+});
+
 for(const{id,hex}of fixture.refusals)test("a malformed binary fact index is refused by the lazy opener as well: "+id,()=>{
  expect(()=>openFactIndexV1(Buffer.from(hex,"hex"),{maximumBytes:limit})).toThrow("Closed binary fact index required");
 });

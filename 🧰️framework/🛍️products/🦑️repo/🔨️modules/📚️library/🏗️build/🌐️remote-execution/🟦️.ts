@@ -15,7 +15,16 @@ export type RemoteExecutionPolicyV1=Readonly<typeof buildPolicy.remoteExecution>
 export type RemoteExecutionSandboxV1="darwin-sandbox"|"linux-sandbox"|"isolated-root";
 
 /** 📡️ A worker's announcement when it joins (`POST /v1/workers`). */
-export type RemoteExecutionWorkerRegistrationV1=Readonly<{version:1;name:string;host:string;platform:string;properties:readonly RemoteExecutionPropertyV1[];concurrency:number;sandbox:RemoteExecutionSandboxV1;runtime:string}>;
+export type RemoteExecutionWorkerRegistrationV1=Readonly<{version:1;name:string;host:string;platform:string;properties:readonly RemoteExecutionPropertyV1[];concurrency:number;sandbox:RemoteExecutionSandboxV1;runtime:string;origin:string;capacity:Readonly<{cores:number;memoryMegabytes:number;resumed?:readonly Readonly<{task:string;instance:string;action:RemoteExecutionDigestV1}>[]}>;confinement:RemoteExecutionConfinementV1;network:RemoteExecutionNetworkV1}>;
+
+/** 🧱️ Whether a sandbox confines the file system of an action: `none` is the private input root alone. */
+export type RemoteExecutionConfinementV1="full"|"none";
+
+/** 🛜️ What a worker does about the network of an action: cut by the sandbox, asked for but not enforceable by the strategy, or allowed by policy. */
+export type RemoteExecutionNetworkV1="denied"|"unenforced"|"allowed";
+
+/** 🚫️ Why a worker's own admission refused an action. */
+export type RemoteExecutionRefusalV1="memory"|"swap"|"swap-activity"|"pressure-critical"|"pressure-warn"|"files"|"attaches"|"load"|"queue-order"|"ramp"|"quiet-limit"|"slots"|"disk"|"not-ready"|"draining";
 
 /** 🤝️ The scheduler's answer to a registration. */
 export type RemoteExecutionWorkerRegisteredV1=Readonly<{version:1;id:string;heartbeatSeconds:number;pollSeconds:number;leaseSeconds:number;cache:Readonly<{url:string;relative:boolean}>;language:"en"|"de"|"none"}>;
@@ -36,7 +45,7 @@ export type RemoteExecutionHeartbeatAnswerV1=Readonly<{version:1;known:boolean;c
 export type RemoteExecutionTaskStatusV1=Readonly<{code:number;message:string;missing?:readonly RemoteExecutionDigestV1[]}>;
 
 /** 🏁️ A worker's report of one task. */
-export type RemoteExecutionTaskResultV1=Readonly<{version:1;outcome:"completed"|"failed"|"cancelled";status:RemoteExecutionTaskStatusV1;actionResult:string|null}>;
+export type RemoteExecutionTaskResultV1=Readonly<{version:1;outcome:"completed"|"failed"|"cancelled"|"refused";status:RemoteExecutionTaskStatusV1;actionResult:string|null;refusal?:RemoteExecutionRefusalV1|null}>;
 
 const definitions=schema.definitions;
 
@@ -63,11 +72,24 @@ export function remoteExecutionPlatformKeyV1(properties:readonly RemoteExecution
  return [...properties].map(row=>`${row.name}=${row.value}`).sort().join(";");
 }
 
-/** 🧩️ Whether a worker offering `offered` can run an action that requires `required`: every required property must be offered with the same value (extra offered properties are fine). */
+/** 🎚️ The properties an Execute request may carry for the scheduler itself: `semio-offload` (`if-idle`: answer RESOURCE_EXHAUSTED at once when no other machine has headroom) and `semio-origin` (the origin id of the requester, which never runs its own offload and whose platform key the action must match). They are never matched against workers. */
+export const REMOTE_EXECUTION_CONTROL_PROPERTIES_V1:readonly string[]=Object.freeze(["semio-offload","semio-origin"]);
+
+/** 🧹️ The properties of a request that workers are matched against: everything but the control properties. */
+export function remoteExecutionMatchPropertiesV1(properties:readonly RemoteExecutionPropertyV1[]):readonly RemoteExecutionPropertyV1[]{
+ return properties.filter(row=>!REMOTE_EXECUTION_CONTROL_PROPERTIES_V1.includes(row.name));
+}
+
+/** 🎛️ The value of one control property of a request, if it carries it. */
+export function remoteExecutionControlV1(properties:readonly RemoteExecutionPropertyV1[],name:"semio-offload"|"semio-origin"):string|undefined{
+ return properties.find(row=>row.name===name)?.value;
+}
+
+/** 🧩️ Whether a worker offering `offered` can run an action that requires `required`: every required property (the control properties excepted) must be offered with the same value (extra offered properties are fine). The toolchain build (`semio-toolchain`) and the target (`semio-target`) are ordinary properties, so an action that names them runs only on workers of the same build. */
 export function remoteExecutionPlatformMatchesV1(required:readonly RemoteExecutionPropertyV1[],offered:readonly RemoteExecutionPropertyV1[]):boolean{
  const have=new Map<string,Set<string>>();
  for(const row of offered){const values=have.get(row.name)??new Set<string>();values.add(row.value);have.set(row.name,values);}
- return required.every(row=>have.get(row.name)?.has(row.value)===true);
+ return remoteExecutionMatchPropertiesV1(required).every(row=>have.get(row.name)?.has(row.value)===true);
 }
 
 /** 🧭️ Reads `name=value,name=value` (the client contract's `properties` variable) into properties; a malformed list is refused. */
@@ -77,7 +99,7 @@ export function remoteExecutionPropertiesV1(text:string|undefined):readonly Remo
 }
 
 /** 🖥️ The properties a worker of this machine offers, in the contract's vocabulary (`OSFamily`, `Arch`). */
-export function remoteExecutionHostPropertiesV1(platform:string=process.platform,arch:string=process.arch):readonly RemoteExecutionPropertyV1[]{
+export function remoteExecutionHostPropertiesV1(platform:string=process.platform,arch:string=process.arch,toolchain?:Readonly<{target:string|null;toolchain:string|null}>):readonly RemoteExecutionPropertyV1[]{
  const family=platform==="darwin"?"macos":platform==="win32"?"windows":platform,cpu=arch==="x64"?"amd64":arch;
- return [{name:"Arch",value:cpu},{name:"OSFamily",value:family}];
+ return [{name:"Arch",value:cpu},{name:"OSFamily",value:family},...toolchain?.target?[{name:"semio-target",value:toolchain.target}]:[],...toolchain?.toolchain?[{name:"semio-toolchain",value:toolchain.toolchain}]:[]];
 }

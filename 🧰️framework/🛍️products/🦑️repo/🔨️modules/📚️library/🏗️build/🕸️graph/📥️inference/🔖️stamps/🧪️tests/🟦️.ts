@@ -10,7 +10,7 @@ import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import roster from "../../🗂️components/🔣️.json";
-import {admitInferenceProtocolV1,classifyImplementationRowsV1,inferenceFragmentsV1,inferenceStampEntriesV1,matchesFragmentsV1,unclassifiedCodeV1} from "../🟨️.mjs";
+import {admitInferenceProtocolV1,classifyImplementationRowsV1,conformanceDirectoryV1,inferenceFragmentsV1,inferenceStampEntriesV1,inferrerActiveV1,matchesFragmentsV1,projectStampPathsV1,settleConformanceStampsV1,unclassifiedCodeV1,wire} from "../🟨️.mjs";
 import {captureObservedSourceInputsV1,observationsHold,observedInferenceStampsV1,registerInferenceStampsV1} from "../../../../👁️observation/🟨️.mjs";
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️.py"),schemaPath=join(here,"..","🧬️schema","🔣️.json");
@@ -21,6 +21,7 @@ const ask=(...args:string[])=>JSON.parse(Bun.spawnSync([python!,"-I",oracle,...a
 const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value));
 const at=(root:any,path:readonly (string|number)[])=>path.reduce((value,key)=>value[key],root);
 const rowOf=(path:string)=>({kind:"digest",path,fact:{sha256:"0".repeat(64),size:1,mtimeMs:1}});
+const EFFECTIVE=Object.fromEntries((protocol as any).derived.map((id:string,index:number)=>[id,(protocol as any).inferrers[id].stamp+"+"+String(index+1).repeat(32)]));
 
 test("the fixture and the declared protocol are closed under their schemas, validated by an independent implementation",()=>{
  const ajv=new Ajv({strict:true});
@@ -47,13 +48,14 @@ for(const row of fixture.refusals)test("protocol admission: "+row.id,()=>{
 test("classification keeps the data nobody covers and drops covered code, infrastructure and stamped files, like the independent oracle",()=>{
  const rows=fixture.rows.map(row=>rowOf(row.path)),file=join(scratch(),"rows.json");writeFileSync(file,JSON.stringify(rows));
  try{
-  const model=ask("classify",schemaPath,file),actual=classifyImplementationRowsV1(rows as never,protocol);
+  const effectiveFile=join(dirname(file),"effective.json");writeFileSync(effectiveFile,JSON.stringify(EFFECTIVE));
+  const model=ask("classify",schemaPath,file,effectiveFile),actual=classifyImplementationRowsV1(rows as never,protocol,new Map(Object.entries(EFFECTIVE)));
   expect(JSON.parse(JSON.stringify(actual))).toEqual(model);
   const kept=new Set(actual.filter(row=>row.kind!=="stamp").map(row=>row.path));
   for(const row of fixture.rows)expect(kept.has(row.path),row.path).toBe(row.cls==="keep");
   const stamps=actual.filter(row=>row.kind==="stamp");
   expect(stamps.map(row=>row.path)).toEqual(Object.keys((protocol as any).inferrers).map(id=>"inferrer:"+id));
-  expect(stamps.every(row=>(protocol as any).inferrers[row.path.slice(9)].stamp===row.fact&&(protocol as any).inferrers[row.path.slice(9)].scope===row.scope)).toBe(true);
+  expect(stamps.every(row=>((protocol as any).inferrers[row.path.slice(9)].stamp===row.fact||EFFECTIVE[row.path.slice(9)]===row.fact)&&(protocol as any).inferrers[row.path.slice(9)].scope===row.scope)).toBe(true);
  }finally{rmSync(dirname(file),{recursive:true,force:true});}
 });
 
@@ -65,6 +67,21 @@ const walk=(directory:string,out:string[]=[]):string[]=>{
  return out;
 };
 
+test("while a derived inferrer has no conformance stamp its sources count as content again and it carries no stamp row, like the independent oracle",()=>{
+ const derived=(protocol as any).derived as string[],rows=fixture.rows.map(row=>rowOf(row.path)),file=join(scratch(),"rows.json");writeFileSync(file,JSON.stringify(rows));
+ try{
+  const actual=classifyImplementationRowsV1(rows as never,protocol,new Map()),model=ask("classify",schemaPath,file);
+  expect(JSON.parse(JSON.stringify(actual))).toEqual(model);
+  const sources=derived.flatMap(id=>(protocol as any).inferrers[id].sources as string[]),kept=new Set(actual.filter(row=>row.kind!=="stamp").map(row=>row.path));
+  for(const row of fixture.rows)if(sources.some(fragment=>row.path.includes(fragment)))expect(kept.has(row.path),row.path).toBe(true);
+  for(const id of derived)expect(actual.some(row=>row.path==="inferrer:"+id)).toBe(false);
+  expect(inferrerActiveV1(derived[0]!,new Map(),protocol as never)).toBe(false);expect(inferrerActiveV1(derived[0]!,new Map(Object.entries(EFFECTIVE)),protocol as never)).toBe(true);
+  expect(inferenceStampEntriesV1(protocol as never,new Map()).some(([path])=>path==="inferrer:"+derived[0])).toBe(false);
+  expect(inferenceStampEntriesV1(protocol as never,new Map(Object.entries(EFFECTIVE))).filter(([path])=>path==="inferrer:"+derived[0])).toEqual([["inferrer:"+derived[0],EFFECTIVE[derived[0]!]]]);
+  expect(inferenceFragmentsV1(protocol as never,new Map()).some(fragment=>sources.includes(fragment))).toBe(false);
+ }finally{rmSync(dirname(file),{recursive:true,force:true});}
+});
+
 test("every executable file of the loaded implementation and of the graph host is claimed by an inferrer or by infrastructure, and no fragment is dead",async()=>{
  const plugin=await import("../../🟨️.mjs");await plugin.libraryBootstrap;
  const loaded=plugin.loadedImplementationRowsV1.map((row:{path:string})=>({kind:"digest",path:relative(workspace,row.path).split(sep).join("/")}));
@@ -72,7 +89,7 @@ test("every executable file of the loaded implementation and of the graph host i
  expect(loaded.length).toBeGreaterThan(50);expect(host.length).toBeGreaterThan(20);
  expect(unclassifiedCodeV1([...loaded,...host] as never,protocol)).toEqual([]);
  const files=[...walk(library),...walk(join(workspace,"🧰️framework","🔨️modules")),...loaded.map((row:{path:string})=>row.path)];
- for(const fragment of inferenceFragmentsV1(protocol))expect(files.some(path=>path.includes(fragment)),"dead fragment "+fragment).toBe(true);
+ for(const fragment of inferenceFragmentsV1(protocol,new Map(Object.entries(EFFECTIVE))))expect(files.some(path=>path.includes(fragment)),"dead fragment "+fragment).toBe(true);
 },60000);
 
 test("every component of the inference roster is stamped or declared infrastructure",()=>{
@@ -84,6 +101,31 @@ test("every component of the inference roster is stamped or declared infrastruct
  const stamped=new Set(Object.keys((protocol as any).inferrers));
  for(const name of["project-nodes","project-assembly","target-policy","native-manifests","script-inputs","source-analyses","bun-lock","generator-outputs","component-targets","playground-targets","owner-discovery","dependency-edges","coordinates","bootstrap"])expect(stamped.has(name),name).toBe(true);
 });
+
+test("settling the conformance stamps of the real providers registers one stamp row per derived inferrer, takes them from the local record the second time and falls back to content when the corpus cannot run",async()=>{
+ wire();
+ const directory=join(scratch(),"records"),derived=(protocol as any).derived as string[];
+ try{
+  expect(projectStampPathsV1({native:false}).some(path=>derived.some(id=>path==="inferrer:"+id)),"before settling").toBe(false);
+  const first=await settleConformanceStampsV1({libraryRoot:library,directory});
+  expect(first.map(row=>row.status)).toEqual(derived.map(()=>"computed"));
+  for(const id of derived){expect(projectStampPathsV1({native:false})).toContain("inferrer:"+id);expect(inferrerActiveV1(id)).toBe(true);}
+  const recorded=await captureObservedSourceInputsV1(async()=>{observedInferenceStampsV1(derived.map(id=>"inferrer:"+id));},undefined,false);
+  expect(recorded.observations.map(row=>row.fact)).toEqual(first.map(row=>row.stamp));
+  expect(await observationsHold(recorded.observations as never)).toBe(true);
+  const second=await settleConformanceStampsV1({libraryRoot:library,directory});
+  expect(second.map(row=>row.status)).toEqual(derived.map(()=>"stored"));expect(second.map(row=>row.stamp)).toEqual(first.map(row=>row.stamp));
+  expect(await observationsHold(recorded.observations as never)).toBe(true);
+  const broken=await settleConformanceStampsV1({libraryRoot:library,directory:join(directory,"other"),runners:{"input-precision":async()=>{throw Error("broken");},"package-managers":async()=>{throw Error("broken");}} as never});
+  expect(broken.map(row=>row.status)).toEqual(derived.map(()=>"unavailable"));
+  for(const id of derived){expect(projectStampPathsV1({native:false})).not.toContain("inferrer:"+id);expect(inferrerActiveV1(id)).toBe(false);}
+  expect(await observationsHold(recorded.observations as never),"a recorded stamp row no longer holds without a registered stamp: the project is inferred again").toBe(false);
+  expect(conformanceDirectoryV1({},"darwin","/home/u")).toBe("/home/u/Library/Caches/semio/inference-conformance");
+  expect(conformanceDirectoryV1({LOCALAPPDATA:"C:\\L"},"win32","C:\\u")).toContain("inference-conformance");
+  expect(conformanceDirectoryV1({XDG_CACHE_HOME:"/x"},"linux","/h")).toBe("/x/semio/inference-conformance");
+  expect(conformanceDirectoryV1({},"linux","/h")).toBe("/h/.cache/semio/inference-conformance");
+ }finally{rmSync(dirname(directory),{recursive:true,force:true});wire();await settleConformanceStampsV1({libraryRoot:library});}
+},120000);
 
 test("a stamp row holds exactly while the process carries the stamp it was recorded with",async()=>{
  registerInferenceStampsV1(inferenceStampEntriesV1(protocol),inferenceFragmentsV1(protocol));

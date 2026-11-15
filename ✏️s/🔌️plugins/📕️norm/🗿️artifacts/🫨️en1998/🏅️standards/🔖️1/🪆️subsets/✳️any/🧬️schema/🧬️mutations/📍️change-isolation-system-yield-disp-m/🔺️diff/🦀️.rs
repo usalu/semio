@@ -1,4 +1,4 @@
-//! 📍️ `change-isolation-system-yield-disp-m` diff: patches `yield_displacement_m` of the addressed isolation_system row.
+//! 📍️ `change-isolation-system-yield-displacement-m` diff: patches `yield_displacement_m` of the addressed isolation_system row.
 
 use crate::change_isolation_system_yield_disp_m::ChangeIsolationSystemYieldDisplacementM;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998IsolationSystemDelta, En1998IsolationSystemPatch};

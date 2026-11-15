@@ -60,6 +60,7 @@ fn a_parameter_links_to_the_last_factor_override_that_replaces_it() {
 
 #[test]
 fn the_section_renders_one_row_per_parameter_and_jumps_to_the_governing_check_of_the_override() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let report = report();
     let render = |locale| {
         let node = check_parameters_section(&report, 0, &document(), locale, "s.norm.test@1/*#editor").expect("section").expect("some");

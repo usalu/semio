@@ -464,6 +464,7 @@ message En1998FoundationPatch {
   optional double pile_moment_rd_nm = 29;
   optional double base_friction_angle_deg = 30;
   optional double base_pore_pressure_pa = 31;
+  optional string pile_axial_load_n = 32;
 }
 message En1998RetainingWallDelta {
   repeated En1998RetainingWallRemoval removed = 1;

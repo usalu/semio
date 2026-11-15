@@ -45,7 +45,7 @@ check, use `GET /instance` with `X-Forwarded-Proto: https`.
 ### Cross-origin API
 
 The site calls `POST /commands` and `POST /queries` with `content-type: application/json` and no credentials, so every
-call is preceded by a CORS preflight. The request gate, the outermost layer, answers every `OPTIONS` itself with `204`:
+call is preceded by a CORS preflight. A preflight is a read: it passes the per-address throttle (the read allowance, `429` with `Retry-After` when spent, still carrying the grant so the page can read the wait) and is then answered by the request gate itself with `204`, never reaching the settling or the routes:
 
 | Preflight from | Answer |
 |---|---|
@@ -535,7 +535,7 @@ nothing, because the learner may ask at any time. Presence never carries a learn
 ## Data
 
 All state is `<PROCTOR_DATA>/proctor.sqlite`. It runs in WAL mode with synchronous commits, and holds a format row that
-refuses a file of another format. Events, receipts and outbox deliveries are append-only. The read models live in the
+refuses a file of another format. An existing file is inspected read-only before anything is written: a file of another format, a foreign database and a file that is no database are refused byte-identical, and only an absent or empty file gets its schema and format row, in one transaction. Events, receipts and outbox deliveries are append-only. The read models live in the
 same file and can always be rebuilt (`proctor rebuild`, with the serving proctor stopped: the directory belongs to one
 serving process).
 

@@ -34,7 +34,7 @@ export function file(path: string): RuntimeFileV1 {
 }
 
 export async function serve(options: RuntimeServeOptionsV1): Promise<RuntimeServerV1> {
-  const server = bun().serve({ hostname: options.hostname, port: options.port, idleTimeout: options.idleTimeoutSeconds, maxRequestBodySize: options.maximumRequestBodyBytes, ...(options.tls === undefined ? {} : { tls: { cert: bun().file(options.tls.certificate), key: bun().file(options.tls.key) } }), fetch: options.fetch });
+  const server = bun().serve({ hostname: options.hostname, port: options.port, idleTimeout: options.idleTimeoutSeconds, maxRequestBodySize: options.maximumRequestBodyBytes, ...(options.tls === undefined ? {} : { tls: { cert: bun().file(options.tls.certificate), key: bun().file(options.tls.key) } }), fetch: (request: Request, server: Readonly<{ requestIP(request: Request): Readonly<{ address: string }> | null }>) => options.fetch(request, server.requestIP(request)?.address) });
   return { port: server.port, hostname: server.hostname, stop: async force => { await server.stop(force); } };
 }
 

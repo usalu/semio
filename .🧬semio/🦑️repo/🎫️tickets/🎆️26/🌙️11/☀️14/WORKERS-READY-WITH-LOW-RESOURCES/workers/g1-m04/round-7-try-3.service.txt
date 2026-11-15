@@ -1,0 +1,34 @@
+## /run/user/1000/semio-repo/1000/host-6b3804922737.log
+graph: 516 stale projects, 0 taken from the fleet, this machine can infer 0 (0 per wave); asking the fleet for 516
+graph: waiting for the fleet: 0 of 516 projects arrived
+## last 30 lines
+[repo] still working after 2330 s; last phase started: source.served
+[repository:command] still running after 2330 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 2340 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 2350 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 2360 s; last phase started: source.served
+[repository:command] still running after 2360 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 2370 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 2380 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 2390 s; last phase started: source.served
+[repository:command] still running after 2390 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 2400 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 2410 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 2420 s; last phase started: source.served
+[repository:command] still running after 2420 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 2430 s
+graph: nothing to wait for any longer: asked the fleet for 516 stale projects and received 0 within 301 s, 516 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-14T20:55:12.483Z graph-wanted-expired {"wanted":"516","arrived":"0","seconds":"301","missing":"516","local":"0"}
+[repository:command] still running after 2440 s
+[repo] still working after 2450 s; last phase started: source.served
+[repository:command] still running after 2450 s

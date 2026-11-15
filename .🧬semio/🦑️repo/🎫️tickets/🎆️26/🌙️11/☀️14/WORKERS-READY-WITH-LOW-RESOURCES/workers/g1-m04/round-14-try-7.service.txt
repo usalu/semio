@@ -1,0 +1,78 @@
+## /run/user/1000/semio-repo/1000/host-625973c07ed0.log
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: 517 stale projects, 0 taken from the fleet, 75 too heavy for this machine (@semio-tech/framework-os-dev (about 39020 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 7894 MB), @semio-tech/framework-renderer-wgpu (about 6858 MB), and 69 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 517
+graph: waiting for the fleet: 0 of 517 projects arrived
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: the fleet was asked for 517 stale projects and delivered 24 within 1369 s; 493 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 39020 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 7894 MB), @semio-tech/framework-renderer-wgpu (about 6858 MB), and 68 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+graph: plan answered, managed 105 MB, resident 182 MB (released 2 MB)
+## last waiting line: graph: waiting for the fleet: 24 of 517 projects arrived
+## last 30 lines
+[repository:command] still running after 1780 s
+[repo] still working after 1790 s; last phase started: source.served
+[repository:command] still running after 1790 s
+[repository:command] still running after 1800 s
+[repository:command] still running after 1810 s
+[repo] still working after 1820 s; last phase started: source.served
+[repository:command] still running after 1820 s
+[repository:command] still running after 1830 s
+[repository:command] still running after 1840 s
+[repo] still working after 1850 s; last phase started: source.served
+[repository:command] still running after 1850 s
+[repository:command] still running after 1860 s
+[repository:command] still running after 1870 s
+[repo] still working after 1880 s; last phase started: source.served
+[repository:command] still running after 1880 s
+[repository:command] still running after 1890 s
+[repository:command] still running after 1900 s
+[repo] still working after 1910 s; last phase started: source.served
+[repository:command] still running after 1910 s
+[repository:command] still running after 1920 s
+[repository:command] still running after 1930 s
+[repo] still working after 1940 s; last phase started: source.served
+[repository:command] still running after 1940 s
+[repository:command] still running after 1950 s
+[repository:command] still running after 1960 s
+[repo] still working after 1970 s; last phase started: source.served
+[repository:command] still running after 1970 s
+[repository:command] still running after 1980 s
+2026-11-15T04:50:13.283Z shutdown superseded
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+## /run/user/1000/semio-repo/1000/host-ab95c5ac8675.log
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: 540 stale projects, 0 taken from the fleet, 77 too heavy for this machine (@semio-tech/framework-os-dev (about 39020 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 14034 MB), @semio-tech/framework-plugin (about 7894 MB), @semio-tech/framework-renderer-wgpu (about 6858 MB), and 71 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 540
+graph: waiting for the fleet: 0 of 540 projects arrived
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: the fleet was asked for 540 stale projects and delivered 0 within 414 s; 540 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 39020 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 14034 MB), @semio-tech/framework-plugin (about 7894 MB), @semio-tech/framework-renderer-wgpu (about 6858 MB), and 71 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+graph: plan answered, managed 104 MB, resident 181 MB (released 1 MB)
+## last waiting line: graph: waiting for the fleet: 0 of 540 projects arrived
+## last 30 lines
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repository:command] still running after 430 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repo] still working after 440 s; last phase started: source.served
+[repository:command] still running after 440 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repository:command] still running after 450 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repository:command] still running after 460 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repo] still working after 470 s; last phase started: source.served
+[repository:command] still running after 470 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repository:command] still running after 480 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repository:command] still running after 490 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repo] still working after 500 s; last phase started: source.served
+[repository:command] still running after 500 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repository:command] still running after 510 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repository:command] still running after 520 s
+graph: waiting for the fleet: 0 of 540 projects arrived
+[repo] still working after 530 s; last phase started: source.served
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: the fleet was asked for 540 stale projects and delivered 0 within 414 s; 540 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 39020 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 14034 MB), @semio-tech/framework-plugin (about 7894 MB), @semio-tech/framework-renderer-wgpu (about 6858 MB), and 71 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-15T04:57:52.069Z graph-wanted-expired {"wanted":"540","arrived":"0","seconds":"414","missing":"540","local":"0","heavy":", among them the too heavy project(s) @semio-tech/framework-os-dev (about 39020 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 14034 MB), @semio-tech/framework-plugin (about 7894 MB), @semio-tech/framework-renderer-wgpu (about 6858 MB), and 71 more (this machine can give about 0 MB per project)"}
+graph: plan answered, managed 104 MB, resident 181 MB (released 1 MB)
+[repository:command] still running after 530 s

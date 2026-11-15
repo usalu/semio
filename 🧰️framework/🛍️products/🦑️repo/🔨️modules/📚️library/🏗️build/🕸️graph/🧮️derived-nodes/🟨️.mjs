@@ -1,7 +1,9 @@
 import{createHash}from"node:crypto";
-import{availableParallelism,freemem}from"node:os";
+import{availableParallelism}from"node:os";
+import{hostAvailableBytesV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import{canonicalJsonV1}from"../🕰️generations/🧮️fact-codec/🟨️.mjs";
+import{footprintGateV1}from"../../🧠️memory/🦶️footprint/🟨️.mjs";
 import{entryHashV1,globSpecV1,hexOfV1,rosterHashV1}from"./🧩️kinds/🟨️.mjs";
 
 /** 🧮️ The declared constants of the derived-node DAG; the schema file is the single source. */
@@ -18,7 +20,7 @@ export const digestOfV1=value=>sha256V1(canonicalJsonV1(value));
  * 🌡️ The `capacity` port from the host capacity grant: `source()` answers the grant the scheduler admitted (`handle` is the `HostCapacityHandleV1` with `cpu`, `jobs`, `reservedMegabytes`; `limit` the `JobLimitPolicyV1` with `memoryMegabytes`, `cpuShares`) and `undefined` when the process runs ungranted, then the host (`os`) answers. The memory this process may still use is the granted memory minus its resident size, a quarter of the grant stays in reserve.
  * @see ../../../🌡️host-capacity/🟦️.ts
  */
-export function capacityOfGrantV1(source,{rss=()=>process.memoryUsage.rss(),host=()=>({cpus:availableParallelism(),availableBytes:freemem()})}={}){
+export function capacityOfGrantV1(source,{rss=()=>footprintGateV1()?.footprintBytes()??process.memoryUsage.rss(),host=()=>({cpus:availableParallelism(),availableBytes:hostAvailableBytesV1()??Infinity})}={}){
  return()=>{
   const{handle,limit}=source()??{},megabytes=limit?.memoryMegabytes??handle?.reservedMegabytes;
   if(megabytes===undefined)return host();
@@ -46,7 +48,7 @@ function limiterOf(count){
  * 🧮️ The derived-node graph: pull-recompute with push-invalidate and early cutoff (red-green marking). `get` answers a node, revalidating or deriving only what is unverified; `invalidate` takes the paths a journal reports, rechecks only the raw reads those paths touch and walks the changed values upward by depth, stopping at every node whose value digest is unchanged. A glob read (`ctx.glob`) keeps its members as one file read each plus two additive multiset hashes, so `ctx.globDelta` patches the previous answer with the dirty entries only: the cost of an edit does not depend on the size of the glob. Single-flight per key, bounded node count (least recently used nodes are evicted together with every node above them), world reads limited by `concurrency`, verification streamed in slices, every wait cancellable. `rules[kind](ctx)` is a pure function of `ctx.file`, `ctx.glob` and `ctx.node`.
  * @see ./🧬️schema/🔣️.json
  */
-export function createDerivedGraphV1({rules,world,store,statIndex,environment,environmentKey,verifyObserved,capacity=()=>({cpus:availableParallelism(),availableBytes:freemem()}),release=globalThis.Bun?.gc?()=>globalThis.Bun.gc(true):undefined,revision="0",concurrency=P.deriveConcurrency,maximumNodes=P.maximumNodes,trace=false}){
+export function createDerivedGraphV1({rules,world,store,statIndex,environment,environmentKey,verifyObserved,capacity=()=>({cpus:availableParallelism(),availableBytes:hostAvailableBytesV1()??Infinity}),release=globalThis.Bun?.gc?()=>globalThis.Bun.gc(true):undefined,revision="0",concurrency=P.deriveConcurrency,maximumNodes=P.maximumNodes,trace=false}){
  const nodes=new Map(),registry=new Map(),rdeps=new Map(),byPath=new Map(),byRoot=new Map(),inflight=new Map(),pending=new Set(),gate=limiterOf(concurrency),heavy=limiterOf(()=>{const grant=capacity();return Math.max(1,Math.min(P.heavyMaximum,Math.floor(grant.cpus/2),Math.floor((grant.availableBytes-(grant.reserveBytes??P.heavyReserveBytes))/P.heavyBytes)));}),log=[],specs=new WeakMap(),verifiers=new WeakMap(),frozen=environment===undefined?undefined:Object.freeze(environment);
  const counters={computed:0,cutoffHit:0,revalidated:0,rawReads:0,statReused:0,stampHeld:0,evicted:0,patched:0,released:0};
  let rev=revision,operations=0,retained=0,held=new Map(),dirtyNow={all:false,paths:new Set(),directories:[],parents:new Set()},reads=new Map(),changedLog=[];

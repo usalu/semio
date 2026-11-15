@@ -2558,7 +2558,7 @@
     },
     "SelectedPlanProtocol": {
       "const": {
-        "maximumRoles": 16,
+        "maximumRoles": 24,
         "maximumGenerations": 4096,
         "directoryRoles": [
           "{{generationDirectory}}",
@@ -2574,7 +2574,123 @@
           "dependencies.json",
           "storage-events.jsonl"
         ],
-        "service": ".fseventsd"
+        "service": ".fseventsd",
+        "partitionRoles": [
+          {
+            "name": "generation",
+            "kind": "directory",
+            "writer": {
+              "en": "Generation receipts, adoption and installation records and ownership marks of the dependency generation, adopt and incremental protocols.",
+              "de": "Generations-Quittungen, Übernahme- und Installationsnachweise und Eigentumsmarken der Protokolle Generation, Übernahme und Inkrement."
+            },
+            "retention": "retained"
+          },
+          {
+            "name": "pointer",
+            "kind": "directory",
+            "writer": {
+              "en": "Publication pointers of concurrent producers; the concurrency protocol keeps at most maximumRetired retired pointers per scope.",
+              "de": "Veröffentlichungszeiger gleichzeitiger Erzeuger; das Nebenläufigkeitsprotokoll behält je Bereich höchstens maximumRetired ausgemusterte Zeiger."
+            },
+            "retention": "self-managed"
+          },
+          {
+            "name": "bazel",
+            "kind": "directory",
+            "writer": {
+              "en": "Bazel module cache of the Bazel dependency tasks (bazel/modules/<digest>); content-addressed, never edited in place.",
+              "de": "Bazel-Modul-Cache der Bazel-Abhängigkeitsaufgaben (bazel/modules/<Digest>); inhaltsadressiert und nie an Ort und Stelle verändert."
+            },
+            "retention": "self-managed"
+          },
+          {
+            "name": "python",
+            "kind": "directory",
+            "writer": {
+              "en": "Python environments and the uv cache of the Python dependency tasks (toolchain layout python/environments and python/uv-cache); a changed lock creates a new environment.",
+              "de": "Python-Umgebungen und uv-Cache der Python-Abhängigkeitsaufgaben (Toolchain-Layout python/environments und python/uv-cache); eine geänderte Sperrdatei erzeugt eine neue Umgebung."
+            },
+            "retention": "self-managed"
+          },
+          {
+            "name": "dotnet",
+            "kind": "directory",
+            "writer": {
+              "en": "Restore state of the .NET dependency task.",
+              "de": "Wiederherstellungszustand der .NET-Abhängigkeitsaufgabe."
+            },
+            "retention": "self-managed"
+          },
+          {
+            "name": "nuget",
+            "kind": "directory",
+            "writer": {
+              "en": "NuGet package cache of the .NET dependency task.",
+              "de": "NuGet-Paketcache der .NET-Abhängigkeitsaufgabe."
+            },
+            "retention": "self-managed"
+          },
+          {
+            "name": ".metadata_never_index",
+            "kind": "file",
+            "writer": {
+              "en": "Spotlight marker that the macOS cache image carries together with its file system events silence.",
+              "de": "Spotlight-Marke, die das macOS-Cache-Image zusammen mit der Stilllegung der Dateisystemereignisse trägt."
+            },
+            "retention": "service"
+          }
+        ]
+      }
+    },
+    "PartitionRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "writer",
+        "retention"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9._-]+$"
+        },
+        "kind": {
+          "enum": [
+            "directory",
+            "file"
+          ]
+        },
+        "writer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        },
+        "retention": {
+          "enum": [
+            "retained",
+            "self-managed",
+            "service"
+          ]
+        }
       }
     },
     "SelectedPlanCase": {

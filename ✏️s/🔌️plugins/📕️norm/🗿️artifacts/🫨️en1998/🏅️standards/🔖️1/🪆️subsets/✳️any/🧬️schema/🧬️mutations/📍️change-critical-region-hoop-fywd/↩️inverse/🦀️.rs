@@ -1,4 +1,4 @@
-//! ↩️ `change-critical-region-hoop-fywd` inverse: restores the previous `hoop_design_yield_mpa`.
+//! ↩️ `change-critical-region-hoop-design-yield-mpa` inverse: restores the previous `hoop_design_yield_mpa`.
 
 use crate::change_critical_region_hoop_fywd::ChangeCriticalRegionHoopDesignYieldMpa;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

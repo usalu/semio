@@ -112,6 +112,24 @@
       "except": [
         "/🏗️build/🏛️sealed/🧭️mode/"
       ]
+    },
+    {
+      "id": "remote-execution",
+      "match": [
+        "/🏗️build/🌐️remote-execution/"
+      ]
+    },
+    {
+      "id": "scheduler",
+      "match": [
+        "/🏗️build/🗓️scheduler/"
+      ]
+    },
+    {
+      "id": "cache-gc",
+      "match": [
+        "/🏗️build/🧹️cache-gc/"
+      ]
     }
   ],
   "rows": [
@@ -243,9 +261,12 @@
         "bootstrap",
         "store-receipt",
         "tools",
-        "revision"
+        "revision",
+        "remote-execution",
+        "scheduler",
+        "cache-gc"
       ],
-      "maximumModules": 100,
+      "maximumModules": 72,
       "maximumBytes": 1250000
     },
     {

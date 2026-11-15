@@ -1,4 +1,4 @@
-"""🔊 Subtitle voiceover for Ventilation Chapter 6 (Übergabe an Heizung und Kühlung) — synth, align, verify.
+"""🔊 Subtitle voiceover for Ventilation Chapter 6 (Übergabe an Heizung und Kühltechnik) — synth, align, verify.
 
     synth   → one audio file per clause + the timing manifest (measured lengths)
     trace   → VO_TRACE=1 manim run records when each subtitle appears

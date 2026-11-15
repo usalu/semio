@@ -1,0 +1,14 @@
+import { measureVolumes } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🟦️.ts";
+import { entryOf, loadSource, merged } from "./volumes-lib.ts";
+const [spec, sc, thId, ...bodyIds] = process.argv.slice(2);
+const { entry, asset } = entryOf(spec!);
+const src = loadSource(entry)!;
+const v = src.volumes[sc!];
+const t = v.thermal.find((x: any) => x.id === thId);
+v.thermal = [t];
+v.body = v.body.filter((b: any) => bodyIds.includes(b.id) || b.id === t.of);
+v.structure = v.structure.filter((s: any) => bodyIds.includes(s.id) || s.id === v.structure[0].id);
+const m = merged(asset, src);
+m.thermal = { ...m.thermal, regions: m.thermal.regions.map((r: any) => ({ ...r, areaM2: 1e6 })) };
+const ms = measureVolumes(m as never, { scale: Number(sc) as never, rules: ["volumes-thermal-coverage"] as never });
+console.log(ms.filter((x: any) => x.name.startsWith("areaDeviation")).map((x: any) => x.name + " " + ((1 - x.value) * 1e6).toFixed(4)));

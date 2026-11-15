@@ -97,7 +97,7 @@ return;
     const archive = new Uint8Array(await response.arrayBuffer());
     decodeDocumentArchiveBytes(archive);
     const echo = state.folderArchive !== null && equalByteArrays(state.folderArchive, archive);
-    if (!echo && folderWorkUnacknowledged(state)) {
+    if (!echo && state.facetBacklog.length === 0 && folderWorkUnacknowledged(state)) {
       setStatus(state, { writeFailure: { code: "external-divergence" } });
       return;
     }

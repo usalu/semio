@@ -36,8 +36,8 @@ test("The door that re-enters under the quiet grant it holds starts at once besi
    const row=(await readHostCapacityStatusV1({directory,policy,control:control(),sample})).grants.find(item=>item.id===outer.handle!.id)!;
    inner={inherited:granted.handle!.inherited,args:granted.args,ms:Date.now()-started,quiet:row.quiet};
    await sleep(80);
-  },ports(directory,{write:(line:string)=>lines.push(line)}));
- },ports(directory,{write:(line:string)=>lines.push(line)}));
+  },ports(directory,{observe:async()=>100,write:(line:string)=>lines.push(line)}));
+ },ports(directory,{observe:async()=>100,write:(line:string)=>lines.push(line)}));
  machine.release();await machine.done;
  expect(inner).toMatchObject({inherited:true,quiet:true});expect(inner!.args.at(-1),"the tool is told the full jobs").toBe("--parallel=2");
  expect(inner!.ms,"no capacity queue for the re-entered door").toBeLessThan(2500);

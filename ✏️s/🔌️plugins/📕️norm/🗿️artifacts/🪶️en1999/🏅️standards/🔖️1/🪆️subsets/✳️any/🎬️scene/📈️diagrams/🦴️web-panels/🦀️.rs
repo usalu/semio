@@ -42,7 +42,7 @@ pub(super) fn web_panels(d: &En1999Snapshot, report: &CheckReport, member: &Alum
         let mut outline = rectangle(*x0, *x1, h_w);
         let first = outline[0].clone();
         outline.push(first);
-        series.push(Series::Polyline { id: format!("panel-{}-outline", k + 1), label: label.clone(), points: outline, style: stroke(tone, 1.5, if !super::scene::norm::within_limit(*u) { Dash::Dashed } else { Dash::Solid }) });
+        series.push(Series::Polyline { id: format!("panel-{}-outline", k + 1), label: label.clone(), points: outline, style: stroke(tone, 1.5, if !crate::scene::norm::within_limit(*u) { Dash::Dashed } else { Dash::Solid }) });
         notes.push(DiagramNote { id: format!("panel-{}-note", k + 1), at: Vec2::new(0.5 * (x0 + x1), 0.5 * h_w), text: loc(&format!("a/h_w = {:.2}, u = {:.2}", aspect, u), &format!("a/h_w = {:.2}, u = {:.2}", aspect, u)), tone });
     }
     let markers: Vec<Marker> = rows

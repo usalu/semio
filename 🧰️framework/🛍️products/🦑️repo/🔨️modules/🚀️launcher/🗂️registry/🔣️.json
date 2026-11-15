@@ -167,6 +167,10 @@
    "en": "The repository implementation entry is missing: {path}",
    "de": "Der Einstieg der Repository-Implementierung fehlt: {path}"
   },
+  "namespaceDangling": {
+   "en": "The dependency namespace {path} is a link to {target}, which is no generation of this checkout's dependency store, so it cannot be recovered automatically. Delete the link {path}, then run: {command}",
+   "de": "Der Abhängigkeits-Namensraum {path} ist eine Verknüpfung auf {target}, das keine Generation des Abhängigkeitsspeichers dieses Checkouts ist, und lässt sich nicht automatisch wiederherstellen. Lösche die Verknüpfung {path} und führe dann aus: {command}"
+  },
   "provisioning": {
    "en": "Provisioning {runtime} {version} for {platform}/{arch}: first use, {megabytes} MiB from {source}.",
    "de": "Bereitstellung von {runtime} {version} für {platform}/{arch}: erste Nutzung, {megabytes} MiB von {source}."

@@ -13,7 +13,7 @@ import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {cacheLedgerV1} from "../../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
-import {resolveRemoteCacheContractV1} from "../../../🌐️remote-cache/🟦️.ts";
+import {resolveRemoteCacheV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {bazelRemoteCacheV1,type BazelCredentialHelperV1} from "../🌐️remote-cache/🟦️.ts";
 
 const hostPaths=schema.definitions.HostPaths.const;
@@ -61,7 +61,7 @@ export function bazelServerBaseV1(layout:ReturnType<typeof bazelCacheLayoutV1>,s
 }
 /** 🌐️ Derives the closed startup and command flags for Bazel's disk, repository-content and optional remote caches; the remote part is the Bazel rendering of the neutral remote cache contract (`🌐️remote-cache`) and stays off until an endpoint is configured. The token travels only in `environment`, which the caller hands to the Bazel client and never persists. */
 export function bazelCacheFlagsV1(layout:ReturnType<typeof bazelCacheLayoutV1>,slot:string,options:Readonly<{environment?:Readonly<Record<string,string|undefined>>;skipCache?:boolean;skipRemoteCache?:boolean;checkout?:string}>={}):Readonly<{startup:readonly string[];command:readonly string[];remote:boolean;environment:Readonly<Record<string,string>>;helper?:BazelCredentialHelperV1}>{
- const input=options.environment??{},contract=resolveRemoteCacheContractV1(input),command=[`--disk_cache=${layout.actions}`,`--experimental_disk_cache_gc_max_size=${bazelDiskCacheMaximumBytesV1()}`];
+ const resolved=resolveRemoteCacheV1(options.environment??{}),input=resolved?.environment??options.environment??{},contract=resolved?.contract,command=[`--disk_cache=${layout.actions}`,`--experimental_disk_cache_gc_max_size=${bazelDiskCacheMaximumBytesV1()}`];
  if(options.skipCache)command.push("--noremote_accept_cached");
  const rendering=contract!==undefined&&!options.skipRemoteCache?bazelRemoteCacheV1(contract,input,{helperDirectory:layout.temporary}):undefined;
  if(rendering)command.push(...rendering.flags);

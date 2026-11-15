@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+import { tessellateSolid } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+const C = await import(`../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes-next-b/🧵️centreline/🟦️.ts`);
+const fx = JSON.parse(readFileSync("/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/🧊️volumes-rules/🔣️.json", "utf8")).follow.hoop;
+const g = tessellateSolid({ id: "hoop", bone: "b", material: "m", role: "body", tone: 0.5, node: "b", ...fx.solid } as never, { chordM: 0.002, minSegments: 12, maxSegments: 96 });
+const positions = Float64Array.from(g.positions), indices = Uint32Array.from(g.indices);
+console.log("verts", positions.length / 3, "tris", indices.length / 3);
+const t = Date.now();
+const cl = C.centreLineOf(positions, positions, indices);
+console.log(Date.now() - t, "ms", cl && { len: cl.length, th: cl.thickness, n: cl.clusters.length, e: cl.edges.length });

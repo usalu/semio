@@ -1,0 +1,434 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:project-records:portable:v1",
+  "title": "The observations of a project record that name the producer's machine and not the project's inputs",
+  "description": "A stored project record carries every filesystem fact its inference consumed, and a taker replays them against its own tree before it uses the record. Two kinds of fact name the producer's machine and not an input: (1) `lstat` of every directory above the checkout (`/`, `/Users`, `/Users/Shared`, or `/home`, `/home/deck`: the realpath walk of the TypeScript compiler), which holds on no machine with another checkout location, and (2) every path below `.cache/b/d/m/j/<id>/`, the dependency generation the inference tooling ran from (its id derives from the checkout and the platform, and every record holds exactly one). Measured on 2870 production records: 1824 of 1825 macOS records and 545 of 546 Linux records hold both kinds, so before this module a record produced under one checkout could not hold under another, and never on another platform. A record is published portable: the location rows are dropped (a directory above the checkout exists whenever the checkout does, so the fact cannot decide anything) and the generation id is replaced by a token; the taker puts its own generation in the token's place (the real path of its `node_modules`), so the rows are replayed against the tooling it runs from, whose identity the `field` row of the compiler (a package identity digest) still decides. A record that holds several generation ids, or a taker that has no generation, keeps rows that cannot hold, and the project is inferred locally. The record is also normalised for the representation of the host (`neutralRecordV1`, `localRecordV1`), so one record serves POSIX and Windows takers: (3) the root, spelled `/Users/Shared/semio`, `C:\\\\semio` in a row path, `C:/semio` in a result text, in the JSON-in-JSON paths of `resolve`, `closure` and `registry` rows, becomes the root token with `/` separators and is spelled again in the taker's way (`\\\\` in row paths and `/` in result texts on Windows, as each host's own inference writes them); the drive letter and the root are compared without case on Windows and the extended prefix `\\\\\\\\?\\\\` is ignored; (4) the identity of a source analysis provider is `build:<role>:v1:<hash of the module URL and the code stamp>` and the module URL names the checkout, so the hash becomes a token and the taker puts the identity of the provider it has registered for that role; (5) the key of a closure recipe is the hash of the recipe text, which names the root, so every key (the recipe table, the `closureRef` markers, the `closure` rows, the names and recipes of the closure bundles) becomes the hash of the neutral recipe and the taker computes the key of the recipe in its own spelling. A text that still names the root in a spelling that cannot be mapped is refused on publication (`unportable`), and a taken text that still holds a root token is refused, so a project is inferred locally and never taken wrongly.",
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "dependencyRoot",
+        "token",
+        "unavailable",
+        "locationKinds",
+        "probe",
+        "rootToken",
+        "ownerToken",
+        "ownerPattern",
+        "pathKinds",
+        "jsonKinds",
+        "factPathKinds",
+        "residue"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "dependencyRoot": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "unavailable": {
+          "type": "string"
+        },
+        "locationKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "probe": {
+          "type": "string"
+        },
+        "rootToken": {
+          "type": "string"
+        },
+        "ownerToken": {
+          "type": "string"
+        },
+        "ownerPattern": {
+          "type": "string"
+        },
+        "pathKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "jsonKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "factPathKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "residue": {
+          "type": "string"
+        }
+      },
+      "const": {
+        "version": 1,
+        "dependencyRoot": ".cache/b/d/m/j",
+        "token": "⟦generation⟧",
+        "unavailable": "generation-unavailable",
+        "locationKinds": [
+          "lstat"
+        ],
+        "probe": "node_modules",
+        "rootToken": "⟦semio-root⟧",
+        "ownerToken": "⟦analysis-owner⟧",
+        "ownerPattern": "^(build:[a-z0-9-]+:v1:)[0-9a-f]{64}$",
+        "pathKinds": [
+          "file",
+          "exists",
+          "lstat",
+          "stat",
+          "readdir",
+          "readdirNames",
+          "fileExists",
+          "directoryExists",
+          "directories",
+          "typescriptText",
+          "typescriptRealpath",
+          "realpath",
+          "realpathNative",
+          "field",
+          "analysis"
+        ],
+        "jsonKinds": [
+          "resolve",
+          "closure",
+          "registry"
+        ],
+        "factPathKinds": [
+          "resolve",
+          "realpath",
+          "realpathNative",
+          "typescriptRealpath"
+        ],
+        "residue": "⟦semio-"
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "fact": {}
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "root",
+        "rows",
+        "portable",
+        "generation",
+        "local"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        },
+        "portable": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        },
+        "generation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "local": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "paths",
+        "hosts",
+        "records"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Case"
+          }
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PathCase"
+          }
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HostCase"
+          }
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RecordCase"
+          }
+        }
+      }
+    },
+    "PathCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "root",
+        "path",
+        "neutral"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "neutral": {
+          "type": "string"
+        },
+        "local": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "the path spelled again for the same host; null when it is not below the root"
+        }
+      }
+    },
+    "HostCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "root",
+        "neutral",
+        "local"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "neutral": {
+          "type": "string"
+        },
+        "local": {
+          "type": "string"
+        }
+      }
+    },
+    "RecordCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "root",
+        "producer",
+        "neutral",
+        "takers"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "producer": {
+          "type": "object"
+        },
+        "neutral": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "null when the record is refused as unportable"
+        },
+        "takers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "root",
+              "providers",
+              "generation",
+              "local"
+            ],
+            "properties": {
+              "root": {
+                "type": "string"
+              },
+              "providers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "generation": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "local": {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "bundles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Bundle"
+                }
+              }
+            }
+          }
+        },
+        "bundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Bundle"
+          }
+        },
+        "neutralBundles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Bundle"
+          }
+        }
+      }
+    },
+    "Bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recipeKey",
+        "bundle"
+      ],
+      "properties": {
+        "recipeKey": {
+          "type": "string"
+        },
+        "bundle": {
+          "type": "object"
+        }
+      }
+    },
+    "RealCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "windows",
+        "posix"
+      ],
+      "description": "The records of one project as two real machines produced them (stored in the production cache of the fleet on 2026-11-15, written back into the spelling of their producers): a Windows checkout at C:\\\\semio and a POSIX checkout at the root named. Their neutral forms must be equal apart from the volatile stamps of the files.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "windows": {
+          "type": "object",
+          "required": [
+            "root",
+            "record"
+          ],
+          "properties": {
+            "root": {
+              "type": "string"
+            },
+            "record": {
+              "type": "object"
+            }
+          }
+        },
+        "posix": {
+          "type": "object",
+          "required": [
+            "root",
+            "record"
+          ],
+          "properties": {
+            "root": {
+              "type": "string"
+            },
+            "record": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "RealFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/RealCase"
+          }
+        }
+      }
+    }
+  }
+}

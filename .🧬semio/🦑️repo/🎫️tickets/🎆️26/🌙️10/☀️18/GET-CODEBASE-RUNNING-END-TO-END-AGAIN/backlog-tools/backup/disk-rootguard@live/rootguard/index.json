@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/📖️texts/🔣️.json": {
+  "backup": "000.orig",
+  "base": "6a7343610f10b5425f1908effc5a8c31d8d55fe3449ce8e5e4241525f755c2cb",
+  "applied": "6390ff7e35a4882eff9080694d171677983d3c6c69935ba47b87001e45912161"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts": {
+  "backup": "001.orig",
+  "base": "8084fb3c969fe7fb0dfeada1c51a785762599b8872314f89b74ff54021eb726e",
+  "applied": "b25ecf83b152015a5431e420cdc02ccd1d00e3540b5409027fe56c73e4cd8f76"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧭️root/🟦️.ts": {
+  "backup": null,
+  "base": "absent",
+  "applied": "f40477f5a73a1958dcb6ccc3333e044d31f17fe0e4b66671b14d9c61b9be53e7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧭️root/🧪️tests/🟦️.ts": {
+  "backup": null,
+  "base": "absent",
+  "applied": "d3dcc215ebd41d00aae23deea3f4b3bd850248b8efcb0a620d8a39eb811acfac"
+ }
+}

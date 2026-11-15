@@ -134,6 +134,47 @@
      "value": 2
     }
    ]
+  },
+  {
+   "expected": "error",
+   "id": "derived names an undeclared inferrer",
+   "mutate": [
+    {
+     "path": [
+      "derived",
+      0
+     ],
+     "value": "never-declared"
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "derived names an inferrer twice",
+   "mutate": [
+    {
+     "fromPath": [
+      "derived",
+      0
+     ],
+     "path": [
+      "derived",
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "expected": "error",
+   "id": "derived is missing",
+   "mutate": [
+    {
+     "path": [
+      "derived"
+     ],
+     "value": null
+    }
+   ]
   }
  ],
  "rows": [
@@ -200,6 +241,38 @@
   {
    "cls": "keep",
    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🟨️.mjs"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json"
+  },
+  {
+   "cls": "keep",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🔣️.json"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟦️.ts"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🔣️policy.json"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🍞️bun/🔣️.json"
+  },
+  {
+   "cls": "drop",
+   "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs"
   }
  ],
  "version": 1

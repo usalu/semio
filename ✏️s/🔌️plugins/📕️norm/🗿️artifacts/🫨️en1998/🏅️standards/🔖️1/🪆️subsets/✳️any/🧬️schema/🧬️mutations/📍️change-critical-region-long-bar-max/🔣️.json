@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-critical-region-long-bar-max",
-  "semanticKind": "change-critical-region-long-bar-max",
+  "semanticKind": "change-critical-region-longitudinal-bar-max-diameter-m",
   "displayName": "Change critical region: largest longitudinal bar diameter",
   "emoji": "📍️",
   "aggregateVariant": "ChangeCriticalRegionLongitudinalBarMaxDiameterM",

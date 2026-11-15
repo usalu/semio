@@ -7,7 +7,7 @@
 //! `Serialize`/`Deserialize`, so a second handcrafted grammar per structured type would just
 //! duplicate that losslessly.
 
-use semio_s_artifact_norm_vdi3805_mutations::Vdi3805Mutation;
+use crate::Vdi3805Mutation;
 
 use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry_connection::AddGeometryConnection;
 use semio_s_artifact_norm_vdi3805_mut_file::change_correction_as_of::ChangeCorrectionAsOf;
@@ -219,7 +219,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
         components: Vec::new(),
         extensions: ExtensionBag::default(),
     };
-    let geometry = ParametricGeometry { id: "geom.new".into(), bbox: BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: std::collections::BTreeMap::new() };
+    let geometry = ParametricGeometry { id: "geom.new".into(), bbox: BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::new() };
     let curve = CharacteristicCurve { id: "curve.new".into(), x_unit: VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01), y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0), points: vec![CurvePoint { x: 0.0, y: 0.0 }] };
 
     vec![
@@ -241,7 +241,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
             index: None,
         }),
         Vdi3805Mutation::RemoveGeometryConnection(RemoveGeometryConnection { id: "geom-valve-50".into(), connection_id: "in".into() }),
-        Vdi3805Mutation::ChangeGeometryParameters(ChangeGeometryParameters { id: "geom-valve-50".into(), new_parameters: std::collections::BTreeMap::from([("scale".to_string(), 2.0)]) }),
+        Vdi3805Mutation::ChangeGeometryParameters(ChangeGeometryParameters { id: "geom-valve-50".into(), new_parameters: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap::from([("scale".to_string(), 2.0)]) }),
         Vdi3805Mutation::AddCurve(AddCurve { curve: curve.clone() }),
         Vdi3805Mutation::RemoveCurve(RemoveCurve { id: "curve-kvs".into() }),
         Vdi3805Mutation::ChangeCurvePoints(ChangeCurvePoints { id: "curve-kvs".into(), new_points: vec![CurvePoint { x: 0.0, y: 0.0 }, CurvePoint { x: 100.0, y: 9.0 }] }),
@@ -269,8 +269,8 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::mutations::*;
-use semio_s_artifact_norm_vdi3805_mutations::*;
+use crate::text::*;
+use crate::*;
 use semio_s_artifact_norm_vdi3805_model::{CatalogIndexEntry, CatalogueProduct, SheetAttributes, Vdi3805Snapshot};
 use semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff;
 use semio_s_artifact_norm_vdi3805_mut_geometry::add_geometry_connection;
@@ -303,7 +303,7 @@ pub fn decode_vdi3805_mutation_json(text: &str) -> Result<Vdi3805Mutation, Strin
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use crate::mutations::mutations_codec::*;
+pub use crate::text::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

@@ -1,0 +1,666 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "housing",
+     "kind": "box",
+     "bone": "hob",
+     "material": "steel-enamel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.28,
+      0.031,
+      0.5
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0,
+       0.0155,
+       0
+      ]
+     }
+    },
+    {
+     "id": "plate",
+     "kind": "extrude",
+     "bone": "hob",
+     "material": "steel-enamel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.25,
+       -0.15
+      ],
+      [
+       0.25259,
+       -0.14966
+      ],
+      [
+       0.255,
+       -0.14866
+      ],
+      [
+       0.25707,
+       -0.14707
+      ],
+      [
+       0.25866,
+       -0.145
+      ],
+      [
+       0.25966,
+       -0.14259
+      ],
+      [
+       0.26,
+       -0.14
+      ],
+      [
+       0.26,
+       0.14
+      ],
+      [
+       0.25966,
+       0.14259
+      ],
+      [
+       0.25866,
+       0.145
+      ],
+      [
+       0.25707,
+       0.14707
+      ],
+      [
+       0.255,
+       0.14866
+      ],
+      [
+       0.25259,
+       0.14966
+      ],
+      [
+       0.25,
+       0.15
+      ],
+      [
+       -0.25,
+       0.15
+      ],
+      [
+       -0.25259,
+       0.14966
+      ],
+      [
+       -0.255,
+       0.14866
+      ],
+      [
+       -0.25707,
+       0.14707
+      ],
+      [
+       -0.25866,
+       0.145
+      ],
+      [
+       -0.25966,
+       0.14259
+      ],
+      [
+       -0.26,
+       0.14
+      ],
+      [
+       -0.26,
+       -0.14
+      ],
+      [
+       -0.25966,
+       -0.14259
+      ],
+      [
+       -0.25866,
+       -0.145
+      ],
+      [
+       -0.25707,
+       -0.14707
+      ],
+      [
+       -0.255,
+       -0.14866
+      ],
+      [
+       -0.25259,
+       -0.14966
+      ],
+      [
+       -0.25,
+       -0.15
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.03,
+     "to": 0.04
+    },
+    {
+     "id": "vent-rise",
+     "kind": "capsule",
+     "bone": "hob",
+     "material": "steel-enamel",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      -0.1,
+      0.006,
+      -0.2503
+     ],
+     "p1": [
+      -0.08,
+      0.016,
+      -0.2503
+     ],
+     "r0": 0.0007,
+     "r1": 0.0007,
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.04,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "vent-fall",
+     "kind": "capsule",
+     "bone": "hob",
+     "material": "steel-enamel",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      -0.08,
+      0.016,
+      -0.2503
+     ],
+     "p1": [
+      -0.06,
+      0.006,
+      -0.2503
+     ],
+     "r0": 0.0007,
+     "r1": 0.0007,
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0.04,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "knob",
+     "kind": "revolve",
+     "bone": "knob",
+     "material": "bakelite",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0,
+       0.011
+      ],
+      [
+       0.009,
+       0.011
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.259
+     ]
+    },
+    {
+     "id": "knob-pointer",
+     "kind": "box",
+     "bone": "knob",
+     "material": "bakelite",
+     "role": "detail",
+     "tone": 0.1,
+     "size": [
+      0.0024,
+      0.011,
+      0.0005
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0.0055,
+       -0.25925
+      ]
+     }
+    },
+    {
+     "id": "burner-ring",
+     "kind": "revolve",
+     "bone": "burner",
+     "material": "brass",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0,
+       0.052
+      ],
+      [
+       0.007,
+       0.046
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0.03
+     ]
+    },
+    {
+     "id": "burner-cap",
+     "kind": "revolve",
+     "bone": "burner",
+     "material": "brass",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0.007,
+       0.02
+      ],
+      [
+       0.018,
+       0.016
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0.03
+     ]
+    },
+    {
+     "id": "flame-ring",
+     "kind": "loft",
+     "bone": "flame-body",
+     "material": "flame",
+     "role": "body",
+     "tone": 0.92,
+     "sections": [
+      {
+       "at": [
+        -0.03,
+        0,
+        0.03
+       ],
+       "rx": 0.008,
+       "ry": 0.008,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.03,
+        0.009,
+        0.03
+       ],
+       "rx": 0.0072,
+       "ry": 0.0072,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.03,
+        0.015,
+        0.03
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        -0.03,
+        0.02,
+        0.03
+       ],
+       "rx": 0.0008,
+       "ry": 0.0008,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 12,
+      "rotationAxis": [
+       0,
+       1,
+       0
+      ],
+      "rotationRad": 0.5236,
+      "origin": [
+       0,
+       0,
+       0.03
+      ]
+     }
+    },
+    {
+     "id": "flame-centre",
+     "kind": "loft",
+     "bone": "flame-tip",
+     "material": "flame",
+     "role": "body",
+     "tone": 0.97,
+     "sections": [
+      {
+       "at": [
+        0,
+        -0.015,
+        0.03
+       ],
+       "rx": 0.009,
+       "ry": 0.009,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        -0.003,
+        0.03
+       ],
+       "rx": 0.008,
+       "ry": 0.008,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.005,
+        0.03
+       ],
+       "rx": 0.004,
+       "ry": 0.004,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.012,
+        0.03
+       ],
+       "rx": 0.0008,
+       "ry": 0.0008,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "trivet-rail",
+     "kind": "extrude",
+     "bone": "trivet",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       -0.037,
+       -0.135
+      ],
+      [
+       0.097,
+       -0.135
+      ],
+      [
+       0.097,
+       0.135
+      ],
+      [
+       -0.037,
+       0.135
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.038,
+     "to": 0.048,
+     "holes": [
+      [
+       [
+        -0.025,
+        -0.123
+       ],
+       [
+        0.085,
+        -0.123
+       ],
+       [
+        0.085,
+        0.123
+       ],
+       [
+        -0.025,
+        0.123
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "trivet-legs-front",
+     "kind": "box",
+     "bone": "trivet",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.014,
+      0.04,
+      0.014
+     ],
+     "transform": {
+      "translation": [
+       -0.12,
+       0.02,
+       -0.03
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.24,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "trivet-legs-back",
+     "kind": "box",
+     "bone": "trivet",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.014,
+      0.04,
+      0.014
+     ],
+     "transform": {
+      "translation": [
+       -0.12,
+       0.02,
+       0.09
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.24,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-housing",
+     "of": "housing",
+     "region": "plate"
+    },
+    {
+     "id": "th-plate",
+     "of": "plate",
+     "region": "plate"
+    },
+    {
+     "id": "th-knob",
+     "of": "knob",
+     "region": "knob"
+    },
+    {
+     "id": "th-knob-pointer",
+     "of": "knob-pointer",
+     "region": "knob"
+    },
+    {
+     "id": "th-burner-ring",
+     "of": "burner-ring",
+     "region": "burner"
+    },
+    {
+     "id": "th-burner-cap",
+     "of": "burner-cap",
+     "region": "burner"
+    },
+    {
+     "id": "th-flame-ring",
+     "of": "flame-ring",
+     "region": "flame"
+    },
+    {
+     "id": "th-flame-centre",
+     "of": "flame-centre",
+     "region": "flame"
+    },
+    {
+     "id": "th-trivet-rail",
+     "of": "trivet-rail",
+     "region": "trivet"
+    },
+    {
+     "id": "th-trivet-legs-front",
+     "of": "trivet-legs-front",
+     "region": "trivet"
+    },
+    {
+     "id": "th-trivet-legs-back",
+     "of": "trivet-legs-back",
+     "region": "trivet"
+    }
+   ],
+   "structure": [],
+   "decisions": []
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [],
+   "thermal": [],
+   "structure": [],
+   "decisions": []
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [],
+   "thermal": [],
+   "structure": [],
+   "decisions": []
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

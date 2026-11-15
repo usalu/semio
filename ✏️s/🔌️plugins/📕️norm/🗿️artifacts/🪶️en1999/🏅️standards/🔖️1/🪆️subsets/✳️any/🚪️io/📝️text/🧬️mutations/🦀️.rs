@@ -12,21 +12,21 @@ use semio_s_artifact_norm_en1999_mut_inputs::{change_reliability_class};
 use semio_s_artifact_norm_en1999_mut_members::{change_bolt_count, change_material_designation, change_member_buckling_length, change_member_m_y_ed, change_member_n_ed, change_plate_thickness, change_weld_throat, insert_member, remove_member};
 use semio_s_artifact_norm_en1999_mut_cold_formed::{change_sheet_material_id, change_sheet_span, change_sheet_thickness, change_sheet_welded, change_sheet_width};
 use semio_s_artifact_norm_en1999_mut_cold_formed_action::{change_sheet_action_category, change_sheet_action_g_k_line, change_sheet_action_kind, change_sheet_action_n_k, change_sheet_action_q_k_line, change_sheet_action_source, change_sheet_action_v_y_k};
-use semio_s_artifact_norm_en1999_mut_cold_formed_action_components::{change_sheet_action_local_load_k, change_sheet_action_m_y_k, change_sheet_action_m_z_k, change_sheet_action_torsion_k, change_sheet_action_v_z_k};
+use semio_s_artifact_norm_en1999_mut_cold_formed_actions::{change_sheet_action_local_load_k, change_sheet_action_m_y_k, change_sheet_action_m_z_k, change_sheet_action_torsion_k, change_sheet_action_v_z_k};
 use semio_s_artifact_norm_en1999_mut_connection::{change_conn_bolts_diameter, change_conn_bolts_edge_distance, change_conn_bolts_material, change_conn_bolts_pitch, change_conn_kind, change_conn_material_id, change_conn_member_id, change_conn_force_method};
 use semio_s_artifact_norm_en1999_mut_connection_fasteners::{change_conn_bolts_gauge, change_conn_bolts_plate_thickness, change_conn_welds_beta_w, change_conn_welds_filler_alloy, change_conn_welds_haz_extent, change_conn_welds_length};
 use semio_s_artifact_norm_en1999_mut_connection_action::{change_conn_action_category, change_conn_action_g_k_line, change_conn_action_kind, change_conn_action_n_k, change_conn_action_q_k_line, change_conn_action_source, change_conn_action_v_y_k};
-use semio_s_artifact_norm_en1999_mut_connection_action_components::{change_conn_action_local_load_k, change_conn_action_m_y_k, change_conn_action_m_z_k, change_conn_action_torsion_k, change_conn_action_v_z_k};
+use semio_s_artifact_norm_en1999_mut_connection_components::{change_conn_action_local_load_k, change_conn_action_m_y_k, change_conn_action_m_z_k, change_conn_action_torsion_k, change_conn_action_v_z_k};
 use semio_s_artifact_norm_en1999_mut_fatigue_detail::{change_fatigue_delta_sigma_c, change_fatigue_delta_sigma_ed, change_fatigue_detail_category, change_fatigue_m1, change_fatigue_m2, change_fatigue_member_id, change_fatigue_n_cycles};
 use semio_s_artifact_norm_en1999_mut_fire_scenario::{change_fire_duration_s, change_fire_member_id, change_fire_theta_a};
 use semio_s_artifact_norm_en1999_mut_material::{change_material_product_form};
 use semio_s_artifact_norm_en1999_mut_member::{change_member_c1, change_member_length, change_member_ltb_length, change_member_material_id, change_member_restrained_ltb, change_member_section_id, change_member_support};
 use semio_s_artifact_norm_en1999_mut_member_web_details::{change_member_bearing_length, change_member_transverse_weld, change_member_t_weld_offset};
 use semio_s_artifact_norm_en1999_mut_member_action::{change_action_category, change_action_g_k_line, change_action_kind, change_action_q_k_line, change_action_source, change_action_v_y_k, change_action_v_z_k};
-use semio_s_artifact_norm_en1999_mut_member_action_components::{change_action_local_load_k, change_action_m_z_k, change_action_torsion_k};
+use semio_s_artifact_norm_en1999_mut_member_components::{change_action_local_load_k, change_action_m_z_k, change_action_torsion_k};
 use semio_s_artifact_norm_en1999_mut_section::{change_section_flange_thickness, change_section_height, change_section_kind, change_section_outer_diameter, change_section_web_thickness, change_section_width};
 use semio_s_artifact_norm_en1999_mut_section_element::{change_element_outstand, change_element_weld_direction, change_element_weld_position, change_element_weld_process, change_element_weld_t_junction, change_element_welded, change_element_width};
-use semio_s_artifact_norm_en1999_mut_section_element_stiffeners::{change_element_stiffener_depth, change_element_stiffener_thk};
+use semio_s_artifact_norm_en1999_mut_element_stiffeners::{change_element_stiffener_depth, change_element_stiffener_thk};
 use semio_s_artifact_norm_en1999_mut_shell::{change_shell_fabrication_class, change_shell_length, change_shell_material_id, change_shell_radius, change_shell_thickness, change_shell_welded};
 use semio_s_artifact_norm_en1999_mut_shell_action::{change_shell_action_category, change_shell_action_g_k_line, change_shell_action_kind, change_shell_action_n_k, change_shell_action_q_k_line, change_shell_action_source, change_shell_action_v_y_k};
 use semio_s_artifact_norm_en1999_mut_shell_action_components::{change_shell_action_local_load_k, change_shell_action_m_y_k, change_shell_action_m_z_k, change_shell_action_torsion_k, change_shell_action_v_z_k};
@@ -51,14 +51,13 @@ use semio_s_artifact_norm_en1999_mut_fire_insulations::{insert_fire_insulation, 
 use semio_s_artifact_norm_en1999_mut_transverse_stiffener::{change_transverse_girder_id, change_transverse_position, change_transverse_sides, change_transverse_thickness, change_transverse_width, change_conn_load_eccentricity, change_conn_hole_stagger};
 use semio_s_artifact_norm_en1999_mut_sheet_profiles::{change_sheet_profile_sheet_id, change_sheet_profile_pitch, change_sheet_profile_top_flange, change_sheet_profile_bottom_flange, change_sheet_profile_web_height};
 use semio_s_artifact_norm_en1999_mut_fire_insulations::{change_fire_insulation_fire_id, change_fire_insulation_thickness, change_fire_insulation_conductivity, change_fire_insulation_specific_heat, change_fire_insulation_density};
-use semio_s_artifact_norm_en1999_mut_rows_transverse_stiffener::{insert_transverse_stiffener, remove_transverse_stiffener};
-use semio_s_artifact_norm_en1999_model::{TransverseStiffener, RingStiffener, PatchLoad, FatigueCategory, AluminiumConnection, AluminiumMaterial, AluminiumSection, AluminiumShell, ColdFormedSheet, FatigueDetail, FireScenario, Placement, SectionVertex, WeldRun, SupportCondition, AluminiumMember, SheetProfile, FireInsulation};
+use semio_s_artifact_norm_en1999_mut_rows_stiffener::{insert_transverse_stiffener, remove_transverse_stiffener};
+use semio_s_artifact_norm_en1999_model::{TransverseStiffener, RingStiffener, PatchLoad, FatigueCategory, AluminiumConnection, AluminiumMaterial, AluminiumSection, AluminiumShell, ColdFormedSheet, FatigueDetail, FireScenario, Placement, SectionVertex, WeldRun, SupportCondition, AluminiumMember, SheetProfile, FireInsulation, PlateElement, MemberAction, ActionCategory, ActionKind, ActionSource, ConnectionKind, DetailType, FabricationClass, FastenerForceMethod, OutlineRing, PatchLoadPosition, ProductForm, SectionKind, StiffenerSides, WeldDirection, WeldProcess};
 use semio_s_artifact_norm_en1999_mut_rows_member_action::{insert_member_action, remove_member_action};
 use semio_s_artifact_norm_en1999_mut_rows_connection_action::{insert_connection_action, remove_connection_action};
 use semio_s_artifact_norm_en1999_mut_rows_section_element::{insert_section_element, remove_section_element};
 use semio_s_artifact_norm_en1999_mut_rows_sheet_action::{insert_sheet_action, remove_sheet_action};
 use semio_s_artifact_norm_en1999_mut_rows_shell_action::{insert_shell_action, remove_shell_action};
-use semio_s_artifact_norm_en1999_model::{PlateElement, MemberAction, RingStiffener, PatchLoad, FatigueCategory, AluminiumConnection, AluminiumMaterial, AluminiumSection, AluminiumShell, ColdFormedSheet, FatigueDetail, FireScenario, Placement, SectionVertex, WeldRun, SupportCondition, AluminiumMember};
 use protocol::OpText;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
@@ -74,8 +73,8 @@ pub enum En1999MutationDsl {
     ChangePlateThickness { section_id: String, element_id: String, new_thickness: f64 },
     ChangeWeldThroat { connection_id: String, new_throat: f64 },
     ChangeBoltCount { connection_id: String, new_rows: u32, new_bolts_per_row: u32 },
-    ChangeMaterialProductForm { material_id: String, new_product_form: String },
-    ChangeSectionKind { section_id: String, new_kind: String },
+    ChangeMaterialProductForm { material_id: String, new_product_form: ProductForm },
+    ChangeSectionKind { section_id: String, new_kind: SectionKind },
     ChangeSectionHeight { section_id: String, new_height: f64 },
     ChangeSectionWidth { section_id: String, new_width: f64 },
     ChangeSectionFlangeThickness { section_id: String, new_flange_thickness: f64 },
@@ -85,9 +84,9 @@ pub enum En1999MutationDsl {
     ChangeElementOutstand { section_id: String, element_id: String, new_outstand: bool },
     ChangeElementWelded { section_id: String, element_id: String, new_welded: bool },
     ChangeElementWeldPosition { section_id: String, element_id: String, new_weld_position: f64 },
-    ChangeElementWeldProcess { section_id: String, element_id: String, new_weld_process: String },
+    ChangeElementWeldProcess { section_id: String, element_id: String, new_weld_process: WeldProcess },
     ChangeElementWeldTJunction { section_id: String, element_id: String, new_weld_t_junction: bool },
-    ChangeElementWeldDirection { section_id: String, element_id: String, new_weld_direction: String },
+    ChangeElementWeldDirection { section_id: String, element_id: String, new_weld_direction: WeldDirection },
     ChangeElementStiffenerDepth { section_id: String, element_id: String, new_edge_stiffener_depth: f64 },
     ChangeElementStiffenerThk { section_id: String, element_id: String, new_edge_stiffener_thickness: f64 },
     ChangeMemberSectionId { member_id: String, new_section_id: String },
@@ -100,9 +99,9 @@ pub enum En1999MutationDsl {
     ChangeMemberBearingLength { member_id: String, new_bearing_length: f64 },
     ChangeMemberTransverseWeld { member_id: String, new_transverse_weld: bool },
     ChangeMemberTWeldOffset { member_id: String, new_transverse_weld_offset: f64 },
-    ChangeActionKind { member_id: String, action_id: String, new_kind: String },
-    ChangeActionCategory { member_id: String, action_id: String, new_category: String },
-    ChangeActionSource { member_id: String, action_id: String, new_source: String },
+    ChangeActionKind { member_id: String, action_id: String, new_kind: ActionKind },
+    ChangeActionCategory { member_id: String, action_id: String, new_category: ActionCategory },
+    ChangeActionSource { member_id: String, action_id: String, new_source: ActionSource },
     ChangeActionGKLine { member_id: String, action_id: String, new_g_k_line: f64 },
     ChangeActionQKLine { member_id: String, action_id: String, new_q_k_line: f64 },
     ChangeActionVYK { member_id: String, action_id: String, new_v_y_k: f64 },
@@ -112,8 +111,8 @@ pub enum En1999MutationDsl {
     ChangeActionLocalLoadK { member_id: String, action_id: String, new_local_load_k: f64 },
     ChangeConnMemberId { connection_id: String, new_member_id: String },
     ChangeConnMaterialId { connection_id: String, new_material_id: String },
-    ChangeConnKind { connection_id: String, new_kind: String },
-    ChangeConnForceMethod { connection_id: String, new_force_method: String },
+    ChangeConnKind { connection_id: String, new_kind: ConnectionKind },
+    ChangeConnForceMethod { connection_id: String, new_force_method: FastenerForceMethod },
     ChangeConnBoltsMaterial { connection_id: String, new_bolts_material: String },
     ChangeConnBoltsDiameter { connection_id: String, new_bolts_diameter: f64 },
     ChangeConnBoltsEdgeDistance { connection_id: String, new_bolts_edge_distance: f64 },
@@ -124,9 +123,9 @@ pub enum En1999MutationDsl {
     ChangeConnWeldsLength { connection_id: String, new_welds_length: f64 },
     ChangeConnWeldsBetaW { connection_id: String, new_welds_beta_w: f64 },
     ChangeConnWeldsHazExtent { connection_id: String, new_welds_haz_extent: f64 },
-    ChangeConnActionKind { connection_id: String, action_id: String, new_kind: String },
-    ChangeConnActionCategory { connection_id: String, action_id: String, new_category: String },
-    ChangeConnActionSource { connection_id: String, action_id: String, new_source: String },
+    ChangeConnActionKind { connection_id: String, action_id: String, new_kind: ActionKind },
+    ChangeConnActionCategory { connection_id: String, action_id: String, new_category: ActionCategory },
+    ChangeConnActionSource { connection_id: String, action_id: String, new_source: ActionSource },
     ChangeConnActionGKLine { connection_id: String, action_id: String, new_g_k_line: f64 },
     ChangeConnActionQKLine { connection_id: String, action_id: String, new_q_k_line: f64 },
     ChangeConnActionNK { connection_id: String, action_id: String, new_n_k: f64 },
@@ -151,9 +150,9 @@ pub enum En1999MutationDsl {
     ChangeSheetWidth { cold_formed_id: String, new_width: f64 },
     ChangeSheetSpan { cold_formed_id: String, new_span: f64 },
     ChangeSheetWelded { cold_formed_id: String, new_welded: bool },
-    ChangeSheetActionKind { cold_formed_id: String, action_id: String, new_kind: String },
-    ChangeSheetActionCategory { cold_formed_id: String, action_id: String, new_category: String },
-    ChangeSheetActionSource { cold_formed_id: String, action_id: String, new_source: String },
+    ChangeSheetActionKind { cold_formed_id: String, action_id: String, new_kind: ActionKind },
+    ChangeSheetActionCategory { cold_formed_id: String, action_id: String, new_category: ActionCategory },
+    ChangeSheetActionSource { cold_formed_id: String, action_id: String, new_source: ActionSource },
     ChangeSheetActionGKLine { cold_formed_id: String, action_id: String, new_g_k_line: f64 },
     ChangeSheetActionQKLine { cold_formed_id: String, action_id: String, new_q_k_line: f64 },
     ChangeSheetActionNK { cold_formed_id: String, action_id: String, new_n_k: f64 },
@@ -168,10 +167,10 @@ pub enum En1999MutationDsl {
     ChangeShellThickness { shell_id: String, new_thickness: f64 },
     ChangeShellLength { shell_id: String, new_length: f64 },
     ChangeShellWelded { shell_id: String, new_welded: bool },
-    ChangeShellFabricationClass { shell_id: String, new_fabrication_class: String },
-    ChangeShellActionKind { shell_id: String, action_id: String, new_kind: String },
-    ChangeShellActionCategory { shell_id: String, action_id: String, new_category: String },
-    ChangeShellActionSource { shell_id: String, action_id: String, new_source: String },
+    ChangeShellFabricationClass { shell_id: String, new_fabrication_class: FabricationClass },
+    ChangeShellActionKind { shell_id: String, action_id: String, new_kind: ActionKind },
+    ChangeShellActionCategory { shell_id: String, action_id: String, new_category: ActionCategory },
+    ChangeShellActionSource { shell_id: String, action_id: String, new_source: ActionSource },
     ChangeShellActionGKLine { shell_id: String, action_id: String, new_g_k_line: f64 },
     ChangeShellActionQKLine { shell_id: String, action_id: String, new_q_k_line: f64 },
     ChangeShellActionNK { shell_id: String, action_id: String, new_n_k: f64 },
@@ -187,12 +186,12 @@ pub enum En1999MutationDsl {
     ChangeWeldRunLength { weld_run_id: String, new_length: f64 },
     ChangeWeldRunOffset { weld_run_id: String, new_offset: f64 },
     ChangeWeldRunThroat { weld_run_id: String, new_throat: f64 },
-    ChangeWeldRunProcess { weld_run_id: String, new_process: String },
+    ChangeWeldRunProcess { weld_run_id: String, new_process: WeldProcess },
     ChangeWeldRunTJunction { weld_run_id: String, new_t_junction: bool },
-    ChangeWeldRunDirection { weld_run_id: String, new_direction: String },
+    ChangeWeldRunDirection { weld_run_id: String, new_direction: WeldDirection },
     ChangeWeldRunHazExtent { weld_run_id: String, new_haz_extent: f64 },
     ChangeVertexSectionId { outline_vertex_id: String, new_section_id: String },
-    ChangeVertexRing { outline_vertex_id: String, new_ring: String },
+    ChangeVertexRing { outline_vertex_id: String, new_ring: OutlineRing },
     ChangeVertexElementId { outline_vertex_id: String, new_element_id: String },
     ChangeVertexY { outline_vertex_id: String, new_y: f64 },
     ChangeVertexZ { outline_vertex_id: String, new_z: f64 },
@@ -226,12 +225,12 @@ pub enum En1999MutationDsl {
     ChangeCategoryMemberId { fatigue_category_id: String, new_member_id: String },
     ChangeCategoryElementId { fatigue_category_id: String, new_element_id: String },
     ChangeCategoryDetailCategory { fatigue_category_id: String, new_detail_category: String },
-    ChangeCategoryDetailType { fatigue_category_id: String, new_detail_type: String },
+    ChangeCategoryDetailType { fatigue_category_id: String, new_detail_type: DetailType },
     ChangeCategoryLocationX { fatigue_category_id: String, new_location_x: f64 },
     ChangeCategoryM1 { fatigue_category_id: String, new_m1: f64 },
     ChangeCategoryM2 { fatigue_category_id: String, new_m2: f64 },
     ChangePatchSubjectId { patch_load_id: String, new_subject_id: String },
-    ChangePatchPosition { patch_load_id: String, new_position: String },
+    ChangePatchPosition { patch_load_id: String, new_position: PatchLoadPosition },
     ChangePatchX { patch_load_id: String, new_x: f64 },
     ChangePatchBearingLength { patch_load_id: String, new_bearing_length: f64 },
     ChangePatchWebHeight { patch_load_id: String, new_web_height: f64 },
@@ -279,7 +278,7 @@ pub enum En1999MutationDsl {
     ChangeFireInsulationSpecificHeat { fire_insulation_id: String, new_specific_heat: f64 },
     ChangeFireInsulationConductivity { fire_insulation_id: String, new_conductivity: f64 },
     ChangeFireInsulationThickness { fire_insulation_id: String, new_thickness: f64 },
-    ChangeTransverseSides { transverse_stiffener_id: String, new_sides: String },
+    ChangeTransverseSides { transverse_stiffener_id: String, new_sides: StiffenerSides },
     InsertTransverseStiffener { index: u32, payload_json: String },
     RemoveTransverseStiffener { id: String },
 }
@@ -325,8 +324,8 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangePlateThickness(p) => En1999MutationDsl::ChangePlateThickness { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_thickness: p.new_thickness },
         En1999Mutation::ChangeWeldThroat(p) => En1999MutationDsl::ChangeWeldThroat { connection_id: p.connection_id.clone(), new_throat: p.new_throat },
         En1999Mutation::ChangeBoltCount(p) => En1999MutationDsl::ChangeBoltCount { connection_id: p.connection_id.clone(), new_rows: p.new_rows, new_bolts_per_row: p.new_bolts_per_row },
-        En1999Mutation::ChangeMaterialProductForm(p) => En1999MutationDsl::ChangeMaterialProductForm { material_id: p.material_id.clone(), new_product_form: p.new_product_form.clone() },
-        En1999Mutation::ChangeSectionKind(p) => En1999MutationDsl::ChangeSectionKind { section_id: p.section_id.clone(), new_kind: p.new_kind.clone() },
+        En1999Mutation::ChangeMaterialProductForm(p) => En1999MutationDsl::ChangeMaterialProductForm { material_id: p.material_id.clone(), new_product_form: p.new_product_form },
+        En1999Mutation::ChangeSectionKind(p) => En1999MutationDsl::ChangeSectionKind { section_id: p.section_id.clone(), new_kind: p.new_kind },
         En1999Mutation::ChangeSectionHeight(p) => En1999MutationDsl::ChangeSectionHeight { section_id: p.section_id.clone(), new_height: p.new_height },
         En1999Mutation::ChangeSectionWidth(p) => En1999MutationDsl::ChangeSectionWidth { section_id: p.section_id.clone(), new_width: p.new_width },
         En1999Mutation::ChangeSectionFlangeThickness(p) => En1999MutationDsl::ChangeSectionFlangeThickness { section_id: p.section_id.clone(), new_flange_thickness: p.new_flange_thickness },
@@ -336,9 +335,9 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangeElementOutstand(p) => En1999MutationDsl::ChangeElementOutstand { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_outstand: p.new_outstand },
         En1999Mutation::ChangeElementWelded(p) => En1999MutationDsl::ChangeElementWelded { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_welded: p.new_welded },
         En1999Mutation::ChangeElementWeldPosition(p) => En1999MutationDsl::ChangeElementWeldPosition { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_weld_position: p.new_weld_position },
-        En1999Mutation::ChangeElementWeldProcess(p) => En1999MutationDsl::ChangeElementWeldProcess { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_weld_process: p.new_weld_process.clone() },
+        En1999Mutation::ChangeElementWeldProcess(p) => En1999MutationDsl::ChangeElementWeldProcess { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_weld_process: p.new_weld_process },
         En1999Mutation::ChangeElementWeldTJunction(p) => En1999MutationDsl::ChangeElementWeldTJunction { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_weld_t_junction: p.new_weld_t_junction },
-        En1999Mutation::ChangeElementWeldDirection(p) => En1999MutationDsl::ChangeElementWeldDirection { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_weld_direction: p.new_weld_direction.clone() },
+        En1999Mutation::ChangeElementWeldDirection(p) => En1999MutationDsl::ChangeElementWeldDirection { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_weld_direction: p.new_weld_direction },
         En1999Mutation::ChangeElementStiffenerDepth(p) => En1999MutationDsl::ChangeElementStiffenerDepth { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_edge_stiffener_depth: p.new_edge_stiffener_depth },
         En1999Mutation::ChangeElementStiffenerThk(p) => En1999MutationDsl::ChangeElementStiffenerThk { section_id: p.section_id.clone(), element_id: p.element_id.clone(), new_edge_stiffener_thickness: p.new_edge_stiffener_thickness },
         En1999Mutation::ChangeMemberSectionId(p) => En1999MutationDsl::ChangeMemberSectionId { member_id: p.member_id.clone(), new_section_id: p.new_section_id.clone() },
@@ -351,9 +350,9 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangeMemberBearingLength(p) => En1999MutationDsl::ChangeMemberBearingLength { member_id: p.member_id.clone(), new_bearing_length: p.new_bearing_length },
         En1999Mutation::ChangeMemberTransverseWeld(p) => En1999MutationDsl::ChangeMemberTransverseWeld { member_id: p.member_id.clone(), new_transverse_weld: p.new_transverse_weld },
         En1999Mutation::ChangeMemberTWeldOffset(p) => En1999MutationDsl::ChangeMemberTWeldOffset { member_id: p.member_id.clone(), new_transverse_weld_offset: p.new_transverse_weld_offset },
-        En1999Mutation::ChangeActionKind(p) => En1999MutationDsl::ChangeActionKind { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_kind: p.new_kind.clone() },
-        En1999Mutation::ChangeActionCategory(p) => En1999MutationDsl::ChangeActionCategory { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_category: p.new_category.clone() },
-        En1999Mutation::ChangeActionSource(p) => En1999MutationDsl::ChangeActionSource { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_source: p.new_source.clone() },
+        En1999Mutation::ChangeActionKind(p) => En1999MutationDsl::ChangeActionKind { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_kind: p.new_kind },
+        En1999Mutation::ChangeActionCategory(p) => En1999MutationDsl::ChangeActionCategory { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_category: p.new_category },
+        En1999Mutation::ChangeActionSource(p) => En1999MutationDsl::ChangeActionSource { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_source: p.new_source },
         En1999Mutation::ChangeActionGKLine(p) => En1999MutationDsl::ChangeActionGKLine { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_g_k_line: p.new_g_k_line },
         En1999Mutation::ChangeActionQKLine(p) => En1999MutationDsl::ChangeActionQKLine { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_q_k_line: p.new_q_k_line },
         En1999Mutation::ChangeActionVYK(p) => En1999MutationDsl::ChangeActionVYK { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_v_y_k: p.new_v_y_k },
@@ -363,8 +362,8 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangeActionLocalLoadK(p) => En1999MutationDsl::ChangeActionLocalLoadK { member_id: p.member_id.clone(), action_id: p.action_id.clone(), new_local_load_k: p.new_local_load_k },
         En1999Mutation::ChangeConnMemberId(p) => En1999MutationDsl::ChangeConnMemberId { connection_id: p.connection_id.clone(), new_member_id: p.new_member_id.clone() },
         En1999Mutation::ChangeConnMaterialId(p) => En1999MutationDsl::ChangeConnMaterialId { connection_id: p.connection_id.clone(), new_material_id: p.new_material_id.clone() },
-        En1999Mutation::ChangeConnKind(p) => En1999MutationDsl::ChangeConnKind { connection_id: p.connection_id.clone(), new_kind: p.new_kind.clone() },
-        En1999Mutation::ChangeConnForceMethod(p) => En1999MutationDsl::ChangeConnForceMethod { connection_id: p.connection_id.clone(), new_force_method: p.new_force_method.clone() },
+        En1999Mutation::ChangeConnKind(p) => En1999MutationDsl::ChangeConnKind { connection_id: p.connection_id.clone(), new_kind: p.new_kind },
+        En1999Mutation::ChangeConnForceMethod(p) => En1999MutationDsl::ChangeConnForceMethod { connection_id: p.connection_id.clone(), new_force_method: p.new_force_method },
         En1999Mutation::ChangeConnBoltsMaterial(p) => En1999MutationDsl::ChangeConnBoltsMaterial { connection_id: p.connection_id.clone(), new_bolts_material: p.new_bolts_material.clone() },
         En1999Mutation::ChangeConnBoltsDiameter(p) => En1999MutationDsl::ChangeConnBoltsDiameter { connection_id: p.connection_id.clone(), new_bolts_diameter: p.new_bolts_diameter },
         En1999Mutation::ChangeConnBoltsEdgeDistance(p) => En1999MutationDsl::ChangeConnBoltsEdgeDistance { connection_id: p.connection_id.clone(), new_bolts_edge_distance: p.new_bolts_edge_distance },
@@ -375,9 +374,9 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangeConnWeldsLength(p) => En1999MutationDsl::ChangeConnWeldsLength { connection_id: p.connection_id.clone(), new_welds_length: p.new_welds_length },
         En1999Mutation::ChangeConnWeldsBetaW(p) => En1999MutationDsl::ChangeConnWeldsBetaW { connection_id: p.connection_id.clone(), new_welds_beta_w: p.new_welds_beta_w },
         En1999Mutation::ChangeConnWeldsHazExtent(p) => En1999MutationDsl::ChangeConnWeldsHazExtent { connection_id: p.connection_id.clone(), new_welds_haz_extent: p.new_welds_haz_extent },
-        En1999Mutation::ChangeConnActionKind(p) => En1999MutationDsl::ChangeConnActionKind { connection_id: p.connection_id.clone(), action_id: p.action_id.clone(), new_kind: p.new_kind.clone() },
-        En1999Mutation::ChangeConnActionCategory(p) => En1999MutationDsl::ChangeConnActionCategory { connection_id: p.connection_id.clone(), action_id: p.action_id.clone(), new_category: p.new_category.clone() },
-        En1999Mutation::ChangeConnActionSource(p) => En1999MutationDsl::ChangeConnActionSource { connection_id: p.connection_id.clone(), action_id: p.action_id.clone(), new_source: p.new_source.clone() },
+        En1999Mutation::ChangeConnActionKind(p) => En1999MutationDsl::ChangeConnActionKind { connection_id: p.connection_id.clone(), action_id: p.action_id.clone(), new_kind: p.new_kind },
+        En1999Mutation::ChangeConnActionCategory(p) => En1999MutationDsl::ChangeConnActionCategory { connection_id: p.connection_id.clone(), action_id: p.action_id.clone(), new_category: p.new_category },
+        En1999Mutation::ChangeConnActionSource(p) => En1999MutationDsl::ChangeConnActionSource { connection_id: p.connection_id.clone(), action_id: p.action_id.clone(), new_source: p.new_source },
         En1999Mutation::ChangeConnActionGKLine(p) => En1999MutationDsl::ChangeConnActionGKLine { connection_id: p.connection_id.clone(), action_id: p.action_id.clone(), new_g_k_line: p.new_g_k_line },
         En1999Mutation::ChangeConnActionQKLine(p) => En1999MutationDsl::ChangeConnActionQKLine { connection_id: p.connection_id.clone(), action_id: p.action_id.clone(), new_q_k_line: p.new_q_k_line },
         En1999Mutation::ChangeConnActionNK(p) => En1999MutationDsl::ChangeConnActionNK { connection_id: p.connection_id.clone(), action_id: p.action_id.clone(), new_n_k: p.new_n_k },
@@ -402,9 +401,9 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangeSheetWidth(p) => En1999MutationDsl::ChangeSheetWidth { cold_formed_id: p.cold_formed_id.clone(), new_width: p.new_width },
         En1999Mutation::ChangeSheetSpan(p) => En1999MutationDsl::ChangeSheetSpan { cold_formed_id: p.cold_formed_id.clone(), new_span: p.new_span },
         En1999Mutation::ChangeSheetWelded(p) => En1999MutationDsl::ChangeSheetWelded { cold_formed_id: p.cold_formed_id.clone(), new_welded: p.new_welded },
-        En1999Mutation::ChangeSheetActionKind(p) => En1999MutationDsl::ChangeSheetActionKind { cold_formed_id: p.cold_formed_id.clone(), action_id: p.action_id.clone(), new_kind: p.new_kind.clone() },
-        En1999Mutation::ChangeSheetActionCategory(p) => En1999MutationDsl::ChangeSheetActionCategory { cold_formed_id: p.cold_formed_id.clone(), action_id: p.action_id.clone(), new_category: p.new_category.clone() },
-        En1999Mutation::ChangeSheetActionSource(p) => En1999MutationDsl::ChangeSheetActionSource { cold_formed_id: p.cold_formed_id.clone(), action_id: p.action_id.clone(), new_source: p.new_source.clone() },
+        En1999Mutation::ChangeSheetActionKind(p) => En1999MutationDsl::ChangeSheetActionKind { cold_formed_id: p.cold_formed_id.clone(), action_id: p.action_id.clone(), new_kind: p.new_kind },
+        En1999Mutation::ChangeSheetActionCategory(p) => En1999MutationDsl::ChangeSheetActionCategory { cold_formed_id: p.cold_formed_id.clone(), action_id: p.action_id.clone(), new_category: p.new_category },
+        En1999Mutation::ChangeSheetActionSource(p) => En1999MutationDsl::ChangeSheetActionSource { cold_formed_id: p.cold_formed_id.clone(), action_id: p.action_id.clone(), new_source: p.new_source },
         En1999Mutation::ChangeSheetActionGKLine(p) => En1999MutationDsl::ChangeSheetActionGKLine { cold_formed_id: p.cold_formed_id.clone(), action_id: p.action_id.clone(), new_g_k_line: p.new_g_k_line },
         En1999Mutation::ChangeSheetActionQKLine(p) => En1999MutationDsl::ChangeSheetActionQKLine { cold_formed_id: p.cold_formed_id.clone(), action_id: p.action_id.clone(), new_q_k_line: p.new_q_k_line },
         En1999Mutation::ChangeSheetActionNK(p) => En1999MutationDsl::ChangeSheetActionNK { cold_formed_id: p.cold_formed_id.clone(), action_id: p.action_id.clone(), new_n_k: p.new_n_k },
@@ -419,10 +418,10 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangeShellThickness(p) => En1999MutationDsl::ChangeShellThickness { shell_id: p.shell_id.clone(), new_thickness: p.new_thickness },
         En1999Mutation::ChangeShellLength(p) => En1999MutationDsl::ChangeShellLength { shell_id: p.shell_id.clone(), new_length: p.new_length },
         En1999Mutation::ChangeShellWelded(p) => En1999MutationDsl::ChangeShellWelded { shell_id: p.shell_id.clone(), new_welded: p.new_welded },
-        En1999Mutation::ChangeShellFabricationClass(p) => En1999MutationDsl::ChangeShellFabricationClass { shell_id: p.shell_id.clone(), new_fabrication_class: p.new_fabrication_class.clone() },
-        En1999Mutation::ChangeShellActionKind(p) => En1999MutationDsl::ChangeShellActionKind { shell_id: p.shell_id.clone(), action_id: p.action_id.clone(), new_kind: p.new_kind.clone() },
-        En1999Mutation::ChangeShellActionCategory(p) => En1999MutationDsl::ChangeShellActionCategory { shell_id: p.shell_id.clone(), action_id: p.action_id.clone(), new_category: p.new_category.clone() },
-        En1999Mutation::ChangeShellActionSource(p) => En1999MutationDsl::ChangeShellActionSource { shell_id: p.shell_id.clone(), action_id: p.action_id.clone(), new_source: p.new_source.clone() },
+        En1999Mutation::ChangeShellFabricationClass(p) => En1999MutationDsl::ChangeShellFabricationClass { shell_id: p.shell_id.clone(), new_fabrication_class: p.new_fabrication_class },
+        En1999Mutation::ChangeShellActionKind(p) => En1999MutationDsl::ChangeShellActionKind { shell_id: p.shell_id.clone(), action_id: p.action_id.clone(), new_kind: p.new_kind },
+        En1999Mutation::ChangeShellActionCategory(p) => En1999MutationDsl::ChangeShellActionCategory { shell_id: p.shell_id.clone(), action_id: p.action_id.clone(), new_category: p.new_category },
+        En1999Mutation::ChangeShellActionSource(p) => En1999MutationDsl::ChangeShellActionSource { shell_id: p.shell_id.clone(), action_id: p.action_id.clone(), new_source: p.new_source },
         En1999Mutation::ChangeShellActionGKLine(p) => En1999MutationDsl::ChangeShellActionGKLine { shell_id: p.shell_id.clone(), action_id: p.action_id.clone(), new_g_k_line: p.new_g_k_line },
         En1999Mutation::ChangeShellActionQKLine(p) => En1999MutationDsl::ChangeShellActionQKLine { shell_id: p.shell_id.clone(), action_id: p.action_id.clone(), new_q_k_line: p.new_q_k_line },
         En1999Mutation::ChangeShellActionNK(p) => En1999MutationDsl::ChangeShellActionNK { shell_id: p.shell_id.clone(), action_id: p.action_id.clone(), new_n_k: p.new_n_k },
@@ -438,12 +437,12 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangeWeldRunLength(p) => En1999MutationDsl::ChangeWeldRunLength { weld_run_id: p.weld_run_id.clone(), new_length: p.new_length },
         En1999Mutation::ChangeWeldRunOffset(p) => En1999MutationDsl::ChangeWeldRunOffset { weld_run_id: p.weld_run_id.clone(), new_offset: p.new_offset },
         En1999Mutation::ChangeWeldRunThroat(p) => En1999MutationDsl::ChangeWeldRunThroat { weld_run_id: p.weld_run_id.clone(), new_throat: p.new_throat },
-        En1999Mutation::ChangeWeldRunProcess(p) => En1999MutationDsl::ChangeWeldRunProcess { weld_run_id: p.weld_run_id.clone(), new_process: p.new_process.clone() },
+        En1999Mutation::ChangeWeldRunProcess(p) => En1999MutationDsl::ChangeWeldRunProcess { weld_run_id: p.weld_run_id.clone(), new_process: p.new_process },
         En1999Mutation::ChangeWeldRunTJunction(p) => En1999MutationDsl::ChangeWeldRunTJunction { weld_run_id: p.weld_run_id.clone(), new_t_junction: p.new_t_junction },
-        En1999Mutation::ChangeWeldRunDirection(p) => En1999MutationDsl::ChangeWeldRunDirection { weld_run_id: p.weld_run_id.clone(), new_direction: p.new_direction.clone() },
+        En1999Mutation::ChangeWeldRunDirection(p) => En1999MutationDsl::ChangeWeldRunDirection { weld_run_id: p.weld_run_id.clone(), new_direction: p.new_direction },
         En1999Mutation::ChangeWeldRunHazExtent(p) => En1999MutationDsl::ChangeWeldRunHazExtent { weld_run_id: p.weld_run_id.clone(), new_haz_extent: p.new_haz_extent },
         En1999Mutation::ChangeVertexSectionId(p) => En1999MutationDsl::ChangeVertexSectionId { outline_vertex_id: p.outline_vertex_id.clone(), new_section_id: p.new_section_id.clone() },
-        En1999Mutation::ChangeVertexRing(p) => En1999MutationDsl::ChangeVertexRing { outline_vertex_id: p.outline_vertex_id.clone(), new_ring: p.new_ring.clone() },
+        En1999Mutation::ChangeVertexRing(p) => En1999MutationDsl::ChangeVertexRing { outline_vertex_id: p.outline_vertex_id.clone(), new_ring: p.new_ring },
         En1999Mutation::ChangeVertexElementId(p) => En1999MutationDsl::ChangeVertexElementId { outline_vertex_id: p.outline_vertex_id.clone(), new_element_id: p.new_element_id.clone() },
         En1999Mutation::ChangeVertexY(p) => En1999MutationDsl::ChangeVertexY { outline_vertex_id: p.outline_vertex_id.clone(), new_y: p.new_y },
         En1999Mutation::ChangeVertexZ(p) => En1999MutationDsl::ChangeVertexZ { outline_vertex_id: p.outline_vertex_id.clone(), new_z: p.new_z },
@@ -477,12 +476,12 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangeCategoryMemberId(p) => En1999MutationDsl::ChangeCategoryMemberId { fatigue_category_id: p.fatigue_category_id.clone(), new_member_id: p.new_member_id.clone() },
         En1999Mutation::ChangeCategoryElementId(p) => En1999MutationDsl::ChangeCategoryElementId { fatigue_category_id: p.fatigue_category_id.clone(), new_element_id: p.new_element_id.clone() },
         En1999Mutation::ChangeCategoryDetailCategory(p) => En1999MutationDsl::ChangeCategoryDetailCategory { fatigue_category_id: p.fatigue_category_id.clone(), new_detail_category: p.new_detail_category.clone() },
-        En1999Mutation::ChangeCategoryDetailType(p) => En1999MutationDsl::ChangeCategoryDetailType { fatigue_category_id: p.fatigue_category_id.clone(), new_detail_type: p.new_detail_type.clone() },
+        En1999Mutation::ChangeCategoryDetailType(p) => En1999MutationDsl::ChangeCategoryDetailType { fatigue_category_id: p.fatigue_category_id.clone(), new_detail_type: p.new_detail_type },
         En1999Mutation::ChangeCategoryLocationX(p) => En1999MutationDsl::ChangeCategoryLocationX { fatigue_category_id: p.fatigue_category_id.clone(), new_location_x: p.new_location_x },
         En1999Mutation::ChangeCategoryM1(p) => En1999MutationDsl::ChangeCategoryM1 { fatigue_category_id: p.fatigue_category_id.clone(), new_m1: p.new_m1 },
         En1999Mutation::ChangeCategoryM2(p) => En1999MutationDsl::ChangeCategoryM2 { fatigue_category_id: p.fatigue_category_id.clone(), new_m2: p.new_m2 },
         En1999Mutation::ChangePatchSubjectId(p) => En1999MutationDsl::ChangePatchSubjectId { patch_load_id: p.patch_load_id.clone(), new_subject_id: p.new_subject_id.clone() },
-        En1999Mutation::ChangePatchPosition(p) => En1999MutationDsl::ChangePatchPosition { patch_load_id: p.patch_load_id.clone(), new_position: p.new_position.clone() },
+        En1999Mutation::ChangePatchPosition(p) => En1999MutationDsl::ChangePatchPosition { patch_load_id: p.patch_load_id.clone(), new_position: p.new_position },
         En1999Mutation::ChangePatchX(p) => En1999MutationDsl::ChangePatchX { patch_load_id: p.patch_load_id.clone(), new_x: p.new_x },
         En1999Mutation::ChangePatchBearingLength(p) => En1999MutationDsl::ChangePatchBearingLength { patch_load_id: p.patch_load_id.clone(), new_bearing_length: p.new_bearing_length },
         En1999Mutation::ChangePatchWebHeight(p) => En1999MutationDsl::ChangePatchWebHeight { patch_load_id: p.patch_load_id.clone(), new_web_height: p.new_web_height },
@@ -530,7 +529,7 @@ pub fn en1999_mutation_to_dsl(mutation: &En1999Mutation) -> En1999MutationDsl {
         En1999Mutation::ChangeFireInsulationSpecificHeat(p) => En1999MutationDsl::ChangeFireInsulationSpecificHeat { fire_insulation_id: p.fire_insulation_id.clone(), new_specific_heat: p.new_specific_heat },
         En1999Mutation::ChangeFireInsulationConductivity(p) => En1999MutationDsl::ChangeFireInsulationConductivity { fire_insulation_id: p.fire_insulation_id.clone(), new_conductivity: p.new_conductivity },
         En1999Mutation::ChangeFireInsulationThickness(p) => En1999MutationDsl::ChangeFireInsulationThickness { fire_insulation_id: p.fire_insulation_id.clone(), new_thickness: p.new_thickness },
-        En1999Mutation::ChangeTransverseSides(p) => En1999MutationDsl::ChangeTransverseSides { transverse_stiffener_id: p.transverse_stiffener_id.clone(), new_sides: p.new_sides.clone() },
+        En1999Mutation::ChangeTransverseSides(p) => En1999MutationDsl::ChangeTransverseSides { transverse_stiffener_id: p.transverse_stiffener_id.clone(), new_sides: p.new_sides },
         En1999Mutation::InsertTransverseStiffener(p) => En1999MutationDsl::InsertTransverseStiffener { index: p.index, payload_json: json_of(&p.transverse_stiffener) },
         En1999Mutation::RemoveTransverseStiffener(p) => En1999MutationDsl::RemoveTransverseStiffener { id: p.id.clone() },
     }

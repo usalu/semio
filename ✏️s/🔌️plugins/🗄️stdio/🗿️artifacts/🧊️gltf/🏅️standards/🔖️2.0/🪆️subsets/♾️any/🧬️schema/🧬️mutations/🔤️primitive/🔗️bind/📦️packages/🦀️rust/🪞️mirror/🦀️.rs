@@ -28,21 +28,21 @@ pub mod standards {
                         #[path = "../../../../../🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::add_required_extension;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::add_used_extension;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_default_scene;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::add_required_extension;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::add_used_extension;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::bind_default_scene;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::bind_morph_target_attribute;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_node_camera;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_node_child;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_node_mesh;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_node_skin;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::bind_node_camera;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::bind_node_child;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::bind_node_mesh;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::bind_node_skin;
                         #[path = "../../../🦀️.rs"]
                         pub mod bind_primitive_attribute;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_primitive_material;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::change_asset_descriptive_metadata;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::change_asset_extension_data;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::bind_primitive_indices;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::bind_primitive_material;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::change_asset_descriptive_metadata;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::change_asset_extension_data;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_asset_extra_data;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_asset_version;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any::standards::v2_0::subsets::any::schema::mutations::change_document_extension_data;
@@ -131,8 +131,8 @@ pub mod standards {
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::move_skin;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::move_texture;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::move_used_extension;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::remove_required_extension;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::remove_used_extension;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::remove_required_extension;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::remove_used_extension;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::reorder_accessors;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::reorder_animations;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::reorder_buffer_views;
@@ -154,26 +154,26 @@ pub mod standards {
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::reorder_skins;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::reorder_textures;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::reorder_used_extensions;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_default_scene;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_default_scene;
                         pub use semio_s_artifact_stdio_gltf_mutations_mut_any_3::standards::v2_0::subsets::any::schema::mutations::unbind_morph_target_attribute;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_node_camera;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_node_child;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_node_mesh;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_node_skin;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_node_camera;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_node_child;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_node_mesh;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_node_skin;
                         #[path = "../../../../✂️unbind/🦀️.rs"]
                         pub mod unbind_primitive_attribute;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_indices;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_material;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_node;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_indices;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_material;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_node;
                     }
                     #[path = "."]
                     pub mod modules {
                         #[path = "."]
                         pub mod mutation_support {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::modules::mutation_support::create_scene;
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::modules::mutation_support::structure_geometry;
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level;
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level_collections;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::modules::mutation_support::create_scene;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::modules::mutation_support::structure_geometry;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level_collections;
                         }
                     }
                 }

@@ -1,0 +1,75 @@
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gt_ref"))
+        theta_e = _year_theta_e()
+        heating = theta_e < _THETA_HG
+        O = np.array([-5.7, -1.65, 0.0])
+        XL, YL, T_LO, T_HI = 7.4, 3.3, -8.0, 26.0
+
+        def cp(day, temp):
+            return O + RIGHT * (day / 365 * XL) + UP * ((temp - T_LO) / (T_HI - T_LO) * YL)
+
+        x_axis = Arrow(O, O + RIGHT * (XL + 0.3), buff=0, stroke_width=2.4, color=PASTEL_WHITE,
+                       tip_length=0.15, max_tip_length_to_length_ratio=0.05)
+        y_axis = Arrow(O, O + UP * (YL + 0.3), buff=0, stroke_width=2.4, color=PASTEL_WHITE,
+                       tip_length=0.15, max_tip_length_to_length_ratio=0.08)
+        y_name = math_label(r"\theta\;\text{in}\;\mathrm{°C}", size=LABEL_FONT_SIZE)
+        y_name.next_to(y_axis.get_end(), RIGHT, buff=0.14)
+        y_ticks = VGroup(*[
+            VGroup(Line(cp(0, k) + LEFT * 0.06, cp(0, k) + RIGHT * 0.06, color=PASTEL_WHITE, stroke_width=2),
+                   math_label(str(k), cp(0, k) + LEFT * 0.14 + DOWN * 0.07, size=15, edge="right"))
+            for k in (0, 10)
+        ])
+        months = tr("JFMAMJJASOND", "JFMAMJJASOND")
+        starts = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
+        m_marks = VGroup(*[Line(cp(d, T_LO) + DOWN * 0.06, cp(d, T_LO) + UP * 0.06, color=PASTEL_WHITE, stroke_width=2)
+                           for d in starts[1:-1]])
+        m_names = VGroup(*[_label(m, size=15, color=PASTEL_WHITE).move_to(cp((a + b) / 2, T_LO) + DOWN * 0.22)
+                           for m, a, b in zip(months, starts[:-1], starts[1:])])
+        curve = VMobject(color=ICY_BLUE, stroke_width=2.4).set_points_as_corners([cp(d + 0.5, v) for d, v in enumerate(theta_e)])
+        e_name = math_label(r"\theta_{\mathrm{e}}", cp(292, theta_e[292]) + DOWN * 0.38 + RIGHT * 0.25, size=22, color=ICY_BLUE)
+        i_line = Line(cp(0, _THETA_I), cp(365, _THETA_I), color=WARM, stroke_width=3)
+        hg_line = DashedLine(cp(0, _THETA_HG), cp(365, _THETA_HG), color=PASTEL_YELLOW, stroke_width=2.4)
+        i_name = math_label(rf"\theta_{{\mathrm{{i}}}} = {label_number(_THETA_I)}\,\mathrm{{°C}}",
+                            np.array([2.2, cp(0, _THETA_I)[1], 0.0]), size=22, color=WARM, edge="left")
+        i_note = _label(tr("room temperature", "Raumtemperatur"), size=15, color=WARM).next_to(i_name, RIGHT, buff=0.2)
+        hg_name = math_label(tr(rf"\text{{heating limit}}\;{label_number(_THETA_HG)}\,\mathrm{{°C}}", rf"\text{{Heizgrenze}}\;{label_number(_THETA_HG)}\,\mathrm{{°C}}"),
+                             np.array([2.2, cp(0, _THETA_HG)[1], 0.0]), size=22, color=PASTEL_YELLOW, edge="left")
+
+        day = ValueTracker(0.0)
+        heating_days = np.flatnonzero(heating)
+        bars = VGroup(*[
+            Rectangle(width=XL / 365 * 1.2, height=(_THETA_I - theta_e[d]) / (T_HI - T_LO) * YL, stroke_width=0,
+                      fill_color=PURPLE, fill_opacity=0.0).move_to((cp(d + 0.5, _THETA_I) + cp(d + 0.5, theta_e[d])) / 2)
+            for d in heating_days
+        ])
+        bars.add_updater(lambda group: [bar.set_fill(opacity=0.55 if d + 1 <= day.get_value() else 0.0)
+                                        for bar, d in zip(group, heating_days)])
+
+        def gt_now():
+            return float(sum(_THETA_I - theta_e[d] for d in heating_days if d + 1 <= day.get_value()))
+
+        gt_def = math_label(r"G_{\mathrm{t20/15}} = \Sigma\,(\theta_{\mathrm{i}} - \theta_{\mathrm{e}}) \cdot 1\,\mathrm{d}",
+                            np.array([2.2, -0.15, 0.0]), size=20, color=PURPLE, edge="left")
+        gt_note = math_label(tr(r"\text{only days with}\;\theta_{\mathrm{e}} < 15\,\mathrm{°C}", r"\text{nur Tage mit}\;\theta_{\mathrm{e}} < 15\,\mathrm{°C}"),
+                             np.array([2.2, -0.6, 0.0]), size=18, color=GREY_A, edge="left")
+        d_read = math_readout(lambda: tr(rf"\mathrm{{Day}}\; {int(day.get_value())}\; \text{{of}}\; 365", rf"\mathrm{{Tag}}\; {int(day.get_value())}\; \text{{von}}\; 365"),
+                              np.array([2.2, -1.05, 0.0]), size=20, color=GREY_A)
+        gt_read = math_readout(lambda: rf"G_{{\mathrm{{t20/15}}}} \approx {label_number(round(gt_now(), -1))}\,\frac{{\mathrm{{Kd}}}}{{\mathrm{{a}}}}",
+                               np.array([2.2, -1.55, 0.0]), size=24, color=PURPLE)
+        mark = always_redraw(lambda: Dot(cp(day.get_value(), theta_e[min(int(day.get_value()), 364)]), radius=0.07, color=PASTEL_WHITE))
+        d0 = 20
+        gap = DoubleArrow(cp(d0 + 0.5, _THETA_I), cp(d0 + 0.5, theta_e[d0]), buff=0, stroke_width=2.2, tip_length=0.12, color=PASTEL_WHITE)
+        gap_name = math_label(r"\theta_{\mathrm{i}} - \theta_{\mathrm{e}}", cp(d0 + 0.5, (_THETA_I + theta_e[d0]) / 2) + RIGHT * 0.9,
+                              size=18, color=PASTEL_WHITE)
+
+        self.play(FadeOut(VGroup(wall_icon, window_icon, house["air"], ht_read, hv_read, climate_label)), run_time=0.6)
+        self.play(GrowArrow(x_axis), GrowArrow(y_axis), FadeIn(y_name), FadeIn(y_ticks), FadeIn(m_marks),
+                  FadeIn(m_names), Create(curve), FadeIn(e_name), run_time=1.6)
+        self.play(Create(i_line), FadeIn(i_name), FadeIn(i_note), run_time=0.9)
+        self.play(Create(hg_line), FadeIn(hg_name), run_time=0.9)
+        hold_for(self, self.NARRATION, "gt_ref", used=0.6 + 1.6 + 0.9 + 0.9)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gradtag"))
+        self.add(bars, mark, d_read, gt_read)
+        self.play(FadeIn(gt_def), FadeIn(gt_note), GrowFromCenter(gap), FadeIn(gap_name), run_time=1.0)
+        self.play(day.animate.set_value(365), run_time=4.0, rate_func=linear)
+        hold_for(self, self.NARRATION, "gradtag", used=1.0 + 4.0)

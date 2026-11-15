@@ -31,7 +31,7 @@ pub mod mutations {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::{WFC_GRID2D_DIALECT};
+pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::{WFC_GRID2D_DIALECT};
 pub use crate::standards::v1::artifact_items_2::{artifact_kind};
 pub use crate::standards::v1::artifact_items_3::{ArtifactApps, artifact, definition};
 

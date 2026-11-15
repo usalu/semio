@@ -15,8 +15,8 @@ import { existsSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { TimeTravelScenarioV1 } from "@semio-tech/framework-time-travel-ts/testing/scenario";
-import { configure, routeUrl, flagValue } from "@semio-tech/framework-time-travel-ts/testing/arguments";
-import { serveOrigin, universalRoute, renderer, setUniversalRoute, OUT, base, locales, chordLocales, ndjsonPath } from "@semio-tech/framework-time-travel-ts/testing/state";
+import { configure, routeUrl, flagValue } from "../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🧭️arguments/🟦️.ts";
+import { serveOrigin, universalRoute, renderer, setUniversalRoute, OUT, base, locales, chordLocales, ndjsonPath } from "../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🧠️state/🟦️.ts";
 import { runProbe } from "./🎪️run/🟦️.ts";
 
 //#region 🔖️Arguments

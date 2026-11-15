@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """🐍️ Independent oracle of the inference stamp laws: classifies implementation rows by the declared protocol with plain Python (no shared code with the module under test) and admits or refuses protocols.
 
-usage: 🐍️.py classify SCHEMA.json ROWS.json    prints the classified rows as JSON
+usage: 🐍️.py classify SCHEMA.json ROWS.json [EFFECTIVE.json]   prints the classified rows as JSON (the effective stamps of the derived inferrers, none by default)
        🐍️.py admit PROTOCOL.json              prints {"ok": true} or {"error": "..."}"""
 import json, re, sys
 
@@ -9,20 +9,21 @@ STAMP = re.compile(r"^semio\.graph-inferrer\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*/[1-9]
 ID = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 
 
-def classify(protocol, rows):
+def classify(protocol, rows, effective):
+    active = {i: g for i, g in protocol["inferrers"].items() if i not in protocol["derived"] or i in effective}
     out = []
     for row in rows:
         path = row["path"]
-        if any(f in path for f in protocol["none"]) or any(f in path for g in protocol["inferrers"].values() for f in g["sources"]):
+        if any(f in path for f in protocol["none"]) or any(f in path for g in active.values() for f in g["sources"]):
             continue
         out.append(row)
-    for id_, group in protocol["inferrers"].items():
-        out.append({"kind": "stamp", "path": "inferrer:" + id_, "fact": group["stamp"], "scope": group["scope"]})
+    for id_, group in active.items():
+        out.append({"kind": "stamp", "path": "inferrer:" + id_, "fact": effective.get(id_, group["stamp"]), "scope": group["scope"]})
     return out
 
 
 def admit(protocol):
-    keys = {"version", "scopes", "inferrers", "none"}
+    keys = {"version", "scopes", "inferrers", "derived", "none"}
     if not isinstance(protocol, dict) or set(protocol) != keys:
         return "keys"
     if protocol["version"] != 1:
@@ -36,6 +37,8 @@ def admit(protocol):
         seen[f] = "none"
     if not protocol["inferrers"]:
         return "inferrers"
+    if not isinstance(protocol["derived"], list) or len(set(protocol["derived"])) != len(protocol["derived"]) or any(i not in protocol["inferrers"] for i in protocol["derived"]):
+        return "derived"
     for id_, row in protocol["inferrers"].items():
         if set(row) != {"stamp", "scope", "sources"}:
             return "inferrer keys " + id_
@@ -53,7 +56,8 @@ def admit(protocol):
 if __name__ == "__main__":
     if sys.argv[1] == "classify":
         protocol = json.load(open(sys.argv[2], encoding="utf8"))["definitions"]["Protocol"]["const"]
-        print(json.dumps(classify(protocol, json.load(open(sys.argv[3], encoding="utf8"))), ensure_ascii=False))
+        effective = json.load(open(sys.argv[4], encoding="utf8")) if len(sys.argv) > 4 else {}
+        print(json.dumps(classify(protocol, json.load(open(sys.argv[3], encoding="utf8")), effective), ensure_ascii=False))
     else:
         error = admit(json.load(open(sys.argv[2], encoding="utf8")))
         print(json.dumps({"ok": True} if error is None else {"error": error}))

@@ -170,7 +170,7 @@ pub(super) fn check_accessories_compositions(catalogue: &Catalogue, report: &mut
     let product_ids: HashSet<_> = catalogue.products.iter().map(|p| p.id.clone()).collect();
     let mut failed = 0u32;
 
-    for (host, accessories) in &catalogue.accessories {
+    for (host, accessories) in catalogue.accessories.iter() {
         if !product_ids.contains(host) {
             failed += 1;
             report.push(fail(

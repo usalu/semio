@@ -2,7 +2,7 @@
 //! addressed by id.
 
 use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
-use std::collections::BTreeMap;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 #[value(rename_all = "camelCase")]
 pub struct ChangeGeometryParameters {
     pub id: String,
-    pub new_parameters: BTreeMap<String, f64>,
+    pub new_parameters: RetainedOrderedMap<String, f64>,
 }
 
 impl<Op> protocol::MutationKind<Vdi3805Snapshot, Op> for ChangeGeometryParameters where Op: protocol::Mutation<Vdi3805Snapshot, Diff = semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff> + From<crate::change_geometry_parameters::ChangeGeometryParameters> {

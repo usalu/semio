@@ -1,5 +1,6 @@
 import {appendFileSync,existsSync,mkdirSync,readFileSync,renameSync,rmdirSync,statSync,writeFileSync} from "node:fs";
-import {freemem,homedir,totalmem} from "node:os";
+import {homedir,totalmem} from "node:os";
+import {hostAvailableBytesV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {isAbsolute,join} from "node:path";
 import {applySchedulerEventV1,decideTickV1,emptySchedulerStateV1,schedulerSnapshotV1,schedulerTextV1,type SchedulerEventV1,type SchedulerHostV1,type SchedulerPolicyV1,type SchedulerSnapshotV1,type SchedulerStateV1} from "../🟦️.ts";
 
@@ -22,9 +23,8 @@ export function schedulerDirectoryV1(environment:Readonly<Record<string,string|u
 }
 
 /** 🌡️ Job budget of the host: the policy ceiling or what is left after system and daemon reserves, and the memory that is really available now. */
-export function defaultSchedulerHostV1(policy:SchedulerPolicyV1,platform:NodeJS.Platform=process.platform):SchedulerHostV1{
- const totalMegabytes=Math.floor(totalmem()/2**20);let availableMegabytes=Math.floor(freemem()/2**20);
- if(platform==="linux"){try{const match=/^MemAvailable:\s+(\d+) kB/mu.exec(readFileSync("/proc/meminfo","utf8"));if(match)availableMegabytes=Math.floor(Number(match[1])/1024);}catch{}}
+export function defaultSchedulerHostV1(policy:SchedulerPolicyV1):SchedulerHostV1{
+ const totalMegabytes=Math.floor(totalmem()/2**20),available=hostAvailableBytesV1(),availableMegabytes=available===undefined?totalMegabytes:Math.floor(available/2**20);
  return{budgetMegabytes:Math.max(1,Math.min(policy.hostBudgetMegabytes,totalMegabytes-policy.systemReserveMegabytes-policy.daemonReserveMegabytes)),availableMegabytes};
 }
 

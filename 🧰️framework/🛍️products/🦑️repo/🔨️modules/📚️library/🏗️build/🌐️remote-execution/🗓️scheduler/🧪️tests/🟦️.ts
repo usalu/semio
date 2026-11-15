@@ -23,12 +23,12 @@ class Memory implements RemoteExecutionContentV1{
  }
 }
 
-const profile=(name:string,properties:{name:string;value:string}[]=[{name:"OSFamily",value:"macos"}],concurrency=1):RemoteExecutionWorkerRegistrationV1=>({version:1,name,host:"h",platform:"darwin-arm64",properties,concurrency,sandbox:"isolated-root",runtime:"test"});
+const profile=(name:string,properties:{name:string;value:string}[]=[{name:"OSFamily",value:"macos"}],concurrency=1):RemoteExecutionWorkerRegistrationV1=>({version:1,name,host:"h",platform:"darwin-arm64",properties,concurrency,sandbox:"isolated-root",runtime:"test",origin:name,capacity:{cores:8,memoryMegabytes:16384},confinement:"none",network:"unenforced"});
 const resultOf=(exit=0,extra:object={}):RemoteExecutionTaskResultV1=>({version:1,outcome:"completed",status:{code:0,message:""},actionResult:Buffer.from(encodeProtobufV1(REAPI_V1.actionResult,{exit_code:exit,...extra})).toString("base64")});
 
 function harness(extra:Partial<RemoteExecutionSchedulerOptionsV1>={}){
  let now=1_000_000;const memory=new Memory(),events:string[]=[];
- const scheduler=new RemoteExecutionSchedulerV1({content:memory,unmatchedSeconds:30,lingerSeconds:0.05,leaseSeconds:10,maximumAttempts:3,defaultActionSeconds:60,maximumQueued:100,heartbeatSeconds:2,pollSeconds:5,cache:{url:"http://c",relative:false},language:"none",sweepMilliseconds:0,now:()=>now,onEvent:event=>events.push(`${event.stage} ${event.detail}`),...extra});
+ const scheduler=new RemoteExecutionSchedulerV1({content:memory,unmatchedSeconds:30,lingerSeconds:0.05,leaseSeconds:10,maximumAttempts:3,defaultActionSeconds:60,maximumActionSeconds:600,maximumQueued:100,heartbeatSeconds:2,pollSeconds:5,loadExpireSeconds:15,refusalCooldownSeconds:2,cache:{url:"http://c",relative:false},language:"none",sweepMilliseconds:0,now:()=>now,onEvent:event=>events.push(`${event.stage} ${event.detail}`),...extra});
  return {memory,scheduler,events,advance:(seconds:number)=>{now+=seconds*1000;scheduler.sweep();}};
 }
 const drain=async(stream:AsyncGenerator<RemoteExecutionSnapshotV1>)=>{const rows:RemoteExecutionSnapshotV1[]=[];for await(const row of stream)rows.push(row);return rows;};
@@ -114,4 +114,45 @@ test("a missing input reported by a worker is passed through; infrastructure fai
  const missing={hash:"b".repeat(64),size:3};
  scheduler.report(worker.id,second.id,{version:1,outcome:"failed",status:{code:9,message:"Missing blob",missing:[missing]},actionResult:null});
  await run.done;expect(run.rows.at(-1)!.outcome!.status).toEqual({code:9,message:"Missing blob",missing:[missing]});
+});
+
+test("an action whose worker falls silent past its deadline is rescheduled once on another worker and then fails back with its timeout; a refusal does not count as a failure",async()=>{
+ const {memory,scheduler,advance,events}=harness({maximumAttempts:2,leaseSeconds:10}),requested=[{name:"semio-origin",value:"requester"}];
+ const action=memory.action(requested,"deadline",5),run=submit(scheduler,action),one=scheduler.register(profile("one")),two=scheduler.register(profile("two"));
+ await Bun.sleep(20);
+ const first=await polled(scheduler,one.id);expect(first.task?.timeoutSeconds).toBe(5);
+ const waiting=polled(scheduler,two.id,2000);
+ for(let step=0;step<4;step++){advance(4);scheduler.heartbeat(one.id,[first.task!.id]);scheduler.heartbeat(two.id,[]);}
+ const second=await waiting;expect(second.task?.attempt).toBe(2);expect(events.some(event=>event.startsWith("retried")&&event.includes("deadline"))).toBe(true);
+ const third=polled(scheduler,one.id,2000);void third;
+ for(let step=0;step<4;step++){advance(4);scheduler.heartbeat(two.id,[second.task!.id]);}
+ await run.done;
+ const outcome=run.rows.at(-1)!.outcome!;expect(outcome.status.code).toBe(4);expect(outcome.status.message).toMatch(/timeout/u);
+ const refused=harness({maximumAttempts:2}),again=refused.memory.action([],"refused"),op=submit(refused.scheduler,again),only=refused.scheduler.register(profile("only"));
+ await Bun.sleep(20);
+ const given=await polled(refused.scheduler,only.id);
+ expect(refused.scheduler.report(only.id,given.task!.id,{version:1,outcome:"refused",status:{code:8,message:"no headroom"},actionResult:null,refusal:"memory"})).toBe(true);
+ expect(refused.scheduler.status().counters).toMatchObject({refused:1,retried:1});expect(refused.scheduler.status().workers[0]).toMatchObject({refused:1,headroom:false});
+ refused.advance(3);
+ const retry=await polled(refused.scheduler,only.id);expect(retry.task?.action).toEqual(again);expect(retry.task?.attempt).toBe(2);
+ refused.scheduler.report(only.id,retry.task!.id,resultOf());await op.done;expect(op.rows.at(-1)!.outcome!.status.code).toBe(0);
+});
+
+test("an offloaded action that one worker's policy refuses runs on another worker; when every worker refuses it fails back at once with the refusal, and a non-offloaded action keeps the refusal as its result",async()=>{
+ const {memory,scheduler}=harness({maximumAttempts:3}),requested=[{name:"semio-origin",value:"requester"}];
+ const stale=scheduler.register(profile("stale")),fresh=scheduler.register(profile("fresh"));
+ const run=submit(scheduler,memory.action(requested,"policy-1"));await Bun.sleep(20);
+ const first=await polled(scheduler,stale.id);expect(first.task).not.toBeNull();
+ scheduler.report(stale.id,first.task!.id,{version:1,outcome:"failed",status:{code:9,message:"Action refused by the worker policy: -Z embed-metadata=no is not allowed"},actionResult:null});
+ const second=await polled(scheduler,fresh.id,2000);expect(second.task?.attempt).toBe(2);
+ scheduler.report(fresh.id,second.task!.id,resultOf());
+ await run.done;expect(run.rows.at(-1)!.outcome!.status.code).toBe(0);
+ const all=harness({maximumAttempts:3}),only=all.scheduler.register(profile("only")),runAll=submit(all.scheduler,all.memory.action(requested,"policy-2"));await Bun.sleep(20);
+ const given=await polled(all.scheduler,only.id);
+ all.scheduler.report(only.id,given.task!.id,{version:1,outcome:"failed",status:{code:9,message:"Action refused by the worker policy: --sysroot is not allowed"},actionResult:null});
+ await runAll.done;const status=runAll.rows.at(-1)!.outcome!.status;expect(status.message).toContain("Action refused by the worker policy: --sysroot is not allowed");expect(status.message).toContain("no other machine can take the action");
+ const plain=harness({maximumAttempts:3}),one=plain.scheduler.register(profile("one")),runPlain=submit(plain.scheduler,plain.memory.action([],"policy-3"));await Bun.sleep(20);
+ const taken=await polled(plain.scheduler,one.id);
+ plain.scheduler.report(one.id,taken.task!.id,{version:1,outcome:"failed",status:{code:9,message:"Action refused by the worker policy: -o is not allowed"},actionResult:null});
+ await runPlain.done;expect(runPlain.rows.at(-1)!.outcome!.status).toEqual({code:9,message:"Action refused by the worker policy: -o is not allowed"});
 });

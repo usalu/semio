@@ -1,0 +1,6 @@
+pre-run facts, taken 2026-11-14T21:49:34Z
+replica agent: running, not restarted by me (0 times); .cache/f/health.json age 1 s
+replica code digest: "code":"590fdef8b75853d124d6f615cd2612d607146e27aaf2b94715a5d7b7606ad2f1"; "bootVersion":6
+launcher: 1771439 -rwxr-xr-x 1 deck deck 20516143 2026-11-14 21:46:46.384754297 +0100 /home/deck/.local/bin/repo
+repo service host processes (pid ppid etime rss):
+2748475    1977       14:12 143624 /home

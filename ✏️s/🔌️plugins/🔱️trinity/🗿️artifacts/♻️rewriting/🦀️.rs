@@ -122,9 +122,9 @@ pub use semio_s_artifact_trinity_rewriting_inferences::standards::v1::subsets::a
                 pub use semio_s_artifact_trinity_rewriting_operations::standards::v1::subsets::any::content;
                 #[path = "."]
                 pub mod io {
-                    pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::standards::v1::subsets::any::io::*;
+                    pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::standards::v1::subsets::any::io::*;
 pub mod binary {
-    pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::standards::v1::subsets::any::io::binary::*;
     pub use semio_s_artifact_trinity_rewriting_schema::standards::v1::subsets::any::io::binary::diff;
     pub use semio_s_artifact_trinity_rewriting_model::standards::v1::subsets::any::io::binary::inferences;
 }
@@ -133,7 +133,7 @@ pub mod sqlite {
     pub use semio_s_artifact_trinity_rewriting_inferences::standards::v1::subsets::any::io::sqlite::snapshot;
 }
 pub mod text {
-    pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::standards::v1::subsets::any::io::text::*;
     pub use semio_s_artifact_trinity_rewriting_layout::standards::v1::subsets::any::io::text::inferences;
 }
 
@@ -202,23 +202,23 @@ pub mod editor {
             // 🕹️ Every command file is self-contained (its own private copy of any shared
             // helpers) and exposes exactly one `pub fn` matching its directory's verb —
             // re-exported here by name, flat, matching how `TrinityRewritingCommand::handle` calls them.
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::node_graph_edit;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::node_graph_edit;
 
             pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::set_lhs;
 
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::set_rhs;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::set_rhs;
 
             pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::set_parameter;
 
             pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::add_rule_clause_command;
 
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::reset_rule;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::reset_rule;
 
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::set_active_example;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::set_active_example;
 
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::patch_nodes;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::patch_nodes;
 
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::add_working_node_command;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::add_working_node_command;
 
             pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::commands::set_viewport;
 
@@ -243,7 +243,7 @@ pub mod editor {
 
                     pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::modes::edit::windows::rhs;
 
-                    pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::modes::edit::windows::jack;
+                    pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::modes::edit::windows::jack;
 
                     pub use semio_s_artifact_trinity_rewriting_editor::editor::rewriting::modes::edit::windows::parameters;
                 }

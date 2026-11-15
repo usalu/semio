@@ -1,0 +1,82 @@
+P6 checks on g1-m03, 2026-11-14T19:53:09Z, after the first repo run of round 6 (try 1, workspace:setup started the graph service at about 19:52:50Z)
+
+## 1. How the service is started
+$ launchctl list | grep tech.semio.repo.service
+8911	0	tech.semio.repo.service.d8505b2379b9
+$ launchctl print gui/501/tech.semio.repo.service.d8505b2379b9 | grep -E "program|arguments|working directory|state|last exit"
+	state = running
+
+	program = /Users/ueli/.local/share/semio/launcher/bin/repo
+	arguments = {
+		/Users/ueli/.local/share/semio/launcher/bin/repo
+		/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts
+		repo
+		service
+		host
+		run
+--
+	working directory = /Users/ueli/Documents/semio
+
+	stdout path = /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-293b476f6b9d.log
+	stderr path = /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-293b476f6b9d.log
+		SSH_AUTH_SOCK => /var/run/com.apple.launchd.QSyGYyZDeI/Listeners
+	}
+--
+	last exit code = (never exited)
+
+	resource coalition = {
+		ID = 24825
+		type = resource
+		state = active
+$ ps -o pid,ppid,command -p 8911
+  PID  PPID COMMAND
+ 8911     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.ts repo service host run
+$ ls -l /usr/local/bin/repo
+lrwxr-xr-x@ 1 root  wheel  27 Nov 13 22:02 /usr/local/bin/repo -> /Users/ueli/.local/bin/repo
+$ echo $SEMIO_SERVICE_LAUNCHD
+(unset in the agent shell)
+
+## 2. Identity of the replica daemon
+$ grep bootVersion ".../fleet/entry/entry.json"
+"bootVersion":5
+$ ps -axo pid,ppid,command | grep -E "boot.sh|boot.mjs|supervisor" | grep -v grep
+ 4284     1 /bin/sh /Users/ueli/Library/Application Support/semio/fleet/entry/boot.sh run
+ 4291  4284 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs run
+ 4292  4291 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M-$M^]M-oM-8M^Oshared-worktree/M-pM^_M^TM^AM-oM-8M^Oreplica/M-pM^_M^[M^_M-oM-8M^Osupervisor/M-pM^_M^_M-&M-oM-8M^O.ts --boot
+$ ls -la entry/ ; tail entry/shim.txt
+    
+288 Nov 14 20:53 .
+96 Nov 13 20:28 ..
+30745 Nov 14 20:38 boot.mjs
+30745 Nov 14 20:38 boot.prev.mjs
+3095 Nov 14 20:38 boot.ps1
+2731 Nov 14 20:38 boot.sh
+628 Nov 14 20:38 entry.json
+218 Nov 14 20:53 state.json
+28 Nov 14 20:38 worktree
+tail: /Users/ueli/Library/Application Support/semio/fleet/entry/shim.txt: No such file or directory
+
+## 4. Receipts
+$ ls ".../semio/access/"*/ && cat ".../semio/access/"*/service.json
+total 16
+drwx------@ 4 ueli  staff  128 Nov 14 20:53 .
+drwx------@ 3 ueli  staff   96 Nov 14 20:52 ..
+-rw-------@ 1 ueli  staff  192 Nov 14 20:52 client.json
+-rw-------@ 1 ueli  staff  193 Nov 14 20:53 service.json
+-- /Users/ueli/Library/Application Support/semio/access/3f08bbea4d32/client.json
+{"version":1,"role":"client","pid":8895,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794685973229}
+-- /Users/ueli/Library/Application Support/semio/access/3f08bbea4d32/service.json
+{"version":1,"role":"service","pid":8942,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794685980074}
+
+$ repo preflight --lang en   (run in the checkout root at 19:53Z)
+No preflight output: the command waited 270 s in the capacity door behind workspace:setup and graph-plan (`[capacity] waiting … for command: not enough free memory`), was admitted, printed `build:source-admission` and `build:implementation-source` and ended with exit 0 without a check line. Full output: round-6.preflight-during-try-1.txt.
+
+$ repo ./📜️script.ts preflight --group g1 --lang en   (the fleet preflight in 🤝️shared-worktree/🗺️topology, which has the worktree access check; full output: round-6.fleet-preflight-during-try-1.txt)
+[13/23] ok   worktree access: the replica can read /Users/ueli/Documents/semio
+WARN time synchronisation: the synchronisation state cannot be read here (timedatectl or systemsetup missing or needs root)
+WARN native build: pending: the native bootstrap has not completed (/Users/ueli/Documents/semio/.cache/f/native-bootstrap.done is missing), so this machine syncs but cannot build yet; run the provisioning script again to retry it, the log is /Users/ueli/Documents/semio/.cache/f/native-bootstrap.log
+ok   worktree access: the replica can read /Users/ueli/Documents/semio
+23 checks, 2 with warnings, none failed: the machine works, look at the warnings.
+exit=0
+
+Observations: service program is the launcher (/Users/ueli/.local/share/semio/launcher/bin/repo), arguments script.ts repo service host run, working directory the checkout, state running, parent of pid 8911 is 1. /usr/local/bin/repo still links to /Users/ueli/.local/bin/repo (provision script not run again). Replica daemon: bootVersion 5; chain sh boot.sh (4284) -> bun boot.mjs (4291) -> bun replica script (4292); entry/shim.txt does not exist, so SEMIO_WORKSPACE_ROOT could not be checked there. Receipts client.json and service.json: state ok, identity the launcher path. Section 3 not run: no denial and no exit 4 so far.

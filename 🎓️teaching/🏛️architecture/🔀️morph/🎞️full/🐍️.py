@@ -818,8 +818,8 @@ def execute(source, target, *, transition, fps):
         animation = _appear(target, c)
     else:
         animation, keep = _BUILDERS[transition.recipe](source, target, _couples(transition, source, target) if _spec.uses_parts(transition) else [], c)
-    if c.copy and transition.recipe not in ("parts", "hull", "move", "replace", "fade"):
-        raise ValueError(f"copy keeps the source and is only supported by parts, hull, move, replace and fade, not {transition.recipe!r}")
+    if c.copy and transition.recipe not in ("parts", "hull", "split", "move", "replace", "fade"):
+        raise ValueError(f"copy keeps the source and is only supported by parts, hull, split, move, replace and fade, not {transition.recipe!r}")
     inner_clean = animation.clean_up_from_scene
 
     def clean_up(scene):

@@ -849,7 +849,7 @@ log() { :; }
 pin_row() { printf 'row'; }
 fetch_pinned() { cp "$SEMIO_TEST_INSTALLER" "$2"; }
 ensure_dotnet
-`, {REPO_ROOT: root, HOME: home, LOCAL_BIN: local, PATH: pathDir, SSL_CERT_FILE: cert, SEMIO_TEST_INSTALLER: installer, SEMIO_TEST_URL: `https://127.0.0.1:${port}/sdk`});
+`, {REPO_ROOT: root, HOME: home, DOTNET_ROOT: "", LOCAL_BIN: local, PATH: pathDir, SSL_CERT_FILE: cert, SEMIO_TEST_INSTALLER: installer, SEMIO_TEST_URL: `https://127.0.0.1:${port}/sdk`});
     expect(result.status, result.stderr).toBe(0);
     expect(readFileSync(payload, "utf8")).toBe("dotnet-sdk");
     expect(existsSync(join(local, "dotnet"))).toBe(true);

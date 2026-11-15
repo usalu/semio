@@ -1,4 +1,4 @@
-//! 📍️ `change-critical-region-concrete-fcd` diff: patches `concrete_design_strength_mpa` of the addressed critical_region row.
+//! 📍️ `change-critical-region-concrete-design-strength-mpa` diff: patches `concrete_design_strength_mpa` of the addressed critical_region row.
 
 use crate::change_critical_region_concrete_fcd::ChangeCriticalRegionConcreteDesignStrengthMpa;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998CriticalRegionDelta, En1998CriticalRegionPatch};

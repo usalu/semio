@@ -1,0 +1,210 @@
+##### try 1 native_rc=1: last 40 lines of the bootstrap log
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2289 edges
+[script] bun:dependency-storage · Checking declared package providers: 3965 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2010 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 2010 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[repository:command] still running after 192 s
+[script] bun:dependency-storage · Checking declared package providers: 3834 edges
+[script] bun:dependency-storage · Checking declared package providers: 3916 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 3231 edges
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:1636544 (exclusive, 159 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:1636800 (exclusive, 159 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:1732608 (exclusive, 160 s)
+[script] bun:dependency-storage · Checking declared package providers: 3916 edges
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:1732928 (exclusive, 165 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:1828800 (exclusive, 165 s)
+[repository:command] still running after 202 s
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 1705 edges
+[script] bun:dependency-storage · Checking declared package providers: 4200 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 1 edges
+[script] bun:dependency-storage · Checking declared package providers: 3096 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[repository:command] still running after 212 s
+[repo] still working after 230 s; last phase started: source.served
+[repository:command] still running after 222 s
+[semio] workspace:setup…
+[capacity] run: sized at 102% of the default from 3 earlier run(s) of its class
+[capacity] waiting 0s for run: not enough free memory (need 2048 MB; 28 MB spare above the 2048 MB floor, load 12.3; 1 running, 1 ahead); behind @teaching/staffage-react:test (waiting to grow, 1 job(s), 51 MB)
+[capacity] admitted run: 1 job(s), 2048 MB reserved (10183 MB available, 2048 MB floor)
+Planning 1 targets.
+The resident service met an unexpected failure (reference b72e2264); try again, the details under that reference are in the service log /var/folders/gd/byw98s3s0p95zhdpzyv769740000gn/T/semio-repo/501/host-2369f6f2a056.log.
+end 2026-11-15T04:15:01Z
+native_rc=1
+
+##### try 4 native_rc=1: last 40 lines of the bootstrap log
+Reading the project graph slice (1733 s).
+Reading the project graph slice (1735 s).
+Reading the project graph slice (1737 s).
+Reading the project graph slice (1739 s).
+Reading the project graph slice (1741 s).
+Reading the project graph slice (1743 s).
+Reading the project graph slice (1745 s).
+Reading the project graph slice (1747 s).
+Reading the project graph slice (1749 s).
+[repo] still working after 1761 s; last phase started: door.script
+Reading the project graph slice (1751 s).
+Reading the project graph slice (1753 s).
+Reading the project graph slice (1755 s).
+Reading the project graph slice (1758 s).
+Reading the project graph slice (1760 s).
+Reading the project graph slice (1762 s).
+Reading the project graph slice (1764 s).
+Reading the project graph slice (1766 s).
+Reading the project graph slice (1770 s).
+Reading the project graph slice (1772 s).
+Reading the project graph slice (1774 s).
+Reading the project graph slice (1776 s).
+Reading the project graph slice (1778 s).
+Reading the project graph slice (1780 s).
+[repo] still working after 1791 s; last phase started: door.script
+Reading the project graph slice (1782 s).
+Reading the project graph slice (1784 s).
+Reading the project graph slice (1786 s).
+Reading the project graph slice (1788 s).
+Reading the project graph slice (1790 s).
+Reading the project graph slice (1792 s).
+Reading the project graph slice (1794 s).
+Reading the project graph slice (1796 s).
+Reading the project graph slice (1798 s).
+Reading the project graph slice (1800 s).
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+Cancelled (SIGINT); leases released.
+Internal error: Original Script process interrupted
+end 2026-11-15T05:42:55Z
+native_rc=1
+
+##### try 5 native_rc=1: last 40 lines of the bootstrap log
+Reading the project graph slice (567 s).
+Reading the project graph slice (569 s).
+Reading the project graph slice (571 s).
+Reading the project graph slice (573 s).
+Reading the project graph slice (575 s).
+Reading the project graph slice (577 s).
+Reading the project graph slice (579 s).
+Reading the project graph slice (581 s).
+Reading the project graph slice (583 s).
+Reading the project graph slice (585 s).
+Reading the project graph slice (587 s).
+Reading the project graph slice (589 s).
+[repo] still working after 590 s; last phase started: door.script
+Reading the project graph slice (591 s).
+Reading the project graph slice (593 s).
+Reading the project graph slice (595 s).
+Reading the project graph slice (597 s).
+Reading the project graph slice (599 s).
+Reading the project graph slice (601 s).
+Reading the project graph slice (603 s).
+Reading the project graph slice (605 s).
+Reading the project graph slice (607 s).
+Reading the project graph slice (609 s).
+Reading the project graph slice (611 s).
+Reading the project graph slice (613 s).
+Reading the project graph slice (615 s).
+Reading the project graph slice (617 s).
+Reading the project graph slice (619 s).
+[repo] still working after 620 s; last phase started: door.script
+Reading the project graph slice (621 s).
+Reading the project graph slice (623 s).
+Reading the project graph slice (625 s).
+Reading the project graph slice (627 s).
+Reading the project graph slice (629 s).
+Reading the project graph slice (631 s).
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+Cancelled (SIGINT); leases released.
+Internal error: Original Script process interrupted
+end 2026-11-15T06:10:30Z
+native_rc=1
+
+##### try 6 native_rc=1: last 40 lines of the bootstrap log
+Reading the project graph slice (34 s).
+Reading the project graph slice (36 s).
+[repo] still working after 2000 s; last phase started: door.script
+Reading the project graph slice (38 s).
+Reading the project graph slice (40 s).
+Reading the project graph slice (42 s).
+Reading the project graph slice (44 s).
+Reading the project graph slice (46 s).
+Reading the project graph slice (48 s).
+Reading the project graph slice (50 s).
+Reading the project graph slice (52 s).
+Reading the project graph slice (54 s).
+Reading the project graph slice (56 s).
+Reading the project graph slice (58 s).
+Reading the project graph slice (60 s).
+Reading the project graph slice (62 s).
+Reading the project graph slice (64 s).
+Reading the project graph slice (66 s).
+[repo] still working after 2030 s; last phase started: door.script
+Reading the project graph slice (68 s).
+Reading the project graph slice (70 s).
+Reading the project graph slice (72 s).
+Reading the project graph slice (74 s).
+Reading the project graph slice (76 s).
+Reading the project graph slice (78 s).
+Reading the project graph slice (80 s).
+Reading the project graph slice (82 s).
+Reading the project graph slice (84 s).
+Reading the project graph slice (86 s).
+Reading the project graph slice (88 s).
+Reading the project graph slice (90 s).
+Reading the project graph slice (92 s).
+Reading the project graph slice (94 s).
+Reading the project graph slice (96 s).
+[repo] still working after 2060 s; last phase started: door.script
+Reading the project graph slice (98 s).
+Reading the project graph slice (100 s).
+The plan cannot continue: the slice worker ended 4 times in a row with exit code 75 because the code on this machine kept changing under it; try again once the replica has settled.
+end 2026-11-15T06:49:29Z
+native_rc=1
+
+##### try 7 native_rc=1: last 40 lines of the bootstrap log
+[script] bun:dependency-storage · Checking declared package providers: 4741 edges
+[script] bun:dependency-storage · Checking declared package providers: 6220 edges
+[script] bun:dependency-storage · Checking declared package providers: 7190 edges
+[script] bun:dependency-storage · Checking declared package providers: 7543 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[repo] still working after 470 s; last phase started: source.served
+[script] bun:dependency-storage · Checking declared package providers: 7748 edges
+[repository:command] still running after 450 s
+[repository:command] still running after 460 s
+[repository:command] still running after 470 s
+[repo] still working after 500 s; last phase started: source.served
+[repository:command] still running after 480 s
+[repository:command] still running after 490 s
+[semio] workspace:setup…
+[capacity] run: sized at 102% of the default from 3 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 512 MB reserved (8242 MB available, 2048 MB floor)
+Starting the repo graph service for this host.
+The graph service runs under the access of the calling app: the launchd route was refused for /Users/ueli/Documents/semio earlier since this machine started / Der Graphdienst läuft mit dem Zugriff der aufrufenden App: die launchd-Route wurde für /Users/ueli/Documents/semio seit dem Start dieses Rechners bereits abgewiesen
+Waiting for the repo graph service (8 ms).
+Waiting for the repo graph service (2043 ms).
+Waiting for the repo graph service (4075 ms).
+[repo] still working after 5 s; last phase started: door.script
+Waiting for the repo graph service (6105 ms).
+Waiting for the repo graph service (8138 ms).
+[repo] still working after 10 s; last phase started: door.script
+Waiting for the repo graph service (10169 ms).
+Loading the project graph of 440cffa5563d.
+Planning 1 targets.
+Reading the project graph slice (2 s).
+The graph service under the launcher was denied access; it is started again under the access of the calling app / Der Graphdienst unter dem Launcher wurde abgewiesen; er wird erneut mit dem Zugriff der aufrufenden App gestartet
+Starting the repo graph service for this host.
+Waiting for the repo graph service (2 ms).
+The graph service was denied access to the checkout although this process can read it, so this is not a missing file access consent of this session; a service that was started for another route or another app is judged against another identity. The service ended and was started once more under the access of this process; the second one was denied as well. macOS does not let `repo` read your Documents folder: /Users/ueli/Documents/semio is refused, so /Users/ueli/Documents/semio cannot be read. Open System Settings, Privacy & Security, Files & Folders, switch on Documents Folder for `repo` (/Users/ueli/.local/share/semio/launcher/bin/repo) (or give it Full Disk Access) or click "Allow" on the dialog "repo would like to access files in your Documents folder", then run the command again. The consent is asked once per machine; a checkout outside Documents, Desktop and Downloads needs none.
+end 2026-11-15T07:02:44Z
+native_rc=1
+

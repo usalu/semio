@@ -15,6 +15,7 @@ import { useArchive } from "../🧭️context/🟦️.tsx";
 import { Button, CheckField, Notice, NumberField, Segmented, SelectField, SliderField, Tag, cn } from "../🪟️chrome/🟦️.tsx";
 import { FigureBoundary, useDarkSurface } from "../🖼️previews/🟦️.tsx";
 import { Transport } from "../⏯️transport/🟦️.tsx";
+import { scaleChoices } from "../🧊️spatial/🟦️.ts";
 import { depictionOptions, evaluateState, frameOf, sceneOf, type SceneFrame } from "../🧮️pipeline/🟦️.ts";
 import { useViewpointReady } from "../🧮️pipeline/🦥️lazy/⚛️hook/🟦️.tsx";
 import type { Selection } from "../💾️persistence/🟦️.ts";
@@ -160,6 +161,7 @@ export function Viewer(props: ViewerProps): ReactElement {
   const unavailable = !all ? resolutions[viewer.viewpoint] : undefined;
   const groundColour = bg === "transparent" ? "transparent" : GROUND_COLOURS[bg];
   const poseOptions = [{ value: "default", label: t("viewer.selection.default", { title: clip.title[language] }) }, ...asset.clips.map((candidate) => ({ value: `clip:${candidate.id}`, label: `${t("viewer.selection.clip")}: ${candidate.title[language]}` })), ...namedPoses(asset).map((pose) => ({ value: `pose:${pose.id}`, label: `${t("viewer.selection.pose")}: ${pose.title[language]}` }))];
+  const reasons = useMemo(() => new Map(scaleChoices(asset, language).flatMap((choice) => (choice.available ? [] : [[choice.scale, t("model.scaleUnavailable", { scale: choice.scale, reason: choice.reason })] as const]))), [asset, language]);
   const patch = (next: Partial<ViewerState>, replace = true): void => onChange(next, replace);
   const setEnv = (key: keyof Environment, value: number): void => patch({ environment: { ...viewer.environment, [key]: value } });
   return (
@@ -189,7 +191,7 @@ export function Viewer(props: ViewerProps): ReactElement {
           <div role="group" aria-label={t("model.viewerStage", { title: asset.title[language] })} aria-describedby={`${asset.id}-model-help`} data-stage="" data-model="" className="relative h-[clamp(22rem,64vh,42rem)] w-full">
             <span id={`${asset.id}-model-help`} className="sr-only">{t("model.viewerHelp")}</span>
             <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" title={asset.title[language]}>{message}</Notice>}>
-              <StaffageFigure asset={asset} query={query} clock={clock} view={viewer.view} viewpoint="model" scale={{ denominator: viewer.scale }} language={language} theme={theme} fit="contain" preset={viewer.camera} onPreset={(camera) => patch({ camera })} background={groundColour} thermalQuantity={viewer.thermalQuantity} forceQuantity={viewer.forceQuantity} range={viewer.range} {...(overridden ? { environment } : {})} live />
+              <StaffageFigure asset={asset} query={query} clock={clock} view={viewer.view} viewpoint="model" scale={{ denominator: viewer.scale }} language={language} theme={theme} fit="contain" preset={viewer.camera} onPreset={(camera) => patch({ camera })} onScale={(scale) => patch({ scale })} onView={(view) => patch({ view })} background={groundColour} thermalQuantity={viewer.thermalQuantity} forceQuantity={viewer.forceQuantity} range={viewer.range} {...(overridden ? { environment } : {})} live />
             </FigureBoundary>
           </div>
         ) : (
@@ -260,7 +262,7 @@ export function Viewer(props: ViewerProps): ReactElement {
         <Segmented label={t("viewer.view")} value={viewer.view} onChange={(view) => patch({ view })} options={VIEWS.map((view) => ({ value: view, label: VIEW_NAMES[view][language], title: VIEW_NAMES[view][language] }))} />
         <ViewpointSelector value={all ? "all" : viewer.viewpoint} focus={planarFocus} language={language} choices={FIGURE_CHOICES} resolutions={resolutions} names={Object.fromEntries(sectionNames)} onChange={(choice) => patch(choice === "all" ? { layout: "all" } : { viewpoint: choice, layout: "single" })} />
         <div className="flex flex-col gap-single">
-          <Segmented label={t("viewer.scale")} value={customScale ? -1 : viewer.scale} onChange={(scale) => scale > 0 && patch({ scale })} options={[...SCALE_PRESETS.map((scale) => ({ value: scale as number, label: `1:${scale}` })), { value: -1, label: t("viewer.scaleCustom"), title: t("viewer.scaleCustomHelp") }]} />
+          <Segmented label={t("viewer.scale")} value={customScale ? -1 : viewer.scale} onChange={(scale) => scale > 0 && patch({ scale })} options={[...SCALE_PRESETS.map((scale) => ({ value: scale as number, label: `1:${scale}`, ...(model && reasons.has(scale) ? { unavailable: reasons.get(scale)! } : {}) })), { value: -1, label: t("viewer.scaleCustom"), title: t("viewer.scaleCustomHelp") }]} />
           <NumberField label={t("viewer.scaleDenominator")} unit={t("viewer.scaleUnit")} min={1} max={100000} value={viewer.scale} onChange={(scale) => scale !== null && scale >= 1 && patch({ scale })} />
         </div>
         <SelectField label={t("viewer.selection")} value={selectionKey(viewer.selection)} options={poseOptions} onChange={(key) => patch({ selection: keyToSelection(key), timeS: null, pan: viewer.pan })} />

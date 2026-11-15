@@ -25,7 +25,7 @@ semio-s-artifact-flow-flow-mutations = { path = "../../🏅️standards/🔖️1
 semio-s-artifact-flow-flow-editor-leaves = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️connect-media-ports/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-viewer = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-editor = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
-semio-s-artifact-flow-flow-original-command-retirement-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/📦️packages/🦀️rust" }
+semio-s-artifact-flow-flow-command-retirement-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-unit-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-flow-flow-unit-tests-2 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }

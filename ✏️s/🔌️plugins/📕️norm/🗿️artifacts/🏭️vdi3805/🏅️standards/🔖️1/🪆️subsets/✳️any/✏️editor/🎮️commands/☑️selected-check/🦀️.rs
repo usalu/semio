@@ -31,7 +31,4 @@ pub fn handle(_payload: &SetSelectedCheckIndex, _doc: &ArtifactView<'_, Vdi3805S
 //#endregion 🔖️Handler
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

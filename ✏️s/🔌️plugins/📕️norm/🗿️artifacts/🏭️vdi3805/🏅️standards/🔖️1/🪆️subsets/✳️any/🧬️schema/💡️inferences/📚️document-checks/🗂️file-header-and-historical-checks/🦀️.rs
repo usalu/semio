@@ -112,7 +112,7 @@ pub(super) fn check_catalog_file_header(document: &Vdi3805Snapshot, out: &mut Ve
     }
     out.push(cr.build());
 
-    for (key, geom) in &document.geometry {
+    for (key, geom) in document.geometry.iter() {
         let ok = key == &geom.id;
         let mut gk = CheckResult::assess(
             format!("vdi3805.1.geometry.idKey.{key}"),
@@ -136,7 +136,7 @@ pub(super) fn check_catalog_file_header(document: &Vdi3805Snapshot, out: &mut Ve
         }
         out.push(gk.build());
     }
-    for (key, curve) in &document.curves {
+    for (key, curve) in document.curves.iter() {
         let ok = key == &curve.id;
         let mut ck = CheckResult::assess(
             format!("vdi3805.1.curve.idKey.{key}"),
@@ -250,7 +250,7 @@ pub(super) fn check_historical(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
 
 pub(super) fn check_edition_profiles(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     let mut out = Vec::new();
-    for (key, profile) in &document.edition_profile {
+    for (key, profile) in document.edition_profile.iter() {
         let Ok(sheet) = key.parse::<u16>() else { continue };
         let product = document.catalog.products.iter().find(|p| p.sheet.0 == sheet);
         let mut b = CheckResult::assess(

@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
 
 import { BundleScript, scriptInvocationBudget,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,scriptInvocationEnvironment } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {compilerAdmissionBudgetV1} from "@semio-tech/process/compiler-capacity";
+
 import {checkResourceLeaseControl} from "@semio-tech/process/leases";
 import { readGraphOutputCatalog } from "../📇️catalog/🟦️.ts";
 import { renderGraphArtifacts } from "../📽️projection/🟦️.ts";
@@ -73,7 +73,7 @@ export class TestScript extends BundleScript {
     checkResourceLeaseControl(phaseControl);
     const { rest } = resolveTestLevel(segments);
     const sourcePhase=createRequestedIssuedResourceControlV1(phaseControl,cmdBudgetMs());
-    await runOwnedCommand(runtimeExecutableV1(), runtimeTestArgumentsV1([resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")]), this.repoRoot, "tool:owner", compilerAdmissionBudgetV1(sourcePhase), {env:scriptInvocationEnvironment(this.invocation,process.env),signal:sourcePhase.signal});
+    await runOwnedCommand(runtimeExecutableV1(), runtimeTestArgumentsV1([resolve(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")]), this.repoRoot, "tool:owner", 0, {deadline:sourcePhase,env:scriptInvocationEnvironment(this.invocation,process.env),signal:sourcePhase.signal});
     checkResourceLeaseControl(sourcePhase);
     await runCargoTestsV1({ manifestPath: resolve(this.repoRoot, "🧰️framework/Cargo.toml"), packages: GRAPH_PACKAGES, cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,phaseControl);
   }

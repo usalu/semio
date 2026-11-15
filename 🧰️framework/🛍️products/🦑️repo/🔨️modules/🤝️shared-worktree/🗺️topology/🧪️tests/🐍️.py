@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """🐍️ Independent oracle of the fleet topology. It shares no code with `../🟦️.ts`: it validates a topology structurally with the standard library and recomputes the environment of a machine from the topology alone.
-usage: 🐍️.py check                          validate the committed topology and the fixture (valid accepted, every invalid case refused, environments recomputed)
-       🐍️.py env <topology.json|fixture.json> <group>    print the environment of one group as JSON
+usage: 🐍️.py check                          validate the committed topology and the fixture (valid accepted, every invalid case refused)
        🐍️.py plist <plist> <environment> <worktree> <language>    insert the fleet environment into the first EnvironmentVariables dict, the same way the macOS provision script does
+       🐍️.py worktree <topology.json|fixture.json> <platform> <home>    print the worktree of one platform below an account home
+       🐍️.py fill <text> <home> <user> <xml|plain>    replace the home and user placeholders of a service definition, escaping for XML when asked
        🐍️.py logs <plist>    print the unique StandardOutPath and StandardErrorPath values
        🐍️.py namespace <root> <link>    print keep or remove for a node_modules link
 Python 3.9 compatible."""
@@ -14,12 +15,12 @@ GROUP=r"[a-z][a-z0-9]{0,15}"
 UNIX=r"/[A-Za-z0-9._/-]{1,200}"
 WINDOWS=r"[A-Za-z]:\\[A-Za-z0-9._\\-]{1,200}"
 WINDOWS_ROOT=r"[A-Za-z]:\\[A-Za-z0-9._-]{1,12}"
+HOME_ROOT=r"~(/[A-Za-z0-9][A-Za-z0-9._-]{0,31}){1,4}"
 SHARE=r"/[A-Za-z0-9._-]+"
 DRIVE=r"[A-Za-z]:\\"
 ENDPOINT=r"https?://"+HOST+r"(:[0-9]{1,5})?"
 INSTANCE=r"[A-Za-z0-9._-]{1,64}"
 PLATFORMS=("linux","macos","windows")
-NAMES={"endpoint":"SEMIO_REMOTE_CACHE_ENDPOINT","access":"SEMIO_REMOTE_CACHE_ACCESS","instance":"SEMIO_REMOTE_CACHE_INSTANCE"}
 
 def whole(pattern,value): return isinstance(value,str) and re.fullmatch(pattern,value) is not None
 def integer(value,low,high): return type(value) is int and low<=value<=high
@@ -36,27 +37,92 @@ def exact(node,keys,where,out):
         out.append(where+" must contain exactly "+",".join(sorted(keys)));return False
     return True
 
+def optional_problems(extra,group,where,out):
+    if "ports" in extra:
+        ports=extra["ports"]
+        if not exact(ports,["cache","scheduler","worker"],where+" ports",out): pass
+        elif not all(integer(ports[k],1,65535) for k in ports): out.append(where+" ports invalid")
+    if "access" in extra:
+        access=extra["access"]
+        if isinstance(access,dict) and set(access)-{"enforceNetwork","transport"}: out.append(where+" access has unknown keys")
+        elif not isinstance(access,dict) or "enforceNetwork" not in access: out.append(where+" access.enforceNetwork missing")
+        else:
+            if type(access["enforceNetwork"]) is not bool: out.append(where+" access.enforceNetwork invalid")
+            transport=access.get("transport")
+            if transport is not None:
+                if not isinstance(transport,dict) or set(transport)-{"crossGroup","inGroup"}: out.append(where+" access.transport invalid")
+                else:
+                    if transport.get("crossGroup","sealed")!="sealed": out.append(where+" access.transport.crossGroup must be sealed")
+                    if transport.get("inGroup","sealed") not in ("sealed","trusted-lan"): out.append(where+" access.transport.inGroup invalid")
+    if "links" in extra:
+        links=extra["links"]
+        if not isinstance(links,dict): out.append(where+" links is not an object")
+        else:
+            for peer,link in links.items():
+                if not whole(GROUP,peer) or not isinstance(link,dict) or link.get("transport") not in ("direct","relayed") or not set(link)<={"transport","endpoints","serverKey"}: out.append(where+" link "+str(peer)+" invalid");continue
+                if "endpoints" in link and (not isinstance(link["endpoints"],list) or len(link["endpoints"])>8 or not all(whole(ENDPOINT,e) for e in link["endpoints"])): out.append(where+" link "+str(peer)+" endpoints invalid")
+                if "serverKey" in link and not whole(r"[A-Za-z0-9_-]{40,200}",link["serverKey"]): out.append(where+" link "+str(peer)+" serverKey invalid")
+                if link["transport"]=="relayed" and link.get("endpoints"): out.append(where+" relayed link lists endpoints")
+                if isinstance(group.get("peers"),dict) and peer not in group["peers"]: out.append(where+" links a group that is not a peer")
+
+def sidecar_problems(node,out):
+    if not exact(node,["enabled","startAfterSeconds","graceSeconds","restart","children"],"sidecars",out): return
+    if type(node["enabled"]) is not bool: out.append("sidecars.enabled invalid")
+    if not integer(node["startAfterSeconds"],0,3600): out.append("sidecars.startAfterSeconds invalid")
+    if not integer(node["graceSeconds"],1,300): out.append("sidecars.graceSeconds invalid")
+    if exact(node["restart"],["initialMilliseconds","maximumMilliseconds","stableMilliseconds"],"sidecars.restart",out):
+        for key,low,high in (("initialMilliseconds",10,600000),("maximumMilliseconds",10,3600000),("stableMilliseconds",10,86400000)):
+            if not integer(node["restart"][key],low,high): out.append("sidecars.restart."+key+" invalid")
+    children=node["children"]
+    if not isinstance(children,list) or len(children)>8:
+        out.append("sidecars.children must hold at most 8 entries");return
+    names=[]
+    for child in children:
+        if not exact(child,["name","script","arguments","roles","requires","enabled"],"sidecars.child",out): continue
+        if not whole(r"[a-z][a-z0-9-]{0,39}",child["name"]): out.append("sidecars.child.name invalid")
+        names.append(child["name"])
+        if not isinstance(child["script"],str) or not 1<=len(child["script"])<=240: out.append("sidecars.child.script invalid")
+        if not isinstance(child["arguments"],list) or len(child["arguments"])>16 or not all(isinstance(a,str) and len(a)<=128 for a in child["arguments"]): out.append("sidecars.child.arguments invalid")
+        roles=child["roles"]
+        if not isinstance(roles,list) or not 1<=len(roles)<=2 or len(set(roles))!=len(roles) or not all(r in ("member","server") for r in roles): out.append("sidecars.child.roles invalid")
+        if child["requires"] not in ("none","platform-peer"): out.append("sidecars.child.requires invalid")
+        if type(child["enabled"]) is not bool: out.append("sidecars.child.enabled invalid")
+    if len(set(names))!=len(names): out.append("sidecars.children names must be unique")
+
 def problems(topology):
     out=[]
-    if not exact(topology,["version","worktree","storeMount","groups","replica"],"topology",out): return out
+    if not exact(topology,["version","worktree","storeMount","groups","replica"]+(["sidecars"] if isinstance(topology,dict) and "sidecars" in topology else []),"topology",out): return out
+    if "sidecars" in topology: sidecar_problems(topology["sidecars"],out)
     if type(topology["version"]) is not int or topology["version"]!=1: out.append("version must be 1")
-    for name,pattern,drive in (("worktree",UNIX,WINDOWS_ROOT),("storeMount",UNIX,DRIVE)):
+    for name,pattern,drive in (("worktree",HOME_ROOT,WINDOWS_ROOT),("storeMount",UNIX,DRIVE)):
         node=topology[name]
         if exact(node,list(PLATFORMS),name,out):
             for platform in ("linux","macos"):
                 if not whole(pattern,node[platform]): out.append(name+"."+platform+" invalid")
             if not whole(drive,node["windows"]): out.append(name+".windows invalid")
     replica=topology["replica"]
-    if exact(replica,["pollMilliseconds","scanSeconds","debounceMilliseconds","retentionDays","bootstrapMinutes"],"replica",out):
+    if exact(replica,["pollMilliseconds","scanSeconds","debounceMilliseconds","retentionDays","bootstrapMinutes","compaction"],"replica",out):
         for key,low,high in (("pollMilliseconds",50,60000),("scanSeconds",1,3600),("debounceMilliseconds",10,10000),("retentionDays",1,3650),("bootstrapMinutes",1,10080)):
             if not integer(replica[key],low,high): out.append("replica."+key+" invalid")
+        compaction=replica["compaction"]
+        if exact(compaction,["automatic","snapshotEvents","safetyHours","staleHours","catchUpEvents"],"replica.compaction",out):
+            if type(compaction["automatic"]) is not bool: out.append("replica.compaction.automatic invalid")
+            for key,low,high in (("snapshotEvents",1000,100000000),("safetyHours",1,8760),("staleHours",1,8760),("catchUpEvents",1000,100000000)):
+                if not integer(compaction[key],low,high): out.append("replica.compaction."+key+" invalid")
     groups=topology["groups"]
     if not isinstance(groups,list) or not 1<=len(groups)<=64:
         out.append("groups must hold 1 to 64 entries");return out
     ids=[]
+    extras={}
     for index,group in enumerate(groups):
         where="groups/"+str(index)
+        optional_keys=("ports","access","links")
+        if isinstance(group,dict):
+            for key in optional_keys:
+                if key in group: extras.setdefault(index,{})[key]=group[key]
+            group={k:v for k,v in group.items() if k not in optional_keys}
         if not exact(group,["id","nfs","server","cache","peers"],where,out): continue
+        optional_problems(extras.get(index,{}),group,where,out)
         if not whole(GROUP,group["id"]): out.append(where+" id invalid")
         else: ids.append(group["id"])
         if exact(group["nfs"],["host","export"],where+" nfs",out):
@@ -66,6 +132,10 @@ def problems(topology):
         if isinstance(server,dict) and "directory" in server:
             if not whole(WINDOWS,server["directory"]): out.append(where+" server.directory invalid")
             server={k:v for k,v in server.items() if k!="directory"}
+        if isinstance(server,dict) and "advertise" in server:
+            advertise=server["advertise"]
+            if not isinstance(advertise,list) or len(advertise)>4 or len(set(advertise))!=len(advertise) or not all(whole(HOST,h) for h in advertise): out.append(where+" server.advertise invalid")
+            server={k:v for k,v in server.items() if k!="advertise"}
         if exact(server,["platform","protocol","network"],where+" server",out):
             if server["platform"] not in PLATFORMS: out.append(where+" server.platform invalid")
             if server["protocol"] not in ("nfs","smb"): out.append(where+" server.protocol invalid")
@@ -97,12 +167,6 @@ def problems(topology):
             if sorted(group["peers"])!=sorted(i for i in ids if i!=group["id"]): out.append(group["id"]+" must mount exactly the other groups")
     return out
 
-def environment(topology,group_id):
-    found=[g for g in topology["groups"] if g["id"]==group_id]
-    if len(found)!=1: raise SystemExit("unknown group "+group_id)
-    cache=found[0]["cache"]
-    return {NAMES["endpoint"]:cache["endpoint"],NAMES["access"]:"read-write",NAMES["instance"]:cache["instance"]}
-
 def mutate(base,change):
     copied=copy.deepcopy(base);node=copied
     for key in change["path"][:-1]: node=node[key]
@@ -122,26 +186,23 @@ def check():
     if [g["id"] for g in committed["groups"]]!=["g%d"%n for n in range(1,6)]: failures.append("committed: groups must be g1..g5")
     for group in committed["groups"]:
         n=group["id"]
+        if group.get("ports")!={"cache":6094,"scheduler":8980,"worker":8981}: failures.append("committed: ports of "+n)
+        if group.get("access")!={"enforceNetwork":False,"transport":{"crossGroup":"sealed","inGroup":"trusted-lan"}}: failures.append("committed: access of "+n)
         if n=="g1":
             if group["nfs"]!={"host":"nfs.g1.semio.internal","export":"/Users/Shared/semio-store"}: failures.append("committed: nfs of g1")
             if group["server"]!={"platform":"macos","protocol":"nfs","network":"10.0.1.0/24"}: failures.append("committed: server of g1")
             if group["cache"]!={"endpoint":"http://cache.g1.semio.internal:6090","instance":"semio"}: failures.append("committed: cache of g1")
-            if environment(committed,n)!={NAMES["endpoint"]:"http://cache.g1.semio.internal:6090",NAMES["access"]:"read-write",NAMES["instance"]:"semio"}: failures.append("committed: environment of g1")
         else:
             if group["nfs"]!={"host":"nfs.%s.semio.internal"%n,"export":"/srv/semio-store"}: failures.append("committed: nfs of "+n)
             if group["server"]!={"platform":"linux","protocol":"nfs","network":"10.0.%s.0/24"%n[1:]}: failures.append("committed: server of "+n)
             if group["cache"]!={"endpoint":"http://cache.%s.semio.internal:6090"%n,"instance":"semio"}: failures.append("committed: cache of "+n)
-            if environment(committed,n)!={NAMES["endpoint"]:"http://cache.%s.semio.internal:6090"%n,NAMES["access"]:"read-write",NAMES["instance"]:"semio"}: failures.append("committed: environment of "+n)
         if group["peers"]!={m["id"]:"/mnt/semio-peers/"+m["id"] for m in committed["groups"] if m["id"]!=n}: failures.append("committed: peers of "+n)
     if len(committed["worktree"]["windows"])>15: failures.append("committed: windows worktree root is not short")
-    if committed["worktree"]!={"linux":"/srv/semio","macos":"/Users/Shared/semio","windows":"C:\\semio"}: failures.append("committed: worktree")
+    if committed["worktree"]!={"linux":"~/semio","macos":"~/Documents/semio","windows":"C:\\semio"}: failures.append("committed: worktree")
     if committed["storeMount"]!={"linux":"/mnt/semio-store","macos":"/Volumes/semio-store","windows":"S:\\"}: failures.append("committed: storeMount")
-    if committed["replica"]!={"pollMilliseconds":250,"scanSeconds":900,"debounceMilliseconds":150,"retentionDays":14,"bootstrapMinutes":60}: failures.append("committed: replica")
-    if fixture["variables"]!=NAMES: failures.append("fixture: variable names")
+    if committed["replica"]!={"pollMilliseconds":250,"scanSeconds":90,"debounceMilliseconds":150,"retentionDays":14,"bootstrapMinutes":60,"compaction":{"automatic":False,"snapshotEvents":100000,"safetyHours":3,"staleHours":12,"catchUpEvents":20000}}: failures.append("committed: replica")
+    if [(c["name"],c["arguments"],c["roles"],c["requires"]) for c in committed["sidecars"]["children"]]!=[("build-agent",["agent"],["member","server"],"none"),("build-scheduler",["scheduler"],["server"],"none"),("build-cache",["cache"],["server"],"none")]: failures.append("committed: sidecars")
     for message in problems(fixture["topology"]): failures.append("fixture: "+message)
-    for group_id,expected in fixture["environments"].items():
-        if environment(fixture["topology"],group_id)!=expected: failures.append("fixture: environment of "+group_id)
-    if sorted(fixture["environments"])!=sorted(g["id"] for g in fixture["topology"]["groups"]): failures.append("fixture: environments cover the groups")
     for change in fixture["invalid"]:
         if not problems(mutate(fixture["topology"],change)): failures.append("accepted: "+change["name"])
     return failures
@@ -185,6 +246,19 @@ def plist_environment(plist, environment_text, worktree, language):
         extra+="<key>"+xml_escape(name)+"</key><string>"+xml_escape(value)+"</string>"
     marker="<key>EnvironmentVariables</key><dict>"
     return plist.replace(marker, marker+extra, 1)
+
+
+def worktree_path(topology, platform, home):
+    template=topology["worktree"][platform]
+    if platform=="windows": return template
+    trimmed=home.rstrip("/")
+    if not home.startswith("/") or "\0" in home or trimmed=="": raise ValueError("Absolute account home required: "+home)
+    return trimmed+template[1:]
+
+
+def fill(text, home, user, xml):
+    def escaped(value): return value.replace("&","&amp;").replace("<","&lt;") if xml else value
+    return text.replace("__WORKER_USER__",escaped(user)).replace("__WORKER_HOME__",escaped(home.rstrip("/")))
 
 
 def daemon_logs(text):
@@ -246,6 +320,15 @@ if __name__=="__main__":
     if len(sys.argv)==6 and sys.argv[1]=="plist":
         print(plist_environment(Path(sys.argv[2]).read_text(), Path(sys.argv[3]).read_text(), sys.argv[4], sys.argv[5]), end="")
         sys.exit(0)
+    if len(sys.argv)==6 and sys.argv[1]=="fill":
+        print(fill(Path(sys.argv[2]).read_text(), sys.argv[3], sys.argv[4], sys.argv[5]=="xml"), end="")
+        sys.exit(0)
+    if len(sys.argv)==5 and sys.argv[1]=="worktree":
+        data=load(sys.argv[2])
+        try: print(worktree_path(data.get("topology",data), sys.argv[3], sys.argv[4]))
+        except ValueError as error:
+            print(error, file=sys.stderr); sys.exit(1)
+        sys.exit(0)
     if len(sys.argv)==3 and sys.argv[1]=="logs":
         for path in daemon_logs(Path(sys.argv[2]).read_text()): print(path)
         sys.exit(0)
@@ -260,6 +343,4 @@ if __name__=="__main__":
         found=check()
         for line in found: print(line)
         sys.exit(1 if found else 0)
-    if len(sys.argv)==4 and sys.argv[1]=="env":
-        data=load(sys.argv[2]);print(json.dumps(environment(data.get("topology",data),sys.argv[3]),sort_keys=True));sys.exit(0)
     sys.exit(__doc__)

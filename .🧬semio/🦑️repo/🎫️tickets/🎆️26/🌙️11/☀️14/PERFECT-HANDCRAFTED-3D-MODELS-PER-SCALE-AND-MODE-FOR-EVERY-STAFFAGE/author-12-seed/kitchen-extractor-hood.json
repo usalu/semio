@@ -1,0 +1,490 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "canopy",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       0,
+       0.02
+      ],
+      [
+       0.5,
+       0.02
+      ],
+      [
+       0.5,
+       0.06
+      ],
+      [
+       0.4,
+       0.2
+      ],
+      [
+       0,
+       0.2
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.45,
+     "to": 0.45
+    },
+    {
+     "id": "filter",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "filter-mesh",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.43,
+       0.02
+      ],
+      [
+       0.43,
+       0.02
+      ],
+      [
+       0.43,
+       0.48
+      ],
+      [
+       -0.43,
+       0.48
+      ]
+     ],
+     "plane": "zx",
+     "from": 0,
+     "to": 0.02,
+     "holes": [
+      [
+       [
+        -0.17,
+        0.1
+       ],
+       [
+        -0.17402,
+        0.115
+       ],
+       [
+        -0.185,
+        0.12598
+       ],
+       [
+        -0.2,
+        0.13
+       ],
+       [
+        -0.215,
+        0.12598
+       ],
+       [
+        -0.22598,
+        0.115
+       ],
+       [
+        -0.23,
+        0.1
+       ],
+       [
+        -0.22598,
+        0.085
+       ],
+       [
+        -0.215,
+        0.07402
+       ],
+       [
+        -0.2,
+        0.07
+       ],
+       [
+        -0.185,
+        0.07402
+       ],
+       [
+        -0.17402,
+        0.085
+       ]
+      ],
+      [
+       [
+        0.23,
+        0.1
+       ],
+       [
+        0.22598,
+        0.115
+       ],
+       [
+        0.215,
+        0.12598
+       ],
+       [
+        0.2,
+        0.13
+       ],
+       [
+        0.185,
+        0.12598
+       ],
+       [
+        0.17402,
+        0.115
+       ],
+       [
+        0.17,
+        0.1
+       ],
+       [
+        0.17402,
+        0.085
+       ],
+       [
+        0.185,
+        0.07402
+       ],
+       [
+        0.2,
+        0.07
+       ],
+       [
+        0.215,
+        0.07402
+       ],
+       [
+        0.22598,
+        0.085
+       ]
+      ],
+      [
+       [
+        -0.17,
+        0.37
+       ],
+       [
+        -0.17402,
+        0.385
+       ],
+       [
+        -0.185,
+        0.39598
+       ],
+       [
+        -0.2,
+        0.4
+       ],
+       [
+        -0.215,
+        0.39598
+       ],
+       [
+        -0.22598,
+        0.385
+       ],
+       [
+        -0.23,
+        0.37
+       ],
+       [
+        -0.22598,
+        0.355
+       ],
+       [
+        -0.215,
+        0.34402
+       ],
+       [
+        -0.2,
+        0.34
+       ],
+       [
+        -0.185,
+        0.34402
+       ],
+       [
+        -0.17402,
+        0.355
+       ]
+      ],
+      [
+       [
+        0.23,
+        0.37
+       ],
+       [
+        0.22598,
+        0.385
+       ],
+       [
+        0.215,
+        0.39598
+       ],
+       [
+        0.2,
+        0.4
+       ],
+       [
+        0.185,
+        0.39598
+       ],
+       [
+        0.17402,
+        0.385
+       ],
+       [
+        0.17,
+        0.37
+       ],
+       [
+        0.17402,
+        0.355
+       ],
+       [
+        0.185,
+        0.34402
+       ],
+       [
+        0.2,
+        0.34
+       ],
+       [
+        0.215,
+        0.34402
+       ],
+       [
+        0.22598,
+        0.355
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "lamp-l",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "lamp-diffuser",
+     "role": "detail",
+     "tone": 0.95,
+     "profile": [
+      [
+       0,
+       0.028
+      ],
+      [
+       0.0015,
+       0.029
+      ],
+      [
+       0.012,
+       0.029
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0,
+       -0.2
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.27,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "lamp-r",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "lamp-diffuser",
+     "role": "detail",
+     "tone": 0.95,
+     "profile": [
+      [
+       0,
+       0.028
+      ],
+      [
+       0.0015,
+       0.029
+      ],
+      [
+       0.012,
+       0.029
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0,
+       0.2
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.27,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "chimney-lower",
+     "kind": "box",
+     "bone": "chimney",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.3,
+      0.35,
+      0.3
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.15,
+       0.175,
+       0
+      ]
+     }
+    },
+    {
+     "id": "chimney-upper",
+     "kind": "box",
+     "bone": "chimney-top",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.65,
+     "size": [
+      0.28,
+      0.35,
+      0.28
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.14,
+       0.175,
+       0
+      ]
+     }
+    },
+    {
+     "id": "collar",
+     "kind": "box",
+     "bone": "chimney-top",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.2,
+      0.015,
+      0.2
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.14,
+       0.3575,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-canopy",
+     "of": "canopy",
+     "region": "canopy"
+    },
+    {
+     "id": "th-filter",
+     "of": "filter",
+     "region": "filter"
+    },
+    {
+     "id": "th-lamp-l",
+     "of": "lamp-l",
+     "region": "lamps"
+    },
+    {
+     "id": "th-lamp-r",
+     "of": "lamp-r",
+     "region": "lamps"
+    },
+    {
+     "id": "th-chimney-lower",
+     "of": "chimney-lower",
+     "region": "chimney"
+    },
+    {
+     "id": "th-chimney-upper",
+     "of": "chimney-upper",
+     "region": "chimney"
+    },
+    {
+     "id": "th-collar",
+     "of": "collar",
+     "region": "chimney"
+    }
+   ],
+   "structure": [],
+   "decisions": []
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [],
+   "thermal": [],
+   "structure": [],
+   "decisions": []
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [],
+   "thermal": [],
+   "structure": [],
+   "decisions": []
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

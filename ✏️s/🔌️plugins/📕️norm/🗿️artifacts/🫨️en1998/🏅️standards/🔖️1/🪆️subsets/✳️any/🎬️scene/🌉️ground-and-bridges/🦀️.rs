@@ -440,7 +440,7 @@ fn wall(input: &SceneInput, layout: &Layout, handles: &Index, w: &super::model::
         out.push(water, &[behind.clone(), v3(o.x + WALL_LENGTH, behind.y + WALL_BACKFILL_WIDTH, o.z + wet)]);
         if let Some(dynamic) = computed_of(input.report, &format!("en1998.5.{}.water", w.id)).filter(|v| *v > 0.0) {
             let at = v3(o.x + 0.5 * WALL_LENGTH, behind.y, o.z + 0.4 * wet);
-            out.push(Spec::new(EntityKind::Load, format!("{}:water-thrust", w.id), path.clone(), Geometry::Load(LoadGlyph::Point { at: at.clone(), direction: v3(0.0, -1.0, 0.0), magnitude: Quantity::new(QuantityKind::Force, dynamic), case: load_case(&format!("seismic-{}", w.id)) }), MaterialRole::Load, loc(&format!("Water thrust on {}", w.id), &format!("Wasserschub auf {}", w.id)), LAYER_GROUND), &[at]);
+            out.push(Spec::new(EntityKind::Load, format!("{}:water-thrust", w.id), path.clone(), Geometry::Load(LoadGlyph::Point { at: at.clone(), direction: v3(0.0, -1.0, 0.0), magnitude: Quantity::new(QuantityKind::Force, dynamic), case: load_case(&format!("seismic-{}", w.id)) }), MaterialRole::Load { kind: LoadKind::Seismic }, loc(&format!("Water thrust on {}", w.id), &format!("Wasserschub auf {}", w.id)), LAYER_GROUND), &[at]);
         }
     }
     if let Some(thrust) = computed_of(input.report, &format!("en1998.5.{}.thrust", w.id)).filter(|v| *v > 0.0) {

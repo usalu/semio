@@ -1,0 +1,10 @@
+{"grew_ms": 282.8, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 1, "mode": "plain", "file": "probe-1.txt", "hint_created": null}
+{"grew_ms": 20760.2, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 2, "mode": "plain", "file": "probe-2.txt", "hint_created": null}
+{"grew_ms": 1575.8, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 3, "mode": "plain", "file": "probe-3.txt", "hint_created": null}
+{"grew_ms": 5876.4, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 4, "mode": "plain", "file": "probe-4.txt", "hint_created": null}
+{"grew_ms": 6828.9, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 5, "mode": "plain", "file": "probe-5.txt", "hint_created": null}
+{"grew_ms": 22814.9, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 6, "mode": "plain", "file": "probe-6.txt", "hint_created": null}
+{"grew_ms": 3272.5, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 7, "mode": "plain", "file": "probe-7.txt", "hint_created": null}
+{"grew_ms": 10793.5, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 8, "mode": "plain", "file": "probe-8.txt", "hint_created": null}
+{"grew_ms": 7594.7, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 9, "mode": "plain", "file": "probe-9.txt", "hint_created": null}
+{"grew_ms": 11021.5, "contains_ms": null, "timeout": true, "hint_consumed_ms": null, "segment": "000000000133.jsonl", "n": 10, "mode": "plain", "file": "probe-10.txt", "hint_created": null}

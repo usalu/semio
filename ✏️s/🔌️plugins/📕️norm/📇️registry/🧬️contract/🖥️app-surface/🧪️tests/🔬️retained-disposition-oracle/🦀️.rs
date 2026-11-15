@@ -86,7 +86,7 @@ pub fn assert_fixture(variant: &str) {
     assert!(oracle.summarize(&forged_factory.to_string()).is_err());
 }
 
-/// 🧪️ Pins the live-editing routes of the ten Eurocode editors: the fixture rows equal the declared editor tool ids and publication contracts, and `variant` is one of the live apps.
+/// 🧪️ Pins the live-editing routes of the fifteen norm editors: the fixture rows equal the declared editor tool ids and publication contracts, and `variant` is one of the live apps.
 pub fn assert_live_fixture(variant: &str) {
     let source = include_str!("../../../🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json");
     let canonical: serde_json::Value = serde_json::from_str(source).expect("canonical fixture JSON");

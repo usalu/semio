@@ -1,5 +1,5 @@
 import{isAbsolute,relative,resolve}from"node:path";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{renderCargoProfileConfigurationV1}from"../../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json"with{type:"json"};
 import type{RuntimeWasmObservationV1,RuntimeWasmRostersV1,RuntimeGraphFindingV1}from"../../🧬️schema/🟦️.ts";

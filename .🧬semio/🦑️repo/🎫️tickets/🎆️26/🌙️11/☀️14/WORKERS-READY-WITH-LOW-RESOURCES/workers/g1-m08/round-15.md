@@ -1,0 +1,3 @@
+# Round 15 — g1-m08 — superseded before native start
+
+No round-15 native bootstrap started. The local replica reported fresh checkpoint verdict ok at checks 27 and 32, after the own P12 sample artifact was renamed portably without changing its contents. Other workers still reported disagreements. Before a native try could start, round 16 arrived; the prepared observer re-read control and exited with zero attempts. The agreement poller also exited naturally on round16. No bootstrap SIGINT was needed. Last actual native result remains round13 try2: native_rc=75, ready=false. See round-15-agreement-gate.json, exact status check logs, and round-15-artifact-rename.json. Round16 tools setup is next.

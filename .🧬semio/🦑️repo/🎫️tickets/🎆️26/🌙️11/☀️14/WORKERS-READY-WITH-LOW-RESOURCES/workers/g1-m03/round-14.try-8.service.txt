@@ -1,0 +1,67 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b814083e21d9.log (lines after 8745)
+graph: refreshing 1203 projects (generation 233)
+graph: 1203 stale projects, 0 taken from the fleet, 5 too heavy for this machine (@semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 1203
+graph: 0 of 1203 projects arrived from the fleet, 0 inferred here, 1203 left
+-- last 30 lines when the try ended
+[script] build:playground-variants · Collecting playground variants
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] build:playground-native · Collecting native playground inputs
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[repository:command] still running after 4391 s
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-d7505b87cee1.log (lines after 363)
+-- last 30 lines when the try ended
+[repository:command] still running after 2010 s
+[repository:command] still running after 2020 s
+[repo] still working after 2031 s; last phase started: source.served
+[repository:command] still running after 2030 s
+[repository:command] still running after 2040 s
+[repository:command] still running after 2050 s
+[repo] still working after 2061 s; last phase started: source.served
+[repository:command] still running after 2060 s
+[repository:command] still running after 2070 s
+[repository:command] still running after 2080 s
+[repo] still working after 2091 s; last phase started: source.served
+[repository:command] still running after 2090 s
+[repository:command] still running after 2100 s
+[repository:command] still running after 2110 s
+[repo] still working after 2121 s; last phase started: source.served
+[repository:command] still running after 2120 s
+[repository:command] still running after 2130 s
+[repository:command] still running after 2140 s
+[repo] still working after 2151 s; last phase started: source.served
+[repository:command] still running after 2150 s
+[repository:command] still running after 2160 s
+[repository:command] still running after 2170 s
+[repo] still working after 2181 s; last phase started: source.served
+[repository:command] still running after 2180 s
+[repository:command] still running after 2190 s
+[repository:command] still running after 2200 s
+[repo] still working after 2211 s; last phase started: source.served
+[repository:command] still running after 2210 s
+[repository:command] still running after 2220 s
+[repository:command] still running after 2230 s

@@ -501,7 +501,7 @@ impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzz
             let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
             return semio_framework_job::close_original_retained_step(cx,demand,|_|{
                 self.owners.stage(Puzzle2dImportOwners{fragment:self.fragment.take(),catalogs:std::mem::take(&mut self.catalogs),compatibility:std::mem::take(&mut self.compatibility),mutations:std::mem::take(&mut self.mutations),pending_completion_rejection:self.pending_completion_rejection.take()});self.staged=true;
-                semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}
+                semio_framework_value::RetainedWorkOutcome::<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}
             })
         }
         semio_framework_job::close_original_nested_step(cx,|cx,_|crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx))
@@ -525,12 +525,13 @@ pub struct Puzzle2dClipboardJob{
     staged:bool,
     completed:bool,
     owners:crate::puzzle_job::WorkClosing<Puzzle2dClipboardOwners>,
+    construction:semio_plugin::MediaConstruction,
 }
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
 struct Puzzle2dClipboardOwners{rejection:Option<ArtifactToolCompletionRejection<EditorApp<Puzzle2dPlayApp>>>,fault:Option<Vec<u8>>}
 impl Default for Puzzle2dClipboardJob{
-    fn default()->Self{Self{rejection:None,fault:None,outbox:Default::default(),closing:false,staged:false,completed:false,owners:Default::default()}}
+    fn default()->Self{Self{rejection:None,fault:None,outbox:Default::default(),closing:false,staged:false,completed:false,owners:Default::default(),construction:Default::default()}}
 }
 impl Puzzle2dClipboardJob{
     pub fn emit(request:&ArtifactReservedToolJobRequest<EditorApp<Puzzle2dPlayApp>>) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, NoDraftMutation>, Fault> {
@@ -580,8 +581,8 @@ impl Puzzle2dClipboardJob{
         if self.rejection.is_some(){
             let text=b"puzzle2d-clipboard-completion-rejected";
             let bytes=text.len()+2*std::mem::size_of::<Vec<u8>>();
-            semio_framework_job::admit_original_construction(cx,&mut self.fault,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:text.len(),release_bytes:0,depth:1},|_|{
-                let source=text.to_vec();let capacity=source.capacity();semio_framework_value::RetainedWorkOutcome{result:Ok((source,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:capacity,..Default::default()})),work:1}
+            self.construction.built(cx,&mut self.fault,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:text.len(),release_bytes:0,depth:1},||{
+                let source=text.to_vec();let capacity=source.capacity();Ok((source,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:capacity,..Default::default()}))
             })?;
             return Ok(JobTurn::Yield)
         }
@@ -608,20 +609,23 @@ impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Puzz
     fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{self.outbox.borrow_outcome(descriptor)}
     fn begin_close(&mut self){self.closing=true;}
     fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if !self.construction.terminal_is_empty(){return self.construction.close_demand(body)}
         if !self.staged{return Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Puzzle2dClipboardOwners>()+std::mem::size_of::<Option<Puzzle2dClipboardOwners>>()+std::mem::size_of::<bool>(),depth:1,..Default::default()})}
         crate::puzzle_job::job_close_demands(&self.outbox,&self.owners,body)
     }
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        self.closing=true;if !self.staged{
+        self.closing=true;
+        if !self.construction.terminal_is_empty(){if let Some(progress)=self.construction.close_step(cx)?{return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress})}}
+        if !self.staged{
             let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
             return semio_framework_job::close_original_retained_step(cx,demand,|_|{
                 self.owners.stage(Puzzle2dClipboardOwners{rejection:self.rejection.take(),fault:self.fault.take()});self.staged=true;
-                semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}
+                semio_framework_value::RetainedWorkOutcome::<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}
             })
         }
         semio_framework_job::close_original_nested_step(cx,|cx,_|crate::puzzle_job::job_close_step(&mut self.outbox,&mut self.owners,cx))
     }
-    fn terminal_is_empty(&self)->bool{self.closing&&self.staged&&self.outbox.terminal_is_empty()&&self.owners.is_empty()}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.staged&&self.outbox.terminal_is_empty()&&self.owners.is_empty()&&self.construction.terminal_is_empty()}
 }
 //#endregion 🧵️ReservedJobs
 //#endregion 🔖️PlayApp

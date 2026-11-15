@@ -1,0 +1,18 @@
+[capacity] run: sized at 46% of the default from 1 earlier run(s) of its class
+[capacity] admitted run with 7 of 8 job(s): the host cannot carry more right now
+[capacity] run: sized at 52% of the default from 1 earlier run(s) of its class
+[capacity] run: sized at 52% of the default from 1 earlier run(s) of its class
+[capacity] run: sized at 52% of the default from 1 earlier run(s) of its class
+[capacity] admitted dependencies: 1 job(s), 6144 MB reserved (9904 MB available, 2048 MB floor)
+[capacity] run: sized at 46% of the default from 1 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 2048 MB reserved (9724 MB available, 2048 MB floor)
+[capacity] run: work has to run, waiting 0s to grow the reservation from 2048 MB to 8190 MB: not enough free memory (-1117 MB spare above the 2048 MB floor; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 3123 MB), graph-farm (running, 1 job(s), 1536 MB), graph-farm (running, 1 job(s), 0 MB)
+[capacity] run: work has to run, waiting 6s to grow the reservation from 2048 MB to 8190 MB: not enough free memory (-1004 MB spare above the 2048 MB floor; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 3123 MB), graph-farm (running, 1 job(s), 1536 MB), graph-farm (running, 1 job(s), 0 MB)
+[capacity] run: work has to run, waiting 11s to grow the reservation from 2048 MB to 8190 MB: not enough free memory (-1070 MB spare above the 2048 MB floor; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 5523 MB), graph-farm (running, 1 job(s), 1536 MB), graph-farm (running, 1 job(s), 0 MB)
+[capacity] run: work has to run, waiting 16s to grow the reservation from 2048 MB to 8190 MB: not enough free memory (-1135 MB spare above the 2048 MB floor; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 5523 MB), graph-farm (running, 1 job(s), 1536 MB), graph-farm (running, 1 job(s), 0 MB)
+[capacity] run: work has to run, waiting 21s to grow the reservation from 2048 MB to 8190 MB: not enough free memory (-635 MB spare above the 2048 MB floor; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 5523 MB), graph-farm (running, 1 job(s), 1536 MB), graph-farm (running, 1 job(s), 0 MB)
+[capacity] run: work has to run, waiting 26s to grow the reservation from 2048 MB to 8190 MB: not enough free memory (3009 MB spare above the 2048 MB floor; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 2975 MB), graph-farm (running, 1 job(s), 0 MB), graph-farm (running, 1 job(s), 0 MB)
+[capacity] run: reservation grown from 2048 MB to 3510 MB with 2 of 8 job(s) after 31s: the host cannot carry more right now (4357 MB available, 2048 MB floor); the run grows to more jobs once memory and cores free up
+[capacity] run: grown from 2 to 3 of 8 job(s) after 795s, reservation 3510 MB -> 3510 MB: memory freed up and nothing of ours waits (2472 MB available, 2048 MB floor); work that starts from now on uses the new jobs
+[capacity] run: grown from 3 to 4 of 8 job(s) after 3270s, reservation 3510 MB -> 4446 MB: memory freed up and nothing of ours waits (4449 MB available, 2048 MB floor); work that starts from now on uses the new jobs
+[capacity] run: sized at 69% of the default from 1 earlier run(s) of its class

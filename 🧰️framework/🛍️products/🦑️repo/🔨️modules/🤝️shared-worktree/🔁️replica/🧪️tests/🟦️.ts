@@ -6,11 +6,15 @@ import {appendFileSync,chmodSync,existsSync,lstatSync,mkdirSync,mkdtempSync,read
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {parseReplicaArgumentsV1} from "../⌨️command/🟦️.ts";
+import {readRetirementV1,retiredPathV1,writeRetirementV1,type RetirementV1} from "../../🩺️attest/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import stateSchema from "../💾️state/🧬️schema/🔣️.json" with {type:"json"};
+import {decodeRecordsV1,frameV1,payloadsV1,readCheckpointV1,scanWalV1,walHeaderV1} from "../💾️state/🟦️.ts";
 import {blobPathV1,foldEventsV1,formatHlcV1,readEventsV1,readHeadV1,readNewestSnapshotV1,type FleetEventV1,type FleetManifestEntryV1} from "../../📒️journal/🟦️.ts";
-import {closeReplicaV1,CompactTableV1,compactV1,conflictWinnerV1,followOnceV1,foldStoreV1,homedOriginsV1,joinV1,JoinRefusedV1,openReplicaV1,publishOnceV1,relayOnceV1,relayV1,ReplicaBookV1,scanDelayV1,ReplicaBusyV1,ReplicaFoldsV1,requireReplicaShapeV1,runV1,seedV1,snapshotV1,statusV1,verifyV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
+import {checkpointReplicaV1,closeReplicaV1,CompactTableV1,compactV1,conflictWinnerV1,followOnceV1,foldStoreV1,homedOriginsV1,joinV1,localPathsV1,JoinRefusedV1,openReplicaV1,publishOnceV1,relayOnceV1,recallV1,relayV1,ReplicaBookV1,scanDelayV1,ReplicaBusyV1,ReplicaFoldsV1,requireReplicaShapeV1,runV1,seedV1,setSyncEnabledV1,snapshotV1,statusV1,syncEnabledV1,verifyV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
 
-const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),python=testPythonV1(),scratch:string[]=[];
+const ajv=new Ajv({strict:true,allowUnionTypes:true}),validator=(definition:string)=>ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:`#/definitions/${definition}`}),headerValidator=ajv.compile({$schema:stateSchema.$schema,definitions:stateSchema.definitions,$ref:"#/definitions/Header"}),python=testPythonV1(),scratch:string[]=[];
 const oracle=join(import.meta.dirname,"🐍️.py"),fixturePath=join(import.meta.dirname,"🧫️fixtures","🔣️.json"),posixTest=process.platform==="win32"?test.skip:test;
 const temp=(label:string)=>{const path=mkdtempSync(join(tmpdir(),`replica-${label}-`));scratch.push(path);return path;};
 afterAll(()=>{for(const path of scratch)rmSync(path,{recursive:true,force:true});});
@@ -244,7 +248,7 @@ test("the safety-net scan interval is spread over 75 to 125 percent so that mach
 test("events the own journal holds but the state never recorded (a crash between append and persist) are replayed, so a file that left the disk meanwhile is deleted everywhere",async()=>{
  const {machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
  await shut(a);
- const cache=join(a.options.worktree,".cache","f"),saved=new Map(["state.json","state.log","cursor.json"].map(name=>[name,existsSync(join(cache,name))?readFileSync(join(cache,name)):undefined] as const));
+ const cache=join(a.options.worktree,".cache","f"),saved=new Map(["state.ckp","state.wal","cursor.json"].map(name=>[name,existsSync(join(cache,name))?readFileSync(join(cache,name)):undefined] as const));
  await open(a);
  write(a,"crash/x.txt","published, then the daemon dies");write(a,"crash/y.txt","stays");
  await publish(a);await follow(b);
@@ -287,8 +291,12 @@ test("state, cursors and clock survive a restart and are closed documents",async
  write(a,"one.txt","1");await publish(a);await follow(b);await shut(b);
  const directory=join(b.options.worktree,".cache","f");
  requireReplicaShapeV1("Machine",JSON.parse(readFileSync(join(directory,"machine.json"),"utf8")),"machine");
- for(const [definition,file] of [["State","state.json"],["Cursor","cursor.json"],["Clock","clock.json"],["Machine","machine.json"]] as const)expect(validator(definition)(JSON.parse(readFileSync(join(directory,file),"utf8")))).toBe(true);
- await open(b);
+ expect(headerValidator(await readCheckpointV1(localPathsV1(b.options.worktree).checkpoint,()=>undefined))).toBe(true);
+ expect(validator("Machine")(JSON.parse(readFileSync(join(directory,"machine.json"),"utf8")))).toBe(true);
+ expect(existsSync(join(directory,"cursor.json"))||existsSync(join(directory,"clock.json"))).toBe(false);
+ const reopened=await open(b);
+ const memo=(name:string):Record<string,unknown>=>JSON.parse(Buffer.from(recallV1(reopened,name)!).toString("utf8")) as Record<string,unknown>;
+ expect(validator("Cursor")({version:1,cursors:memo("cursors")})).toBe(true);expect(validator("Clock")({version:1,...memo("clock")})).toBe(true);
  expect(await publish(b)).toMatchObject({published:0,deleted:0});
  write(a,"two.txt","2");await publish(a);
  expect(await follow(b)).toMatchObject({events:1,applied:1});
@@ -307,6 +315,20 @@ test("the loser of a concurrent edit is kept under lost/<hlc>/<path> and reporte
  expect((await publish(b)).published).toBe(0);
 });
 
+test("a read-only copy left under lost by an earlier round is written again instead of blocking the path, and the kept copy stays writable",async()=>{
+ const {machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
+ write(a,"s.txt","base text");await publish(a);await follow(b);
+ write(a,"s.txt","A wins again");write(b,"s.txt","B loses again");await publish(a);
+ const hlc=a.replica!.files.get("s.txt")?.hlc;
+ expect(typeof hlc,"the publisher records the clock of its event").toBe("string");
+ const earlier=join(b.options.worktree,".cache","f","lost",hlc as string,"s.txt");mkdirSync(join(earlier,".."),{recursive:true});writeFileSync(earlier,"half");chmodSync(earlier,0o444);
+ await follow(b);
+ const again=b.events.find(event=>event.event==="overwritten"&&event.path==="s.txt"),copy=join(b.options.worktree,".cache","f",again!.lost!);
+ expect(copy,"the copy is the one the earlier round left").toBe(earlier);
+ expect(readFileSync(copy,"utf8")).toBe("B loses again");expect(statSync(copy).mode&0o200,"the kept copy is writable").toBe(0o200);expect(read(b,"s.txt")).toBe("A wins again");
+ expect(b.events.filter(event=>event.event==="blocked")).toEqual([]);
+});
+
 test("a .gitignore change is honoured by publish and by the next scan",async()=>{
  const {store,machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
  write(a,".gitignore",`${fixture.gitignore}*.tmp\n`);await publish(a);await follow(b);
@@ -318,6 +340,32 @@ test("a .gitignore change is honoured by publish and by the next scan",async()=>
  expect((await publish(b)).published).toBe(1);
  await follow(a);
  expect(read(a,"scratch.tmp")).toBe("local only");
+});
+
+test("a commit replicates, and a gitignored file, a git lock, the index, the config and the reflog stay on the machine that wrote them",async()=>{
+ const {machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
+ write(a,"src/note.txt","edited");
+ write(a,".git/index","staged note");
+ write(a,".git/HEAD","ref: refs/heads/main\n");
+ write(a,".git/refs/heads/main","abc123\n");
+ write(a,".git/objects/ab/cd","blob");
+ write(a,"noise.log","local log");
+ write(a,".git/index.lock","lock");
+ write(a,".git/info/exclude","*.mine\n");
+ write(a,".git/config","[core]\n\tfilemode = true\n");
+ write(a,".git/logs/HEAD","reflog line\n");
+ write(a,".git/hooks/pre-commit","#!/bin/sh\n");
+ expect((await publish(a)).published).toBe(4);
+ await follow(b);
+ expect(read(b,"src/note.txt")).toBe("edited");
+ expect(existsSync(at(b,".git/index"))).toBe(false);
+ for(const private_ of [".git/config",".git/logs/HEAD",".git/hooks/pre-commit"])expect(existsSync(at(b,private_))).toBe(false);
+ expect(read(b,".git/HEAD")).toBe("ref: refs/heads/main\n");
+ expect(read(b,".git/refs/heads/main")).toBe("abc123\n");
+ expect(read(b,".git/objects/ab/cd")).toBe("blob");
+ expect(existsSync(at(b,"noise.log"))).toBe(false);
+ expect(existsSync(at(b,".git/index.lock"))).toBe(false);
+ expect(existsSync(at(b,".git/info/exclude"))).toBe(false);
 });
 
 test("a join starts from the newest snapshot, replays the journal after it and refuses an unrelated worktree",async()=>{
@@ -491,6 +539,15 @@ test("torn writer state is never read and torn local staging files and stale loc
  expect(JSON.parse(readFileSync(join(directory,"daemon.lock"),"utf8")).pid).toBe(process.pid);
 });
 
+test("verify leaves the derived git caches the pack gate keeps on a machine out of the drift, as the running replica does",async()=>{
+ const {machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
+ write(a,"p.txt","pristine");await publish(a);await follow(b);await shut(a);await shut(b);
+ write(b,".git/objects/info/commit-graphs/commit-graph-chain","local chain\n");write(b,".git/objects/info/packs","P pack-local.pack\n");
+ expect(await verifyV1(b.options)).toMatchObject({ok:true,drift:[]});
+ write(b,".git/packed-refs","# stray\n");
+ expect((await verifyV1(b.options)).drift.map(item=>[item.path,item.kind])).toEqual([[".git/packed-refs","extra-local"]]);
+});
+
 test("verify rehashes the tree against state and store and names every drift",async()=>{
  const {machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
  write(a,"p.txt","pristine");write(a,"q.txt","quiet");write(a,"r.txt","remote");await publish(a);await follow(b);await shut(a);await shut(b);
@@ -627,45 +684,45 @@ test("a future-dated event is held, earlier events and other origins proceed, an
  expect(skews()).toHaveLength(1);
 });
 
-test("state is a checkpoint plus an append-only log that survives a crash, a torn tail, a stale generation and a rollover",async()=>{
+test("state is a checkpoint plus an append-only delta log that survives a crash, a torn tail, a stale generation and a rollover",async()=>{
  const {machines}=await fleet(["a","b"]),[a,b]=machines as [Machine,Machine];
- const directory=join(b.options.worktree,".cache","f"),state=join(directory,"state.json"),log=join(directory,"state.log"),checkpoint=readFileSync(state,"utf8"),first=(JSON.parse(checkpoint) as {generation:number}).generation;
+ const paths=localPathsV1(b.options.worktree),header=async()=>(await readCheckpointV1(paths.checkpoint,()=>undefined))!,checkpoint=readFileSync(paths.checkpoint),first=(await header()).generation;
+ const scan=()=>scanWalV1(readFileSync(paths.wal)),records=()=>scan().payloads.flatMap(payload=>decodeRecordsV1(payload)),removal=(path:string)=>frameV1([...payloadsV1([{kind:"files",path,entry:null}])][0]!);
  write(a,"one.txt","1");write(a,"two.txt","2");await publish(a);await follow(b);
- expect(readFileSync(state,"utf8")).toBe(checkpoint);
- const lines=readFileSync(log,"utf8").trimEnd().split("\n").map(line=>JSON.parse(line) as {kind?:string;path?:string;entry?:{operation?:string}|null});
- for(const line of lines)expect(validator("StateLogLine")(line)).toBe(true);
- expect<unknown>(lines[0]).toEqual({generation:first});
- expect(lines.some(line=>line.kind==="files"&&line.path==="one.txt"&&line.entry?.operation==="put")).toBe(true);
- expect(lines.some(line=>line.kind==="queue"&&line.path==="one.txt"&&line.entry===null)).toBe(true);
+ expect(Buffer.compare(readFileSync(paths.checkpoint),checkpoint)).toBe(0);
+ expect(scan()).toMatchObject({generation:first,verdict:"clean"});
+ expect(records().some(record=>record.kind==="files"&&record.path==="one.txt"&&record.entry?.operation==="put")).toBe(true);
+ expect(records().some(record=>record.kind==="queue"&&record.path==="one.txt"&&record.entry===null)).toBe(true);
  await b.replica!.release();b.replica=undefined;
- appendFileSync(log,'{"kind":"files","path":"torn.txt","entry":{"hlc":"170');
+ appendFileSync(paths.wal,frameV1(new Uint8Array(40)).subarray(0,25));
+ expect(scan().verdict).toBe("torn");
  const crashed=await open(b);
  expect(crashed.files.get("one.txt")?.operation).toBe("put");expect(crashed.files.get("two.txt")?.operation).toBe("put");
  expect(crashed.files.has("torn.txt")).toBe(false);expect(crashed.queue.size).toBe(0);
- expect(readFileSync(log,"utf8").endsWith("}\n")).toBe(true);
+ expect(scan().verdict).toBe("clean");
  expect(await publish(b)).toMatchObject({published:0,deleted:0});
+ await checkpointReplicaV1(crashed);
+ const generation=(await header()).generation;
+ expect(generation).toBe(first+1);expect(statSync(paths.wal).size).toBe(0);
  await shut(b);
- expect(readFileSync(log,"utf8")).toBe("");
- const generation=(JSON.parse(readFileSync(state,"utf8")) as {generation:number}).generation;
- expect(generation).toBe(first+1);
- const removal=`${JSON.stringify({kind:"files",path:"one.txt",entry:null})}\n`;
- writeFileSync(log,`${JSON.stringify({generation:generation-1})}\n${removal}`);
+ writeFileSync(paths.wal,Buffer.concat([walHeaderV1(generation-1),removal("one.txt")]));
  const stale=await open(b);
- expect(stale.files.get("one.txt")?.operation).toBe("put");expect(statSync(log).size).toBe(0);
+ expect(stale.files.get("one.txt")?.operation).toBe("put");expect(statSync(paths.wal).size).toBe(0);
  await shut(b);
- writeFileSync(log,`${JSON.stringify({generation})}\n${removal}`);
+ writeFileSync(paths.wal,Buffer.concat([walHeaderV1(generation),removal("one.txt")]));
  const replayed=await open(b);
  expect(replayed.files.has("one.txt")).toBe(false);expect(replayed.files.get("two.txt")?.operation).toBe("put");
  await replayed.release();b.replica=undefined;
- const filler=Array.from({length:100_000},(_,index)=>JSON.stringify({kind:"files",path:`filler/${"x".repeat(120)}${index}`,entry:null})).join("\n");
- writeFileSync(log,`${JSON.stringify({generation})}\n${filler}\n`);
+ const filler=Array.from({length:100_000},(_,index)=>({kind:"files" as const,path:`filler/${"x".repeat(120)}${index}`,entry:null}));
+ writeFileSync(paths.wal,Buffer.concat([walHeaderV1(generation),...[...payloadsV1(filler)].map(frameV1)]));
  await open(b);
- expect(statSync(log).size).toBeGreaterThan(16*1024*1024);
+ expect(statSync(paths.wal).size).toBeGreaterThan(8*1024*1024);
  write(b,"roll.txt","r");
  expect((await publish(b)).published).toBe(1);
- expect(statSync(log).size).toBe(0);
- const rolled=JSON.parse(readFileSync(state,"utf8")) as {generation:number;files:Record<string,unknown>};
- expect(rolled.generation).toBe(generation+1);expect(Object.keys(rolled.files)).toContain("roll.txt");
+ expect(statSync(paths.wal).size).toBe(0);
+ expect((await header()).generation).toBe(generation+1);
+ await shut(b);
+ expect((await open(b)).files.get("roll.txt")?.operation).toBe("put");
  await shut(b);
 },60000);
 
@@ -755,7 +812,93 @@ for(const seed of [11,12])test(`five machines on two relayed stores converge in 
  try{await chaos(seed,stages);}finally{for(const who of stages.flatMap(stage=>stage.members))await shut(who);}
 },120000);
 
+test("the sync switch agrees with the python oracle and holds the tree while off",async()=>{
+ const root=temp("switch"),file=join(root,".cache","f","sync.json");
+ expect(await syncEnabledV1(root)).toBe(true);
+ const absent=Bun.spawnSync([python!,"-I",oracle,"sync",file],{stdout:"pipe",stderr:"pipe"});
+ expect(absent.exitCode).toBe(0);
+ expect(absent.stdout.toString().trim()).toBe("true");
+ await setSyncEnabledV1(root,false);
+ expect(await syncEnabledV1(root)).toBe(false);
+ const present=Bun.spawnSync([python!,"-I",oracle,"sync",file],{stdout:"pipe",stderr:"pipe"});
+ expect(present.exitCode).toBe(0);
+ expect(present.stdout.toString().trim()).toBe("false");
+ await setSyncEnabledV1(root,true);
+ expect(existsSync(file)).toBe(false);
+ const {machines}=await fleet(["a","b"]);
+ const [a,b]=machines;
+ try{
+  await shut(a);await shut(b);
+  await setSyncEnabledV1(a.options.worktree,false);
+  write(a,"held.txt","stay");
+  const stop=new AbortController();
+  const running=runV1(a.options,stop.signal,event=>a.events.push(event));
+  await until(()=>a.events.some(event=>event.event==="sync"&&event.reason==="off"));
+  stop.abort();
+  await running;
+  await open(b);
+  await follow(b);
+  expect(read(b,"held.txt")).toBeUndefined();
+ }finally{for(const who of machines)await shut(who);}
+});
+
 for(const seed of [21,22])test(`machines killed and reopened in the middle of random edits still converge (seed ${seed})`,async()=>{
  const stages=seed===21?[await singleStage(["a","b","c","d","e"])]:await twoStages();
  try{await chaos(seed,stages,{kill:true});}finally{for(const who of stages.flatMap(stage=>stage.members))await shut(who);}
 },120000);
+
+const retirement=(origin:string,retired:boolean,offset:number,by:string="a"):RetirementV1=>({version:1,originId:origin,by,hlc:formatHlcV1({ms:1_700_000_000_000+offset,counter:0},by),wallMs:1_700_000_000_000+offset,reason:retired?"left the fleet":"",retired});
+
+test("retire reads its origin as the first argument and refuses every other positional word",()=>{
+ const parsed=parseReplicaArgumentsV1(["retire","g1-m03","--reason","left the fleet","--force"]);
+ expect([parsed.operation,parsed.target,parsed.values["--reason"],parsed.flags.has("--force")]).toEqual(["retire","g1-m03","left the fleet",true]);
+ expect(parseReplicaArgumentsV1(["retire","--undo"]).target).toBeUndefined();
+ expect(parseReplicaArgumentsV1(["retire","g1-m03","--undo"]).flags.has("--undo")).toBe(true);
+ expect(()=>parseReplicaArgumentsV1(["retire","g1-m03","--bogus"])).toThrow("Unknown option for retire");
+ expect(()=>parseReplicaArgumentsV1(["status","g1-m03"])).toThrow("Unknown option for status");
+});
+
+test("a retired daemon reports one retired event, publishes and applies nothing, and resumes after the undo",async()=>{
+ const store=temp("store"),a=machine("a",store),b=machine("b",store);
+ write(a,".gitignore",fixture.gitignore);write(a,"x.txt","one");await seedV1(a.options);await joinV1(b.options);
+ await open(a);
+ await writeRetirementV1(store,retirement("b",true,0));
+ const controller=new AbortController(),running=runV1(b.options,controller.signal,event=>b.events.push(event));
+ try{
+  await until(()=>b.events.some(event=>event.event==="retired"));
+  write(b,"parked.txt","never");write(a,"y.txt","from a");await publish(a);
+  await Bun.sleep(700);
+  expect(b.events.filter(event=>event.event==="retired")).toHaveLength(1);
+  expect(b.events.some(event=>event.event==="published")).toBe(false);
+  expect(await readHeadV1(store,"b")).toBeUndefined();
+  expect(read(b,"y.txt")).toBeUndefined();
+  const report=await statusV1(b.options);
+  expect(validator("Status")(report),JSON.stringify(validator("Status").errors?.[0])).toBe(true);
+  expect(report.retired).toEqual({by:"a",reason:"left the fleet",wallMs:1_700_000_000_000});
+  await writeRetirementV1(store,retirement("b",false,1000));
+  await until(()=>read(b,"y.txt")==="from a");
+  await until(()=>existsSync(join(store,"v1","origins","b","head.json")));
+  expect(b.events.filter(event=>event.event==="retired")).toHaveLength(1);
+  expect(b.events.some(event=>event.event==="sync"&&event.reason==="on")).toBe(true);
+  expect((await statusV1(b.options)).retired).toBeNull();
+ }finally{controller.abort();await running;await shut(a);}
+},60000);
+
+test("the relay copies retirement records of every origin, the newer record wins in both directions, and a compaction keeps them",async()=>{
+ const one=temp("store1"),two=temp("store2"),a=machine("a",one);
+ write(a,".gitignore",fixture.gitignore);write(a,"x.txt","one");await seedV1(a.options);
+ await writeRetirementV1(one,retirement("a",true,0));
+ await writeRetirementV1(one,retirement("z9",true,0));
+ const pull=async(from:string,group:string,into:string)=>relayOnceV1(into,from,await homedOriginsV1(from,group));
+ await pull(one,"g1",two);
+ expect(readFileSync(retiredPathV1(two,"a"),"utf8")).toBe(readFileSync(retiredPathV1(one,"a"),"utf8"));
+ expect((await readRetirementV1(two,"z9"))?.retired).toBe(true);
+ await writeRetirementV1(two,retirement("a",false,5000,"b"));
+ await pull(one,"g1",two);
+ expect((await readRetirementV1(two,"a"))?.retired).toBe(false);
+ await pull(two,"g1",one);
+ expect(await readRetirementV1(one,"a")).toEqual(retirement("a",false,5000,"b"));
+ await compactV1(one,"a",0);
+ expect(await readRetirementV1(one,"a")).toEqual(retirement("a",false,5000,"b"));
+ expect(existsSync(retiredPathV1(one,"z9"))).toBe(true);
+});

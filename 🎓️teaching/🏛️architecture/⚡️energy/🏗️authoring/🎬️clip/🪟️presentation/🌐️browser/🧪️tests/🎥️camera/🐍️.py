@@ -13,6 +13,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framewor
 sys.path.insert(0, str(ROOT))
 CASES = json.loads(Path(__file__).with_name("🔣️.json").read_text(encoding="utf-8"))
 RENDER = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🥞️hierarchy.🖌️render.🐍️")
+SYNTHETIC = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🖼️posters.🧪️tests.🧰️synthetic.🐍️")
 
 
 class CameraFrame(unittest.TestCase):
@@ -27,7 +28,8 @@ class CameraFrame(unittest.TestCase):
             requests = [{"video_id": CASES["scene"], **frame, "output": work / f"{index}.png", "snapshot": snapshot}
                         for index, frame in enumerate(CASES["frames"])]
             settings = {"language": "en", "profile": "preview", "resolution": None, "fps": 15, "audience": "speaker"}
-            results = RENDER.frame_batch(requests, settings)
+            with SYNTHETIC.captured():
+                results = RENDER.frame_batch(requests, settings)
             self.assertEqual(len(results), len(requests))
             for result in results:
                 self.assertTrue(result["browser"]["border_compositor"]["ready_before_capture"])

@@ -12,9 +12,10 @@ export function declaredTypeScriptProjectsV1(inputs: ScriptInputsValueV1, worksp
 export function relativeScriptInputs(entries: ScriptInputsValueV1, workspaceRoot: string, cache?: ScriptInputsValueV1, requiredSources?: boolean, resourceEntries?: ScriptInputsValueV1, commands?: ReadonlyMap<string, readonly string[]>): Promise<ScriptInputsValueV1>;
 export function withoutSchedulingV1(closure: readonly ScriptInputsValueV1[], prefixes?: readonly string[]): ScriptInputsValueV1[];
 export function nativeCommandInputs(workspaceRoot: string, scripts: ScriptInputsValueV1): Promise<ScriptInputsValueV1>;
-export function targetScriptSources(target: ScriptInputsValueV1, workspaceRoot: string, scripts: ScriptInputsValueV1, projectRoot?: string, nativeManifest?: ScriptInputsValueV1): Promise<ScriptInputsValueV1>;
+export function targetScriptEntriesV1(target: ScriptInputsValueV1, workspaceRoot: string, projectRoot?: string, nativeManifest?: ScriptInputsValueV1): Promise<{resources: string[]; entries: Set<string>; words: Map<string, Set<string> | null>; fallback: boolean}>;
+export function targetScriptSources(target: ScriptInputsValueV1, workspaceRoot: string, scripts: ScriptInputsValueV1, projectRoot?: string, nativeManifest?: ScriptInputsValueV1, cover?: "native" | "generic" | "queries"): Promise<ScriptInputsValueV1>;
 export function ownerCommandChildV1(options: ScriptInputsValueV1, bound: ScriptInputsValueV1): { readonly cwd: string; readonly command: string } | undefined;
-export function targetScriptClosure(target: ScriptInputsValueV1, workspaceRoot: string, scripts: ScriptInputsValueV1, projectRoot?: string): Promise<ScriptInputsValueV1>;
+export function targetScriptClosure(target: ScriptInputsValueV1, workspaceRoot: string, scripts: ScriptInputsValueV1, projectRoot?: string, cover?: "native" | "generic" | "queries"): Promise<ScriptInputsValueV1>;
 export function nativeLockInputs(command: ScriptInputsValueV1): ScriptInputsValueV1;
 export function nativeTargetCommandInputs(target: ScriptInputsValueV1, workspaceRoot: string, fallback: ScriptInputsValueV1, scripts: ScriptInputsValueV1, projectRoot?: string): Promise<ScriptInputsValueV1>;
 export function genericTargetCommandInputs(target: ScriptInputsValueV1, workspaceRoot: string, fallback: ScriptInputsValueV1, scripts?: ScriptInputsValueV1, projectRoot?: string): Promise<ScriptInputsValueV1>;
@@ -41,5 +42,10 @@ export function sharedClosureRecipesV1(scripts: ScriptInputsValueV1): readonly R
 /** 🧰️ Derives the shared closure entries once, in order, before the owners start. */
 export function primeSharedClosuresV1(workspaceRoot: string, scripts: ScriptInputsValueV1, options?: { signal?: AbortSignal; progress?: (event: { done: number; total: number }) => unknown; recipes?: readonly Record<string, unknown>[] }): Promise<{ recipes: number; derived: number; loaded: number; stale: number }>;
 
+/** 🚚️ The closure entries of a project record as portable bundles and back. */
+export const closureTravelV1: Readonly<{ export(workspaceRoot: string, image: string): Promise<readonly Readonly<{ recipeKey: string; bundle: unknown }>[]>; import(workspaceRoot: string, bundles: readonly Readonly<{ recipeKey: string; bundle: unknown }>[]): Promise<number> }>;
+
 /** 🫧️ Releases what one finished owner left in the shared script input cache. */
-export function releaseOwnerStateV1(scripts: ScriptInputsValueV1): void;
+export function closureEntriesWithLayersV1(): number;
+export function chargedToSharedV1<T>(cache: object, work: () => Promise<T>): Promise<T>;
+export function releaseOwnerStateV1(scripts: ScriptInputsValueV1, options?: { shrink?: boolean; gate?: { grantBytes(): number | undefined; footprintBytes(): number } }): void;

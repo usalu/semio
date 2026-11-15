@@ -355,7 +355,7 @@ fn tendon(c: &Ctx, out: &mut Out, grips: &mut Vec<Grip>) {
     let ent = c.eref(EntityKind::Fastener, "tendon", ".prestress");
     let grip = Grip {
         id: format!("{}/tendon/eccentricity", m.id),
-        entity: ent,
+        entity: ent.clone(),
         kind: along(mul(&f.z, -1.0)),
         style: GripStyle::Diamond,
         anchor: at(f, l / 2.0, 0.0, -e),

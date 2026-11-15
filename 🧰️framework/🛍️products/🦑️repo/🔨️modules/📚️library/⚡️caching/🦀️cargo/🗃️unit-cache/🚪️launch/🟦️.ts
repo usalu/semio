@@ -5,10 +5,12 @@ import {appendFileSync,chmodSync,closeSync,existsSync,mkdirSync,openSync,readFil
 import {dirname,join} from "node:path";
 import {createHash,randomBytes} from "node:crypto";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
+import {sealModulesV1,type SealedModulesV1} from "../🏛️seal/🟦️.ts";
 import {jobserverProbeShellV1,shellQuoteV1} from "../🎰️jobserver/🟦️.ts";
 import {collectGarbageSingleFlightV1,gcOutOfSpaceV1,gcPressureV1,measureVolumeV1,type GcPressureV1} from "../🧹️gc/🟦️.ts";
 import {releaseBallastV1} from "../🧹️gc/🛟️ballast/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {fleetCacheRootV1,readLocalFleetCacheFactsV1,resolveRemoteCacheV1} from "../../../../🏗️build/🌐️remote-cache/🛰️fleet/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
 /** 📍️ The wrapper script Cargo runs in place of rustc. */
@@ -28,8 +30,16 @@ export function focusFromCargoArgumentsV1(args:readonly string[]):string[]{
  return[...new Set(names)].sort();
 }
 
-/** 🪞️ Where the executable stand-in for the compiler wrapper lives: Cargo runs it as `<wrapper> <rustc> <arguments>`. On Windows it is a native executable named by the digest of the code it embeds (`rustc-wrapper-<digest>.exe`, see {@link ensureUnitCacheShimV1}), because Cargo passes arguments with quotes (`--cfg feature="std"`) and Rust refuses to hand those to a batch file. */
-export function unitCacheShimPathV1(cacheRoot:string,platform:NodeJS.Platform=process.platform,digest?:string):string{return join(cacheRoot,"bin",platform==="win32"?`rustc-wrapper-${digest??"native"}.exe`:"rustc-wrapper");}
+/** 🏛️ Seals the module set the compiler wrapper runs (script and native entry, with every file they import) into the cache root and answers the sealed copies: every process of one build session runs this snapshot, so a concurrent edit of the live tooling reaches the next session only, and a tree that is mid-edit is retried and never sealed (see {@link sealModulesV1}). */
+export function sealedUnitCacheV1(cacheRoot:string,runtime:string=process.execPath):SealedModulesV1{return sealModulesV1(cacheRoot,[UNIT_CACHE_SCRIPT_V1,UNIT_CACHE_ENTRY_V1],{checked:[UNIT_CACHE_SCRIPT_V1],runtime});}
+
+/** 📜️ The sealed wrapper script for a process that names it in its environment (`SEMIO_UNIT_CACHE_SCRIPT`), or `undefined` after a bilingual notice when no snapshot could be sealed (the unit cache is then off for that process, never half-working). */
+export function sealedUnitCacheScriptV1(cacheRoot:string,report:(line:string)=>void=line=>{process.stderr.write(line+"\n");}):string|undefined{
+ try{return sealedUnitCacheV1(cacheRoot).entries[0];}catch(error){report(unitCacheWrapperRefusalV1(String((error as Error)?.message??error).split("\n")[0]!));return undefined;}
+}
+
+/** 🪞️ Where the executable stand-in for the compiler wrapper lives: Cargo runs it as `<wrapper> <rustc> <arguments>`. Its name carries the digest of the code it runs (`rustc-wrapper-<digest>`; on Windows a native executable `….exe`, see {@link ensureUnitCacheShimV1}, because Cargo passes arguments with quotes (`--cfg feature="std"`) and Rust refuses to hand those to a batch file), so sessions of different tooling never share a stand-in. */
+export function unitCacheShimPathV1(cacheRoot:string,platform:NodeJS.Platform,digest:string):string{return join(cacheRoot,"bin",`rustc-wrapper-${digest}${platform==="win32"?".exe":""}`);}
 
 /** 📜️ The text of the POSIX stand-in: it names the runtime and the wrapper script by absolute path, so no `PATH` entry and no file mode of the tracked script matters. Before the runtime starts (and opens descriptors of its own at the lowest free numbers) it runs {@link jobserverProbeShellV1}, which exports the jobserver pair `CARGO_MAKEFLAGS` names only when both descriptors are open: a build script does not inherit them unless a stand-in hands them on, and the wrapper must never pass a descriptor that is not Cargo's. */
 export function unitCacheShimSourceV1(runtime:string,script:string):string{
@@ -66,17 +76,33 @@ function ensureNativeWrapperV1(cacheRoot:string,runtime:string,entry:string,plat
  return path;
 }
 
-/** 🛠️ Writes the stand-in once (atomically, executable) and returns its path. POSIX: a `/bin/sh` script. Windows: a native executable built from `🏁️entry.ts`; a build that fails throws, and {@link unitCacheEnvironmentV1} turns that into a bilingual refusal. Build scripts that run `$RUSTC` reach the real compiler; only Cargo's own compiler calls go through the wrapper. */
-export function ensureUnitCacheShimV1(cacheRoot:string,runtime:string=process.execPath,script:string=UNIT_CACHE_SCRIPT_V1,platform:NodeJS.Platform=process.platform,build:UnitCacheNativeBuildV1=UNIT_CACHE_NATIVE_BUILD_V1,entry:string=UNIT_CACHE_ENTRY_V1):string{
- if(platform==="win32")return ensureNativeWrapperV1(cacheRoot,runtime,entry,platform,build);
- const path=unitCacheShimPathV1(cacheRoot,platform),text=unitCacheShimSourceV1(runtime,script);
+/** 🛠️ Writes the stand-in once (atomically, executable) and returns its path. Unless the caller names `script` and `entry` itself, both are the sealed copies of this session ({@link sealedUnitCacheV1}), so neither the stand-in nor the native executable ever runs or embeds a live file that a peer is editing. POSIX: a `/bin/sh` script named by the snapshot digest. Windows: a native executable built from the sealed `🏁️entry.ts`; a build or seal that fails throws, and {@link unitCacheEnvironmentV1} turns that into a bilingual refusal. Build scripts that run `$RUSTC` reach the real compiler; only Cargo's own compiler calls go through the wrapper. */
+export function ensureUnitCacheShimV1(cacheRoot:string,runtime:string=process.execPath,script?:string,platform:NodeJS.Platform=process.platform,build:UnitCacheNativeBuildV1=UNIT_CACHE_NATIVE_BUILD_V1,entry?:string):string{
+ const sealed=(platform==="win32"?entry:script)===undefined?sealedUnitCacheV1(cacheRoot,runtime):undefined;
+ script??=sealed?.entries[0];entry??=sealed?.entries[1];
+ for(const digest of sealed?.removed??[])rmSync(unitCacheShimPathV1(cacheRoot,platform,digest),{force:true});
+ if(platform==="win32")return ensureNativeWrapperV1(cacheRoot,runtime,entry!,platform,build);
+ const path=unitCacheShimPathV1(cacheRoot,platform,sealed?.digest??createHash("sha256").update(runtime+"\0"+script!).digest("hex").slice(0,UNIT_CACHE_POLICY_V1.seal.digestCharacters)),text=unitCacheShimSourceV1(runtime,script!);
  let current:string|undefined;try{current=readFileSync(path,"utf8");}catch{}
  if(current!==text){mkdirSync(dirname(path),{recursive:true});const temporary=path+"."+randomBytes(4).toString("hex");writeFileSync(temporary,text);chmodSync(temporary,0o755);renameSync(temporary,path);}
  return path;
 }
 
+/** 🛰️ The fleet cache as the rustc wrapper reads it (`SEMIO_REMOTE_CACHE_*`), resolved once per Cargo process by the one resolver of the remote cache (the environment first, field by field, then the fleet facts of this machine's local copy; the copy is read, never refreshed, so a launch waits for no network). Empty when the tier is switched off (`SEMIO_UNIT_CACHE_REMOTE=off`) or nothing names a cache. The token travels in the environment like the Nx cache token does: every process of the Cargo tree can read it. */
+export function fleetRemoteEnvironmentV1(environment:Readonly<Record<string,string|undefined>>=process.env,workspaceRoot?:string):Record<string,string>{
+ try{
+  if(environment.SEMIO_UNIT_CACHE_REMOTE==="off")return{};
+  const root=workspaceRoot??fleetCacheRootV1(environment),copy=root===undefined?undefined:readLocalFleetCacheFactsV1(root);
+  const resolved=resolveRemoteCacheV1(environment,copy===undefined||root===undefined?{}:{root,copy});
+  if(resolved===undefined)return{};
+  const contract=resolved.contract;
+  return{SEMIO_REMOTE_CACHE_ENDPOINT:contract.endpoint,SEMIO_REMOTE_CACHE_INSTANCE:contract.instance,SEMIO_REMOTE_CACHE_ACCESS:contract.access,SEMIO_REMOTE_CACHE_UPLOAD:String(contract.upload),...(resolved.token===undefined?{}:{SEMIO_REMOTE_CACHE_TOKEN:resolved.token}),...(resolved.generation===null?{}:{SEMIO_REMOTE_CACHE_GENERATION:String(resolved.generation)}),...(resolved.environment.SEMIO_REMOTE_CACHE_SIGNED==="1"&&root!==undefined?{SEMIO_REMOTE_CACHE_SIGNED:"1",SEMIO_UNIT_CACHE_WORKSPACE_ROOT:root}:{})};
+ }catch{return{};}
+}
+
 /** 🧩️ The environment block that routes every compiler call of one Cargo process through the unit cache: Cargo runs the stand-in as `<wrapper> <rustc> <arguments>`, the wrapper script serves a unit from the cache or falls back to the memory-admitting scheduler for every miss. `RUSTC` stays the real compiler, so build scripts that exec it work whatever the file mode of the script or `PATH`. A launcher adds this after its storage admission and never before; without a `scheduler` a miss runs the compiler directly. */
-export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler?:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;runtime?:string;platform?:NodeJS.Platform;build?:UnitCacheNativeBuildV1;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
+export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:string;laneRoot:string;scheduler?:string;compiler:string;toolchain:string;focus:readonly string[];slots?:number;workspaceRoot?:string;environment?:Readonly<Record<string,string|undefined>>;runtime?:string;platform?:NodeJS.Platform;build?:UnitCacheNativeBuildV1;features?:Readonly<{buildScripts?:boolean;brokerReplay?:boolean}>}>):Record<string,string>{
+ const workspace=input.workspaceRoot??fleetCacheRootV1(input.environment??process.env);
  let wrapper:string;
  try{wrapper=ensureUnitCacheShimV1(input.cacheRoot,input.runtime,undefined,input.platform,input.build);}
  catch(error){return{RUSTC_WRAPPER:"",SEMIO_UNIT_CACHE:"off",SEMIO_UNIT_CACHE_REFUSAL:unitCacheWrapperRefusalV1(String((error as Error)?.message??error).split("\n")[0]!)};}
@@ -91,6 +117,8 @@ export function unitCacheEnvironmentV1(input:Readonly<{cacheRoot:string;lane:str
   SEMIO_UNIT_CACHE_FOCUS:input.focus.join(","),
   ...(input.features?.buildScripts?{SEMIO_UNIT_CACHE_BUILD_SCRIPTS:"on"}:{}),
   ...(input.features?.brokerReplay?{SEMIO_UNIT_CACHE_BROKER_REPLAY:"on"}:{}),
+  ...(workspace?{SEMIO_UNIT_CACHE_WORKSPACE_ROOT:workspace}:{}),
+  ...fleetRemoteEnvironmentV1(input.environment,workspace),
  };
 }
 
@@ -122,7 +150,7 @@ export function startUnitCacheCollectorV1(options:Readonly<{root:string;capacity
   try{if(statSync(log).size>UNIT_CACHE_POLICY_V1.gc.eventLogMaximumBytes)renameSync(log,log+".1");}catch{}
   const fd=openSync(log,"a");
   try{
-   const child=spawn(options.runtime??process.execPath,[options.script??UNIT_CACHE_SCRIPT_V1,"--semio-unit-cache","gc","--single-flight",...options.watch?["--watch"]:[],"--root",options.root,"--capacity",String(options.capacityBytes)],{env,detached:true,stdio:["ignore",fd,fd],windowsHide:true});
+   const child=spawn(options.runtime??process.execPath,[options.script??sealedUnitCacheV1(options.root,options.runtime).entries[0]!,"--semio-unit-cache","gc","--single-flight",...options.watch?["--watch"]:[],"--root",options.root,"--capacity",String(options.capacityBytes)],{env,detached:true,stdio:["ignore",fd,fd],windowsHide:true});
    child.on("error",error=>{try{appendFileSync(log,"launch failed: "+error.message+"\n");}catch{}});child.unref();
    if(child.pid!==undefined)try{setPriority(child.pid,10);}catch(error){appendFileSync(log,"priority not lowered: "+String((error as Error).message)+"\n");}
   }finally{closeSync(fd);}
@@ -153,10 +181,14 @@ export function relieveUnitStorageV1(store:string,options:Readonly<{environment:
 }
 
 /** ⏱️ Runs a long compile and, every `recheckMilliseconds`, looks at the image again with `recheck` (never awaited, never failing the compile): a Cargo process can write gigabytes after the launch decision was taken, so the watching collector is (re)started while the compile runs, not only before it. */
-export async function withUnitPressureRecheckV1<T>(recheck:()=>Promise<unknown>,body:()=>Promise<T>,intervalMilliseconds:number=policy.gc.recheckMilliseconds):Promise<T>{
- const timer=setInterval(()=>{void recheck().catch(()=>undefined);},intervalMilliseconds);timer.unref?.();
- try{return await body();}finally{clearInterval(timer);}
+export async function withUnitPressureRecheckV1<T>(recheck:()=>Promise<unknown>,body:()=>Promise<T>,intervalMilliseconds:number=policy.gc.recheckMilliseconds,every:UnitRecheckTimerV1=realRecheckTimerV1):Promise<T>{
+ const stop=every(()=>{void recheck().catch(()=>undefined);},intervalMilliseconds);
+ try{return await body();}finally{stop();}
 }
+
+/** ⏲️ A repeating timer: starts calling `tick` every `milliseconds` and answers the function that stops it. Injectable so a test drives the ticks itself. */
+export type UnitRecheckTimerV1=(tick:()=>void,milliseconds:number)=>()=>void;
+const realRecheckTimerV1:UnitRecheckTimerV1=(tick,milliseconds)=>{const timer=setInterval(tick,milliseconds);timer.unref?.();return()=>clearInterval(timer);};
 
 /** 🪐️ Runs a build once more after it failed with the operating system's out-of-space error: the unit cache of the store is collected right now (single-flight) and the failure that came back from the first run is only rethrown when the second run fails too or the error was something else. */
 export async function retryAfterOutOfSpaceV1<T>(options:Readonly<{store:string;language:"en"|"de";report:(line:string)=>void}>,run:()=>Promise<T>):Promise<T>{

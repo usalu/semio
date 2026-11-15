@@ -19,7 +19,7 @@ pub(super) fn preflight(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, con
     let limits = control.limits();
     control.allocation_stage(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint, allocation| {
         let mut callback = |event: semio_framework_value::native_encoding::NativeEncodeProgress| checkpoint(event.completed, event.total);
-        let mut native = NativeEncodeControl::new_forwarded(remaining, &mut callback, allocation);
+        let mut native = allocation.encode(remaining, &mut callback);
         let result = (|| {
             let count = measured(snapshot, encoding, limits, &mut native)?;
             if count > remaining.saturating_sub(native.owned_bytes()) {

@@ -95,7 +95,7 @@ impl En1999Snapshot {
   for(n,x)in self.fire_insulations.iter().enumerate(){out.insert_float("en1999_fire_insulation",&[Cell::Integer(1),ordinal(n)?,Cell::Text(&x.id),Cell::Text(&x.fire_id),Cell::Real(x.thickness),Cell::Real(x.conductivity),Cell::Real(x.specific_heat),Cell::Real(x.density)],FIRE_INSULATION)?;}
         Ok(())
     }
-    fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {semio_s_artifact_norm_contract::sqlite_native::schema(En1999Snapshot::SQLITE_SCHEMA,23,34,control)?; let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
+    fn admit_sqlite_values(&self, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {semio_s_artifact_norm_contract::sqlite_native::schema(En1999Snapshot::SQLITE_SCHEMA,25,34,control)?; let mut out = RowWriter::borrowed(control, phase)?; self.write_sqlite_rows(&mut out)?; out.finish_borrowed() }
 }
 impl ArtifactSqliteSnapshotHost for En1999Snapshot{
  
@@ -115,23 +115,23 @@ impl ArtifactSqliteSnapshotHost for En1999Snapshot{
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(), ValueError>{self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;
   let mut b=NativeEncodingBound::file_only(c)?;let mut rows=1;admit_rows(&mut b,&mut rows,self.materials.len())?;admit_rows(&mut b,&mut rows,self.sections.len())?;admit_rows(&mut b,&mut rows,self.members.len())?;admit_rows(&mut b,&mut rows,self.connections.len().checked_mul(3).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 connection row overflow"))?)?;admit_rows(&mut b,&mut rows,self.fire_scenarios.len())?;admit_rows(&mut b,&mut rows,self.fatigue_details.len())?;admit_rows(&mut b,&mut rows,self.cold_formed.len())?;admit_rows(&mut b,&mut rows,self.shells.len())?;admit_rows(&mut b,&mut rows,self.placements.len())?;admit_rows(&mut b,&mut rows,self.weld_runs.len())?;admit_rows(&mut b,&mut rows,self.outline_vertices.len())?;admit_rows(&mut b,&mut rows,self.fatigue_categories.len())?;admit_rows(&mut b,&mut rows,self.patch_loads.len())?;admit_rows(&mut b,&mut rows,self.ring_stiffeners.len())?;admit_rows(&mut b,&mut rows,self.transverse_stiffeners.len())?; admit_rows(&mut b,&mut rows,self.sheet_profiles.len())?; admit_rows(&mut b,&mut rows,self.fire_insulations.len())?;
   for s in &self.sections{admit_rows(&mut b,&mut rows,s.elements.len())?;}for m in &self.members{admit_rows(&mut b,&mut rows,m.actions.len())?;}for v in &self.connections{admit_rows(&mut b,&mut rows,v.actions.len())?;}for s in &self.cold_formed{admit_rows(&mut b,&mut rows,s.actions.len())?;}for s in &self.shells{admit_rows(&mut b,&mut rows,s.actions.len())?;}b.add(16384)?;
-  for m in &self.materials{b.add(2048)?;for v in [&m.id,&m.designation,&m.product_form]{b.repeated(v.len(),24)?;}}
-  for s in &self.sections{b.add(16384)?;for v in [&s.id,&s.kind]{b.repeated(v.len(),24)?;}for p in &s.elements{b.add(8192)?;for t in [&p.id,&p.weld_process,&p.weld_direction]{b.repeated(t.len(),24)?;}}}
-  for m in &self.members{b.add(16384)?;for v in [&m.id,&m.section_id,&m.material_id]{b.repeated(v.len(),24)?;}bound_actions(&m.actions,&mut b)?;}
-  for v in &self.connections{b.add(32768)?;for t in [&v.id,&v.member_id,&v.material_id,&v.kind,&v.bolts.material,&v.welds.filler_alloy]{b.repeated(t.len(),24)?;}bound_actions(&v.actions,&mut b)?;}
-  for f in &self.fire_scenarios{b.add(8192)?;for t in [&f.id,&f.member_id]{b.repeated(t.len(),24)?;}}
-  for f in &self.fatigue_details{b.add(16384)?;for t in [&f.id,&f.member_id,&f.detail_category]{b.repeated(t.len(),24)?;}}
-  for s in &self.cold_formed{b.add(12288)?;for t in [&s.id,&s.material_id]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
-  for s in &self.shells{b.add(12288)?;for t in [&s.id,&s.material_id,&s.fabrication_class]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
+  for m in &self.materials{b.add(2048)?;for v in [m.id.as_str(),m.designation.as_str(),product_form_text(m.product_form)]{b.repeated(v.len(),24)?;}}
+  for s in &self.sections{b.add(16384)?;for v in [s.id.as_str(),section_kind_text(s.kind)]{b.repeated(v.len(),24)?;}for p in &s.elements{b.add(8192)?;for t in [p.id.as_str(),weld_process_text(p.weld_process),weld_direction_text(p.weld_direction)]{b.repeated(t.len(),24)?;}}}
+  for m in &self.members{b.add(16384)?;for v in [m.id.as_str(),m.section_id.as_str(),m.material_id.as_str()]{b.repeated(v.len(),24)?;}bound_actions(&m.actions,&mut b)?;}
+  for v in &self.connections{b.add(32768)?;for t in [v.id.as_str(),v.member_id.as_str(),v.material_id.as_str(),connection_kind_text(v.kind),v.bolts.material.as_str(),v.welds.filler_alloy.as_str()]{b.repeated(t.len(),24)?;}bound_actions(&v.actions,&mut b)?;}
+  for f in &self.fire_scenarios{b.add(8192)?;for t in [f.id.as_str(),f.member_id.as_str()]{b.repeated(t.len(),24)?;}}
+  for f in &self.fatigue_details{b.add(16384)?;for t in [f.id.as_str(),f.member_id.as_str(),f.detail_category.as_str()]{b.repeated(t.len(),24)?;}}
+  for s in &self.cold_formed{b.add(12288)?;for t in [s.id.as_str(),s.material_id.as_str()]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
+  for s in &self.shells{b.add(12288)?;for t in [s.id.as_str(),s.material_id.as_str(),fabrication_class_text(s.fabrication_class)]{b.repeated(t.len(),24)?;}bound_actions(&s.actions,&mut b)?;}
   for p in &self.placements{b.add(8192)?;b.repeated(p.id.len(),24)?;}
-  for w in &self.weld_runs{b.add(12288)?;for t in [&w.id,&w.member_id,&w.element_id,&w.process,&w.direction]{b.repeated(t.len(),24)?;}}
-  for v in &self.outline_vertices{b.add(8192)?;for t in [&v.id,&v.section_id,&v.ring,&v.element_id]{b.repeated(t.len(),24)?;}}
-  for x in &self.fatigue_categories{b.add(8192)?;for t in [&x.id,&x.member_id,&x.element_id,&x.detail_category,&x.detail_type]{b.repeated(t.len(),24)?;}}
-  for x in &self.patch_loads{b.add(8192)?;for t in [&x.id,&x.subject_id,&x.position]{b.repeated(t.len(),24)?;}}
-  for x in &self.ring_stiffeners{b.add(8192)?;for t in [&x.id,&x.shell_id]{b.repeated(t.len(),24)?;}}
-  for x in &self.transverse_stiffeners{b.add(8192)?;for t in [&x.id,&x.girder_id,&x.sides]{b.repeated(t.len(),24)?;}}
-  for x in &self.sheet_profiles{b.add(8192)?;for t in [&x.id,&x.sheet_id]{b.repeated(t.len(),24)?;}}
-  for x in &self.fire_insulations{b.add(8192)?;for t in [&x.id,&x.fire_id]{b.repeated(t.len(),24)?;}}
+  for w in &self.weld_runs{b.add(12288)?;for t in [w.id.as_str(),w.member_id.as_str(),w.element_id.as_str(),weld_process_text(w.process),weld_direction_text(w.direction)]{b.repeated(t.len(),24)?;}}
+  for v in &self.outline_vertices{b.add(8192)?;for t in [v.id.as_str(),v.section_id.as_str(),outline_ring_text(v.ring),v.element_id.as_str()]{b.repeated(t.len(),24)?;}}
+  for x in &self.fatigue_categories{b.add(8192)?;for t in [x.id.as_str(),x.member_id.as_str(),x.element_id.as_str(),x.detail_category.as_str(),detail_type_text(x.detail_type)]{b.repeated(t.len(),24)?;}}
+  for x in &self.patch_loads{b.add(8192)?;for t in [x.id.as_str(),x.subject_id.as_str(),patch_load_position_text(x.position)]{b.repeated(t.len(),24)?;}}
+  for x in &self.ring_stiffeners{b.add(8192)?;for t in [x.id.as_str(),x.shell_id.as_str()]{b.repeated(t.len(),24)?;}}
+  for x in &self.transverse_stiffeners{b.add(8192)?;for t in [x.id.as_str(),x.girder_id.as_str(),stiffener_sides_text(x.sides)]{b.repeated(t.len(),24)?;}}
+  for x in &self.sheet_profiles{b.add(8192)?;for t in [x.id.as_str(),x.sheet_id.as_str()]{b.repeated(t.len(),24)?;}}
+  for x in &self.fire_insulations{b.add(8192)?;for t in [x.id.as_str(),x.fire_id.as_str()]{b.repeated(t.len(),24)?;}}
   b.finish()
  }
 }
@@ -164,7 +164,7 @@ for r in ordered(entities(d,"en1999_fire_insulation",9,FIRE_INSULATION,c)?.into_
   c.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(Self{annex:read_annex(doc.text(1)?)?,reliability_class:read_reliability_class(doc.text(2)?)?,materials,sections,members,connections,fire_scenarios,fatigue_details,cold_formed,shells,placements,weld_runs,outline_vertices,fatigue_categories,patch_loads,ring_stiffeners,transverse_stiffeners,sheet_profiles,fire_insulations})
  }
 }
-fn bound_actions(values:&[MemberAction],b:&mut NativeEncodingBound<'_,'_>)->Result<(), ValueError>{for a in values{b.add(16384)?;for t in [&a.id,&a.kind,&a.category,&a.source]{b.repeated(t.len(),24)?;}}Ok(())}
+fn bound_actions(values:&[MemberAction],b:&mut NativeEncodingBound<'_,'_>)->Result<(), ValueError>{for a in values{b.add(16384)?;for t in [a.id.as_str(),action_kind_text(a.kind),action_category_text(a.category),action_source_text(a.source)]{b.repeated(t.len(),24)?;}}Ok(())}
 fn admit_rows(b:&mut NativeEncodingBound<'_,'_>,rows:&mut usize,add:usize)->Result<(), ValueError>{*rows=rows.checked_add(add).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "EN1999 native row count overflow"))?;b.check_rows(*rows)?;b.checkpoint()}
 
 #[path="🛂️admission/🦀️.rs"]

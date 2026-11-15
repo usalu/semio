@@ -111,7 +111,7 @@ type RegistryError struct {
 func (e RegistryError) Error() string { return e.Path + ": " + e.Kind + " " + e.Subject }
 
 // 🔢️RequiredMessages are the text identifiers the launcher and the runtime guard of the build implementation print; the registry must carry every one in every language.
-var RequiredMessages = []string{"runtimeUnknown", "runtimeUnsupported", "entryUnknown", "entryMissing", "provisioning", "downloading", "waitingForPeer", "ready", "downloadFailed", "integrityFailed", "extractFailed", "probeFailed", "pathTooLong", "cacheUnavailable", "cancelled", "handOffFailed", "domainNeedsInstall", "helpNative", "helpDashboard", "helpOsMcp", "versionRuntimeReady", "versionRuntimeAbsent", "versionImplementation", "versionImplementationUnknown", "mirrorRefused", "redirectRefused", "extractTooLarge", "unexpected", "guardTest", "guardMissing", "guardLoop"}
+var RequiredMessages = []string{"runtimeUnknown", "runtimeUnsupported", "entryUnknown", "entryMissing", "namespaceDangling", "provisioning", "downloading", "waitingForPeer", "ready", "downloadFailed", "integrityFailed", "extractFailed", "probeFailed", "pathTooLong", "cacheUnavailable", "cancelled", "handOffFailed", "domainNeedsInstall", "helpNative", "helpDashboard", "helpOsMcp", "versionRuntimeReady", "versionRuntimeAbsent", "versionImplementation", "versionImplementationUnknown", "mirrorRefused", "redirectRefused", "extractTooLarge", "unexpected", "guardTest", "guardMissing", "guardLoop"}
 
 var (
 	shaPattern          = regexp.MustCompile(`^[a-f0-9]{64}$`)

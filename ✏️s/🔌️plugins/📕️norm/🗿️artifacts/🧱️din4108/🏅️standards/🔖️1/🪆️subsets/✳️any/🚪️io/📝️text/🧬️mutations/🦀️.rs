@@ -6,7 +6,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use semio_s_artifact_norm_din4108_mutations::Din4108Mutation;
+use crate::Din4108Mutation;
 use semio_s_artifact_norm_din4108_mut_building::{change_climate_zone, change_usage, change_t_int_c, change_rh_int, change_airtightness_n50, change_has_mechanical_ventilation, change_bb2_details_conform};
 use semio_s_artifact_norm_din4108_mut_zones::{insert_zone, remove_zone, change_zone_floor_area, change_zone_heaviness, change_zone_night_ventilation};
 use semio_s_artifact_norm_din4108_mut_windows::{insert_zone_window, remove_zone_window, change_zone_window_area, change_zone_window_g_value, change_zone_window_shading_fc, change_zone_window_orientation, change_zone_window_inclination_deg};
@@ -363,8 +363,8 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::text::mutations::*;
-use semio_s_artifact_norm_din4108_mutations::*;
+use crate::text::*;
+use crate::*;
 use semio_s_artifact_norm_din4108_diff::Din4108Diff;
 use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 use semio_s_artifact_norm_din4108_mut_building::change_climate_zone;
@@ -415,7 +415,7 @@ pub fn decode_din4108_mutation_json(text: &str) -> Result<Din4108Mutation, Strin
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use crate::text::mutations::mutations_codec::*;
+pub use crate::text::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

@@ -10,7 +10,6 @@ use super::{handles, SceneInput};
 
 const STUD_PREFIXES: [&str; 3] = ["en1994.6.6.", "en1994.2.6.8.3.stud.", "en1994.6.2.1.3."];
 const PER_STUD_PREFIXES: [&str; 1] = ["en1994.6.6.2.perstud."];
-pub(crate) const MAX_STUDS_DRAWN: usize = 2000;
 const SLAB_PREFIXES: [&str; 3] = ["en1994.6.6.6.", "en1994.7.4.", "en1994.5.4.1.2."];
 const SHEETING_PREFIXES: [&str; 2] = ["en1994.9.3.", "en1994.6.2.1.construction."];
 const BAR_PREFIXES: [&str; 1] = ["en1994.7.4."];

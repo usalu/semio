@@ -11,12 +11,13 @@ import{createFarmV1,GRAPH_FARM_POLICY_V1}from"../../🏊️pool/🟨️.mjs";
 const validate=new Ajv({strict:true}).compile(contract);
 class DelayedChild extends EventEmitter{
  connected=true;exitCode:number|null=null;signalCode:string|null=null;shutdown=false;
- constructor(readonly rss:number,readonly outcome="result"){super();}
+ runs=0;
+ constructor(readonly rss:number,readonly outcome="result",readonly warm=0){super();queueMicrotask(()=>this.answer({type:"ready",pid:1,identity:"law"}));}
+ reading(){return this.runs++<this.warm?1:this.rss;}
  answer(message:unknown){expect(validate(message),JSON.stringify(validate.errors)).toBe(true);this.emit("message",message);}
  send(message:{type:string;id?:number}){
   expect(validate(message),JSON.stringify(validate.errors)).toBe(true);
-  if(message.type==="init")queueMicrotask(()=>this.answer({type:"ready",pid:1,identity:"law"}));
-  if(message.type==="run"){const job=JSON.parse(readFileSync((message as unknown as{jobFile:string}).jobFile,"utf8"));expect(job.value).toBe(7);queueMicrotask(()=>this.answer(this.outcome==="result"?{type:"result",id:message.id,reply:7,rssMegabytes:this.rss}:{type:"failure",id:message.id,name:"Error",message:"controlled failure",code:null,rssMegabytes:this.rss}));}
+  if(message.type==="run"){const job=JSON.parse(readFileSync((message as unknown as{jobFile:string}).jobFile,"utf8"));expect(job.value).toBe(7);queueMicrotask(()=>this.answer(this.outcome==="result"?{type:"result",id:message.id,reply:7,rssMegabytes:this.reading()}:{type:"failure",id:message.id,name:"Error",message:"controlled failure",code:null,rssMegabytes:this.reading()}));}
   if(message.type==="shutdown")this.shutdown=true;
   return true;
  }
@@ -28,10 +29,10 @@ test("worker replacement and pool close retain retiring processes until actual e
 
  const db=new Database(":memory:");
  try{for(const row of fixture.cases){
-  const children:DelayedChild[]=[],retired:number[]=[],policy={...GRAPH_FARM_POLICY_V1,recycleAfterProjects:row.reason==="projects"?row.jobs:100,shutdownGraceMilliseconds:1000},pool=createFarmV1({entry:"law-worker",service:"file:///law-service",session:{},workers:1,megabytes:10,policy,accept:identity=>identity==="law",spawnProcess:(()=>{const child=new DelayedChild(row.rssMegabytes,row.outcome);children.push(child);return child;})as never,retired:(_slot:number,generation:number)=>retired.push(generation)});
+  const children:DelayedChild[]=[],retired:number[]=[],policy={...GRAPH_FARM_POLICY_V1,recycleAfterProjects:row.reason==="projects"?row.jobs:100,shutdownGraceMilliseconds:1000},pool=createFarmV1({entry:"law-worker",service:"file:///law-service",session:{},workers:1,megabytes:10,policy,accept:identity=>identity==="law",spawnProcess:(()=>{const child=new DelayedChild(row.rssMegabytes,row.outcome,row.reason==="memory"?1:0);children.push(child);return child;})as never,retired:(_slot:number,generation:number)=>retired.push(generation)});
   try{
    const assertOutcome=(answer:any)=>row.outcome==="result"?expect(answer.reply).toBe(7):expect(answer.failure.message).toBe("controlled failure");
-   assertOutcome(await pool.run({value:7}));
+   for(let served=0;served<(row.reason==="memory"?2:1);served++)assertOutcome(await pool.run({value:7}));
    const pending=pool.run({value:7});await Bun.sleep(0);
    const beforeExit=children.length;
    children[0]!.finish();assertOutcome(await pending);
@@ -48,8 +49,8 @@ import{openProjectFarmV1}from"../../🟨️.mjs";
 import{inferenceRecordIdentityV1}from"../../../../../../👁️observation/🟨️.mjs";
 
 test("a refused worker retains its host capacity grant until its process exits",async()=>{
- const children:DelayedChild[]=[],db=new Database(":memory:");let released=0;
- const farm=openProjectFarmV1({workspaceRoot:process.cwd(),context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{SEMIO_LANGUAGE:"en"},processed:()=>24,cores:10,write:()=>undefined,request:(()=>({granted:Promise.resolve({jobs:1,megabytes:3584}),release:()=>{released++;}}))as never,spawnProcess:(()=>{const child=new DelayedChild(1);child.answer=(message:unknown)=>{const row=message as{type:string;identity?:unknown};if(row.type==="ready")row.identity={implementation:"different",records:inferenceRecordIdentityV1()};expect(validate(row),JSON.stringify(validate.errors)).toBe(true);child.emit("message",row);};children.push(child);return child;})as never})!;
+ const children:DelayedChild[]=[],db=new Database(":memory:");let released=0,requests=0;
+ const farm=openProjectFarmV1({workspaceRoot:process.cwd(),context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{SEMIO_LANGUAGE:"en"},processed:()=>24,cores:10,write:()=>undefined,request:(()=>{const number=requests++;let cancel!:(value:undefined)=>void;const granted=number===0?Promise.resolve({jobs:1,megabytes:3584}):new Promise<undefined>(done=>{cancel=done;});return{granted,release:()=>{if(number===0)released++;else cancel(undefined);}};})as never,spawnProcess:(()=>{const child=new DelayedChild(1);child.answer=(message:unknown)=>{const row=message as{type:string;identity?:unknown};if(row.type==="ready")row.identity={implementation:"different",records:inferenceRecordIdentityV1()};expect(validate(row),JSON.stringify(validate.errors)).toBe(true);child.emit("message",row);};children.push(child);return child;})as never})!;
  const job={name:"law",root:"law",json:{},native:false,pipeline:false,nativeRoot:"law",selectedInputs:[],head:[],cacheKey:"0".repeat(24)};
  try{
   for(let i=0;i<24;i++)await farm.prepare(job);await Bun.sleep(0);

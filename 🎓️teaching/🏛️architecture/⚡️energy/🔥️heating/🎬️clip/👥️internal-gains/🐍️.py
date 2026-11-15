@@ -54,8 +54,8 @@ swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 watt_anchor = _manim_module.watt_anchor
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 label_number = _manim_module.label_number
@@ -71,7 +71,6 @@ flow_animation = _manim_module.flow_animation
 pulse_flashes = _manim_module.pulse_flashes
 
 # 🗣️ Timing follows German captions (reading floor in hold_for).
-set_vo_language("de")
 
 # 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
 TITLE_DE = "Modul 4: Interne Wärmegewinne"
@@ -155,24 +154,24 @@ def _twinkle(stars, run_time: float):
 
 #region Typeset symbols
 def _phi(sub: str) -> str:
-    """🔣 LaTeX source of a heat flux Φ with an upright index (p, e, l, int)."""
-    return rf"\Phi_{{\mathrm{{{sub}}}}}"
+    """🔣 LaTeX source of an internal-gain load Q̇_i with an upright index (p, e, l; ``int`` is the sum Q̇_i)."""
+    return r"\dot{Q}_{\mathrm{i}}" if sub == "int" else rf"\dot{{Q}}_{{\mathrm{{i,{sub}}}}}"
 
 
 def _watts(sub: str, tracker) -> str:
-    """⚡ Live ``Φ_x = … W`` source read from a tracker."""
+    """⚡ Live ``Q̇_i,x = … W`` source read from a tracker."""
     return rf"{_phi(sub)} = {label_number(tracker.get_value())}\,\mathrm{{W}}"
 
 
 def _sum_parts(keys, *, lead=None):
-    """🧮 Panel parts ``[lead =] Φ_p + Φ_e + … [W]`` for ``math_panel``."""
+    """🧮 Panel parts ``[lead =] Q̇_i,p + Q̇_i,e + …  [Q̇_i] = W`` for ``math_panel``."""
     colors = {"p": COLOR_PEOPLE, "e": COLOR_EQUIP, "l": COLOR_LIGHT, "int": PASTEL_WHITE}
     parts = [(f"phi_{lead}", _phi(lead), colors[lead]), (None, "=", PASTEL_WHITE)] if lead else []
     for i, k in enumerate(keys):
         if i:
             parts.append((None, "+", PASTEL_WHITE))
         parts.append((f"phi_{k}", _phi(k), colors[k]))
-    parts.append((None, r"\;[\mathrm{W}]", PASTEL_WHITE))
+    parts.append((None, r"\quad[\dot{Q}_{\mathrm{i}}] = \mathrm{W}", PASTEL_WHITE))
     return parts
 #endregion
 
@@ -289,8 +288,8 @@ class Beat1_WinterInterneGewinne(Scene):
          "Inside, people, devices, and lights already make free heat.",
          "Drinnen erzeugen Personen, Geräte und Licht schon freie Wärme."),
         ("din",
-         "Those internal gains cut the annual heating demand in DIN V 18599. A design heating load after DIN EN 12831 usually ignores them.",
-         "Diese internen Gewinne senken den Jahres-Heizwärmebedarf nach DIN V 18599. Eine Auslegungsheizlast nach DIN EN 12831 lässt sie meist weg."),
+         r"Those internal gains $Q_{\mathrm{i}}$ cut the annual heating demand $Q_{\mathrm{h}}$ in DIN V 4108-6. A design heating load after DIN EN 12831-1 usually ignores them.",
+         r"Die internen Gewinne $Q_{\mathrm{i}}$ senken den Heizwärmebedarf $Q_{\mathrm{h}}$ nach DIN V 4108-6. Die Heizlast nach DIN EN 12831-1 lässt sie meist weg."),
     ]
 
     def construct(self):
@@ -334,7 +333,7 @@ class Beat1_WinterInterneGewinne(Scene):
                   ripples(gains["warm"], r_max=0.35, color=COLOR_HEAT, cycles=1), run_time=1.6)
         hold_for(self, self.NARRATION, "inside", during=all_heat)
 
-        din_tag = Text("DIN V 18599", font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to(B1_DIN_AT)
+        din_tag = Text(_references.designation("din-v-4108-6"), font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to(B1_DIN_AT)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "din"))
         self.play(FadeIn(din_tag, shift=LEFT * 0.2), *all_heat(1.3), run_time=1.3)
         hold_for(self, self.NARRATION, "din", during=all_heat)
@@ -344,7 +343,7 @@ class Beat1_WinterInterneGewinne(Scene):
 #endregion
 
 
-#region Beat2 — Persons Φ_p
+#region Beat2 — Persons Q̇_i,p
 B2_ROOM_C = np.array([-1.25, -0.05, 0.0])
 
 
@@ -357,15 +356,15 @@ class Beat2_PersonenPhiP(Scene):
          "That load is about eighty watts — roughly two thirds of a seated person's full output.",
          "Diese Last liegt bei etwa achtzig Watt — rund zwei Drittel einer sitzenden Person."),
         ("phi_p",
-         "We call the person heat flux Phi p — unit watt.",
-         "Wir nennen den Personenwärmestrom Phi-p — Einheit Watt."),
+         r"We call the heat from persons $\dot{Q}_{\mathrm{i,p}}$ — the heat flow $\Phi$ as a load at the room, unit watt.",
+         r"Wir nennen die Personenwärme $\dot{Q}_{\mathrm{i,p}}$ — der Wärmestrom $\Phi$ als Last am Raum, Einheit Watt."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Heat from people", "Personenabwärme"))
-        din = _din_ref("DIN V 18599-10")
+        din = _din_ref(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "person"))
@@ -415,7 +414,7 @@ class Beat2_PersonenPhiP(Scene):
 #endregion
 
 
-#region Beat3 — Equipment Φ_e
+#region Beat3 — Equipment Q̇_i,e
 B3_ROOM_C = np.array([-0.9, 0.0, 0.0])
 
 
@@ -428,15 +427,15 @@ class Beat3_GeraetePhiE(Scene):
          "Electricity becomes heat the moment it leaves the wall socket.",
          "Strom wird Wärme, sobald er die Steckdose verlässt."),
         ("phi_e",
-         "That equipment heat flux is Phi e — again in watts.",
-         "Dieser Gerätewärmestrom heißt Phi-e — wieder in Watt."),
+         r"That equipment heat is $\dot{Q}_{\mathrm{i,e}}$ — again in watts.",
+         r"Diese Geräteabwärme heißt $\dot{Q}_{\mathrm{i,e}}$ — wieder in Watt."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Heat from equipment", "Geräteabwärme"))
-        din = _din_ref("DIN V 18599-10")
+        din = _din_ref(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "desk"))
@@ -518,7 +517,7 @@ class Beat3_GeraetePhiE(Scene):
 #endregion
 
 
-#region Beat4 — Lighting Φ_l
+#region Beat4 — Lighting Q̇_i,l
 B4_ROOM_C = np.array([0.0, 0.05, 0.0])
 B4_LAMP_UNIT = 3.2
 
@@ -532,15 +531,15 @@ class Beat4_BeleuchtungPhiL(Scene):
          "Warm plumes rise from the lit patch back into the room air.",
          "Warme Schwaden steigen vom beleuchteten Fleck zurück in die Raumluft."),
         ("phi_l",
-         "Lighting heat is Phi l. Together: Phi p plus Phi e plus Phi l.",
-         "Lichtwärme ist Phi-l. Zusammen: Phi-p plus Phi-e plus Phi-l."),
+         r"Lighting heat is $\dot{Q}_{\mathrm{i,l}}$. Together: $\dot{Q}_{\mathrm{i,p}} + \dot{Q}_{\mathrm{i,e}} + \dot{Q}_{\mathrm{i,l}}$.",
+         r"Lichtwärme ist $\dot{Q}_{\mathrm{i,l}}$. Zusammen: $\dot{Q}_{\mathrm{i,p}} + \dot{Q}_{\mathrm{i,e}} + \dot{Q}_{\mathrm{i,l}}$."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Heat from lighting", "Beleuchtungswärme"))
-        din = _din_ref("DIN V 18599-10")
+        din = _din_ref(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "lamp"))
@@ -603,7 +602,7 @@ class Beat4_BeleuchtungPhiL(Scene):
 #endregion
 
 
-#region Beat5 — Sum Φ_int and specific density
+#region Beat5 — Sum Q̇_i and specific load density
 #region Beat5 layout
 B5_BAR_UNIT = 3.0 / PHI_INT_W
 B5_BAR_W = 0.62
@@ -636,21 +635,21 @@ class Beat5_SummeUndDichte(Scene):
          "Persons, equipment, and lighting are the three internal sources.",
          "Personen, Geräte und Beleuchtung sind die drei internen Quellen."),
         ("sum",
-         "Phi int equals Phi p plus Phi e plus Phi l — total free heat in watts.",
-         "Phi-int ist Phi-p plus Phi-e plus Phi-l — die gesamte freie Wärme in Watt."),
+         r"$\dot{Q}_{\mathrm{i}}$ equals $\dot{Q}_{\mathrm{i,p}} + \dot{Q}_{\mathrm{i,e}} + \dot{Q}_{\mathrm{i,l}}$ — the total free heat in watts.",
+         r"$\dot{Q}_{\mathrm{i}}$ ist $\dot{Q}_{\mathrm{i,p}} + \dot{Q}_{\mathrm{i,e}} + \dot{Q}_{\mathrm{i,l}}$ — die gesamte freie Wärme in Watt."),
         ("density",
-         "Divide by the net floor area A N to get watts per square meter.",
-         "Geteilt durch die Nettogrundfläche A-N ergibt Watt pro Quadratmeter."),
+         r"Divide by the net floor area $A_{\mathrm{N}}$ to get watts per square metre.",
+         r"Geteilt durch die Nettogrundfläche $A_{\mathrm{N}}$ ergibt Watt pro Quadratmeter."),
         ("din",
-         "That specific flux q int is tabulated in DIN V 18599-10.",
-         "Diese spezifische Dichte q-int steht tabellarisch in DIN V 18599-10."),
+         r"That specific load $q_{\mathrm{i}}$ is tabulated in DIN/TS 18599-10; over the heating season it becomes the internal gain $Q_{\mathrm{i}}$.",
+         r"Diese spezifische Last $q_{\mathrm{i}}$ steht tabellarisch in DIN/TS 18599-10; über die Heizperiode wird daraus der interne Gewinn $Q_{\mathrm{i}}$."),
     ]
 
     def construct(self):
         stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
-        subtitle = section_heading(tr("Sum and heat flux density", "Summe und Wärmestromdichte"))
+        subtitle = section_heading(tr("Sum and load density", "Summe und Lastdichte"))
         self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "sources"))
@@ -741,16 +740,16 @@ class Beat5_SummeUndDichte(Scene):
         hold_for(self, self.NARRATION, "sum")
         self.play(FadeOut(ring), run_time=0.25)
 
-        density_sub = section_heading(tr("Specific heat flux density (DIN V 18599-10)", "Spezifische Wärmestromdichte (DIN V 18599-10)"))
+        density_sub = section_heading(tr("Specific load density (DIN/TS 18599-10:2025-10)", "Spezifische Lastdichte (DIN/TS 18599-10:2025-10)"))
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "density"))
         self.play(stage.transition("heating.internal-gains.sum.subtitle-to-density", source=subtitle, target=density_sub), run_time=0.7)
         subtitle = density_sub
 
         row2, box2, items2 = math_panel([
-            ("q_int", r"q_{\mathrm{int}}", COLOR_HEAT),
+            ("q_int", r"q_{\mathrm{i}}", COLOR_HEAT),
             (None, "=", PASTEL_WHITE),
             ("frac", rf"\frac{{{_phi('int')}}}{{\textcolor{{{PASTEL_CYAN}}}{{A_{{\mathrm{{N}}}}}}}}", PASTEL_WHITE),
-            (None, r"\;[\mathrm{W/m^{2}}]", PASTEL_WHITE),
+            (None, r"\quad[q_{\mathrm{i}}] = \frac{\mathrm{W}}{\mathrm{m^{2}}}", PASTEL_WHITE),
         ], edge_buff=FORMULA_EDGE_BUFF)
         self.play(stage.transition("heating.internal-gains.sum.formula-to-density", source=row, target=row2), stage.transition("heating.internal-gains.sum.formula-box-to-density", source=box, target=box2), run_time=1.4)
         row, box, items = row2, box2, {**items2, "a_n": items2["frac"][0][2]}
@@ -786,9 +785,9 @@ class Beat5_SummeUndDichte(Scene):
         )
         q_on = ValueTracker(0.0)
         q_live = _live(
-            lambda: (rf"q_{{\mathrm{{int}}}} = \frac{{{label_number(total.get_value())}\,\mathrm{{W}}}}"
+            lambda: (rf"q_{{\mathrm{{i}}}} = \frac{{{label_number(total.get_value())}\,\mathrm{{W}}}}"
                      rf"{{{label_number(area())}\,\mathrm{{m^{{2}}}}}}"
-                     rf" = {label_number(q_on.get_value() * total.get_value() / max(area(), 1e-6), 1)}\,\mathrm{{W/m^{{2}}}}"),
+                     rf" = {label_number(q_on.get_value() * total.get_value() / max(area(), 1e-6), 1)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}}"),
             np.array([plan.get_center()[0], plan_tag.get_top()[1] + 0.42, 0.0]),
             size=BODY_FONT_SIZE, color=COLOR_HEAT, edge="center",
         )

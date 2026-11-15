@@ -1,0 +1,123 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/build/resident/consent/v1",
+ "title": "File access consent of the long-lived roles: what one role found when it probed the checkout it works on",
+ "description": "macOS asks once per machine for the consent to read the Documents, Desktop and Downloads folders of a user and gives it to one identity (the launcher `repo`). Every long-lived role (resident graph service, foreground command) probes the checkout it works on and leaves this receipt in a folder outside the protected folders, so that `repo preflight` can name the role that lacks the consent.",
+ "definitions": {
+  "Role": {
+   "type": "string",
+   "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+  },
+  "State": {
+   "description": "`ok` the checkout can be listed, `denied` the operating system refuses the read, `waiting` the read does not return because a consent dialog waits for an answer, `unprotected` the checkout lies outside the protected folders and needs no consent.",
+   "type": "string",
+   "enum": [
+    "ok",
+    "denied",
+    "waiting",
+    "unprotected"
+   ]
+  },
+  "Receipt": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "role",
+    "pid",
+    "state",
+    "root",
+    "folder",
+    "identity",
+    "at"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "role": {
+     "$ref": "#/definitions/Role"
+    },
+    "pid": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "state": {
+     "$ref": "#/definitions/State"
+    },
+    "root": {
+     "type": "string",
+     "minLength": 1
+    },
+    "folder": {
+     "description": "The protected folder the checkout lies below, empty when there is none.",
+     "type": "string"
+    },
+    "identity": {
+     "description": "The path of the launcher that macOS has to be given the consent for, empty on other systems.",
+     "type": "string"
+    },
+    "at": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "error": {
+     "type": "string"
+    },
+    "place": {
+     "description": "The place below the checkout the system refused to read (the root itself or an entry found by the sample below it), empty when nothing was refused.",
+     "type": "string"
+    },
+    "route": {
+     "description": "How the service process came to run: `launchd` (a job under the launcher), `direct` (a child of the calling process, with its access) or `foreground` (started by hand).",
+     "enum": [
+      "launchd",
+      "direct",
+      "foreground"
+     ]
+    },
+    "ppid": {
+     "description": "The parent process id of the role when it wrote the receipt (1 for a launchd job or a detached child whose starter ended).",
+     "type": "integer",
+     "minimum": 0
+    },
+    "launcherSha256": {
+     "description": "The sha-256 of the launcher file the receipt was written for; a receipt for other bytes proves nothing about the current launcher.",
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    }
+   }
+  },
+  "LaunchdRefusal": {
+   "description": "Remembered for one boot: the launchd route of the resident service was refused for this checkout (a volume or entry the launcher job may not read although the caller may). The next services start directly under the caller. Valid only for the same launcher bytes, written after the machine booted, at most a day old. File `launchd-refused.json` next to the receipts.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "version",
+    "root",
+    "place",
+    "at"
+   ],
+   "properties": {
+    "version": {
+     "const": 1
+    },
+    "root": {
+     "type": "string",
+     "minLength": 1
+    },
+    "place": {
+     "type": "string"
+    },
+    "at": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "launcherSha256": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    }
+   }
+  }
+ }
+}

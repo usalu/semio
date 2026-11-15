@@ -22,3 +22,5 @@ pub fn encode_op(mutation: &En1992Mutation) -> Result<Vec<u8>, protocol::Protoco
 pub fn decode_op(bytes: &[u8]) -> Result<En1992Mutation, protocol::ProtocolError> {
     En1992Mutation::decode_op(bytes)
 }
+
+semio_os_kernel::original_pack_value_operation_receiving!(En1992Mutation);

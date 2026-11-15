@@ -1,0 +1,27 @@
+service log: /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-3af1e67bb957.log
+closure entries before: 14248
+2026-11-15T02:45:21Z no slice worker
+2026-11-15T02:45:26Z no slice worker
+2026-11-15T02:45:31Z no slice worker
+2026-11-15T02:45:36Z no slice worker
+2026-11-15T02:45:41Z no slice worker
+2026-11-15T02:45:46Z no slice worker
+2026-11-15T02:45:51Z no slice worker
+2026-11-15T02:45:56Z pid=32346 rss=1146MB footprint=[bun [32346]: 64-bit    Footprint: 205 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T02:46:01Z pid=32346 rss=1475MB footprint=[bun [32346]: 64-bit    Footprint: 305 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T02:46:06Z pid=32346 rss=2240MB footprint=[bun [32346]: 64-bit    Footprint: 476 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T02:46:11Z pid=32346 rss=2298MB footprint=[bun [32346]: 64-bit    Footprint: 392 MB (16384 bytes per page)] last=[graph: nothing to wait for any longer: the fleet was asked for 569 stale projects and delivered 0 within 902 s; 569 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 39020 MB), repo (about 1]
+2026-11-15T02:46:16Z pid=32346 rss=2299MB footprint=[bun [32346]: 64-bit    Footprint: 372 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T02:46:21Z pid=32346 rss=2479MB footprint=[bun [32346]: 64-bit    Footprint: 371 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T02:46:26Z pid=32346 rss=2502MB footprint=[bun [32346]: 64-bit    Footprint: 359 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T02:46:31Z pid=32346 rss=2694MB footprint=[bun [32346]: 64-bit    Footprint: 410 MB (16384 bytes per page)] last=[graph: nothing to wait for any longer: the fleet was asked for 569 stale projects and delivered 0 within 902 s; 569 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 39020 MB), repo (about 1]
+2026-11-15T02:46:36Z pid=32346 rss=2756MB footprint=[bun [32346]: 64-bit    Footprint: 441 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T02:46:41Z pid=32346 rss=3011MB footprint=[bun [32346]: 64-bit    Footprint: 529 MB (16384 bytes per page)] last=[graph: nothing to wait for any longer: the fleet was asked for 569 stale projects and delivered 0 within 902 s; 569 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 39020 MB), repo (about 1]
+2026-11-15T02:46:46Z pid=32346 rss=3014MB footprint=[bun [32346]: 64-bit    Footprint: 421 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T02:46:52Z pid=32346 rss=3374MB footprint=[bun [32346]: 64-bit    Footprint: 561 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T02:46:57Z pid=32346 rss=3375MB footprint=[bun [32346]: 64-bit    Footprint: 417 MB (16384 bytes per page)] last=[]
+2026-11-15T02:47:02Z no slice worker
+2026-11-15T02:47:07Z no slice worker
+2026-11-15T02:47:12Z no slice worker
+2026-11-15T02:47:17Z no slice worker
+closure entries after: 14248

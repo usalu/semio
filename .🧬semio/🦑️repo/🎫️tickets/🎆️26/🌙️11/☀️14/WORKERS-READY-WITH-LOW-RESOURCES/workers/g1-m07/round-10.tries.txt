@@ -1,0 +1,3 @@
+try 1 ended 2026-11-15T00:05:35Z native_rc=7 hard_stop=1 refusal_lines=0 moving_lines=0
+try 2 ended 2026-11-15T00:31:14Z native_rc=1 hard_stop=0 refusal_lines=0 moving_lines=0
+driver ended 2026-11-15T00:31:14Z after try 2

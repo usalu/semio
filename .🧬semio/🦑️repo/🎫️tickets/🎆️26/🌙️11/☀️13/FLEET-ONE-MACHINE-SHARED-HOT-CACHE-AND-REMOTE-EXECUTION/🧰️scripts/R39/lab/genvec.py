@@ -1,0 +1,50 @@
+import json
+UC="ov/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🔭️interface/🧪️tests/"
+cases=[]
+def case(label,old,new,equal,consumer,necessary=False,rustc=True,observable=None):
+    cases.append(dict(label=label,old=old,new=new,equal=equal,consumer=consumer,observable=observable or ('none' if equal else ('code' if necessary else 'none')),rustc=rustc))
+BASE="pub struct S { pub f: u32 }\n"
+CONS_F="pub fn run() -> u32 { a::f(5) }\n"
+# equal: unobservable body edits
+case("plain function body","pub fn f(x: u32) -> u32 { x + 1 }\n","pub fn f(x: u32) -> u32 { let y = x * 3; y + 7 }\n",True,CONS_F)
+case("inherent method of a non-generic impl",BASE+"impl S { pub fn m(&self) -> u32 { self.f } }\npub fn f(x: u32) -> u32 { S { f: x }.m() }\n",BASE+"impl S { pub fn m(&self) -> u32 { self.f + 100 } }\npub fn f(x: u32) -> u32 { S { f: x }.m() }\n",True,CONS_F)
+case("trait impl method for a concrete type","pub trait T { fn t(&self) -> u32; }\npub struct S;\nimpl T for S { fn t(&self) -> u32 { 1 } }\npub fn f(_x: u32) -> u32 { S.t() }\n","pub trait T { fn t(&self) -> u32; }\npub struct S;\nimpl T for S { fn t(&self) -> u32 { 2 } }\npub fn f(_x: u32) -> u32 { S.t() }\n",True,CONS_F)
+case("function in an inline module","pub mod m { pub fn g() -> u32 { 1 } }\npub fn f(_x: u32) -> u32 { m::g() }\n","pub mod m { pub fn g() -> u32 { 9 } }\npub fn f(_x: u32) -> u32 { m::g() }\n",True,CONS_F)
+case("unsafe function","pub unsafe fn f(x: u32) -> u32 { x + 1 }\n","pub unsafe fn f(x: u32) -> u32 { x + 5 }\n",True,"pub fn run() -> u32 { unsafe { a::f(5) } }\n")
+case("must_use and cfg attributes","#[must_use]\n#[cfg(not(any()))]\npub fn f(x: u32) -> u32 { x }\n","#[must_use]\n#[cfg(not(any()))]\npub fn f(x: u32) -> u32 { x + 2 }\n",True,CONS_F)
+case("Drop impl body","pub struct D;\nimpl Drop for D { fn drop(&mut self) { } }\npub fn f(_x: u32) -> u32 { let _d = D; 1 }\n","pub struct D;\nimpl Drop for D { fn drop(&mut self) { let _ = 1 + 1; } }\npub fn f(_x: u32) -> u32 { let _d = D; 1 }\n",True,CONS_F)
+case("nested function inside a body","pub fn f(x: u32) -> u32 { fn h(y: u32) -> u32 { y } h(x) }\n","pub fn f(x: u32) -> u32 { fn h(y: u32) -> u32 { y + 3 } h(x) }\n",True,CONS_F)
+case("closure and boxed trait object","pub fn f(x: u32) -> u32 { let b: Box<dyn Fn(u32) -> u32> = Box::new(|v| v + 1); b(x) }\n","pub fn f(x: u32) -> u32 { let b: Box<dyn Fn(u32) -> u32> = Box::new(|v| v + 2); b(x) }\n",True,CONS_F)
+case("braces in strings, raw strings, characters and lifetimes","pub fn f(x: u32) -> u32 { let s: &'static str = \"}{\"; let r = r#\"}\"#; let c = '}'; x + s.len() as u32 + r.len() as u32 + c as u32 }\n","pub fn f(x: u32) -> u32 { let s: &'static str = \"}}{{\"; let r = r#\"}}\"#; let c = '{'; x + s.len() as u32 + r.len() as u32 + c as u32 }\n",True,CONS_F)
+case("comments with braces inside a body","pub fn f(x: u32) -> u32 { /* { /* nested } */ */ x // }\n}\n","pub fn f(x: u32) -> u32 { /* } */ x + 1 // {\n}\n",True,CONS_F)
+case("known expression macros in a body","pub fn f(x: u32) -> u32 { let v = vec![x, 1]; assert!(v.len() == 2); v[0] + v[1] }\n","pub fn f(x: u32) -> u32 { let v = vec![x, 2]; assert!(v.len() == 2); v[0] + v[1] }\n",True,CONS_F)
+case("shared generic instance used only in a body","pub struct S;\npub fn f(_x: u32) -> u32 { let mut v: Vec<S> = Vec::new(); v.push(S); v.len() as u32 }\n","pub struct S;\npub fn f(_x: u32) -> u32 { 0 }\n",True,"pub fn run() -> u32 { let mut v: Vec<a::S> = Vec::new(); v.push(a::S); v.len() as u32 + a::f(0) }\n",False,True)
+cases[-1]["sharedGenerics"]=True;cases[-1]["rustc"]=False
+# not equal, and necessary
+case("generic function body","pub fn f<T: Into<u32>>(t: T) -> u32 { t.into() + 1 }\n","pub fn f<T: Into<u32>>(t: T) -> u32 { t.into() + 2 }\n",False,"pub fn run() -> u32 { a::f(5u8) }\n",True)
+case("inline function body","#[inline]\npub fn f(x: u32) -> u32 { x + 1 }\n","#[inline]\npub fn f(x: u32) -> u32 { x + 2 }\n",False,CONS_F,True)
+case("inline(always) function body","#[inline(always)]\npub fn f(x: u32) -> u32 { x + 1 }\n","#[inline(always)]\npub fn f(x: u32) -> u32 { x + 2 }\n",False,CONS_F,True)
+case("const function body","pub const fn f(x: u32) -> u32 { x + 1 }\n","pub const fn f(x: u32) -> u32 { x - 10 }\n",False,"pub fn run() -> u32 { const V: u32 = a::f(5); V }\n",True,True,"check")
+case("return position impl Trait","pub fn f(x: u32) -> impl Fn() -> u32 { move || x + 1 }\n","pub fn f(x: u32) -> impl Fn() -> u32 { let r = std::rc::Rc::new(x); move || *r + 1 }\n",False,"fn need<T: Send>(_t: T) {}\npub fn run() -> u32 { need(a::f(5)); 0 }\n",True,True,"check")
+case("async function body","pub async fn f(x: u32) -> u32 { x + 1 }\n","pub async fn f(x: u32) -> u32 { x + 2 }\n",False,"pub fn run() -> u32 { 0 }\n")
+case("method of a generic impl","pub struct W<T>(pub T);\nimpl<T: Copy + Into<u32>> W<T> { pub fn m(&self) -> u32 { self.0.into() + 1 } }\n","pub struct W<T>(pub T);\nimpl<T: Copy + Into<u32>> W<T> { pub fn m(&self) -> u32 { self.0.into() + 2 } }\n",False,"pub fn run() -> u32 { a::W(5u8).m() }\n",True)
+case("trait default method body","pub trait T { fn d(&self) -> u32 { 1 } }\npub struct S;\nimpl T for S {}\n","pub trait T { fn d(&self) -> u32 { 2 } }\npub struct S;\nimpl T for S {}\n",False,"pub fn run() -> u32 { use a::T; a::S.d() }\n",True)
+case("impl Trait argument","pub fn f(x: impl Into<u32>) -> u32 { x.into() + 1 }\n","pub fn f(x: impl Into<u32>) -> u32 { x.into() + 2 }\n",False,"pub fn run() -> u32 { a::f(5u8) }\n",True)
+case("where clause","pub fn f(x: u32) -> u32 where u32: Copy { x + 1 }\n","pub fn f(x: u32) -> u32 where u32: Copy { x + 2 }\n",False,CONS_F)
+case("extern C function","pub extern \"C\" fn f(x: u32) -> u32 { x + 1 }\n","pub extern \"C\" fn f(x: u32) -> u32 { x + 2 }\n",False,CONS_F)
+case("no_mangle function","#[no_mangle]\npub fn f(x: u32) -> u32 { x + 1 }\n","#[no_mangle]\npub fn f(x: u32) -> u32 { x + 2 }\n",False,CONS_F)
+case("a body that declares an impl","pub struct S;\npub trait T { fn t(&self) -> u32; }\npub fn f(_x: u32) -> u32 { impl T for S { fn t(&self) -> u32 { 1 } } 0 }\n","pub struct S;\npub trait T { fn t(&self) -> u32; }\npub fn f(_x: u32) -> u32 { impl T for S { fn t(&self) -> u32 { 2 } } 0 }\n",False,"pub fn run() -> u32 { use a::T; a::f(0); a::S.t() }\n",True)
+case("a body that calls a user macro","macro_rules! m { ($e:expr) => { $e + 1 }; }\npub fn f(x: u32) -> u32 { m!(x) }\n","macro_rules! m { ($e:expr) => { $e + 1 }; }\npub fn f(x: u32) -> u32 { m!(x + 1) }\n",False,CONS_F)
+case("macro_rules definition body","#[macro_export]\nmacro_rules! k { () => { 1 }; }\npub fn f(_x: u32) -> u32 { 0 }\n","#[macro_export]\nmacro_rules! k { () => { 2 }; }\npub fn f(_x: u32) -> u32 { 0 }\n",False,"pub fn run() -> u32 { a::k!() }\n",True)
+case("signature","pub fn f(x: u32) -> u32 { x + 1 }\n","pub fn f(x: u64) -> u64 { x + 1 }\n",False,CONS_F,False,False)
+case("visibility","pub fn f(x: u32) -> u32 { x + 1 }\n","pub(crate) fn f(x: u32) -> u32 { x + 1 }\n",False,CONS_F,False,False)
+case("constant initializer","pub const K: u32 = 1;\npub fn f(_x: u32) -> u32 { K }\n","pub const K: u32 = 2;\npub fn f(_x: u32) -> u32 { K }\n",False,"const _: () = assert!(a::K == 1);\npub fn run() -> u32 { a::f(0) }\n",True,True,"check")
+case("static initializer","pub static K: u32 = 1;\npub fn f(_x: u32) -> u32 { 0 }\n","pub static K: u32 = 2;\npub fn f(_x: u32) -> u32 { 0 }\n",False,"pub fn run() -> u32 { a::K + a::f(0) }\n")
+case("field added to a struct",BASE+"pub fn f(x: u32) -> u32 { x }\n","pub struct S { pub f: u32, g: u8 }\npub fn f(x: u32) -> u32 { x }\n",False,CONS_F,False,False)
+case("comment outside a body (conservative)","// one\npub fn f(x: u32) -> u32 { x }\n","// two\npub fn f(x: u32) -> u32 { x }\n",False,CONS_F,False,False)
+case("type alias impl Trait voids masking","#![feature(type_alias_impl_trait)]\npub type X = impl Fn() -> u32;\npub fn mk() -> X { || 1 }\npub fn f(x: u32) -> u32 { x + 1 }\n","#![feature(type_alias_impl_trait)]\npub type X = impl Fn() -> u32;\npub fn mk() -> X { || 1 }\npub fn f(x: u32) -> u32 { x + 2 }\n",False,CONS_F,False,False)
+case("include! splice voids masking","include!(\"x.rs\");\npub fn f(x: u32) -> u32 { x + 1 }\n","include!(\"x.rs\");\npub fn f(x: u32) -> u32 { x + 2 }\n",False,CONS_F,False,False)
+case("unterminated literal voids masking","pub fn f(x: u32) -> u32 { x + 1 } /* never ends\n","pub fn f(x: u32) -> u32 { x + 2 } /* never ends\n",False,CONS_F,False,False)
+out=dict(cases=cases)
+json.dump(out,open(UC+"🔣️.json","w",encoding="utf8"),ensure_ascii=False,indent=1)
+print(len(cases),"cases")

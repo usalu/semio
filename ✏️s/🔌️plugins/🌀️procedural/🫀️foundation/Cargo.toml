@@ -3,11 +3,11 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-    "🧵️retained-source/📦️packages/🦀️rust",
     "🖼️semantic-ui/📦️packages/🦀️rust",
     "🧬️generation/🪶️sqlite/📦️packages/🦀️rust",
     "🧬️generation/🪶️sqlite/🚦️native/📦️packages/🦀️rust",
     "🧬️generation/🪶️sqlite/🧪️tests/🧰️support/📦️packages/🦀️rust",
+    "🧵️retained-source/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",

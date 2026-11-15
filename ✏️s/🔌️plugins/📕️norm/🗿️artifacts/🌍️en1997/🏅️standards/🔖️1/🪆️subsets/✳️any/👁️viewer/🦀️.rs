@@ -29,7 +29,7 @@ semio_plugin::view_commands! {
     }
 }
 
-semio_s_plugin_norm_app_surface::norm_viewer_commands!(En1997Snapshot);
+semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_en1997_model::En1997Snapshot);
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(En1997ViewBoundedCommandJobFactory, En1997Viewer);
 

@@ -185,6 +185,28 @@
         "additionalProperties": false
       }
     },
+    "posters": {
+      "description": "The finished poster images of this render by chapter scene; a card whose poster is missing here fails loudly.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "file",
+          "sha256"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
     "restoreTiming": {
       "$ref": "#/$defs/timing"
     },
@@ -210,7 +232,7 @@
           "id",
           "title",
           "icon",
-          "symbol",
+          "poster",
           "cell",
           "topics"
         ],
@@ -223,9 +245,6 @@
             "$ref": "#/$defs/localized"
           },
           "icon": {
-            "type": "string"
-          },
-          "symbol": {
             "type": "string"
           },
           "cell": {
@@ -242,7 +261,8 @@
                 "title",
                 "icon",
                 "cell",
-                "videos"
+                "videos",
+                "poster"
               ],
               "properties": {
                 "id": {
@@ -270,10 +290,24 @@
                   "items": {
                     "$ref": "#/$defs/video"
                   }
+                },
+                "poster": {
+                  "description": "The chapter scene whose poster frame this card shows; null only for a topic without lessons.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 }
               },
               "additionalProperties": false
             }
+          },
+          "poster": {
+            "description": "The chapter scene whose poster frame this card shows; null only for a topic without lessons.",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "additionalProperties": false
@@ -369,7 +403,6 @@
         "id",
         "title",
         "icon",
-        "symbol",
         "cell"
       ],
       "properties": {
@@ -383,19 +416,6 @@
         "icon": {
           "type": "string",
           "minLength": 1
-        },
-        "symbol": {
-          "enum": [
-            "physics",
-            "air",
-            "heat",
-            "cool",
-            "balance",
-            "bim",
-            "optimization",
-            "grasshopper",
-            "excel"
-          ]
         },
         "cell": {
           "$ref": "#/$defs/cell"
@@ -464,7 +484,7 @@
         "id",
         "title",
         "icon",
-        "symbol",
+        "poster",
         "cell"
       ],
       "properties": {
@@ -479,11 +499,13 @@
           "type": "string",
           "minLength": 1
         },
-        "symbol": {
-          "type": "string"
-        },
         "cell": {
           "$ref": "#/$defs/cell"
+        },
+        "poster": {
+          "description": "The chapter scene whose poster frame this card shows.",
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": false

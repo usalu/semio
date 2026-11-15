@@ -24,7 +24,7 @@ use crate::En1991Mutation;
 
 const WIRE_PROTOCOL: &str = semio_s_artifact_norm_en1991_mutations_protocol::LEAF;
 
-fn malformed(what: &'static str, offset: usize, detail: String) -> protocol::ProtocolError {
+fn malformed(what: &'static str, offset: u64, detail: String) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what, offset, detail }
 }
 
@@ -73,4 +73,6 @@ impl protocol::OpBinary for En1991Mutation {
         semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Io(error.to_string()))
     }
 }
+
+semio_os_kernel::original_pack_value_operation_receiving!(En1991Mutation);
 }

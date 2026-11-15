@@ -32,8 +32,8 @@ export function renderGraphFarmMessagesV1(key, fields, environment) {
   });
 }
 
-/** 📐️ Plans how many worker processes the work can use: the explicit environment value wins, otherwise the processors left to the workers and the work there is to share bound the request; what the host capacity governor then grants decides how many run, so no constant limits the farm. */
-export function planGraphFarmV1({ projects, environment = {}, cores, policy = P }) {
+/** 📐️ Plans how many worker processes the work can use: the explicit environment value wins, otherwise the processors left to the workers, the work there is to share and the memory the plan may add (`maximumWorkers`) bound the request; what the host capacity governor then grants decides how many run, so no constant limits the farm. */
+export function planGraphFarmV1({ projects, environment = {}, cores, policy = P, maximumWorkers = Infinity }) {
   const text = environment[policy.workersEnvironment]?.trim().toLowerCase();
   if (text === "0" || text === "off" || text === "false") return { workers: 0, reason: "disabled" };
   if (text !== undefined && text !== "" && text !== "auto") {
@@ -42,7 +42,7 @@ export function planGraphFarmV1({ projects, environment = {}, cores, policy = P 
     return { workers: forced, reason: forced === 0 ? "disabled" : "forced" };
   }
   if (projects < policy.minimumProjects) return { workers: 0, reason: "small" };
-  const bounds = [["work", Math.floor(projects / policy.projectsPerWorker)], ["cpu", cores - policy.cpuReserve]];
+  const bounds = [["work", Math.floor(projects / policy.projectsPerWorker)], ["cpu", cores - policy.cpuReserve], ["memory", maximumWorkers]];
   const [reason, workers] = bounds.reduce((best, row) => row[1] < best[1] ? row : best);
   return workers < 2 ? { workers: 0, reason } : { workers, reason };
 }
@@ -74,7 +74,8 @@ export function choosePoolV1(pools) {
 
 /** ♻️ Whether a worker that just answered a job is replaced before the next one: `memory` when its resident set passed the declared share of its budget (a project that grew it is the last one it runs), `projects` when it served the declared number of jobs (what a long-lived process keeps for itself is bounded by its lifetime, not by the project); undefined keeps it. */
 export function recycleReasonV1({ rssMegabytes, baselineMegabytes, jobs, megabytes }, policy = P) {
-  if (rssMegabytes > megabytes || rssMegabytes > megabytes * policy.recycleMemoryRatio && (!Number.isFinite(baselineMegabytes) || rssMegabytes > baselineMegabytes * (1 + policy.recycleGrowthRatio))) return "memory";
+  const ceiling = Math.max(megabytes, Number.isFinite(baselineMegabytes) && baselineMegabytes > 0 ? baselineMegabytes * policy.recycleCeilingFactor : 0);
+  if (rssMegabytes > ceiling || rssMegabytes > megabytes * policy.recycleMemoryRatio && (!Number.isFinite(baselineMegabytes) || rssMegabytes > baselineMegabytes * (1 + policy.recycleGrowthRatio))) return "memory";
   if (jobs >= policy.recycleAfterProjects) return "projects";
   return undefined;
 }
@@ -113,24 +114,38 @@ export function createFarmTemporaryDirectoryV1(kind, { directory = realpathSync(
 /** 🫀️ Whether a process id still names a process: only the answer "no such process" counts as gone, so a platform that cannot tell keeps the directory. */
 export function farmProcessAliveV1(pid) { try { process.kill(pid, 0); return true; } catch (error) { return error?.code !== "ESRCH"; } }
 
+const liveChildrenV1 = createBoundedCacheV1({ name: "inference:live-children", maxEntries: 4096, maxBytes: 4096 });
+let exitHookedV1 = false;
+
+/** 🪦️ Remembers a worker process until it is gone and, once per process, kills the ones still held when this process exits, so no worker outlives its parent. */
+function holdForExitV1(child) {
+  if (typeof child?.kill !== "function") return;
+  liveChildrenV1.set(child, child);
+  child.once?.("exit", () => liveChildrenV1.delete(child));
+  if (exitHookedV1) return;
+  exitHookedV1 = true;
+  process.on("exit", () => { for (const each of liveChildrenV1.keys()) { try { each.kill("SIGKILL"); } catch {} } });
+}
+
 const reclaimedDirectoriesV1 = createBoundedCacheV1({ name: "inference:reclaimed-directories", maxEntries: 256, maxBytes: 256 });
 
 /**
  * 🧵️ A pool of worker processes, each running one service module (`open(session, where)` once, then `run(job)` per job, one at a time). Every job ends as `{ reply }`, `{ failure }` (the service threw) or `{ lost }` (the process died or timed out on every attempt), so a caller decides what a failed job means; nothing is thrown except the abort reason of the signal.
  * A lost job is sent again to a fresh process up to `maximumAttempts` times; more than `maximumRestarts` lost processes disable the pool. `accept(identity)` decides whether a worker that announced its identity may serve; a refusal disables the pool. A worker that grew past its memory budget is replaced after its job; `retired(slot, generation)` tells the caller that a process is gone, so it can reclaim what that process left.
- * With `auxiliaryFile` every worker reads that private regular file as descriptor 3 (opened read-only and without following links for each start, so no two workers share a file offset; a file is read in one pass, a pipe needs this process scheduled for every chunk) and the channel moves to descriptor 4. The same path is `SEMIO_GRAPH_WORKER_SNAPSHOT`, so a worker opens the file itself when descriptor 3 is not a regular file.
+ * With `auxiliaryFile` every worker opens that private regular file itself, named by `SEMIO_GRAPH_WORKER_SNAPSHOT`, so no two workers share a file offset and none needs this process scheduled to read it. A worker starts from its environment (`initEnvironment`, schema `Start`): it needs no message of this process, so a busy event loop of the parent never delays it. A process that ends takes every worker with it: they end when their channel closes, and this process kills the workers it still holds when it exits.
  */
 export function createFarmV1({ entry, service, session, workers, megabytes, environment = process.env, signal, policy = P, accept = () => true, report = () => {}, retired = () => {}, spawnProcess = spawn, runtime = graphFarmRuntimeV1(), command = process.execPath, commandArguments = [], auxiliaryFile = undefined }) {
   if (!Number.isSafeInteger(workers) || workers < 1) throw Error("Graph farm of at least one worker required");
   const retiring = new Set();
   const slots = Array.from({ length: workers }, (_, index) => ({ index, generation: 0, child: undefined, state: "empty", job: undefined, timer: undefined })), queue = [];
   const stats = { workers, jobs: 0, replies: 0, failures: 0, lost: 0, recycled: 0, started: 0, peakRssMegabytes: 0, queuedMilliseconds: 0, workedMilliseconds: 0, bootMilliseconds: 0 };
-  let nextId = 0, closed = false, disabled, restarts = 0, sessionDirectory, sessionFile, readyAccept, closeWork;
+  let nextId = 0, closed = false, disabled, restarts = 0, sessionDirectory, sessionFile, readyAccept, closeWork, referenced = true, lastLoss;
+  const holdChild = child => { try { if (referenced) { child.ref?.(); child.channel?.ref?.(); } else { child.unref?.(); child.channel?.unref?.(); } } catch {} };
   const ready = new Promise(done => { readyAccept = done; });
   const childEnvironment = { ...environment, ...graphFarmRuntimeEnvironmentV1(runtime, megabytes, policy), SEMIO_GRAPH_WORKER: "1", ...(auxiliaryFile === undefined ? {} : { SEMIO_GRAPH_WORKER_SNAPSHOT: auxiliaryFile }) };
   delete childEnvironment[policy.workersEnvironment];
 
-  const settle = (job, value) => { if (job.settled) return; job.settled = true; clearTimeout(job.timer); job.resolve(value); };
+  const settle = (job, value) => { if (job.settled) return; job.settled = true; clearTimeout(job.timer); job.release?.(); job.resolve(value); };
   const retire = (slot, graceful) => {
     const child = slot.child, generation = slot.generation;
     clearTimeout(slot.timer);
@@ -159,6 +174,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     } else { try { child.kill("SIGKILL"); } catch {} }
   };
   const lose = (slot, why) => {
+    lastLoss = why;
     const job = slot.job;
     slot.job = undefined;
     retire(slot, false);
@@ -180,14 +196,15 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     slot.state = "starting"; slot.generation++; slot.served = 0; slot.baseline = undefined; stats.started++; slot.spawned = performance.now();
     if (sessionFile === undefined) { sessionDirectory = createFarmTemporaryDirectoryV1("session", { policy }); sessionFile = join(sessionDirectory, "session.bin"); writeFileSync(sessionFile, serialize(session)); }
     let child, descriptor;
-    try { descriptor = undefined; child = spawnProcess(command, [...commandArguments, entry], { stdio: ["ignore", "inherit", "inherit", "ipc"], serialization: "json", env: childEnvironment }); }
+    try { descriptor = undefined; child = spawnProcess(command, [...commandArguments, entry], { stdio: ["ignore", "inherit", "inherit", "ipc"], serialization: "json", env: { ...childEnvironment, [policy.initEnvironment]: JSON.stringify({ service, sessionFile, slot: slot.index, generation: slot.generation }) } }); }
     catch (error) { lose(slot, String(error?.message ?? error)); return; }
     finally { if (descriptor !== undefined) closeSync(descriptor); }
     slot.child = child;
+    holdChild(child);
+    holdForExitV1(child);
     slot.timer = setTimeout(() => lose(slot, "init timeout"), policy.initTimeoutMilliseconds);
     child.on("message", message => {
       if (slot.child !== child) return;
-      if (message?.type === "listening") { try { child.send({ type: "init", service, sessionFile, slot: slot.index, generation: slot.generation }); } catch (error) { lose(slot, String(error?.message ?? error)); } return; }
       if (message?.type === "ready") {
         clearTimeout(slot.timer);
         if (!accept(message.identity)) { disable("identity differs"); return; }
@@ -252,6 +269,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
   const abort = () => { void close(); };
   if (signal) { if (signal.aborted) abort(); else signal.addEventListener("abort", abort, { once: true }); }
   for (const slot of slots) launch(slot);
+  if (disabled === undefined && slots.every(slot => slot.child === undefined)) disable("start: " + (lastLoss ?? "no process"));
   return Object.freeze({
     width: workers,
     ready,
@@ -259,6 +277,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     get usable() { return !closed && disabled === undefined; },
     get pending() { return queue.length + slots.filter(slot => slot.state === "busy").length; },
     stats: () => ({ ...stats, queuedMilliseconds: Math.round(stats.queuedMilliseconds), workedMilliseconds: Math.round(stats.workedMilliseconds), bootMilliseconds: Math.round(stats.bootMilliseconds), restarts, ...(disabled === undefined ? {} : { disabled }) }),
+    refer(on) { referenced = on === true; for (const slot of slots) if (slot.child) holdChild(slot.child); },
     run(payload, options = {}) {
       if (closed || disabled !== undefined) return Promise.resolve({ lost: closed ? "closed" : "disabled: " + disabled });
       options.signal?.throwIfAborted();
@@ -266,6 +285,17 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
       return new Promise(resolve => {
         const job = { id: nextId++, payload, attempts: 0, resolve, settled: false, timer: undefined, queued: performance.now(), dispatched: 0 };
         queue.push(job);
+        if (options.signal) {
+          const cancel = () => {
+            if (job.settled) return;
+            const at = queue.indexOf(job);
+            if (at >= 0) queue.splice(at, 1);
+            settle(job, { lost: "aborted" });
+            const slot = slots.find(each => each.job === job);
+            if (slot) { slot.job = undefined; retire(slot, false); pump(); }
+          };
+          if (options.signal.aborted) cancel(); else { options.signal.addEventListener("abort", cancel, { once: true }); job.release = () => options.signal.removeEventListener("abort", cancel); }
+        }
         pump();
       });
     },

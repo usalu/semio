@@ -1,0 +1,67 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-3af1e67bb957.log (lines after 1094)
+-- last 30 lines when the try ended
+[repository:command] still running after 1180 s
+[repo] still working after 1190 s; last phase started: source.served
+[repository:command] still running after 1190 s
+[repository:command] still running after 1200 s
+[repository:command] still running after 1210 s
+[repo] still working after 1220 s; last phase started: source.served
+[repository:command] still running after 1220 s
+[repository:command] still running after 1230 s
+[repository:command] still running after 1240 s
+[repo] still working after 1250 s; last phase started: source.served
+[repository:command] still running after 1250 s
+[repository:command] still running after 1260 s
+[repository:command] still running after 1270 s
+[repo] still working after 1280 s; last phase started: source.served
+[repository:command] still running after 1280 s
+[repository:command] still running after 1290 s
+[repository:command] still running after 1300 s
+[repo] still working after 1310 s; last phase started: source.served
+[repository:command] still running after 1310 s
+[repository:command] still running after 1320 s
+[repository:command] still running after 1330 s
+[repo] still working after 1340 s; last phase started: source.served
+[repository:command] still running after 1340 s
+[repository:command] still running after 1350 s
+[repository:command] still running after 1360 s
+[repo] still working after 1370 s; last phase started: source.served
+[repository:command] still running after 1370 s
+[repository:command] still running after 1380 s
+2026-11-15T02:46:55.371Z shutdown superseded
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-79a74804a430.log (lines after 0)
+graph: 657 stale projects, 0 taken from the fleet, 187 too heavy for this machine (@semio-tech/framework-process (about 9854 MB), @semio-tech/framework-renderer-wgpu (about 7348 MB), @semio-tech/framework-os-mcp (about 5530 MB), @semio-tech/framework-os (about 5424 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/ui-contract-identity-rs (about 4894 MB), and 181 more; it can give about 264 MB per project), it can infer 72 of the others (18 per wave); asking the fleet for 657
+graph: nothing to wait for any longer: the fleet was asked for 657 stale projects and delivered 0 within 0 s; 657 remain, among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/framework-renderer-wgpu (about 7348 MB), @semio-tech/framework-os-mcp (about 5530 MB), @semio-tech/framework-os (about 5424 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/ui-contract-identity-rs (about 4894 MB), and 181 more, which this machine must never infer itself (it can give about 264 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-15T02:46:57.893Z graph-wanted-expired {"wanted":"657","arrived":"0","seconds":"0","missing":"657","local":"72","heavy":", among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/framework-renderer-wgpu (about 7348 MB), @semio-tech/framework-os-mcp (about 5530 MB), @semio-tech/framework-os (about 5424 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/ui-contract-identity-rs (about 4894 MB), and 181 more (this machine can give about 264 MB per project)"}
+-- last 30 lines when the try ended
+[script] graph:slice-worker · Verifying input closures: 1002 of 1051 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1022:1051","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1022 of 1051 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:942","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:942:942","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:4","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:4:4","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1025:1051","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1025 of 1051 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1044:1051","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1044 of 1051 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1051:1051","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1051 of 1051 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+graph: 657 stale projects, 0 taken from the fleet, 187 too heavy for this machine (@semio-tech/framework-process (about 9854 MB), @semio-tech/framework-renderer-wgpu (about 7348 MB), @semio-tech/framework-os-mcp (about 5530 MB), @semio-tech/framework-os (about 5424 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/ui-contract-identity-rs (about 4894 MB), and 181 more; it can give about 264 MB per project), it can infer 72 of the others (18 per wave); asking the fleet for 657
+graph: the fleet cache cannot be reached, so 657 stale projects cannot be requested from it; this machine can infer 72
+graph: this machine is darwin-arm64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: the fleet was asked for 657 stale projects and delivered 0 within 0 s; 657 remain, among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/framework-renderer-wgpu (about 7348 MB), @semio-tech/framework-os-mcp (about 5530 MB), @semio-tech/framework-os (about 5424 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/ui-contract-identity-rs (about 4894 MB), and 181 more, which this machine must never infer itself (it can g
+2026-11-15T02:46:57.893Z graph-wanted-expired {"wanted":"657","arrived":"0","seconds":"0","missing":"657","local":"72","heavy":", among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/framework-renderer-wgpu (about 7348 MB), @semio-tech/framework-os-mcp (about 5530 MB), @semio-tech/framework-os (about 5424 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/ui-contract-identity-rs (about 4894 MB), and 181 more (this machine can give about 264 MB per proje
+graph: plan answered, managed 119 MB, resident 417 MB (released 0 MB)
+[repository:command] still running after 70 s
+[repo] still working after 80 s; last phase started: source.served
+[repository:command] still running after 80 s
+[repository:command] still running after 90 s
+[repository:command] still running after 100 s

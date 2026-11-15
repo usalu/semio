@@ -5,6 +5,7 @@
       "const": {
         "maximumRetirements": 4096,
         "maximumPlanBytes": 67108864,
+        "maximumBusyWaitMilliseconds": 120000,
         "progressResource": "dependencies:obsolete-retired",
         "returns": "physical-generation-prefixes",
         "unknown": "refuse-before-effects",
@@ -221,7 +222,7 @@
             },
             "names": {
               "type": "array",
-              "maxItems": 16,
+              "maxItems": 24,
               "items": {
                 "type": "string",
                 "minLength": 1,
@@ -314,7 +315,7 @@
               },
               "roles": {
                 "type": "array",
-                "maxItems": 16,
+                "maxItems": 24,
                 "items": {
                   "type": "string",
                   "minLength": 1,

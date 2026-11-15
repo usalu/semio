@@ -1,0 +1,80 @@
+{
+ "version": 1,
+ "vectors": [
+  {
+   "name": "a cache read of a blob by a peer group",
+   "group": "g1",
+   "originSeed": "8cd75c93caf66fdddf663d51bf5b9725685b35bc9152b098d0b29904f9b8433f",
+   "askerSeed": "b4e00ba9d9f87d0cef0c0599cf9751112c798165af35293b9eb3d036c0f23bc1",
+   "serverSeed": "4d0eca57b10b9b84c2f2a822f5931a4cbce72361c6c05c07c972f24823bdafda",
+   "timestamp": 1794700000000,
+   "nonce": "-VsVG2HNneS7MdLSkhmc7w",
+   "request": {
+    "head": {
+     "method": "GET",
+     "target": "/semio/cas/abababababababababababababababababababababababababababababababab",
+     "headers": {
+      "authorization": "Semio-Fleet o=g2-server r=cache-read a=cache t=1794700000000 n=AAAAAAAAAAAAAAAAAAAAAA s=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "x-semio-hop": "1"
+     }
+    },
+    "bodyHex": ""
+   },
+   "reply": {
+    "head": {
+     "status": 200,
+     "headers": {
+      "content-type": "application/octet-stream"
+     }
+    },
+    "bodyHex": "626c6f62206f662070726f6a65637420f09fa680efb88f616c706861"
+   },
+   "serverX25519": "449d4a7b1c92d07e7bfb3d28dc2a149009864946e4abda8f45a8f317b4ff6930",
+   "requestKey": "d359451e12e84e68b6caf3d4641f06aaaaa52bc1ccdeb6f52c564c9b2ba49d8e",
+   "requestIv": "5e00fed7505512fd309726b9",
+   "replyKey": "8fbf6e13e7983f94f01fcb1f126bb248c1f1a1ad63c98b4a266f126f63658911",
+   "replyIv": "573a06dad8ebcba6243e76fd",
+   "requestHeader": "1.6qPeXe4LbDJIzGo4jk2l4bKQGADVf6BBlyfwor_nhSc.1794700000000.-VsVG2HNneS7MdLSkhmc7w",
+   "replyHeader": "1.WW095pltJTh2wcHO0L2BjjVe-y6FyyGbV53jwN0zgC8",
+   "requestCiphertext": "02b1828173d6c7ce3b349650df8b1cea9d5601af85b46b016079dd87df33ac3cadd4e45fe164946f23b1924783d0455c629c094603afca1f99ea4705914ed5e8ceb5f97800def35b005a26549a418dc8141ccb4f99821647fe14fbabbae38635345cb38055f3c7a48ee5bc8c673cf2614505cb4c72e15be502b894db718b49fd0388e71593b287ae6f8ed4372b6861ebb69c6d38bc5021fd06a932547f52965d9cf9a3110db55d2dbc7a8e2f0089914f0924f7f7f1d1841a5a4e01ea16d300b545ab0e77804c5cd688566b5b29149ae68c09e812cde12c2960fba459c46c15df41d5d16a037a53f4abad3411fb2cab01692d959ca9e3029ac29b7241a10bec404544681fc906d3358bca2b822023ee3193e2b08af47e117f91d3aa0afc719320ae48050d268765e7b70bd927569374f1584762e9f31cf986ac68ff420de7becc450f2d2ecd3ca94f4ea9b03848cf5d489528ddfe21a57559a58c",
+   "replyCiphertext": "cb48840c8e8c541d3e0b97f869f6b3d44f930e1b378437fc8cc0f0984aee87b935198e598ec5d006827eb6aa779fcb19d14ce24067c80c4d24b4e582b6ad86cd4b04f7cdb3a3ffca3962e2a656a483de11b60995e4ef8034398d7a699e47d467b5db1849b25ebda6bff298b293421f5c398cc3a1"
+  },
+  {
+   "name": "a claim post with a body and a miss reply",
+   "group": "g2",
+   "originSeed": "f906f0491c1b1c388c971de0c56b68778ceef9bfb26c2fbcf7f562240fb5074b",
+   "askerSeed": "9baa808972efe2f4785641fbd1869526326e4bd0eb02ff45e8441f8063a5bd67",
+   "serverSeed": "1a96336891a53693bcc97a068134aba8228c19510f932e13680b50850faf0738",
+   "timestamp": 1794700001000,
+   "nonce": "XNVF17LfyTZ1-d381wnWSQ",
+   "request": {
+    "head": {
+     "method": "POST",
+     "target": "/semio/claim/ac/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+     "headers": {
+      "content-type": "application/json"
+     }
+    },
+    "bodyHex": "7b226f776e6572223a2267312d6d3031222c2274746c4d696c6c697365636f6e6473223a313030307d"
+   },
+   "reply": {
+    "head": {
+     "status": 404,
+     "headers": {
+      "x-semio-time": "1794700000123"
+     }
+    },
+    "bodyHex": ""
+   },
+   "serverX25519": "15d70d3eb964549534059af1d8bdbff229f567d7bc23cbcb8135ab548ff27b66",
+   "requestKey": "a9cd1cf5827e86dcc8ce5534d2d9c3d5c1f489e0b9c71140fc7028e917f6c015",
+   "requestIv": "0634ef33e0d5def17aa317a0",
+   "replyKey": "c9df666f08a8cb68b4e79973f5892523333dbc6239ca5e2cbbf06107d8f5345e",
+   "replyIv": "d3b6be14c72ee269fff5f725",
+   "requestHeader": "1.veJeZqyqFuJrg6BbyG65H_jYXJaxUQjvNMavAuMsA0o.1794700001000.XNVF17LfyTZ1-d381wnWSQ",
+   "replyHeader": "1.y49LoPTwL3a1I-EccU6xvYBQQl0d5y6E3AvI-0QFF0Q",
+   "requestCiphertext": "b56f8bb97b24d381c4fdfdeeb0606eebf9f171b31c3795236379f88c5d3dffd7b82742820aa5aa82b9caf50a224582fc181bbb6a0f04a8da30861ba2e3310c3a517568b3cdc5843d037db1d2c1d25830f940b19551a1479b0b4a557ea2321fed4ee1a059d7d0dbe2d6cb2ff06215ed7bdc03390879352e230cfb902934880b830514c1595803ca0e3d0438d4947a50bf8918145e55094d56809b06b8593d28760f2d5f772361cb4ac9cf81d6fc7a5b66e81e5202e223546434d2113dc12421a73be93c7ea16d4f4f70542d519c48d10b380f09b7980c81d2",
+   "replyCiphertext": "f739197d9effcfe8c585074927f2b5303d654c7de3c651b2517ef3213427be8ffff6f125eb3d0fe65e139c949243be2c2250e30efcef62f9c53d6c833b733e47b35e89d76a655a13475fe1df55"
+  }
+ ]
+}

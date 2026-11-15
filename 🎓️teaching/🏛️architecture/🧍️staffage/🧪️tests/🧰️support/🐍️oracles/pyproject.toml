@@ -6,7 +6,7 @@ requires-python = ">=3.9"
 dependencies = []
 
 [dependency-groups]
-geometry = ["shapely", "numpy", "scipy", "svgelements"]
+geometry = ["shapely", "numpy", "scipy", "svgelements", "trimesh", "rtree"]
 documents = ["pymupdf==1.26.5", "lxml", "ezdxf", "reportlab<5", "pikepdf", "pypdfium2", "pillow"]
 media = ["av", "imageio-ffmpeg"]
 dwg = ["ezdwg==0.19.2; python_full_version >= '3.10'"]

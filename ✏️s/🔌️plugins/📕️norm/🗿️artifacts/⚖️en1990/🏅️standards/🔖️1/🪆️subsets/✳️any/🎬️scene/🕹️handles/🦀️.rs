@@ -5,7 +5,7 @@
 use super::scene::projection_kit::{along, base_id, entity_ref, loc, mul, v3, Placement};
 use super::actions::{affected, lift, present_groups, rows, selector_anchor, GROUP_LANE};
 use super::analyses;
-use super::kit::{member_depth, COMBINATION_ENTITY};
+use super::kit::{member_depth, raw_value, COMBINATION_ENTITY};
 use super::layout::Layout;
 use super::members::exaggeration;
 use super::model::{self, En1990Snapshot};
@@ -196,10 +196,6 @@ fn leaf_of(collection: &str) -> &'static str {
         "accidentals" => "ad",
         _ => "aEk",
     }
-}
-
-pub(crate) fn raw_value(d: &En1990Snapshot, id: &str) -> f64 {
-    d.permanents.iter().find(|a| a.id == id).map(|a| a.gk).or_else(|| d.variables.iter().find(|a| a.id == id).map(|a| a.qk)).or_else(|| d.accidentals.iter().find(|a| a.id == id).map(|a| a.ad)).or_else(|| d.seismics.iter().find(|a| a.id == id).map(|a| a.a_ek)).unwrap_or(0.0)
 }
 
 fn action_handles(d: &En1990Snapshot, layout: &Layout, id: &str) -> Vec<Handle> {

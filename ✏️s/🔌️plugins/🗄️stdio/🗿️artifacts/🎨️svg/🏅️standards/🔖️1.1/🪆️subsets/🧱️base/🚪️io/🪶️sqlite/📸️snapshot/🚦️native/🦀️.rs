@@ -29,7 +29,7 @@ fn count(value:&SvgSnapshot,encoding:SnapshotEncoding,native:&mut NativeEncodeCo
 }
 pub(crate) fn preflight(value:&SvgSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  let limits=control.limits();control.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint,allocation|{
-  let mut callback=|event:NativeEncodeProgress|checkpoint(event.completed,event.total);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,allocation);
+  let mut callback=|event:NativeEncodeProgress|checkpoint(event.completed,event.total);let mut native=allocation.encode(remaining,&mut callback);
   let result=count(value,encoding,&mut native,limits).map(|_|());(result,native.owned_bytes())
  })?
 }
@@ -46,10 +46,10 @@ pub(crate) fn encode(value:&SvgSnapshot,encoding:SnapshotEncoding,limits:store::
 
 /// 🏗️ Credits the temporary XML projection independently of the subsequent SQL rows.
 pub(crate) fn project_document(value:&crate::schema::snapshot::SvgDocument,control:&mut SqliteSnapshotControl<'_>)->Result<semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument,ValueError>{
-    control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,checkpoint,allocation|{let mut observer=|event:NativeEncodeProgress|checkpoint(event.completed,event.total);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut observer,allocation);let result=crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_document_controlled(value,&mut *native);(result,native.owned_bytes())})?
+    control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,checkpoint,allocation|{let mut observer=|event:NativeEncodeProgress|checkpoint(event.completed,event.total);let mut native=allocation.encode(remaining,&mut observer);let result=crate::standards::v1_1::subsets::base::io::text::snapshot::native_svg_document_controlled(value,&mut *native);(result,native.owned_bytes())})?
 }
 /// 🌳️ Credits native attribute admission independently of retained SQL reconstruction.
 pub(crate) fn admit_document(value:semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument,control:&mut SqliteSnapshotControl<'_>)->Result<crate::schema::snapshot::SvgDocument,ValueError>{
     let owner=DecodedFieldOwner::new(value,retire_xml_document);
-    control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{let mut observer=|event:NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut observer,allocation);let result=crate::standards::v1_1::subsets::base::io::text::snapshot::bind_svg_document_controlled(owner.take(),&mut *native);(result,native.owned_bytes())})?
+    control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot,|remaining,checkpoint,allocation|{let mut observer=|event:NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native=allocation.decode(remaining,&mut observer);let result=crate::standards::v1_1::subsets::base::io::text::snapshot::bind_svg_document_controlled(owner.take(),&mut *native);(result,native.owned_bytes())})?
 }

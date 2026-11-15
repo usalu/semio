@@ -1,0 +1,13 @@
+/** 🏔️ The tightest `memory.max` or `memory.high` that bounds the MACHINE's share of this user (the cgroups above the ones this system creates itself): a `semio-service-*`, `semio-jobs` or `job-*` group is the budget of one process of ours, and a process that took its own budget for the size of the machine called a 16 GB worker 4 GB big (measured on g1-m04: `it can give about 0 MB per project` in 7 of 7 tries). Answers undefined where no such level has a numeric limit or cgroup v2 is not readable. */
+export function cgroupMachineLimitBytesV1(ports:CgroupPortsV1=cgroupPortsV1()):number|undefined{
+ try{
+  const segments=ports.own().split("/").filter(Boolean);let limit=Infinity;
+  for(let depth=segments.length;depth>=1;depth--){
+   const name=segments[depth-1]!;if(name.startsWith("semio-")||name.startsWith("job-"))continue;
+   const directory=join(ports.root,...segments.slice(0,depth));
+   for(const file of["memory.max","memory.high"])try{const text=ports.read(join(directory,file)).trim();if(/^[0-9]+$/u.test(text)&&Number(text)<2**62)limit=Math.min(limit,Number(text));}catch{}
+  }
+  return Number.isFinite(limit)?limit:undefined;
+ }catch{return undefined;}
+}
+

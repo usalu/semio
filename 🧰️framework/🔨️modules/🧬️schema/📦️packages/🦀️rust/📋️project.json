@@ -4,8 +4,14 @@
   "targets": {
     "generate": {
       "executor": "repo:script",
+      "outputs": [],
       "metadata": {
         "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          },
           "sourceInputObservation": "freshness"
         }
       },
@@ -14,7 +20,7 @@
         "command": "repo ./📜️script.ts generate",
         "forwardAllArgs": true
       },
-      "cache": true
+      "cache": false
     },
     "preview-generated": {
       "executor": "repo:script",
@@ -142,7 +148,7 @@
   ],
   "namedInputs": {
     "default": [
-      "{projectRoot}/**/*",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🔨️modules/🧬️schema/🤖️generated\"" }, "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🏃️execution/🟦️.ts",

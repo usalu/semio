@@ -1,4 +1,4 @@
-//! 📍️ `change-pier-base-soil-vs-m-s` diff: patches `soil_vs_m_s` of the addressed pier_base row.
+//! 📍️ `change-pier-base-soil-vs-ms` diff: patches `soil_vs_m_s` of the addressed pier_base row.
 
 use crate::change_pier_base_soil_vs_m_s::ChangePierBaseSoilVsMS;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998PierBaseDelta, En1998PierBasePatch};

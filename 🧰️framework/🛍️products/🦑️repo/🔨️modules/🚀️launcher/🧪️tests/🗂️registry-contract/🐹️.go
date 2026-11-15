@@ -140,7 +140,7 @@ func TestRegistryAgreesWithBunReleaseRecord(t *testing.T) {
 // 🗂️Every text the launcher can print exists in every language with equal placeholders: the registry texts that failures name, and the built-in texts for the moments without a registry.
 func TestEveryPrintableTextIsBilingual(t *testing.T) {
 	registry := loadRegistry(t)
-	for _, id := range []string{"runtimeUnsupported", "cacheUnavailable", "pathTooLong", "mirrorRefused", "redirectRefused", "downloadFailed", "integrityFailed", "extractFailed", "extractTooLarge", "probeFailed", "cancelled", "waitingForPeer", "provisioning", "downloading", "handOffFailed", "entryUnknown", "entryMissing", "runtimeUnknown", "unexpected"} {
+	for _, id := range []string{"runtimeUnsupported", "cacheUnavailable", "pathTooLong", "mirrorRefused", "redirectRefused", "downloadFailed", "integrityFailed", "extractFailed", "extractTooLarge", "probeFailed", "cancelled", "waitingForPeer", "provisioning", "downloading", "handOffFailed", "entryUnknown", "entryMissing", "namespaceDangling", "runtimeUnknown", "unexpected"} {
 		for _, language := range registry.Languages {
 			if registry.Messages[id][language] == "" {
 				t.Fatalf("%s lacks %s", id, language)

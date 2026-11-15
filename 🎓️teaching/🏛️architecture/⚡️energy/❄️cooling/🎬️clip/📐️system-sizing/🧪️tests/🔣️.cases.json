@@ -1,3 +1,4 @@
 {
-  "caption": "Divide the sensible load by air density, specific heat capacity and the temperature difference to find the required airflow."
+  "caption": "Because $\\dot{Q}_{\\mathrm{V,sens}}=\\dot{Q}_{\\mathrm{S}}$, we solve for the airflow: the load divided by density, specific heat capacity and temperature lift.",
+  "chain": {"areaM2": 30, "glassShare": 0.7, "blind": 0.15, "gPerp": 0.6, "irradianceWM2": 800, "loadW": 1510, "supplyLiftK": 8, "airflowM3S": 0.157, "ductAreaM2": 0.0629, "velocityMS": 2.5}
 }

@@ -53,11 +53,10 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 load_vo_timing = _manim_module.load_vo_timing
 
-set_vo_language("de")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
@@ -70,6 +69,7 @@ BEDARF_CYAN = semio_color("secondary")
 VERBRAUCH_ORANGE = semio_color("tertiary")
 PRIM_VIOLET = semio_color("info")
 END_RED = semio_color("danger")
+END_TXT = interpolate_color(ManimColor(END_RED), ManimColor("#FFFFFF"), 0.4)
 AMBIENT_GREEN = semio_color("success")
 
 CLASSES = (
@@ -80,7 +80,8 @@ CLASSES = (
 
 GAS_END, WP_END = 140, 31
 Q_NUTZ = 100
-UNIT = r"\mathrm{kWh/(m^{2}\cdot a)}"
+UNIT = r"\frac{\mathrm{kWh}}{\mathrm{m^{2}\,a}}"
+UNIT_FRAC = r"\frac{\mathrm{kWh}}{\mathrm{m^{2}\,a}}"
 STAGE_U = 0.0095
 MONTHS = 36
 
@@ -89,12 +90,32 @@ _RAW = np.clip(_SEASON * (1.0 + np.random.default_rng(6).uniform(-0.38, 0.38, MO
 
 
 #region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+def _din_ref(text: str, title=None):
+    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
+    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
+
+    def line(content: str):
+        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+
+    lines = []
+    for part in text.replace("\n", " · ").split(" · "):
+        if lines and line(f"{lines[-1]} · {part}").width <= room:
+            lines[-1] += f" · {part}"
+        else:
+            lines.append(part)
+    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
+    if ref.width > room:
+        ref.scale_to_fit_width(room)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
+
+
+def _regroup(scene, group):
+    """🧲 Make ``group`` the scene's own entry for its parts, so a transition that consumes it removes every part and not just the group object."""
+    family = set(group.get_family())
+    scene.remove(*[m for m in scene.mobjects if m is not group and family.intersection(m.get_family())])
+    scene.add(group)
 #endregion
 
 
@@ -301,32 +322,32 @@ class Beat1_BedarfVsVerbrauch(Scene):
          "Everything we calculated ends up on one sheet of paper that buyers and tenants actually get to see.",
          "Alles, was wir berechnet haben, landet auf einem Blatt Papier, das Käufer und Mieter wirklich zu sehen bekommen."),
         ("bedarf_berechnung",
-         "The demand certificate is exactly this series: a standardised calculation.",
-         "Der Bedarfsausweis ist genau diese Serie: eine standardisierte Berechnung."),
+         "The demand certificate is exactly this series: a standardised calculation of the final energy $Q_{E}$.",
+         "Der Bedarfsausweis ist genau diese Serie: eine standardisierte Berechnung der Endenergie $Q_{E}$."),
         ("bedarf_rand",
          "It rests on fixed boundary conditions.",
          "Sie beruht auf festgelegten Randbedingungen."),
         ("bedarf_norm",
-         "A set room temperature and a standard use, whatever the real residents do.",
-         "Eine feste Raumtemperatur und eine Norm-Nutzung — unabhängig vom Verhalten der echten Bewohner."),
+         r"A set room temperature of $20\,\mathrm{°C}$ and a standard use, whatever the real residents do.",
+         r"Eine feste Raumtemperatur von $20\,\mathrm{°C}$ und eine Norm-Nutzung — unabhängig vom Verhalten der echten Bewohner."),
         ("verbrauch_daten",
-         "The consumption certificate instead uses recorded consumption data.",
-         "Der Verbrauchsausweis nutzt stattdessen erfasste Verbrauchsdaten."),
+         "The consumption certificate instead uses recorded final-energy consumption: what the meters and bills show.",
+         "Der Verbrauchsausweis nutzt stattdessen den erfassten Endenergieverbrauch: was Zähler und Rechnungen zeigen."),
         ("verbrauch_monate",
-         "At least thirty-six months of it are required.",
-         "Es werden mindestens sechsunddreißig Monate benötigt."),
+         r"At least $36$ months of it are required (§ 82).",
+         r"Es werden mindestens $36$ Monate benötigt (§ 82)."),
         ("verbrauch_witterung",
          "These values are corrected for the weather.",
          "Diese Werte werden witterungsbereinigt."),
         ("unterschied_bedarf",
-         "So the demand certificate describes the building under those fixed conditions.",
-         "Der Bedarfsausweis beschreibt also das Gebäude unter festen Randbedingungen."),
+         "So the demand certificate describes the building under those fixed conditions: its calculated final-energy demand.",
+         "Der Bedarfsausweis beschreibt also das Gebäude unter festen Randbedingungen: seinen berechneten Endenergiebedarf."),
         ("unterschied_verbrauch",
-         "The consumption certificate describes the building and its actual use together.",
-         "Der Verbrauchsausweis beschreibt Gebäude und tatsächliche Nutzung zusammen."),
+         "The consumption certificate describes the building and its actual use together: the measured final-energy consumption.",
+         "Der Verbrauchsausweis beschreibt Gebäude und tatsächliche Nutzung zusammen: den gemessenen Endenergieverbrauch."),
         ("wann_neubau",
-         "New buildings always need the calculated certificate.",
-         "Für Neubauten ist der berechnete Ausweis Pflicht."),
+         "New buildings always need the calculated certificate (§ 80).",
+         "Für Neubauten ist der berechnete Ausweis Pflicht (§ 80)."),
         ("wann_bestand",
          "For existing buildings there is usually a choice, with exceptions.",
          "Im Bestand besteht meist die Wahl — mit Ausnahmen."),
@@ -337,7 +358,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Demand or consumption", "Bedarf oder Verbrauch"))
-        din = _din_ref("GEG § 79 ff. · § 80")
+        din = _din_ref(_references.cite(("gmodg", "p79-82")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -429,11 +450,11 @@ class Beat1_BedarfVsVerbrauch(Scene):
         sleeper = _stand(house2, hx2 + 0.55, "demand-certificate-sleeper", storey=1)
         real_lamp = _lamp(np.array([hx2 + 0.5, house2["level_1"].get_center()[1], 0.0]), 0.3)
         row_a, box_a, items_a = math_panel([
-            ("bed", tr(r"\text{Demand}", r"\text{Bedarf}"), BEDARF_CYAN), (None, "=", P_WHITE),
+            ("bed", tr(r"\text{Final-energy demand}", r"\text{Endenergiebedarf}"), BEDARF_CYAN), (None, "=", P_WHITE),
             ("geb", tr(r"\text{Building}\;|_{\,\text{standard}}", r"\text{Gebäude}\;|_{\,\text{Norm}}"), P_PRIMARY),
         ], size=BODY_FONT_SIZE + 2)
         row_b, box_b, items_b = math_panel([
-            ("ver", tr(r"\text{Consumption}", r"\text{Verbrauch}"), VERBRAUCH_ORANGE), (None, "=", P_WHITE),
+            ("ver", tr(r"\text{Final-energy consumption}", r"\text{Endenergieverbrauch}"), VERBRAUCH_ORANGE), (None, "=", P_WHITE),
             ("geb2", tr(r"\text{Building}", r"\text{Gebäude}"), P_PRIMARY), (None, "+", P_WHITE),
             ("use", tr(r"\text{Usage}", r"\text{Nutzung}"), VERBRAUCH_ORANGE),
         ], size=BODY_FONT_SIZE + 2)
@@ -495,6 +516,9 @@ class Beat2_DieSkala(Scene):
         ("skala",
          "For residential buildings, the result is printed on one colour band, from A plus down to H.",
          "Bei Wohngebäuden wird das Ergebnis auf einem Farbband ausgewiesen — von A-plus bis H."),
+        ("skala_end",
+         r"The band measures final energy $Q_{E}$: what the meter records, not the useful heat in the room.",
+         r"Das Band misst die Endenergie $Q_{E}$: was der Zähler erfasst, nicht die Nutzenergie im Raum."),
         ("skala_beide",
          "Both certificate types print on that same band.",
          "Beide Ausweistypen nutzen dasselbe Farbband."),
@@ -502,39 +526,42 @@ class Beat2_DieSkala(Scene):
          "Two numbers stand beside it: final energy and primary energy.",
          "Daneben stehen zwei Zahlen: Endenergie und Primärenergie."),
         ("werte_klasse",
-         "But for residential buildings the class follows final energy.",
-         "Die Effizienzklasse richtet sich bei Wohngebäuden aber nach der Endenergie."),
+         "But for residential buildings the class follows final energy only (§ 86).",
+         "Die Effizienzklasse richtet sich bei Wohngebäuden aber nur nach der Endenergie (§ 86)."),
         ("gas",
-         "Our gas-heated design needs a hundred and forty kilowatt-hours per square metre.",
-         "Unser gasbeheizter Entwurf braucht hundertvierzig Kilowattstunden je Quadratmeter."),
+         r"Our gas-heated design needs $140\,\mathrm{kWh/(m^2\,a)}$ of final energy: gas at the meter.",
+         r"Unser gasbeheizter Entwurf braucht $140\,\mathrm{kWh/(m^2\,a)}$ Endenergie: Erdgas am Zähler."),
         ("gas_nutz",
-         "Of that, a hundred is useful heat; the other forty are plant losses.",
-         "Davon sind hundert Nutzwärme — die übrigen vierzig sind Anlagenverluste."),
+         r"Of that, $100\,\mathrm{kWh/(m^2\,a)}$ arrive as useful energy $Q_{h}$ in the room; the other $40\,\mathrm{kWh/(m^2\,a)}$ are plant losses.",
+         r"Davon kommen $100\,\mathrm{kWh/(m^2\,a)}$ als Nutzenergie $Q_{h}$ im Raum an; die übrigen $40\,\mathrm{kWh/(m^2\,a)}$ sind Anlagenverluste."),
         ("gas_klasse",
          "That lands in class E.",
          "Das ergibt Klasse E."),
         ("wp",
-         "The identical building with a heat pump needs only thirty-one.",
-         "Dasselbe Gebäude mit Wärmepumpe braucht nur einunddreißig."),
+         r"The identical building with a heat pump needs only $31\,\mathrm{kWh/(m^2\,a)}$ of electricity, which is final energy.",
+         r"Dasselbe Gebäude mit Wärmepumpe braucht nur $31\,\mathrm{kWh/(m^2\,a)}$ Strom, das ist die Endenergie."),
         ("wp_klasse",
          "That moves it up to class A.",
          "Damit rückt es auf Klasse A."),
         ("wp_umwelt",
-         "The rest of the useful heat comes from ambient heat.",
-         "Den Rest der Nutzwärme liefert die Umweltwärme."),
+         r"Electricity is not the delivered heat: net of plant losses, ambient heat adds $69\,\mathrm{kWh/(m^2\,a)}$ past the meter.",
+         r"Strom ist nicht die gelieferte Wärme: Netto liefert die Umweltwärme $69\,\mathrm{kWh/(m^2\,a)}$ am Zähler vorbei."),
         ("lesen",
-         "Same walls, same windows, same useful heating demand.",
-         "Gleiche Wände, gleiche Fenster, gleicher Heizwärmebedarf."),
+         r"Same walls, same windows, same useful energy $Q_{h}$.",
+         r"Gleiche Wände, gleiche Fenster, gleiche Nutzenergie $Q_{h}$."),
         ("lesen_anlage",
-         "The plant moves the letter too, not the envelope alone.",
-         "Den Buchstaben bestimmt die Anlage mit, nicht die Hülle allein."),
+         r"The plant moves the letter too, not the envelope alone: final energy is $Q_{E}=Q_{h}\cdot e_{E}$, with the dimensionless factor $e_{E}$.",
+         r"Den Buchstaben bestimmt die Anlage mit, nicht die Hülle allein: Die Endenergie ist $Q_{E}=Q_{h}\cdot e_{E}$ mit dem einheitenlosen Faktor $e_{E}$."),
+        ("lesen_wp",
+         r"For the heat pump $e_{E}$ is only $0.31$, so the letter becomes A.",
+         r"Bei der Wärmepumpe ist $e_{E}$ nur $0{,}31$, der Buchstabe wird also A."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Reading the scale", "Die Skala lesen"))
-        din = _din_ref("GEG § 86 · Anlage 10")
+        din = _din_ref(_references.cite(("gmodg", "p86")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "skala"))
@@ -549,8 +576,10 @@ class Beat2_DieSkala(Scene):
                        size=LABEL_FONT_SIZE - 4, color=P_WHITE, edge="center").set_opacity(0.6)
             for i, (_l, bound, _c) in enumerate(CLASSES[:-1])
         ])
-        unit_label = math_label(UNIT, at=np.array([strip["center"][0] + strip["width"] / 2 + 0.2, band_y - 0.07, 0.0]),
-                                size=LABEL_FONT_SIZE - 4, color=P_PRIMARY, edge="left")
+        unit_label = math_label(rf"Q_{{E}}\;\text{{in}}\;{UNIT}", at=np.array([0.0, band_bottom - 0.68, 0.0]),
+                                size=LABEL_FONT_SIZE - 2, color=END_TXT, edge="center")
+        end_title = body_text(tr("Final energy at the meter", "Endenergie am Zähler"), font_size=LABEL_FONT_SIZE, color=END_TXT).move_to(
+            np.array([0.0, band_top + 0.45, 0.0]))
         schematic_note = note_line(tr("Class widths schematic, not to scale", "Klassenbreiten schematisch, nicht maßstäblich"), color=P_PRIMARY)
 
         def clear(*keep):
@@ -569,8 +598,12 @@ class Beat2_DieSkala(Scene):
         self.play(FadeIn(bounds), FadeIn(unit_label), FadeIn(schematic_note), run_time=1.2)
         hold_for(self, self.NARRATION, "skala", used=BEAT_SUBTITLE_FADE + 0.3 + 2.2 + 1.2)
 
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "skala_end"))
+        self.play(FadeIn(end_title), Indicate(unit_label, color=END_RED), run_time=1.4)
+        hold_for(self, self.NARRATION, "skala_end")
+
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "skala_beide"))
-        self.play(Create(sheet_l[0]), FadeIn(sheet_l[1]), Create(sheet_r[0]), FadeIn(sheet_r[1]), run_time=1.4)
+        self.play(FadeOut(end_title), Create(sheet_l[0]), FadeIn(sheet_l[1]), Create(sheet_r[0]), FadeIn(sheet_r[1]), run_time=1.4)
         self.play(GrowArrow(feed_l), GrowArrow(feed_r), run_time=1.4)
         hold_for(self, self.NARRATION, "skala_beide")
 
@@ -600,16 +633,20 @@ class Beat2_DieSkala(Scene):
         gas_bar = _end_bar(gx, ground, v_gas, [(0, Q_NUTZ, BEDARF_CYAN), (Q_NUTZ, GAS_END, END_RED)])
         gas_ptr = _pointer(strip, v_gas, P_ORANGE)
         gas_read = math_readout(
-            lambda: rf"{label_number(v_gas.get_value())}\,{UNIT}",
+            lambda: rf"Q_{{E}}={label_number(v_gas.get_value())}\;{UNIT}",
             np.array([gx, ground + GAS_END * STAGE_U + 0.3, 0.0]),
-            size=LABEL_FONT_SIZE - 1, color=P_ORANGE, edge="center",
+            size=LABEL_FONT_SIZE - 2, color=P_ORANGE, edge="center",
         )
         gas_name = body_text(tr("Gas boiler", "Gaskessel"), font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(
             np.array([gx, ground - 0.25, 0.0]))
         qh_y = ground + Q_NUTZ * STAGE_U
-        nutz_label = math_label(tr(r"\text{Useful heat}\;Q_{h}=100", r"\text{Nutzwärme}\;Q_{h}=100"), at=np.array([gx + 0.55, ground + 0.5 * Q_NUTZ * STAGE_U, 0.0]),
-                                size=LABEL_FONT_SIZE - 2, color=BEDARF_CYAN, edge="left")
-        loss_label = body_text(tr("System losses", "Anlagenverluste"), font_size=LABEL_FONT_SIZE - 3, color=END_RED)
+        nutz_name = tr(r"\text{Useful energy}", r"\text{Nutzenergie}")
+        loss_name = tr(r"\text{System losses}", r"\text{Anlagenverluste}")
+        nutz_label = math_label(rf"{nutz_name}\;Q_{{h}}={Q_NUTZ}\;{UNIT}",
+                                at=np.array([gx + 0.55, ground + 0.5 * Q_NUTZ * STAGE_U, 0.0]),
+                                size=LABEL_FONT_SIZE - 3, color=BEDARF_CYAN, edge="left")
+        loss_label = math_label(rf"{loss_name}\;{GAS_END - Q_NUTZ}\;{UNIT}",
+                                size=LABEL_FONT_SIZE - 3, color=END_TXT)
         loss_label.move_to(np.array([gx + 0.55, ground + 1.2 * Q_NUTZ * STAGE_U, 0.0])).align_to(
             np.array([gx + 0.55, 0.0, 0.0]), LEFT)
 
@@ -635,18 +672,20 @@ class Beat2_DieSkala(Scene):
         wp_bar = _end_bar(wx, ground, v_wp, [(0, WP_END, END_RED)])
         wp_ptr = _pointer(strip, v_wp, AMBIENT_GREEN)
         wp_read = math_readout(
-            lambda: rf"{label_number(v_wp.get_value())}\,{UNIT}",
+            lambda: rf"Q_{{E}}={label_number(v_wp.get_value())}\;{UNIT}",
             np.array([wx, ground + Q_NUTZ * STAGE_U + 0.3, 0.0]),
-            size=LABEL_FONT_SIZE - 1, color=AMBIENT_GREEN, edge="center",
+            size=LABEL_FONT_SIZE - 2, color=AMBIENT_GREEN, edge="center",
         )
-        wp_name = body_text(tr("Heat pump", "Wärmepumpe"), font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(
+        wp_name = body_text(tr("Heat pump (electricity)", "Wärmepumpe (Strom)"), font_size=LABEL_FONT_SIZE, color=AMBIENT_GREEN).move_to(
             np.array([wx, ground - 0.25, 0.0]))
         ambient = Rectangle(width=0.8, height=(Q_NUTZ - WP_END) * STAGE_U, color=AMBIENT_GREEN, stroke_width=1.2,
                             fill_color=AMBIENT_GREEN, fill_opacity=0.16).move_to(
             np.array([wx, ground + (WP_END + Q_NUTZ) / 2 * STAGE_U, 0.0]))
-        ambient_label = body_text(tr("Ambient heat", "Umweltwärme"), font_size=LABEL_FONT_SIZE - 3, color=AMBIENT_GREEN)
-        ambient_label.move_to(np.array([wx - 0.55, ground + 0.65 * Q_NUTZ * STAGE_U, 0.0])).align_to(
-            np.array([wx - 0.55, 0.0, 0.0]), RIGHT)
+        ambient_name = tr(r"\text{Ambient heat, net}", r"\text{Umweltwärme, netto}")
+        ambient_label = math_label(rf"{ambient_name}\;{Q_NUTZ - WP_END}\;{UNIT}",
+                                   size=LABEL_FONT_SIZE - 3, color=AMBIENT_GREEN)
+        ambient_label.move_to(np.array([wx + 0.55, ground + 0.65 * Q_NUTZ * STAGE_U, 0.0])).align_to(
+            np.array([wx + 0.55, 0.0, 0.0]), LEFT)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "wp"))
         gas_bar.clear_updaters()
@@ -673,7 +712,7 @@ class Beat2_DieSkala(Scene):
                              color=BEDARF_CYAN, stroke_width=2.2, dash_length=0.1)
         qh_right = DashedLine(np.array([house["bottom_right"][0] + 0.01, qh_y, 0.0]),
                               np.array([gx - 0.4, qh_y, 0.0]), color=BEDARF_CYAN, stroke_width=2.2, dash_length=0.1)
-        qh_label = math_label(r"Q_{h}=100", at=np.array([wx + 0.75, qh_y + 0.3, 0.0]),
+        qh_label = math_label(rf"{nutz_name}\;Q_{{h}}={Q_NUTZ}\;{UNIT}", at=np.array([-1.6, qh_y + 1.15, 0.0]),
                               size=LABEL_FONT_SIZE - 2, color=BEDARF_CYAN, edge="center")
         envelope = _envelope(house)
 
@@ -688,21 +727,30 @@ class Beat2_DieSkala(Scene):
 
         ep_gas, ep_wp = label_number(GAS_END / Q_NUTZ, 2), label_number(WP_END / Q_NUTZ, 2)
         row, box, items = math_panel([
-            ("qh", r"Q_{h}=100", BEDARF_CYAN), (None, r"\Rightarrow", P_WHITE),
-            ("gas", rf"100\cdot{ep_gas}={GAS_END}\to\mathrm{{{_class_letter(GAS_END)}}}", P_ORANGE),
-            (None, r"\quad|\quad", P_WHITE),
-            ("wp", rf"100\cdot{ep_wp}={WP_END}\to\mathrm{{{_class_letter(WP_END)}}}", AMBIENT_GREEN),
-        ], size=BODY_FONT_SIZE + 2)
+            ("qe", r"Q_{E}=Q_{h}\cdot e_{E}", END_TXT), (None, "=", P_WHITE),
+            ("gas", rf"{Q_NUTZ}\,{UNIT_FRAC}\cdot {ep_gas}={GAS_END}\,{UNIT_FRAC}\to\mathrm{{{_class_letter(GAS_END)}}}", P_ORANGE),
+        ], size=BODY_FONT_SIZE)
+        row_w, box_w, items_w = math_panel([
+            ("qe", r"Q_{E}=Q_{h}\cdot e_{E}", END_TXT), (None, "=", P_WHITE),
+            ("wp", rf"{Q_NUTZ}\,{UNIT_FRAC}\cdot {ep_wp}={WP_END}\,{UNIT_FRAC}\to\mathrm{{{_class_letter(WP_END)}}}", AMBIENT_GREEN),
+        ], size=BODY_FONT_SIZE)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lesen_anlage"))
         self.play(Create(box), FadeIn(row), *_heat(warm, 1.2), run_time=1.2)
-        self.play(Create(highlight_param(items, "qh", color=BEDARF_CYAN)), Indicate(qh_left, color=BEDARF_CYAN),
+        ring_qe = highlight_param(items, "qe", color=END_TXT)
+        ring_gas = highlight_param(items, "gas", color=P_ORANGE)
+        self.play(Create(ring_qe), Indicate(qh_left, color=BEDARF_CYAN),
                   Indicate(qh_right, color=BEDARF_CYAN), *_heat(warm, 1.2), run_time=1.2)
-        self.play(Create(highlight_param(items, "gas", color=P_ORANGE)), Indicate(gas_bar, color=P_ORANGE),
-                  *_heat(warm, 1.2), run_time=1.2)
-        self.play(Create(highlight_param(items, "wp", color=AMBIENT_GREEN)), Indicate(wp_bar, color=AMBIENT_GREEN),
+        self.play(Create(ring_gas), Indicate(gas_bar, color=P_ORANGE),
                   *_heat(warm, 1.2), run_time=1.2)
         hold_for(self, self.NARRATION, "lesen_anlage", during=lambda rt: _heat(warm, rt))
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lesen_wp"))
+        self.play(FadeOut(row), FadeOut(box), FadeOut(ring_qe), FadeOut(ring_gas), *_heat(warm, 0.6), run_time=0.6)
+        self.play(Create(box_w), FadeIn(row_w), *_heat(warm, 1.2), run_time=1.2)
+        self.play(Create(highlight_param(items_w, "wp", color=AMBIENT_GREEN)), Indicate(wp_bar, color=AMBIENT_GREEN),
+                  *_heat(warm, 1.2), run_time=1.2)
+        hold_for(self, self.NARRATION, "lesen_wp", during=lambda rt: _heat(warm, rt))
 
         self.play(*[FadeOut(m) for m in list(self.mobjects) if m not in (subtitle, din)], run_time=0.6)
         self.wait(0.4)
@@ -721,8 +769,8 @@ class Beat3_PflichtangabenUndFolgen(Scene):
          "Once one exists, its key entries have to appear in commercial property ads.",
          "Liegt einer vor, gehören seine Kernangaben in kommerzielle Immobilienanzeigen."),
         ("art_wert",
-         "These are the type of certificate and the final energy value.",
-         "Das sind die Ausweisart und der Endenergiekennwert."),
+         r"These are the type of certificate and the final-energy demand or consumption $Q_{E}$.",
+         r"Das sind die Ausweisart und der Endenergiebedarf bzw. -verbrauch $Q_{E}$."),
         ("traeger",
          "Then the main energy carrier.",
          "Dazu kommt der wesentliche Energieträger."),
@@ -733,8 +781,8 @@ class Beat3_PflichtangabenUndFolgen(Scene):
          "For residential buildings the efficiency class is required as well.",
          "Bei Wohngebäuden zusätzlich die Effizienzklasse."),
         ("buchstabe",
-         "That single letter travels furthest.",
-         "Dieser eine Buchstabe wirkt am weitesten."),
+         r"That single letter, derived from $Q_{E}$ alone, travels furthest.",
+         r"Dieser eine Buchstabe, allein aus $Q_{E}$ abgeleitet, wirkt am weitesten."),
         ("vergleich",
          "It lets buyers and tenants roughly compare buildings.",
          "Er lässt Käufer und Mieter Gebäude überschlägig vergleichen."),
@@ -754,7 +802,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("What the certificate triggers", "Was der Ausweis auslöst"))
-        din = _din_ref("GEG § 84 · § 87")
+        din = _din_ref(_references.cite(("gmodg", "p84-87")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -774,14 +822,14 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         listing = RoundedRectangle(corner_radius=0, width=4.6, height=3.9, color=P_PRIMARY, stroke_width=_theme_module.CHROME_BORDER)
         listing.move_to(np.array([card_x, 0.0, 0.0]))
         listing.set_fill(P_DEEP_DARK, opacity=0.9)
-        listing_head = body_text(tr("Mandatory details per GEG § 87", "Pflichtangaben nach GEG § 87"), font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
+        listing_head = body_text(tr("Mandatory details per § 87", "Pflichtangaben nach § 87"), font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
         listing_head.next_to(listing.get_top(), DOWN, buff=0.22)
         small_sheet = _certificate([2.0, 0.1], BEDARF_CYAN, tr("Energy certificate", "Energieausweis"), width=2.4, height=2.7)
         into_ad = Arrow(np.array([0.7, 0.1, 0.0]), np.array([listing.get_right()[0] + 0.12, 0.1, 0.0]), buff=0.0,
                         color=BEDARF_CYAN, stroke_width=3, max_tip_length_to_length_ratio=0.12)
 
-        keys = (tr("Certificate type", "Ausweisart"), tr("Final energy indicator", "Endenergiekennwert"), tr("main energy carrier", "wesentlicher Energieträger"), tr("Year built (residential)", "Baujahr (Wohngebäude)"))
-        row_y = (1.05, 0.45, -0.15, -0.75)
+        keys = (tr("Certificate type", "Ausweisart"), tr("Final-energy demand / consumption", "Endenergiebedarf / -verbrauch"), tr("main energy carrier", "wesentlicher Energieträger"), tr("Year built (residential)", "Baujahr (Wohngebäude)"))
+        row_y = (1.1, 0.5, -0.35, -0.95)
         key_texts = VGroup(*[
             body_text(k, font_size=LABEL_FONT_SIZE - 4, color=P_WHITE).set_opacity(0.75).move_to(
                 np.array([text_x, y, 0.0])).align_to(np.array([text_x, y, 0.0]), LEFT)
@@ -791,15 +839,16 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         v_type = body_text(tr("Demand-based certificate", "Bedarfsausweis"), font_size=LABEL_FONT_SIZE, color=BEDARF_CYAN)
         v_type.move_to(value_at[0]).align_to(value_at[0], LEFT)
         v_end = ValueTracker(0.0)
-        v_end_read = math_readout(lambda: rf"{label_number(v_end.get_value())}\,{UNIT}", value_at[1] + DOWN * 0.1,
-                                  size=LABEL_FONT_SIZE, color=END_RED, edge="left")
+        v_end_read = math_readout(lambda: rf"Q_{{E}}={label_number(v_end.get_value())}\;{UNIT}", value_at[1] + DOWN * 0.1,
+                                  size=LABEL_FONT_SIZE - 2, color=END_TXT, edge="left")
         v_carrier = body_text(tr("Natural gas", "Erdgas"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
         v_carrier.move_to(value_at[2]).align_to(value_at[2], LEFT)
         v_year = body_text("1996", font_size=LABEL_FONT_SIZE, color=P_WHITE)
         v_year.move_to(value_at[3]).align_to(value_at[3], LEFT)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "anzeige"))
-        self.play(stage.transition("demand.certificate.mandatory.sheet-to-listing-size", source=big_sheet, target=small_sheet), run_time=1.4)
+        _regroup(self, big_sheet)
+        self.play(stage.transition("demand.certificate.mandatory.sheet-to-listing-size",source=big_sheet, target=small_sheet), run_time=1.4)
         self.play(Create(listing), FadeIn(listing_head), GrowArrow(into_ad), run_time=1.4)
         hold_for(self, self.NARRATION, "anzeige")
 
@@ -808,6 +857,11 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         self.add(v_end_read)
         self.play(FadeIn(key_texts[1]), v_end.animate.set_value(GAS_END), run_time=2.0, rate_func=smooth)
         hold_for(self, self.NARRATION, "art_wert")
+        v_end_read.clear_updaters()
+        v_end_static = math_label(rf"Q_{{E}}={label_number(GAS_END)}\;{UNIT}", at=value_at[1] + DOWN * 0.1,
+                                  size=LABEL_FONT_SIZE - 2, color=END_TXT, edge="left")
+        self.remove(v_end_read)
+        self.add(v_end_static)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "traeger"))
         self.play(FadeIn(key_texts[2]), FadeIn(v_carrier, shift=RIGHT * 0.1), run_time=1.4)
@@ -824,11 +878,9 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         badge_tag = body_text(tr("Efficiency class", "Effizienzklasse"), font_size=LABEL_FONT_SIZE - 4, color=P_WHITE).set_opacity(0.75)
         badge_tag.move_to(np.array([text_x, tag_y, 0.0])).align_to(np.array([text_x, tag_y, 0.0]), LEFT)
         badge_spot = np.array([text_x + 3.0, tag_y, 0.0])
-        fly = math_label(rf"{label_number(GAS_END)}\,{UNIT}", at=value_at[1] + DOWN * 0.1,
-                         size=LABEL_FONT_SIZE, color=END_RED, edge="left")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "klasse"))
-        self.play(*clear(listing, listing_head, *key_texts, v_type, v_end_read, v_carrier, v_year), run_time=0.8)
+        self.play(*clear(listing, listing_head, *key_texts, v_type, v_end_static, v_carrier, v_year), run_time=0.8)
         self.play(LaggedStart(*[FadeIn(b, shift=UP * 0.08) for b in strip["bands"]], lag_ratio=0.1), run_time=1.6)
         self.play(FadeIn(badge_tag), run_time=1.2)
         hold_for(self, self.NARRATION, "klasse")
@@ -837,6 +889,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         badge = _class_badge(class_letter, class_color, badge_spot, size=0.55, font=BODY_FONT_SIZE + 2)
         flight = cell.copy()
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "buchstabe"))
+        fly = v_end_static.copy()
         self.add(fly, scale_ptr)
         self.play(fly.animate.move_to(np.array([2.2, 0.1, 0.0])), v_scale.animate.set_value(GAS_END),
                   run_time=2.2, rate_func=smooth)

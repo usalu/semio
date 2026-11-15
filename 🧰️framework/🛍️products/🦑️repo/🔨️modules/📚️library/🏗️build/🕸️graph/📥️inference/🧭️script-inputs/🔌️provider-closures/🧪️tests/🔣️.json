@@ -25,6 +25,7 @@
     "tool:cargo-lock-owner"
   ],
   "files": {
+    "📦️packages/🟦️typescript/🧪️testing/🟦️.ts": "export const testing = 1;\n",
     "app/own.ts": "import { util } from \"../lib/util.ts\";\nexport const own = util;\n",
     "app/📜️script.ts": "import { defineScriptProviderV1 } from \"../lib/port.ts\";\nimport { own } from \"./own.ts\";\ndefineScriptProviderV1(\"tooling\");\nexport const script = own;\n",
     "lib/cargo/provider.ts": "import { util } from \"../util.ts\";\nimport { args } from \"../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/args.ts\";\nexport const provider = util + args;\n",
@@ -260,6 +261,24 @@
     "cargo-command": {
       "entries": [
         "⚡️caching/🦀️cargo/📜️script.ts"
+      ],
+      "resources": []
+    },
+    "driver-stages": {
+      "entries": [
+        "../../../💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts"
+      ],
+      "resources": []
+    },
+    "process-router": {
+      "entries": [
+        "../../../../🔨️modules/🏃️process/📜️script.ts"
+      ],
+      "resources": []
+    },
+    "testing-framework": {
+      "entries": [
+        "📦️packages/🟦️typescript/🧪️testing/🟦️.ts"
       ],
       "resources": []
     },

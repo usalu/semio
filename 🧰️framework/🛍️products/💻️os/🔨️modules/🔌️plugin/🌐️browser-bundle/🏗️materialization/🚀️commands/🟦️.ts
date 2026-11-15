@@ -101,13 +101,23 @@ async function materializationIdentityV1(): Promise<string> {
   return createHash("sha256").update(digests.join("\n")).digest("hex");
 }
 
+/** 🧬️ The transpile stage cache request: the digest of the debug-stripped component bytes jco reads, the jco version, this module's implementation and the module name; no path of any checkout is part of it. */
+export function transpileStageRequestV1(component: string, jco: string, materialization: string, base: string) {
+  return { stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base } };
+}
+
+/** 🪶️ The optimize stage cache request of one extracted core: its digest, the optimizer's version and its arguments. */
+export function optimizeStageRequestV1(core: string, version: string, args: readonly string[]) {
+  return { stage: "optimize", schemaVersion: 1, inputs: { core }, tools: { "wasm-opt": version, args: args.join(" ") } };
+}
+
 /** 🧬️ The transpile stage: jco's location-independent module files of the component, cached by the digest of the debug-stripped bytes jco actually reads, the jco version, this module's
  * implementation and the module name. */
 export async function transpileComponentModulesV1(work: ComponentModuleWorkV1): Promise<string> {
   checkResourceLeaseControl(work.control);
   const base = componentBaseV1(work.target), output = join(work.work, "transpiled");
   const [component, jco, materialization] = await Promise.all([Promise.resolve(createHash("sha256").update(stripWasmDebugSectionsV1(readFileSync(work.deliverable.wasm))).digest("hex")), toolIdentityV1("jco", async () => JSON.parse(readFileSync(createRequire(join(work.repoRoot, "package.json")).resolve("@bytecodealliance/jco/package.json"), "utf8")).version), toolIdentityV1("materialization", materializationIdentityV1)]);
-  await work.cache.run({ stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base } }, output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal);
+  await work.cache.run(transpileStageRequestV1(component, jco, materialization, base), output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal, base);
   checkResourceLeaseControl(work.control);
   return output;
 }
@@ -122,7 +132,7 @@ export async function optimizeComponentCoresV1(work: ComponentModuleWorkV1, tran
   mkdirSync(output, { recursive: true });
   for (const file of pluginCoreModuleFilesV1(transpiled, componentBaseV1(work.target))) {
     const core = join(transpiled, file), stage = join(work.work, `optimize-${file}`);
-    await work.cache.run({ stage: "optimize", schemaVersion: 1, inputs: { core: await fileDigest(core, work.control.signal) }, tools: { "wasm-opt": version, args: tool.args.join(" ") } }, stage, (directory) => optimizePluginCoreModuleAsync(core, join(directory, "core.wasm"), { repoRoot: work.repoRoot, preview2VendorDir: "", environment: work.environment, ...(cores === undefined ? {} : { cores }), control: work.control }), work.control.signal);
+    await work.cache.run(optimizeStageRequestV1(await fileDigest(core, work.control.signal), version, tool.args), stage, (directory) => optimizePluginCoreModuleAsync(core, join(directory, "core.wasm"), { repoRoot: work.repoRoot, preview2VendorDir: "", environment: work.environment, ...(cores === undefined ? {} : { cores }), control: work.control }), work.control.signal, `${componentBaseV1(work.target)}/${file}`);
     renameSync(join(stage, "core.wasm"), join(output, file));
     rmSync(stage, { recursive: true, force: true });
   }
@@ -148,7 +158,7 @@ async function probeComponentModuleV1(work: ComponentModuleWorkV1, module: strin
   for (const [name, path] of artifactFiles(module)) inputs[name] = await fileDigest(path, work.control.signal);
   for (const [name, path] of artifactFiles(vendor)) inputs[`vendor/${name}`] = await fileDigest(path, work.control.signal);
   const node = await toolIdentityV1("node", () => captureOwnedCommandV1("node", ["--version"], work.repoRoot, { control: work.control }).then((text) => text.trim())), output = join(work.work, "probe");
-  await work.cache.run(probeStageRequestV1(inputs, node), output, async (directory) => { writeFileSync(join(directory, "semantic.bin"), await probeModuleDescriptor(join(module, `${componentBaseV1(work.target)}.js`), work.repoRoot, work.control, work.environment)); }, work.control.signal);
+  await work.cache.run(probeStageRequestV1(inputs, node), output, async (directory) => { writeFileSync(join(directory, "semantic.bin"), await probeModuleDescriptor(join(module, `${componentBaseV1(work.target)}.js`), work.repoRoot, work.control, work.environment)); }, work.control.signal, componentBaseV1(work.target));
   checkResourceLeaseControl(work.control);
   return readArtifactBytesV1(join(output,"semantic.bin"),CATALOG_DESCRIPTOR_MAX_BYTES,work.control.signal);
 }

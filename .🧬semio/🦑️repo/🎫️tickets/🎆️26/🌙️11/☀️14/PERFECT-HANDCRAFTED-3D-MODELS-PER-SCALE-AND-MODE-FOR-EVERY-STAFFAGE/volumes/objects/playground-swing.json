@@ -1,0 +1,5722 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "leg-left-l",
+     "kind": "loft",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        0.180031,
+        0.683805,
+        -0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-left-clamp-l",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.036
+      ],
+      [
+       0.004,
+       0.04
+      ],
+      [
+       0.096,
+       0.04
+      ],
+      [
+       0.1,
+       0.036
+      ],
+      [
+       0.1,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.3,
+      0.0,
+      0.56
+     ]
+    },
+    {
+     "id": "leg-left-weld-l",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.002,
+       0.0315
+      ],
+      [
+       0.006,
+       0.0315
+      ],
+      [
+       0.008,
+       0.03
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.276,
+      0.0,
+      0.56
+     ]
+    },
+    {
+     "id": "leg-right-l",
+     "kind": "loft",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        -0.180031,
+        0.683805,
+        0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-right-clamp-l",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.036
+      ],
+      [
+       0.004,
+       0.04
+      ],
+      [
+       0.096,
+       0.04
+      ],
+      [
+       0.1,
+       0.036
+      ],
+      [
+       0.1,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.3,
+      0.0,
+      0.56
+     ]
+    },
+    {
+     "id": "leg-right-weld-l",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.002,
+       0.0315
+      ],
+      [
+       0.006,
+       0.0315
+      ],
+      [
+       0.008,
+       0.03
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.276,
+      0.0,
+      0.56
+     ]
+    },
+    {
+     "id": "leg-left-r",
+     "kind": "loft",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        0.180031,
+        0.683805,
+        -0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-left-clamp-r",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.036
+      ],
+      [
+       0.004,
+       0.04
+      ],
+      [
+       0.096,
+       0.04
+      ],
+      [
+       0.1,
+       0.036
+      ],
+      [
+       0.1,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.3,
+      0.0,
+      -0.56
+     ]
+    },
+    {
+     "id": "leg-left-weld-r",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.002,
+       0.0315
+      ],
+      [
+       0.006,
+       0.0315
+      ],
+      [
+       0.008,
+       0.03
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.276,
+      0.0,
+      -0.56
+     ]
+    },
+    {
+     "id": "leg-right-r",
+     "kind": "loft",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        -0.180031,
+        0.683805,
+        0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-right-clamp-r",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.036
+      ],
+      [
+       0.004,
+       0.04
+      ],
+      [
+       0.096,
+       0.04
+      ],
+      [
+       0.1,
+       0.036
+      ],
+      [
+       0.1,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.3,
+      0.0,
+      -0.56
+     ]
+    },
+    {
+     "id": "leg-right-weld-r",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.002,
+       0.0315
+      ],
+      [
+       0.006,
+       0.0315
+      ],
+      [
+       0.008,
+       0.03
+      ],
+      [
+       0.008,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.276,
+      0.0,
+      -0.56
+     ]
+    },
+    {
+     "id": "foot-left-l",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       0.006,
+       0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-left-r",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       0.006,
+       -0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-right-l",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       2.6,
+       0.006,
+       0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-right-r",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       2.6,
+       0.006,
+       -0.55
+      ]
+     }
+    },
+    {
+     "id": "brace-l",
+     "kind": "capsule",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "p0": [
+      0.0,
+      0.0,
+      0.56
+     ],
+     "p1": [
+      1.92,
+      0.0,
+      0.56
+     ],
+     "r0": 0.02,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "brace-clamp-l1",
+     "kind": "box",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.05,
+      0.062,
+      0.064
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.005,
+       0.0,
+       0.56
+      ]
+     }
+    },
+    {
+     "id": "brace-clamp-l2",
+     "kind": "box",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.05,
+      0.062,
+      0.064
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       1.915,
+       0.0,
+       0.56
+      ]
+     }
+    },
+    {
+     "id": "brace-r",
+     "kind": "capsule",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "p0": [
+      0.0,
+      0.0,
+      -0.56
+     ],
+     "p1": [
+      1.92,
+      0.0,
+      -0.56
+     ],
+     "r0": 0.02,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "brace-clamp-r1",
+     "kind": "box",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.05,
+      0.062,
+      0.064
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.005,
+       0.0,
+       -0.56
+      ]
+     }
+    },
+    {
+     "id": "brace-clamp-r2",
+     "kind": "box",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.05,
+      0.062,
+      0.064
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       1.915,
+       0.0,
+       -0.56
+      ]
+     }
+    },
+    {
+     "id": "beam",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.05
+      ],
+      [
+       1.2,
+       0.05
+      ],
+      [
+       1.2,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.6
+     ]
+    },
+    {
+     "id": "hanger-collar-left",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.048
+      ],
+      [
+       0.0,
+       0.0575
+      ],
+      [
+       0.05,
+       0.0575
+      ],
+      [
+       0.05,
+       0.048
+      ],
+      [
+       0.0,
+       0.048
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.205
+     ]
+    },
+    {
+     "id": "hanger-tab-left",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.025,
+       -0.045
+      ],
+      [
+       -0.025,
+       -0.085
+      ],
+      [
+       -0.015,
+       -0.095
+      ],
+      [
+       0.015,
+       -0.095
+      ],
+      [
+       0.025,
+       -0.085
+      ],
+      [
+       0.025,
+       -0.045
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.01,
+        -0.07
+       ],
+       [
+        0.00901,
+        -0.065661
+       ],
+       [
+        0.006235,
+        -0.062182
+       ],
+       [
+        0.002225,
+        -0.060251
+       ],
+       [
+        -0.002225,
+        -0.060251
+       ],
+       [
+        -0.006235,
+        -0.062182
+       ],
+       [
+        -0.00901,
+        -0.065661
+       ],
+       [
+        -0.01,
+        -0.07
+       ],
+       [
+        -0.00901,
+        -0.074339
+       ],
+       [
+        -0.006235,
+        -0.077818
+       ],
+       [
+        -0.002225,
+        -0.079749
+       ],
+       [
+        0.002225,
+        -0.079749
+       ],
+       [
+        0.006235,
+        -0.077818
+       ],
+       [
+        0.00901,
+        -0.074339
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.22375,
+     "to": 0.23625
+    },
+    {
+     "id": "chain-left-rod",
+     "kind": "capsule",
+     "bone": "chain-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      0.23
+     ],
+     "r0": 0.0055,
+     "r1": 0.0055,
+     "slender": true
+    },
+    {
+     "id": "shackle-left",
+     "kind": "ellipsoid",
+     "bone": "seat",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.011,
+      0.027,
+      0.011
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.025,
+       0.23
+      ]
+     }
+    },
+    {
+     "id": "hanger-collar-right",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.048
+      ],
+      [
+       0.0,
+       0.0575
+      ],
+      [
+       0.05,
+       0.0575
+      ],
+      [
+       0.05,
+       0.048
+      ],
+      [
+       0.0,
+       0.048
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.255
+     ]
+    },
+    {
+     "id": "hanger-tab-right",
+     "kind": "extrude",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.025,
+       -0.045
+      ],
+      [
+       -0.025,
+       -0.085
+      ],
+      [
+       -0.015,
+       -0.095
+      ],
+      [
+       0.015,
+       -0.095
+      ],
+      [
+       0.025,
+       -0.085
+      ],
+      [
+       0.025,
+       -0.045
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.01,
+        -0.07
+       ],
+       [
+        0.00901,
+        -0.065661
+       ],
+       [
+        0.006235,
+        -0.062182
+       ],
+       [
+        0.002225,
+        -0.060251
+       ],
+       [
+        -0.002225,
+        -0.060251
+       ],
+       [
+        -0.006235,
+        -0.062182
+       ],
+       [
+        -0.00901,
+        -0.065661
+       ],
+       [
+        -0.01,
+        -0.07
+       ],
+       [
+        -0.00901,
+        -0.074339
+       ],
+       [
+        -0.006235,
+        -0.077818
+       ],
+       [
+        -0.002225,
+        -0.079749
+       ],
+       [
+        0.002225,
+        -0.079749
+       ],
+       [
+        0.006235,
+        -0.077818
+       ],
+       [
+        0.00901,
+        -0.074339
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.23625,
+     "to": -0.22375
+    },
+    {
+     "id": "chain-right-rod",
+     "kind": "capsule",
+     "bone": "chain-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      -0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      -0.23
+     ],
+     "r0": 0.0055,
+     "r1": 0.0055,
+     "slender": true
+    },
+    {
+     "id": "shackle-right",
+     "kind": "ellipsoid",
+     "bone": "seat",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.011,
+      0.027,
+      0.011
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.025,
+       -0.23
+      ]
+     }
+    },
+    {
+     "id": "seat",
+     "kind": "loft",
+     "bone": "seat",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        -0.069,
+        -0.26
+       ],
+       "rx": 0.17,
+       "ry": 0.02,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        -0.069,
+        -0.25
+       ],
+       "rx": 0.205,
+       "ry": 0.028,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        -0.069,
+        0.0
+       ],
+       "rx": 0.21,
+       "ry": 0.029,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        -0.069,
+        0.25
+       ],
+       "rx": 0.205,
+       "ry": 0.028,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        -0.069,
+        0.26
+       ],
+       "rx": 0.17,
+       "ry": 0.02,
+       "exponent": 4
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-leg-left-l",
+     "of": "leg-left-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-left-clamp-l",
+     "of": "leg-left-clamp-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-left-weld-l",
+     "of": "leg-left-weld-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-l",
+     "of": "leg-right-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-clamp-l",
+     "of": "leg-right-clamp-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-weld-l",
+     "of": "leg-right-weld-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-left-r",
+     "of": "leg-left-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-left-clamp-r",
+     "of": "leg-left-clamp-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-left-weld-r",
+     "of": "leg-left-weld-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-r",
+     "of": "leg-right-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-clamp-r",
+     "of": "leg-right-clamp-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-weld-r",
+     "of": "leg-right-weld-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-left-l",
+     "of": "foot-left-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-left-r",
+     "of": "foot-left-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-right-l",
+     "of": "foot-right-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-right-r",
+     "of": "foot-right-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-l",
+     "of": "brace-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-clamp-l1",
+     "of": "brace-clamp-l1",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-clamp-l2",
+     "of": "brace-clamp-l2",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-r",
+     "of": "brace-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-clamp-r1",
+     "of": "brace-clamp-r1",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-clamp-r2",
+     "of": "brace-clamp-r2",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-beam",
+     "of": "beam",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-hanger-collar-left",
+     "of": "hanger-collar-left",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-hanger-tab-left",
+     "of": "hanger-tab-left",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-chain-left-rod",
+     "of": "chain-left-rod",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-shackle-left",
+     "of": "shackle-left",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-hanger-collar-right",
+     "of": "hanger-collar-right",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-hanger-tab-right",
+     "of": "hanger-tab-right",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-chain-right-rod",
+     "of": "chain-right-rod",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-shackle-right",
+     "of": "shackle-right",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-seat",
+     "of": "seat",
+     "region": "seat-rubber"
+    }
+   ],
+   "structure": [
+    {
+     "id": "leg-left-tube-l",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      0.56
+     ],
+     "member": "leg-left",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-leg-left-clamp-l",
+     "of": "leg-left-clamp-l",
+     "member": "leg-left",
+     "part": "joint"
+    },
+    {
+     "id": "leg-right-tube-l",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      0.56
+     ],
+     "member": "leg-right",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-leg-right-clamp-l",
+     "of": "leg-right-clamp-l",
+     "member": "leg-right",
+     "part": "joint"
+    },
+    {
+     "id": "brace-tube-l",
+     "kind": "revolve",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.016
+      ],
+      [
+       1.92,
+       0.016
+      ],
+      [
+       1.92,
+       0.0185
+      ],
+      [
+       0.0,
+       0.0185
+      ],
+      [
+       0.0,
+       0.016
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.56
+     ],
+     "member": "brace",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-brace-clamp-l1",
+     "of": "brace-clamp-l1",
+     "member": "brace",
+     "part": "joint"
+    },
+    {
+     "id": "joint-brace-clamp-l2",
+     "of": "brace-clamp-l2",
+     "member": "brace",
+     "part": "joint"
+    },
+    {
+     "id": "leg-left-tube-r",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      -0.56
+     ],
+     "member": "leg-left",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-leg-left-clamp-r",
+     "of": "leg-left-clamp-r",
+     "member": "leg-left",
+     "part": "joint"
+    },
+    {
+     "id": "leg-right-tube-r",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      -0.56
+     ],
+     "member": "leg-right",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-leg-right-clamp-r",
+     "of": "leg-right-clamp-r",
+     "member": "leg-right",
+     "part": "joint"
+    },
+    {
+     "id": "brace-tube-r",
+     "kind": "revolve",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.016
+      ],
+      [
+       1.92,
+       0.016
+      ],
+      [
+       1.92,
+       0.0185
+      ],
+      [
+       0.0,
+       0.0185
+      ],
+      [
+       0.0,
+       0.016
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.56
+     ],
+     "member": "brace",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-brace-clamp-r1",
+     "of": "brace-clamp-r1",
+     "member": "brace",
+     "part": "joint"
+    },
+    {
+     "id": "joint-brace-clamp-r2",
+     "of": "brace-clamp-r2",
+     "member": "brace",
+     "part": "joint"
+    },
+    {
+     "id": "beam-tube",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0445
+      ],
+      [
+       1.196,
+       0.0445
+      ],
+      [
+       1.196,
+       0.0485
+      ],
+      [
+       0.0,
+       0.0485
+      ],
+      [
+       0.0,
+       0.0445
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.598
+     ],
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "chain-left-member",
+     "kind": "capsule",
+     "bone": "chain-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      0.23
+     ],
+     "r0": 0.0039,
+     "r1": 0.0039,
+     "slender": true,
+     "member": "chain-left",
+     "part": "member"
+    },
+    {
+     "id": "joint-chain-left-hanger",
+     "of": "hanger-tab-left",
+     "member": "chain-left",
+     "part": "joint"
+    },
+    {
+     "id": "joint-chain-left-shackle",
+     "of": "shackle-left",
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "chain-right-member",
+     "kind": "capsule",
+     "bone": "chain-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      -0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      -0.23
+     ],
+     "r0": 0.0039,
+     "r1": 0.0039,
+     "slender": true,
+     "member": "chain-right",
+     "part": "member"
+    },
+    {
+     "id": "joint-chain-right-hanger",
+     "of": "hanger-tab-right",
+     "member": "chain-right",
+     "part": "joint"
+    },
+    {
+     "id": "joint-chain-right-shackle",
+     "of": "shackle-right",
+     "member": "seat",
+     "part": "joint"
+    },
+    {
+     "id": "seat-member",
+     "of": "seat",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "support-pin-left-l",
+     "kind": "extrude",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.03,
+       0.0
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       -0.015
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.5,
+     "to": 0.6,
+     "transform": {
+      "translation": [
+       0.0,
+       0,
+       0
+      ]
+     },
+     "member": "leg-left",
+     "part": "support",
+     "anchor": "pin-left-l"
+    },
+    {
+     "id": "support-pin-left-r",
+     "kind": "extrude",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.03,
+       0.0
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       -0.015
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": -0.5,
+     "transform": {
+      "translation": [
+       0.0,
+       0,
+       0
+      ]
+     },
+     "member": "leg-left",
+     "part": "support",
+     "anchor": "pin-left-r"
+    },
+    {
+     "id": "support-roller-right-l",
+     "kind": "revolve",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.1,
+       0.0075
+      ],
+      [
+       0.1,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.6,
+      -0.0075,
+      0.5
+     ],
+     "member": "leg-right",
+     "part": "support",
+     "anchor": "roller-right-l"
+    },
+    {
+     "id": "support-roller-right-r",
+     "kind": "revolve",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.1,
+       0.0075
+      ],
+      [
+       0.1,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.6,
+      -0.0075,
+      -0.6
+     ],
+     "member": "leg-right",
+     "part": "support",
+     "anchor": "roller-right-r"
+    },
+    {
+     "id": "mass-beam",
+     "kind": "ellipsoid",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.04,
+      0.04,
+      0.15
+     ],
+     "member": "beam",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-left-l",
+     "kind": "ellipsoid",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "leg-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-right-l",
+     "kind": "ellipsoid",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "leg-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-brace-l",
+     "kind": "ellipsoid",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.015,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       0.96,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "brace",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-left-r",
+     "kind": "ellipsoid",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "leg-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-right-r",
+     "kind": "ellipsoid",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "leg-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-brace-r",
+     "kind": "ellipsoid",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.015,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       0.96,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "brace",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat",
+     "kind": "ellipsoid",
+     "bone": "seat",
+     "material": "rubber",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.065,
+       0.0
+      ]
+     },
+     "member": "seat",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: two real A-frames in the planes z = +-0.56 m. Each leg is one loft of a 60 mm tube on its true centre line (u = 2.64 m at 60.5 / 119.5 degrees) whose foot is cut by the horizontal plane of the 12 mm foot plate (a first elliptical section tilted into that plane: the drawn mitre, no wedge gap) and whose head runs into the 100 mm beam; clamp collars with chamfers at u = 2.3 m, weld rings at u = 0.28 m (the drawn weld lines), 180 x 100 x 12 mm foot plates, the 40 mm brace between the leg axes with cast cross-clamp blocks, the beam as a 1.2 m revolve about w with a hanger saddle ring and an eye tab with a real 20 mm hole per chain (the chain top sits in the hole), the 11 mm chains as slender capsules, oval shackles and the rubber seat as a loft of 5 rounded sections (420 x 58 x 520 mm, rounded plank section and corners). The chain links the 2D draws as detail are not solids: a 5.5 mm wire ring is below the 7.5 mm feature.",
+     "de": "K\u00f6rper: zwei echte A-Rahmen in den Ebenen z = +-0,56 m. Jedes Bein ist eine Loft eines 60-mm-Rohres auf seiner wahren Mittellinie (u = 2,64 m bei 60,5 / 119,5 Grad), deren Fu\u00df von der waagerechten Ebene der 12-mm-Fu\u00dfplatte geschnitten wird (ein erster elliptischer Schnitt in diese Ebene gekippt: der gezeichnete Gehrungsschnitt, keine Keill\u00fccke) und dessen Kopf in den 100-mm-Holm l\u00e4uft; Klemmmanschetten mit Fasen bei u = 2,3 m, Schwei\u00dfringe bei u = 0,28 m (die gezeichneten Schwei\u00dflinien), Fu\u00dfplatten 180 x 100 x 12 mm, die 40-mm-Strebe zwischen den Beinachsen mit gegossenen Kreuzklemmen, der Holm als 1,2-m-Rotation um w mit Aufh\u00e4ngesattel und Augenlasche mit echtem 20-mm-Loch je Kette (das Kettenende sitzt im Loch), die 11-mm-Ketten als schlanke Kapseln, ovale Sch\u00e4kel und der Gummisitz als Loft aus 5 gerundeten Schnitten (420 x 58 x 520 mm, gerundeter Brettschnitt und Ecken). Die in 2D als Detail gezeichneten Kettenglieder sind keine K\u00f6rper: ein Drahtring von 5,5 mm liegt unter der Einzelheit 7,5 mm."
+    },
+    {
+     "en": "Thermal: three single-layer regions (B2), all references to body solids: frame-galv = legs, clamps, welds, foot plates, braces, brace clamps, beam, hanger rings and tabs; chain-steel = both chains and shackles; seat-rubber = the seat. No emitters, no hidden regions. Root fix of areaM2 (C16, within 1.5): chain-steel 0.1 -> 0.13 (two 11 mm chains of 1.83 m expose 0.126 m2). Not applied (beyond 1.5, listed in area-review.md): frame-galv declared 1.3 m2, the honestly modelled tubes expose 3.10 m2 (four 60 mm legs of 2.64 m alone are 1.99 m2); seat-rubber declared 0.12 m2, the 420 x 520 mm plank exposes 0.49 m2 (top alone 0.22 m2).",
+     "de": "Thermik: drei einschichtige Regionen (B2), alle Referenzen auf K\u00f6rper: frame-galv = Beine, Manschetten, Schwei\u00dfringe, Fu\u00dfplatten, Streben, Strebenklemmen, Holm, Aufh\u00e4ngeringe und Laschen; chain-steel = beide Ketten und Sch\u00e4kel; seat-rubber = der Sitz. Keine Emitter, keine verdeckten Regionen. Korrektur von areaM2 (C16, innerhalb 1,5): chain-steel 0,1 -> 0,13 (zwei 11-mm-Ketten von 1,83 m haben 0,126 m2). Nicht angewandt (\u00fcber 1,5, in area-review.md gelistet): frame-galv mit 1,3 m2 angegeben, die ehrlich modellierten Rohre haben 3,10 m2 (vier 60-mm-Beine von 2,64 m allein 1,99 m2); seat-rubber mit 0,12 m2 angegeben, das Brett 420 x 520 mm hat 0,49 m2 (die Oberseite allein 0,22 m2)."
+    },
+    {
+     "en": "Structure: every eligible bone is a member on its real line. Legs: 60 x 3 mm tubes (inside the 1.5 mm skin of the body), braces: 40 x 2.5 mm tubes between the leg axes, beam: 100 x 4 mm tube, chains: two slender rods of 7.8 mm (the area of two 5.5 mm wires), seat: the rubber plank itself. Joints: clamp collars and brace clamps (fixed), the eye tabs (chain pivots at the beam) and the shackles (seat pivots). Supports: four anchors at the foot plates, a wedge under each pin foot (pin-left-*) and a 15 mm roller under each roller foot (roller-right-*) with their anchors, below the ground contact plane. Masses: beam (20 kg), the four legs (5.85 kg each in their tubes), the two braces and the seat.",
+     "de": "Tragwerk: jede tragende Achse ist ein Stab auf ihrer wirklichen Linie. Beine: Rohre 60 x 3 mm (innerhalb der 1,5-mm-Haut des K\u00f6rpers), Streben: Rohre 40 x 2,5 mm zwischen den Beinachsen, Holm: Rohr 100 x 4 mm, Ketten: zwei schlanke St\u00e4be von 7,8 mm (die Fl\u00e4che zweier 5,5-mm-Dr\u00e4hte), Sitz: das Gummibrett selbst. Gelenke: Klemmmanschetten und Strebenklemmen (fest), die Augenlaschen (Kettendrehpunkte am Holm) und die Sch\u00e4kel (Sitzdrehpunkte). Auflager: vier Anker an den Fu\u00dfplatten, je ein Keil unter jedem Festlager (pin-left-*) und eine 15-mm-Rolle unter jedem Rollenlager (roller-right-*) mit ihren Ankern, unter der Aufstandsebene. Massen: Holm (20 kg), die vier Beine (je 5,85 kg in ihren Rohren), die beiden Streben und der Sitz."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "leg-left-l",
+     "kind": "loft",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        0.180031,
+        0.683805,
+        -0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-right-l",
+     "kind": "loft",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        -0.180031,
+        0.683805,
+        0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-left-r",
+     "kind": "loft",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        0.180031,
+        0.683805,
+        -0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-right-r",
+     "kind": "loft",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        -0.180031,
+        0.683805,
+        0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "foot-left-l",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       0.006,
+       0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-left-r",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       0.006,
+       -0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-right-l",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       2.6,
+       0.006,
+       0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-right-r",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       2.6,
+       0.006,
+       -0.55
+      ]
+     }
+    },
+    {
+     "id": "brace-l",
+     "kind": "capsule",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "p0": [
+      0.0,
+      0.0,
+      0.56
+     ],
+     "p1": [
+      1.92,
+      0.0,
+      0.56
+     ],
+     "r0": 0.02,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "brace-r",
+     "kind": "capsule",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "p0": [
+      0.0,
+      0.0,
+      -0.56
+     ],
+     "p1": [
+      1.92,
+      0.0,
+      -0.56
+     ],
+     "r0": 0.02,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "beam",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.05
+      ],
+      [
+       1.2,
+       0.05
+      ],
+      [
+       1.2,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.6
+     ]
+    },
+    {
+     "id": "chain-left-rod",
+     "kind": "capsule",
+     "bone": "chain-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      0.23
+     ],
+     "r0": 0.0055,
+     "r1": 0.0055,
+     "slender": true
+    },
+    {
+     "id": "chain-right-rod",
+     "kind": "capsule",
+     "bone": "chain-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      -0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      -0.23
+     ],
+     "r0": 0.0055,
+     "r1": 0.0055,
+     "slender": true
+    },
+    {
+     "id": "seat",
+     "kind": "loft",
+     "bone": "seat",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        -0.069,
+        -0.26
+       ],
+       "rx": 0.19,
+       "ry": 0.027,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        -0.069,
+        0.0
+       ],
+       "rx": 0.21,
+       "ry": 0.029,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        -0.069,
+        0.26
+       ],
+       "rx": 0.19,
+       "ry": 0.027,
+       "exponent": 4
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-leg-left-l",
+     "of": "leg-left-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-l",
+     "of": "leg-right-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-left-r",
+     "of": "leg-left-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-r",
+     "of": "leg-right-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-left-l",
+     "of": "foot-left-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-left-r",
+     "of": "foot-left-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-right-l",
+     "of": "foot-right-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-right-r",
+     "of": "foot-right-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-l",
+     "of": "brace-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-r",
+     "of": "brace-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-beam",
+     "of": "beam",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-chain-left-rod",
+     "of": "chain-left-rod",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-chain-right-rod",
+     "of": "chain-right-rod",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-seat",
+     "of": "seat",
+     "region": "seat-rubber"
+    }
+   ],
+   "structure": [
+    {
+     "id": "leg-left-tube-l",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      0.56
+     ],
+     "slender": true,
+     "member": "leg-left",
+     "part": "member"
+    },
+    {
+     "id": "joint-leg-left-l",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.1,
+       0.0285
+      ],
+      [
+       0.1,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0285
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.3,
+      0.0,
+      0.56
+     ],
+     "member": "leg-left",
+     "part": "joint"
+    },
+    {
+     "id": "leg-right-tube-l",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      0.56
+     ],
+     "slender": true,
+     "member": "leg-right",
+     "part": "member"
+    },
+    {
+     "id": "joint-leg-right-l",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.1,
+       0.0285
+      ],
+      [
+       0.1,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0285
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.3,
+      0.0,
+      0.56
+     ],
+     "member": "leg-right",
+     "part": "joint"
+    },
+    {
+     "id": "brace-tube-l",
+     "kind": "revolve",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.016
+      ],
+      [
+       1.92,
+       0.016
+      ],
+      [
+       1.92,
+       0.0185
+      ],
+      [
+       0.0,
+       0.0185
+      ],
+      [
+       0.0,
+       0.016
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.56
+     ],
+     "slender": true,
+     "member": "brace",
+     "part": "member"
+    },
+    {
+     "id": "leg-left-tube-r",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      -0.56
+     ],
+     "slender": true,
+     "member": "leg-left",
+     "part": "member"
+    },
+    {
+     "id": "joint-leg-left-r",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.1,
+       0.0285
+      ],
+      [
+       0.1,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0285
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.3,
+      0.0,
+      -0.56
+     ],
+     "member": "leg-left",
+     "part": "joint"
+    },
+    {
+     "id": "leg-right-tube-r",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      -0.56
+     ],
+     "slender": true,
+     "member": "leg-right",
+     "part": "member"
+    },
+    {
+     "id": "joint-leg-right-r",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.1,
+       0.0285
+      ],
+      [
+       0.1,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0285
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      2.3,
+      0.0,
+      -0.56
+     ],
+     "member": "leg-right",
+     "part": "joint"
+    },
+    {
+     "id": "brace-tube-r",
+     "kind": "revolve",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.016
+      ],
+      [
+       1.92,
+       0.016
+      ],
+      [
+       1.92,
+       0.0185
+      ],
+      [
+       0.0,
+       0.0185
+      ],
+      [
+       0.0,
+       0.016
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.56
+     ],
+     "slender": true,
+     "member": "brace",
+     "part": "member"
+    },
+    {
+     "id": "beam-tube",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0445
+      ],
+      [
+       1.196,
+       0.0445
+      ],
+      [
+       1.196,
+       0.0485
+      ],
+      [
+       0.0,
+       0.0485
+      ],
+      [
+       0.0,
+       0.0445
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.598
+     ],
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "chain-left-member",
+     "kind": "capsule",
+     "bone": "chain-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      0.23
+     ],
+     "r0": 0.0039,
+     "r1": 0.0039,
+     "slender": true,
+     "member": "chain-left",
+     "part": "member"
+    },
+    {
+     "id": "chain-right-member",
+     "kind": "capsule",
+     "bone": "chain-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      -0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      -0.23
+     ],
+     "r0": 0.0039,
+     "r1": 0.0039,
+     "slender": true,
+     "member": "chain-right",
+     "part": "member"
+    },
+    {
+     "id": "seat-member",
+     "of": "seat",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "support-pin-left-l",
+     "kind": "extrude",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.03,
+       0.0
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       -0.015
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.5,
+     "to": 0.6,
+     "transform": {
+      "translation": [
+       0.0,
+       0,
+       0
+      ]
+     },
+     "member": "leg-left",
+     "part": "support",
+     "anchor": "pin-left-l"
+    },
+    {
+     "id": "support-pin-left-r",
+     "kind": "extrude",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.03,
+       0.0
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       -0.015
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": -0.5,
+     "transform": {
+      "translation": [
+       0.0,
+       0,
+       0
+      ]
+     },
+     "member": "leg-left",
+     "part": "support",
+     "anchor": "pin-left-r"
+    },
+    {
+     "id": "support-roller-right-l",
+     "kind": "revolve",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.1,
+       0.0075
+      ],
+      [
+       0.1,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.6,
+      -0.0075,
+      0.5
+     ],
+     "member": "leg-right",
+     "part": "support",
+     "anchor": "roller-right-l"
+    },
+    {
+     "id": "support-roller-right-r",
+     "kind": "revolve",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0075
+      ],
+      [
+       0.1,
+       0.0075
+      ],
+      [
+       0.1,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.6,
+      -0.0075,
+      -0.6
+     ],
+     "member": "leg-right",
+     "part": "support",
+     "anchor": "roller-right-r"
+    },
+    {
+     "id": "mass-beam",
+     "kind": "ellipsoid",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.04,
+      0.04,
+      0.15
+     ],
+     "member": "beam",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-left-l",
+     "kind": "ellipsoid",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "leg-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-right-l",
+     "kind": "ellipsoid",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "leg-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-brace-l",
+     "kind": "ellipsoid",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.015,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       0.96,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "brace",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-left-r",
+     "kind": "ellipsoid",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "leg-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-right-r",
+     "kind": "ellipsoid",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "leg-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-brace-r",
+     "kind": "ellipsoid",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.015,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       0.96,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "brace",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat",
+     "kind": "ellipsoid",
+     "bone": "seat",
+     "material": "rubber",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.065,
+       0.0
+      ]
+     },
+     "member": "seat",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: modelled anew against the 1:100 drawing: clamps, weld rings, hangers, eye tabs and shackles (7.5-100 mm detail, not drawn at this scale) are merged into the tubes; the legs keep their 60 mm tube with the mitred foot, the braces are slender 40 mm capsules (the drawing shows a stroke), chains slender 11 mm, the seat a loft of three sections with the drawn rounded plank section, foot plates and beam unchanged.",
+     "de": "K\u00f6rper: neu gegen die Zeichnung 1:100 modelliert: Klemmen, Schwei\u00dfringe, Aufh\u00e4nger, Augenlaschen und Sch\u00e4kel (Details von 7,5-100 mm, in diesem Ma\u00dfstab nicht gezeichnet) sind in die Rohre aufgegangen; die Beine behalten ihr 60-mm-Rohr mit dem Gehrungsfu\u00df, die Streben sind schlanke 40-mm-Kapseln (die Zeichnung zeigt einen Strich), die Ketten schlank mit 11 mm, der Sitz eine Loft aus drei Schnitten mit dem gezeichneten gerundeten Brettschnitt, Fu\u00dfplatten und Holm unver\u00e4ndert."
+    },
+    {
+     "en": "Thermal: references to the same body solids by region (frame-galv, chain-steel, seat-rubber); areas as at 1:50 (frame 2.90 m2 against the declared 1.3, seat 0.48 against 0.12: see area-review.md, not applied).",
+     "de": "Thermik: Referenzen auf dieselben K\u00f6rper nach Region (frame-galv, chain-steel, seat-rubber); Fl\u00e4chen wie bei 1:50 (Rahmen 2,90 m2 gegen 1,3 angegeben, Sitz 0,48 gegen 0,12: siehe area-review.md, nicht angewandt)."
+    },
+    {
+     "en": "Structure: the same true tubes, rods and pivots without the eye-tab and shackle joints (merged into the members), four doubler sleeves as leg-to-beam joints, a 15 mm roller and wedge at each foot, the masses of beam, legs, braces and seat.",
+     "de": "Tragwerk: dieselben wahren Rohre, St\u00e4be und Drehpunkte ohne die Gelenke Augenlasche und Sch\u00e4kel (in die St\u00e4be aufgegangen), vier Dopplerh\u00fclsen als Gelenke Bein-Holm, je eine 15-mm-Rolle und ein Keil an jedem Fu\u00df, die Massen von Holm, Beinen, Streben und Sitz."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "leg-left-l",
+     "kind": "loft",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.56
+       ],
+       "rx": 0.029,
+       "ry": 0.03332,
+       "rotation": [
+        0.683805,
+        0.180031,
+        0.683805,
+        -0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        0.56
+       ],
+       "rx": 0.029,
+       "ry": 0.029
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-right-l",
+     "kind": "loft",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.56
+       ],
+       "rx": 0.029,
+       "ry": 0.03332,
+       "rotation": [
+        0.683805,
+        -0.180031,
+        0.683805,
+        0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        0.56
+       ],
+       "rx": 0.029,
+       "ry": 0.029
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-left-r",
+     "kind": "loft",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.029,
+       "ry": 0.03332,
+       "rotation": [
+        0.683805,
+        0.180031,
+        0.683805,
+        -0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.029,
+       "ry": 0.029
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-right-r",
+     "kind": "loft",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.029,
+       "ry": 0.03332,
+       "rotation": [
+        0.683805,
+        -0.180031,
+        0.683805,
+        0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.029,
+       "ry": 0.029
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "foot-left-l",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       0.006,
+       0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-left-r",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       0.006,
+       -0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-right-l",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       2.6,
+       0.006,
+       0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-right-r",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       2.6,
+       0.006,
+       -0.55
+      ]
+     }
+    },
+    {
+     "id": "brace-l",
+     "kind": "capsule",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "p0": [
+      0.0,
+      0.0,
+      0.56
+     ],
+     "p1": [
+      1.92,
+      0.0,
+      0.56
+     ],
+     "r0": 0.02,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "brace-r",
+     "kind": "capsule",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "p0": [
+      0.0,
+      0.0,
+      -0.56
+     ],
+     "p1": [
+      1.92,
+      0.0,
+      -0.56
+     ],
+     "r0": 0.02,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "beam",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.05
+      ],
+      [
+       1.2,
+       0.05
+      ],
+      [
+       1.2,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.6
+     ]
+    },
+    {
+     "id": "chain-left-rod",
+     "kind": "capsule",
+     "bone": "chain-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      0.23
+     ],
+     "r0": 0.0055,
+     "r1": 0.0055,
+     "slender": true
+    },
+    {
+     "id": "chain-right-rod",
+     "kind": "capsule",
+     "bone": "chain-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      -0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      -0.23
+     ],
+     "r0": 0.0055,
+     "r1": 0.0055,
+     "slender": true
+    },
+    {
+     "id": "seat",
+     "kind": "box",
+     "bone": "seat",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.42,
+      0.058,
+      0.52
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.069,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-leg-left-l",
+     "of": "leg-left-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-l",
+     "of": "leg-right-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-left-r",
+     "of": "leg-left-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-r",
+     "of": "leg-right-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-left-l",
+     "of": "foot-left-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-left-r",
+     "of": "foot-left-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-right-l",
+     "of": "foot-right-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-right-r",
+     "of": "foot-right-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-l",
+     "of": "brace-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-r",
+     "of": "brace-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-beam",
+     "of": "beam",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-chain-left-rod",
+     "of": "chain-left-rod",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-chain-right-rod",
+     "of": "chain-right-rod",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-seat",
+     "of": "seat",
+     "region": "seat-rubber"
+    }
+   ],
+   "structure": [
+    {
+     "id": "leg-left-tube-l",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      0.56
+     ],
+     "slender": true,
+     "member": "leg-left",
+     "part": "member"
+    },
+    {
+     "id": "leg-right-tube-l",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      0.56
+     ],
+     "slender": true,
+     "member": "leg-right",
+     "part": "member"
+    },
+    {
+     "id": "brace-tube-l",
+     "kind": "revolve",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.016
+      ],
+      [
+       1.92,
+       0.016
+      ],
+      [
+       1.92,
+       0.0185
+      ],
+      [
+       0.0,
+       0.0185
+      ],
+      [
+       0.0,
+       0.016
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.56
+     ],
+     "slender": true,
+     "member": "brace",
+     "part": "member"
+    },
+    {
+     "id": "leg-left-tube-r",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      -0.56
+     ],
+     "slender": true,
+     "member": "leg-left",
+     "part": "member"
+    },
+    {
+     "id": "leg-right-tube-r",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      -0.56
+     ],
+     "slender": true,
+     "member": "leg-right",
+     "part": "member"
+    },
+    {
+     "id": "brace-tube-r",
+     "kind": "revolve",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.016
+      ],
+      [
+       1.92,
+       0.016
+      ],
+      [
+       1.92,
+       0.0185
+      ],
+      [
+       0.0,
+       0.0185
+      ],
+      [
+       0.0,
+       0.016
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.56
+     ],
+     "slender": true,
+     "member": "brace",
+     "part": "member"
+    },
+    {
+     "id": "beam-tube",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0445
+      ],
+      [
+       1.196,
+       0.0445
+      ],
+      [
+       1.196,
+       0.0485
+      ],
+      [
+       0.0,
+       0.0485
+      ],
+      [
+       0.0,
+       0.0445
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.598
+     ],
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "chain-left-member",
+     "kind": "capsule",
+     "bone": "chain-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      0.23
+     ],
+     "r0": 0.0039,
+     "r1": 0.0039,
+     "slender": true,
+     "member": "chain-left",
+     "part": "member"
+    },
+    {
+     "id": "chain-right-member",
+     "kind": "capsule",
+     "bone": "chain-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      -0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      -0.23
+     ],
+     "r0": 0.0039,
+     "r1": 0.0039,
+     "slender": true,
+     "member": "chain-right",
+     "part": "member"
+    },
+    {
+     "id": "seat-member",
+     "of": "seat",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "support-pin-left-l",
+     "kind": "extrude",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.03,
+       0.0
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       -0.03
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.5,
+     "to": 0.6,
+     "transform": {
+      "translation": [
+       0.0,
+       0,
+       0
+      ]
+     },
+     "member": "leg-left",
+     "part": "support",
+     "anchor": "pin-left-l"
+    },
+    {
+     "id": "support-pin-left-r",
+     "kind": "extrude",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.03,
+       0.0
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       -0.03
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": -0.5,
+     "transform": {
+      "translation": [
+       0.0,
+       0,
+       0
+      ]
+     },
+     "member": "leg-left",
+     "part": "support",
+     "anchor": "pin-left-r"
+    },
+    {
+     "id": "support-roller-right-l",
+     "kind": "revolve",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.1,
+       0.015
+      ],
+      [
+       0.1,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.6,
+      -0.015,
+      0.5
+     ],
+     "member": "leg-right",
+     "part": "support",
+     "anchor": "roller-right-l"
+    },
+    {
+     "id": "support-roller-right-r",
+     "kind": "revolve",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.1,
+       0.015
+      ],
+      [
+       0.1,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.6,
+      -0.015,
+      -0.6
+     ],
+     "member": "leg-right",
+     "part": "support",
+     "anchor": "roller-right-r"
+    },
+    {
+     "id": "mass-beam",
+     "kind": "ellipsoid",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.04,
+      0.04,
+      0.15
+     ],
+     "member": "beam",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-left-l",
+     "kind": "ellipsoid",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "leg-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-right-l",
+     "kind": "ellipsoid",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "leg-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-brace-l",
+     "kind": "ellipsoid",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.015,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       0.96,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "brace",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-left-r",
+     "kind": "ellipsoid",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "leg-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-right-r",
+     "kind": "ellipsoid",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "leg-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-brace-r",
+     "kind": "ellipsoid",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.015,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       0.96,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "brace",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat",
+     "kind": "ellipsoid",
+     "bone": "seat",
+     "material": "rubber",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.02,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.065,
+       0.0
+      ]
+     },
+     "member": "seat",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: modelled anew against the 1:200 drawing, which draws the legs, brace and chain as strokes of 0.25 / 0.13 / 0.35 mm pen and the seat as a plain rectangle: legs as 58 mm tubes with the mitred foot (the drawn 60 mm strips, one raster cell thinner), the brace as a slender 26 mm capsule (its drawn pen width, thinner than the real 40 mm), the chains as 40 x 70 mm oval rods (front and plan draw them 40 mm wide, the elevation 70 mm: the two views cannot both be met by one round rod), the seat a box 420 x 58 x 520 mm, plate and beam unchanged.",
+     "de": "K\u00f6rper: neu gegen die Zeichnung 1:200 modelliert, die Beine, Strebe und Kette als Striche mit 0,25 / 0,13 / 0,35 mm Federbreite und den Sitz als glattes Rechteck zeichnet: Beine als 58-mm-Rohre mit Gehrungsfu\u00df (die gezeichneten 60-mm-Streifen, eine Rasterzelle schmaler), die Strebe als schlanke 26-mm-Kapsel (ihre gezeichnete Federbreite, d\u00fcnner als die wahren 40 mm), die Ketten als ovale St\u00e4be 40 x 70 mm (Vorderansicht und Grundriss zeichnen sie 40 mm breit, der Aufriss 70 mm: ein runder Stab erf\u00fcllt nicht beide Ansichten), der Sitz ein Quader 420 x 58 x 520 mm, Platte und Holm unver\u00e4ndert."
+    },
+    {
+     "en": "Thermal: references by region; every region has a solid and only the sum is compared at this scale: the sum of the exposed areas is 2.5 times the declared sum (frame 2.68 against 1.3, seat 0.55 against 0.12, and the 70 mm oval chains 0.65 m2 against 0.13 because the scale draws the chain thicker than it is); not applied, see area-review.md.",
+     "de": "Thermik: Referenzen nach Region; jede Region hat einen K\u00f6rper und in diesem Ma\u00dfstab z\u00e4hlt nur die Summe: die Summe der freien Fl\u00e4chen ist das 2,5-fache der angegebenen Summe (Rahmen 2,68 gegen 1,3, Sitz 0,55 gegen 0,12 und die ovalen 70-mm-Ketten 0,65 m2 gegen 0,13, weil der Ma\u00dfstab die Kette dicker zeichnet als sie ist); nicht angewandt, siehe area-review.md."
+    },
+    {
+     "en": "Structure: the real tubes (60 x 3 mm legs, 40 x 2.5 mm braces, 100 x 4 mm beam) and the 7.8 mm chain rods inside the thicker body solids, the rubber seat, no joint solids (merged into the members), 30 mm roller and wedge supports, masses as before.",
+     "de": "Tragwerk: die wirklichen Rohre (Beine 60 x 3 mm, Streben 40 x 2,5 mm, Holm 100 x 4 mm) und die 7,8-mm-Kettenst\u00e4be innerhalb der dickeren K\u00f6rper, das Gummibrett, keine Gelenkk\u00f6rper (in die St\u00e4be aufgegangen), Auflager mit 30-mm-Rolle und Keil, Massen wie zuvor."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "leg-left-l",
+     "kind": "loft",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        0.180031,
+        0.683805,
+        -0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-right-l",
+     "kind": "loft",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        -0.180031,
+        0.683805,
+        0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-left-r",
+     "kind": "loft",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        0.180031,
+        0.683805,
+        -0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "leg-right-r",
+     "kind": "loft",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.013787,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.034469,
+       "rotation": [
+        0.683805,
+        -0.180031,
+        0.683805,
+        0.180031
+       ]
+      },
+      {
+       "at": [
+        2.64,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "foot-left-l",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       0.006,
+       0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-left-r",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       0.006,
+       -0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-right-l",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       2.6,
+       0.006,
+       0.55
+      ]
+     }
+    },
+    {
+     "id": "foot-right-r",
+     "kind": "box",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.18,
+      0.012,
+      0.1
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       2.6,
+       0.006,
+       -0.55
+      ]
+     }
+    },
+    {
+     "id": "brace-l",
+     "kind": "loft",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.56
+       ],
+       "rx": 0.02,
+       "ry": 0.02
+      },
+      {
+       "at": [
+        1.92,
+        0.0,
+        0.56
+       ],
+       "rx": 0.02,
+       "ry": 0.02
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "brace-r",
+     "kind": "loft",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.02,
+       "ry": 0.02
+      },
+      {
+       "at": [
+        1.92,
+        0.0,
+        -0.56
+       ],
+       "rx": 0.02,
+       "ry": 0.02
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "beam",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.05
+      ],
+      [
+       1.2,
+       0.05
+      ],
+      [
+       1.2,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.6
+     ]
+    },
+    {
+     "id": "chain-left-rod",
+     "kind": "loft",
+     "bone": "chain-left",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        0.07,
+        0.0,
+        0.23
+       ],
+       "rx": 0.0055,
+       "ry": 0.0055
+      },
+      {
+       "at": [
+        1.9,
+        0.0,
+        0.23
+       ],
+       "rx": 0.0055,
+       "ry": 0.0055
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "chain-right-rod",
+     "kind": "loft",
+     "bone": "chain-right",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        0.07,
+        0.0,
+        -0.23
+       ],
+       "rx": 0.0055,
+       "ry": 0.0055
+      },
+      {
+       "at": [
+        1.9,
+        0.0,
+        -0.23
+       ],
+       "rx": 0.0055,
+       "ry": 0.0055
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "slender": true
+    },
+    {
+     "id": "seat",
+     "kind": "box",
+     "bone": "seat",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.42,
+      0.058,
+      0.52
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.069,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-leg-left-l",
+     "of": "leg-left-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-l",
+     "of": "leg-right-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-left-r",
+     "of": "leg-left-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-leg-right-r",
+     "of": "leg-right-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-left-l",
+     "of": "foot-left-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-left-r",
+     "of": "foot-left-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-right-l",
+     "of": "foot-right-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-foot-right-r",
+     "of": "foot-right-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-l",
+     "of": "brace-l",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-brace-r",
+     "of": "brace-r",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-beam",
+     "of": "beam",
+     "region": "frame-galv"
+    },
+    {
+     "id": "th-chain-left-rod",
+     "of": "chain-left-rod",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-chain-right-rod",
+     "of": "chain-right-rod",
+     "region": "chain-steel"
+    },
+    {
+     "id": "th-seat",
+     "of": "seat",
+     "region": "seat-rubber"
+    }
+   ],
+   "structure": [
+    {
+     "id": "leg-left-tube-l",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      0.56
+     ],
+     "slender": true,
+     "member": "leg-left",
+     "part": "member"
+    },
+    {
+     "id": "leg-right-tube-l",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      0.56
+     ],
+     "slender": true,
+     "member": "leg-right",
+     "part": "member"
+    },
+    {
+     "id": "brace-tube-l",
+     "kind": "revolve",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.016
+      ],
+      [
+       1.92,
+       0.016
+      ],
+      [
+       1.92,
+       0.0185
+      ],
+      [
+       0.0,
+       0.0185
+      ],
+      [
+       0.0,
+       0.016
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.56
+     ],
+     "slender": true,
+     "member": "brace",
+     "part": "member"
+    },
+    {
+     "id": "leg-left-tube-r",
+     "kind": "revolve",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      -0.56
+     ],
+     "slender": true,
+     "member": "leg-left",
+     "part": "member"
+    },
+    {
+     "id": "leg-right-tube-r",
+     "kind": "revolve",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0255
+      ],
+      [
+       2.6,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0255
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.04,
+      0.0,
+      -0.56
+     ],
+     "slender": true,
+     "member": "leg-right",
+     "part": "member"
+    },
+    {
+     "id": "brace-tube-r",
+     "kind": "revolve",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.016
+      ],
+      [
+       1.92,
+       0.016
+      ],
+      [
+       1.92,
+       0.0185
+      ],
+      [
+       0.0,
+       0.0185
+      ],
+      [
+       0.0,
+       0.016
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.56
+     ],
+     "slender": true,
+     "member": "brace",
+     "part": "member"
+    },
+    {
+     "id": "beam-tube",
+     "kind": "revolve",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0445
+      ],
+      [
+       1.196,
+       0.0445
+      ],
+      [
+       1.196,
+       0.0485
+      ],
+      [
+       0.0,
+       0.0485
+      ],
+      [
+       0.0,
+       0.0445
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.598
+     ],
+     "member": "beam",
+     "part": "member"
+    },
+    {
+     "id": "chain-left-member",
+     "kind": "capsule",
+     "bone": "chain-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      0.23
+     ],
+     "r0": 0.0039,
+     "r1": 0.0039,
+     "slender": true,
+     "member": "chain-left",
+     "part": "member"
+    },
+    {
+     "id": "chain-right-member",
+     "kind": "capsule",
+     "bone": "chain-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.5,
+     "p0": [
+      0.07,
+      0.0,
+      -0.23
+     ],
+     "p1": [
+      1.9,
+      0.0,
+      -0.23
+     ],
+     "r0": 0.0039,
+     "r1": 0.0039,
+     "slender": true,
+     "member": "chain-right",
+     "part": "member"
+    },
+    {
+     "id": "seat-member",
+     "of": "seat",
+     "member": "seat",
+     "part": "member"
+    },
+    {
+     "id": "support-pin-left-l",
+     "kind": "extrude",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.045,
+       0.0
+      ],
+      [
+       0.045,
+       0.0
+      ],
+      [
+       0.0,
+       -0.075
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.5,
+     "to": 0.6,
+     "transform": {
+      "translation": [
+       0.0,
+       0,
+       0
+      ]
+     },
+     "member": "leg-left",
+     "part": "support",
+     "anchor": "pin-left-l"
+    },
+    {
+     "id": "support-pin-left-r",
+     "kind": "extrude",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.045,
+       0.0
+      ],
+      [
+       0.045,
+       0.0
+      ],
+      [
+       0.0,
+       -0.075
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": -0.5,
+     "transform": {
+      "translation": [
+       0.0,
+       0,
+       0
+      ]
+     },
+     "member": "leg-left",
+     "part": "support",
+     "anchor": "pin-left-r"
+    },
+    {
+     "id": "support-roller-right-l",
+     "kind": "revolve",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.1,
+       0.0375
+      ],
+      [
+       0.1,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.6,
+      -0.0375,
+      0.5
+     ],
+     "member": "leg-right",
+     "part": "support",
+     "anchor": "roller-right-l"
+    },
+    {
+     "id": "support-roller-right-r",
+     "kind": "revolve",
+     "bone": "ground",
+     "material": "steel-galvanised",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0375
+      ],
+      [
+       0.1,
+       0.0375
+      ],
+      [
+       0.1,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      2.6,
+      -0.0375,
+      -0.6
+     ],
+     "member": "leg-right",
+     "part": "support",
+     "anchor": "roller-right-r"
+    },
+    {
+     "id": "mass-beam",
+     "kind": "ellipsoid",
+     "bone": "beam",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.04,
+      0.04,
+      0.15
+     ],
+     "member": "beam",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-left-l",
+     "kind": "ellipsoid",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "leg-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-right-l",
+     "kind": "ellipsoid",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "leg-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-brace-l",
+     "kind": "ellipsoid",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.96,
+       0.0,
+       0.56
+      ]
+     },
+     "member": "brace",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-left-r",
+     "kind": "ellipsoid",
+     "bone": "leg-left",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "leg-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-leg-right-r",
+     "kind": "ellipsoid",
+     "bone": "leg-right",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       1.32,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "leg-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-brace-r",
+     "kind": "ellipsoid",
+     "bone": "brace",
+     "material": "steel-galvanised",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.0375,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0.96,
+       0.0,
+       -0.56
+      ]
+     },
+     "member": "brace",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: modelled anew against the 1:500 drawing, whose elevation strokes are 90 mm (legs, brace) and 150 mm (chain) wide while front and plan draw the legs 60 mm and the chains 30 mm: legs and braces are 60 x 90 mm oval tubes (lateral width of front and plan, sagittal width of the elevation stroke), the chains 30 x 150 mm oval bars from the beam centre to 75 mm below the chain end (the stroke caps), seat a box, beam 100 mm, foot plates 180 x 12 x 100 mm. These widths are the drawing's, not the object's; true sizes are in the structure list.",
+     "de": "K\u00f6rper: neu gegen die Zeichnung 1:500 modelliert, deren Aufrissstriche 90 mm (Beine, Strebe) und 150 mm (Kette) breit sind, w\u00e4hrend Vorderansicht und Grundriss die Beine mit 60 mm und die Ketten mit 30 mm zeichnen: Beine und Streben sind ovale Rohre 60 x 90 mm (seitliche Breite von Vorderansicht und Grundriss, Tiefe des Aufrissstrichs), die Ketten ovale St\u00e4be 30 x 150 mm von der Holmmitte bis 75 mm unter das Kettenende (die Strichkappen), der Sitz ein Quader, der Holm 100 mm, die Fu\u00dfplatten 180 x 12 x 100 mm. Diese Breiten sind die der Zeichnung, nicht die des Objekts; wahre Gr\u00f6\u00dfen stehen in der Tragwerksliste."
+    },
+    {
+     "en": "Thermal: references by region; the sum of exposed areas is 3.5 times the declared sum (frame 3.71, chain 1.26 for the 150 mm bars against 0.13, seat 0.55 against 0.12): the declared frame and seat areas are mis-estimates (area-review.md) and the scale draws the chain 14 times thicker than it is.",
+     "de": "Thermik: Referenzen nach Region; die Summe der freien Fl\u00e4chen ist das 3,5-fache der angegebenen Summe (Rahmen 3,71, Kette 1,26 f\u00fcr die 150-mm-St\u00e4be gegen 0,13, Sitz 0,55 gegen 0,12): die angegebenen Fl\u00e4chen von Rahmen und Sitz sind Fehlsch\u00e4tzungen (area-review.md), und der Ma\u00dfstab zeichnet die Kette 14 mal dicker als sie ist."
+    },
+    {
+     "en": "Structure: true tubes at true size (60 x 3 mm legs, 40 x 2.5 mm braces: slender, so exempt from the 75 mm feature), 100 x 4 mm beam tube, 7.8 mm chain rods, the rubber seat as member, 75 mm contact pads, masses of beam, legs and braces (the seat mass of 2.8 kg is below 10 % and merged into the seat member); the leg masses are 60 mm ellipsoids (the feature limit of the leg drawing) inside the 60 x 90 mm body legs.",
+     "de": "Tragwerk: wahre Rohre in wahrer Gr\u00f6\u00dfe (Beine 60 x 3 mm, Streben 40 x 2,5 mm: schlank, daher von der Einzelheit 75 mm ausgenommen), Holmrohr 100 x 4 mm, 7,8-mm-Kettenst\u00e4be, das Gummibrett als Stab, Aufstandsplatten 75 mm, Massen von Holm, Beinen und Streben (die Sitzmasse von 2,8 kg liegt unter 10 % und ist im Sitzstab aufgegangen); die Beinmassen sind 60-mm-Ellipsoide (die Grenze der Beinzeichnung) innerhalb der K\u00f6rperbeine 60 x 90 mm."
+    }
+   ]
+  }
+ }
+}

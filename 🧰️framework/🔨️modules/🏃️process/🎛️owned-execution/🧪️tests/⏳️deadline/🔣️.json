@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "description": {
+    "en": "A live caller deadline supervises an owned command: output that renews the idle window keeps it alive, silence past the window stops it with a timeout refusal naming the reason, and a finite deadline that is not renewable ends it as an exhausted deadline.",
+    "de": "Eine lebendige Frist des Aufrufers überwacht einen eigenen Befehl: Ausgabe, die das Leerlauffenster erneuert, hält ihn am Leben, Stille über das Fenster hinaus stoppt ihn mit einer Zeitüberschreitungs-Ablehnung samt Grund, und eine endliche, nicht erneuerbare Frist beendet ihn als erschöpfte Frist."
+  },
+  "cases": [
+    { "name": "renewed by output outlives its idle window", "idleMilliseconds": 700, "lineEveryMilliseconds": 150, "lines": 14, "renewOnLine": true, "expected": "completed" },
+    { "name": "silence past the idle window stops with the progress notice", "idleMilliseconds": 400, "lineEveryMilliseconds": 0, "lines": 0, "renewOnLine": true, "expected": "execution.progress-expired" },
+    { "name": "unrenewed output stops at the fixed window", "idleMilliseconds": 600, "lineEveryMilliseconds": 150, "lines": 14, "renewOnLine": false, "expected": "execution.deadline-exhausted" }
+  ]
+}

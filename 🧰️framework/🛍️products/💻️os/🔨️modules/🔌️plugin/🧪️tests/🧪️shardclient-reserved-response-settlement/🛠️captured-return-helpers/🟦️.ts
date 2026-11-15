@@ -1,6 +1,6 @@
 /** 🛠️ The captured return, response, input stream and delivered input fixtures shared by the captured return authority parts. */
 import { loadInstanceOutputAdmissionFixture, loadActivationReturnAdmissionFixture, loadActorActivationReturnFixture } from "@semio-tech/framework-actor/testing/fixtures";
-import { loadContentInputAuthorityFixture } from "@semio-tech/framework-kernel/testing/fixtures";
+import { loadContentInputAuthorityFixture } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
 import { flushAdmission } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { ActorInstanceLifetime, OwnedShardReturn, ShardClientSettlementTestKit, ShardInstanceLifecycleLease } from "../🧰️settlement-test-kit/🟦️.ts";
 

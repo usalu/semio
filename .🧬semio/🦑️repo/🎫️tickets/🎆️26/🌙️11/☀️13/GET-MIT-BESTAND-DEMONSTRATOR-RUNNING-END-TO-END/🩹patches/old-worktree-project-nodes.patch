@@ -1,0 +1,11 @@
+--- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs	2026-11-13 22:05:27
++++ /Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs	2026-11-14 00:56:28
+@@ -109,7 +109,7 @@
+ /** 🧱️ Builds, from plain data, what the inference of one project shares across the projects of a graph construction; a worker process opens the session its parent describes, the generator contracts included: they are no fact of a project record but part of its key, so a worker that read them again after a peer edit would write content of other contracts under the key of its parent. */
+ export function createProjectInferenceEnvironmentV1(session) {
+   const { workspaceRoot, registry, projectsByRoot, componentRoots, contracts } = session;
+-  if (typeof session.closureStore === "string") bindClosureStoreV1(workspaceRoot, session.closureStore);
++  if (typeof session.closureStore === "string") bindClosureStoreV1(workspaceRoot, session.closureStore, true);
+   const context = { workspaceRoot, registry, lateClosures: session.lateClosures === true }, scripts = createScriptInputCache(context), commandInputs = session.commandInputs?.closureRecipe ? closureHandleFromRecipeV1(session.commandInputs.closureRecipe) : session.commandInputs;
+   if (contracts === null || typeof contracts !== "object" || Array.isArray(contracts)) throw refuseBuildV1("invalid","graph.generator-contracts-required");
+   scripts.generatedOutput = path => readBuildProducedCompileOutputV1(path, workspaceRoot, contracts, registry);

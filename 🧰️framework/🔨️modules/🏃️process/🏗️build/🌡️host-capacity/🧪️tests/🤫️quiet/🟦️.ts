@@ -7,7 +7,7 @@ import {mkdtempSync,readdirSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {setTimeout as sleep} from "node:timers/promises";
-import {newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,requestHostCapacityUpgradeV1,withHostCapacityV1,type HostCapacityHandleV1,type HostCapacityOptionsV1,type HostRequestV1,type HostRunV1,type HostSampleV1} from "../../🟦️.ts";
+import {evaluateHostCapacityV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,requestHostCapacityUpgradeV1,withHostCapacityV1,type HostCapacityHandleV1,type HostCapacityOptionsV1,type HostRequestV1,type HostRunV1,type HostSampleV1} from "../../🟦️.ts";
 import decisionFixture from "../🧫️fixtures/🔣️.json";
 
 const policy=readHostCapacityPolicyV1({...decisionFixture.policy,load:{...decisionFixture.policy.load,overrideAfterMilliseconds:600000},wait:{...decisionFixture.policy.wait,pollMilliseconds:10,progressMilliseconds:20,heartbeatMilliseconds:20,sampleMaximumAgeMilliseconds:0,lockStaleMilliseconds:2000,staleMilliseconds:60000}});
@@ -89,4 +89,11 @@ test("A quiet run whose tree stays within its quiet reservation never grows and 
  });
  expect(lines.filter(line=>/grow|grown|vergrößer/u.test(line))).toEqual([]);
  expect(learned.map(run=>[run.executed,run.jobs,run.peakMegabytes])).toEqual([[false,3,480]]);
+});
+
+test("Quiet grants that hold next to nothing never commit their reservation against the memory budget, so a request that fits the free memory is admitted beside any number of them",()=>{
+ const at=Date.now(),quietGrant=(index:number)=>({id:`quiet${index}`,operation:"run",jobs:1,cpu:1,reservedMegabytes:2048,admittedAtMs:at-5000,observedMegabytes:47,pid:100+index,bootAtMs:0,quiet:true,session:"one"}) as const;
+ const world={...host(),totalMegabytes:16384,availableMegabytes:9000,cores:10},ledger=[0,1,2,3].map(quietGrant),waiter={request:sized("asker",2048,{preferredJobs:1,perJobMegabytes:0}),arrivedAtMs:at,pid:999,session:"one",weight:1};
+ const evaluation=evaluateHostCapacityV1(policy,world,ledger,[waiter],at);
+ expect(evaluation.binding).toBe("available");expect(evaluation.decisions[0]).toMatchObject({verdict:"admit"});
 });

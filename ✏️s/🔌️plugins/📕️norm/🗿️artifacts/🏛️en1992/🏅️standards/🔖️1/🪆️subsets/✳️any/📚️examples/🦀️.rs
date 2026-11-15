@@ -15,7 +15,7 @@ pub mod compliant_office_frame;
 #[path = "🏢️compliant-office-frame/🧪️tests/🧩️example/🦀️.rs"]
 mod compliant_office_frame_example_tests;
 #[path = "🧵️compliant-prestressed-beam/🦀️.rs"]
-mod compliant_prestressed_beam;
+pub mod compliant_prestressed_beam;
 #[cfg(test)]
 #[path = "🧵️compliant-prestressed-beam/🧪️tests/🧩️example/🦀️.rs"]
 mod compliant_prestressed_beam_example_tests;
@@ -23,7 +23,7 @@ mod compliant_prestressed_beam_example_tests;
 #[path = "🛢️liquid-retaining-fem-anchor/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
 #[path = "💥️failing-prestressed-beam/🦀️.rs"]
-mod failing_prestressed_beam;
+pub mod failing_prestressed_beam;
 #[cfg(test)]
 #[path = "💥️failing-prestressed-beam/🧪️tests/🧩️example/🦀️.rs"]
 mod failing_prestressed_beam_example_tests;

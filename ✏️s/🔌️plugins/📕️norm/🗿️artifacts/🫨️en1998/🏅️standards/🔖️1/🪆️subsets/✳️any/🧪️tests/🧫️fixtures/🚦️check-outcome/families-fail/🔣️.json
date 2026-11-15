@@ -1057,7 +1057,8 @@
       "pileLowerVsMS": 300.0,
       "pileMomentRdNm": 400000.0,
       "baseFrictionAngleDeg": 25.0,
-      "basePorePressurePa": 10000.0
+      "basePorePressurePa": 10000.0,
+      "pileAxialLoadN": 0.0
     },
     {
       "id": "fd-2",
@@ -1091,7 +1092,8 @@
       "pileLowerVsMS": 0.0,
       "pileMomentRdNm": 0.0,
       "baseFrictionAngleDeg": 25.0,
-      "basePorePressurePa": 10000.0
+      "basePorePressurePa": 10000.0,
+      "pileAxialLoadN": 0.0
     }
   ],
   "retainingWalls": [

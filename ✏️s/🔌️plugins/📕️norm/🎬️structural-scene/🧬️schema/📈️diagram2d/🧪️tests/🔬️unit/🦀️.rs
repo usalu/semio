@@ -128,5 +128,7 @@ fn reference_markers_and_the_basis_note_are_read_from_their_ids() {
     d.annotations.push(DiagramNote { id: BASIS_NOTE_ID.into(), at: Vec2::ZERO, text: copy("basis"), tone: Tone::Neutral });
     d.annotations.push(DiagramNote { id: "note:a".into(), at: Vec2::ZERO, text: copy("a"), tone: Tone::Neutral });
     assert_eq!(d.basis().map(|b| b.en.as_str()), Some("basis"));
-    assert_eq!(d.plotted_notes().map(|n| n.id.as_str()).collect::<Vec<_>>(), vec!["note:a"]);
+    let plotted: Vec<&str> = d.plotted_notes().map(|n| n.id.as_str()).collect();
+    assert!(plotted.contains(&"note:a") && !plotted.contains(&BASIS_NOTE_ID));
+    assert_eq!(plotted.len() + 1, d.annotations.len());
 }

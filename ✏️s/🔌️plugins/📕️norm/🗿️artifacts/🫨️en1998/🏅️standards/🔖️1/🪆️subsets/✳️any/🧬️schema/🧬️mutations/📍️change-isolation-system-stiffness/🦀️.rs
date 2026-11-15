@@ -1,4 +1,4 @@
-//! 📍️ `change-isolation-system-stiffness` mutation leaf.
+//! 📍️ `change-isolation-system-stiffness-n-per-m` mutation leaf.
 
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
@@ -17,7 +17,7 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeIsolationSystemSti
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "isolation-system-stiffness-n-per-m",
-        kind: "change-isolation-system-stiffness",
+        kind: "change-isolation-system-stiffness-n-per-m",
         record: "ChangeIsolationSystemStiffnessNPerM",
     };
 

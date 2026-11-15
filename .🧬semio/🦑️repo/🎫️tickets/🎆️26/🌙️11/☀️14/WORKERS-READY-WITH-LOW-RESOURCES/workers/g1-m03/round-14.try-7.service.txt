@@ -1,0 +1,90 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b814083e21d9.log (lines after 7466)
+graph: 1203 stale projects, 0 taken from the fleet, 5 too heavy for this machine (@semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 1203
+graph: waiting for the fleet: 0 of 1203 projects arrived
+graph: the fleet did not deliver 5 too heavy project(s) (@semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB)); this machine infers them itself, one at a time and alone after the others, each with up to about 8428 MB
+-- last 30 lines when the try ended
+[repository:command] still running after 3031 s
+[repository:command] still running after 3041 s
+[repo] still working after 3050 s; last phase started: source.served
+graph: attached to the graph build of another command on this machine (generation 232, 831 s), no second build is started
+[repository:command] still running after 3051 s
+[repository:command] still running after 3061 s
+[repository:command] still running after 3071 s
+[repo] still working after 3080 s; last phase started: source.served
+[repository:command] still running after 3081 s
+[repository:command] still running after 3091 s
+[repository:command] still running after 3101 s
+graph: attached to the graph build of another command on this machine (generation 232, 884 s), no second build is started
+[repo] still working after 3110 s; last phase started: source.served
+[repository:command] still running after 3111 s
+[repository:command] still running after 3121 s
+[repository:command] still running after 3131 s
+[repo] still working after 3140 s; last phase started: source.served
+[repository:command] still running after 3141 s
+[repository:command] still running after 3151 s
+[repository:command] still running after 3161 s
+[repo] still working after 3170 s; last phase started: source.served
+[repository:command] still running after 3171 s
+[repository:command] still running after 3181 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":29}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":173}}
+[repository:command] still running after 3191 s
+[repo] still working after 3201 s; last phase started: source.served
+[repository:command] still running after 3201 s
+[repository:command] still running after 3211 s
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-d7505b87cee1.log (lines after 0)
+graph: generation 232 (5100 projects) restored from the remote cache, 5104 documents (48 MB) downloaded in 68 s, from a state 31 min old with 141 projects stale
+[graph] closure-missing 7143a7deaa3ba919893aefa5354df74795ac63f70f9e90262dc144994f2965bb named by 70 projects: re-derived
+[graph] closure-missing a32e8e410630d55255504482814fd86de14118524a0dcbeb5b8c2db68f2a9e5b named by 70 projects: re-derived
+[graph] closure-missing f828673b2db20f132aba65197c4f2af79ff125e2c9c42c8f2dbf409911540a6d named by 1 projects: re-derived
+[graph] closure-missing f8361925b3100b32ee3815a6faebee0ac1ffdf8b2640c9e25ff7f8bee8dc0298 named by 1 projects: re-derived
+[graph] closure-missing f836d19fdc47d953f4e316d82126ce04ae97cec03462d289be680a179ce2ad91 named by 1 projects: re-derived
+[graph] closure-missing f839dd5fcf08344d93f91277424907b08eeddaf4189a272fe8cb7c9b73012382 named by 1 projects: re-derived
+[graph] closure-missing f83acbae1c1c0c1286e4f00e761aead07fc623b4eb8d00cdd14835f4e8f42f56 named by 1 projects: re-derived
+[graph] closure-missing f83c0a3b73a4540119d60258df670aed4cac7823344a7945842c5d7e6a4db20e named by 1 projects: re-derived
+[graph] closure-missing f83e88b6f288e8aaa8c1c4a9b3ee26f0fb32196a7f94eecac47884b03670cb79 named by 1 projects: re-derived
+[graph] closure-missing f844baf71e873242dae6334e392fb04e5690883d9bcf427e382bc75a37894cf9 named by 1 projects: re-derived
+[graph] closure-missing f844bce21308a1e930b9d242e8d890a2a3d6d55614082d129fff3fee472f60f8 named by 1 projects: re-derived
+[graph] closure-missing f84985e9b90d948cfa4171b1f9dc51d2b3a3864078985255e349d2643dc1170f named by 1 projects: re-derived
+[graph] closure-missing f850197bce88d8ffedd2da6e48ee08babc287ba612e96b38fae9d43a09a88477 named by 1 projects: re-derived
+[graph] closure-missing f8519f197a08f1e2821b5bc9df4c1569e29b13812f4523d8ee0ce992bb8b595f named by 1 projects: re-derived
+[graph] closure-missing f856acaee4f865f329fcb72b982ccaf1852e9a3cecf24bbe4ce9625902103b9c named by 1 projects: re-derived
+[graph] closure-missing f858fba302913385f972baa73e7f1c7751f8870303776c7952ba565d3c16d0e4 named by 1 projects: re-derived
+[graph] closure-missing f85b8278342f8a20729f1ae39687e9dd974740fffdf738cb54825b39ed9ac036 named by 1 projects: re-derived
+[graph] closure-missing f85cb4af815e332d11f412611f25b1a12a702850088c196756068ecc5acd17ff named by 1 projects: re-derived
+[graph] closure-missing f862cced248d04916621212e97efeefef89db4a34e01451956d9d3e0fa215fc7 named by 1 projects: re-derived
+[graph] closure-missing f86572e9798da0387bafdc38d495b78bb3b1f303b9778edadd6b821fd7478f14 named by 1 projects: re-derived
+[graph] closure-missing f86986fc649ac0cb57d90aca868ad20b30e0e5ef16504841e9096bee0b43539f named by 1 projects: re-derived
+[graph] closure-missing f877eab4ab3522a771355ce2246d01059e30ffcf6dc1437bd379b270afca821e named by 1 projects: re-derived
+-- last 30 lines when the try ended
+[repository:command] still running after 880 s
+[repo] still working after 890 s; last phase started: source.served
+[repository:command] still running after 890 s
+graph: the build input closure f86986fc649a... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f86986fc649ac0cb57d90aca868ad20b30e0e5ef16504841e9096bee0b43539f named by 1 projects: re-derived
+[repository:command] still running after 900 s
+[repository:command] still running after 910 s
+[repo] still working after 920 s; last phase started: source.served
+[repository:command] still running after 920 s
+[repository:command] still running after 930 s
+[repository:command] still running after 940 s
+[repo] still working after 950 s; last phase started: source.served
+[repository:command] still running after 950 s
+[repository:command] still running after 960 s
+[repository:command] still running after 970 s
+[repo] still working after 980 s; last phase started: source.served
+[repository:command] still running after 980 s
+[repository:command] still running after 990 s
+[repository:command] still running after 1000 s
+[repo] still working after 1010 s; last phase started: source.served
+[repository:command] still running after 1010 s
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+graph: the build input closure f877eab4ab35... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f877eab4ab3522a771355ce2246d01059e30ffcf6dc1437bd379b270afca821e named by 1 projects: re-derived
+graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)
+[repository:command] still running after 1020 s
+[repository:command] still running after 1030 s
+[repo] still working after 1040 s; last phase started: source.served
+[repository:command] still running after 1040 s
+[repository:command] still running after 1050 s

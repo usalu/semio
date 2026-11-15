@@ -1,0 +1,64 @@
+step 0 start 2026-11-15T06:38:29Z
+step 0 end 2026-11-15T07:20:51Z exit=1 wall=2542 s
+## restored / installed lines
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:30763","mode":"shared","elapsedMs":82950.81444199989}}
+[script] repository:command remains active on javascript-installed-paths:30763 (shared, 83 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:32569","mode":"shared","elapsedMs":88076.55268700002}}
+[script] repository:command remains active on javascript-installed-paths:32569 (shared, 88 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:34220","mode":"shared","elapsedMs":93101.2875359999}}
+[script] repository:command remains active on javascript-installed-paths:34220 (shared, 93 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:36460","mode":"shared","elapsedMs":98181.97907700017}}
+[script] repository:command remains active on javascript-installed-paths:36460 (shared, 98 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:38192","mode":"shared","elapsedMs":103213.3333180002}}
+[script] repository:command remains active on javascript-installed-paths:38192 (shared, 103 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:39864","mode":"shared","elapsedMs":108297.8564960002}}
+[script] repository:command remains active on javascript-installed-paths:39864 (shared, 108 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:41872","mode":"shared","elapsedMs":113438.26794699999}}
+[script] repository:command remains active on javascript-installed-paths:41872 (shared, 113 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:43667","mode":"shared","elapsedMs":118635.89591600001}}
+[script] repository:command remains active on javascript-installed-paths:43667 (shared, 119 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:45571","mode":"shared","elapsedMs":123641.20375199988}}
+[script] repository:command remains active on javascript-installed-paths:45571 (shared, 124 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:47332","mode":"shared","elapsedMs":128764.23202}}
+[script] repository:command remains active on javascript-installed-paths:47332 (shared, 129 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:49157","mode":"shared","elapsedMs":133778.49619700015}}
+[script] repository:command remains active on javascript-installed-paths:49157 (shared, 134 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:51277","mode":"shared","elapsedMs":138982.13792299991}}
+[script] repository:command remains active on javascript-installed-paths:51277 (shared, 139 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:53276","mode":"shared","elapsedMs":144012.38486400014}}
+[script] repository:command remains active on javascript-installed-paths:53276 (shared, 144 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:55243","mode":"shared","elapsedMs":149161.0726089999}}
+[script] repository:command remains active on javascript-installed-paths:55243 (shared, 149 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:57202","mode":"shared","elapsedMs":154334.04222600022}}
+[script] repository:command remains active on javascript-installed-paths:57202 (shared, 154 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:59207","mode":"shared","elapsedMs":159594.90931400005}}
+[script] repository:command remains active on javascript-installed-paths:59207 (shared, 160 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:61039","mode":"shared","elapsedMs":164868.09358800016}}
+[script] repository:command remains active on javascript-installed-paths:61039 (shared, 165 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:62909","mode":"shared","elapsedMs":170184.05358200008}}
+[script] repository:command remains active on javascript-installed-paths:62909 (shared, 170 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:64476","mode":"shared","elapsedMs":175366.79579399992}}
+[script] repository:command remains active on javascript-installed-paths:64476 (shared, 175 s)
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-installed-paths:66233","mode":"shared","elapsedMs":180335.8688330003}}
+[script] repository:command remains active on javascript-installed-paths:66233 (shared, 180 s)
+## last 20 lines
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-source-provider:7748","mode":"shared","elapsedMs":29658.237151999958}}
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-source-provider:7748","mode":"shared","elapsedMs":30133.178040000144}}
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-source-provider:7748","mode":"shared","elapsedMs":30392.87586800009}}
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-source-provider:7748","mode":"shared","elapsedMs":30686.295069000218}}
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-source-provider:7748","mode":"shared","elapsedMs":30965.819779000245}}
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"javascript-source-provider:7748","mode":"shared","elapsedMs":31126.683664000127}}
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:selected-plan:1","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:selected-plan:2","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:selected-plan:3","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:selected-plan:4","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"dependencies:selected-plan:5","mode":"exclusive","elapsedMs":0}}
+Internal error: Exact selected dependency fields required
+repository:command failed with exit code 1

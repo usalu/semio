@@ -9,7 +9,7 @@ import {canonicalArchitectureEnvironment} from "../../../⚡️caching/🦀️ca
 import {withRepositoryCompilerRuntimeEntriesV1} from "../../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import {privateRepositoryParentsV1,privateRepositoryDeepestV1,requirePrivateRepositoryWorkspaceV1,testCheckoutRootV1} from "../../🧫️private-repository/📥️invocation/🟦️.ts";
 import {retirePrivateRepositoryRootV1} from "../../🧫️private-repository/🪦️retirement/🟦️.ts";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {captureOwnedCommandResultV1,writeOwnedCommandOutputV1,type OwnedCommandCaptureV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/📥️capture/🟦️.ts";
 import {SCRIPT_PROCESS_INVOCATION_ENV,readIssuedScriptProcessEnvelopeV1,readScriptProcessEnvelope,scriptProcessEnvironment,scriptResourceProcessEnvironmentV1,requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,receiveScriptProcessInvocation,createIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";

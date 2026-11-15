@@ -1,0 +1,5 @@
+import{readdirSync,readFileSync,statSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{createHash}from"node:crypto";
+const dir=process.argv[2],pick=(sub:string,lo:number,hi:number,n:number)=>readdirSync(dir+"/"+sub).map(f=>[f,statSync(dir+"/"+sub+"/"+f).size] as const).filter(x=>x[1]>lo&&x[1]<hi).slice(0,n).map(x=>readFileSync(dir+"/"+sub+"/"+x[0]));
+const sets:Record<string,Buffer[]>={entry:pick("e",20000,60000,40),bigEntry:pick("e",250000,400000,6),layer:pick("l",200000,2e6,25)};
+const sha=(b:Buffer)=>createHash("sha256").update(b).digest("hex");
+for(const[name,files]of Object.entries(sets)){for(const opts of[{maxOutputLength:268435456},{maxOutputLength:268435456,chunkSize:1<<20},{maxOutputLength:268435456,chunkSize:8<<20}]){const t=performance.now();let bytes=0;for(let r=0;r<3;r++)for(const f of files){const out=brotliDecompressSync(f,opts);bytes+=out.length;}const ms=performance.now()-t;console.log(name,JSON.stringify(opts.chunkSize??"default"),"files",files.length,"MB out/s",Math.round(bytes/1e6/(ms/1000)),"ms/file",+(ms/3/files.length).toFixed(2));}}

@@ -200,3 +200,46 @@ test("the storage reader answers from the recorded usage of the cache partitions
  expect(facts.storage?.images.length).toBeGreaterThan(0);
  expect(elapsed,"the second read of the storage in milliseconds").toBeLessThan(1000);
 },120000);
+
+test("the fleet section lists every machine with load, pressure, queue, worker, offload and unit cache counters and the totals of the scheduler, in both languages, and satisfies the closed schema under both validators",()=>{
+ const base=cases.find(row=>row.id===cases[0]!.id)!,machine=(origin:string,over:Record<string,unknown>={})=>({origin,platform:"macos-arm64-0123456789abcdef",pressure:"normal",load:1.5,cores:8,running:2,queued:0,headroom:true,ageSeconds:3,worker:"busy",offloadedIn:4,offloadedOut:1,refused:0,cacheHit:30,cacheMiss:10,...over});
+ const facts={...plain(base.facts),fleet:{scheduler:"http://cache.g1.semio.internal:8981",expireSeconds:15,machines:[machine("g1-m02",{pressure:"critical",headroom:false,worker:"refusing",refused:3,load:null}),machine("g1-m01")],queued:2,executing:2,offloadRejected:5,refused:3,retried:1,cache:{hits:100,misses:20,puts:30},claims:{active:2,waiting:1,oldestSeconds:75}}} as unknown as FleetFactsV1;
+ expect(validator("Facts")(facts)).toBe(true);expect(validateFleetFactsV1(facts)).toEqual([]);
+ const result=summarizeFleetV1(facts,"en");
+ expect(validator("Report")(result)).toBe(true);expect(validateFleetReportV1(result)).toEqual([]);
+ expect(result.fleet).toMatchObject({machines:[{origin:"g1-m01"},{origin:"g1-m02"}],queued:2,executing:2,offloadedIn:8,offloadedOut:2,refused:3,declined:5,retried:1,cacheHit:60,cacheMiss:20,cache:{hits:100,misses:20,puts:30},claims:{active:2,waiting:1,oldestSeconds:75}});
+ const english=formatFleetReportV1("en",result,20).filter(line=>line.includes("g1-m0")||line.startsWith("Fleet of machines")||line.includes("claims")||line.includes("cache server")),german=formatFleetReportV1("de",summarizeFleetV1(facts,"de"),20).filter(line=>line.includes("g1-m0")||line.startsWith("Maschinenflotte")||line.includes("Beanspruchungen")||line.includes("Cache-Server"));
+ expect(english).toHaveLength(5);expect(german).toHaveLength(5);
+ expect(english[0]).toContain("2 reporting, 2 queued and 2 executing");expect(german[0]).toContain("2 melden sich, 2 warten und 2 laufen");
+ expect(english.join("\n")).toContain("g1-m02 macos-arm64-0123456789abcdef: pressure critical, load ?/8 cores");expect(english.join("\n")).toContain("worker refusing (no headroom)");expect(german.join("\n")).toContain("Worker refusing (kein Spielraum)");
+ expect(english.join("\n")).toContain("claims: 2 active, 1 waiting, oldest 75 s");expect(english.join("\n")).not.toMatch(/\{[a-zA-Z]+\}/u);expect(german.join("\n")).not.toMatch(/\{[a-zA-Z]+\}/u);
+ const bare=summarizeFleetV1(plain(base.facts),"en");expect(bare.fleet).toBeUndefined();
+ const bad=plain(facts) as unknown as {fleet:{machines:{worker:string}[]}};bad.fleet.machines[0]!.worker="sleeping";expect(validator("Facts")(bad)).toBe(false);expect(validateFleetFactsV1(bad as never).length).toBeGreaterThan(0);
+});
+
+test("the fleet section says why a machine shares nothing: no other machine has its platform key (another OS or another compiler build), or it reports no Rust compiler, in both languages",()=>{
+ const base=cases.find(row=>row.id===cases[0]!.id)!,machine=(origin:string,platform:string)=>({origin,platform,pressure:"normal",load:1.5,cores:8,running:0,queued:0,headroom:true,ageSeconds:3,worker:"idle",offloadedIn:0,offloadedOut:0,refused:0,cacheHit:0,cacheMiss:0});
+ const facts=(machines:unknown[])=>({...plain(base.facts),fleet:{scheduler:"http://cache.g1.semio.internal:8981",expireSeconds:15,machines,queued:0,executing:0,offloadRejected:0,refused:0,retried:0}}) as unknown as FleetFactsV1;
+ const mixed=facts([machine("g1-m01","macos-arm64-aaaaaaaaaaaaaaaa"),machine("g1-m02","macos-arm64-aaaaaaaaaaaaaaaa"),machine("g1-m03","macos-arm64-bbbbbbbbbbbbbbbb"),machine("g1-m04","linux-arm64-aaaaaaaaaaaaaaaa"),machine("g1-m08","windows-amd64-none")]);
+ expect(validateFleetFactsV1(mixed)).toEqual([]);
+ const english=formatFleetReportV1("en",summarizeFleetV1(mixed,"en"),40).join("\n"),german=formatFleetReportV1("de",summarizeFleetV1(mixed,"de"),40).join("\n");
+ expect(english).toContain("g1-m03 shares its platform key with no other machine (other keys: linux-arm64-aaaaaaaaaaaaaaaa, macos-arm64-aaaaaaaaaaaaaaaa, windows-amd64-none)");
+ expect(english).toContain("g1-m04 shares its platform key with no other machine");expect(english).toContain("g1-m08 reports no Rust compiler (windows-amd64-none)");
+ expect(english).not.toContain("g1-m01 shares");expect(english).not.toContain("g1-m02 shares");
+ expect(german).toContain("g1-m03 teilt seinen Plattformschlüssel mit keiner anderen Maschine");expect(german).toContain("g1-m08 meldet keinen Rust-Compiler");
+ expect(english).not.toMatch(/\{[a-zA-Z]+\}/u);expect(german).not.toMatch(/\{[a-zA-Z]+\}/u);
+ expect(formatFleetReportV1("en",summarizeFleetV1(facts([machine("g1-m01","macos-arm64-aaaaaaaaaaaaaaaa")]),"en"),40).join("\n")).not.toContain("shares its platform key");
+});
+
+test("the fleet section says per machine whose worker is absent why it works not, in the chosen language, and a machine with a working worker shows no reason",()=>{
+ const base=cases.find(row=>row.id===cases[0]!.id)!,machine=(origin:string,over:Record<string,unknown>={})=>({origin,platform:"macos-arm64-aaaaaaaaaaaaaaaa",pressure:"normal",load:1.5,cores:8,running:0,queued:0,headroom:true,ageSeconds:3,worker:"idle",offloadedIn:0,offloadedOut:0,refused:0,cacheHit:0,cacheMiss:0,...over});
+ const why={code:"no-toolchain",en:"the pinned Rust toolchain is not installed and could not be provisioned (nightly-2026-07-20 missing)",de:"die festgeschriebene Rust-Toolchain ist nicht installiert und konnte nicht bereitgestellt werden (nightly-2026-07-20 fehlt)"};
+ const facts={...plain(base.facts),fleet:{scheduler:"http://cache.g1.semio.internal:8981",expireSeconds:15,machines:[machine("g1-m02",{worker:"absent",why}),machine("g1-m01"),machine("g1-m03",{worker:"absent"}),machine("g1-m04",{worker:"refusing",why:{code:"no-headroom",en:"the machine has no headroom for one more action (memory)",de:"die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"}})],queued:0,executing:0,offloadRejected:0,refused:0,retried:0}} as unknown as FleetFactsV1;
+ expect(validateFleetFactsV1(facts)).toEqual([]);expect(validator("Facts")(facts)).toBe(true);
+ const english=formatFleetReportV1("en",summarizeFleetV1(facts,"en"),40),german=formatFleetReportV1("de",summarizeFleetV1(facts,"de"),40);
+ expect(english.filter(line=>line.includes(" worker absent: "))).toEqual(["    g1-m02 worker absent: "+why.en]);
+ expect(english).toContain("    g1-m04 worker refusing: the machine has no headroom for one more action (memory)");
+ expect(german.filter(line=>line.includes(" Worker absent: "))).toEqual(["    g1-m02 Worker absent: "+why.de]);
+ const bad=plain(facts) as unknown as {fleet:{machines:{why?:unknown}[]}};bad.fleet.machines[0]!.why={code:1};
+ expect(validator("Facts")(bad)).toBe(false);expect(validateFleetFactsV1(bad as never).length).toBeGreaterThan(0);
+});

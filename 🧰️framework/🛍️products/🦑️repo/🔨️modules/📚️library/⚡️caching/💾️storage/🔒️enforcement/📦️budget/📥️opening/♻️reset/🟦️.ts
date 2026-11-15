@@ -21,7 +21,7 @@ import {readNativeMountPathsV1} from "../../../../../../../../../../🔨️modul
 import {requireNativeInactiveCapsuleReadersV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts";
 import {callerRepositoryRootV1} from "../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {openRepositoryCachePartitionAttemptV1,repositoryLeaseDirectoryV1,repositoryCachePartitionNativeImageV1} from "../🟦️.ts";
-import {repositoryCacheBudgetV1,repositoryPartitionRegrowDueV1,type RepositoryCachePartitionIdV1} from "../../🟦️.ts";
+import {repositoryCacheBudgetV1,repositoryPartitionGrowthRecordV1,repositoryPartitionRegrowDueV1,type RepositoryCachePartitionIdV1} from "../../🟦️.ts";
 import {lstatSync,statSync,readdirSync} from "node:fs";
 import {dirname,basename,join,resolve,sep} from "node:path";
 const protocol=schema.$defs.InactivePublicationProtocol.const;
@@ -146,6 +146,7 @@ export async function regrowElasticImageIfQuiescentV1(invocation:ScriptInvocatio
   requireIssuedResourceControlInvocationV1(control,invocation);const workspace=callerRepositoryRootV1(invocation.capabilities),declaration=repositoryCacheBudgetV1(workspace).partitions[partition],directory=declaration.directory;
   const plan=planElasticRegrowV1({record:nativeRecomputableRetirementPendingV1(directory),due:repositoryPartitionRegrowDueV1(workspace,partition),verdict:nativeRecomputableRetirementVerdictAtV1(nativeImageRootV1(directory),declaration.capacityBytes)});
   if(plan==="skip"||plan==="decline")return false;
+  if(plan==="reset")repositoryPartitionGrowthRecordV1(workspace,partition);
   if(plan==="reset")(await acquireResourceLease({directory:repositoryLeaseDirectoryV1(workspace),resource:"native-fixed-image:"+directory,mode:"exclusive",signal:control.signal,control,timeoutMs:0})).release();
   await resetInactiveRepositoryCacheNamespaceV1(invocation,control,partition);return true;
  }catch{checkResourceLeaseControl(control);return false;}

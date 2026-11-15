@@ -1,0 +1,60 @@
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:664:4:0:%40semio-tech%2F2d-compute-rs|language%3Arust|0|0,%40semio-tech%2F2d-engine-rs|language%3Arust|0|0,semio-plugin-original-job-ownership|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 664 projects · 4 running, longest 0 s: @semio-tech/2d-compute-rs (language:rust, 0 s, 0 rows), @semio-tech/2d-engine-rs (language:rust, 0 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:664:7:0:%40semio-tech%2F2d-compute-rs|language%3Arust|0|0,%40semio-tech%2F2d-engine-rs|language%3Arust|0|0,semio-plugin-original-job-ownership|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 664 projects · 7 running, longest 0 s: @semio-tech/2d-compute-rs (language:rust, 0 s, 0 rows), @semio-tech/2d-engine-rs (language:rust, 0 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:664:7:0:%40semio-tech%2F2d-engine-rs|language%3Arust|0|0,semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-os-mcp-process-arena|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 664 projects · 7 running, longest 0 s: @semio-tech/2d-engine-rs (language:rust, 0 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 2 inferred here, 701 left; the server last progressed 1866 s ago, estimated time left: about 19 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:2:664:7:0:%40semio-tech%2F2d-engine-rs|language%3Arust|0|0,semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-os-mcp-process-arena|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 2 of 664 projects · 7 running, longest 0 s: @semio-tech/2d-engine-rs (language:rust, 0 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:5:664:7:0:%40semio-tech%2F2d-engine-rs|language%3Arust|0|0,semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-os-mcp-process-arena|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 5 of 664 projects · 7 running, longest 0 s: @semio-tech/2d-engine-rs (language:rust, 0 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[capacity] waiting 6s for exec: not enough free memory (need 1536 MB; 301 MB spare above the 1536 MB floor, load 3.58; 3 running, 0 ahead); behind graph-plan (running, 1 job(s), 6339 MB), graph-farm (running, 1 job(s), 1536 MB), workspace:setup (quiet, 1 job(s), 52 MB)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:8:664:8:0:%40semio-tech%2F2d-engine-rs|language%3Arust|0|0,semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-os-mcp-process-arena|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 8 of 664 projects · 8 running, longest 0 s: @semio-tech/2d-engine-rs (language:rust, 0 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:10:664:7:0:%40semio-tech%2F2d-engine-rs|language%3Arust|0|0,semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-os-mcp-process-arena|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 10 of 664 projects · 7 running, longest 0 s: @semio-tech/2d-engine-rs (language:rust, 0 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows)
+graph: waiting for memory headroom (435 of 1065 MB reserved, 7 projects running): repo-policy needs 1176 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:12:664:6:0:%40semio-tech%2F2d-engine-rs|language%3Arust|0|0,semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-os-mcp-process-arena|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 12 of 664 projects · 6 running, longest 0 s: @semio-tech/2d-engine-rs (language:rust, 0 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: headroom of 968 MB is below one project (1176 MB), inferring one project at a time
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 19 inferred here, 684 left; the server last progressed 1868 s ago, estimated time left: about 19 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[capacity] admitted exec: 1 job(s), 1536 MB reserved (7504 MB available, 1536 MB floor)
+[repo] still working after 5960 s; last phase started: source.served
+graph: inferring projects with 1 worker processes (1536 MB each)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:19:664:1:0:repo-policy|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 19 of 664 projects · 1 running, longest 0 s: repo-policy (project, 0 s, 0 rows)
+[repository:command] still running after 5960 s
+graph: waiting for memory headroom (1176 of 1076 MB reserved, 1 projects running): repo-nx-output-custody needs 901 MB and has waited 5 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 5970 s
+graph: plan stage inference settled from 6907 to 7297 MB
+Graph: Plan-Stufe inference beruhigt von 6907 auf 7297 MB
+[repository:command] still running after 5980 s
+[repo] still working after 5990 s; last phase started: source.served
+[repository:command] still running after 5990 s
+[repository:command] still running after 6000 s
+[repository:command] still running after 6010 s

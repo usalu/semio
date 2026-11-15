@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "vectors": [
+    { "id": "raw-argv-url-path", "code": "if(process.argv[1]!==undefined&&process.argv[1]===fileURLToPath(import.meta.url))process.exitCode=await run();", "guard": true },
+    { "id": "supervisor-canonical", "code": "if(canonical(entry)===canonical(fileURLToPath(import.meta.url))){await main();}", "guard": true },
+    { "id": "url-first", "code": "if (import.meta.url === pathToFileURL(process.argv[1]).href) start();", "guard": true },
+    { "id": "inequality", "code": "if(entry!=fileURLToPath(import.meta.url))return;", "guard": true },
+    { "id": "filename", "code": "if(import.meta.filename===process.argv[1])go();", "guard": true },
+    { "id": "bundler-main-with-fallback", "code": "if(import.meta.main??(process.argv[1]!==undefined&&process.argv[1]===fileURLToPath(import.meta.url)))run();", "guard": false },
+    { "id": "second-line-raw", "code": "const a=1;\nif(process.argv[1]===fileURLToPath(import.meta.url))run();", "guard": true },
+    { "id": "bound-guard", "code": "if(isMainModuleV1(import.meta.url)){await main();}", "guard": false },
+    { "id": "bundler-main", "code": "if(import.meta.main){await main();}", "guard": false },
+    { "id": "lazy-load", "code": "const adapter=id===\"bun\"?createRequire(import.meta.url)(\"../bun.ts\"):id===\"node\"?createRequire(import.meta.url)(\"../node.ts\"):undefined;", "guard": false },
+    { "id": "sibling-url", "code": "const worker=fileURLToPath(new URL(\"./worker.mjs\",import.meta.url));", "guard": false },
+    { "id": "here", "code": "const here=dirname(fileURLToPath(import.meta.url)),root=resolve(here,\"..\");", "guard": false },
+    { "id": "self-check", "code": "const main=process.argv[1]===undefined?undefined:await realpath(process.argv[1]).catch(()=>undefined);", "guard": false },
+    { "id": "program-text", "code": "const program=`const f=process.argv[1];process.exit(f===undefined?1:0)`;", "guard": false }
+  ]
+}

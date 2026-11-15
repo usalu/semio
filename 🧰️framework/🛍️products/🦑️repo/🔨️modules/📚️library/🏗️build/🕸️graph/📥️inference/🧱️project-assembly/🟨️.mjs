@@ -176,9 +176,9 @@ function precisionReceiptsV1(workspaceRoot) {
 }
 
 const precisionDocumentsV1 = createBoundedCacheV1({ name: "inference:precision-documents", maxEntries: 4, maxBytes: 4 });
-/** 📏️ The input precision rules as every project that applies them records them: read once per process, and the facts of that read (the engine, its schema and the rules) are replayed into each receiving project, so the rows of a project never depend on which project of the same process asked first (a farm worker infers in a fresh process). */
+/** 📏️ The input precision rules as every project that applies them records them (the rules file always; the engine and the manager sources only while their conformance stamp is unavailable, since the stamp row stands for them otherwise): read once per process, and the facts of that read (the engine, its schema and the rules) are replayed into each receiving project, so the rows of a project never depend on which project of the same process asked first (a farm worker infers in a fresh process). */
 export function readProjectInputPrecisionV1() {
-  return memoizedObservedComputationV1(precisionDocumentsV1, PRECISION_RULES, () => { for (const file of PRECISION_FILES) readFileSync(join(LIBRARY_ROOT, file)); for(const file of managerSourceFilesV1())readFileSync(file); const rules = join(LIBRARY_ROOT, PRECISION_RULES); return existsSync(rules) ? readInputPrecisionV1(JSON.parse(readFileSync(rules, "utf8"))) : null; }) ?? undefined;
+  return memoizedObservedComputationV1(precisionDocumentsV1, PRECISION_RULES, () => { if (!stampActiveV1("input-precision")) for (const file of PRECISION_FILES) readFileSync(join(LIBRARY_ROOT, file)); if (!stampActiveV1("package-managers")) for(const file of managerSourceFilesV1())readFileSync(file); const rules = join(LIBRARY_ROOT, PRECISION_RULES); return existsSync(rules) ? readInputPrecisionV1(JSON.parse(readFileSync(rules, "utf8"))) : null; }) ?? undefined;
 }
 
 /** 🎯️ The input precision rules and the engine host of one graph construction. */
@@ -239,11 +239,12 @@ function receiptedStoreTargetV1(policy, name, reason) {
   return withCacheDecision({ ...policy, outputs: [storeReceiptOutputV1(name)] }, policy.cache ? "deterministic" : "managed-output", policy.cache ? "pure-function-of-inputs" : reason);
 }
 
-let closureApiV1, closureHandleOfV1, registerClosureQueryV1, workspaceDataDirectory, targetScriptSources,libraryBootstrap, nativeDependencyRoots, buildPath, LIBRARY_ROOT, readTaxonomyProjectionV1, readToml, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, cargoSourceInputs, cargoSourcesOrRefuseV1, createScriptInputCache, loaded, yieldInferenceV1, SOURCE_INPUT_MODULE, TAXONOMY, SCRIPT_BASENAME, goManifest, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, owned, withWasmTooling, withCacheDecision, cachedOutputsAdmittedV1, rootCommandTargets, cargoTargets, componentBuildTargets, printDocumentTargets, prepareSourceAnalysesV1, generatorContractInputs, generatorOutputOwners, genericCommandFallbackInputs, targetWithDefaults, targetPolicy, targetExecutionKindV1, targetExclusionsV1, excludedInputConflictV1, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs, outputRootInputs, generatorOutputCouplingInputs;
+let stampActiveV1, closureApiV1, closureHandleOfV1, registerClosureQueryV1, workspaceDataDirectory, targetScriptSources,libraryBootstrap, nativeDependencyRoots, buildPath, LIBRARY_ROOT, readTaxonomyProjectionV1, readToml, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, cargoSourceInputs, cargoSourcesOrRefuseV1, createScriptInputCache, loaded, yieldInferenceV1, SOURCE_INPUT_MODULE, TAXONOMY, SCRIPT_BASENAME, goManifest, relativeScriptInputs, resolveOutputPath, exampleCollectionInputs, owned, withWasmTooling, withCacheDecision, cachedOutputsAdmittedV1, rootCommandTargets, cargoTargets, componentBuildTargets, printDocumentTargets, prepareSourceAnalysesV1, generatorContractInputs, generatorOutputOwners, genericCommandFallbackInputs, targetWithDefaults, targetPolicy, targetExecutionKindV1, targetExclusionsV1, excludedInputConflictV1, nativeTargetCommandInputs, targetScriptClosure, nativeLockInputs, genericTargetCommandInputs, outputRootInputs, generatorOutputCouplingInputs;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
   ({ libraryBootstrap, loaded } = registry.bootstrap);
+  ({ inferrerActiveV1: stampActiveV1 } = registry.stamps);
   ({ nativeDependencyRoots, readToml, cargoSourceInputs, cargoSourcesOrRefuseV1, goManifest } = registry.nativeManifests);
   ({ buildPath, LIBRARY_ROOT, POLICY, WORKSPACE_POLICY, PROJECT_BASENAME, SOURCE_INPUT_MODULE, SCRIPT_BASENAME, exampleCollectionInputs, owned, workspaceDataDirectory } = registry.coordinates);
   ({ readTaxonomyProjectionV1, TAXONOMY, prepareSourceAnalysesV1 } = registry.sourceAnalyses);
@@ -328,6 +329,7 @@ export async function projectInputs(json, root, workspaceRoot, facts, scripts=cr
   return loaded.inferProjectInputs(json, root, workspaceRoot, facts, scripts, { POLICY, TAXONOMY, LIBRARY_ROOT, SCRIPT_BASENAME, cargoSourceInputs, goManifest, buildPath, relativeScriptInputs, closureOf: (entries, extras, role) => closures.closureOf(entries, extras, role), resolveOutputPath, exampleCollectionInputs, workspaceNegationClosed, declaredSourceInputs:sourceGroups===undefined?(json,root,namedInputs)=>declaredSourceInputs({...json,namedInputs:{...namedInputs,...Object.fromEntries(Object.keys(commandGroups).map(name=>[name,[]]))}},root,scripts.context,inputNames):()=>sourceGroups, owned, sourceRepresentation });
 }
 
+
 /**
  * 🕸️ The project configuration completed with its declared defaults, inferred inputs and targets.
  * @param {Record<string, any>} json
@@ -384,7 +386,7 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     if(typeof inherited.options?.cwd==="string")inherited.options={...inherited.options,cwd:inherited.options.cwd.replaceAll("{projectRoot}",root).replaceAll("{workspaceRoot}",workspaceRoot)};
     let policy = targetPolicy(name,inherited,undefined,`${json.name}:${name}`);
     const execution = targetExecutionKindV1(target,`${json.name}:${name}`), orchestrator = execution === "orchestration" || target.metadata?.semio?.orchestrator === true;
-    if (execution === "native" && !nativeProject) throw Error(`Native execution contract requires a native project owner: ${json.name}:${name}`);
+    if (execution === "native" && !nativeProject) throw Object.assign(Error(`Native execution contract requires a native project owner: ${json.name}:${name}; Build owner manifest absent: ${buildPath(join(nativeRoot,"Cargo.toml"))} (required by ${json.name}:${name})`),{code:"BUILD_OWNER_MANIFEST_ABSENT"});
     const nativePolicyTarget = execution !== "source" && !orchestrator && nativeProject && policy.executor !== "repo:noop" && (execution === "native" || typeof policy.options?.command === "string" && await closures.some(await commandSourcesOf({...policy,configurations:undefined}), nativeCommandDriverNamesV1));
     const nativeTarget = execution !== "source" && !orchestrator && (nativePolicyTarget || nativeProject && /^(?:build|wasm|native|test|lint|check|verify)(?:-|$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts"));
     const artifactTarget = artifactTypeScript && /^(?:build|check|test)$/.test(name);
@@ -489,12 +491,18 @@ export async function resolveClosureRefsV1(project, workspaceRoot, scripts, sour
   return { project: mergeCommandSourceGroupsV1(bound), rows, derived };
 }
 
-/** 🔑️ The digest of one input list, taken item by item: equal lists have equal digests without the text of the whole list ever existing, which for the thousands of command source groups of one project (each the files of a whole closure) is the difference between one pass and gigabytes of serialised text. */
-function inputListDigestV1(list) {
-  if (!Array.isArray(list)) return createHash("sha256").update(JSON.stringify(list) ?? "undefined").digest("hex");
-  const hash = createHash("sha256");
-  for (const item of list) hash.update(typeof item === "string" ? "s" + item.length + ":" + item : "j" + JSON.stringify(item) + "\n");
-  return hash.digest("hex");
+/** 🔑️ The key of one input list, taken item by item through a table that names each distinct item once: equal lists have equal keys without the text of the list or a string per item ever being made, which for the thousands of command source groups of one project (each the files of a whole closure) is the difference between one pass and gigabytes of transient text; unequal lists may share a key, so a shared key is confirmed by {@link sameInputListV1}. */
+function inputListKeyV1(list, names) {
+  if (!Array.isArray(list)) return "!" + JSON.stringify(list);
+  let first = 0x811c9dc5, second = list.length;
+  for (const item of list) {
+    const text = typeof item === "string" ? item : "\0" + JSON.stringify(item);
+    let id = names.get(text);
+    if (id === undefined) { id = names.size + 1; names.set(text, id); }
+    first = Math.imul(first ^ id, 0x01000193) >>> 0;
+    second = (Math.imul(second, 31) + id) >>> 0;
+  }
+  return first + ":" + second + ":" + list.length;
 }
 
 /** 🟰️ Whether two input lists hold the same items in the same order: the exact check behind an equal digest. */
@@ -509,9 +517,9 @@ function sameInputListV1(left, right) {
 /** 📁️ Groups made from different recipes can hold the same files; the direct inference names one group per distinct content in order of first use, so equal groups are merged and the survivors renumbered the same way. */
 export function mergeCommandSourceGroupsV1(project) {
   const names = Object.keys(project.namedInputs).filter((name) => /^commandSources\d+$/u.test(name)).sort((left, right) => Number(left.slice(14)) - Number(right.slice(14)));
-  const contents = new Map(), rename = new Map(), groups = [];
+  const contents = new Map(), rename = new Map(), groups = [], itemNames = new Map();
   for (const name of names) {
-    const list = project.namedInputs[name], key = inputListDigestV1(list);
+    const list = project.namedInputs[name], key = inputListKeyV1(list, itemNames);
     let found = contents.get(key)?.find((row) => sameInputListV1(row.list, list));
     if (!found) { found = { name: `commandSources${groups.length}`, list }; const held = contents.get(key); if (held) held.push(found); else contents.set(key, [found]); groups.push([found.name, list]); }
     rename.set(name, found.name);

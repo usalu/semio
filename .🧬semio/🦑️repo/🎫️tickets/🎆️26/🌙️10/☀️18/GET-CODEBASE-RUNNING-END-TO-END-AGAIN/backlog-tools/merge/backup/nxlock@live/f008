@@ -1,0 +1,105 @@
+{
+  "edges": [
+    {
+      "owner": "bootstrap",
+      "scope": "runInStorage",
+      "callee": "withRepositoryToolingStoreV1",
+      "phaseIndex": 2,
+      "expected": [
+        "actualPhase"
+      ]
+    },
+    {
+      "owner": "service",
+      "scope": "authenticatePhysicalWitnessV1",
+      "callee": "readPhysicalCargoSourceV1",
+      "phaseIndex": 2,
+      "expected": [
+        "control"
+      ]
+    },
+    {
+      "owner": "service",
+      "scope": "authenticateNxDaemonServiceHandoffV1",
+      "callee": "authenticatePhysicalWitnessV1",
+      "phaseIndex": 3,
+      "expected": [
+        "control"
+      ]
+    },
+    {
+      "owner": "service",
+      "scope": "withNxDaemonServiceV1",
+      "callee": "authenticateNxDaemonServiceHandoffV1",
+      "phaseIndex": 2,
+      "expected": [
+        "storePhase",
+        "usePhase"
+      ]
+    },
+    {
+      "owner": "service",
+      "scope": "withNxDaemonServiceBirthV1",
+      "callee": "body",
+      "phaseIndex": 1,
+      "expected": [
+        "usePhase"
+      ]
+    },
+    {
+      "owner": "service",
+      "scope": "withNxDaemonJournalReaderV1",
+      "callee": "authenticatePhysicalWitnessV1",
+      "phaseIndex": 3,
+      "expected": [
+        "storePhase"
+      ]
+    },
+    {
+      "owner": "startup",
+      "scope": "withNxDaemonStartupV1",
+      "callee": "body",
+      "phaseIndex": 0,
+      "expected": [
+        "birthPhase"
+      ]
+    },
+    {
+      "owner": "startup",
+      "scope": "withNxDaemonStartupV1",
+      "callee": "checkResourceLeaseControl",
+      "phaseIndex": 0,
+      "expected": [
+        "actualPhase",
+        "actualPhase"
+      ]
+    },
+    {
+      "owner": "service",
+      "scope": "withNxDaemonServiceV1",
+      "callee": "withRepositoryNxStorageV1",
+      "phaseIndex": 2,
+      "expected": [
+        "storePhase"
+      ]
+    },
+    {
+      "owner": "service",
+      "scope": "withNxDaemonServiceBirthV1",
+      "callee": "withRepositoryNxStorageV1",
+      "phaseIndex": 2,
+      "expected": [
+        "storePhase"
+      ]
+    },
+    {
+      "owner": "service",
+      "scope": "withNxDaemonJournalReaderV1",
+      "callee": "withRepositoryNxStorageV1",
+      "phaseIndex": 2,
+      "expected": [
+        "storePhase"
+      ]
+    }
+  ]
+}

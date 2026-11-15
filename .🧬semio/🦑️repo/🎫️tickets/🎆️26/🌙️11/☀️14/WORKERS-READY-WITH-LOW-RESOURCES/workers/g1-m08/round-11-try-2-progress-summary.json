@@ -1,0 +1,409 @@
+{
+  "at": "2026-11-15T00:57:06Z",
+  "last_progress_gap_s": 0.15,
+  "unique_progress_lines": 1757,
+  "recent": [
+    {
+      "at": "2026-11-15T00:55:39Z",
+      "line": "[script] graph:slice-worker · Verifying graph facts: 262144 of 271552 facts"
+    },
+    {
+      "at": "2026-11-15T00:55:39Z",
+      "line": "Reading the project graph slice (188 s): facts 180224 of 271552."
+    },
+    {
+      "at": "2026-11-15T00:55:39Z",
+      "line": "Reading the project graph slice (190 s): facts 204800 of 271552."
+    },
+    {
+      "at": "2026-11-15T00:55:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:263360:271552\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:55:44Z",
+      "line": "[script] graph:slice-worker · Verifying graph facts: 263360 of 271552 facts"
+    },
+    {
+      "at": "2026-11-15T00:55:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:271552:271552\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:55:44Z",
+      "line": "[script] graph:slice-worker · Verifying graph facts: 271552 of 271552 facts"
+    },
+    {
+      "at": "2026-11-15T00:55:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:0:3\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:55:44Z",
+      "line": "[script] graph:slice-worker · Verifying input closures: 0 of 3 closures"
+    },
+    {
+      "at": "2026-11-15T00:55:44Z",
+      "line": "Reading the project graph slice (192 s): facts 249856 of 271552."
+    },
+    {
+      "at": "2026-11-15T00:55:44Z",
+      "line": "Reading the project graph slice (194 s): facts 271552 of 271552."
+    },
+    {
+      "at": "2026-11-15T00:55:50Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:1:3\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:55:50Z",
+      "line": "[script] graph:slice-worker · Verifying input closures: 1 of 3 closures"
+    },
+    {
+      "at": "2026-11-15T00:55:50Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:2:3\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:55:50Z",
+      "line": "[script] graph:slice-worker · Verifying input closures: 2 of 3 closures"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:3:3\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] graph:slice-worker · Verifying input closures: 3 of 3 closures"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:0:129\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:1:129\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:129:129\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:0:2\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:2:2\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:05Z",
+      "line": "Reading the project graph slice (216 s): parts 129 of 129."
+    },
+    {
+      "at": "2026-11-15T00:56:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:0:2\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:commands\",\"stage\":\"running\"}"
+    },
+    {
+      "at": "2026-11-15T00:56:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:commands\",\"stage\":\"complete\"}"
+    },
+    {
+      "at": "2026-11-15T00:56:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:2\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:10Z",
+      "line": "graph: headroom of 1024 MB is below one project (1895 MB), inferring one project at a time"
+    },
+    {
+      "at": "2026-11-15T00:56:10Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:0:2:1:0:workspace|root%3Alanguage%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:15Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:2:1:5:workspace|root%3Alanguage%3Acargo|5|0:waiting|1895|1024|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:15Z",
+      "line": "[script] build:projects · Inferring projects: 0 of 2 projects · 1 running, longest 5 s: workspace (root:language:cargo, 5 s, 0 rows) · waiting for memory headroom (1895 of 1024 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T00:56:15Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:0:2:1:5:workspace|root%3Alanguage%3Acargo|5|0:waiting|1895|1024|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:20Z",
+      "line": "Reading the project graph slice (228 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0); waiting for memory headroom (1895 of 1024 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T00:56:30Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:1:2:1:10:workspace|root%3Alanguage%3Acargo|10|0:waiting|1895|1340|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:30Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:0:2\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:30Z",
+      "line": "Reading the project graph slice (240 s): owners 1 of 2."
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:1:2:1:5:%40semio-tech%2Fplugin-registry|project|5|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] build:projects · Inferring projects: 1 of 2 projects · 1 running, longest 5 s: @semio-tech/plugin-registry (project, 5 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:1:2:1:5:%40semio-tech%2Fplugin-registry|project|5|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:1:2\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] build:projects · Inferring projects: 1 of 2 projects"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:1:2\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:2:2\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] build:projects · Inferring projects: 2 of 2 projects"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[fleet] projects from the fleet: 0 taken, 0 stored, 0 offered, 0 waited for another machine, 0 computed here | Projekte aus der Flotte: 0 übernommen, 0 gespeichert, 0 angeboten, 0 auf eine andere Maschine gewartet, 0 hier berechnet"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:infer\",\"stage\":\"running\"}"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "[script] build:infer · Inferring projects"
+    },
+    {
+      "at": "2026-11-15T00:56:35Z",
+      "line": "Reading the project graph slice (246 s): owners 1 of 2; running (name, kind, seconds, rows): @semio-tech/plugin-registry (project, 5, 0)."
+    },
+    {
+      "at": "2026-11-15T00:56:40Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:generator-producers\",\"stage\":\"running\"}"
+    },
+    {
+      "at": "2026-11-15T00:56:40Z",
+      "line": "[script] build:generator-producers · Collecting generator producers"
+    },
+    {
+      "at": "2026-11-15T00:56:40Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:modules\",\"stage\":\"running\"}"
+    },
+    {
+      "at": "2026-11-15T00:56:40Z",
+      "line": "Reading the project graph slice (248 s): owners 1 of 2; running (name, kind, seconds, rows): ."
+    },
+    {
+      "at": "2026-11-15T00:56:45Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:graph\",\"stage\":\"complete\"}"
+    },
+    {
+      "at": "2026-11-15T00:56:45Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:2:2\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:56:45Z",
+      "line": "Reading the project graph slice (254 s): owners 2 of 2."
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "graph: generation 69 published, 2 projects refreshed in 107 s (0 kept their edges)"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "graph: fact index of generation 69: 740266 facts of 5101 projects, 84.7 MB expanded (16.5 % of the 512 MB limit), 13.6 MB packed"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "graph: 3 derived results asked again after 75 stale facts: 1 unchanged, 0 changed"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:assembly:0:703\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Assembling the graph: 0 of 703 projects"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:portable-inputs\",\"stage\":\"running\"}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:expansion:0:170\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Expanding input closures: 0 of 170 closures"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:expansion:170:170\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Expanding input closures: 170 of 170 closures"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:portable-inputs\",\"stage\":\"complete\"}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:assembly:33:703\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Assembling the graph: 33 of 703 projects"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:portable-inputs\",\"stage\":\"running\"}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:expansion:0:167\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Expanding input closures: 0 of 167 closures"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:expansion:167:167\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Expanding input closures: 167 of 167 closures"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:portable-inputs\",\"stage\":\"complete\"}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:portable-inputs\",\"stage\":\"running\"}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:expansion:0:341\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Expanding input closures: 0 of 341 closures"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:expansion:256:341\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Expanding input closures: 256 of 341 closures"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:expansion:341:341\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Expanding input closures: 341 of 341 closures"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:portable-inputs\",\"stage\":\"complete\"}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:assembly:97:703\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Assembling the graph: 97 of 703 projects"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:portable-inputs\",\"stage\":\"running\"}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:expansion:0:233\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "[script] graph:slice-worker · Expanding input closures: 0 of 233 closures"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "2026-11-15T00:57:02.533Z request-failed 742ceab8 Error: ENOENT: no such file or directory, lstat '/Users/ueli/Documents/semio/.cache/b/g/m/build-input-closures/287b569798f6854f56082d3a0cd1b5638507649556b6edc64c75ce8160921a77.json'"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "    at lstatSync (unknown)"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "    at readInventoryRecordLeanV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🟨️.mjs:12:48)"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📁️workspace/🟦️.ts:86:20)"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:146:491)"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "Reading the project graph slice (274 s): assembly 0 of 703."
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "The resident service met an unexpected failure (reference 742ceab8); try again, the details under that reference are in the service log /var/folders/t7/ckfnmc712gsdkt0tc8042br00000gn/T/semio-repo/501/host-ac6bfe8f337c.log."
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "end 2026-11-15T00:57:02Z"
+    },
+    {
+      "at": "2026-11-15T00:57:06Z",
+      "line": "native_rc=1"
+    }
+  ],
+  "stall": false,
+  "writer_failure": false
+}

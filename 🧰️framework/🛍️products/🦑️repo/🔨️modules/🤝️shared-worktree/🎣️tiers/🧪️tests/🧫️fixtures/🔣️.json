@@ -1,0 +1,402 @@
+{
+ "version": 1,
+ "paths": [
+  {
+   "name": "relative",
+   "raw": "a/b.txt",
+   "expect": "a/b.txt"
+  },
+  {
+   "name": "dot segments and doubled slashes",
+   "raw": "./a//b/../b.txt",
+   "expect": "a/b.txt"
+  },
+  {
+   "name": "parent escape",
+   "raw": "../x.txt",
+   "expect": null
+  },
+  {
+   "name": "escape through a middle segment",
+   "raw": "a/../../x.txt",
+   "expect": null
+  },
+  {
+   "name": "absolute inside",
+   "raw": "{root}/dir/f.txt",
+   "expect": "dir/f.txt"
+  },
+  {
+   "name": "absolute outside",
+   "raw": "{outside}/f.txt",
+   "expect": null
+  },
+  {
+   "name": "the worktree itself",
+   "raw": "{root}",
+   "expect": null
+  },
+  {
+   "name": "dot",
+   "raw": ".",
+   "expect": null
+  },
+  {
+   "name": "sealed directory",
+   "raw": ".cache/f/hints/x",
+   "expect": null
+  },
+  {
+   "name": "sealed state file by absolute path",
+   "raw": "{root}/.cache/f/state.json",
+   "expect": null
+  },
+  {
+   "name": "the sealed directory itself",
+   "raw": ".cache/f",
+   "expect": null
+  },
+  {
+   "name": "a sibling of the sealed directory",
+   "raw": ".cache/other",
+   "expect": ".cache/other"
+  },
+  {
+   "name": "empty",
+   "raw": "",
+   "expect": null
+  },
+  {
+   "name": "decomposed accent becomes precomposed",
+   "raw": "café/x.txt",
+   "expect": "café/x.txt"
+  },
+  {
+   "name": "trailing slash",
+   "raw": "{root}/dir/",
+   "expect": "dir"
+  },
+  {
+   "name": "a name that starts with two dots",
+   "raw": "..hidden/f",
+   "expect": "..hidden/f"
+  },
+  {
+   "name": "spaces are kept",
+   "raw": "my dir/my file.txt",
+   "expect": "my dir/my file.txt"
+  },
+  {
+   "name": "emoji",
+   "raw": "🧬️semio/🎣️.ts",
+   "expect": "🧬️semio/🎣️.ts"
+  }
+ ],
+ "hints": [
+  {
+   "name": "nul and newline mixed",
+   "text": "a\u0000b\nc\r\n\n\u0000d",
+   "expect": [
+    "a",
+    "b",
+    "c",
+    "d"
+   ]
+  },
+  {
+   "name": "spaces are part of the path",
+   "text": " a b \n",
+   "expect": [
+    " a b "
+   ]
+  },
+  {
+   "name": "empty text",
+   "text": "",
+   "expect": []
+  },
+  {
+   "name": "only separators",
+   "text": "\n\u0000\r\n",
+   "expect": []
+  },
+  {
+   "name": "no trailing separator",
+   "text": "x/y.txt",
+   "expect": [
+    "x/y.txt"
+   ]
+  }
+ ],
+ "hooks": [
+  {
+   "name": "Edit",
+   "text": "{\"session_id\":\"s\",\"hook_event_name\":\"PostToolUse\",\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"/w/a.ts\",\"old_string\":\"x\",\"new_string\":\"y\"},\"tool_response\":{\"filePath\":\"/w/other.ts\"}}",
+   "expect": [
+    "/w/a.ts"
+   ]
+  },
+  {
+   "name": "Write",
+   "text": "{\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"/w/new.md\",\"content\":\"c\"}}",
+   "expect": [
+    "/w/new.md"
+   ]
+  },
+  {
+   "name": "NotebookEdit",
+   "text": "{\"tool_name\":\"NotebookEdit\",\"tool_input\":{\"notebook_path\":\"/w/n.ipynb\",\"new_source\":\"s\"}}",
+   "expect": [
+    "/w/n.ipynb"
+   ]
+  },
+  {
+   "name": "both keys",
+   "text": "{\"tool_input\":{\"file_path\":\"/w/a\",\"notebook_path\":\"/w/b\"}}",
+   "expect": [
+    "/w/a",
+    "/w/b"
+   ]
+  },
+  {
+   "name": "the same path twice",
+   "text": "{\"tool_input\":{\"file_path\":\"/w/a\",\"notebook_path\":\"/w/a\"}}",
+   "expect": [
+    "/w/a"
+   ]
+  },
+  {
+   "name": "a top-level file_path is ignored",
+   "text": "{\"file_path\":\"/w/top\",\"tool_input\":{}}",
+   "expect": []
+  },
+  {
+   "name": "a path in the tool response is ignored",
+   "text": "{\"tool_input\":{\"command\":\"ls\"},\"tool_response\":{\"file_path\":\"/w/x\"}}",
+   "expect": []
+  },
+  {
+   "name": "no tool_input",
+   "text": "{\"hook_event_name\":\"PostToolUse\"}",
+   "expect": []
+  },
+  {
+   "name": "tool_input is a string",
+   "text": "{\"tool_input\":\"/w/a\"}",
+   "expect": []
+  },
+  {
+   "name": "file_path is a number",
+   "text": "{\"tool_input\":{\"file_path\":7}}",
+   "expect": []
+  },
+  {
+   "name": "file_path is empty",
+   "text": "{\"tool_input\":{\"file_path\":\"\"}}",
+   "expect": []
+  },
+  {
+   "name": "malformed json",
+   "text": "{\"tool_input\":{\"file_path\":",
+   "expect": []
+  },
+  {
+   "name": "a json array",
+   "text": "[{\"tool_input\":{\"file_path\":\"/w/a\"}}]",
+   "expect": []
+  },
+  {
+   "name": "json null",
+   "text": "null",
+   "expect": []
+  },
+  {
+   "name": "empty input",
+   "text": "",
+   "expect": []
+  }
+ ],
+ "percentiles": [
+  {
+   "name": "empty",
+   "values": [],
+   "p50": null,
+   "p95": null
+  },
+  {
+   "name": "one sample",
+   "values": [
+    7
+   ],
+   "p50": 7,
+   "p95": 7
+  },
+  {
+   "name": "two samples",
+   "values": [
+    10,
+    20
+   ],
+   "p50": 10,
+   "p95": 20
+  },
+  {
+   "name": "five unsorted",
+   "values": [
+    50,
+    10,
+    40,
+    20,
+    30
+   ],
+   "p50": 30,
+   "p95": 50
+  },
+  {
+   "name": "twenty",
+   "values": [
+    19,
+    3,
+    5,
+    2,
+    20,
+    1,
+    4,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+   ],
+   "p50": 10,
+   "p95": 19
+  },
+  {
+   "name": "hundred",
+   "values": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100
+   ],
+   "p50": 50,
+   "p95": 95
+  },
+  {
+   "name": "duplicates",
+   "values": [
+    5,
+    5,
+    5,
+    5,
+    100
+   ],
+   "p50": 5,
+   "p95": 100
+  }
+ ]
+}

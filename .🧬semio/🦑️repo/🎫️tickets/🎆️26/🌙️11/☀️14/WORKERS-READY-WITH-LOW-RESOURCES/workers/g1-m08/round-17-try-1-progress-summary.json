@@ -1,0 +1,409 @@
+{
+  "at": "2026-11-15T03:52:11Z",
+  "last_progress_gap_s": 5.997,
+  "unique_progress_lines": 2346,
+  "recent": [
+    {
+      "at": "2026-11-15T03:51:19Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:174:192:5:100:%40semio-tech%2Fframework-os-kernel|language%3Acargo|100|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin|language%3Acargo|20|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:19Z",
+      "line": "[script] build:projects · Inferring projects: 174 of 192 projects · 5 running, longest 100 s: @semio-tech/framework-os-kernel (language:cargo, 100 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 40 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 20 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:19Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:174:192:6:105:%40semio-tech%2Fframework-os-kernel|language%3Acargo|105|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin|language%3Acargo|20|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:19Z",
+      "line": "[script] build:projects · Inferring projects: 174 of 192 projects · 6 running, longest 105 s: @semio-tech/framework-os-kernel (language:cargo, 105 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 40 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 20 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:19Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:222:657:6:105:%40semio-tech%2Fframework-os-kernel|language%3Acargo|105|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin|language%3Acargo|20|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:19Z",
+      "line": "Reading the project graph slice (535 s): owners 220 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 102, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 39, 0), @semio-tech/framework-plugin (language:cargo, 20, 0)."
+    },
+    {
+      "at": "2026-11-15T03:51:19Z",
+      "line": "Reading the project graph slice (537 s): owners 222 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 104, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 41, 0), @semio-tech/framework-plugin (language:cargo, 22, 0)."
+    },
+    {
+      "at": "2026-11-15T03:51:24Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:223:657:6:105:%40semio-tech%2Fframework-os-kernel|language%3Acargo|105|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin|language%3Acargo|25|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:24Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:174:192:5:110:%40semio-tech%2Fframework-os-kernel|language%3Acargo|110|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|45|0,%40semio-tech%2Fframework-plugin|language%3Acargo|30|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:24Z",
+      "line": "[script] build:projects · Inferring projects: 174 of 192 projects · 5 running, longest 110 s: @semio-tech/framework-os-kernel (language:cargo, 110 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 45 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 30 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:29Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:175:192:5:110:%40semio-tech%2Fframework-os-kernel|language%3Acargo|110|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|45|0,%40semio-tech%2Fframework-plugin|language%3Acargo|30|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:29Z",
+      "line": "[script] build:projects · Inferring projects: 175 of 192 projects · 5 running, longest 110 s: @semio-tech/framework-os-kernel (language:cargo, 110 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 45 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 30 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:29Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:223:657:5:110:%40semio-tech%2Fframework-os-kernel|language%3Acargo|110|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|45|0,%40semio-tech%2Fframework-plugin|language%3Acargo|30|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:29Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:224:657:6:110:%40semio-tech%2Fframework-os-kernel|language%3Acargo|110|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|50|0,%40semio-tech%2Fframework-plugin|language%3Acargo|30|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:29Z",
+      "line": "Reading the project graph slice (545 s): owners 223 of 657."
+    },
+    {
+      "at": "2026-11-15T03:51:29Z",
+      "line": "Reading the project graph slice (547 s): owners 224 of 657."
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:176:192:5:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|50|0,%40semio-tech%2Fframework-plugin|language%3Acargo|35|0:waiting|4797|5207|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] build:projects · Inferring projects: 176 of 192 projects · 5 running, longest 115 s: @semio-tech/framework-os-kernel (language:cargo, 115 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 50 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 35 s, 0 rows) · waiting for memory headroom (4797 of 5207 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:224:657:5:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|50|0,%40semio-tech%2Fframework-plugin|language%3Acargo|35|0:waiting|4797|5207|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:225:657:6:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|50|0,%40semio-tech%2Fframework-plugin|language%3Acargo|35|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:176:192:5:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|55|0,%40semio-tech%2Fframework-plugin|language%3Acargo|35|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] build:projects · Inferring projects: 176 of 192 projects · 5 running, longest 115 s: @semio-tech/framework-os-kernel (language:cargo, 115 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 55 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 35 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:226:657:5:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|55|0,%40semio-tech%2Fframework-plugin|language%3Acargo|35|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:177:192:4:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|55|0,%40semio-tech%2Fframework-plugin|language%3Acargo|35|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] build:projects · Inferring projects: 177 of 192 projects · 4 running, longest 115 s: @semio-tech/framework-os-kernel (language:cargo, 115 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 55 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 35 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:227:657:4:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|55|0,%40semio-tech%2Fframework-plugin|language%3Acargo|35|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:178:192:3:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|55|0,%40semio-tech%2Fframework-plugin|language%3Acargo|35|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] build:projects · Inferring projects: 178 of 192 projects · 3 running, longest 115 s: @semio-tech/framework-os-kernel (language:cargo, 115 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 55 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 35 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:179:192:4:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|55|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] build:projects · Inferring projects: 179 of 192 projects · 4 running, longest 120 s: @semio-tech/framework-os-kernel (language:cargo, 120 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 55 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 40 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:179:192:6:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|55|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] build:projects · Inferring projects: 179 of 192 projects · 6 running, longest 120 s: @semio-tech/framework-os-kernel (language:cargo, 120 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 55 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 40 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:227:657:6:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|55|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "Reading the project graph slice (551 s): owners 224 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 117, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 55, 0), @semio-tech/framework-plugin (language:cargo, 36, 0); waiting for memory headroom (4797 of 5207 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T03:51:34Z",
+      "line": "Reading the project graph slice (553 s): owners 225 of 657."
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:228:657:6:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|60|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:179:192:5:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin-guest-contract|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] build:projects · Inferring projects: 179 of 192 projects · 5 running, longest 120 s: @semio-tech/framework-os-kernel (language:cargo, 120 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 40 s, 0 rows), @semio-tech/framework-plugin-guest-contract (language:cargo, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:229:657:5:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin-guest-contract|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:180:192:4:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin-guest-contract|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] build:projects · Inferring projects: 180 of 192 projects · 4 running, longest 120 s: @semio-tech/framework-os-kernel (language:cargo, 120 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 40 s, 0 rows), @semio-tech/framework-plugin-guest-contract (language:cargo, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:230:657:4:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin-guest-contract|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:181:192:3:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin-guest-contract|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] build:projects · Inferring projects: 181 of 192 projects · 3 running, longest 120 s: @semio-tech/framework-os-kernel (language:cargo, 120 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 40 s, 0 rows), @semio-tech/framework-plugin-guest-contract (language:cargo, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:231:657:3:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0,%40semio-tech%2Fframework-plugin-guest-contract|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:182:192:2:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-plugin|language%3Acargo|40|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "[script] build:projects · Inferring projects: 182 of 192 projects · 2 running, longest 120 s: @semio-tech/framework-os-kernel (language:cargo, 120 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 40 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "Reading the project graph slice (555 s): owners 227 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 121, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 59, 0), @semio-tech/framework-plugin (language:cargo, 40, 0)."
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "Reading the project graph slice (557 s): owners 228 of 657."
+    },
+    {
+      "at": "2026-11-15T03:51:39Z",
+      "line": "Reading the project graph slice (559 s): owners 231 of 657."
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:183:192:2:125:%40semio-tech%2Fframework-os-kernel|language%3Acargo|125|0,%40semio-tech%2Fframework-plugin|language%3Acargo|45|0:waiting|960|1635|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] build:projects · Inferring projects: 183 of 192 projects · 2 running, longest 125 s: @semio-tech/framework-os-kernel (language:cargo, 125 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 45 s, 0 rows) · waiting for memory headroom (960 of 1635 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:231:657:2:125:%40semio-tech%2Fframework-os-kernel|language%3Acargo|125|0,%40semio-tech%2Fframework-plugin|language%3Acargo|45|0:waiting|960|1635|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:232:657:3:125:%40semio-tech%2Fframework-os-kernel|language%3Acargo|125|0,%40semio-tech%2Fframework-plugin|language%3Acargo|45|0,%40semio-tech%2Fos-services-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:183:192:2:125:%40semio-tech%2Fframework-os-kernel|language%3Acargo|125|0,%40semio-tech%2Fframework-plugin|language%3Acargo|45|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] build:projects · Inferring projects: 183 of 192 projects · 2 running, longest 125 s: @semio-tech/framework-os-kernel (language:cargo, 125 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 45 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:184:192:3:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|45|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] build:projects · Inferring projects: 184 of 192 projects · 3 running, longest 130 s: @semio-tech/framework-os-kernel (language:cargo, 130 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 45 s, 0 rows), @semio-tech/framework-os-dev (project, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:232:657:3:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|45|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:184:192:4:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] build:projects · Inferring projects: 184 of 192 projects · 4 running, longest 130 s: @semio-tech/framework-os-kernel (language:cargo, 130 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 50 s, 0 rows), @semio-tech/framework-os-dev (project, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:232:657:4:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:184:192:6:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] build:projects · Inferring projects: 184 of 192 projects · 6 running, longest 130 s: @semio-tech/framework-os-kernel (language:cargo, 130 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 50 s, 0 rows), @semio-tech/framework-os-dev (project, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:232:657:6:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "Reading the project graph slice (561 s): owners 231 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 128, 0), @semio-tech/framework-plugin (language:cargo, 47, 0); waiting for memory headroom (960 of 1635 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "Reading the project graph slice (563 s): owners 232 of 657."
+    },
+    {
+      "at": "2026-11-15T03:51:44Z",
+      "line": "Reading the project graph slice (565 s): owners 232 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 131, 0), @semio-tech/framework-plugin (language:cargo, 50, 0), @semio-tech/framework-os-dev (project, 0, 0)."
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:233:657:7:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:185:192:6:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] build:projects · Inferring projects: 185 of 192 projects · 6 running, longest 130 s: @semio-tech/framework-os-kernel (language:cargo, 130 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 50 s, 0 rows), @semio-tech/framework-os-dev (project, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:186:192:5:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] build:projects · Inferring projects: 186 of 192 projects · 5 running, longest 130 s: @semio-tech/framework-os-kernel (language:cargo, 130 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 50 s, 0 rows), @semio-tech/framework-os-dev (project, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:234:657:5:130:%40semio-tech%2Fframework-os-kernel|language%3Acargo|130|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:188:192:4:135:%40semio-tech%2Fframework-os-kernel|language%3Acargo|135|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] build:projects · Inferring projects: 188 of 192 projects · 4 running, longest 135 s: @semio-tech/framework-os-kernel (language:cargo, 135 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 50 s, 0 rows), @semio-tech/framework-os-dev (project, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:236:657:4:135:%40semio-tech%2Fframework-os-kernel|language%3Acargo|135|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:237:657:4:135:%40semio-tech%2Fframework-os-kernel|language%3Acargo|135|0,%40semio-tech%2Fframework-plugin|language%3Acargo|50|0,%40semio-tech%2Fframework-os-dev|project|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:188:192:3:135:%40semio-tech%2Fframework-os-kernel|language%3Acargo|135|0,%40semio-tech%2Fframework-plugin|language%3Acargo|55|0,%40semio-tech%2Fframework-os-dev|project|5|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "[script] build:projects · Inferring projects: 188 of 192 projects · 3 running, longest 135 s: @semio-tech/framework-os-kernel (language:cargo, 135 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 55 s, 0 rows), @semio-tech/framework-os-dev (project, 5 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "Reading the project graph slice (567 s): owners 233 of 657."
+    },
+    {
+      "at": "2026-11-15T03:51:49Z",
+      "line": "Reading the project graph slice (569 s): owners 236 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 136, 0), @semio-tech/framework-plugin (language:cargo, 55, 0), @semio-tech/framework-os-dev (project, 5, 0)."
+    },
+    {
+      "at": "2026-11-15T03:51:55Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:189:192:3:135:%40semio-tech%2Fframework-os-kernel|language%3Acargo|135|0,%40semio-tech%2Fframework-plugin|language%3Acargo|55|0,%40semio-tech%2Fframework-os-dev|project|5|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:55Z",
+      "line": "[script] build:projects · Inferring projects: 189 of 192 projects · 3 running, longest 135 s: @semio-tech/framework-os-kernel (language:cargo, 135 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 55 s, 0 rows), @semio-tech/framework-os-dev (project, 5 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:51:55Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:237:657:3:135:%40semio-tech%2Fframework-os-kernel|language%3Acargo|135|0,%40semio-tech%2Fframework-plugin|language%3Acargo|55|0,%40semio-tech%2Fframework-os-dev|project|5|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:51:55Z",
+      "line": "Reading the project graph slice (571 s): owners 237 of 657; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 138, 0), @semio-tech/framework-plugin (language:cargo, 57, 0), @semio-tech/framework-os-dev (project, 7, 0)."
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:189:192:3:145:%40semio-tech%2Fframework-os-kernel|language%3Acargo|145|1286,%40semio-tech%2Fframework-plugin|language%3Acargo|65|0,%40semio-tech%2Fframework-os-dev|project|15|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "[script] build:projects · Inferring projects: 189 of 192 projects · 3 running, longest 145 s: @semio-tech/framework-os-kernel (language:cargo, 145 s, 1286 rows), @semio-tech/framework-plugin (language:cargo, 65 s, 0 rows), @semio-tech/framework-os-dev (project, 15 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:237:657:3:145:%40semio-tech%2Fframework-os-kernel|language%3Acargo|145|1286,%40semio-tech%2Fframework-plugin|language%3Acargo|65|0,%40semio-tech%2Fframework-os-dev|project|15|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "2026-11-15T03:52:02.245Z graph-plan-too-heavy {\"stage\":\"inference\",\"operation\":\"inference\",\"megabytes\":6910,\"limit\":6553,\"worker\":{\"heapMb\":2064.1,\"extraMb\":1234.5,\"objectCount\":9310710,\"objectTypes\":[{\"type\":\"string\",\"count\":4533169},{\"type\":\"Object\",\"count\":1512423},{\"type\":\"Array\",\"count\":1466262},{\"type\":\"Set\",\"count\":183974},{\"type\":\"WeakRef\",\"count\":160487},{\"type\":\"JSLexicalEnvironment\",\"count\":97693},{\"type\":\"Cell Butterfly\",\"count\":77803},{\"type\":\"Function\",\"count\":75257}],\"at\":1794714681434}}"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "graph: plan answered, managed 106 MB, resident 177 MB (released 0 MB)"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest."
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "graph: a worker process was lost (exited); its project is inferred again"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "graph: 10 of 192 projects inferred by 9 worker processes in 297 s (0 failed, 6 lost, 0 restarts)"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "[fleet] projects from the fleet: 131 taken, 0 stored, 40 offered, 0 waited for another machine, 9 computed here | Projekte aus der Flotte: 131 übernommen, 0 gespeichert, 40 angeboten, 0 auf eine andere Maschine gewartet, 9 hier berechnet"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "graph: plan stage inference took 311 s (managed 3040 MB, 1063 MB more than at its start, resident 3636 MB)"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "Cancelled (SIGINT); leases released."
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to 6910 MB, more than the 6553 MB this machine gives a plan. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine."
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "end 2026-11-15T03:52:02Z"
+    },
+    {
+      "at": "2026-11-15T03:52:05Z",
+      "line": "native_rc=75"
+    }
+  ],
+  "stall": false,
+  "writer_failure": false
+}

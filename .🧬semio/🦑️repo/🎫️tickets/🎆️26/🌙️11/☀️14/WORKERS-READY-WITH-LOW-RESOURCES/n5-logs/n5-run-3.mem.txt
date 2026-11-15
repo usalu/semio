@@ -1,0 +1,7 @@
+== 11:38:46Z
+1904080 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/Shared/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Opr
+1687872 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),ur
+1512464 grep -rl script-provider-ports .
+System-wide memory free percentage: 87%
+total = 3072.00M  used = 2258.31M  free = 813.69M  (encrypted)
+12:38  up 18:56, 4 users, load averages: 23.53 22.51 23.10

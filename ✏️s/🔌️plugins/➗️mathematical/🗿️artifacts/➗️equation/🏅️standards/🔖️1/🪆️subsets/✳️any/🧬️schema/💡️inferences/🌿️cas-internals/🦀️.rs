@@ -55,7 +55,7 @@ pub use semio_s_artifact_mathematical_equation_snapshot::cas::polybridge;
 // #endregion 🔖️Polybridge
 
 // #region 🔖️Simplify
-pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::cas::simplify;
+pub use semio_s_artifact_mathematical_equation_update_graph::cas::simplify;
 // #endregion 🔖️Simplify
 
 // #region 🔖️Trig
@@ -71,7 +71,7 @@ pub use semio_s_artifact_mathematical_equation_inferences::cas::series;
 // #endregion 🔖️Series
 
 // #region 🔖️Limits
-pub use semio_s_artifact_mathematical_equation_update_graph_algorithm::cas::limits;
+pub use semio_s_artifact_mathematical_equation_update_graph::cas::limits;
 // #endregion 🔖️Limits
 
 // #region 🔖️Rootof

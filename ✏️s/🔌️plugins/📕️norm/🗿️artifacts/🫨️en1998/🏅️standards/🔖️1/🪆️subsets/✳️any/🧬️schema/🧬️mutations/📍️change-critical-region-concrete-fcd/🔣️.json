@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-critical-region-concrete-fcd",
-  "semanticKind": "change-critical-region-concrete-fcd",
+  "semanticKind": "change-critical-region-concrete-design-strength-mpa",
   "displayName": "Change critical region: design concrete strength",
   "emoji": "📍️",
   "aggregateVariant": "ChangeCriticalRegionConcreteDesignStrengthMpa",

@@ -127,7 +127,7 @@ test("a wrapper that cannot be built switches the unit cache off for that Cargo 
 });
 
 test("the POSIX stand-in stays a script and the Windows path names an executable", () => {
- expect(unitCacheShimPathV1("/u","linux")).toBe(join("/u","bin","rustc-wrapper"));expect(unitCacheShimPathV1("/u","win32","0123").endsWith("rustc-wrapper-0123.exe")).toBe(true);
+ expect(unitCacheShimPathV1("/u","linux","0123")).toBe(join("/u","bin","rustc-wrapper-0123"));expect(unitCacheShimPathV1("/u","win32","0123").endsWith("rustc-wrapper-0123.exe")).toBe(true);
  expect(typeof UNIT_CACHE_NATIVE_BUILD_V1.compile).toBe("function");
 });
 

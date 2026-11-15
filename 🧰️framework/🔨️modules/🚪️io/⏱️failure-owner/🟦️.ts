@@ -2,7 +2,7 @@ import type {NativeEncodeAllocationOutcome} from "@semio-tech/value-ts/encode/al
 import type {NativeEncodeEffectFailure} from "@semio-tech/value-ts/encode/effect";
 export type {NativeEncodeAllocationOutcome} from "@semio-tech/value-ts/encode/allocation";
 export type {NativeEncodeEffectFailure} from "@semio-tech/value-ts/encode/effect";
-import {ValueError,type ValueErrorRetainedProgress,type ValueRefusalKind} from "@semio-tech/value-ts/refusal";
+import {ValueError,type ValueErrorRetainedProgress,type ValueRefusalKind} from "../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import type {NativeAllocationFailure,NativeAllocationRequest} from "../../🌱️value/🎟️control/🧬️contract/🛂️allocation/🟦️.ts";
 import type {NativeDecodeAllocationOutcome} from "../../🌱️value/🛬️decode/📬️outcome/🛂️allocation/🟦️.ts";
 import type {OriginalReceivingPrimary,OriginalReceivingRetirementFailure} from "../../🌱️value/🛬️decode/📬️outcome/🛬️receiving/🟦️.ts";

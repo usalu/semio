@@ -1,12 +1,12 @@
 import {createHash} from "node:crypto";
 import {existsSync, readFileSync} from "node:fs";
-import {delimiter, join} from "node:path";
+import {delimiter, dirname, join} from "node:path";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {resolveLanguageV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import document from "./🔣️.json" with {type: "json"};
 
-if (validateJsonSchemaSubset(schema, document, schema).length || document.python.tool.version !== document.python.uv) throw new Error("Closed native toolchain policy required / Geschlossene native Toolchain-Richtlinie erforderlich");
+if (validateJsonSchemaSubset(schema, document, schema).length || document.python.tool.version !== document.python.uv || Object.values(document.python.interpreters).some(interpreter => !(interpreter.series in document.python.cpython.series))) throw new Error("Closed native toolchain policy required / Geschlossene native Toolchain-Richtlinie erforderlich");
 
 /** 🧾️ The authored policy: pins, layouts, projects, archives and texts of every native toolchain. */
 export const NATIVE_TOOLCHAINS_V1 = document;
@@ -41,7 +41,6 @@ export type PythonEnvironmentV1 = Readonly<{
   interpreters: string;
   cache: string;
   variables: Readonly<Record<string, string>>;
-  installArguments: readonly string[];
   syncArguments: readonly string[];
   runArguments: readonly string[];
 }>;
@@ -85,6 +84,38 @@ export function pythonInterpreterDirectoryV1(toolsRoot: string): string {
   return join(toolsRoot, ...document.python.layout.interpreters.split("/"));
 }
 
+/** 🐍️ One pinned CPython build: its full version, the release it comes from and the archive of one host. */
+export type PythonInterpreterV1 = Readonly<{series: string; version: string; release: string; versionArguments: readonly string[]; distribution: (typeof document.python.cpython.series)["3.12"]["distributions"][number]}>;
+
+/** 🐍️ Finds the pinned CPython build of one interpreter series for one host. */
+export function pythonInterpreterV1(series: string, host: ToolchainHostV1): PythonInterpreterV1 {
+  const entry = (document.python.cpython.series as Readonly<Record<string, (typeof document.python.cpython.series)["3.12"]>>)[series], distribution = entry?.distributions.find(row => row.host === host);
+  if (entry === undefined || distribution === undefined) throw new Error(toolchainMessageV1("python", {series}));
+  return Object.freeze({series, version: entry.version, release: document.python.cpython.release, versionArguments: document.python.cpython.versionArguments, distribution});
+}
+
+/** 🔗️ The download address of the pinned CPython archive; the `+` of the release build is percent-encoded. */
+export function pythonInterpreterUrlV1(series: string, host: ToolchainHostV1): string {
+  return pythonInterpreterV1(series, host).release + "/" + pythonInterpreterV1(series, host).distribution.archive.replaceAll("+", "%2B");
+}
+
+/** 🏠️ Where one pinned CPython lives: the directory uv recognises as a managed installation, below the interpreter directory of the tools partition. */
+export function pythonInterpreterHomeV1(series: string, host: ToolchainHostV1, toolsRoot: string): string {
+  return join(pythonInterpreterDirectoryV1(toolsRoot), pythonInterpreterV1(series, host).distribution.directory);
+}
+
+/** ▶️ The executable of one pinned CPython. */
+export function pythonInterpreterBinaryV1(series: string, host: ToolchainHostV1, toolsRoot: string): string {
+  const row = pythonInterpreterV1(series, host).distribution, home = pythonInterpreterHomeV1(series, host, toolsRoot);
+  return join(row.binaryDirectory === "." ? home : join(home, ...row.binaryDirectory.split("/")), row.binaries[0]!);
+}
+
+/** 🪪️ Names the intended installation independently of any installation state: `cpython:3.12.13:darwin-arm64:<sha256>`. */
+export function pythonInterpreterIdentityV1(series: string, host: ToolchainHostV1): string {
+  const pin = pythonInterpreterV1(series, host);
+  return "cpython:" + pin.version + ":" + host + ":" + pin.distribution.sha256;
+}
+
 /** 🔎️ Finds one Python project by its id. */
 export function pythonProjectV1(id: string): PythonProjectV1 {
   const row = document.python.projects.find(project => project.id === id);
@@ -123,7 +154,6 @@ export function pythonEnvironmentV1(input: PythonEnvironmentInputV1): PythonEnvi
     interpreters,
     cache,
     variables,
-    installArguments: Object.freeze(["python", "install", series]),
     syncArguments: Object.freeze(["sync", "--locked", "--project", row.root, ...groups]),
     runArguments: Object.freeze(["run", "--locked", "--no-sync", "--project", row.root]),
   });
@@ -140,6 +170,33 @@ export function pythonEnvironmentOfProjectV1(workspace: string, project: string,
     }
   };
   return pythonEnvironmentV1({project, host, roots, manifestSha256: read("pyproject.toml"), lockSha256: read("uv.lock")});
+}
+
+/** 🐍️ The interpreter inside a planned Python environment, `Scripts/python.exe` on Windows and `bin/python` elsewhere; the environment's digest key makes it follow every manifest or lock change, so a stale environment is never reused. */
+export function pythonEnvironmentInterpreterV1(plan: Pick<PythonEnvironmentV1, "directory">, platform: NodeJS.Platform = process.platform): string {
+  return platform === "win32" ? join(plan.directory, "Scripts", "python.exe") : join(plan.directory, "bin", "python");
+}
+
+/** 🧭️ The provisioned interpreter of the repository's own Python environment, found from `workspace` or its nearest ancestor holding `pyproject.toml` and `uv.lock` (a Cargo sub-workspace resolves to the checkout), or `null` while that environment is not synchronized yet (`repo run workspace:deps-python`). */
+export function provisionedPythonV1(workspace: string, project = "workspace"): string | null {
+  for (let root = workspace; ; root = dirname(root)) {
+    if (existsSync(join(root, "pyproject.toml")) && existsSync(join(root, "uv.lock"))) {
+      try {
+        const interpreter = pythonEnvironmentInterpreterV1(pythonEnvironmentOfProjectV1(root, project));
+        return existsSync(interpreter) ? interpreter : null;
+      } catch {
+        return null;
+      }
+    }
+    if (dirname(root) === root) return null;
+  }
+}
+
+/** 🧷️ Adds `SEMIO_PYTHON` to a child environment: the explicit value wins, then the provisioned environment interpreter; with neither, the environment is returned unchanged. The one resolver every test and command spawn goes through. */
+export function withProvisionedPythonV1<T extends Readonly<Record<string, string | undefined>>>(environment: T, workspace: string): T | (T & {SEMIO_PYTHON: string}) {
+  if (environment.SEMIO_PYTHON) return environment;
+  const interpreter = provisionedPythonV1(workspace);
+  return interpreter ? {...environment, SEMIO_PYTHON: interpreter} : environment;
 }
 
 /** 🔣️ Renders the repository `global.json` that pins the .NET SDK. */

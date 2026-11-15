@@ -1,0 +1,988 @@
+{
+ "cases": [
+  {
+   "name": "@semio-tech/s-space-composition-tests",
+   "windows": {
+    "root": "C:\\semio",
+    "record": {
+     "digest": "11c5b76866c092a2d5c48915fa2374dbae4b4c51766c328e9eb5d079aaf5547a",
+     "authority": [],
+     "observations": [
+      {
+       "kind": "stamp",
+       "path": "inferrer:coordinates",
+       "fact": "semio.graph-inferrer.coordinates/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:bootstrap",
+       "fact": "semio.graph-inferrer.bootstrap/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:helpers",
+       "fact": "semio.graph-inferrer.helpers/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:source-analyses",
+       "fact": "semio.graph-inferrer.source-analyses/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:bun-lock",
+       "fact": "semio.graph-inferrer.bun-lock/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:target-policy",
+       "fact": "semio.graph-inferrer.target-policy/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:script-inputs",
+       "fact": "semio.graph-inferrer.script-inputs/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:generator-outputs",
+       "fact": "semio.graph-inferrer.generator-outputs/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:component-targets",
+       "fact": "semio.graph-inferrer.component-targets/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:playground-targets",
+       "fact": "semio.graph-inferrer.playground-targets/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:project-assembly",
+       "fact": "semio.graph-inferrer.project-assembly/2"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:owner-discovery",
+       "fact": "semio.graph-inferrer.owner-discovery/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:project-nodes",
+       "fact": "semio.graph-inferrer.project-nodes/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:observation",
+       "fact": "semio.graph-inferrer.observation/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:graph-assembly",
+       "fact": "semio.graph-inferrer.graph-assembly/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:input-precision",
+       "fact": "semio.graph-inferrer.input-precision/1+186e685153308c22f390163e8adaa592"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:package-managers",
+       "fact": "semio.graph-inferrer.package-managers/1+7797276e0d1fba94a256e51c39f6c08b"
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🪐️space\\📦️packages\\🟦️typescript\\📜️script.ts",
+       "fact": true
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🪐️space\\📦️packages\\🟦️typescript\\Cargo.toml",
+       "fact": false
+      },
+      {
+       "kind": "closure",
+       "path": "[\"C:\\\\semio\",\"73cf2f610edd903bb7c6f34653f5b2b64dfab7f366eb49157abed6b786fe6a63\",[\"some\",[\"/🏃️process/🧪️testing/🧪️vitest/\",\"/🏃️process/📋️context/\"]]]",
+       "fact": "true"
+      },
+      {
+       "kind": "closure",
+       "path": "[\"C:\\\\semio\",\"73cf2f610edd903bb7c6f34653f5b2b64dfab7f366eb49157abed6b786fe6a63\",[\"generated\"]]",
+       "fact": "[]"
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\📚️library\\🏗️build\\📥️inputs\\🎯️precision\\🔣️.json",
+       "fact": true
+      },
+      {
+       "kind": "file",
+       "path": "C:\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\📚️library\\🏗️build\\📥️inputs\\🎯️precision\\🔣️.json",
+       "fact": {
+        "size": 99291,
+        "mtimeMs": 1794276882000,
+        "ctimeMs": 1794611945936.4592,
+        "ino": 281474983472392,
+        "sha256": "3bc278f920b17a88786a0c2d993ea53a863f007b009dd02d54a13ed66a95c19d"
+       }
+      },
+      {
+       "kind": "resolve",
+       "path": "[\"C:\\\\semio\\\\🧰️framework\\\\🛍️products\\\\🦑️repo\\\\🔨️modules\\\\📚️library\\\\🏗️build\\\\🕸️graph\\\\📥️inference\\\\🟨️.mjs\",\"typescript\"]",
+       "fact": "C:\\semio\\.cache\\b\\d\\m\\j\\*\\node_modules\\typescript\\lib\\typescript.js"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules\\typescript",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules\\typescript\\lib",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules\\typescript\\lib\\typescript.js",
+       "fact": "file"
+      },
+      {
+       "kind": "field",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules\\typescript\\lib\\typescript.js",
+       "fact": {
+        "format": "package-identity",
+        "pointer": "",
+        "digest": "bef70a836cac5897ba6fbb69a3ab7e61a405dddf96b4fd06664c5449b82049ea"
+       }
+      },
+      {
+       "kind": "analysis",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🪐️space\\📦️packages\\🟦️typescript\\📜️script.ts",
+       "fact": {
+        "provider": "build:script-requirements:v1:e126d88b1909b51c243cf63b4524debbaa704f13385548afda59bdd3a6011654",
+        "revision": "d21949bed41a56ce7b1054b684fdff987c9e22462ab710af367db59c7664c962",
+        "source": {
+         "size": 1103,
+         "mtimeMs": 1792653807000,
+         "ctimeMs": 1794611934563.021,
+         "ino": 281474983403274,
+         "sha256": "b7279f88ca1504c35dff618899c0717790737cb975e4960051d146507b046599"
+        },
+        "resultSha256": "6a7f2c28ff39a920ad218ebf894f185400a42af783394f4d976ff7d72c18f767",
+        "nestedObservations": []
+       }
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🪐️space\\📦️packages\\🟦️typescript\\go.mod",
+       "fact": false
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🪐️space\\📦️packages\\🟦️typescript\\pyproject.toml",
+       "fact": false
+      },
+      {
+       "kind": "readdirNames",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🪐️space\\📦️packages\\🟦️typescript",
+       "fact": "46ea285948a3bf550813eb0238ddc012dadcdd53f723b35230161be6eb2890db"
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🪐️space\\📦️packages\\🟦️typescript\\CMakeLists.txt",
+       "fact": false
+      }
+     ],
+     "image": "{\"name\":\"@semio-tech/s-space-composition-tests\",\"projectType\":\"library\",\"sourceRoot\":\"✏️s/🧑‍💻dev/🪐️space\",\"namedInputs\":{\"default\":[\"sharedSources63f426603bc9b90f\"],\"production\":[\"!{projectRoot}/**/🧪️tests/**/*\",\"!{projectRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{workspaceRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{workspaceRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{projectRoot}/**/*.feature\",\"!{projectRoot}/**/*.stories.{ts,tsx}\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/🧪️tests/**/*\",\"sharedSources63f426603bc9b90f\"],\"nativeSources\":[\"production\"],\"nativeTestSources\":[\"production\"],\"sharedSources63f426603bc9b90f\":[\"{projectRoot}/**/*\",{\"runtime\":\"node -p \\\"process.platform.concat(process.arch)\\\"\"},\"{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}\",{\"env\":\"NODE_ENV\"},{\"env\":\"BUN_ENV\"},{\"env\":\"CI\"},{\"env\":\"SEMIO_BUILD_MODE\"},{\"env\":\"SEMIO_RENDERER\"},{\"env\":\"SEMIO_PLUGIN\"},{\"env\":\"SEMIO_TEST_LEVEL\"},{\"env\":\"SEMIO_TEST_BUDGET_MS\"},{\"env\":\"SEMIO_BUILD_BUDGET_MS\"},{\"runtime\":\"repo tools exec --light bun -- --version\"},{\"runtime\":\"repo tools exec --light node -- --version\"},\"!{workspaceRoot}/🧰️framework/🤖️generated/process/**/*\",\"!{projectRoot}/**/node_modules/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/node_modules/**/*\",\"!{projectRoot}/**/.git/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.git/**/*\",\"!{projectRoot}/**/.nx/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.nx/**/*\",\"!{projectRoot}/**/.cache/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.cache/**/*\",\"!{projectRoot}/**/.r/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.r/**/*\",\"!{projectRoot}/**/target/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/target/**/*\",\"!{projectRoot}/**/dist/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/dist/**/*\",\"!{projectRoot}/**/📤️dist/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/📤️dist/**/*\",\"!{projectRoot}/**/build/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/build/**/*\",\"!{projectRoot}/**/out/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/out/**/*\",\"!{projectRoot}/**/coverage/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/coverage/**/*\",\"!{projectRoot}/**/test-results/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/test-results/**/*\",\"!{projectRoot}/**/playwright-report/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/playwright-report/**/*\",\"!{projectRoot}/**/storybook-static/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/storybook-static/**/*\",\"!{projectRoot}/**/.venv/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.venv/**/*\",\"!{projectRoot}/**/__pycache__/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/__pycache__/**/*\",\"!{projectRoot}/**/bin/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/bin/**/*\",\"!{projectRoot}/**/obj/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/obj/**/*\",\"!{projectRoot}/**/⚡️cache/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/⚡️cache/**/*\",\"!{projectRoot}/**/🗑️generated/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/🗑️generated/**/*\",\"!{projectRoot}/**/.lake/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.lake/**/*\",\"!{projectRoot}/**/pkg/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/pkg/**/*\",\"!{projectRoot}/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{projectRoot}/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{projectRoot}/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{projectRoot}/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/🧪️tests/**/*\",{\"runtime\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\\\" digest-generated \\\"✏️s/🧑‍💻dev/🤖️generated\\\"\"},\"{workspaceRoot}/🌎️hub/🧩️compositions/**/*.{ts,tsx,json,semio,wit,sql}\",\"{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/**/*\",\"{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*\",\"{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*.{ts,tsx,json,semio,wit,sql}\",\"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**/*.{ts,tsx,json,semio,wit,sql}\",\"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/**/*\",\"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,tsx,json,semio,wit,sql}\",\"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/**/*\",\"{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🟨️.mjs\",\"{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🔣️schema.json\",{\"env\":\"SEMIO_SOURCE_CLOSURE_8e5161b02abd2537625349bf8b177e1a14e0d844c95bac7e86593b53addf82ed\"}],\"commandSources0\":[{\"closureRef\":\"754720a6d6e2ac978d7274a9a7786ee01b63ed2bb04a7cf70038400573a23b7a\"}]},\"targets\":{\"verify-framework-ui-protocol-ownership\":{\"inputs\":[\"default\",\"^default\",\"commandSources0\",{\"env\":\"SEMIO_BUILD_MODE\"}],\"outputs\":[],\"executor\":\"repo:script\",\"cache\":true,\"options\":{\"cwd\":\".\",\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\\\" -- repo \\\"C:/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/📜️script.ts\\\" verify framework-ui-protocol-ownership\",\"forwardAllArgs\":true,\"ownerArguments\":true},\"metadata\":{\"semio\":{\"workspaceCommand\":[\"verify\",\"framework-ui-protocol-ownership\"],\"cache\":{\"version\":1,\"class\":\"deterministic\",\"reason\":\"check-without-outputs\"},\"buildMode\":{\"modes\":[\"prototype\",\"release\"]}}},\"defaultConfiguration\":\"prototype\",\"configurations\":{\"prototype\":{\"env\":{\"SEMIO_BUILD_MODE\":\"prototype\"}},\"release\":{\"env\":{\"SEMIO_BUILD_MODE\":\"release\"}}}}},\"root\":\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\",\"closureRecipes\":{\"73cf2f610edd903bb7c6f34653f5b2b64dfab7f366eb49157abed6b786fe6a63\":{\"fn\":\"target-sources\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo ./📜️script.ts verify framework-ui-protocol-ownership\",\"cwd\":\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\",\"forwardAllArgs\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\"},\"754720a6d6e2ac978d7274a9a7786ee01b63ed2bb04a7cf70038400573a23b7a\":{\"fn\":\"generic-target\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\\\" -- repo \\\"C:/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/📜️script.ts\\\" verify framework-ui-protocol-ownership\",\"cwd\":\".\",\"forwardAllArgs\":true,\"ownerArguments\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\"}},\"closureInputs\":{},\"symbolicGroups\":[[\"commandSources0\",false]]}"
+    }
+   },
+   "posix": {
+    "root": "/Users/Shared/semio",
+    "record": {
+     "digest": "11c5b76866c092a2d5c48915fa2374dbae4b4c51766c328e9eb5d079aaf5547a",
+     "authority": [],
+     "observations": [
+      {
+       "kind": "stamp",
+       "path": "inferrer:coordinates",
+       "fact": "semio.graph-inferrer.coordinates/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:bootstrap",
+       "fact": "semio.graph-inferrer.bootstrap/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:helpers",
+       "fact": "semio.graph-inferrer.helpers/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:source-analyses",
+       "fact": "semio.graph-inferrer.source-analyses/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:bun-lock",
+       "fact": "semio.graph-inferrer.bun-lock/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:target-policy",
+       "fact": "semio.graph-inferrer.target-policy/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:script-inputs",
+       "fact": "semio.graph-inferrer.script-inputs/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:generator-outputs",
+       "fact": "semio.graph-inferrer.generator-outputs/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:component-targets",
+       "fact": "semio.graph-inferrer.component-targets/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:playground-targets",
+       "fact": "semio.graph-inferrer.playground-targets/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:project-assembly",
+       "fact": "semio.graph-inferrer.project-assembly/2"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:owner-discovery",
+       "fact": "semio.graph-inferrer.owner-discovery/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:project-nodes",
+       "fact": "semio.graph-inferrer.project-nodes/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:observation",
+       "fact": "semio.graph-inferrer.observation/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:graph-assembly",
+       "fact": "semio.graph-inferrer.graph-assembly/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:input-precision",
+       "fact": "semio.graph-inferrer.input-precision/1+186e685153308c22f390163e8adaa592"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:package-managers",
+       "fact": "semio.graph-inferrer.package-managers/1+7797276e0d1fba94a256e51c39f6c08b"
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/📜️script.ts",
+       "fact": true
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/Cargo.toml",
+       "fact": false
+      },
+      {
+       "kind": "closure",
+       "path": "[\"/Users/Shared/semio\",\"73cf2f610edd903bb7c6f34653f5b2b64dfab7f366eb49157abed6b786fe6a63\",[\"some\",[\"/🏃️process/🧪️testing/🧪️vitest/\",\"/🏃️process/📋️context/\"]]]",
+       "fact": "true"
+      },
+      {
+       "kind": "closure",
+       "path": "[\"/Users/Shared/semio\",\"73cf2f610edd903bb7c6f34653f5b2b64dfab7f366eb49157abed6b786fe6a63\",[\"generated\"]]",
+       "fact": "[]"
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🔣️.json",
+       "fact": true
+      },
+      {
+       "kind": "file",
+       "path": "/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🔣️.json",
+       "fact": {
+        "size": 99291,
+        "mtimeMs": 1794276882788.688,
+        "ctimeMs": 1794367625967.0225,
+        "ino": 649483635,
+        "sha256": "3bc278f920b17a88786a0c2d993ea53a863f007b009dd02d54a13ed66a95c19d"
+       }
+      },
+      {
+       "kind": "resolve",
+       "path": "[\"/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs\",\"typescript\"]",
+       "fact": "/Users/Shared/semio/.cache/b/d/m/j/*/node_modules/typescript/lib/typescript.js"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+       "fact": "file"
+      },
+      {
+       "kind": "field",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+       "fact": {
+        "format": "package-identity",
+        "pointer": "",
+        "digest": "bef70a836cac5897ba6fbb69a3ab7e61a405dddf96b4fd06664c5449b82049ea"
+       }
+      },
+      {
+       "kind": "analysis",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/📜️script.ts",
+       "fact": {
+        "provider": "build:script-requirements:v1:c4e967f0b20d9aa7e58372b68f32180a7e1eb9bba114344cdafeefe380b11733",
+        "revision": "d21949bed41a56ce7b1054b684fdff987c9e22462ab710af367db59c7664c962",
+        "source": {
+         "size": 1103,
+         "mtimeMs": 1792653807425.0842,
+         "ctimeMs": 1794367719212.4587,
+         "ino": 649657235,
+         "sha256": "b7279f88ca1504c35dff618899c0717790737cb975e4960051d146507b046599"
+        },
+        "resultSha256": "6a7f2c28ff39a920ad218ebf894f185400a42af783394f4d976ff7d72c18f767",
+        "nestedObservations": []
+       }
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/go.mod",
+       "fact": false
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/pyproject.toml",
+       "fact": false
+      },
+      {
+       "kind": "readdirNames",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript",
+       "fact": "46ea285948a3bf550813eb0238ddc012dadcdd53f723b35230161be6eb2890db"
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/CMakeLists.txt",
+       "fact": false
+      }
+     ],
+     "image": "{\"name\":\"@semio-tech/s-space-composition-tests\",\"projectType\":\"library\",\"sourceRoot\":\"✏️s/🧑‍💻dev/🪐️space\",\"namedInputs\":{\"default\":[\"sharedSources63f426603bc9b90f\"],\"production\":[\"!{projectRoot}/**/🧪️tests/**/*\",\"!{projectRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{workspaceRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{workspaceRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{projectRoot}/**/*.feature\",\"!{projectRoot}/**/*.stories.{ts,tsx}\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/🧪️tests/**/*\",\"sharedSources63f426603bc9b90f\"],\"nativeSources\":[\"production\"],\"nativeTestSources\":[\"production\"],\"sharedSources63f426603bc9b90f\":[\"{projectRoot}/**/*\",{\"runtime\":\"node -p \\\"process.platform.concat(process.arch)\\\"\"},\"{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}\",{\"env\":\"NODE_ENV\"},{\"env\":\"BUN_ENV\"},{\"env\":\"CI\"},{\"env\":\"SEMIO_BUILD_MODE\"},{\"env\":\"SEMIO_RENDERER\"},{\"env\":\"SEMIO_PLUGIN\"},{\"env\":\"SEMIO_TEST_LEVEL\"},{\"env\":\"SEMIO_TEST_BUDGET_MS\"},{\"env\":\"SEMIO_BUILD_BUDGET_MS\"},{\"runtime\":\"repo tools exec --light bun -- --version\"},{\"runtime\":\"repo tools exec --light node -- --version\"},\"!{workspaceRoot}/🧰️framework/🤖️generated/process/**/*\",\"!{projectRoot}/**/node_modules/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/node_modules/**/*\",\"!{projectRoot}/**/.git/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.git/**/*\",\"!{projectRoot}/**/.nx/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.nx/**/*\",\"!{projectRoot}/**/.cache/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.cache/**/*\",\"!{projectRoot}/**/.r/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.r/**/*\",\"!{projectRoot}/**/target/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/target/**/*\",\"!{projectRoot}/**/dist/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/dist/**/*\",\"!{projectRoot}/**/📤️dist/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/📤️dist/**/*\",\"!{projectRoot}/**/build/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/build/**/*\",\"!{projectRoot}/**/out/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/out/**/*\",\"!{projectRoot}/**/coverage/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/coverage/**/*\",\"!{projectRoot}/**/test-results/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/test-results/**/*\",\"!{projectRoot}/**/playwright-report/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/playwright-report/**/*\",\"!{projectRoot}/**/storybook-static/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/storybook-static/**/*\",\"!{projectRoot}/**/.venv/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.venv/**/*\",\"!{projectRoot}/**/__pycache__/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/__pycache__/**/*\",\"!{projectRoot}/**/bin/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/bin/**/*\",\"!{projectRoot}/**/obj/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/obj/**/*\",\"!{projectRoot}/**/⚡️cache/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/⚡️cache/**/*\",\"!{projectRoot}/**/🗑️generated/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/🗑️generated/**/*\",\"!{projectRoot}/**/.lake/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.lake/**/*\",\"!{projectRoot}/**/pkg/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/pkg/**/*\",\"!{projectRoot}/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{projectRoot}/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{projectRoot}/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{projectRoot}/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🪐️space/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/🧪️tests/**/*\",{\"runtime\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\\\" digest-generated \\\"✏️s/🧑‍💻dev/🤖️generated\\\"\"},\"{workspaceRoot}/🌎️hub/🧩️compositions/**/*.{ts,tsx,json,semio,wit,sql}\",\"{workspaceRoot}/🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/**/*\",\"{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*\",\"{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/**/*.{ts,tsx,json,semio,wit,sql}\",\"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**/*.{ts,tsx,json,semio,wit,sql}\",\"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/**/*\",\"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,tsx,json,semio,wit,sql}\",\"{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧬️schema-owner/**/*\",\"{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🟨️.mjs\",\"{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🔣️schema.json\",{\"env\":\"SEMIO_SOURCE_CLOSURE_8e5161b02abd2537625349bf8b177e1a14e0d844c95bac7e86593b53addf82ed\"}],\"commandSources0\":[{\"closureRef\":\"9c95208bc580bae9815d8f715b8ee12b2343b90f4c4d1bc1dc43fc6fd3c4b354\"}]},\"targets\":{\"verify-framework-ui-protocol-ownership\":{\"inputs\":[\"default\",\"^default\",\"commandSources0\",{\"env\":\"SEMIO_BUILD_MODE\"}],\"outputs\":[],\"executor\":\"repo:script\",\"cache\":true,\"options\":{\"cwd\":\".\",\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\\\" -- repo \\\"/Users/Shared/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/📜️script.ts\\\" verify framework-ui-protocol-ownership\",\"forwardAllArgs\":true,\"ownerArguments\":true},\"metadata\":{\"semio\":{\"workspaceCommand\":[\"verify\",\"framework-ui-protocol-ownership\"],\"cache\":{\"version\":1,\"class\":\"deterministic\",\"reason\":\"check-without-outputs\"},\"buildMode\":{\"modes\":[\"prototype\",\"release\"]}}},\"defaultConfiguration\":\"prototype\",\"configurations\":{\"prototype\":{\"env\":{\"SEMIO_BUILD_MODE\":\"prototype\"}},\"release\":{\"env\":{\"SEMIO_BUILD_MODE\":\"release\"}}}}},\"root\":\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\",\"closureRecipes\":{\"73cf2f610edd903bb7c6f34653f5b2b64dfab7f366eb49157abed6b786fe6a63\":{\"fn\":\"target-sources\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo ./📜️script.ts verify framework-ui-protocol-ownership\",\"cwd\":\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\",\"forwardAllArgs\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\"},\"9c95208bc580bae9815d8f715b8ee12b2343b90f4c4d1bc1dc43fc6fd3c4b354\":{\"fn\":\"generic-target\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\\\" -- repo \\\"/Users/Shared/semio/✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/📜️script.ts\\\" verify framework-ui-protocol-ownership\",\"cwd\":\".\",\"forwardAllArgs\":true,\"ownerArguments\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript\"}},\"closureInputs\":{},\"symbolicGroups\":[[\"commandSources0\",false]]}"
+    }
+   }
+  },
+  {
+   "name": "@semio-tech/s-puzzle-composition-tests",
+   "windows": {
+    "root": "C:\\semio",
+    "record": {
+     "digest": "cd84bba903bc89baad7f6bb5d70f9022a56fed37133810c0bf6a720dcdbb9757",
+     "authority": [],
+     "observations": [
+      {
+       "kind": "stamp",
+       "path": "inferrer:coordinates",
+       "fact": "semio.graph-inferrer.coordinates/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:bootstrap",
+       "fact": "semio.graph-inferrer.bootstrap/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:helpers",
+       "fact": "semio.graph-inferrer.helpers/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:source-analyses",
+       "fact": "semio.graph-inferrer.source-analyses/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:bun-lock",
+       "fact": "semio.graph-inferrer.bun-lock/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:target-policy",
+       "fact": "semio.graph-inferrer.target-policy/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:script-inputs",
+       "fact": "semio.graph-inferrer.script-inputs/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:generator-outputs",
+       "fact": "semio.graph-inferrer.generator-outputs/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:component-targets",
+       "fact": "semio.graph-inferrer.component-targets/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:playground-targets",
+       "fact": "semio.graph-inferrer.playground-targets/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:project-assembly",
+       "fact": "semio.graph-inferrer.project-assembly/2"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:owner-discovery",
+       "fact": "semio.graph-inferrer.owner-discovery/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:project-nodes",
+       "fact": "semio.graph-inferrer.project-nodes/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:observation",
+       "fact": "semio.graph-inferrer.observation/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:graph-assembly",
+       "fact": "semio.graph-inferrer.graph-assembly/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:input-precision",
+       "fact": "semio.graph-inferrer.input-precision/1+186e685153308c22f390163e8adaa592"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:package-managers",
+       "fact": "semio.graph-inferrer.package-managers/1+7797276e0d1fba94a256e51c39f6c08b"
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🧩️puzzle\\📦️packages\\🟦️typescript\\📜️script.ts",
+       "fact": true
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🧩️puzzle\\📦️packages\\🟦️typescript\\Cargo.toml",
+       "fact": false
+      },
+      {
+       "kind": "closure",
+       "path": "[\"C:\\\\semio\",\"9fb283f1fc78547d9aee7acb42585619950fb92f3e7b543e6ede7a39c41ed05b\",[\"some\",[\"/🏃️process/🧪️testing/🧪️vitest/\",\"/🏃️process/📋️context/\"]]]",
+       "fact": "true"
+      },
+      {
+       "kind": "closure",
+       "path": "[\"C:\\\\semio\",\"9fb283f1fc78547d9aee7acb42585619950fb92f3e7b543e6ede7a39c41ed05b\",[\"generated\"]]",
+       "fact": "[]"
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\📚️library\\🏗️build\\📥️inputs\\🎯️precision\\🔣️.json",
+       "fact": true
+      },
+      {
+       "kind": "file",
+       "path": "C:\\semio\\🧰️framework\\🛍️products\\🦑️repo\\🔨️modules\\📚️library\\🏗️build\\📥️inputs\\🎯️precision\\🔣️.json",
+       "fact": {
+        "size": 99291,
+        "mtimeMs": 1794276882000,
+        "ctimeMs": 1794611945936.4592,
+        "ino": 281474983472392,
+        "sha256": "3bc278f920b17a88786a0c2d993ea53a863f007b009dd02d54a13ed66a95c19d"
+       }
+      },
+      {
+       "kind": "closure",
+       "path": "[\"C:\\\\semio\",\"8aabbe81357256ed232791b5f3c13feec6b734332c3c33f538aef124e1cd8e5c\",[\"some\",[\"/🏃️process/🧪️testing/🧪️vitest/\",\"/🏃️process/📋️context/\"]]]",
+       "fact": "true"
+      },
+      {
+       "kind": "closure",
+       "path": "[\"C:\\\\semio\",\"a117d07d9bcbb93fc84c0958b5c93b7608fbb8289654e5ad7ebb76242a03825d\",[\"generated\"]]",
+       "fact": "[]"
+      },
+      {
+       "kind": "resolve",
+       "path": "[\"C:\\\\semio\\\\🧰️framework\\\\🛍️products\\\\🦑️repo\\\\🔨️modules\\\\📚️library\\\\🏗️build\\\\🕸️graph\\\\📥️inference\\\\🟨️.mjs\",\"typescript\"]",
+       "fact": "C:\\semio\\.cache\\b\\d\\m\\j\\*\\node_modules\\typescript\\lib\\typescript.js"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules\\typescript",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules\\typescript\\lib",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules\\typescript\\lib\\typescript.js",
+       "fact": "file"
+      },
+      {
+       "kind": "field",
+       "path": "C:\\semio\\.cache\\b\\d\\m\\j\\c6d139b55ee3b931e7e4\\node_modules\\typescript\\lib\\typescript.js",
+       "fact": {
+        "format": "package-identity",
+        "pointer": "",
+        "digest": "bef70a836cac5897ba6fbb69a3ab7e61a405dddf96b4fd06664c5449b82049ea"
+       }
+      },
+      {
+       "kind": "analysis",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🧩️puzzle\\📦️packages\\🟦️typescript\\📜️script.ts",
+       "fact": {
+        "provider": "build:script-requirements:v1:e126d88b1909b51c243cf63b4524debbaa704f13385548afda59bdd3a6011654",
+        "revision": "d21949bed41a56ce7b1054b684fdff987c9e22462ab710af367db59c7664c962",
+        "source": {
+         "size": 1019,
+         "mtimeMs": 1792653807000,
+         "ctimeMs": 1794611934547.059,
+         "ino": 281474983403209,
+         "sha256": "ac2ee257a08339d42990a31a651029f9afec11d859de73dae2e0c823112c3590"
+        },
+        "resultSha256": "6a7f2c28ff39a920ad218ebf894f185400a42af783394f4d976ff7d72c18f767",
+        "nestedObservations": []
+       }
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🧩️puzzle\\📦️packages\\🟦️typescript\\go.mod",
+       "fact": false
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🧩️puzzle\\📦️packages\\🟦️typescript\\pyproject.toml",
+       "fact": false
+      },
+      {
+       "kind": "readdirNames",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🧩️puzzle\\📦️packages\\🟦️typescript",
+       "fact": "46ea285948a3bf550813eb0238ddc012dadcdd53f723b35230161be6eb2890db"
+      },
+      {
+       "kind": "exists",
+       "path": "C:\\semio\\✏️s\\🧑‍💻dev\\🧩️puzzle\\📦️packages\\🟦️typescript\\CMakeLists.txt",
+       "fact": false
+      }
+     ],
+     "image": "{\"namedInputs\":{\"default\":[\"sharedSources6da415d574f9dced\"],\"production\":[\"!{projectRoot}/**/🧪️tests/**/*\",\"!{projectRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{workspaceRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{workspaceRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{projectRoot}/**/*.feature\",\"!{projectRoot}/**/*.stories.{ts,tsx}\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/🧪️tests/**/*\",\"sharedSources6da415d574f9dced\"],\"nativeSources\":[\"production\"],\"nativeTestSources\":[\"production\"],\"sharedSources6da415d574f9dced\":[\"{projectRoot}/**/*\",{\"runtime\":\"node -p \\\"process.platform.concat(process.arch)\\\"\"},\"{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}\",{\"env\":\"NODE_ENV\"},{\"env\":\"BUN_ENV\"},{\"env\":\"CI\"},{\"env\":\"SEMIO_BUILD_MODE\"},{\"env\":\"SEMIO_RENDERER\"},{\"env\":\"SEMIO_PLUGIN\"},{\"env\":\"SEMIO_TEST_LEVEL\"},{\"env\":\"SEMIO_TEST_BUDGET_MS\"},{\"env\":\"SEMIO_BUILD_BUDGET_MS\"},{\"runtime\":\"repo tools exec --light bun -- --version\"},{\"runtime\":\"repo tools exec --light node -- --version\"},\"!{workspaceRoot}/🧰️framework/🤖️generated/process/**/*\",\"!{projectRoot}/**/node_modules/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/node_modules/**/*\",\"!{projectRoot}/**/.git/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.git/**/*\",\"!{projectRoot}/**/.nx/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.nx/**/*\",\"!{projectRoot}/**/.cache/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.cache/**/*\",\"!{projectRoot}/**/.r/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.r/**/*\",\"!{projectRoot}/**/target/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/target/**/*\",\"!{projectRoot}/**/dist/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/dist/**/*\",\"!{projectRoot}/**/📤️dist/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/📤️dist/**/*\",\"!{projectRoot}/**/build/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/build/**/*\",\"!{projectRoot}/**/out/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/out/**/*\",\"!{projectRoot}/**/coverage/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/coverage/**/*\",\"!{projectRoot}/**/test-results/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/test-results/**/*\",\"!{projectRoot}/**/playwright-report/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/playwright-report/**/*\",\"!{projectRoot}/**/storybook-static/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/storybook-static/**/*\",\"!{projectRoot}/**/.venv/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.venv/**/*\",\"!{projectRoot}/**/__pycache__/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/__pycache__/**/*\",\"!{projectRoot}/**/bin/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/bin/**/*\",\"!{projectRoot}/**/obj/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/obj/**/*\",\"!{projectRoot}/**/⚡️cache/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/⚡️cache/**/*\",\"!{projectRoot}/**/🗑️generated/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/🗑️generated/**/*\",\"!{projectRoot}/**/.lake/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.lake/**/*\",\"!{projectRoot}/**/pkg/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/pkg/**/*\",\"!{projectRoot}/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{projectRoot}/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{projectRoot}/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{projectRoot}/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/🧪️tests/**/*\",\"sharedGlobals\",{\"runtime\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\\\" digest-generated \\\"✏️s/🧑‍💻dev/🤖️generated\\\"\"},\"{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🟨️.mjs\",\"{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🔣️schema.json\",{\"env\":\"SEMIO_SOURCE_CLOSURE_8e5161b02abd2537625349bf8b177e1a14e0d844c95bac7e86593b53addf82ed\"}],\"commandSources0\":[{\"closureRef\":\"d6ad2e33020abf432c3e3cf2ce515c7ea0e9e9a2ee8c636299ad8e5a83545c6e\"}],\"commandSources1\":[{\"closureRef\":\"da63a796013a1106df5d0130c870a468deb7a8b68c38988e60a53238fc85e0f9\"}]},\"name\":\"@semio-tech/s-puzzle-composition-tests\",\"projectType\":\"library\",\"sourceRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle\",\"targets\":{\"verify-puzzle-fill-policy-self-tests\":{\"inputs\":[\"default\",\"^default\",\"commandSources0\",{\"env\":\"SEMIO_BUILD_MODE\"}],\"outputs\":[],\"executor\":\"repo:script\",\"cache\":true,\"options\":{\"cwd\":\".\",\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\\\" -- repo \\\"C:/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts\\\" verify puzzle-fill-policy-self-tests\",\"forwardAllArgs\":true,\"ownerArguments\":true},\"metadata\":{\"semio\":{\"workspaceCommand\":[\"verify\",\"puzzle-fill-policy-self-tests\"],\"cache\":{\"version\":1,\"class\":\"deterministic\",\"reason\":\"check-without-outputs\"},\"buildMode\":{\"modes\":[\"prototype\",\"release\"]}}},\"defaultConfiguration\":\"prototype\",\"configurations\":{\"prototype\":{\"env\":{\"SEMIO_BUILD_MODE\":\"prototype\"}},\"release\":{\"env\":{\"SEMIO_BUILD_MODE\":\"release\"}}}},\"verify-browser-contribution\":{\"inputs\":[\"default\",\"^default\",\"commandSources1\",{\"env\":\"SEMIO_BUILD_MODE\"}],\"outputs\":[],\"executor\":\"repo:script\",\"cache\":true,\"dependsOn\":[],\"options\":{\"cwd\":\".\",\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\\\" -- repo \\\"C:/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts\\\" verify browser-contribution\",\"forwardAllArgs\":true,\"ownerArguments\":true},\"metadata\":{\"workspaceCommand\":[\"verify\",\"browser-contribution\"],\"semio\":{\"cache\":{\"version\":1,\"class\":\"deterministic\",\"reason\":\"check-without-outputs\"},\"buildMode\":{\"modes\":[\"prototype\",\"release\"]}}},\"defaultConfiguration\":\"prototype\",\"configurations\":{\"prototype\":{\"env\":{\"SEMIO_BUILD_MODE\":\"prototype\"}},\"release\":{\"env\":{\"SEMIO_BUILD_MODE\":\"release\"}}}}},\"root\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\",\"closureRecipes\":{\"8aabbe81357256ed232791b5f3c13feec6b734332c3c33f538aef124e1cd8e5c\":{\"fn\":\"target-sources\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo ./📜️script.ts verify browser-contribution\",\"cwd\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\",\"forwardAllArgs\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"},\"9fb283f1fc78547d9aee7acb42585619950fb92f3e7b543e6ede7a39c41ed05b\":{\"fn\":\"target-sources\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo ./📜️script.ts verify puzzle-fill-policy-self-tests\",\"cwd\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\",\"forwardAllArgs\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"},\"a117d07d9bcbb93fc84c0958b5c93b7608fbb8289654e5ad7ebb76242a03825d\":{\"fn\":\"target-sources\",\"target\":{\"options\":{\"command\":\"repo ./📜️script.ts verify browser-contribution\",\"cwd\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\",\"forwardAllArgs\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"},\"d6ad2e33020abf432c3e3cf2ce515c7ea0e9e9a2ee8c636299ad8e5a83545c6e\":{\"fn\":\"generic-target\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\\\" -- repo \\\"C:/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts\\\" verify puzzle-fill-policy-self-tests\",\"cwd\":\".\",\"forwardAllArgs\":true,\"ownerArguments\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"},\"da63a796013a1106df5d0130c870a468deb7a8b68c38988e60a53238fc85e0f9\":{\"fn\":\"generic-target\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\\\" -- repo \\\"C:/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts\\\" verify browser-contribution\",\"cwd\":\".\",\"forwardAllArgs\":true,\"ownerArguments\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"}},\"closureInputs\":{},\"symbolicGroups\":[[\"commandSources0\",false],[\"commandSources1\",false]]}"
+    }
+   },
+   "posix": {
+    "root": "/Users/Shared/semio",
+    "record": {
+     "digest": "cd84bba903bc89baad7f6bb5d70f9022a56fed37133810c0bf6a720dcdbb9757",
+     "authority": [],
+     "observations": [
+      {
+       "kind": "stamp",
+       "path": "inferrer:coordinates",
+       "fact": "semio.graph-inferrer.coordinates/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:bootstrap",
+       "fact": "semio.graph-inferrer.bootstrap/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:helpers",
+       "fact": "semio.graph-inferrer.helpers/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:source-analyses",
+       "fact": "semio.graph-inferrer.source-analyses/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:bun-lock",
+       "fact": "semio.graph-inferrer.bun-lock/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:target-policy",
+       "fact": "semio.graph-inferrer.target-policy/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:script-inputs",
+       "fact": "semio.graph-inferrer.script-inputs/3"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:generator-outputs",
+       "fact": "semio.graph-inferrer.generator-outputs/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:component-targets",
+       "fact": "semio.graph-inferrer.component-targets/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:playground-targets",
+       "fact": "semio.graph-inferrer.playground-targets/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:project-assembly",
+       "fact": "semio.graph-inferrer.project-assembly/2"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:owner-discovery",
+       "fact": "semio.graph-inferrer.owner-discovery/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:project-nodes",
+       "fact": "semio.graph-inferrer.project-nodes/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:observation",
+       "fact": "semio.graph-inferrer.observation/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:graph-assembly",
+       "fact": "semio.graph-inferrer.graph-assembly/1"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:input-precision",
+       "fact": "semio.graph-inferrer.input-precision/1+186e685153308c22f390163e8adaa592"
+      },
+      {
+       "kind": "stamp",
+       "path": "inferrer:package-managers",
+       "fact": "semio.graph-inferrer.package-managers/1+7797276e0d1fba94a256e51c39f6c08b"
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts",
+       "fact": true
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/Cargo.toml",
+       "fact": false
+      },
+      {
+       "kind": "closure",
+       "path": "[\"/Users/Shared/semio\",\"9fb283f1fc78547d9aee7acb42585619950fb92f3e7b543e6ede7a39c41ed05b\",[\"some\",[\"/🏃️process/🧪️testing/🧪️vitest/\",\"/🏃️process/📋️context/\"]]]",
+       "fact": "true"
+      },
+      {
+       "kind": "closure",
+       "path": "[\"/Users/Shared/semio\",\"9fb283f1fc78547d9aee7acb42585619950fb92f3e7b543e6ede7a39c41ed05b\",[\"generated\"]]",
+       "fact": "[]"
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🔣️.json",
+       "fact": true
+      },
+      {
+       "kind": "file",
+       "path": "/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🔣️.json",
+       "fact": {
+        "size": 99291,
+        "mtimeMs": 1794276882788.688,
+        "ctimeMs": 1794367625967.0225,
+        "ino": 649483635,
+        "sha256": "3bc278f920b17a88786a0c2d993ea53a863f007b009dd02d54a13ed66a95c19d"
+       }
+      },
+      {
+       "kind": "closure",
+       "path": "[\"/Users/Shared/semio\",\"8aabbe81357256ed232791b5f3c13feec6b734332c3c33f538aef124e1cd8e5c\",[\"some\",[\"/🏃️process/🧪️testing/🧪️vitest/\",\"/🏃️process/📋️context/\"]]]",
+       "fact": "true"
+      },
+      {
+       "kind": "closure",
+       "path": "[\"/Users/Shared/semio\",\"a117d07d9bcbb93fc84c0958b5c93b7608fbb8289654e5ad7ebb76242a03825d\",[\"generated\"]]",
+       "fact": "[]"
+      },
+      {
+       "kind": "resolve",
+       "path": "[\"/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs\",\"typescript\"]",
+       "fact": "/Users/Shared/semio/.cache/b/d/m/j/*/node_modules/typescript/lib/typescript.js"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib",
+       "fact": "directory"
+      },
+      {
+       "kind": "lstat",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+       "fact": "file"
+      },
+      {
+       "kind": "field",
+       "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+       "fact": {
+        "format": "package-identity",
+        "pointer": "",
+        "digest": "bef70a836cac5897ba6fbb69a3ab7e61a405dddf96b4fd06664c5449b82049ea"
+       }
+      },
+      {
+       "kind": "analysis",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts",
+       "fact": {
+        "provider": "build:script-requirements:v1:c4e967f0b20d9aa7e58372b68f32180a7e1eb9bba114344cdafeefe380b11733",
+        "revision": "d21949bed41a56ce7b1054b684fdff987c9e22462ab710af367db59c7664c962",
+        "source": {
+         "size": 1019,
+         "mtimeMs": 1792653807423.7153,
+         "ctimeMs": 1794367719475.7285,
+         "ino": 649657467,
+         "sha256": "ac2ee257a08339d42990a31a651029f9afec11d859de73dae2e0c823112c3590"
+        },
+        "resultSha256": "6a7f2c28ff39a920ad218ebf894f185400a42af783394f4d976ff7d72c18f767",
+        "nestedObservations": []
+       }
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/go.mod",
+       "fact": false
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/pyproject.toml",
+       "fact": false
+      },
+      {
+       "kind": "readdirNames",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript",
+       "fact": "46ea285948a3bf550813eb0238ddc012dadcdd53f723b35230161be6eb2890db"
+      },
+      {
+       "kind": "exists",
+       "path": "/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/CMakeLists.txt",
+       "fact": false
+      }
+     ],
+     "image": "{\"namedInputs\":{\"default\":[\"sharedSources6da415d574f9dced\"],\"production\":[\"!{projectRoot}/**/🧪️tests/**/*\",\"!{projectRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{projectRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{workspaceRoot}/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{workspaceRoot}/**/!(🔨️modules)/{🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples}/**/*\",\"!{projectRoot}/**/*.feature\",\"!{projectRoot}/**/*.stories.{ts,tsx}\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/🧪️tests/**/*\",\"sharedSources6da415d574f9dced\"],\"nativeSources\":[\"production\"],\"nativeTestSources\":[\"production\"],\"sharedSources6da415d574f9dced\":[\"{projectRoot}/**/*\",{\"runtime\":\"node -p \\\"process.platform.concat(process.arch)\\\"\"},\"{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,svg,wit,sql}\",{\"env\":\"NODE_ENV\"},{\"env\":\"BUN_ENV\"},{\"env\":\"CI\"},{\"env\":\"SEMIO_BUILD_MODE\"},{\"env\":\"SEMIO_RENDERER\"},{\"env\":\"SEMIO_PLUGIN\"},{\"env\":\"SEMIO_TEST_LEVEL\"},{\"env\":\"SEMIO_TEST_BUDGET_MS\"},{\"env\":\"SEMIO_BUILD_BUDGET_MS\"},{\"runtime\":\"repo tools exec --light bun -- --version\"},{\"runtime\":\"repo tools exec --light node -- --version\"},\"!{workspaceRoot}/🧰️framework/🤖️generated/process/**/*\",\"!{projectRoot}/**/node_modules/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/node_modules/**/*\",\"!{projectRoot}/**/.git/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.git/**/*\",\"!{projectRoot}/**/.nx/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.nx/**/*\",\"!{projectRoot}/**/.cache/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.cache/**/*\",\"!{projectRoot}/**/.r/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.r/**/*\",\"!{projectRoot}/**/target/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/target/**/*\",\"!{projectRoot}/**/dist/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/dist/**/*\",\"!{projectRoot}/**/📤️dist/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/📤️dist/**/*\",\"!{projectRoot}/**/build/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/build/**/*\",\"!{projectRoot}/**/out/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/out/**/*\",\"!{projectRoot}/**/coverage/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/coverage/**/*\",\"!{projectRoot}/**/test-results/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/test-results/**/*\",\"!{projectRoot}/**/playwright-report/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/playwright-report/**/*\",\"!{projectRoot}/**/storybook-static/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/storybook-static/**/*\",\"!{projectRoot}/**/.venv/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.venv/**/*\",\"!{projectRoot}/**/__pycache__/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/__pycache__/**/*\",\"!{projectRoot}/**/bin/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/bin/**/*\",\"!{projectRoot}/**/obj/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/obj/**/*\",\"!{projectRoot}/**/⚡️cache/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/⚡️cache/**/*\",\"!{projectRoot}/**/🗑️generated/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/🗑️generated/**/*\",\"!{projectRoot}/**/.lake/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.lake/**/*\",\"!{projectRoot}/**/pkg/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/pkg/**/*\",\"!{projectRoot}/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{projectRoot}/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{projectRoot}/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{projectRoot}/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]\",\"!{workspaceRoot}/✏️s/🧑‍💻dev/🧩️puzzle/**/.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/**/*\",\"!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/🧪️tests/**/*\",\"sharedGlobals\",{\"runtime\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\\\" digest-generated \\\"✏️s/🧑‍💻dev/🤖️generated\\\"\"},\"{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🟨️.mjs\",\"{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/🔣️schema.json\",{\"env\":\"SEMIO_SOURCE_CLOSURE_8e5161b02abd2537625349bf8b177e1a14e0d844c95bac7e86593b53addf82ed\"}],\"commandSources0\":[{\"closureRef\":\"e479e643549a28e4df93e5a8a4561f9a561c3120215b8ed48a6d962864f7072d\"}],\"commandSources1\":[{\"closureRef\":\"f62df707392777350cdcfced0789d80489a932a5f116bded8a312b5d67ff35a9\"}]},\"name\":\"@semio-tech/s-puzzle-composition-tests\",\"projectType\":\"library\",\"sourceRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle\",\"targets\":{\"verify-puzzle-fill-policy-self-tests\":{\"inputs\":[\"default\",\"^default\",\"commandSources0\",{\"env\":\"SEMIO_BUILD_MODE\"}],\"outputs\":[],\"executor\":\"repo:script\",\"cache\":true,\"options\":{\"cwd\":\".\",\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\\\" -- repo \\\"/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts\\\" verify puzzle-fill-policy-self-tests\",\"forwardAllArgs\":true,\"ownerArguments\":true},\"metadata\":{\"semio\":{\"workspaceCommand\":[\"verify\",\"puzzle-fill-policy-self-tests\"],\"cache\":{\"version\":1,\"class\":\"deterministic\",\"reason\":\"check-without-outputs\"},\"buildMode\":{\"modes\":[\"prototype\",\"release\"]}}},\"defaultConfiguration\":\"prototype\",\"configurations\":{\"prototype\":{\"env\":{\"SEMIO_BUILD_MODE\":\"prototype\"}},\"release\":{\"env\":{\"SEMIO_BUILD_MODE\":\"release\"}}}},\"verify-browser-contribution\":{\"inputs\":[\"default\",\"^default\",\"commandSources1\",{\"env\":\"SEMIO_BUILD_MODE\"}],\"outputs\":[],\"executor\":\"repo:script\",\"cache\":true,\"dependsOn\":[],\"options\":{\"cwd\":\".\",\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\\\" -- repo \\\"/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts\\\" verify browser-contribution\",\"forwardAllArgs\":true,\"ownerArguments\":true},\"metadata\":{\"workspaceCommand\":[\"verify\",\"browser-contribution\"],\"semio\":{\"cache\":{\"version\":1,\"class\":\"deterministic\",\"reason\":\"check-without-outputs\"},\"buildMode\":{\"modes\":[\"prototype\",\"release\"]}}},\"defaultConfiguration\":\"prototype\",\"configurations\":{\"prototype\":{\"env\":{\"SEMIO_BUILD_MODE\":\"prototype\"}},\"release\":{\"env\":{\"SEMIO_BUILD_MODE\":\"release\"}}}}},\"root\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\",\"closureRecipes\":{\"8aabbe81357256ed232791b5f3c13feec6b734332c3c33f538aef124e1cd8e5c\":{\"fn\":\"target-sources\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo ./📜️script.ts verify browser-contribution\",\"cwd\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\",\"forwardAllArgs\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"},\"9fb283f1fc78547d9aee7acb42585619950fb92f3e7b543e6ede7a39c41ed05b\":{\"fn\":\"target-sources\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo ./📜️script.ts verify puzzle-fill-policy-self-tests\",\"cwd\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\",\"forwardAllArgs\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"},\"a117d07d9bcbb93fc84c0958b5c93b7608fbb8289654e5ad7ebb76242a03825d\":{\"fn\":\"target-sources\",\"target\":{\"options\":{\"command\":\"repo ./📜️script.ts verify browser-contribution\",\"cwd\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\",\"forwardAllArgs\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"},\"e479e643549a28e4df93e5a8a4561f9a561c3120215b8ed48a6d962864f7072d\":{\"fn\":\"generic-target\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\\\" -- repo \\\"/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts\\\" verify puzzle-fill-policy-self-tests\",\"cwd\":\".\",\"forwardAllArgs\":true,\"ownerArguments\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"},\"f62df707392777350cdcfced0789d80489a932a5f116bded8a312b5d67ff35a9\":{\"fn\":\"generic-target\",\"target\":{\"metadata\":{\"semio\":{}},\"options\":{\"command\":\"repo \\\"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/📥️owner-command/📜️script.ts\\\" owner-command --cwd \\\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\\\" -- repo \\\"/Users/Shared/semio/✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript/📜️script.ts\\\" verify browser-contribution\",\"cwd\":\".\",\"forwardAllArgs\":true,\"ownerArguments\":true}},\"projectRoot\":\"✏️s/🧑‍💻dev/🧩️puzzle/📦️packages/🟦️typescript\"}},\"closureInputs\":{},\"symbolicGroups\":[[\"commandSources0\",false],[\"commandSources1\",false]]}"
+    }
+   }
+  }
+ ]
+}

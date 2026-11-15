@@ -113,8 +113,7 @@ pub mod binary;
 
 pub use semio_s_artifact_norm_vdi3805_io_text as text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_norm_vdi3805_model::sqlite;
 
 pub mod derived_construction {
     use semio_s_artifact_norm_vdi3805_diff::Vdi3805Diff;
@@ -226,4 +225,4 @@ semio_plugin::derive_artifact_facets!(
     composer: Vdi3805Composer,
 );
 
-pub use mutation_bridge::*;
+pub use semio_s_artifact_norm_vdi3805_mutations::mutation_bridge::*;

@@ -1,7 +1,9 @@
 //! 🧱️ Catalogue core of the ISO 16757 snapshot: the catalogue identifier, dictionary reference, names, dimension signature, unit, value, null state, cardinality, extension bag and lifecycle. See [`super`].
 
 use semio_s_plugin_norm_compliance::LocalizedText;
-use std::collections::BTreeMap;
+
+/// 🗺️ Identifier-keyed retained ordered map used by every keyed field of the snapshot.
+pub type IdMap<V> = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, V>;
 
 /// 🆔️ Stable catalogue identifier.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -139,7 +141,7 @@ impl Cardinality {
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct ExtensionBag {
-    pub fields: BTreeMap<String, semio_framework_value::DslValue>,
+    pub fields: IdMap<semio_framework_value::DslValue>,
 }
 
 /// 📅️ Lifecycle metadata.

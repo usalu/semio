@@ -8,7 +8,6 @@ import {agentSessionRegistryRootV1,agentSessionStoreV1,parseAgentSessionAddressV
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1} from "../../🌡️host-capacity/🟦️.ts";
 import {cacheLedgerV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🟦️.ts";
 import {machinePolicyV1,planMachineBudgetV1,resolveMachineTotalV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
-import {cacheRunnerPortsV1,machineHostFreeBytesV1,machineUsesV1,reportCacheLedgerV1} from "../../🧹️cache-gc/🏃️runner/🟦️.ts";
 import {repositoryCachePartitionRootDataV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import {bazelServerDirectoryV1,listBazelSlotsV1,readBazelServerPidSyncV1,readBazelSlotStateSyncV1} from "../../🔧️tools/🏗️bazel/🧵️sessions/📖️status/🟦️.ts";
 import sessionSchema from "../../🔧️tools/🏗️bazel/🧵️sessions/🧬️schema/🔣️.json" with {type:"json"};
@@ -18,9 +17,6 @@ import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {fleetTextV1} from "../🟦️.ts";
 import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
-import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
-import {fleetFactOfSnapshotV1,SCHEDULER_POLICY_V1} from "../../🗓️scheduler/🟦️.ts";
-import {createFileSchedulerStoreV1,schedulerDirectoryV1} from "../../🗓️scheduler/💾️store/🟦️.ts";
 
 /** 📥️ The readers of the fleet status: each one asks an existing status reader of the build (leases, capacity, Bazel slots, cache ledger, sealed store, graph generation pointer) and turns the answer into the facts the aggregation reads. A reader never takes a lease, never loads the graph and never writes; a reader that fails is reported in `sources` and leaves its section out.
  * @see ../🟦️.ts the aggregation, ../🧬️schema/🔣️.json the facts */
@@ -83,6 +79,7 @@ export const readFleetBazelV1:FleetReaderV1=async context=>{
 
 /** 💾️ Storage: the images and areas of the cache ledger from statfs and the size ledger (no tree is walked) and the machine budget plan. */
 export const readFleetStorageV1:FleetReaderV1=async context=>{
+ const {cacheRunnerPortsV1,machineHostFreeBytesV1,machineUsesV1,reportCacheLedgerV1}=await import("../../🧹️cache-gc/🏃️runner/🟦️.ts");
  const ledger=cacheLedgerV1(),ports=cacheRunnerPortsV1({signal:new AbortController().signal,progress:async()=>{},exclusive:async()=>undefined}),report=await reportCacheLedgerV1(context.root,ledger,ports),declared=machinePolicyV1();
  const fileText=(()=>{try{return readFileSync(join(context.root,...ledger.roots.repository.directory.split("/"),declared.file),"utf8");}catch{return undefined;}})(),total=resolveMachineTotalV1({environment:context.environment,...fileText===undefined?{}:{fileText}},declared);
  const plan=planMachineBudgetV1({totalBytes:total.bytes,hostFreeBytes:machineHostFreeBytesV1(context.root),uses:machineUsesV1(report,report.roots.reduce((sum,row)=>sum+row.usedBytes,0),null)},declared);
@@ -112,21 +109,29 @@ export const readFleetGenerationV1:FleetReaderV1=async context=>{
  const defs=generationSchema.definitions,policy=defs.Policy.const as {pointer:string;manifests:string},directory=join(repositoryCachePartitionRootDataV1(context.root,"graph"),"generations");
  if(!existsSync(join(directory,policy.pointer)))return {};
  const pointer=JSON.parse(readFileSync(join(directory,policy.pointer),"utf8")) as {generation:number;manifest:string|null;verified?:{atMs:number;count:number;owners:string}};
- const bad=validateJsonSchemaSubset(defs.Pointer as never,pointer,generationSchema as never);if(bad.length)throw refuseBuildV1("invalid","fleet.generation-pointer-invalid",{detail:JSON.stringify(bad[0])});
+ const bad=validateJsonSchemaSubset(defs.Pointer as never,pointer,generationSchema as never);if(bad.length)throw (await import("../../📖️texts/🟦️.ts")).refuseBuildV1("invalid","fleet.generation-pointer-invalid",{detail:JSON.stringify(bad[0])});
  if(pointer.manifest===null)return {};
  const path=join(directory,policy.manifests,pointer.manifest+".json"),manifest=JSON.parse(readFileSync(path,"utf8")) as {owners:Record<string,unknown>;implementation:string;built:{kind:"cold"|"delta"|"refresh";dirty:readonly string[]}};
- const shape=validateJsonSchemaSubset(defs.Manifest as never,{...manifest,owners:{}},generationSchema as never);if(shape.length)throw refuseBuildV1("invalid","fleet.generation-manifest-invalid",{path,detail:JSON.stringify(shape[0])});
+ const shape=validateJsonSchemaSubset(defs.Manifest as never,{...manifest,owners:{}},generationSchema as never);if(shape.length)throw (await import("../../📖️texts/🟦️.ts")).refuseBuildV1("invalid","fleet.generation-manifest-invalid",{path,detail:JSON.stringify(shape[0])});
  return {generation:{number:pointer.generation,built:{kind:manifest.built.kind,dirty:manifest.built.dirty.length},owners:Object.keys(manifest.owners).length,implementation:manifest.implementation,publishedAtMs:Math.floor(statSync(path).mtimeMs),verified:pointer.verified===undefined?null:{atMs:pointer.verified.atMs,covered:popcount(pointer.verified.owners),count:pointer.verified.count}}};
 };
 
 /** 🗓️ Scheduler: the host-wide queue, read without taking its lock. */
 export async function readFleetSchedulerV1(context:FleetReaderContextV1):Promise<Partial<FleetFactsV1>>{
+ const [{fleetFactOfSnapshotV1,SCHEDULER_POLICY_V1},{createFileSchedulerStoreV1,schedulerDirectoryV1}]=await Promise.all([import("../../🗓️scheduler/🟦️.ts"),import("../../🗓️scheduler/💾️store/🟦️.ts")]);
  const store=createFileSchedulerStoreV1(schedulerDirectoryV1(context.environment),SCHEDULER_POLICY_V1);
  return{scheduler:fleetFactOfSnapshotV1(await store.snapshot())};
 }
 
+/** 🌍️ Fleet: the machines of the fleet with their load, pressure, queue, worker and offload counters from the scheduler of remote execution, and the counters and claims of the cache server; nothing while no scheduler is published. */
+export async function readFleetLoadV1(context:FleetReaderContextV1):Promise<Partial<FleetFactsV1>>{
+ const {readRemoteExecutionFleetFactsV1}=await import("../../🌐️remote-execution/🚢️status/🟦️.ts");
+ const fleet=await readRemoteExecutionFleetFactsV1({root:context.root,environment:context.environment});
+ return fleet===undefined?{}:{fleet};
+}
+
 /** 🏭️ The readers of the real workspace. */
-export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1});
+export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1});
 
 /** 🧺️ Runs every reader at once, times it and merges what it returned; a reader that throws is a failed source, never a failed command. */
 export async function collectFleetFactsV1(context:FleetReaderContextV1,readers:FleetReadersV1=FLEET_READERS_V1,timeoutMilliseconds:number=policy.readers.timeoutMilliseconds):Promise<FleetFactsV1>{

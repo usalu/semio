@@ -91,7 +91,9 @@ def choose(pools):
 
 
 def recycle(row):
-    if row["rssMegabytes"] > row["megabytes"] or (
+    base = row.get("baselineMegabytes")
+    ceiling = max(row["megabytes"], base * policy["recycleCeilingFactor"] if isinstance(base, (int, float)) and base > 0 else 0)
+    if row["rssMegabytes"] > ceiling or (
         row["rssMegabytes"] > row["megabytes"] * policy["recycleMemoryRatio"]
         and (row.get("baselineMegabytes") is None or row["rssMegabytes"] > row["baselineMegabytes"] * (1 + policy["recycleGrowthRatio"]))
     ):

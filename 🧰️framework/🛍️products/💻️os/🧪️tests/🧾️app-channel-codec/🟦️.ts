@@ -26,7 +26,7 @@ describe("resumable media export wire", () => {
     const client = new AppChannelClient(port, new AppChannelRequestSequence(), 7, "fixture");
     try {
       const submitted = client.submitMediaExport("playback:out", handle.parent_document_id, handle.base_revision);
-      expect(sent.at(-1)).toEqual({ SubmitMediaExport: { seq: 1n, port: "playback:out", expected_parent_document_id: handle.parent_document_id, expected_base_revision: handle.base_revision } });
+      expect(sent.at(-1)).toEqual({ SubmitMediaExport: { seq: 1n, port: "playback:out", expected_parent_document_id: handle.parent_document_id, expected_base_revision: handle.base_revision, checkpoint_id: null } });
       const valid: AppFrameValue = { MediaExportSubmitted: { in_reply_to: 1n, handle } };
       broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ MediaExportSubmitted: { in_reply_to: 9007199254740993n, handle } }), encodeAppFrame(valid)] });
       expect(await submitted).toEqual([valid]);
@@ -79,7 +79,7 @@ describe("resumable media export wire", () => {
   it("preserves exact large operation authority and rejects incomplete or extra bytes", () => {
     const handle = { app_instance_id: 7, parent_document_id: "Überblick", operation_id: 9007199254740993n, base_revision: 18446744073709551615n, generation: 9007199254740995n };
     const commands = [
-      { SubmitMediaExport: { seq: 1n, port: "playback:out", expected_parent_document_id: handle.parent_document_id, expected_base_revision: handle.base_revision } },
+      { SubmitMediaExport: { seq: 1n, port: "playback:out", expected_parent_document_id: handle.parent_document_id, expected_base_revision: handle.base_revision, checkpoint_id: null } },
       { PollMediaExport: { seq: 2n, handle } }, { CancelMediaExport: { seq: 3n, handle } }, { TakeMediaExportChunk: { seq: 4n, handle } },
     ];
     const frames = [

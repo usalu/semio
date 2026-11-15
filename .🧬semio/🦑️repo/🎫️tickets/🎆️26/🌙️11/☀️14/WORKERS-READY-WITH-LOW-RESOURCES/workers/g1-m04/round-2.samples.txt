@@ -1,0 +1,64 @@
+## 2026-11-14T16:00:09Z psi_memory_full_avg10=0.00 MemAvailable:10370972 kB SwapFree:15637216 kB 
+916364 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+543688 /home/deck/.local/bin/claude --permission-mode auto
+83444 /usr/bin/plasma-systemmonitor
+## 2026-11-14T16:00:39Z psi_memory_full_avg10=0.22 MemAvailable:9733528 kB SwapFree:15659308 kB 
+678052 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+548916 /home/deck/.local/bin/claude --permission-mode auto
+529692 /usr/lib/kf6/baloo_file
+## 2026-11-14T16:01:10Z psi_memory_full_avg10=0.00 MemAvailable:8567420 kB SwapFree:15662012 kB 
+1218620 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+619524 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+549236 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:01:40Z psi_memory_full_avg10=0.00 MemAvailable:8864848 kB SwapFree:15662012 kB 
+1180172 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+555976 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+547756 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:02:10Z psi_memory_full_avg10=0.00 MemAvailable:8917340 kB SwapFree:15664628 kB 
+1221956 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+542892 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+537812 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:02:40Z psi_memory_full_avg10=0.00 MemAvailable:8990068 kB SwapFree:15664628 kB 
+1255268 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+537740 /home/deck/.local/bin/claude --permission-mode auto
+531836 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+## 2026-11-14T16:03:10Z psi_memory_full_avg10=0.00 MemAvailable:8472436 kB SwapFree:15664716 kB 
+1772000 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+537700 /home/deck/.local/bin/claude --permission-mode auto
+534156 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+## 2026-11-14T16:03:40Z psi_memory_full_avg10=0.00 MemAvailable:9007308 kB SwapFree:15664720 kB 
+1205576 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+567948 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+537864 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:04:10Z psi_memory_full_avg10=0.00 MemAvailable:8925200 kB SwapFree:15664768 kB 
+749940 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=a
+537932 /home/deck/.local/bin/claude --permission-mode auto
+532532 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+## 2026-11-14T16:04:40Z psi_memory_full_avg10=1.37 MemAvailable:7597888 kB SwapFree:15552764 kB 
+2265204 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+531820 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+500460 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:05:10Z psi_memory_full_avg10=0.53 MemAvailable:6829984 kB SwapFree:15388368 kB 
+2861488 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+551860 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+500880 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:05:40Z psi_memory_full_avg10=0.76 MemAvailable:5837752 kB SwapFree:15250532 kB 
+4332688 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+555012 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+463704 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:06:10Z psi_memory_full_avg10=1.06 MemAvailable:6123280 kB SwapFree:15139124 kB 
+4144152 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+518328 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+359448 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:06:40Z psi_memory_full_avg10=0.05 MemAvailable:6793608 kB SwapFree:15140992 kB 
+3603568 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+530152 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+359892 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:07:10Z psi_memory_full_avg10=0.14 MemAvailable:5419304 kB SwapFree:15142548 kB 
+4680992 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+573020 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+335008 /home/deck/.local/bin/claude --permission-mode auto
+## 2026-11-14T16:07:40Z psi_memory_full_avg10=27.87 MemAvailable:2951080 kB SwapFree:13345164 kB 
+7571404 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=
+426648 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/
+225484 /usr/bin/git -c core.excludesFile= -c core.attributesFile= -c core.quotepath=false -c core.precomposeunicode=true -c core.autocrlf=false -c core.safecrlf

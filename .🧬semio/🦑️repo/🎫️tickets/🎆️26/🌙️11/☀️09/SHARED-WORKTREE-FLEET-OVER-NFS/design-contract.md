@@ -7,8 +7,9 @@ names by hand, copy them from `ls`, every emoji carries U+FE0F).
 ## Goal
 
 One logical worktree, edited live by 50+ machines (macOS, Windows, Linux) in about 5 groups of 10. No branches,
-no merges, no merge queue. Shared files are exactly the files not ignored by the root `.gitignore`. Ignored
-files never leave the machine. Every group has one NFS server and one cache server.
+no merges, no merge queue. Shared files are the files not ignored by the root `.gitignore`, plus the allow-listed
+part of the root `.git` and the stage as registers (`1113-git-state-contract.md`). Ignored files never leave the
+machine. Every group has one NFS server and one cache server.
 
 ## Decision: local replica + journal on NFS (not a direct NFS mount of the worktree)
 
@@ -101,7 +102,10 @@ machine's file clock against another machine's hlc clock, so it is as good as NT
 
 - Shared iff: not ignored by the root `.gitignore` (full gitignore semantics: anchoring, `**`, negation,
   directory-only rules, a rule on a parent directory hides everything below and cannot be re-included, character
-  classes, escapes), and not below `.git/`, and passes the path policy.
+  classes, escapes), and passes the path policy. The root `.git` is shared even when a gitignore rule would
+  hide it. A path under that `.git` is shared only on the allow-list `HEAD`, `packed-refs`, `shallow`, `refs/**`,
+  `objects/**` (not `tmp_*` names in `objects`, not `objects/info/alternates`, no name ending `.lock`); everything else
+  in it and every nested `.git` stays local.
 - Only the root `.gitignore` is read (the repo has no nested ones). It is itself shared; the matcher reloads
   when its content hash changes and the daemon then rescans.
 - Path policy (refuse + report, never share): not NFC; longer than 256 characters; a component longer than
@@ -195,9 +199,14 @@ OS because cache hits across machines require identical checkout paths.
 
 ## Git
 
-`.git/` is never shared. Workers do not need git at all. History is optional and taken by one designated
-archivist machine that commits the replica on a timer; nobody else runs mutating git commands (already the
-rule in `AGENTS.md`).
+The allow-listed part of the root `.git` (`HEAD`, `packed-refs`, `shallow`, `refs/**`, `objects/**`) replicates as files, so a
+commit on one worker is the same commit on every worker: the objects and the ref file travel, the commit changes no stage
+register. Files the root `.gitignore` ignores stay on the machine that wrote them. The index, the config, the reflog, hooks,
+`info`, `FETCH_HEAD`, in-progress operation files and IDE files are private to the machine. The stage replicates as a register
+per path plus one base register in the virtual realm `.cache/f/index-base` and `.cache/f/index/<path>` (events `link` and
+`delete`, last writer wins by hlc, an entry older than the base is void); see `git-state.md` and `1113-git-state-contract.md`.
+Two machines that commit at the same time publish two refs; the later publish wins and the other commit stays unreferenced in
+the object store. A path that becomes private is forgotten locally and never published as a delete.
 
 ## Module interfaces (so the parts can be built in parallel)
 
@@ -239,8 +248,8 @@ export function refusePathV1(path:string):FleetPathRefusalV1|undefined; // colli
 export function linkRefusalV1(path:string,target:string):FleetPathRefusalV1|undefined;
 export type FleetScanEntryV1=Readonly<{path:string;kind:"file"|"link";bytes:number;mtimeMs:number;executable:boolean;target?:string}>;
 export type FleetScanV1=Readonly<{entries:readonly FleetScanEntryV1[];refused:readonly Readonly<{path:string;reason:FleetPathRefusalV1}>[]}>;
-export async function scanSharedV1(worktree:string,ignore:FleetIgnoreV1,signal?:AbortSignal,visit?:(entry:FleetScanEntryV1)=>void):Promise<FleetScanV1>; // never descends into ignored directories or .git; with visit the entries are handed over one by one and `entries` stays empty
-export function sharedV1(path:string,isDirectory:boolean,ignore:FleetIgnoreV1):boolean; // ignore + .git + refusePathV1
+export async function scanSharedV1(worktree:string,ignore:FleetIgnoreV1,signal?:AbortSignal,visit?:(entry:FleetScanEntryV1)=>void):Promise<FleetScanV1>; // never descends into ignored directories or a nested .git; descends into the root .git on the allow-list; with visit the entries are handed over one by one and `entries` stays empty
+export function sharedV1(path:string,isDirectory:boolean,ignore:FleetIgnoreV1):boolean; // root .git on the allow-list gitSharedV1, otherwise ignore + refusePathV1
 export async function hashFileV1(file:string):Promise<Readonly<{sha256:string;bytes:number;stable:boolean}>>;
 ```
 

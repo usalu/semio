@@ -49,6 +49,7 @@ fn readonly_report() -> CheckReport {
 
 #[test]
 fn readonly_scalars_keep_accessible_localized_values_and_have_no_mutation_affordances() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law: serde_json::Value = serde_json::from_str(LAW).expect("neutral admission fixture");
     let rows = law["fields"].as_array().expect("fields").iter().filter(|row| row["editable"] == false).collect::<Vec<_>>();
     let tree = DslValue::object(rows.iter().map(|row| (row["path"].as_str().unwrap().to_owned(), value(&row["value"]))));
@@ -72,6 +73,7 @@ fn readonly_scalars_keep_accessible_localized_values_and_have_no_mutation_afford
 
 #[test]
 fn admitted_scalar_controls_keep_their_original_typed_commit() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let scalar = DslValue::float(0.0015);
     for locale in [Locale::En, Locale::De] {
         let field = field_view("editable", &scalar, &scalar, locale, Some(metadata), UnitSystem::Engineering);
@@ -83,6 +85,7 @@ fn admitted_scalar_controls_keep_their_original_typed_commit() {
 
 #[test]
 fn bulk_commit_requires_admission_for_every_selected_row() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let row = |id: &str, amount: f64| DslValue::object([("id".into(), DslValue::String(id.into())), ("editable".into(), DslValue::float(amount))]);
     let tree = DslValue::object([("items".into(), DslValue::Array(vec![row("b1", 0.0015), row("b2", 0.0025), row("b3", 0.0015)]))]);
     for locale in [Locale::En, Locale::De] {

@@ -4,7 +4,7 @@
  * @see ../🎞️frame/🟦️.ts */
 import type { Operation, PrimitiveSolid, Slug } from "../../🧬️schema/🟦️.ts";
 import { Pace, silentOperation } from "../../⏱️operation/🟦️.ts";
-import { MATERIAL_STRIDE, type Frame, type Scene } from "../🧬️contract/🟦️.ts";
+import { MATERIAL_STRIDE, inScene, type Frame, type Scene } from "../🧬️contract/🟦️.ts";
 import { posedPositions } from "../🎞️frame/🟦️.ts";
 import { rayOf, type CameraState, type Ray } from "../📷️camera/🟦️.ts";
 import type { V3 } from "../../🧮️math/🟦️.ts";
@@ -31,7 +31,7 @@ export function pick(scene: Scene, frame: Frame, ray: Ray, operation: Operation 
   let best: Hit | null = null;
   const [ox, oy, oz] = ray.origin, [dx, dy, dz] = ray.direction;
   for (const prim of scene.primitives) {
-    if (prim.mode !== "triangles") continue;
+    if (prim.mode !== "triangles" || !inScene(prim, frame.sceneIndex)) continue;
     const material = frame.materialMap[prim.materialIndex]!;
     const o = material * MATERIAL_STRIDE;
     if (frame.materials[o + 11] === 1 && frame.materials[o + 3] === 0) continue;

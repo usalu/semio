@@ -48,8 +48,13 @@ func createWorkspaceDirectoryLink(source, destination string) error {
 	return os.Symlink(source, destination)
 }
 
+// 🔏️publishWorkspaceDirectoryLink creates the destination link atomically and never replaces an existing entry, as `MoveFileW` on Windows; a plain rename would silently overwrite a racing link to another target.
 func publishWorkspaceDirectoryLink(source, destination string) error {
-	return os.Rename(source, destination)
+	target, err := os.Readlink(source)
+	if err != nil {
+		return err
+	}
+	return os.Symlink(target, destination)
 }
 
 // 🖥️systemLanguages lists the macOS preferred languages by the command and pattern of the language protocol; other Unix systems state theirs in the environment.

@@ -1,13 +1,18 @@
 //! 🧭️ Interaction domain generator: `norm.<variant>` with one granularity per scene entity kind plus `check` and `loadCase` for cross-selection. See [`super`].
 
 use crate::viewport3d::picking::{granularity, GRANULARITY_CHECK, GRANULARITY_LOAD_CASE};
-use semio_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+use semio_plugin::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec, UtilityDefinition};
 use semio_ui_locale::LocalizedLabel;
 use semio_s_plugin_norm_structural_scene::EntityKind;
 
 pub const POINTER_CHANNEL: &str = "pointer";
 pub const LIST_CHANNEL: &str = "list";
 pub const UTILITY_TRANSFORM: &str = "transform";
+
+/// 🧰️ The transform utility every 3D viewport window kind references (`viewport_window_definition`); the app must declare it beside the interaction.
+pub fn transform_utility_definition() -> UtilityDefinition {
+    UtilityDefinition::new(UTILITY_TRANSFORM, LocalizedLabel::native("Transform", "Transformieren"), "move-3d")
+}
 
 /// 🆔️ Interaction domain id of an artifact variant.
 pub fn interaction_domain_id(variant: &str) -> String {

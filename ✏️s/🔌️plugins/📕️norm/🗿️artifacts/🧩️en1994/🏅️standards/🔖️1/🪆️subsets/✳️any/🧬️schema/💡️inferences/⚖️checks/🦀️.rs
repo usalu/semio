@@ -189,7 +189,7 @@ pub mod part_en1990 {
         (action.m_k_nm, 0.0, 0.0, action.n_k_n)
     }
 
-    fn accumulate_column(actions: &[ColumnAction], stage: &str, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass, mode: &str) -> DesignEffects {
+    fn accumulate_column(actions: &[ColumnAction], stage: semio_s_artifact_norm_en1994_model::ActionStage, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass, mode: &str) -> DesignEffects {
         let g_g = gamma_g(annex, reliability_class);
         let g_q = gamma_q(annex, reliability_class);
         let staged: Vec<_> = actions.iter().filter(|a| a.stage == stage || a.stage == semio_s_artifact_norm_en1994_model::ActionStage::Any).collect();
@@ -262,14 +262,14 @@ pub mod part_en1990 {
     }
 
     pub fn uls_column(actions: &[ColumnAction], annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> DesignEffects {
-        accumulate_column(actions, "composite", annex, reliability_class, "uls")
+        accumulate_column(actions, semio_s_artifact_norm_en1994_model::ActionStage::Composite, annex, reliability_class, "uls")
     }
 
     pub fn fire_column(actions: &[ColumnAction], annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> DesignEffects {
-        accumulate_column(actions, "composite", annex, reliability_class, "fire")
+        accumulate_column(actions, semio_s_artifact_norm_en1994_model::ActionStage::Composite, annex, reliability_class, "fire")
     }
 
-    fn accumulate(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, stage: &str, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass, mode: &str) -> DesignEffects {
+    fn accumulate(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, stage: semio_s_artifact_norm_en1994_model::ActionStage, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass, mode: &str) -> DesignEffects {
         let g_q = gamma_q(annex, reliability_class);
         let staged: Vec<_> = actions.iter().filter(|a| a.stage == stage || a.stage == semio_s_artifact_norm_en1994_model::ActionStage::Any).collect();
         let permanents: Vec<_> = staged.iter().copied().filter(|a| a.kind == semio_s_artifact_norm_en1994_model::ActionKind::Permanent).collect();
@@ -394,26 +394,26 @@ pub mod part_en1990 {
     }
 
     pub fn uls_composite(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> DesignEffects {
-        accumulate(actions, span_m, adjacent_m, support, spacing_m, "composite", annex, reliability_class, "uls")
+        accumulate(actions, span_m, adjacent_m, support, spacing_m, semio_s_artifact_norm_en1994_model::ActionStage::Composite, annex, reliability_class, "uls")
     }
     pub fn uls_construction(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> DesignEffects {
-        accumulate(actions, span_m, adjacent_m, support, spacing_m, "construction", annex, reliability_class, "uls_construction")
+        accumulate(actions, span_m, adjacent_m, support, spacing_m, semio_s_artifact_norm_en1994_model::ActionStage::Construction, annex, reliability_class, "uls_construction")
     }
     pub fn sls_characteristic(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> DesignEffects {
-        accumulate(actions, span_m, adjacent_m, support, spacing_m, "composite", annex, reliability_class, "sls_char")
+        accumulate(actions, span_m, adjacent_m, support, spacing_m, semio_s_artifact_norm_en1994_model::ActionStage::Composite, annex, reliability_class, "sls_char")
     }
     pub fn sls_frequent(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> DesignEffects {
-        accumulate(actions, span_m, adjacent_m, support, spacing_m, "composite", annex, reliability_class, "sls_freq")
+        accumulate(actions, span_m, adjacent_m, support, spacing_m, semio_s_artifact_norm_en1994_model::ActionStage::Composite, annex, reliability_class, "sls_freq")
     }
     pub fn sls_quasi_permanent(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> DesignEffects {
-        accumulate(actions, span_m, adjacent_m, support, spacing_m, "composite", annex, reliability_class, "sls_qp")
+        accumulate(actions, span_m, adjacent_m, support, spacing_m, semio_s_artifact_norm_en1994_model::ActionStage::Composite, annex, reliability_class, "sls_qp")
     }
     /// 🧮 Effects of one stage under an SLS or fire combination mode (`sls_char`, `sls_freq`, `sls_qp`, `fire`).
-    pub fn stage_effects(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, stage: &str, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass, mode: &str) -> DesignEffects {
+    pub fn stage_effects(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, stage: semio_s_artifact_norm_en1994_model::ActionStage, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass, mode: &str) -> DesignEffects {
         accumulate(actions, span_m, adjacent_m, support, spacing_m, stage, annex, reliability_class, mode)
     }
     pub fn fire_combination(actions: &[CharacteristicAction], span_m: f64, adjacent_m: f64, support: semio_s_artifact_norm_en1994_model::SupportCondition, spacing_m: f64, annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> DesignEffects {
-        accumulate(actions, span_m, adjacent_m, support, spacing_m, "composite", annex, reliability_class, "fire")
+        accumulate(actions, span_m, adjacent_m, support, spacing_m, semio_s_artifact_norm_en1994_model::ActionStage::Composite, annex, reliability_class, "fire")
     }
 
     /// 🌉️ EN 1991-2 FLM3 — simplified mid-span stress range for a simply-supported girder.

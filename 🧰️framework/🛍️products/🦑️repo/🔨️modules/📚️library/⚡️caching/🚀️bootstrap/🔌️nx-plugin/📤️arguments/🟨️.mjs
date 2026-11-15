@@ -1,4 +1,4 @@
-import {buildOrchestrationSourceIdentityV1,buildOrchestrationContextV1,requireBuildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "../../../../🏗️build/📥️caller/📤️orchestration/🟨️.mjs";
+import {buildOrchestrationSourceIdentityV1,buildOrchestrationDelegatesV1,buildOrchestrationContextV1,requireBuildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "../../../../🏗️build/📥️caller/📤️orchestration/🟨️.mjs";
 import {dirname,resolve} from "node:path";
 import {createRequire} from "node:module";
 import {readFileSync} from "node:fs";
@@ -13,6 +13,7 @@ import {encodeOwnerArgumentsV1,conformsOwnerContractV1 as conforms} from "../../
 import {readPrivateNxBuildGraphV1} from "../📌️graph-pin/🟨️.mjs";
 import {nxBuildDependencySourceIdentityV1} from "../🔏️implementation/🟨️.mjs";
 import {issueStoreReceiptV1,settleStoreReceiptV1} from "../../../../🏗️build/🧾️store-receipt/🟨️.mjs";
+import {finishNxTaskV1} from "../../../../🏗️build/🌐️remote-cache/🧶️nx/🏁️task-finish/🟦️.ts";
 
 /** 🧾️ Starts a task that declares a store receipt and names its private pending receipt to the handler. */
 function storeReceiptDeclarationV1(context){const project=context.projectsConfigurations?.projects?.[context.projectName];return {workspaceRoot:context.root,projectRoot:project?.root??".",target:context.targetName,outputs:project?.targets?.[context.targetName]?.outputs};}
@@ -42,8 +43,9 @@ export async function executeLiteralBuildArgumentsV1(options,context,delegate){
  const declaration=storeReceiptDeclarationV1(context),issued=issueStoreReceiptV1(declaration),startedAtMs=Date.now();
  const plan={...options,...(ready===undefined?{}:{readyWhen:readinessMarker}),args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName,...issued,...(context.configurationName?{SEMIO_TASK_CONFIGURATION:context.configurationName}:{}),SEMIO_NX_COMMAND_DIRECTORY:directory,SEMIO_NX_COMMAND_RUNNER:fileURLToPath(new URL("./📜️script.ts",import.meta.url)),...(orchestration?{SEMIO_SCRIPT_PROCESS_INVOCATION:JSON.stringify(orchestration),SEMIO_SCRIPT_CAPABILITIES:undefined}:{})}};
  if(options.command!==undefined)plan.command=await wrap(options.command);else{plan.commands=[];for(const command of options.commands)plan.commands.push(await wrap(command));}
- let result;try{result=await delegate(plan,context);}catch(error){await settleStoreReceiptV1(declaration,issued,{succeeded:false,startedAtMs}).catch(()=>undefined);throw error;}
+ let result;try{result=await delegate(plan,context);}catch(error){await settleStoreReceiptV1(declaration,issued,{succeeded:false,startedAtMs}).catch(()=>undefined);await finishNxTaskV1(context,false);throw error;}
  await settleStoreReceiptV1(declaration,issued,{succeeded:result?.success!==false,startedAtMs});
+ await finishNxTaskV1(context,result?.success!==false);
  return result;
 }
 
@@ -96,7 +98,7 @@ export async function issueNativeOwnerInvocationV1(options,context,environment,n
 /** 🧭️ Projects only a reachable immutable orchestration task before its owned script process is born. */
 export async function issueNxBuildOrchestrationV1(options,context,environment,now){
  nxTaskArgumentsSourceIdentityV1();
- const declaration=context.projectsConfigurations?.projects?.[context.projectName]?.targets?.[context.targetName]?.metadata?.semio?.execution;if(declaration?.kind!=="orchestration"||declaration.children===undefined)return;
+ const declaration=context.projectsConfigurations?.projects?.[context.projectName]?.targets?.[context.targetName]?.metadata?.semio?.execution;if(!buildOrchestrationDelegatesV1(declaration))return;
  const {original,declared,task,expected}=await readNxTaskAuthorityV1(options,context,environment,now);if(options.nativeOwnerCommand!==undefined||expected.command!==options.command||JSON.stringify(expected.commands)!==JSON.stringify(options.commands)||JSON.stringify(expected.args??[])!==JSON.stringify(options.args??[])||JSON.stringify(expected.__unparsed__??[])!==JSON.stringify(options.__unparsed__??[]))throw Error("Original orchestration task command changed");
  const portable=await readPrivateNxBuildGraphV1(context.root,environment,()=>{nxTaskArgumentsSourceIdentityV1();nxBuildDependencySourceIdentityV1();}),selection={project:context.projectName,target:context.targetName,...(context.configurationName?{configuration:context.configurationName}:{})},bound=buildOrchestrationContextV1(portable.projects,selection);
  if(!bound||JSON.stringify(declaration)!==JSON.stringify(portable.projects[selection.project]?.targets?.[selection.target]?.metadata?.semio?.execution))throw Error("Immutable orchestration task declaration changed");
@@ -115,8 +117,9 @@ export async function executeOwnerArgumentsV1(options,context,delegate){
  if(options.nativeOwnerCommand!==undefined){environment.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify(await issueNativeOwnerInvocationV1(options,context,environment,Date.now()));delete environment.SEMIO_SCRIPT_CAPABILITIES;}
  else if(/ native owner-command /u.test(options.command))throw Error("Original discovered native request required");
  const plan={...options,args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...environment,[key]:encodeOwnerArgumentsV1(arguments_)}};
- let result;try{result=await delegate(plan,context);}catch(error){await settleStoreReceiptV1(declaration,issued,{succeeded:false,startedAtMs}).catch(()=>undefined);throw error;}
+ let result;try{result=await delegate(plan,context);}catch(error){await settleStoreReceiptV1(declaration,issued,{succeeded:false,startedAtMs}).catch(()=>undefined);await finishNxTaskV1(context,false);throw error;}
  await settleStoreReceiptV1(declaration,issued,{succeeded:result?.success!==false,startedAtMs});
+ await finishNxTaskV1(context,result?.success!==false);
  return result;
 }
 

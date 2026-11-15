@@ -14,10 +14,10 @@ import { qualityOf } from "../../🔨️modules/🧊️volume/⏱️job/🟦️.
 import type { EvaluatedState } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { STAFFAGE_ROOT, fixture } from "./🧰️.ts";
 
-/** 🧍️ The hand-authored sample figure with its 17-solid volume. */
+/** 🧍️ The hand-authored sample figure with its authored volumes. */
 export const sampleFigure = (): Asset => fixture<{ asset: Asset }>("👤️sample-figure").asset;
 
-/** 🗂️ Every catalog asset that already has a `volume`, read straight from the files (no catalog validation: that is another test's work). */
+/** 🗂️ Every catalog asset whose volume is authored at 1:50, read straight from the files (no catalog validation: that is another test's work); the assets that are not re-authored yet are the pending list of the catalog guard. */
 export function catalogAssetsWithVolume(): Asset[] {
   const root = join(STAFFAGE_ROOT, "🗂️catalog");
   const out: Asset[] = [];
@@ -31,9 +31,9 @@ export function catalogAssetsWithVolume(): Asset[] {
       } catch {
         continue;
       }
-      if (!text.includes('"volume"')) continue;
+      if (!text.includes('"volumes"')) continue;
       const asset = (JSON.parse(text) as { asset: Asset }).asset;
-      if (asset.volume !== undefined) out.push(asset);
+      if (asset.volumes?.["50"]?.status === "authored") out.push(asset);
     }
   }
   return out.sort((a, b) => a.id.localeCompare(b.id));
@@ -45,7 +45,7 @@ export const volumeAssets = (): Asset[] => [sampleFigure(), ...catalogAssetsWith
 const arrayBuffer = (bytes: Uint8Array): ArrayBuffer => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 
 /** 📥️ A GLB read by three's `GLTFLoader`. */
-export const loadGlb = (bytes: Uint8Array): Promise<{ readonly scene: Object3D; readonly animations: readonly unknown[]; readonly parser: { readonly json: any } }> => new Promise((resolve, reject) => new GLTFLoader().parse(arrayBuffer(bytes), "", resolve as never, reject));
+export const loadGlb = (bytes: Uint8Array): Promise<{ readonly scene: Object3D; readonly scenes: readonly Object3D[]; readonly animations: readonly unknown[]; readonly parser: { readonly json: any } }> => new Promise((resolve, reject) => new GLTFLoader().parse(arrayBuffer(bytes), "", resolve as never, reject));
 
 /** 📤️ An FBX read by three's `FBXLoader`. */
 export const loadFbx = (bytes: Uint8Array): Object3D & { animations: any[] } => new FBXLoader().parse(arrayBuffer(bytes), "") as never;

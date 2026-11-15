@@ -1,20 +1,25 @@
 import {createHash,randomBytes} from "node:crypto";
 import {createReadStream} from "node:fs";
-import {chmod,copyFile,lstat,mkdir,open,readdir,readFile,rename,rm,stat,type FileHandle} from "node:fs/promises";
+import {chmod,lstat,mkdir,open,readdir,readFile,rename,rm,stat,statfs,utimes,type FileHandle} from "node:fs/promises";
 import {dirname,isAbsolute,join,resolve} from "node:path";
-import {blobPathV1,requireOriginIdV1,storePathsV1,type FleetManifestEntryV1} from "../../📒️journal/🟦️.ts";
-import {compileIgnoreV1,hashFileV1,scanSharedV1,type FleetIgnoreV1,type FleetScanEntryV1} from "../../🚧️boundary/🟦️.ts";
+import {reclaimLitterV1} from "../../🗜️compaction/🟦️.ts";
+import {blobPathV1,copyVerifiedV1,reclaimStagingV1,requireOriginIdV1,storePathsV1,type FleetManifestEntryV1} from "../../📒️journal/🟦️.ts";
+import {compileIgnoreV1,gitPrivateV1,hashFileV1,scanSharedV1,type FleetIgnoreV1,type FleetScanEntryV1} from "../../🚧️boundary/🟦️.ts";
 import {platformV1,readTopologyV1} from "../../🗺️topology/🟦️.ts";
+import {discardReachablePackV1,packExcludedV1,planPacksV1,writeReachablePackV1,type PackPlanV1} from "./🧺️packs/🟦️.ts";
 import {foldStoreV1,requireReplicaShapeV1,storeReachableV1,type ReplicaEventV1,type ReplicaSinkV1} from "../🟦️.ts";
 
 /** 🥾️ The inputs of the archive writer: the worktree to read, the store to write into and the origin that owns the staging names. */
 export type BootstrapOptionsV1=Readonly<{worktree:string;storeRoot:string;originId:string}>;
 
+/** 🎚️ How a build decides: `reachable` (default true) packs the git objects reachable from the refs into one new pack instead of copying the existing packs, `force` builds although little changed (never although the disk is short), `driftBytes` is the changed content that justifies a rebuild (default: the larger of 1 GiB and a tenth of the current archive), `maxAgeMilliseconds` rebuilds an archive that old anyway (default 24 h), `reserveBytes` is what must stay free after the write (default: 3 % of the volume, the disk guard, plus 2 GiB) and `space` reports the free and total bytes of the volume of the store (default: `statfs`). */
+export type BootstrapPolicyV1=Readonly<{reachable?:boolean;force?:boolean;driftBytes?:number;maxAgeMilliseconds?:number;reserveBytes?:number;space?:(directory:string)=>Promise<Readonly<{free:number;total:number}>|undefined>;now?:()=>number}>;
+
 /** 📦️ What one archive build wrote: the folded clock, the files and content bytes it holds, the files it skipped, the sha256 of the tar and the tar path. */
-export type BootstrapResultV1=Readonly<{hlc:string;files:number;bytes:number;skipped:number;sha256:string;archive:string}>;
+export type BootstrapResultV1=Readonly<{hlc:string;files:number;bytes:number;skipped:number;sha256:string;archive:string;outcome:"built"|"unchanged";packs?:PackPlanV1}>;
 
 /** 🧾️ The document `manifest.json` next to the archive; `bytes` is the sum of the file contents, `sha256` is the hash of the whole tar. */
-export type BootstrapManifestV1=Readonly<{version:1;hlc:string;files:number;bytes:number;sha256:string}>;
+export type BootstrapManifestV1=Readonly<{version:1;hlc:string;files:number;bytes:number;sha256:string;archive:string}>;
 
 /** 🧹️ What a settle did: files that already matched the store, files moved aside and the folder that holds them. */
 export type BootstrapSettleV1=Readonly<{kept:number;moved:number;folder:string}>;
@@ -24,12 +29,12 @@ export type BootstrapContextV1=Readonly<{root:string;signal:AbortSignal;write:(l
 
 /** ⛔️ Raised when a bootstrap operation cannot start; `key` names the message `error.bootstrap.<key>`. */
 export class BootstrapRefusedV1 extends Error{
- readonly key:"identity"|"empty"|"joined"|"store";
+ readonly key:"identity"|"empty"|"joined"|"store"|"blob"|"space";
  readonly variables:Readonly<Record<string,string>>;
- constructor(key:"identity"|"empty"|"joined"|"store",variables:Readonly<Record<string,string>>={}){super(`Bootstrap refused: ${key}`);this.name="BootstrapRefusedV1";this.key=key;this.variables=variables;}
+ constructor(key:"identity"|"empty"|"joined"|"store"|"blob"|"space",variables:Readonly<Record<string,string>>={}){super(`Bootstrap refused: ${key}`);this.name="BootstrapRefusedV1";this.key=key;this.variables=variables;}
 }
 
-const BLOCK=512,LIMIT=8**11,CHUNK=1<<20,FIELD=/[^\x20-\x7e]/gu,windows=process.platform==="win32",staleMilliseconds=6*3_600_000,retryMinutes=2;
+const BLOCK=512,LIMIT=8**11,CHUNK=1<<20,FIELD=/[^\x20-\x7e]/gu,windows=process.platform==="win32",retryMinutes=2,spaceRetryMinutes=10,keepArchiveMilliseconds=3_600_000,litterMilliseconds=3_600_000,strayStagingMilliseconds=2*3_600_000,maximumAgeMilliseconds=24*3_600_000,guardFraction=0.03,guardExtraBytes=2**31,minimumDriftBytes=2**30,tarOverhead=1536,archivePattern=/^worktree(-[0-9a-f]{16})?\.tar$/u,partPattern=/^worktree(-[0-9a-f]{16})?\.(?:tar|entries)$/u;
 const code=(error:unknown):string|undefined=>(error as {code?:string}).code;
 const gone=(error:unknown):boolean=>code(error)==="ENOENT"||code(error)==="ENOTDIR";
 const busy=(error:unknown):boolean=>code(error)==="EBUSY"||code(error)==="EPERM"||code(error)==="EACCES";
@@ -82,10 +87,52 @@ export function tarPaddingV1(size:number):number{return (BLOCK-size%BLOCK)%BLOCK
 export function tarEndV1():Buffer{return Buffer.alloc(2*BLOCK);}
 
 /** 🗂️ Resolves the ASCII locations of the archive and its manifest below `<storeRoot>/v1/bootstrap`. */
-export function bootstrapPathsV1(storeRoot:string):Readonly<{directory:string;archive:string;manifest:string}>{
+export function bootstrapPathsV1(storeRoot:string):Readonly<{directory:string;manifest:string}>{
  const directory=join(storePathsV1(storeRoot).root,"bootstrap");
- return {directory,archive:join(directory,"worktree.tar"),manifest:join(directory,"manifest.json")};
+ return {directory,manifest:join(directory,"manifest.json")};
 }
+
+/** 🏷️ The file name of an archive: `worktree-` and the first 16 hex digits of its sha256, so that the name tells the content and a rebuilt archive never overwrites the one a reader is copying. */
+export const bootstrapArchiveNameV1=(sha256:string):string=>`worktree-${sha256.slice(0,16)}.tar`;
+
+/** 🔖️ Reads the manifest of the bootstrap archive and the path of the archive it names; `undefined` when there is none. */
+export async function readBootstrapV1(storeRoot:string):Promise<Readonly<{manifest:BootstrapManifestV1;archive:string}>|undefined>{
+ const paths=bootstrapPathsV1(storeRoot);
+ try{
+  const manifest=JSON.parse(await readFile(paths.manifest,"utf8")) as BootstrapManifestV1;
+  return typeof manifest.archive==="string"&&archivePattern.test(manifest.archive)?{manifest,archive:join(paths.directory,manifest.archive)}:undefined;
+ }catch{return undefined;}
+}
+
+const entriesOf=(archive:string):string=>archive.replace(/\.tar$/u,".entries");
+const entriesLine=(path:string,entry:FleetManifestEntryV1):string=>`${path}\t${entry.sha256}\t${entry.bytes}\t${entry.executable===true?"x":"-"}\n`;
+
+async function pruneArchivesV1(directory:string,keep:ReadonlySet<string>,now:number):Promise<number>{
+ let bytes=0;
+ for(const name of await readdir(directory).catch(()=>[] as string[])){
+  if(!partPattern.test(name)||keep.has(name))continue;
+  const file=join(directory,name),info=await stat(file).catch(()=>undefined);
+  if(info!==undefined&&now-info.mtimeMs>keepArchiveMilliseconds){await rm(file,{force:true});bytes+=info.size;}
+ }
+ return bytes;
+}
+
+async function readEntriesV1(file:string):Promise<Map<string,string>|undefined>{
+ try{
+  const found=new Map<string,string>();
+  for(const line of (await readFile(file,"utf8")).split("\n")){
+   const cut=line.indexOf("\t");
+   if(cut>0)found.set(line.slice(0,cut),line.slice(cut+1));
+  }
+  return found;
+ }catch{return undefined;}
+}
+
+async function volumeV1(directory:string):Promise<Readonly<{free:number;total:number}>|undefined>{
+ try{const info=await statfs(directory);return {free:Number(info.bavail)*Number(info.bsize),total:Number(info.blocks)*Number(info.bsize)};}catch{return undefined;}
+}
+
+const gib=(bytes:number):string=>(bytes/2**30).toFixed(1);
 
 async function put(handle:FileHandle,data:Uint8Array,position:number):Promise<void>{
  let done=0;
@@ -114,51 +161,116 @@ async function copyEntry(handle:FileHandle,file:string,path:string,wanted:FleetM
  return position;
 }
 
-/** 🥾️ Writes `<storeRoot>/v1/bootstrap/worktree.tar` and `manifest.json` from the folded store manifest and the local worktree: one pax tar entry per shared file (links stay to `join`), streamed in 1 MiB chunks, every entry verified against its manifest hash while it is written (a file that is missing, busy, changed or different is skipped and the entry is rewound), staged in `<storeRoot>/v1/tmp` and renamed, tar first and manifest second. */
-export async function writeBootstrapArchiveV1(options:BootstrapOptionsV1,signal?:AbortSignal,sink:ReplicaSinkV1=()=>{}):Promise<BootstrapResultV1>{
+/** 🥾️ Writes `<storeRoot>/v1/bootstrap/worktree-<sha256 prefix>.tar`, `worktree-<same prefix>.entries` and `manifest.json` from the folded store manifest and the local worktree: one pax tar entry per shared file (links stay to `join`), streamed in 1 MiB chunks, every entry verified against its manifest hash while it is written (a file that is missing, busy, changed or different is skipped and the entry is rewound), staged in `<storeRoot>/v1/tmp`. The archive carries no dead or redundant git files: no `tmp_*` or lock file, no `gc.log`, no `multi-pack-index`, and of `.git/objects/pack` one new pack of the objects reachable from the refs (`writeReachablePackV1`, staged in `tmp` and removed after the build; a joiner fetches whatever else it needs from the store), or, when git is missing or fails or `reachable` is off, only the packs of `planPacksV1` (a pack whose objects all lie in a larger kept pack is left out). The extracted tree is a complete repository, `git fsck` confirms. Before it writes anything it (1) sweeps staging files of dead writers (silent for two hours) and archives no manifest names, (2) skips the build and reports `skipped` with reason `unchanged` while the non-pack content that differs from the current archive (its `.entries` sidecar) is below the drift limit and the archive is younger than 24 h (`force` overrides), and (3) estimates the size and refuses with `BootstrapRefusedV1("space")` (event `skipped`, reason `space`) when the volume would keep less than the reserve free; when only the archive that is now being replaced stands in the way (and is older than an hour) it is retired first, so the store never holds more than one archive then. The tar is renamed to its content name first, where no reader looks for it, then the sidecar, and the manifest, which names the tar, is renamed last: that one rename is the only step a reader can observe, so a reader never sees a manifest and an archive that disagree. The archive of the previous manifest stays for an hour for readers that are copying it. */
+export async function writeBootstrapArchiveV1(options:BootstrapOptionsV1&BootstrapPolicyV1,signal?:AbortSignal,sink:ReplicaSinkV1=()=>{}):Promise<BootstrapResultV1>{
  requireOriginIdV1(options.originId);
+ const clock=options.now??Date.now;
+ await reclaimLitterV1(options.storeRoot,{olderThanMilliseconds:litterMilliseconds,now:clock(),signal}).catch(error=>{if(signal?.aborted===true)throw error;});
  const store=storePathsV1(options.storeRoot),paths=bootstrapPathsV1(options.storeRoot),folded=await foldStoreV1(options.storeRoot,signal,sink);
- const wanted=[...folded.manifest].filter(([path,entry])=>entry.operation==="put"&&!unsafe(path)).sort((left,right)=>left[0]<right[0]?-1:left[0]>right[0]?1:0);
- if(wanted.length===0)throw new BootstrapRefusedV1("empty");
+ const plan=await planPacksV1(join(options.worktree,".git","objects","pack"),signal),packed=(path:string):boolean=>path.startsWith(".git/objects/pack/");
+ const eligible=[...folded.manifest].filter(([path,entry])=>entry.operation==="put"&&!unsafe(path)&&!gitPrivateV1(path)&&!packExcludedV1(path,plan)).sort((left,right)=>left[0]<right[0]?-1:left[0]>right[0]?1:0);
+ const plain=eligible.filter(([path])=>!packed(path));
+ if(plain.length===0)throw new BootstrapRefusedV1("empty");
  await mkdir(store.tmp,{recursive:true});await mkdir(paths.directory,{recursive:true});
- for(const name of await readdir(store.tmp).catch(()=>[] as string[])){
-  if(!name.startsWith(`${options.originId}-bootstrap-`))continue;
-  const file=join(store.tmp,name),info=await stat(file).catch(()=>undefined);
-  if(info!==undefined&&Date.now()-info.mtimeMs>staleMilliseconds)await rm(file,{force:true});
- }
- const stem=join(store.tmp,`${options.originId}-bootstrap-${token()}`),archive=`${stem}.tar`,manifest=`${stem}.json`;
- let files=0,bytes=0,skipped=0,sha256="";
- try{
-  const handle=await open(archive,"w");
-  try{
-   let position=0;
-   for(const [index,[path,entry]] of wanted.entries()){
-    signal?.throwIfAborted();
-    const outcome=await copyEntry(handle,absolute(options.worktree,path),path,entry,position,signal);
-    if(typeof outcome==="number"){position=outcome;files++;bytes+=entry.bytes!;}
-    else{skipped++;sink({version:1,event:"skipped",stage:"bootstrap",path,reason:outcome});}
-    if((index+1)%500===0)sink({version:1,event:"progress",stage:"bootstrap",done:index+1,total:wanted.length,bytes});
+ await reclaimStagingV1(options.storeRoot,{olderThanMilliseconds:strayStagingMilliseconds,now:clock()});
+ let previous=await readBootstrapV1(options.storeRoot);
+ await pruneArchivesV1(paths.directory,new Set(previous===undefined?[]:[previous.manifest.archive,entriesOf(previous.manifest.archive)]),clock());
+ if(previous!==undefined){
+  const info=await stat(previous.archive).catch(()=>undefined),before=info===undefined?undefined:await readEntriesV1(join(paths.directory,entriesOf(previous.manifest.archive))),age=clock()-((await stat(paths.manifest).catch(()=>undefined))?.mtimeMs??0);
+  if(info!==undefined&&before!==undefined){
+   let drift=0;
+   for(const [path,entry] of plain)if(before.get(path)!==`${entry.sha256}\t${entry.bytes}\t${entry.executable===true?"x":"-"}`)drift+=entry.bytes!;
+   const limit=options.driftBytes??Math.max(minimumDriftBytes,previous.manifest.bytes/10);
+   if(options.force!==true&&drift<limit&&age<(options.maxAgeMilliseconds??maximumAgeMilliseconds)){
+    sink({version:1,event:"skipped",stage:"bootstrap",reason:"unchanged",bytes:drift});
+    return {hlc:previous.manifest.hlc,files:previous.manifest.files,bytes:previous.manifest.bytes,skipped:0,sha256:previous.manifest.sha256,archive:previous.archive,outcome:"unchanged",packs:plan};
    }
-   await put(handle,tarEndV1(),position);
-   await handle.truncate(position+2*BLOCK);await handle.sync();
-  }finally{await handle.close();}
-  sha256=(await hashFileV1(archive)).sha256;
-  const document:BootstrapManifestV1={version:1,hlc:folded.hlc,files,bytes,sha256};
-  const out=await open(manifest,"w");
-  try{await out.writeFile(JSON.stringify(document));await out.sync();}finally{await out.close();}
-  await rename(archive,paths.archive);
-  await rename(manifest,paths.manifest);
- }catch(error){await rm(archive,{force:true});await rm(manifest,{force:true});throw error;}
- sink({version:1,event:"progress",stage:"bootstrap",done:wanted.length,total:wanted.length,bytes});
- return {hlc:folded.hlc,files,bytes,skipped,sha256,archive:paths.archive};
+  }
+ }
+ const guard=async(needed:number):Promise<void>=>{
+  const volume=await (options.space??volumeV1)(store.tmp);
+  if(volume===undefined)return;
+  const reserve=options.reserveBytes??Math.ceil(volume.total*guardFraction)+guardExtraBytes;
+  let free=volume.free;
+  if(free-needed<reserve&&previous!==undefined){
+   const info=await stat(previous.archive).catch(()=>undefined),manifestInfo=await stat(paths.manifest).catch(()=>undefined),side=await stat(join(paths.directory,entriesOf(previous.manifest.archive))).catch(()=>undefined);
+   if(info!==undefined&&manifestInfo!==undefined&&clock()-manifestInfo.mtimeMs>keepArchiveMilliseconds&&free+info.size+(side?.size??0)-needed>=reserve){
+    await rm(paths.manifest,{force:true});await rm(previous.archive,{force:true});await rm(join(paths.directory,entriesOf(previous.manifest.archive)),{force:true});
+    free+=info.size+(side?.size??0);
+    sink({version:1,event:"retired",stage:"bootstrap",reason:"single-slot",bytes:info.size});
+    previous=undefined;
+   }
+  }
+  if(free-needed<reserve){
+   sink({version:1,event:"skipped",stage:"bootstrap",reason:"space",bytes:needed});
+   throw new BootstrapRefusedV1("space",{need:gib(needed),free:gib(free),reserve:gib(reserve)});
+  }
+ };
+ const size=(list:readonly (readonly [string,FleetManifestEntryV1])[]):number=>list.reduce((sum,[,entry])=>sum+entry.bytes!+tarOverhead,2*BLOCK);
+ const stem=join(store.tmp,`${options.originId}-bootstrap-${token()}`),archive=`${stem}.tar`,manifest=`${stem}.json`,side=`${stem}.entries`,staged=`${stem}.pk`;
+ const sources=new Map<string,string>();
+ let wanted=eligible,reach:Awaited<ReturnType<typeof writeReachablePackV1>>;
+ try{
+  if(options.reachable!==false&&await stat(join(options.worktree,".git","HEAD")).then(()=>true,()=>false)){
+   await guard(size(plain)+2**30);
+   sink({version:1,event:"progress",stage:"bootstrap-pack",done:0,total:1});
+   reach=await writeReachablePackV1(options.worktree,staged,signal);
+   sink({version:1,event:"progress",stage:"bootstrap-pack",done:1,total:1,...reach===undefined?{}:{bytes:reach.bytes}});
+  }
+  if(reach!==undefined){
+   const extra:[string,FleetManifestEntryV1][]=[];
+   for(const [suffix,file] of [["pack",reach.pack],["idx",reach.idx]] as const){
+    const path=`.git/objects/pack/pack-${reach.hash}.${suffix}`,info=await stat(file),hashed=await hashFileV1(file);
+    sources.set(path,file);
+    extra.push([path,{operation:"put",bytes:info.size,sha256:hashed.sha256,executable:false} as unknown as FleetManifestEntryV1]);
+   }
+   wanted=[...plain,...extra].sort((left,right)=>left[0]<right[0]?-1:left[0]>right[0]?1:0);
+   await guard(size(wanted)+reach.bytes);
+  }else await guard(size(wanted));
+  let files=0,bytes=0,skipped=0,sha256="";
+  const lines:string[]=[];
+  try{
+   const handle=await open(archive,"w");
+   try{
+    let position=0;
+    for(const [index,[path,entry]] of wanted.entries()){
+     signal?.throwIfAborted();
+     const outcome=await copyEntry(handle,sources.get(path)??absolute(options.worktree,path),path,entry,position,signal);
+     if(typeof outcome==="number"){position=outcome;files++;bytes+=entry.bytes!;if(!packed(path))lines.push(entriesLine(path,entry));}
+     else{skipped++;sink({version:1,event:"skipped",stage:"bootstrap",path,reason:outcome});}
+     if((index+1)%500===0)sink({version:1,event:"progress",stage:"bootstrap",done:index+1,total:wanted.length,bytes});
+    }
+    await put(handle,tarEndV1(),position);
+    await handle.truncate(position+2*BLOCK);await handle.sync();
+   }finally{await handle.close();}
+   sha256=(await hashFileV1(archive)).sha256;
+   const name=bootstrapArchiveNameV1(sha256),document:BootstrapManifestV1={version:1,hlc:folded.hlc,files,bytes,sha256,archive:name};
+   const sidecar=await open(side,"w");
+   try{await sidecar.writeFile(lines.join(""));await sidecar.sync();}finally{await sidecar.close();}
+   const out=await open(manifest,"w");
+   try{await out.writeFile(JSON.stringify(document));await out.sync();}finally{await out.close();}
+   await rename(archive,join(paths.directory,name));
+   await rename(side,join(paths.directory,entriesOf(name)));
+   await rename(manifest,paths.manifest);
+   const keep=new Set([name,entriesOf(name)]),moment=new Date(clock());
+   if(previous!==undefined&&previous.manifest.archive!==name)for(const old of [previous.manifest.archive,entriesOf(previous.manifest.archive)]){keep.add(old);await utimes(join(paths.directory,old),moment,moment).catch(()=>{});}
+   await pruneArchivesV1(paths.directory,keep,clock());
+  }catch(error){await rm(archive,{force:true});await rm(manifest,{force:true});await rm(side,{force:true});throw error;}
+  sink({version:1,event:"progress",stage:"bootstrap",done:wanted.length,total:wanted.length,bytes});
+  return {hlc:folded.hlc,files,bytes,skipped,sha256,archive:join(paths.directory,bootstrapArchiveNameV1(sha256)),outcome:"built",packs:plan};
+ }finally{await discardReachablePackV1(staged);}
 }
 
-/** 🔄️ Rebuilds the archive now and then every `minutes`, until `signal` aborts; a failed build is reported as an `error` event and retried after at most two minutes, so the relay of a group server never stops for it and a store that is still empty gets its archive soon after the first files arrive. Staging files of a crashed build (older than six hours) are removed by the next build. */
-export async function refreshBootstrapV1(options:BootstrapOptionsV1&Readonly<{minutes:number}>,signal:AbortSignal,sink:ReplicaSinkV1=()=>{}):Promise<void>{
+/** 🔄️ Rebuilds the archive now and then every `minutes` unless `writeBootstrapArchiveV1` finds it unchanged, until `signal` aborts; a failed build is reported as an `error` event and retried after at most two minutes (ten when the disk is too full), so the relay of a group server never stops for it and a store that is still empty gets its archive soon after the first files arrive. Staging files of dead writers (silent for two hours) are removed by every round. */
+export async function refreshBootstrapV1(options:BootstrapOptionsV1&BootstrapPolicyV1&Readonly<{minutes:number}>,signal:AbortSignal,sink:ReplicaSinkV1=()=>{}):Promise<void>{
  while(!signal.aborted){
   let minutes=options.minutes;
-  try{await writeBootstrapArchiveV1(options,signal,sink);}
-  catch(error){if(signal.aborted)break;minutes=Math.min(minutes,retryMinutes);sink({version:1,event:"error",stage:"bootstrap",message:error instanceof BootstrapRefusedV1?error.message:error instanceof Error?error.message:String(error)});}
+  try{await writeBootstrapArchiveV1({...options,force:false},signal,sink);}
+  catch(error){
+   if(signal.aborted)break;
+   minutes=Math.min(minutes,error instanceof BootstrapRefusedV1&&error.key==="space"?spaceRetryMinutes:retryMinutes);
+   sink({version:1,event:"error",stage:"bootstrap",message:error instanceof BootstrapRefusedV1?`${error.message} ${JSON.stringify(error.variables)}`:error instanceof Error?error.message:String(error)});
+  }
   await new Promise<void>(done=>{
    const finish=()=>{clearTimeout(timer);signal.removeEventListener("abort",finish);done();};
    const timer=setTimeout(finish,minutes*60_000);signal.addEventListener("abort",finish,{once:true});
@@ -172,7 +284,9 @@ async function matches(worktree:string,entry:FleetScanEntryV1,wanted:FleetManife
  return false;
 }
 
-async function healNamesV1(worktree:string,ignore:FleetIgnoreV1,signal:AbortSignal|undefined,sink:ReplicaSinkV1):Promise<void>{
+/** 🔤️ Renames every shared name that is not NFC (macOS `tar` extracts decomposed names) to its NFC spelling, parents before their children, until none is left; a name whose NFC spelling already exists beside it stays and remains refused by the path policy. Every rename is reported as a `skipped` event of `stage` with the reason `renamed-to-nfc` and the new path, and the new paths are returned. `bootstrap-settle` and `join --adopt` both start with it. */
+export async function normaliseNamesV1(worktree:string,ignore:FleetIgnoreV1,signal:AbortSignal|undefined,sink:ReplicaSinkV1,stage:"settle"|"adopt"):Promise<readonly string[]>{
+ const done:string[]=[];
  for(let round=0;round<64;round++){
   const todo=(await scanSharedV1(worktree,ignore,signal)).refused.filter(item=>item.reason==="not-nfc").map(item=>item.path);
   let renamed=0;
@@ -180,11 +294,12 @@ async function healNamesV1(worktree:string,ignore:FleetIgnoreV1,signal:AbortSign
    const clean=path.normalize("NFC"),directory=dirname(absolute(worktree,path)),siblings=await readdir(directory).catch(()=>[] as string[]);
    if(siblings.includes(clean.slice(clean.lastIndexOf("/")+1)))continue;
    await rename(absolute(worktree,path),absolute(worktree,clean));
-   renamed++;
-   sink({version:1,event:"skipped",stage:"settle",path:clean,reason:"renamed-to-nfc"});
+   renamed++;done.push(clean);
+   sink({version:1,event:"skipped",stage,path:clean,reason:"renamed-to-nfc"});
   }
-  if(renamed===0)return;
+  if(renamed===0)break;
  }
+ return done;
 }
 
 /** 🧹️ Prepares a worktree extracted from a bootstrap archive for `join`: it folds the store and moves every shared file that differs from it (changed since the archive was built, deleted since, rewritten by a tool) to `.cache/f/lost/bootstrap-<ms>/<path>`, so that `join` finds only matching files and materialises the rest. It refuses a worktree that is already joined and a store without files, and never deletes. */
@@ -196,22 +311,24 @@ export async function settleBootstrapV1(options:Readonly<{worktree:string;storeR
  if(![...folded.manifest.values()].some(entry=>entry.operation==="put"))throw new BootstrapRefusedV1("empty");
  const rules=folded.manifest.get(".gitignore"),text=rules?.operation==="put"?await readFile(blobPathV1(options.storeRoot,rules.sha256!),"utf8"):await readFile(join(options.worktree,".gitignore"),"utf8").catch(()=>"");
  const compiled=compileIgnoreV1(text),ignore:FleetIgnoreV1={digest:compiled.digest,ignores:(path,isDirectory)=>path===".cache/f"||path.startsWith(".cache/f/")||compiled.ignores(path,isDirectory),child:(path,isDirectory)=>path===".cache/f"||path.startsWith(".cache/f/")||compiled.child!(path,isDirectory)};
- await healNamesV1(options.worktree,ignore,signal,sink);
+ await normaliseNamesV1(options.worktree,ignore,signal,sink,"settle");
  const scan=await scanSharedV1(options.worktree,ignore,signal),folder=join(options.worktree,".cache","f","lost",`bootstrap-${(options.now??Date.now)()}`);
  let kept=0,moved=0;
  for(const [index,entry] of scan.entries.entries()){
   signal?.throwIfAborted();
   if(await matches(options.worktree,entry,folded.manifest.get(entry.path)))kept++;
   else{
-   const target=absolute(folder,entry.path);
-   await mkdir(dirname(target),{recursive:true});
-   await rename(absolute(options.worktree,entry.path),target);
-   const wanted=folded.manifest.get(entry.path);
-   if(wanted?.operation==="put"){
-    const restored=absolute(options.worktree,entry.path);
-    await copyFile(blobPathV1(options.storeRoot,wanted.sha256!),restored);
-    if(!windows)await chmod(restored,wanted.executable?0o755:0o644);
+   const target=absolute(folder,entry.path),wanted=folded.manifest.get(entry.path),restored=absolute(options.worktree,entry.path),staged=wanted?.operation==="put"?join(options.worktree,".cache","f","tmp",`settle-${token()}`):undefined;
+   if(staged!==undefined){
+    try{
+     await mkdir(dirname(staged),{recursive:true});
+     if(await copyVerifiedV1(blobPathV1(options.storeRoot,wanted!.sha256!),staged,wanted!.sha256!)==="corrupt")throw new BootstrapRefusedV1("blob",{path:entry.path});
+     if(!windows)await chmod(staged,wanted!.executable?0o755:0o644);
+    }catch(error){await rm(staged,{force:true});throw error;}
    }
+   await mkdir(dirname(target),{recursive:true});
+   await rename(restored,target);
+   if(staged!==undefined)await rename(staged,restored);
    moved++;
    sink({version:1,event:"skipped",stage:"settle",path:entry.path,reason:"moved-aside"});
   }
@@ -238,7 +355,8 @@ export async function runBootstrapCommandV1(operation:"bootstrap-archive"|"boots
   if(operation==="bootstrap-archive"){
    if(machine===undefined)throw new BootstrapRefusedV1("identity");
    context.say("bootstrap.archive.start",{worktree,store:storeRoot});
-   const result=await writeBootstrapArchiveV1({worktree,storeRoot,originId:machine.originId},context.signal,sink);
+   const result=await writeBootstrapArchiveV1({worktree,storeRoot,originId:machine.originId,force:values["--force"]!==undefined},context.signal,sink);
+   if(result.outcome==="unchanged"){context.say("bootstrap.archive.unchanged",{files:result.files,bytes:context.format(result.bytes),sha256:result.sha256});return 0;}
    context.say("bootstrap.archive.done",{files:result.files,bytes:context.format(result.bytes),skipped:result.skipped,sha256:result.sha256});
    return 0;
   }

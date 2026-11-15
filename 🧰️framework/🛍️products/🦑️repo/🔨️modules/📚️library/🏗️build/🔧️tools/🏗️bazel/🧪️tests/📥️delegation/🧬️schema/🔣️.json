@@ -27,6 +27,8 @@
       "enum": [
         "none",
         "valid",
+        "operation",
+        "forged-operation",
         "malformed"
       ]
     },

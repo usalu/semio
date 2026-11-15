@@ -6,7 +6,8 @@ import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {GENERATION_POLICY_V1,canonicalJsonV1,createGenerationStoreV1} from "../../🟨️.mjs";
-import {IDENTITY,IMPLEMENTATION,createCompute,createHolds,createMembership,ringFiles,seed} from "../🏃️world/🟦️.ts";
+import {IDENTITY,IMPLEMENTATION,createCompute,createHolds,createMembership,createMockHost,ringFiles,seed} from "../🏃️world/🟦️.ts";
+import {loadGenerationGraphV1} from "../../🔌️load/🟨️.mjs";
 
 const here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"../🐍️.py"),python=Bun.which("python3")??Bun.which("python");
 const scratch=()=>mkdtempSync(join(realpathSync(tmpdir()),"graph-plan-once-")),sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -100,4 +101,27 @@ test("a custody taken within the declared bound reuses the plan, one beyond it d
    expect(result.built).toBe(true);expect(counters.walks).toBe(walks);
   }
  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+/** 🪞️ A stale read of one command (shared read, then the builder) verifies the tree once when the change cursor proves nothing changed in between, and again when it does not: counted by the membership walks and the fact rows each pass checks, with the graph equal to a command that planned twice. */
+async function staleRead(options:{cursor:boolean;during?:string}){
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(12));await loadGenerationGraphV1(createMockHost(dir).host);await sleep(20);
+  await writeFile(join(dir,"pkg/p3/src/index.ts"),"import \"@syn/p4\";\nexport const edited=1;\n");
+  const passes={walks:0,rows:0},mock=createMockHost(dir,{passes,cursor:options.cursor,...options.during?{prefetch:async()=>{await sleep(20);await writeFile(join(dir,options.during!),"import \"@syn/p6\";\nexport const edited=2;\n");}}:{}}),result=await loadGenerationGraphV1(mock.host);
+  return{passes,reinferred:result.stats.ownersReinferred,graph:normalized((result.graph as {projects:unknown}).projects),log:mock.log.flatMap(row=>row.full).sort()};
+ }finally{rmSync(dir,{recursive:true,force:true});}
+}
+
+test("a stale read plans once when the cursor proves no change between the shared read and the builder, twice otherwise, with the same graph",async()=>{
+ const twice=await staleRead({cursor:false}),once=await staleRead({cursor:true});
+ expect(twice.passes.walks).toBe(2);expect(once.passes.walks).toBe(1);
+ expect(once.passes.rows).toBeLessThan(twice.passes.rows);expect(once.passes.rows*2).toBeLessThanOrEqual(twice.passes.rows+1);
+ expect(once.reinferred).toBe(1);expect(twice.reinferred).toBe(1);expect(once.log).toEqual(["p3"]);expect(once.graph).toEqual(twice.graph);
+});
+
+test("[adversarial] a file edited between the shared read and the builder breaks the proof: the builder plans again and builds it",async()=>{
+ const edited=await staleRead({cursor:true,during:"pkg/p5/src/index.ts"}),baseline=await staleRead({cursor:false,during:"pkg/p5/src/index.ts"});
+ expect(edited.passes.walks).toBe(2);expect(edited.reinferred).toBe(2);expect(edited.log).toEqual(["p3","p5"]);expect(edited.graph).toEqual(baseline.graph);
 });

@@ -1,0 +1,284 @@
+     34 DIN V 4108-6
+     23 GEG
+     18 JAZ
+     18 DIN citation
+     11 DIN V 4108-6:2003-06
+     10 IWU 2015
+     10 DIN EN ISO 6946:2018-03
+      8 GEG 2024
+      8 DIN V 18599-10
+      8 DIN EN 12831-1
+      8 DIN EN 12831
+      7 VDI 2078:2015-06
+      7 IWU-Typ EFH_E
+      7 DIN V 18599
+      6 JAZ}
+      6 IWU-Typ EFH_I
+      6 IWU type EFH_I
+      6 IWU
+      6 GEG-Referenzgebäudes
+      6 GEG reference building
+      6 DING = (
+      6 DIN EN 12831-1:2017-09
+      6 DIN 1946-6
+      5 IWU Deutsche Wohngebäudetypologie 2015
+      4 VDI 3807 Blatt 1
+      4 Maas 1995
+      4 IWU German residential building typology 2015
+      4 GModG 2026 (vormals GEG
+      4 GEGundNormen
+      4 DIN V 4108-6.
+      4 DIN V 18599-5
+      4 DIN V 18599-1:2018-09
+      4 DIN EN 12831-1 · VDI 2078
+      4 DIN 51603-1
+      4 DIN 4108-2
+      3 VDI 2078:2015-06 · innere Wärmequellen
+      3 SCOP
+      3 IWU type EFH_E
+      3 GEG Anlage 10
+      3 GEG (seit 7/2026 GModG
+      3 DING
+      3 DIN V 18599 |
+      3 DIN EN ISO 6946
+      3 DIN EN 16798-7
+      3 DIN
+      2 VDI 2078:2015-06 · Kühllast (Zuluftstrom
+      2 VDI 2052
+      2 Pettenkofer
+      2 ISBN 978-3-658-51570-6
+      2 ISBN 978-3-658-44973-5
+      2 GModG
+      2 GEG Anlage 4
+      2 DING``
+      2 DIN.
+      2 DIN V 18599:2018-09.
+      2 DIN V 18599-5:2018-09
+      2 DIN V 18599-5.
+      2 DIN V 18599-2:2018-09
+      2 DIN EN 410 · } g_{
+      2 DIN EN 410
+      2 DIN EN 16798-1
+      2 DIN EN 14825.
+      2 DIN EN 12831.
+      2 DIN 4108-2:2013-02 · Abschn. 8 Sommerlicher Wä
+      2 DIN 4108-2.
+      2 DIN 4108
+      2 DIN 1946-4:2018-09
+      2 DIN 1946-4
+      2 DIN 18032-1
+      2 Bundesgesundheitsblatt 51 (2008
+      1 Willems WM
+      1 VDI2078 design power rather than annual cooling
+      1 VDI 6022 Blatt 1 · Hygiene (RLT-Anlagen
+      1 VDI 4650-1:2024-02
+      1 VDI 4650 |
+      1 VDI 4650 part 1 · DIN EN 14825 (SCOP
+      1 VDI 4650 part 1
+      1 VDI 4650 Blatt 1:2024-02
+      1 VDI 4650 Blatt 1 · DIN EN 14825 (SCOP
+      1 VDI 4650 Blatt 1 (2024-02
+      1 VDI 4650 Blatt 1
+      1 VDI 4650
+      1 VDI 4645:2023-04
+      1 VDI 4645:2023-
+      1 VDI 2087
+      1 VDI 2078:2015-06 · innere Wärmequellen (Person
+      1 VDI 2078:2015-06 · innere Wärmequellen (Gerät
+      1 VDI 2078:2015-06 · Kühllast opake Bauteile
+      1 VDI 2078:2015-06 · Kühllast Außenluft
+      1 VDI 2078:2015-06 · Kühllast (Solarstrahlung
+      1 VDI 2078:2015-06 · Kühllast
+      1 VDI 2078:2015-06 practice
+      1 VDI 2078:2015-06 (cooling load
+      1 VDI 2078. The
+      1 VDI 2078.
+      1 VDI 2078 berechnet.
+      1 VDI 2078 (implizit
+      1 VDI 2078
+      1 VDI
+      1 Stricker D (2024
+      1 Schild K
+      1 SCOP: DIN EN 14825
+      1 Pettenkoferwert
+      1 Pettenkofer.
+      1 Pettenkofer limit: M. v. Pettenkofer
+      1 Pettenkofer limit.
+      1 Pettenkofer limit
+      1 Pettenkofer 1858 · Bundesgesundheitsbl. 51 (2008
+      1 Pettenkofer 1858 (*Ueber den Luftwechsel in
+      1 JAZ}}
+      1 JAZ: delivered heat per electricity.
+      1 JAZ** | Jahresarbeitszahl
+      1 JAZ — for air-source units often around three.
+      1 JAZ — bei Luft-Wärmepumpen oft rund 3.
+      1 JAZ in mathrm
+      1 JAZ = seasonal performance factor (VDI 4650 Blat
+      1 JAZ = Jahresarbeitszahl (VDI 4650 Blatt 1
+      1 JAZ (VDI 4650-1:2024-02
+      1 JAZ (VDI 4650 Blatt 1
+      1 IWU-Typs EFH_E
+      1 IWU-Typ MFH_B
+      1 IWU-Typ EFH_J mit 1
+      1 IWU-Typ EFH_I mit 1
+      1 IWU-Paket 2
+      1 IWU-Modernisierungspaket 2 für den Typ MFH_B (0
+      1 IWU type MFH_B
+      1 IWU type EFH_J with 1.14 W/(m²·K
+      1 IWU type EFH_I with 1.78 W/(m²·K
+      1 IWU package 2
+      1 IWU calculates 29.9 kWh/(m²·a
+      1 IWU calculates 21.7 kWh/(m²·a
+      1 IWU berechnet 29
+      1 IWU berechnet 21
+      1 IWU German residential building typology 2015.
+      1 IWU Deutsche Wohngebäudetypologie 2015.
+      1 IWU (Institute for Housing and Environment
+      1 Gebäudemodernisierungsgesetz — sets the target.
+      1 Gebäudemodernisierungsgesetz fortgeführt — setzt das Ziel.
+      1 Gebäudemodernisierungsgesetz (GModG
+      1 GModG: § 15 Abs. 1
+      1 GModG — Gebäudeenergiegesetz
+      1 GModG — Building Energy Act
+      1 GModG 2026 Anlage 4
+      1 GEG}
+      1 GEGundNormen` | GEG → DIN V 18599 → Nachbarn
+      1 GEGundNormen(Scene
+      1 GEGundNormen = _scene.Beat1_GEGundNormen
+      1 GEG-Referenzgebäudes plus Lüftung mit Wärmer�
+      1 GEG-Nachweis: standardisiertes Referenzklima
+      1 GEG §14 (German Buildings Energy Act
+      1 GEG §14
+      1 GEG § 85
+      1 GEG § 15 requirement for new residential builds
+      1 GEG § 15 Abs. 1
+      1 GEG still allows an envelope loss H′T up to th
+      1 GEG since 29 July 2026: Gebäudemodernisierungsg
+      1 GEG seit 29.07.2026: Gebäudemodernisierungsgese
+      1 GEG reference window
+      1 GEG reference roof
+      1 GEG reference front door
+      1 GEG reference floor slab
+      1 GEG reference external wall
+      1 GEG reference building plus heat-recovery ventil
+      1 GEG proof: standardised reference climate
+      1 GEG limit | `🏭️primary-energy/🐍️.py` |
+      1 GEG limit of 66 kWh/(m²·a
+      1 GEG erlaubt weiterhin einen Hüllflächenverlust
+      1 GEG begrenzt}
+      1 GEG Anlage 10 classes
+      1 GEG 2024 with the minimum envelope and a heat pu
+      1 GEG 2024 with external blinds (DIN 4108-2:2013-0
+      1 GEG 2024 mit Mindest-Gebäudehülle und Wärmepu
+      1 GEG 2024 mit Außenjalousien (DIN 4108-2:2013-02
+      1 GEG (now GModG
+      1 DIN_V_18599
+      1 DIN_AT = np.array([4.6
+      1 DIN_AT
+      1 DING:
+      1 DIN/TS 18599:2025-10
+      1 DIN/TS 18599.
+      1 DIN/TS 18599-2:2025-10
+      1 DIN/TS 18599-1:2025-10 · GEG § 20 still cites
+      1 DIN/TS 18599-1:2025-10 · GEG § 20 nennt noch 2
+      1 DIN/TS 18599 überarbeitet.
+      1 DIN/TS 12831-1:2020-04
+      1 DIN. Both lines give the same result
+      1 DIN. Beide Zeilen liefern dasselbe Ergebnis
+      1 DIN number below
+      1 DIN V 4701-10:2003-08 (symbols `Q_h`
+      1 DIN V 4701-10:2003-08
+      1 DIN V 4701-10: Übergabe
+      1 DIN V 4108-6:2003-06: 3.2 symbols
+      1 DIN V 4108-6. Eine Auslegungsheizlast nach DIN EN
+      1 DIN V 4108-6. A design heating load after DIN EN 1
+      1 DIN V 4108-6 setzt für Wohnnutzung $q_i = 5
+      1 DIN V 4108-6 method (6.4 Solare Wärmegewinne
+      1 DIN V 4108-6 assumes $q_i = 5
+      1 DIN V 4108-6 (Annex D.2
+      1 DIN V 4108-6 (Anhang D.2
+      1 DIN V 18599:2018-09 — Energy performance assessm
+      1 DIN V 18599:2018-09 — Energetische Bewertung
+      1 DIN V 18599:2018-09 (Teile 1/2/5/6/10
+      1 DIN V 18599:2018-09
+      1 DIN V 18599. Eine Auslegungsheizlast nach DIN EN 1
+      1 DIN V 18599. A design heating load after DIN EN 12
+      1 DIN V 18599-2:2016-10 · Interne Wärmequellen
+      1 DIN V 18599-2:2016-10 (internal heat sources
+      1 DIN V 18599-10:2018-09 · Abschn. 5
+      1 DIN V 18599-10 style point loads
+      1 DIN V 18599-1 · DIN EN 12831-1
+      1 DIN V 18599-1 und GEG pauschal an.
+      1 DIN V 18599-1 and the GEG.
+      1 DIN V 18599 / GEG calculation
+      1 DIN V 18599 / GEG
+      1 DIN EN ISO 6946 for the R- and U-value of a
+      1 DIN EN ISO 6946 for building-component heat transfer
+      1 DIN EN ISO 6946 fasst Leitung
+      1 DIN EN ISO 13789:2017-10
+      1 DIN EN ISO 13789 for the envelope-wide transmission
+      1 DIN EN ISO 13786 · heat storage}
+      1 DIN EN ISO 13786 · Wärmespeicherung}
+      1 DIN EN ISO 13786 |
+      1 DIN EN ISO 13786
+      1 DIN EN 410 |
+      1 DIN EN 410 next to it. Added in absolute frame coor
+      1 DIN EN 308
+      1 DIN EN 16798-3.
+      1 DIN EN 16798-3
+      1 DIN EN 16798-1:2022-03 · Anh. B.2
+      1 DIN EN 16798-1:2022-03 (annex B.2
+      1 DIN EN 16798-1 (indoor air quality
+      1 DIN EN 14825 · DIN EN 410
+      1 DIN EN 14511 |
+      1 DIN EN 14511
+      1 DIN EN 12831-1:2017-09 Abschn. 6 with DIN/TS 12831-
+      1 DIN EN 12831-1 — which calls it $
+      1 DIN EN 12831-1 · DIN EN 16798-1
+      1 DIN EN 12831-1 · DIN 1946-4
+      1 DIN EN 12831-1 where
+      1 DIN EN 12831-1 berechnet — dort heißt sie $
+      1 DIN EN 12831-1 (Q̇_V = V̇ · c_Luft · Δθ
+      1 DIN EN 12831-1 (Q̇_V = V · n · c_Luft · Δθ
+      1 DIN EN 12831 |
+      1 DIN 4108: $0{
+      1 DIN 4108: $0.035
+      1 DIN 4108-3 |
+      1 DIN 4108-2:2026-05 (replaces 2013-02
+      1 DIN 4108-2:2026-05
+      1 DIN 4108-2:2013-02 · Abschn. 8
+      1 DIN 4108-2:2013-02 (section 8 summer heat protec
+      1 DIN 4108-2:2013-02 (section 8
+      1 DIN 4108-2:2013-02 (Abschn. 8
+      1 DIN 4108-2:2013-02
+      1 DIN 4108-2: sun protection
+      1 DIN 4108-2: Sonnenschutz
+      1 DIN 4108-2/-3
+      1 DIN 4108-2 · DIN EN ISO 13786
+      1 DIN 4108-2 |
+      1 DIN 4108-2 nachgewiesen.
+      1 DIN 4108-2 for the envelope insulation requireme
+      1 DIN 4108 verlangt trotzdem einen Mindestwärmesc
+      1 DIN 4108 supplement 2.
+      1 DIN 4108 still requires a minimum envelope resis
+      1 DIN 4108 Beiblatt 2.
+      1 DIN 4108 Beiblatt 2
+      1 DIN 4108 Bbl. 2:2019-06 · DIN V 18599-2
+      1 DIN 1946-7 requires at least 25 m³/h of outdoo
+      1 DIN 1946-7 fordert mindestens 25 m³/h Außenlu
+      1 DIN 1946-6: recovery cuts winter ventilation hea
+      1 DIN 1946-6: mechanische WRG senkt den Lüftungsw
+      1 DIN 1946-6: mechanical recovery can cut the vent
+      1 DIN 1946-6: WRG senkt den Winter-Lüftungswärme
+      1 DIN 1946-6.
+      1 DIN 1946-6 |
+      1 DIN 1946-6 verlangt −0
+      1 DIN 1946-6 requires −0.001·A² + 1.15·A + 20
+      1 DIN 1946-6 (ventilation of dwellings
+      1 DIN 1946-4 — its air is renewed every $3
+      1 DIN 1946-4 verlangt 60 m³/(h·m²
+      1 DIN 1946-4 requires 60 m³/(h·m²
+      1 DIN 1946-4 etwa $20
+      1 DIN 18380:2019-09
+      1 Bohne M (2026
+      1 Bohne D

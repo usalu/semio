@@ -1,0 +1,17 @@
+Pre-run facts, 2026-11-14T16:57:38Z
+- replica code digest (.cache/f/health.json): 39e3688eb315d48831772ca305d78bcb6f35975794444da47750bc5fa7459759, store ok, daemon pid 96303
+- `ps -axo pid,ppid,etime,rss,args` lines of `repo show projects` or `repo service host` processes:
+     8384     1       02:14 448656 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+     8386  8384       02:12 400240 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex
+  (2 process(es))
+- last 8 lines of .cache/f/sidecars/build-agent.log (last written 2026-11-14 17:47:19 local):
+    2026-11-14T16:46:18.468Z joining http://192.168.178.70:8981 offering rustc for 3 target(s)
+    2026-11-14T16:46:18.516Z worker sandbox: darwin-sandbox confined network denied
+    2026-11-14T16:46:18.521Z worker registered: cb70c2bd-c10f-472f-928a-404779c70970 cache http://192.168.178.70:6094
+    2026-11-14T16:47:18.096Z agent code changed, restarting
+    2026-11-14T16:47:18.100Z worker stopped: ueli-workstation-mac-mini-m4-16gb-256gb-03-lan.fritz.box-4967
+    2026-11-14T16:47:19.172Z joining http://192.168.178.70:8981 offering rustc for 3 target(s)
+    2026-11-14T16:47:19.260Z worker sandbox: darwin-sandbox confined network denied
+    2026-11-14T16:47:19.285Z worker registered: ebe16378-2d6a-4b2e-9cb3-ebdf91d94182 cache http://192.168.178.70:6094
+- memory pressure level 1, free disk 100Gi
+- the two processes above, arguments after the script path: 8384 = repo service host run  (parent 1, the resident graph service started by the stopped try 3 of round 2; 2 min 14 s old, so not older than one hour and not a sidecar child); 8386 is its child.

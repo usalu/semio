@@ -292,7 +292,7 @@ pub fn evaluate_scoped(document: &Din4108Snapshot, scope: Scope<'_>) -> CheckRep
     for (_, element) in document.elements.iter().enumerate().filter(|(i, _)| scope.admits("elements", *i)) {
         report.push(part_2::check_minimum_r(element, &document.usage, document.t_int_c));
         report.push(part_2::check_surface_mass(element));
-        report.push(part_2::check_f_rsi(element));
+        report.push(part_2::check_f_rsi(element, document.t_int_c, document.rh_int));
         report.push(part_3::check_glaser(element));
         report.push(part_3::check_drying_reserve(element));
         report.push(part_6::check_u_value(element, &document.usage, document.t_int_c));

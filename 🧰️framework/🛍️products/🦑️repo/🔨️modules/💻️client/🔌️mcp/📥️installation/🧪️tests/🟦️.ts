@@ -8,7 +8,7 @@ import { transformSync } from "esbuild";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
 import { compileJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-const source=readFileSync(new URL("../../📜️script.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("actual-native-installer.ts",source,ts.ScriptTarget.Latest,true),policy=schema.$defs.Protocol.const;
+const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("actual-native-installer.ts",source,ts.ScriptTarget.Latest,true),policy=schema.$defs.Protocol.const;
 test("native discovery stays per-user across a shared checkout",()=>{
  const db=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema.$defs.ReceiptCase);
  try{for(const compiler of ["typescript","esbuild"]as const){const plan=actual("nativeRepoInstallationPlanV1",{installationPolicy:policy,posix,win32},compiler);

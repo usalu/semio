@@ -1,0 +1,1803 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "solids": [
+  {
+   "name": "box",
+   "solid": {
+    "id": "box",
+    "node": "root",
+    "material": "m",
+    "kind": "box",
+    "size": [
+     0.4,
+     0.3,
+     0.2
+    ]
+   },
+   "expected": {
+    "volume": 0.024,
+    "volumeTolerance": 1e-09,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "ellipsoid",
+   "solid": {
+    "id": "ellipsoid",
+    "node": "root",
+    "material": "m",
+    "kind": "ellipsoid",
+    "radii": [
+     0.3,
+     0.2,
+     0.1
+    ]
+   },
+   "expected": {
+    "volume": 0.025132741228718343,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "capsule",
+   "solid": {
+    "id": "capsule",
+    "node": "root",
+    "material": "m",
+    "kind": "capsule",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0,
+     0.5,
+     0
+    ],
+    "r0": 0.1,
+    "r1": 0.1
+   },
+   "expected": {
+    "volume": 0.019896753472735357,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "revolve-cylinder-on-axis",
+   "solid": {
+    "id": "revolve-cylinder-on-axis",
+    "node": "root",
+    "material": "m",
+    "kind": "revolve",
+    "profile": [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      0.1
+     ],
+     [
+      0.5,
+      0.1
+     ],
+     [
+      0.5,
+      0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   "expected": {
+    "volume": 0.015707963267948967,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "revolve-open-profile-is-filled",
+   "solid": {
+    "id": "revolve-open-profile-is-filled",
+    "node": "root",
+    "material": "m",
+    "kind": "revolve",
+    "profile": [
+     [
+      0,
+      0.1
+     ],
+     [
+      0.5,
+      0.1
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   "expected": {
+    "volume": 0.015707963267948967,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "revolve-shell-without-repeat-is-filled",
+   "solid": {
+    "id": "revolve-shell-without-repeat-is-filled",
+    "node": "root",
+    "material": "m",
+    "kind": "revolve",
+    "profile": [
+     [
+      0,
+      0.09
+     ],
+     [
+      0,
+      0.1
+     ],
+     [
+      0.5,
+      0.1
+     ],
+     [
+      0.5,
+      0.09
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   "expected": {
+    "volume": 0.015707963267948967,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "revolve-shell-with-repeat-is-hollow",
+   "solid": {
+    "id": "revolve-shell-with-repeat-is-hollow",
+    "node": "root",
+    "material": "m",
+    "kind": "revolve",
+    "profile": [
+     [
+      0,
+      0.09
+     ],
+     [
+      0,
+      0.1
+     ],
+     [
+      0.5,
+      0.1
+     ],
+     [
+      0.5,
+      0.09
+     ],
+     [
+      0,
+      0.09
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   "expected": {
+    "volume": 0.002984513020910304,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "revolve-half-sweep",
+   "solid": {
+    "id": "revolve-half-sweep",
+    "node": "root",
+    "material": "m",
+    "kind": "revolve",
+    "profile": [
+     [
+      0,
+      0
+     ],
+     [
+      0,
+      0.1
+     ],
+     [
+      0.5,
+      0.1
+     ],
+     [
+      0.5,
+      0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "sweepRad": 3.141592653589793
+   },
+   "expected": {
+    "volume": 0.007853981633974483,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "extrude-square-with-hole",
+   "solid": {
+    "id": "extrude-square-with-hole",
+    "node": "root",
+    "material": "m",
+    "kind": "extrude",
+    "profile": [
+     [
+      -0.2,
+      -0.2
+     ],
+     [
+      0.2,
+      -0.2
+     ],
+     [
+      0.2,
+      0.2
+     ],
+     [
+      -0.2,
+      0.2
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.1,
+       -0.1
+      ],
+      [
+       -0.1,
+       0.1
+      ],
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.1,
+       -0.1
+      ]
+     ]
+    ],
+    "plane": "xy",
+    "from": 0,
+    "to": 0.3
+   },
+   "expected": {
+    "volume": 0.036,
+    "volumeTolerance": 1e-09,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "extrude-pyramid-apex-at-to",
+   "solid": {
+    "id": "extrude-pyramid-apex-at-to",
+    "node": "root",
+    "material": "m",
+    "kind": "extrude",
+    "profile": [
+     [
+      -0.2,
+      -0.2
+     ],
+     [
+      0.2,
+      -0.2
+     ],
+     [
+      0.2,
+      0.2
+     ],
+     [
+      -0.2,
+      0.2
+     ]
+    ],
+    "plane": "xy",
+    "from": 0,
+    "to": 0.3,
+    "taperTo": [
+     1,
+     0
+    ]
+   },
+   "expected": {
+    "volume": 0.016,
+    "volumeTolerance": 1e-09,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "extrude-frustum",
+   "solid": {
+    "id": "extrude-frustum",
+    "node": "root",
+    "material": "m",
+    "kind": "extrude",
+    "profile": [
+     [
+      -0.2,
+      -0.2
+     ],
+     [
+      0.2,
+      -0.2
+     ],
+     [
+      0.2,
+      0.2
+     ],
+     [
+      -0.2,
+      0.2
+     ]
+    ],
+    "plane": "xy",
+    "from": 0,
+    "to": 0.3,
+    "taperTo": [
+     1,
+     0.5
+    ]
+   },
+   "expected": {
+    "volume": 0.028,
+    "volumeTolerance": 1e-09,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-straight",
+   "solid": {
+    "id": "loft-straight",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.1,
+      "ry": 0.1
+     },
+     {
+      "at": [
+       0,
+       0,
+       1
+      ],
+      "rx": 0.1,
+      "ry": 0.1
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   "expected": {
+    "volume": 0.031415926535897934,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-reversed-order",
+   "solid": {
+    "id": "loft-reversed-order",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       1
+      ],
+      "rx": 0.1,
+      "ry": 0.1
+     },
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.1,
+      "ry": 0.1
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   "expected": {
+    "volume": 0.031415926535897934,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-nozzle-first-tangent-up-net-travel-down",
+   "solid": {
+    "id": "loft-nozzle-first-tangent-up-net-travel-down",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0.5,
+       0.0
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.535938,
+       0.05
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.54375,
+       0.1
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.523438,
+       0.15
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.475,
+       0.2
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.398438,
+       0.25
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.29375,
+       0.3
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.160938,
+       0.35
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.0,
+       0.4
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   "expected": {
+    "volume": 0.002130927415508369,
+    "volumeTolerance": 0.08,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-nozzle-reversed",
+   "solid": {
+    "id": "loft-nozzle-reversed",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0.0,
+       0.4
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.160938,
+       0.35
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.29375,
+       0.3
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.398438,
+       0.25
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.475,
+       0.2
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.523438,
+       0.15
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.54375,
+       0.1
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.535938,
+       0.05
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.5,
+       0.0
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   "expected": {
+    "volume": 0.002130927415508369,
+    "volumeTolerance": 0.08,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-arch",
+   "solid": {
+    "id": "loft-arch",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.4,
+       0.1
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.6,
+       0.3
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.6,
+       0.6
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.4,
+       0.8
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0,
+       0.9
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   "expected": {
+    "volume": 0.004779229176020989,
+    "volumeTolerance": 0.08,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-arch-reversed",
+   "solid": {
+    "id": "loft-arch-reversed",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0.9
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.4,
+       0.8
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.6,
+       0.6
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.6,
+       0.3
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.4,
+       0.1
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   "expected": {
+    "volume": 0.004779229176020989,
+    "volumeTolerance": 0.08,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-hook",
+   "solid": {
+    "id": "loft-hook",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.3,
+       0
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.5,
+       0.2
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.4,
+       0.4
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     },
+     {
+      "at": [
+       0,
+       0.2,
+       0.5
+      ],
+      "rx": 0.03,
+      "ry": 0.03
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   "expected": {
+    "volume": 0.0029124155969250808,
+    "volumeTolerance": 0.12,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-rotation-handedness-flipped-in-the-middle",
+   "solid": {
+    "id": "loft-rotation-handedness-flipped-in-the-middle",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.1,
+      "ry": 0.1,
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ]
+     },
+     {
+      "at": [
+       0,
+       0,
+       1
+      ],
+      "rx": 0.1,
+      "ry": 0.1
+     },
+     {
+      "at": [
+       0,
+       0,
+       2
+      ],
+      "rx": 0.1,
+      "ry": 0.1,
+      "rotation": [
+       1,
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   "expected": {
+    "volume": 0.06283185307179587,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-rotated-sections-opposing-the-path",
+   "solid": {
+    "id": "loft-rotated-sections-opposing-the-path",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       1
+      ],
+      "rx": 0.1,
+      "ry": 0.1,
+      "rotation": [
+       1,
+       0,
+       0,
+       0
+      ]
+     },
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.1,
+      "ry": 0.1,
+      "rotation": [
+       1,
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   "expected": {
+    "volume": 0.031415926535897934,
+    "volumeTolerance": 0.02,
+    "closed": true,
+    "manifold": true,
+    "oriented": true
+   }
+  },
+  {
+   "name": "loft-open-tube-start-cap-off",
+   "solid": {
+    "id": "loft-open-tube-start-cap-off",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.1,
+      "ry": 0.1
+     },
+     {
+      "at": [
+       0,
+       0,
+       1
+      ],
+      "rx": 0.1,
+      "ry": 0.1
+     }
+    ],
+    "capStart": false,
+    "capEnd": true
+   },
+   "expected": {
+    "closed": false,
+    "manifold": false,
+    "oriented": true,
+    "openEdgesPositive": true
+   }
+  },
+  {
+   "name": "loft-open-tube-both-caps-off-outward",
+   "solid": {
+    "id": "loft-open-tube-both-caps-off-outward",
+    "node": "root",
+    "material": "m",
+    "kind": "loft",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.1,
+      "ry": 0.1
+     },
+     {
+      "at": [
+       0,
+       0,
+       1
+      ],
+      "rx": 0.1,
+      "ry": 0.1
+     }
+    ],
+    "capStart": false,
+    "capEnd": false
+   },
+   "expected": {
+    "closed": false,
+    "manifold": false,
+    "oriented": true,
+    "openEdgesPositive": true
+   }
+  }
+ ],
+ "meshes": [
+  {
+   "name": "cube-outward",
+   "positions": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "indices": [
+    0,
+    2,
+    3,
+    0,
+    3,
+    1,
+    4,
+    5,
+    7,
+    4,
+    7,
+    6,
+    0,
+    1,
+    5,
+    0,
+    5,
+    4,
+    2,
+    6,
+    7,
+    2,
+    7,
+    3,
+    0,
+    4,
+    6,
+    0,
+    6,
+    2,
+    1,
+    3,
+    7,
+    1,
+    7,
+    5
+   ],
+   "expected": {
+    "closed": true,
+    "manifold": true,
+    "oriented": true,
+    "signedVolume": 1.0,
+    "outwardFrom": [
+     [
+      0.5,
+      0.5,
+      0.5
+     ]
+    ],
+    "components": [
+     [
+      0,
+      12
+     ]
+    ]
+   }
+  },
+  {
+   "name": "cube-inside-out-is-turned-outward",
+   "positions": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "indices": [
+    0,
+    3,
+    2,
+    0,
+    1,
+    3,
+    4,
+    7,
+    5,
+    4,
+    6,
+    7,
+    0,
+    5,
+    1,
+    0,
+    4,
+    5,
+    2,
+    7,
+    6,
+    2,
+    3,
+    7,
+    0,
+    6,
+    4,
+    0,
+    2,
+    6,
+    1,
+    7,
+    3,
+    1,
+    5,
+    7
+   ],
+   "expected": {
+    "closed": true,
+    "manifold": true,
+    "oriented": true,
+    "signedVolume": -1.0,
+    "outwardFrom": [
+     [
+      0.5,
+      0.5,
+      0.5
+     ]
+    ],
+    "components": [
+     [
+      0,
+      12
+     ]
+    ]
+   }
+  },
+  {
+   "name": "cube-one-triangle-flipped",
+   "positions": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "indices": [
+    0,
+    3,
+    2,
+    0,
+    3,
+    1,
+    4,
+    5,
+    7,
+    4,
+    7,
+    6,
+    0,
+    1,
+    5,
+    0,
+    5,
+    4,
+    2,
+    6,
+    7,
+    2,
+    7,
+    3,
+    0,
+    4,
+    6,
+    0,
+    6,
+    2,
+    1,
+    3,
+    7,
+    1,
+    7,
+    5
+   ],
+   "expected": {
+    "closed": true,
+    "manifold": true,
+    "oriented": false,
+    "outwardFrom": [
+     [
+      0.5,
+      0.5,
+      0.5
+     ]
+    ],
+    "components": [
+     [
+      0,
+      12
+     ]
+    ]
+   }
+  },
+  {
+   "name": "two-components-apart",
+   "positions": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    0,
+    0,
+    3,
+    0,
+    0,
+    2,
+    1,
+    0,
+    3,
+    1,
+    0,
+    2,
+    0,
+    1,
+    3,
+    0,
+    1,
+    2,
+    1,
+    1,
+    3,
+    1,
+    1
+   ],
+   "indices": [
+    0,
+    2,
+    3,
+    0,
+    3,
+    1,
+    4,
+    5,
+    7,
+    4,
+    7,
+    6,
+    0,
+    1,
+    5,
+    0,
+    5,
+    4,
+    2,
+    6,
+    7,
+    2,
+    7,
+    3,
+    0,
+    4,
+    6,
+    0,
+    6,
+    2,
+    1,
+    3,
+    7,
+    1,
+    7,
+    5,
+    8,
+    10,
+    11,
+    8,
+    11,
+    9,
+    12,
+    13,
+    15,
+    12,
+    15,
+    14,
+    8,
+    9,
+    13,
+    8,
+    13,
+    12,
+    10,
+    14,
+    15,
+    10,
+    15,
+    11,
+    8,
+    12,
+    14,
+    8,
+    14,
+    10,
+    9,
+    11,
+    15,
+    9,
+    15,
+    13
+   ],
+   "expected": {
+    "closed": true,
+    "manifold": true,
+    "oriented": true,
+    "signedVolume": 2.0,
+    "outwardFrom": [
+     [
+      0.5,
+      0.5,
+      0.5
+     ],
+     [
+      2.5,
+      0.5,
+      0.5
+     ]
+    ],
+    "components": [
+     [
+      0,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
+   }
+  },
+  {
+   "name": "two-components-one-inside-out",
+   "positions": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    0,
+    0,
+    3,
+    0,
+    0,
+    2,
+    1,
+    0,
+    3,
+    1,
+    0,
+    2,
+    0,
+    1,
+    3,
+    0,
+    1,
+    2,
+    1,
+    1,
+    3,
+    1,
+    1
+   ],
+   "indices": [
+    0,
+    2,
+    3,
+    0,
+    3,
+    1,
+    4,
+    5,
+    7,
+    4,
+    7,
+    6,
+    0,
+    1,
+    5,
+    0,
+    5,
+    4,
+    2,
+    6,
+    7,
+    2,
+    7,
+    3,
+    0,
+    4,
+    6,
+    0,
+    6,
+    2,
+    1,
+    3,
+    7,
+    1,
+    7,
+    5,
+    8,
+    11,
+    10,
+    8,
+    9,
+    11,
+    12,
+    15,
+    13,
+    12,
+    14,
+    15,
+    8,
+    13,
+    9,
+    8,
+    12,
+    13,
+    10,
+    15,
+    14,
+    10,
+    11,
+    15,
+    8,
+    14,
+    12,
+    8,
+    10,
+    14,
+    9,
+    15,
+    11,
+    9,
+    13,
+    15
+   ],
+   "expected": {
+    "closed": true,
+    "manifold": true,
+    "oriented": true,
+    "signedVolume": 0.0,
+    "outwardFrom": [
+     [
+      0.5,
+      0.5,
+      0.5
+     ],
+     [
+      2.5,
+      0.5,
+      0.5
+     ]
+    ],
+    "components": [
+     [
+      0,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
+   }
+  },
+  {
+   "name": "open-quad",
+   "positions": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    1,
+    0
+   ],
+   "indices": [
+    0,
+    1,
+    2,
+    0,
+    2,
+    3
+   ],
+   "expected": {
+    "closed": false,
+    "manifold": false,
+    "oriented": true,
+    "openEdges": 4
+   }
+  },
+  {
+   "name": "three-triangles-on-one-edge",
+   "positions": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    1
+   ],
+   "indices": [
+    0,
+    1,
+    2,
+    0,
+    3,
+    1,
+    0,
+    1,
+    4
+   ],
+   "expected": {
+    "closed": false,
+    "manifold": false,
+    "nonManifoldEdges": 1
+   }
+  },
+  {
+   "name": "two-tetrahedra-sharing-one-vertex",
+   "positions": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    -1,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    -1
+   ],
+   "indices": [
+    0,
+    2,
+    1,
+    0,
+    1,
+    3,
+    0,
+    3,
+    2,
+    1,
+    2,
+    3,
+    0,
+    4,
+    5,
+    0,
+    6,
+    4,
+    0,
+    5,
+    6,
+    4,
+    6,
+    5
+   ],
+   "expected": {
+    "closed": true,
+    "manifold": false,
+    "oriented": true,
+    "pinchVertices": 1
+   }
+  }
+ ]
+}

@@ -41,7 +41,7 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod unbind_default_scene {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_default_scene::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_default_scene::*;
                             #[cfg(test)]
                             #[path = "../../../../../../🏠️default-scene/✂️unbind/🧪️tests/🎞️clears/🦀️.rs"]
                             pub mod case_clears;
@@ -58,14 +58,14 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod unbind_node_camera {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_node_camera::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_node_camera::*;
                             #[cfg(test)]
                             #[path = "../../../../../../📷️node-camera/✂️unbind/🧪️tests/🔗️clears/🦀️.rs"]
                             pub mod case_clears;
                         }
                         #[path = "."]
                         pub mod unbind_node_child {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_node_child::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_node_child::*;
                             #[cfg(test)]
                             #[path = "../../../../../../🌿️node-child/✂️unbind/🧪️tests/✂️releases/🦀️.rs"]
                             pub mod case_releases;
@@ -75,14 +75,14 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod unbind_node_mesh {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_node_mesh::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_node_mesh::*;
                             #[cfg(test)]
                             #[path = "../../../../../../🏗️node-mesh/✂️unbind/🧪️tests/🔗️clears/🦀️.rs"]
                             pub mod case_clears;
                         }
                         #[path = "."]
                         pub mod unbind_node_skin {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_node_skin::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_node_skin::*;
                             #[cfg(test)]
                             #[path = "../../../../../../🩻️node-skin/✂️unbind/🧪️tests/🔗️clears/🦀️.rs"]
                             pub mod case_clears;
@@ -99,21 +99,21 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod unbind_primitive_indices {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_indices::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_indices::*;
                             #[cfg(test)]
                             #[path = "../../../../../../🔢️primitive/✂️unbind/🧪️tests/✂️returns/🦀️.rs"]
                             pub mod case_returns;
                         }
                         #[path = "."]
                         pub mod unbind_primitive_material {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_material::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_material::*;
                             #[cfg(test)]
                             #[path = "../../../../../../🧱️primitive/✂️unbind/🧪️tests/✂️returns/🦀️.rs"]
                             pub mod case_returns;
                         }
                         #[path = "."]
                         pub mod unbind_scene_root_node {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_node::*;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_node::*;
                             #[cfg(test)]
                             #[path = "../../../../../../🌲️scene-root/✂️unbind/🧪️tests/📤️demotes/🦀️.rs"]
                             pub mod case_demotes;

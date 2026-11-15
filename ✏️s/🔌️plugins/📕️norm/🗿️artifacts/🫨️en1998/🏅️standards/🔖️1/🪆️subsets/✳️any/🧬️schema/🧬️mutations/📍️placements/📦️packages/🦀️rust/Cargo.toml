@@ -18,7 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 serde = { workspace = true, optional = true }
 semio-s-artifact-norm-en1998-mut-bridges-towers-tower = { workspace = true }
-semio-s-artifact-norm-en1998-mut-bridges-towers-bridge-tower = { workspace = true }
+semio-s-artifact-norm-en1998-mut-towers-bridge-tower = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
@@ -32,7 +32,7 @@ semio-s-artifact-norm-en1998-mut-bridges-variables = { workspace = true }
 semio-s-artifact-norm-en1998-mut-towers-variables = { workspace = true }
 
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-bridges-pier/test-support", "semio-s-artifact-norm-en1998-mut-bridges-towers-bridge-tower/test-support", "semio-s-artifact-norm-en1998-mut-bridges-towers-tower/test-support", "semio-s-artifact-norm-en1998-mut-bridges-variables/test-support", "semio-s-artifact-norm-en1998-mut-towers-variables/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-bridges-pier/test-support", "semio-s-artifact-norm-en1998-mut-towers-bridge-tower/test-support", "semio-s-artifact-norm-en1998-mut-bridges-towers-tower/test-support", "semio-s-artifact-norm-en1998-mut-bridges-variables/test-support", "semio-s-artifact-norm-en1998-mut-towers-variables/test-support"]
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

@@ -6,7 +6,7 @@ import {lstatSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rm
 import {tmpdir} from "node:os";
 import {fileURLToPath} from "node:url";
 import {dirname,join} from "node:path";
-import {confirmGenerationWalkV1,generationProtocolV1 as protocol,generationSha256V1,guardGenerationReplayV1,generationWalkOriginV1} from "../../🟦️.ts";
+import {confirmGenerationWalkV1,generationProtocolV1 as protocol,generationSha256V1,guardGenerationReplayV1,generationWalkOriginV1,requireSoundGenerationProofV1,GenerationReceiptFaultV1} from "../../🟦️.ts";
 import * as glue from "../../💾️storage/🟦️.ts";
 import * as storage from "../../../💾️storage/🟦️.ts";
 import * as readContext from "../../../💾️storage/📥️read-context/🟦️.ts";
@@ -119,3 +119,22 @@ test("followup files: a failed write is removed through the descriptor and the s
   expect(generationSha256V1(readFileSync(join(root,protocol.directory,name)))).toBe(digest);
  }finally{rmSync(root,{recursive:true,force:true});}
 },60000);
+
+test("followup fault: a receipt proof that is unreadable or has invalid evidence stops the synchronization with the stale text in both languages, while a proof that merely differs stays a quiet stale outcome",()=>{
+ const unreadable={status:"mismatch",class:"unreadable",detail:"ENOTDIR: not a directory, lstat '/work/CLAUDE.md/package.json'"} as const;
+ for(const language of ["en","de"]){
+  let thrown:unknown;
+  try{requireSoundGenerationProofV1(".",unreadable,language);}catch(error){thrown=error;}
+  expect(thrown).toBeInstanceOf(GenerationReceiptFaultV1);
+  expect((thrown as Error).name).toBe("GenerationReceiptFaultV1");
+  expect((thrown as Error).message).toContain("ENOTDIR");
+  expect((thrown as Error).message).toContain(language==="en"?"is stale":"ist veraltet");
+ }
+ expect(()=>requireSoundGenerationProofV1("a",{status:"mismatch",class:"evidence-invalid"},"en")).toThrow(GenerationReceiptFaultV1);
+ for(const quiet of ["input-changed","manifest-changed","membership-changed","membership-churn","provider-changed","sha-changed","receipt-invalid","protocol-changed","runtime-changed","configuration-changed","conditions-open","binding-changed","ready-changed"])expect(()=>requireSoundGenerationProofV1(".",{status:"mismatch",class:quiet as never},"en"),quiet).not.toThrow();
+ expect(()=>requireSoundGenerationProofV1(".",{status:"absent"},"en")).not.toThrow();
+ const storage=text("../../💾️storage/🟦️.ts"),elsewhere=text("../../../💾️storage/🟦️.ts");
+ expect(storage).toContain("requireSoundGenerationProofV1(scope,proof,");
+ expect(storage).toContain('(error as Error)?.name==="GenerationReceiptFaultV1")throw error;console.error("[DATA] Store dependency generation receipt failed');
+ expect(elsewhere).toContain('||(error as Error)?.name==="GenerationReceiptFaultV1")throw error;await writeOwnedCommandOutputV1(process.stderr,"[DATA] Store dependency generation receipt not published');
+});

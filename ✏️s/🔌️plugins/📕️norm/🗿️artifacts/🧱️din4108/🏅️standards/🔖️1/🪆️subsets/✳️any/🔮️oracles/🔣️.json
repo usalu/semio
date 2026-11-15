@@ -49,7 +49,7 @@
         "secondImplementationLanguage": "python",
         "specificationSource": "📓️taxonomy.md; 📓️derivation-rules.md; .dsl.semio",
         "fixtureCoverage": {
-          "vectors": 59,
+          "vectors": 65,
           "capabilitiesCovered": [
             "din4108-1-mutate"
           ]

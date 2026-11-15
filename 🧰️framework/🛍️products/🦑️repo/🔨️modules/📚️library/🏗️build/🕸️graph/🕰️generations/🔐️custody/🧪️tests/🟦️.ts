@@ -9,7 +9,7 @@ import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️pro
 import {canonicalJsonV1,createNodeFilePortV1} from "../../🟨️.mjs";
 import {createFileClaimLeasePortV1} from "../../🧩️claims/🟨️.mjs";
 import schema from "../🧬️schema/🔣️.json";
-import {CUSTODY_MESSAGES_V1,CUSTODY_POLICY_V1,admissionOfV1,claimsConflictV1,createSliceCustodyV1,readCustodyClaimV1,renderCustodyMessageV1,type SliceClaimV1} from "../🟨️.mjs";
+import {CUSTODY_MESSAGES_V1,CUSTODY_POLICY_V1,admissionOfV1,attachToBuilderV1,claimsConflictV1,createSliceCustodyV1,readCustodyClaimV1,renderCustodyMessageV1,type SliceClaimV1} from "../🟨️.mjs";
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),oracle=join(here,"🐍️oracle/🐍️.py"),roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
@@ -110,4 +110,42 @@ test("a cancelled wait removes its claim and its lease, and a peer that waited b
  controller.abort(new Error("stop"));await expect(waiting).rejects.toThrow("stop");
  expect((await custody.list()).map(row=>row.token)).toEqual([a.token]);
  await a.release();const again:SliceClaimV1=await custody.hold({owners:["a"]});await again.release();
+});
+
+const attachPolicy={...CUSTODY_POLICY_V1,attachPollMilliseconds:20,attachRecheckMilliseconds:150,noticeMilliseconds:60};
+const lookOf=(custody:ReturnType<typeof world>["custody"],pointer:()=>number,owners:string[])=>async()=>({held:!await custody.idle({owners}),generation:pointer()});
+
+test("a second reader on one state root attaches to the live builder: it never holds the custody beside it, tells the waves in English and German, is served from a wave through the recheck, and ends when the builder lets go",async()=>{
+ const{custody,say,said}=world(),builder=await custody.hold({owners:["p1","p2","p3"]});
+ let generation=0,rechecks=0,serve=false;
+ const attached=attachToBuilderV1({look:lookOf(custody,()=>generation,["p2","p4"]),recheck:async()=>{rechecks++;return serve?{graph:"g"}:undefined;},say,policy:attachPolicy});
+ await sleep(60);expect(said.map(row=>row.key)).toEqual(["attached"]);
+ expect((await custody.list()).map(row=>[row.token,row.state])).toEqual([[builder.token,"held"]]);
+ generation=1;await sleep(60);expect(said.map(row=>row.key)).toEqual(["attached","attachedWave"]);expect(rechecks,"a wave inside the interval is only told").toBe(0);
+ await sleep(120);generation=3;await sleep(60);expect(rechecks).toBe(1);expect(said.filter(row=>row.key==="attachedWave").at(-1)!.text).toContain("3 wave(s)");
+ expect(said.every(row=>row.text.startsWith("graph: "))).toBe(true);
+ expect(renderCustodyMessageV1("attached",{generation:2,seconds:5},"de")).toContain("angehängt");expect(renderCustodyMessageV1("attachedWave",{generation:2,waves:1,seconds:5},"de")).toContain("Welle(n)");
+ serve=true;await sleep(170);generation=4;expect(await attached).toEqual({graph:"g"});expect(rechecks).toBe(2);expect(said.at(-1)!.key).toBe("attachedServed");
+ expect((await custody.list()).length).toBe(1);await builder.release();
+ const left=await attachToBuilderV1({look:lookOf(custody,()=>generation,["p2"]),recheck:async()=>({graph:"never"}),policy:attachPolicy});
+ expect(left,"nothing holds the custody against the reader any more").toBeUndefined();
+ const next=await custody.hold({owners:["p2"]});expect((await custody.list()).length).toBe(1);await next.release();
+});
+
+test("an attached reader ends without a result when the builder releases, when the custody cannot be looked at, and rethrows a cancellation",async()=>{
+ const{custody}=world(),builder=await custody.hold({owners:["p1"]}),started=Date.now();
+ const waiting=attachToBuilderV1({look:lookOf(custody,()=>1,["p1"]),recheck:async()=>undefined,policy:attachPolicy});
+ await sleep(50);await builder.release();expect(await waiting).toBeUndefined();expect(Date.now()-started).toBeLessThan(2000);
+ expect(await attachToBuilderV1({look:async()=>{throw new Error("store gone");},recheck:async()=>({graph:"x"}),policy:attachPolicy})).toBeUndefined();
+ const held=await custody.hold({owners:["p1"]}),controller=new AbortController();
+ const stopped=attachToBuilderV1({look:lookOf(custody,()=>1,["p1"]),recheck:async()=>undefined,signal:controller.signal,policy:attachPolicy});
+ await sleep(40);controller.abort(new Error("cancelled"));await expect(stopped).rejects.toThrow("cancelled");await held.release();
+});
+
+test("the recheck is asked at most once per interval and a failing recheck never ends the attachment",async()=>{
+ const{custody}=world(),builder=await custody.hold({owners:["p1"]});let generation=0,asked=0;
+ const attached=attachToBuilderV1({look:lookOf(custody,()=>generation,["p1"]),recheck:async()=>{asked++;throw new Error("verification failed");},policy:{...attachPolicy,attachRecheckMilliseconds:100}});
+ for(let wave=1;wave<=8;wave++){generation=wave;await sleep(30);}
+ expect(asked).toBeGreaterThanOrEqual(1);expect(asked).toBeLessThanOrEqual(3);
+ await builder.release();expect(await attached).toBeUndefined();
 });

@@ -9,5 +9,5 @@ export function nativeImageSparseInitialBytesV1(imageBytes:number):number{return
 export function nativeImageSparseGrowArgumentsV1(imageBytes:number,backing:string):readonly string[]|null{
  return nativeImageSparseInitialBytesV1(imageBytes)===imageBytes?null:Object.freeze([protocol.growVerb,protocol.growSizeFlag,String(imageBytes/image.unitBytes)+protocol.growUnit,backing]);
 }
-/** 🚪️ Bounds the free host bytes a creation needs: the envelope when small, else the admission floor, because the backing only grows with its content. */
-export function nativeImageSparseAdmissionBytesV1(maximumPhysicalBytes:number):number{return Math.min(maximumPhysicalBytes,protocol.admissionFreeBytes)+67108864;}
+/** 🚪️ Bounds the free host bytes a creation needs: `hdiutil resize` refuses (status 22, "Invalid argument") any size beyond the free bytes of the host volume although the backing stays sparse, so the whole envelope plus the initial extent must be free. See https://ss64.com/mac/hdiutil.html */
+export function nativeImageSparseAdmissionBytesV1(maximumPhysicalBytes:number):number{return maximumPhysicalBytes+protocol.initialBytes;}

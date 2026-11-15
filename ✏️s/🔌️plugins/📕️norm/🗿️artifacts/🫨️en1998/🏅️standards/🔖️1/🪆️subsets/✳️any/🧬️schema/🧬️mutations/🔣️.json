@@ -595,6 +595,9 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-pile-head-shear-n/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-pile-axial-load-n/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-pile-head-fixed/schema.json"
     },
     {

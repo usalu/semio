@@ -22,6 +22,12 @@ test("Print worker success processes every captured item exactly once and preser
 });
 
 
+test("Print workers honour a smaller requested worker count, a result slot per index and reject a non-positive count",async()=>{
+ const input=Array.from({length:9},(_,i)=>i),results:number[]=[];let active=0,maximum=0;await runPrintWorkersV1(input,new AbortController().signal,async(value,_signal,index)=>{active++;maximum=Math.max(maximum,active);await new Promise(resolve=>setTimeout(resolve,9-value));results[index]=value*2;active--;},2);
+ expect(maximum).toBe(2);expect(results).toEqual(input.map(value=>value*2));
+ let refused=false;try{await runPrintWorkersV1(input,new AbortController().signal,async()=>{},0);}catch{refused=true;}expect(refused).toBe(true);
+});
+
 test("Print scratch identities are canonical portable DATA distinct from receipt owners",()=>{const db=new Database(":memory:");try{db.exec("create table scopes(name text)");for(const name of["material/tectonic","material/tex","material/fonts","compiler","verify-tectonic","native/chart-grammar"]){db.exec("delete from scopes");db.query("insert into scopes values(?)").run(name);const expected=db.query<{owner:string},[]>("select 'print/'||name owner from scopes").get();if(!expected)throw Error("Independent scratch owner row required");expect(printScratchOwnerV1(name)).toBe(expected.owner);}for(const name of["@semio-tech/print:compiler","../escape","", "native\\escape"])expect(()=>printScratchOwnerV1(name)).toThrow();}finally{db.close();}});
 
 import{printArtifactNxOutputV1}from"../🟦️.ts";

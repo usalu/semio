@@ -52,7 +52,7 @@ semio-s-artifact-norm-en1992-mut-anchors-capacity = { workspace = true }
 semio-s-artifact-norm-en1992-mut-anchors-head = { workspace = true }
 semio-s-artifact-norm-en1992-mut-anchor-actions-identity = { workspace = true }
 semio-s-artifact-norm-en1992-mut-anchor-actions-loads = { workspace = true }
-semio-s-artifact-norm-en1992-mut-anchor-actions-resultants = { workspace = true }
+semio-s-artifact-norm-en1992-mut-anchor-resultants = { workspace = true }
 semio-s-artifact-norm-en1992-mut-grades-rows = { workspace = true }
 semio-s-artifact-norm-en1992-mut-member-lists-rows = { workspace = true }
 semio-s-artifact-norm-en1992-mut-member-geometry-rows = { workspace = true }

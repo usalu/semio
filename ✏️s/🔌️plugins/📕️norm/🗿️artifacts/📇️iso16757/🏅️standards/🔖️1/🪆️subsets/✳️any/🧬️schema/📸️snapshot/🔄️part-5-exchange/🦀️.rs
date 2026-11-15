@@ -1,6 +1,6 @@
 //! 🔄️ Part 5 of the ISO 16757 snapshot: the exchange process, part number rule, external media, IFC catalogue and the script limits, result and error. See [`super`].
 
-use std::collections::BTreeMap;
+use super::catalogue_core::IdMap;
 
 /// 🔄️ Exchange process stage.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -27,7 +27,7 @@ pub enum ExchangeProcess {
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum PartNumberRule {
     Literal { value: String },
-    Table { rows: Vec<BTreeMap<String, String>>, output_column: String },
+    Table { rows: Vec<IdMap<String>>, output_column: String },
     Script { function_id: String, source: String },
 }
 

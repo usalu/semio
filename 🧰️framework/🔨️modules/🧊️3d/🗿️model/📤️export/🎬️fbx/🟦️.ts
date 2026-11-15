@@ -10,6 +10,7 @@
  */
 import type { Animation, Channel, Material, Mesh, ModelDocument, Node, Operation, Primitive, Skin, Slug, Variant } from "../../🧬️schema/🟦️.ts";
 import { CancelledError, Pace } from "../../⏱️operation/🟦️.ts";
+import { scenesOf, selectScene } from "../../🎞️scenes/🟦️.ts";
 import { compose, invert4, multiply4, qNormalize, worldMatrices } from "../../🧮️math/🟦️.ts";
 import { colourCurves, rotationCurves, vectorCurves } from "./🎞️animation/🟦️.ts";
 import type { Curves } from "./🎞️animation/🟦️.ts";
@@ -27,8 +28,8 @@ export type { Compressor } from "./🗜️deflate/🟦️.ts";
 export { ownedCompressor } from "./🗜️deflate/🟦️.ts";
 export type { Notice } from "./🦴️mechanism/🟦️.ts";
 
-/** ⚙️ What one encoding includes: an optional clip, an optional variant look, the only format. */
-export type FbxOptions = { readonly animation?: Slug; readonly variant?: Slug; readonly format: "binary" };
+/** ⚙️ What one encoding includes: an optional clip, an optional variant look, the only format, and the model scene (FBX holds one scene per file; absent = the first scene, with a notice when there are several). */
+export type FbxOptions = { readonly animation?: Slug; readonly variant?: Slug; readonly format: "binary"; readonly scene?: Slug };
 /** 📦️ The bytes of one encoding and everything that could not be expressed in FBX. */
 export type FbxResult = { readonly bytes: Uint8Array; readonly notices: readonly Notice[] };
 
@@ -142,7 +143,7 @@ const solidRangesOf = (triangles: readonly Primitive[]): string => {
 };
 
 /** 🎥️ Encodes a resolved document; returns the bytes and the notices of everything FBX could not express. */
-export function encodeFbxDetailed(document: ModelDocument, options: FbxOptions, operation: Operation, compressor: Compressor = ownedCompressor): FbxResult {
+export function encodeFbxDetailed(source: ModelDocument, options: FbxOptions, operation: Operation, compressor: Compressor = ownedCompressor): FbxResult {
   const guard = new Pace(operation);
   const check = (): void => {
     try {
@@ -161,6 +162,10 @@ export function encodeFbxDetailed(document: ModelDocument, options: FbxOptions, 
   check();
   operation.report(0);
   if (options.format !== "binary") fail("unsupported-format", `Format ${String(options.format)} is not supported; only binary FBX 7.4 is written.`, `Das Format ${String(options.format)} wird nicht unterstützt; nur binäres FBX 7.4 wird geschrieben.`);
+  const sceneList = scenesOf(source);
+  if (options.scene !== undefined && !sceneList.some((item) => item.id === options.scene)) fail("unknown-scene", `Scene ${options.scene} does not exist.`, `Die Szene ${options.scene} existiert nicht.`);
+  const sceneId = options.scene ?? sceneList[0]!.id;
+  const document = source.scenes !== undefined && source.scenes.length > 0 ? selectScene(source, sceneId) : source;
   if (document.solids.length > 0) fail("procedural-document", "The document is procedural (it carries solids); tessellate it before encoding FBX.", "Das Dokument ist prozedural (es enthält Solids); vor der FBX-Kodierung tessellieren.");
   const animation: Animation | undefined = options.animation === undefined ? undefined : document.animations.find((item) => item.id === options.animation);
   if (options.animation !== undefined && !animation) fail("unknown-animation", `Animation ${options.animation} does not exist.`, `Die Animation ${options.animation} existiert nicht.`);
@@ -168,6 +173,7 @@ export function encodeFbxDetailed(document: ModelDocument, options: FbxOptions, 
   if (options.variant !== undefined && !variant) fail("unknown-variant", `Variant ${options.variant} does not exist.`, `Die Variante ${options.variant} existiert nicht.`);
 
   const notices: Notice[] = [];
+  if (options.scene === undefined && sceneList.length > 1) notices.push({ code: "scene-defaulted", subject: sceneId, message: { en: `The model has ${sceneList.length} scenes and FBX holds one per file; scene ${sceneId} was written.`, de: `Das Modell hat ${sceneList.length} Szenen und FBX enthält eine pro Datei; die Szene ${sceneId} wurde geschrieben.` } });
   const ids = new Ids();
   const objects: { group: number; record: FbxNode }[] = [];
   const connections: FbxNode[] = [];

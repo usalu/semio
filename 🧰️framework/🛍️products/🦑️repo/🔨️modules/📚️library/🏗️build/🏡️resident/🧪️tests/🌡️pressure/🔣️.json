@@ -1,0 +1,23 @@
+{
+ "version": 1,
+ "pageBytes": 16384,
+ "floorMegabytes": 256,
+ "sustainedSeconds": 30,
+ "rows": [
+  {
+   "name": "a busy macOS host keeps few free pages and a lot reclaimable",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                   167059.\nPages active:                                 168909.\nPages inactive:                               267341.\nPages speculative:                               337.\nPages throttled:                                   0.\nPages wired down:                             153156.\nPages purgeable:                               1671.\n\"Translation faults\":                      852722494.\nFile-backed pages:                             91131.\nAnonymous pages:                              345456.\nPages occupied by compressor:                 254260.\nSwapouts:                                     946112.\n",
+   "availablePages": 434737
+  },
+  {
+   "name": "free pages at the old floor are not scarcity while the cache is large",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                   4000.\nPages active:                                 168909.\nPages inactive:                               300000.\nPages speculative:                               100.\nPages throttled:                                   0.\nPages wired down:                             153156.\nPages purgeable:                               2000.\n\"Translation faults\":                      852722494.\nFile-backed pages:                             250000.\nAnonymous pages:                              345456.\nPages occupied by compressor:                 254260.\nSwapouts:                                     946112.\n",
+   "availablePages": 304100
+  },
+  {
+   "name": "a really scarce host reports little",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                   3000.\nPages active:                                 168909.\nPages inactive:                               4000.\nPages speculative:                               10.\nPages throttled:                                   0.\nPages wired down:                             153156.\nPages purgeable:                               100.\n\"Translation faults\":                      852722494.\nFile-backed pages:                             2000.\nAnonymous pages:                              345456.\nPages occupied by compressor:                 254260.\nSwapouts:                                     946112.\n",
+   "availablePages": 7010
+  }
+ ]
+}

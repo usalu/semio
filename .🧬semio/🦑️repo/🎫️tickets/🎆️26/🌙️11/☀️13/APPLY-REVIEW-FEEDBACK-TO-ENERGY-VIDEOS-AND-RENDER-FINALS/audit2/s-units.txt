@@ -1,0 +1,28 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md:46: The cooling load is the sum $\dot{Q}_\mathrm{C} = \dot{Q}_\mathrm{T} + \dot{Q}_\mathrm{V} + \dot{Q}_\mathrm{S} + \dot{Q}_\mathrm{I}$ in W (transmission, ventilation, solar, internal), the same $\dot{Q}$ notation as in the heating video; index `V` always means ventilation, with the latent part `V,lat
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:364: placed[b] = min(placed[b], placed[a] - (labels[a].height + labels[b].height) / 2 - gap)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:606: faces.add(Polygon(front[a], front[b], back[b], back[a], stroke_width=0,
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py:204: f"{''.join(labels)}amix=inputs={len(usable)}:normalize=0:dropout_transition=0[m];"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py:205: f"[m]apad=whole_dur={total:.3f},atrim=0:{total:.3f}[out]"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py:407: audio_filter = f"[1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,apad=whole_dur={target:.3f},atrim=0:{target:.3f}[a]"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py:410: audio_filter = f"anullsrc=channel_layout=stereo:sample_rate=44100,atrim=0:{target:.3f}[a]"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py:415: "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:816: np.array([text_x, y, 0.0])).align_to(np.array([text_x, y, 0.0]), LEFT)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:819: value_at = [np.array([text_x, y - 0.29, 0.0]) for y in row_y]
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:859: badge_tag.move_to(np.array([text_x, tag_y, 0.0])).align_to(np.array([text_x, tag_y, 0.0]), LEFT)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:860: badge_spot = np.array([text_x + 3.0, tag_y, 0.0])
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:238: | **Q̇ = U · A · Δθ** | Wärmestrom durch Bauteil [W] |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:275: | **H = U · A** | 1-m²-Wert mal Anzahl Quadratmeter [W/K] |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:276: | **Φ_T = Σ (U_i · A_i · Δθ_i)** | Transmissionswärmestrom der Hülle [W] |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:456: | **Q̇_Pers = n · q̇_p** | Personenlast [W] |
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:558: Rectangle(width=XL / 365 * 1.2, height=(_THETA_I - theta_e[d]) / (T_HI - T_LO) * YL, stroke_width=0,
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:559: fill_color=PURPLE, fill_opacity=0.0).move_to((cp(d + 0.5, _THETA_I) + cp(d + 0.5, theta_e[d])) / 2)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:566: return float(sum(_THETA_I - theta_e[d] for d in heating_days if d + 1 <= day.get_value()))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:491: p = phases[d]
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:592: pairs = [(index[a], index[b]) for a in index for b in ((a[0] + 1, a[1]), (a[0], a[1] + 1)) if b in index]
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:595: bonds = VGroup(*[Line(homes[a][0], homes[b][0], color=bond_color, stroke_width=1.6, stroke_opacity=0.55)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:671: line.put_start_and_end_on(lat["dots"][a].get_center(), lat["dots"][b].get_center())
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:265: need = (labels[a].height + labels[b].height) / 2 + gap
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:266: placed[b] = min(placed[b], placed[a] - need)
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:863: curve.set_points_smoothly([ypt(d, kw_day[d]) for d in range(0, 366, 2)])
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:879: pts = [ypt(0, 0)] + [ypt(d, kw_day[d]) for d in range(0, d_end + 1, 2)] + [ypt(d_end, 0)]
+TOTAL 27

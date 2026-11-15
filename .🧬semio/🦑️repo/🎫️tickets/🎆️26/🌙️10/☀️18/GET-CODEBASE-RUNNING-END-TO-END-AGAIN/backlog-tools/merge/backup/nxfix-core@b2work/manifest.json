@@ -1,0 +1,50 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json": {
+  "file": "f000",
+  "after": "4f5dd870e2837f334d9c8467e45f87073dbaf60ba2f54e0266b92783887e13ac"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "after": "45542f066ad4fba6e8e940a79d5103f75d1424b9fb43d50c67b1d2ac2245fe18"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🧾️refusals/🔣️.json": {
+  "file": "f002",
+  "after": "ebb72e2a8a730d7bad4207d8fadaf1b18a421ac7a5b926d34d4cf7dee134e3f8"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🧾️refusals.json": {
+  "file": "f003",
+  "after": "d5f332ca6e8506d844b8d853484cce65a8d3b6faab50bfbdebb710ad3f091af9"
+ },
+ "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧾️refusals/🟦️.ts": {
+  "file": "f004",
+  "after": "ad6a22455020ab0e3fda943a35124bc0888247f613307fce141d48f50915d0fc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🐍️order.py": {
+  "file": null,
+  "after": "2a24619a6b5dc01f99f7274b376785c55aee94667138f35e2f3e7a8ec37e87a4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🎟️put-slots/🧪️tests/🟦️.ts": {
+  "file": "f006",
+  "after": "c2bba45620daee938bdd8b9f9c033ee6eb8cbb8b7c34924455a8f6edc46e002c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts": {
+  "file": "f007",
+  "after": "933d02ac6655151fd65eaf435c46679cf54bc8793941ece5b5ac7323b7023a47"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🐍️.py": {
+  "file": null,
+  "after": "74dc8c2f69a04d4c2d9248b5a048d7d1419dbe935906210553d98d974b7e016d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🔣️.json": {
+  "file": "f009",
+  "after": "2e3cd67079dd712d6601939bca5789b268bee356e5cb18ae5473afde6b6da4ce"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧪️tests/🟦️.ts": {
+  "file": "f010",
+  "after": "be564b3cd35a6ecea181ba323b9b3b328659dd5910c25abf5ef05476f0a40afa"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🧬️schema/🔣️.json": {
+  "file": "f011",
+  "after": "616ae1151ae012538b568db4bfd945af667d716fa992aa2e9cfdef9a5fe6d6c4"
+ }
+}

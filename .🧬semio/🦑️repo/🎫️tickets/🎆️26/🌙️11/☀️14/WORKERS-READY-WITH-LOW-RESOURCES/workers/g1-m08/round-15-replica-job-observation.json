@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-15T02:30:01.546117+00:00",
+  "job_selected_lines": [
+    "\tstate = running",
+    "\truns = 10",
+    "\tpid = 97859",
+    "\tlast exit code = 0",
+    "\t\tstate = active",
+    "\t\tstate = active"
+  ],
+  "job_rc": 0,
+  "code": "d399114215f574cd93e191090e959fc4f901cfe0f2cd44963ab8d2b8d4046284",
+  "pid": 27483,
+  "health_age_s": 3.612
+}

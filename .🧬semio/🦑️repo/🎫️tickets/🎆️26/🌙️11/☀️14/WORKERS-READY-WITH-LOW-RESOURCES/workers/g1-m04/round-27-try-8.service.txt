@@ -1,0 +1,116 @@
+## /run/user/1000/semio-repo/1000/host-ea8a35560905.log
+2026-11-15T11:03:20.274Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=314303 ppid=314235
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 8395 MB
+graph: 703 stale projects, 0 taken from the fleet, 10 too heavy for this machine (semio-repo-test-host (about 22090 MB), workspace (about 17906 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/2d-trace-rs (about 8940 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), and 4 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: inferring 693 light projects here while the fleet works, continuously and lightest first (the server works heaviest first); what the fleet delivers meanwhile is taken and dropped here
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left
+graph: preparing 693 of the 693 open stale projects (1 compute slots), 0 of 693 already prepared
+graph: plan stage inference starts (managed 1139 MB, resident 1503 MB)
+graph: inferring 689 projects in this process (memory)
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 20 s ago, estimated time left: about 27 min
+graph: waiting for memory headroom (433 of 1004 MB reserved, 1 projects running): semio-plugin-original-job-ownership needs 1044 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 35 s ago, estimated time left: about 28 min
+graph: waiting for memory headroom (1477 of 1741 MB reserved, 2 projects running): semio-os-mcp-process-arena needs 1044 MB and has waited 2 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (2520 of 3096 MB reserved, 3 projects running): semio-os-infinite needs 1044 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 46 s ago, estimated time left: about 28 min
+graph: waiting for memory headroom (3564 of 4063 MB reserved, 4 projects running): semio-framework-value-testing-effect-bank needs 1044 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference settled from 6541 to 7358 MB
+graph: plan answered, managed 104 MB, resident 216 MB (released 39 MB)
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 9094 MB
+graph: 703 stale projects, 0 taken from the fleet, 10 too heavy for this machine (semio-repo-test-host (about 22058 MB), workspace (about 17880 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/2d-trace-rs (about 8926 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), and 4 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: plan stage inference starts (managed 901 MB, resident 1201 MB)
+graph: waiting for memory headroom (433 of 949 MB reserved, 1 projects running): semio-plugin-original-job-ownership needs 1044 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: headroom of 990 MB is below one project (1044 MB), inferring one project at a time
+graph: 0 of 703 projects arrived from the fleet, 3 inferred here, 700 left; the server last progressed 579 s ago, estimated time left: about 28 min
+graph: waiting for memory headroom (1044 of 1188 MB reserved, 1 projects running): semio-framework-value-testing-effect-bank needs 1044 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference settled from 6897 to 7189 MB
+graph: plan answered, managed 103 MB, resident 189 MB (released 22 MB)
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 9284 MB
+graph: 703 stale projects, 0 taken from the fleet, 10 too heavy for this machine (semio-repo-test-host (about 22024 MB), workspace (about 17854 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/2d-trace-rs (about 8914 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), and 4 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: plan stage inference starts (managed 905 MB, resident 1198 MB)
+graph: asking the host for up to 2 worker processes for 689 projects; the projects wait for them
+graph: inferring projects with 2 worker processes (1536 MB each)
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 1128 s ago, estimated time left: about 3 min
+graph: waiting for memory headroom (433 of 891 MB reserved, 1 projects running): semio-plugin-original-job-ownership needs 1044 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: headroom of 930 MB is below one project (1044 MB), inferring one project at a time
+graph: 0 of 703 projects arrived from the fleet, 3 inferred here, 700 left; the server last progressed 1130 s ago, estimated time left: about 3 min
+graph: waiting for memory headroom (1044 of 1032 MB reserved, 1 projects running): semio-framework-value-testing-effect-bank needs 1044 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference settled from 6864 to 7521 MB
+graph: plan answered, managed 103 MB, resident 187 MB (released 19 MB)
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 9115 MB
+graph: 703 stale projects, 0 taken from the fleet, 10 too heavy for this machine (semio-repo-test-host (about 21994 MB), workspace (about 17828 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/2d-trace-rs (about 8900 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), and 4 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: plan stage inference starts (managed 916 MB, resident 1201 MB)
+graph: inferring projects with 1 worker processes (1536 MB each)
+graph: waiting for memory headroom (433 of 747 MB reserved, 1 projects running): semio-plugin-original-job-ownership needs 1044 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: headroom of 829 MB is below one project (1044 MB), inferring one project at a time
+graph: headroom of 875 MB again (812 MB taken), resuming
+graph: 0 of 703 projects arrived from the fleet, 3 inferred here, 700 left; the server last progressed 158 s ago, estimated time left: about 3 min
+graph: waiting for memory headroom (812 of 1183 MB reserved, 1 projects running): semio-framework-value-testing-effect-bank needs 812 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference settled from 7050 to 7520 MB
+graph: plan answered, managed 103 MB, resident 166 MB (released 68 MB)
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 9032 MB
+graph: 703 stale projects, 0 taken from the fleet, 10 too heavy for this machine (semio-repo-test-host (about 21962 MB), workspace (about 17802 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/2d-trace-rs (about 8888 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), and 4 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: plan stage inference starts (managed 914 MB, resident 1060 MB)
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 698 s ago, estimated time left: about 5 min
+graph: waiting for memory headroom (433 of 911 MB reserved, 1 projects running): semio-plugin-original-job-ownership needs 812 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 1 inferred here, 702 left; the server last progressed 700 s ago, estimated time left: about 5 min
+graph: 0 of 703 projects arrived from the fleet, 3 inferred here, 700 left; the server last progressed 703 s ago, estimated time left: about 5 min
+graph: waiting for memory headroom (2692 of 1288 MB reserved, 5 projects running): semio-framework-value-receiving needs 242 MB and has waited 9 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 3 inferred here, 700 left; the server last progressed 719 s ago, estimated time left: about 5 min
+graph: plan stage inference settled from 7023 to 7268 MB
+graph: plan answered, managed 103 MB, resident 186 MB (released 20 MB)
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 9176 MB
+graph: 703 stale projects, 0 taken from the fleet, 10 too heavy for this machine (semio-repo-test-host (about 21926 MB), workspace (about 17774 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/2d-trace-rs (about 8874 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), and 4 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: plan stage inference starts (managed 1168 MB, resident 1432 MB)
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 1293 s ago, estimated time left: about 11 min
+graph: waiting for memory headroom (676 of 781 MB reserved, 2 projects running): semio-os-mcp-process-arena needs 242 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 1 inferred here, 702 left; the server last progressed 1304 s ago, estimated time left: about 11 min
+graph: 0 of 703 projects arrived from the fleet, 2 inferred here, 701 left; the server last progressed 1306 s ago, estimated time left: about 11 min
+graph: waiting for memory headroom (1211 of 1195 MB reserved, 5 projects running): semio-framework-value-retirement-contract needs 242 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 10 inferred here, 693 left; the server last progressed 1311 s ago, estimated time left: about 11 min
+graph: plan stage inference settled from 6367 to 7319 MB
+graph: plan answered, managed 103 MB, resident 161 MB (released 1 MB)
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 9378 MB
+graph: 703 stale projects, 0 taken from the fleet, 10 too heavy for this machine (semio-repo-test-host (about 21894 MB), workspace (about 17748 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/2d-trace-rs (about 8860 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), and 4 more; it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: plan stage inference starts (managed 900 MB, resident 1168 MB)
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 5 s ago, estimated time left: about 11 min
+graph: waiting for memory headroom (918 of 955 MB reserved, 3 projects running): semio-os-infinite needs 242 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 2 inferred here, 701 left; the server last progressed 7 s ago, estimated time left: about 11 min
+graph: 0 of 703 projects arrived from the fleet, 9 inferred here, 694 left; the server last progressed 9 s ago, estimated time left: about 11 min
+graph: waiting for memory headroom (1662 of 1093 MB reserved, 4 projects running): semio-framework-value-native-slice-equality needs 242 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 10 inferred here, 693 left; the server last progressed 15 s ago, estimated time left: about 11 min
+graph: plan stage inference settled from 6757 to 7690 MB
+graph: plan answered, managed 104 MB, resident 159 MB (released 3 MB)
+## last waiting line: 
+## last 30 lines
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (1662 of 1093 MB reserved, 4 projects running): semio-framework-value-native-slice-equality needs 242 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:10:689:4:5:semio-os-infinite|language%3Acargo|5|0,semio-framework-value-native-tree-engine|language%3Acargo|0|0,semio-framework-value-native-source|language%3Acargo|0|0:waiting|1662|1093|language%3Acargo","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 10 of 689 projects · 4 running, longest 5 s: semio-os-infinite (language:cargo, 5 s, 0 rows), semio-framework-value-native-tree-engine (language:cargo, 0 s, 0 rows), semio-framework-value-native-source (language:cargo, 0 s, 0 rows) · waiting for memory headroom (1662 of 1093 MB reserved)
+[capacity] admitted exec: 1 job(s), 1536 MB reserved (5981 MB available, 1536 MB floor)
+graph: inferring projects with 1 worker processes (1536 MB each)
+graph: 0 of 703 projects arrived from the fleet, 10 inferred here, 693 left; the server last progressed 15 s ago, estimated time left: about 11 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:10:689:5:5:semio-os-infinite|language%3Acargo|5|0,semio-framework-value-native-tree-engine|language%3Acargo|5|0,semio-framework-value-native-source|language%3Acargo|5|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 10 of 689 projects · 5 running, longest 5 s: semio-os-infinite (language:cargo, 5 s, 0 rows), semio-framework-value-native-tree-engine (language:cargo, 5 s, 0 rows), semio-framework-value-native-source (language:cargo, 5 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:10:689:6:5:semio-os-infinite|language%3Acargo|5|0,semio-framework-value-native-tree-engine|language%3Acargo|5|0,semio-framework-value-native-source|language%3Acargo|5|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 10 of 689 projects · 6 running, longest 5 s: semio-os-infinite (language:cargo, 5 s, 0 rows), semio-framework-value-native-tree-engine (language:cargo, 5 s, 0 rows), semio-framework-value-native-source (language:cargo, 5 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[repo] still working after 3470 s; last phase started: source.served
+[repository:command] still running after 3470 s
+graph: plan stage inference settled from 6757 to 7690 MB
+Graph: Plan-Stufe inference beruhigt von 6757 auf 7690 MB
+[repository:command] still running after 3480 s
+[repository:command] still running after 3490 s
+graph: plan answered, managed 104 MB, resident 159 MB (released 3 MB)
+[repo] still working after 3500 s; last phase started: source.served
+[repository:command] still running after 3500 s
+[repository:command] still running after 3510 s
+[repository:command] still running after 3520 s
+[repo] still working after 3530 s; last phase started: source.served
+[repository:command] still running after 3530 s
+[repository:command] still running after 3540 s
+[repository:command] still running after 3550 s

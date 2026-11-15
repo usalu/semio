@@ -1,0 +1,99 @@
+/** 🌿️ The membership frontier of a workspace, walked once and then advanced: a walk lists every directory it may descend into; an advance stats the directories of the previous frontier and lists only the ones whose entry stamp moved (plus the directories that appeared below them), so a tree that changed in a handful of directories costs a stat pass, not a readdir of every directory. */
+
+export const FRONTIER_WALK_POLICY_V1=Object.freeze({concurrency:64,racyMilliseconds:2000,rootDirectory:"."});
+const P=FRONTIER_WALK_POLICY_V1;
+const fail=(message,code)=>Object.assign(Error(message),code?{code}:{});
+const parentOf=path=>{const cut=path.lastIndexOf("/");return cut<0?P.rootDirectory:path.slice(0,cut);};
+const childOf=(directory,name)=>directory===P.rootDirectory?name:directory+"/"+name;
+const aborted=signal=>signal?.throwIfAborted();
+
+async function pool(items,visit,signal){
+ let next=0;
+ await Promise.all(Array.from({length:Math.min(P.concurrency,items.length)},async()=>{while(next<items.length){aborted(signal);const at=next++;await visit(items[at],at);}}));
+}
+
+/**
+ * 🚶️ Walks the tree below the root directory `.` once. `list(directory)` answers the entries `{name,kind}` (`kind` is `directory`, `file` or `other`, symbolic links count as `other`) or undefined when the directory vanished; `stat(path)` answers `{directory,file,mtimeMs,ino,mode}` or undefined; `descend(name,path,parent)` says whether a directory is entered; `member(path)` whether a file belongs to the membership. The stamp of a directory is taken before it is listed, so an entry that appears while it is listed moves the next stamp.
+ * Answers `{directories:[[path,mtimeMs,ino]],members:[[path,mode]]}` in walk order.
+ */
+export async function walkFrontierV1({list,stat,descend,member,signal}){
+ const directories=[],members=[];
+ let pending=[P.rootDirectory];
+ while(pending.length){
+  const batch=pending;pending=[];const listed=new Array(batch.length);
+  await pool(batch,async(directory,at)=>{
+   const status=await stat(directory),entries=status?.directory?await list(directory):undefined;
+   if(!entries)throw fail("Build directory removed during discovery: "+directory,"BUILD_MEMBERSHIP_CHANGED");
+   listed[at]={directory,status,entries};
+  },signal);
+  for(const{directory,status,entries}of listed){
+   directories.push([directory,status.mtimeMs,status.ino]);
+   const files=[];
+   for(const entry of entries){
+    const path=childOf(directory,entry.name);
+    if(entry.kind==="directory"){if(descend(entry.name,path,directory))pending.push(path);}
+    else if(entry.kind==="file"&&member(path))files.push(path);
+   }
+   await pool(files,async path=>{const info=await stat(path);if(!info)throw fail("Build member removed during discovery: "+path,"BUILD_MEMBERSHIP_CHANGED");members.push([path,info.mode]);},signal);
+  }
+ }
+ return{directories,members};
+}
+
+/**
+ * ⏩️ Advances a previous frontier `{capturedAt,directories,members}` to the current tree with the same ports as {@link walkFrontierV1}: every previous directory is stat'ed, the ones whose stamp moved (or that were touched within the racy window of the capture) are listed again, directories that appeared below them are walked, entries that disappeared are dropped with their subtrees and the mode of every member is read again. Answers `undefined` when the tree shows a change its parents do not explain (a directory vanished although its parent is unchanged), so the caller walks again; `{unchanged:true}` when nothing moved; otherwise `{directories,members,listed}` equal to what a walk of the current tree answers (`listed` counts the directories read again).
+ */
+export async function advanceFrontierV1({frontier,list,stat,descend,member,signal}){
+ const stamps=new Map(frontier.directories.map(row=>[row[0],row])),modes=new Map(frontier.members.map(row=>[row[0],row[1]]));
+ const children={directories:new Map(),files:new Map()};
+ const index=(map,parent,path)=>{const held=map.get(parent);if(held)held.push(path);else map.set(parent,[path]);};
+ for(const path of stamps.keys())if(path!==P.rootDirectory)index(children.directories,parentOf(path),path);
+ for(const path of modes.keys())index(children.files,parentOf(path),path);
+ const changed=new Map(),missing=new Set();
+ await pool(frontier.directories,async row=>{
+  const status=await stat(row[0]);
+  if(!status?.directory){missing.add(row[0]);return;}
+  if(status.mtimeMs!==row[1]||status.ino!==row[2]||frontier.capturedAt-row[1]<P.racyMilliseconds)changed.set(row[0],status);
+ },signal);
+ for(const path of missing)if(path===P.rootDirectory||!changed.has(parentOf(path))&&!missing.has(parentOf(path)))return undefined;
+ const moved=new Map();
+ await pool([...modes.keys()],async path=>{
+  const parent=parentOf(path);if(changed.has(parent)||missing.has(parent))return;
+  const info=await stat(path);
+  if(!info?.file)moved.set(path,undefined);else if(info.mode!==modes.get(path))moved.set(path,info.mode);
+ },signal);
+ for(const[path,mode]of moved)if(mode===undefined)return undefined;
+ if(!changed.size&&!missing.size&&!moved.size)return{unchanged:true};
+ const dirs=new Map(stamps);
+ const dropTree=path=>{
+  dirs.delete(path);
+  for(const file of children.files.get(path)??[])modes.delete(file);
+  for(const directory of children.directories.get(path)??[])dropTree(directory);
+ };
+ for(const path of missing)dropTree(path);
+ for(const[path,mode]of moved)modes.set(path,mode);
+ for(const[path,status]of changed)dirs.set(path,[path,status.mtimeMs,status.ino]);
+ let pending=[...changed.keys()].filter(path=>dirs.has(path)).sort(),listed=0;
+ while(pending.length){
+  const batch=pending;pending=[];const answers=new Array(batch.length);
+  await pool(batch,async(directory,at)=>{answers[at]=await list(directory);},signal);
+  listed+=batch.length;
+  for(let at=0;at<batch.length;at++){
+   const directory=batch[at],entries=answers[at];
+   if(!dirs.has(directory))continue;
+   if(!entries){dropTree(directory);if(directory===P.rootDirectory)return undefined;continue;}
+   const here={directories:new Set(),files:new Set()},fresh=[];
+   for(const entry of entries){
+    const path=childOf(directory,entry.name);
+    if(entry.kind==="directory"){if(descend(entry.name,path,directory)){here.directories.add(path);if(!dirs.has(path))fresh.push(path);}}
+    else if(entry.kind==="file"&&member(path))here.files.add(path);
+   }
+   for(const path of children.directories.get(directory)??[])if(!here.directories.has(path))dropTree(path);
+   for(const path of children.files.get(directory)??[])if(!here.files.has(path))modes.delete(path);
+   await pool([...here.files],async path=>{const info=await stat(path);if(!info?.file){here.files.delete(path);modes.delete(path);return;}modes.set(path,info.mode);},signal);
+   await pool(fresh,async path=>{const status=await stat(path);if(status?.directory){dirs.set(path,[path,status.mtimeMs,status.ino]);pending.push(path);}},signal);
+  }
+  pending.sort();
+ }
+ return{directories:[...dirs.values()],members:[...modes].map(([path,mode])=>[path,mode]),listed};
+}

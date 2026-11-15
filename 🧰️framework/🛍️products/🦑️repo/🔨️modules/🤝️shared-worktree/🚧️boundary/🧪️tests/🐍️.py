@@ -6,11 +6,14 @@ import json,os,re,sys,unicodedata
 HERE=os.path.dirname(os.path.abspath(__file__))
 FIXTURE=json.load(open(os.path.join(HERE,"🧫️fixtures","🔣️.json"),encoding="utf8"))
 ILLEGAL=re.compile(r'[<>:"|?*\\\x00-\x1f\x7f-\x9f]')
-RESERVED=re.compile("(CON|PRN|AUX|NUL|COM[1-9\u00b9\u00b2\u00b3]|LPT[1-9\u00b9\u00b2\u00b3])")
+RESERVED=re.compile("(CON|PRN|AUX|NUL|CONIN\\$|CONOUT\\$|CLOCK\\$|COM[1-9\u00b9\u00b2\u00b3]|LPT[1-9\u00b9\u00b2\u00b3])")
+TABLE=json.load(open(os.path.join(HERE,"..","🔤️fold","🔣️.json"),encoding="utf8"))
+FOLD={entry[0]:entry[1] for entry in TABLE["map"]}
+
 
 def refuse_path(path):
     if path!=unicodedata.normalize("NFC",path): return "not-nfc"
-    if len(path)>256: return "too-long"
+    if len(path.encode("utf-16-le"))//2>256: return "too-long"
     parts=path.split("/")
     if any(len(part.encode("utf-8","surrogatepass"))>255 for part in parts): return "component-too-long"
     if ILLEGAL.search(path): return "illegal-character"
@@ -29,6 +32,33 @@ def refuse_link(path,target):
             if depth<0: return "unsafe-link"
         else: depth+=1
     return None
+
+def git_shared(path):
+    parts=path.split("/")
+    if parts[0]!=".git": return False
+    rest=parts[1:]
+    if not rest: return True
+    name=rest[-1]
+    if name.endswith(".lock"): return False
+    if len(rest)==1 and name in ("HEAD","packed-refs","shallow"): return True
+    if rest[0] not in ("refs","objects"): return False
+    if rest[0]=="objects": return not name.startswith("tmp_") and "/".join(rest)!="objects/info/alternates"
+    return True
+
+def fold(name):
+    name=unicodedata.normalize("NFC",name)
+    return unicodedata.normalize("NFC","".join(FOLD.get(ord(char),char.lower() if "A"<=char<="Z" else char) for char in name))
+
+def fold_property_failures():
+    failures=[];checked=0
+    for point in range(0x110000):
+        if 0xd800<=point<=0xdfff: continue
+        char=chr(point)
+        if unicodedata.category(char)=="Cn": continue
+        checked+=1
+        folded=char.casefold()
+        if fold(char)!=fold(folded): failures.append("casefold of U+%04X is %r but the table folds %r and %r differently"%(point,folded,fold(char),fold(folded)))
+    return checked,failures
 
 def path_of(row): return row["path"]*row.get("times",1)+row.get("suffix","")
 
@@ -62,6 +92,14 @@ def main():
     for row in FIXTURE["links"]:
         checked+=1;got=refuse_link(row["path"],row["target"])
         if got!=row["refusal"]: failures.append("link %r -> %r: fixture %r, oracle %r"%(row["path"],row["target"],row["refusal"],got))
+    for row in FIXTURE["git"]:
+        checked+=1;got=git_shared(row["path"])
+        if got!=row["shared"]: failures.append("git %r: fixture %r, oracle %r"%(row["path"],row["shared"],got))
+    for row in FIXTURE["folds"]:
+        checked+=1;got=fold(row["a"])==fold(row["b"])
+        if got!=row["same"]: failures.append("fold %r %r: fixture %s, oracle %s"%(row["a"],row["b"],row["same"],got))
+    count,property_failures=fold_property_failures()
+    checked+=count;failures.extend(property_failures)
     try:
         import pathspec
         spec_class=pathspec.GitIgnoreSpec

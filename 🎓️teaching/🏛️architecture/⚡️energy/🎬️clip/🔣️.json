@@ -9,6 +9,10 @@
           "scene": "PhysicalFundamentals_FullSection",
           "segments": [
             {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
+            {
               "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
               "scene": "Beat1_Leistung"
             },
@@ -53,16 +57,16 @@
           "scene": "Ventilation_01_WarumLueften",
           "segments": [
             {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
+            {
               "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
               "scene": "Beat1_Lueftungsbedarf"
             },
             {
               "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
               "scene": "Beat2_Lueftungsweg"
-            },
-            {
-              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
-              "scene": "Beat3_Fahrplan"
             }
           ]
         },
@@ -177,6 +181,10 @@
         {
           "scene": "Heating_01_Introduction",
           "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
             {
               "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
               "scene": "Beat1_DreiWegeDerWaerme"
@@ -363,6 +371,10 @@
           "scene": "Cooling_01_HeatingVsCooling",
           "segments": [
             {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
+            {
               "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py",
               "scene": "Beat1_WinterGains"
             },
@@ -506,7 +518,12 @@
       "chapters": [
         {
           "scene": "EnergyBalance_01_Energiebilanz",
+          "poster": {"segment": 1, "animation": 24},
           "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🗺️roadmap/🐍️.py",
+              "scene": "Beat1_Fahrplan"
+            },
             {
               "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py",
               "scene": "Beat1_Bilanzgrenze"
@@ -527,6 +544,7 @@
         },
         {
           "scene": "EnergyBalance_02_RegelwerkKlima",
+          "poster": {"segment": 1, "animation": 32},
           "segments": [
             {
               "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py",
@@ -548,6 +566,7 @@
         },
         {
           "scene": "EnergyBalance_03_BedarfVsLeistung",
+          "poster": {"segment": 2, "animation": 24},
           "segments": [
             {
               "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py",
@@ -569,6 +588,7 @@
         },
         {
           "scene": "EnergyBalance_04_NutzZuEndenergie",
+          "poster": {"segment": 2, "animation": 28},
           "segments": [
             {
               "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
@@ -594,6 +614,7 @@
         },
         {
           "scene": "EnergyBalance_05_Primaerenergie",
+          "poster": {"segment": 2, "animation": 28},
           "segments": [
             {
               "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py",
@@ -615,6 +636,7 @@
         },
         {
           "scene": "EnergyBalance_06_Energieausweis",
+          "poster": {"segment": 1, "animation": 16},
           "segments": [
             {
               "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py",
@@ -632,6 +654,7 @@
         },
         {
           "scene": "EnergyBalance_07_TheorieVsPraxis",
+          "poster": {"segment": 1, "animation": 24},
           "segments": [
             {
               "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py",
@@ -648,7 +671,8 @@
           ]
         }
       ],
-      "output": "Full_EnergyBalance"
+      "output": "Full_EnergyBalance",
+      "poster": {"chapter": "EnergyBalance_05_Primaerenergie"}
     },
     {
       "id": "bim_information",

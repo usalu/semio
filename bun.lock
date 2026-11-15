@@ -1915,7 +1915,7 @@
   },
   "overrides": {
     "@semio-tech/assets": "workspace:*",
-    "diff": "^8.0.3",
+    "diff": "8.0.4",
     "tmp": "^0.2.5"
   },
   "packages": {

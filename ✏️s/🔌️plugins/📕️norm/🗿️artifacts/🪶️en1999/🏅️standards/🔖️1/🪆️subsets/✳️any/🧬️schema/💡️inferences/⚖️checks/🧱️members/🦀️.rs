@@ -42,11 +42,11 @@ mod thin_wall_checks;
 pub use thin_wall_checks::*;
 
 #[path = "../🧵️weld-run-checks/🦀️.rs"]
-mod weld_run_checks;
+pub mod weld_run_checks;
 pub use weld_run_checks::*;
 
 #[path = "../🔷️outline-checks/🦀️.rs"]
-mod outline_checks;
+pub mod outline_checks;
 pub use outline_checks::*;
 
 #[path = "../🌀️free-outline-stability/🦀️.rs"]

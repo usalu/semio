@@ -147,7 +147,7 @@ pub mod editor {
         pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::ui_helpers_and_io;
         #[path = "."]
         pub mod wasm {
-            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::wasm::*;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::wasm::*;
             #[cfg(test)]
             #[path = "../../../🌉️wasm/🧪️tests/🔬️unit/🦀️.rs"]
             pub mod tests;
@@ -156,14 +156,14 @@ pub mod editor {
         pub mod commands {
             #[path = "."]
             pub mod asset {
-                pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::asset::*;
+                pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::asset::*;
                 #[cfg(test)]
                 #[path = "../../../🎮️commands/📦️asset/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;
             }
             #[path = "."]
             pub mod camera {
-                pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::camera::*;
+                pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::camera::*;
                 #[cfg(test)]
                 #[path = "../../../🎮️commands/🎥️camera/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;
@@ -172,35 +172,35 @@ pub mod editor {
             pub mod export;
             #[path = "."]
             pub mod document {
-                pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::document::*;
+                pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::document::*;
                 #[cfg(test)]
                 #[path = "../../../🎮️commands/📄️document/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;
             }
             #[path = "."]
             pub mod gumball {
-                pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::gumball::*;
+                pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::gumball::*;
                 #[cfg(test)]
                 #[path = "../../../🎮️commands/🧭️gumball/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;
             }
             #[path = "."]
             pub mod scene {
-                pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::scene::*;
+                pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::scene::*;
                 #[cfg(test)]
                 #[path = "../../../🎮️commands/☀️scene/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;
             }
             #[path = "."]
             pub mod selection {
-                pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::selection::*;
+                pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::selection::*;
                 #[cfg(test)]
                 #[path = "../../../🎮️commands/🗂️selection/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;
             }
             #[path = "."]
             pub mod shot {
-                pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::shot::*;
+                pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::shot::*;
                 #[cfg(test)]
                 #[path = "../../../🎮️commands/📷️shot/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;

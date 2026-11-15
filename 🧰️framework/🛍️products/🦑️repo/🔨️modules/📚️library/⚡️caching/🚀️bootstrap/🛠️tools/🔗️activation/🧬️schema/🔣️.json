@@ -105,7 +105,9 @@
             "file",
             "invalid-receipt",
             "mutation",
-            "cancel"
+            "cancel",
+            "relocated",
+            "relocated-dangling"
           ]
         },
         "accepted": {
@@ -118,7 +120,8 @@
       "additionalProperties": false,
       "required": [
         "cases",
-        "activationCases"
+        "activationCases",
+        "linkCases"
       ],
       "properties": {
         "cases": {
@@ -131,11 +134,60 @@
         },
         "activationCases": {
           "type": "array",
-          "minItems": 9,
-          "maxItems": 9,
+          "minItems": 11,
+          "maxItems": 11,
           "items": {
             "$ref": "#/$defs/ActivationCase"
           }
+        },
+        "linkCases": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/LinkCase"
+          }
+        }
+      }
+    },
+    "LinkCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "root",
+        "target",
+        "style",
+        "verdict"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "style": {
+          "enum": [
+            "posix",
+            "windows"
+          ]
+        },
+        "verdict": {
+          "enum": [
+            "owned",
+            "relocated",
+            "refused"
+          ]
         }
       }
     }

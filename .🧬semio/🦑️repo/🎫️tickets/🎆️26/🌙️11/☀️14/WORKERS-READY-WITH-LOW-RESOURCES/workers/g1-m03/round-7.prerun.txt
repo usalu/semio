@@ -1,0 +1,31 @@
+Pre-run facts, 2026-11-14T20:09:21Z
+- replica code digest (.cache/f/health.json): 28b4f47dc4d69fae3a080d0c58d3520741c02c444760d2a3cec506db943ae8ff, store ok, daemon pid 4292
+- replica agent: launchctl print gui/501/tech.semio.fleet.replica:
+    	state = running
+    	runs = 43
+    	pid = 4284
+    	last exit code = 0
+    		state = active
+    		state = active
+- `repo service host` processes (pid, ppid, age, rss KiB):
+    pid 8911 ppid 1 age 16:28 rss 298720 (… repo service host run)
+    pid 8942 ppid 8911 age 16:25 rss 520288 (… repo service host run)
+    pid 18021 ppid 18006 age 00:00 rss 912 (… repo service host run)
+  (2 process(es))
+- graph service job(s):
+    tech.semio.repo.service.d8505b2379b9
+    	state = running
+    	runs = 1
+    	last exit code = (never exited)
+    		state = active
+    		state = active
+- last 8 lines of .cache/f/sidecars/build-agent.log:
+    2026-11-14T20:09:03.911Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T20:09:05.348Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T20:09:06.476Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T20:09:07.712Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T20:09:08.774Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T20:09:09.906Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T20:09:10.939Z worker registered: 41c8df99-c2c4-47d4-8471-8e17b6f931a1 cache http://192.168.178.70:6094
+    2026-11-14T20:09:13.256Z load report sent: reachable again
+- memory pressure level 1, free disk 88Gi

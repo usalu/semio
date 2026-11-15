@@ -15,7 +15,7 @@ import {enterLaneV1,lanePathsV1,readLaneV1} from "../🧵️lane/🟦️.ts";
 import {acquirePooledLaneV1} from "../🧵️lane/🏊️pool/🟦️.ts";
 import {lookupBuildRunV1,pruneEntriesV1,publishBuildRunV1} from "../💾️store/🟦️.ts";
 import {admissionMemoKeyV1,recallAdmissionV1,rememberAdmissionV1,unitAdmissionMemoV1} from "../📖️admission/🟦️.ts";
-import {ensureUnitCacheShimV1,focusFromCargoArgumentsV1,laneMessageV1,unitCacheEnvironmentV1,unitCacheRootV1,unitCacheShimPathV1,unitCacheShimSourceV1} from "../🚪️launch/🟦️.ts";
+import {ensureUnitCacheShimV1,focusFromCargoArgumentsV1,laneMessageV1,sealedUnitCacheV1,unitCacheEnvironmentV1,unitCacheRootV1,unitCacheShimPathV1,unitCacheShimSourceV1} from "../🚪️launch/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {cargoScratchBaseV1} from "./🏖️scratch/🟦️.ts";
 import {CATALOG_LANGUAGES_V1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
@@ -152,14 +152,14 @@ function writeWorkspace(root:string,libraries:readonly string[],full:boolean){
 type Session={code:number;output:string;milliseconds:number;lane:string};
 function session(workspace:string,cache:string,lane:string,args:string[],extra:Record<string,string|undefined>={}):Promise<Session>{
  const laneRoot=join(cache,"l",lane);mkdirSync(laneRoot,{recursive:true});
- const environment={...process.env,RUSTC_WRAPPER:process.execPath,RUSTC:script,SEMIO_UNIT_CACHE_ROOT:cache,SEMIO_UNIT_CACHE_LANE:lane,SEMIO_UNIT_CACHE_LANE_ROOT:laneRoot,SEMIO_UNIT_CACHE_SLOTS:"4",SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,slow,fixture.scenario.bounds.slowCrate,String(fixture.scenario.bounds.slowMilliseconds),"--","rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_TERM_COLOR:"never",...extra};
+ const environment={...process.env,RUSTC_WRAPPER:process.execPath,RUSTC:script,SEMIO_UNIT_CACHE_ROOT:cache,SEMIO_UNIT_CACHE_LANE:lane,SEMIO_UNIT_CACHE_LANE_ROOT:laneRoot,SEMIO_UNIT_CACHE_SLOTS:"4",SEMIO_UNIT_CACHE_INNER:JSON.stringify([process.execPath,slow,fixture.scenario.bounds.slowCrate,String(fixture.scenario.bounds.slowMilliseconds),"--","rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_TERM_COLOR:"never",SEMIO_UNIT_CACHE_REMOTE:"off",...extra};
  for(const name of["RUSTC_WORKSPACE_WRAPPER","CARGO_BUILD_RUSTC_WRAPPER"])delete (environment as Record<string,string|undefined>)[name];
  return new Promise(done=>{const started=Date.now(),child=spawn(cargo,["build","--manifest-path",join(workspace,"Cargo.toml"),...args],{cwd:workspace,env:environment as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output,milliseconds:Date.now()-started,lane}));});
 }
 type Event={kind:string;crate:string;key:string|null;waitedMs:number;reason?:string;lane:string};
 function events(cache:string,lane?:string):Event[]{
  const directory=join(cache,"x");if(!existsSync(directory))return[];
- return readdirSync(directory).filter(name=>!lane||name===lane+".jsonl").flatMap(name=>readFileSync(join(directory,name),"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line) as Event));
+ return readdirSync(directory).filter(name=>lane?name===lane+".jsonl":name.endsWith(".jsonl")&&name!=="offload.jsonl").flatMap(name=>readFileSync(join(directory,name),"utf8").split("\n").filter(Boolean).map(line=>JSON.parse(line) as Event));
 }
 const count=(rows:readonly Event[],kind:string,crate?:string)=>rows.filter(row=>row.kind===kind&&(crate===undefined||row.crate===crate)).length;
 
@@ -194,12 +194,13 @@ test("three sessions build disjoint crates at once, share each unit exactly once
  expect(count(events(cache,"s4").slice(warm.length+appEvents.length),"miss")).toBe(0);
 },180000);
 
-test("the focused crate compiles incrementally in its own lane, is never published, and its neighbours stay shared", async()=>{
+test("the focused crate compiles incrementally in its own lane on a miss, is published and served like every other unit, and its neighbours stay shared", async()=>{
  const directory=scratch(),workspace=join(directory,"ws"),cache=join(directory,"cache");writeWorkspace(workspace,[],true);
  const warm=await session(workspace,cache,"w1",["-p","leaf2"]);expect(warm.code,warm.output).toBe(0);
  const changed=join(workspace,"leaf2","src","lib.rs");
  for(const round of[1,2]){writeFileSync(changed,readFileSync(changed,"utf8")+`pub fn r${round}() -> u32 { ${round} }\n`);const run=await session(workspace,cache,"f1",["-p","leaf2"],{SEMIO_UNIT_CACHE_FOCUS:"leaf2"});expect(run.code,run.output).toBe(0);}
- const rows=events(cache,"f1");expect(count(rows,"incremental","leaf2")).toBe(2);expect(count(rows,"publish","leaf2")).toBe(0);expect(count(rows,"hit","core")).toBe(1);
+ const rows=events(cache,"f1");expect(count(rows,"miss","leaf2")).toBe(2);expect(count(rows,"publish","leaf2")).toBe(2);expect(count(rows,"hit","core")).toBe(1);
+ const again=await session(workspace,cache,"f2",["-p","leaf2"],{SEMIO_UNIT_CACHE_FOCUS:"leaf2"});expect(again.code,again.output).toBe(0);const second=events(cache,"f2");expect(count(second,"hit","leaf2")).toBe(1);expect(count(second,"miss")).toBe(0);
  const incremental=spawnSync("find",[join(cache,"l","f1"),"-name","incremental","-type","d"],{encoding:"utf8"}).stdout.trim();expect(incremental.length).toBeGreaterThan(0);
  expect(readdirSync(incremental.split("\n")[0]!).length).toBeGreaterThan(0);
 },180000);
@@ -271,10 +272,10 @@ test("one Cargo process owns a lane at a time: concurrent commands get distinct 
 test("the launcher block selects the wrapper chain and the focus follows the package selection", () => {
  expect(focusFromCargoArgumentsV1(["check","-p","a","--package","b@1.0.0","--package=c","-pd","--","-p","zzz"])).toEqual(["a","b","c","d"]);
  expect(focusFromCargoArgumentsV1(["build","--workspace"])).toEqual([]);
- const cacheRoot=join(scratch(),"u"),block=unitCacheEnvironmentV1({cacheRoot,lane:"abc",laneRoot:join(cacheRoot,"l","abc"),scheduler:"/t/scheduler",compiler:"rustc",toolchain:"tc",focus:["a","b"],slots:6,runtime:"/bin/bun"});
- expect(block.RUSTC_WRAPPER).toBe(unitCacheShimPathV1(cacheRoot));expect("RUSTC" in block,"the compiler stays the real one").toBe(false);
- expect(readFileSync(block.RUSTC_WRAPPER,"utf8")).toBe(unitCacheShimSourceV1("/bin/bun",script));expect(statSync(block.RUSTC_WRAPPER).mode&0o111).toBe(0o111);
- expect(ensureUnitCacheShimV1(cacheRoot,"/bin/bun")).toBe(block.RUSTC_WRAPPER);
+ const cacheRoot=join(scratch(),"u"),block=unitCacheEnvironmentV1({cacheRoot,lane:"abc",laneRoot:join(cacheRoot,"l","abc"),scheduler:"/t/scheduler",compiler:"rustc",toolchain:"tc",focus:["a","b"],slots:6,runtime:process.execPath}),sealed=sealedUnitCacheV1(cacheRoot);
+ expect(block.RUSTC_WRAPPER).toBe(unitCacheShimPathV1(cacheRoot,process.platform,sealed.digest));expect("RUSTC" in block,"the compiler stays the real one").toBe(false);
+ expect(readFileSync(block.RUSTC_WRAPPER,"utf8")).toBe(unitCacheShimSourceV1(process.execPath,sealed.entries[0]!));expect(statSync(block.RUSTC_WRAPPER).mode&0o111).toBe(0o111);
+ expect(ensureUnitCacheShimV1(cacheRoot)).toBe(block.RUSTC_WRAPPER);
  const quoted=unitCacheShimSourceV1("/o'p/bun","/s/it's.ts");expect(quoted.startsWith("#!/bin/sh\n")).toBe(true);expect(quoted.endsWith("exec '/o'\\''p/bun' '/s/it'\\''s.ts' \"$@\"\n")).toBe(true);expect(unitCacheShimPathV1("/u","win32","abc").endsWith("rustc-wrapper-abc.exe"),"a native executable, never a batch file").toBe(true);
  expect(JSON.parse(block.SEMIO_UNIT_CACHE_INNER)).toEqual(["/t/scheduler","rustc"]);expect(block.SEMIO_UNIT_CACHE_FOCUS).toBe("a,b");expect(block.SEMIO_UNIT_CACHE_SLOTS).toBe("6");
  expect(unitCacheRootV1("/store")).toBe("/store/u");
@@ -420,10 +421,10 @@ fn main() {
 `);
  writeFileSync(join(workspace,"src","lib.rs"),"pub fn f() {}\n");
  const bare=`${process.env.HOME}/.cargo/bin:/usr/bin:/bin`,lanes:string[]=[];
- expect(statSync(script).mode&0o111,"the tracked script itself is executable").not.toBe(0);
  for(const lane of["x1","x2"]){
   const laneRoot=join(cache,"l",lane);mkdirSync(laneRoot,{recursive:true});lanes.push(lane);
   const block=unitCacheEnvironmentV1({cacheRoot:cache,lane,laneRoot,scheduler:"unused",compiler:"rustc",toolchain:"tc",focus:[],slots:2,features:{buildScripts:true}});
+  if(process.platform!=="win32")expect(readFileSync(block.RUSTC_WRAPPER,"utf8"),"the stand-in starts the runtime on the script, so no file mode of the script matters").toMatch(/\nexec \S*\/?[^\n]*\.ts' "\$@"\n$/u);
   const run=await new Promise<{code:number;output:string}>(done=>{const child=spawn(cargo,["build"],{cwd:workspace,env:{HOME:process.env.HOME,...toolchainEnvironment,PATH:bare,...block,SEMIO_UNIT_CACHE_INNER:JSON.stringify(["rustc"]),CARGO_TARGET_DIR:join(laneRoot,"t"),CARGO_INCREMENTAL:"0"} as NodeJS.ProcessEnv,stdio:["ignore","pipe","pipe"]});let output="";child.stdout.on("data",chunk=>{output+=chunk;});child.stderr.on("data",chunk=>{output+=chunk;});child.on("close",code=>done({code:code??1,output}));});
   expect(run.code,run.output).toBe(0);
  }

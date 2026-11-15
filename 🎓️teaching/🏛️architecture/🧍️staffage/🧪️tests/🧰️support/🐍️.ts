@@ -32,6 +32,21 @@ export type SvgRaster = { readonly widthPx: number; readonly heightPx: number; r
 /** 🗂️ Rasterises one element (by id) of an SVG file at `pixelsPerMm` with MuPDF and measures the pixels that are at least half covered: the extent of the figure at a known pixel density, independent of the SVG writer. */
 export const rasteriseSvg = (svgFile: string, elementId: string, pixelsPerMm: number): SvgRaster => json<SvgRaster>("🖼️raster.py", "documents", ["measure", svgFile, elementId, String(pixelsPerMm)]);
 
+/** 🕳️ What shapely says every even-odd case of a fill-rule fixture paints: the area from the planar arrangement, from the symmetric difference of the rings (none for a self-crossing ring) and whether each sample is painted. */
+export type FillRuleExpected = { readonly areaMm2: number; readonly xorAreaMm2: number | null; readonly samples: readonly (readonly [number, number, boolean])[] };
+export const fillRuleExpected = (fixtureFile: string): readonly FillRuleExpected[] => JSON.parse(python(script("🕳️fillrule-shapely.py"), "geometry", [fixtureFile])) as FillRuleExpected[];
+
+/** 🕳️ A filled catalog shape whose rings overlap each other (not one inside the other) by `overlapM2`, as shapely finds them. */
+export type RingOverlap = { readonly asset: string; readonly scale: string; readonly view: string; readonly id: string; readonly rings: readonly [number, number]; readonly overlapM2: number };
+export const ringOverlaps = (ringsFile: string): readonly RingOverlap[] => JSON.parse(python(script("🕳️fillrule-catalog.py"), "geometry", [ringsFile])) as RingOverlap[];
+
+/** 🖼️ Rasterises an SVG file with MuPDF at `pixelsPerMm` into pixels. */
+export function renderSvg(svgFile: string, pixelsPerMm: number): Ppm {
+  const target = `${svgFile}.ppm`;
+  json<unknown>("🕳️fillrule-mupdf.py", "documents", [svgFile, String(pixelsPerMm), target]);
+  return parsePpm(readFileSync(target));
+}
+
 /** 📐️ One shape of an SVG file as svgelements places it. */
 export type SvgShapeBox = { readonly id: string | null; readonly fill: string; readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number };
 

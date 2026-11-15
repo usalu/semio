@@ -1,0 +1,37 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-293b476f6b9d.log
+-- graph lines
+graph: 657 stale projects, 0 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 657
+graph: waiting for the fleet: 0 of 657 projects arrived
+graph: waiting for the fleet: 96 of 657 projects arrived
+graph: waiting for the fleet: 143 of 657 projects arrived
+-- last 30 lines when the try ended
+graph: waiting for the fleet: 96 of 657 projects arrived
+[repo] still working after 830 s; last phase started: source.served
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 830 s
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 840 s
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 850 s
+[repo] still working after 860 s; last phase started: source.served
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 860 s
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 870 s
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 880 s
+[repo] still working after 890 s; last phase started: source.served
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 890 s
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 900 s
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 910 s
+[repo] still working after 920 s; last phase started: source.served
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 920 s
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 930 s
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+Cancelled (SIGINT); leases released.
+[repository:command] still running after 940 s

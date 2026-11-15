@@ -314,7 +314,6 @@ impl Validate for Keyframe {
     fn check(&self, path: &str, out: &mut Vec<Violation>) {
         finite(out, &at(path, "at"), &[self.at]);
         self.caption.check(&at(path, "caption"), out);
-        expect(out, path, self.field.is_some() || self.layer.is_some(), "field-or-layer");
     }
 }
 
@@ -326,6 +325,9 @@ impl Validate for ParameterTrack {
         expect(out, &at(path, "range"), self.min < self.max, "ordered-domain");
         positive(out, &at(path, "step"), self.step);
         each(&self.keyframes, path, "keyframes", out);
+        for (index, key) in self.keyframes.iter().enumerate() {
+            expect(out, &nth(path, "keyframes", index), matches!(self.kind, TrackKind::Combination) || key.field.is_some() || key.layer.is_some(), "field-or-layer");
+        }
         expect(out, &at(path, "keyframes"), self.keyframes.windows(2).all(|w| w[0].at < w[1].at) && self.keyframes.iter().all(|k| (self.min..=self.max).contains(&k.at)), "ascending-within-range");
         expect(out, &at(path, "keyframes"), matches!(self.kind, TrackKind::Phase) || !self.keyframes.is_empty(), "non-empty");
     }

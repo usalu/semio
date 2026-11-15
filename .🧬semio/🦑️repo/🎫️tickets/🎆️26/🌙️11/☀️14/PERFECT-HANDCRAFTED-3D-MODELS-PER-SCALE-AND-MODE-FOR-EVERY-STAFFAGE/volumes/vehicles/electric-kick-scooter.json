@@ -1,0 +1,4009 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "deck-top",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.065,
+       0.38
+      ],
+      [
+       0.065,
+       0.38
+      ],
+      [
+       0.075,
+       0.37732
+      ],
+      [
+       0.082321,
+       0.37
+      ],
+      [
+       0.085,
+       0.36
+      ],
+      [
+       0.085,
+       -0.39
+      ],
+      [
+       0.08232,
+       -0.4
+      ],
+      [
+       0.075,
+       -0.407321
+      ],
+      [
+       0.065,
+       -0.41
+      ],
+      [
+       0.03,
+       -0.41
+      ],
+      [
+       0.03,
+       -0.31
+      ],
+      [
+       -0.03,
+       -0.31
+      ],
+      [
+       -0.03,
+       -0.41
+      ],
+      [
+       -0.065,
+       -0.41
+      ],
+      [
+       -0.075,
+       -0.40732
+      ],
+      [
+       -0.082321,
+       -0.4
+      ],
+      [
+       -0.085,
+       -0.39
+      ],
+      [
+       -0.085,
+       0.36
+      ],
+      [
+       -0.08232,
+       0.37
+      ],
+      [
+       -0.075,
+       0.377321
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.137,
+     "to": 0.145
+    },
+    {
+     "id": "deck-bottom",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.065,
+       0.38
+      ],
+      [
+       0.065,
+       0.38
+      ],
+      [
+       0.075,
+       0.37732
+      ],
+      [
+       0.082321,
+       0.37
+      ],
+      [
+       0.085,
+       0.36
+      ],
+      [
+       0.085,
+       -0.39
+      ],
+      [
+       0.08232,
+       -0.4
+      ],
+      [
+       0.075,
+       -0.407321
+      ],
+      [
+       0.065,
+       -0.41
+      ],
+      [
+       0.03,
+       -0.41
+      ],
+      [
+       0.03,
+       -0.31
+      ],
+      [
+       -0.03,
+       -0.31
+      ],
+      [
+       -0.03,
+       -0.41
+      ],
+      [
+       -0.065,
+       -0.41
+      ],
+      [
+       -0.075,
+       -0.40732
+      ],
+      [
+       -0.082321,
+       -0.4
+      ],
+      [
+       -0.085,
+       -0.39
+      ],
+      [
+       -0.085,
+       0.36
+      ],
+      [
+       -0.08232,
+       0.37
+      ],
+      [
+       -0.075,
+       0.377321
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.095,
+     "to": 0.103
+    },
+    {
+     "id": "deck-side-l",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.4,
+       0.095
+      ],
+      [
+       0.37,
+       0.095
+      ],
+      [
+       0.38,
+       0.12
+      ],
+      [
+       0.37,
+       0.145
+      ],
+      [
+       -0.4,
+       0.145
+      ],
+      [
+       -0.41,
+       0.12
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.077,
+     "to": 0.085
+    },
+    {
+     "id": "deck-side-r",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.4,
+       0.095
+      ],
+      [
+       0.37,
+       0.095
+      ],
+      [
+       0.38,
+       0.12
+      ],
+      [
+       0.37,
+       0.145
+      ],
+      [
+       -0.4,
+       0.145
+      ],
+      [
+       -0.41,
+       0.12
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.085,
+     "to": -0.077
+    },
+    {
+     "id": "deck-end-front",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.008,
+      0.034,
+      0.154
+     ],
+     "transform": {
+      "translation": [
+       0.376,
+       0.12,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "deck-notch-wall-l",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.1,
+      0.034,
+      0.008
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.12,
+       0.034
+      ]
+     }
+    },
+    {
+     "id": "deck-end-rear-l",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.008,
+      0.034,
+      0.047
+     ],
+     "transform": {
+      "translation": [
+       -0.406,
+       0.12,
+       0.0535
+      ]
+     }
+    },
+    {
+     "id": "deck-notch-wall-r",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.1,
+      0.034,
+      0.008
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.12,
+       -0.034
+      ]
+     }
+    },
+    {
+     "id": "deck-end-rear-r",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.008,
+      0.034,
+      0.047
+     ],
+     "transform": {
+      "translation": [
+       -0.406,
+       0.12,
+       -0.0535
+      ]
+     }
+    },
+    {
+     "id": "grip-tape",
+     "kind": "box",
+     "bone": "deck",
+     "material": "griptape",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.66,
+      0.008,
+      0.14
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       -0.03,
+       0.149,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "fender-r",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "plastic",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.3083,
+       0.1406
+      ],
+      [
+       -0.3127,
+       0.1541
+      ],
+      [
+       -0.3187,
+       0.167
+      ],
+      [
+       -0.326,
+       0.1791
+      ],
+      [
+       -0.3347,
+       0.1904
+      ],
+      [
+       -0.3445,
+       0.2006
+      ],
+      [
+       -0.3555,
+       0.2096
+      ],
+      [
+       -0.3674,
+       0.2173
+      ],
+      [
+       -0.3801,
+       0.2237
+      ],
+      [
+       -0.3934,
+       0.2286
+      ],
+      [
+       -0.4072,
+       0.2319
+      ],
+      [
+       -0.4213,
+       0.2337
+      ],
+      [
+       -0.4355,
+       0.2339
+      ],
+      [
+       -0.4496,
+       0.2325
+      ],
+      [
+       -0.4635,
+       0.2295
+      ],
+      [
+       -0.4769,
+       0.2249
+      ],
+      [
+       -0.4898,
+       0.2189
+      ],
+      [
+       -0.5019,
+       0.2115
+      ],
+      [
+       -0.5131,
+       0.2027
+      ],
+      [
+       -0.5232,
+       0.1928
+      ],
+      [
+       -0.5322,
+       0.1818
+      ],
+      [
+       -0.5398,
+       0.1698
+      ],
+      [
+       -0.5461,
+       0.1571
+      ],
+      [
+       -0.5508,
+       0.1437
+      ],
+      [
+       -0.5541,
+       0.1299
+      ],
+      [
+       -0.5423,
+       0.1278
+      ],
+      [
+       -0.5393,
+       0.1403
+      ],
+      [
+       -0.535,
+       0.1524
+      ],
+      [
+       -0.5293,
+       0.1639
+      ],
+      [
+       -0.5224,
+       0.1747
+      ],
+      [
+       -0.5143,
+       0.1847
+      ],
+      [
+       -0.5052,
+       0.1937
+      ],
+      [
+       -0.495,
+       0.2016
+      ],
+      [
+       -0.4841,
+       0.2083
+      ],
+      [
+       -0.4725,
+       0.2138
+      ],
+      [
+       -0.4603,
+       0.2179
+      ],
+      [
+       -0.4478,
+       0.2206
+      ],
+      [
+       -0.435,
+       0.2219
+      ],
+      [
+       -0.4221,
+       0.2217
+      ],
+      [
+       -0.4094,
+       0.2201
+      ],
+      [
+       -0.3969,
+       0.2171
+      ],
+      [
+       -0.3848,
+       0.2127
+      ],
+      [
+       -0.3734,
+       0.2069
+      ],
+      [
+       -0.3626,
+       0.1999
+      ],
+      [
+       -0.3527,
+       0.1918
+      ],
+      [
+       -0.3437,
+       0.1825
+      ],
+      [
+       -0.3359,
+       0.1724
+      ],
+      [
+       -0.3293,
+       0.1614
+      ],
+      [
+       -0.3239,
+       0.1497
+      ],
+      [
+       -0.3199,
+       0.1375
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.03,
+     "to": 0.03
+    },
+    {
+     "id": "tyre-f",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.07,
+     "profile": [
+      [
+       -0.016,
+       0.073
+      ],
+      [
+       -0.022,
+       0.081
+      ],
+      [
+       -0.022,
+       0.096
+      ],
+      [
+       -0.016,
+       0.105
+      ],
+      [
+       -0.011,
+       0.108
+      ],
+      [
+       0.011,
+       0.108
+      ],
+      [
+       0.016,
+       0.105
+      ],
+      [
+       0.022,
+       0.096
+      ],
+      [
+       0.022,
+       0.081
+      ],
+      [
+       0.016,
+       0.073
+      ],
+      [
+       -0.016,
+       0.073
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "rim-f",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "motor-alloy",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.075
+      ],
+      [
+       0.022,
+       0.075
+      ],
+      [
+       0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "hub-f",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "motor-alloy",
+     "role": "detail",
+     "tone": 0.75,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.035
+      ],
+      [
+       0.022,
+       0.035
+      ],
+      [
+       0.022,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0225
+     ]
+    },
+    {
+     "id": "tyre-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.07,
+     "profile": [
+      [
+       -0.016,
+       0.073
+      ],
+      [
+       -0.022,
+       0.081
+      ],
+      [
+       -0.022,
+       0.096
+      ],
+      [
+       -0.016,
+       0.105
+      ],
+      [
+       -0.011,
+       0.108
+      ],
+      [
+       0.011,
+       0.108
+      ],
+      [
+       0.016,
+       0.105
+      ],
+      [
+       0.022,
+       0.096
+      ],
+      [
+       0.022,
+       0.081
+      ],
+      [
+       0.016,
+       0.073
+      ],
+      [
+       -0.016,
+       0.073
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "rim-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.075
+      ],
+      [
+       0.022,
+       0.075
+      ],
+      [
+       0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "disc-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.006,
+       0.03
+      ],
+      [
+       0.006,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0225
+     ]
+    },
+    {
+     "id": "hub-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "anodised",
+     "role": "detail",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.014,
+       0.03
+      ],
+      [
+       0.014,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0285
+     ]
+    },
+    {
+     "id": "stem",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.65,
+     "profile": [
+      [
+       0.0,
+       0.017
+      ],
+      [
+       0.0,
+       0.019
+      ],
+      [
+       0.8,
+       0.016
+      ],
+      [
+       0.8,
+       0.014
+      ],
+      [
+       0.0,
+       0.017
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "bar",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.65,
+     "profile": [
+      [
+       0.0,
+       0.012
+      ],
+      [
+       0.0,
+       0.014
+      ],
+      [
+       0.38,
+       0.014
+      ],
+      [
+       0.38,
+       0.012
+      ],
+      [
+       0.0,
+       0.012
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.8,
+      0.0,
+      -0.19
+     ]
+    },
+    {
+     "id": "grip-l",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.1,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.028
+      ],
+      [
+       0.095,
+       0.028
+      ],
+      [
+       0.095,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.8,
+      0.0,
+      0.12
+     ]
+    },
+    {
+     "id": "grip-r",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.1,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.028
+      ],
+      [
+       0.095,
+       0.028
+      ],
+      [
+       0.095,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.8,
+      0.0,
+      -0.215
+     ]
+    },
+    {
+     "id": "head-block",
+     "kind": "box",
+     "bone": "fork",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.088,
+      0.08,
+      0.07
+     ],
+     "cornerRadius": 0.01,
+     "transform": {
+      "translation": [
+       -0.01,
+       0.0014,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "fork-blade",
+     "kind": "capsule",
+     "bone": "fork",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "p0": [
+      0.0,
+      0.0,
+      0.0535
+     ],
+     "p1": [
+      -0.1943,
+      -0.003,
+      0.0535
+     ],
+     "r0": 0.014,
+     "r1": 0.014,
+     "lateralScale": 0.607143
+    },
+    {
+     "id": "fork-crown",
+     "kind": "box",
+     "bone": "fork",
+     "material": "anodised",
+     "role": "detail",
+     "tone": 0.6,
+     "size": [
+      0.031,
+      0.03,
+      0.084
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       -0.029815,
+       0.003685,
+       0.027
+      ]
+     }
+    },
+    {
+     "id": "brake-lever",
+     "kind": "capsule",
+     "bone": "stem",
+     "material": "plastic",
+     "role": "detail",
+     "tone": 0.2,
+     "p0": [
+      0.8036,
+      -0.0106,
+      0.17
+     ],
+     "p1": [
+      0.7762,
+      -0.0976,
+      0.17
+     ],
+     "r0": 0.008,
+     "r1": 0.008,
+     "lateralScale": 1.25
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-deck-top",
+     "of": "deck-top",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-deck-bottom",
+     "of": "deck-bottom",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+v"
+     ]
+    },
+    {
+     "id": "th-deck-side-l",
+     "of": "deck-side-l",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "-w"
+     ]
+    },
+    {
+     "id": "th-deck-side-r",
+     "of": "deck-side-r",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+w"
+     ]
+    },
+    {
+     "id": "th-deck-end-front",
+     "of": "deck-end-front",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-deck-notch-wall-l",
+     "of": "deck-notch-wall-l",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+w"
+     ]
+    },
+    {
+     "id": "th-deck-notch-wall-r",
+     "of": "deck-notch-wall-r",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "-w"
+     ]
+    },
+    {
+     "id": "th-deck-end-rear-l",
+     "of": "deck-end-rear-l",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+u"
+     ]
+    },
+    {
+     "id": "th-deck-end-rear-r",
+     "of": "deck-end-rear-r",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+u"
+     ]
+    },
+    {
+     "id": "th-grip-tape",
+     "of": "grip-tape",
+     "region": "deck-grip"
+    },
+    {
+     "id": "th-bms",
+     "kind": "box",
+     "bone": "deck",
+     "material": "plastic",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.09,
+      0.02,
+      0.1
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.3,
+       0.12,
+       0.0
+      ]
+     },
+     "region": "bms-controller"
+    },
+    {
+     "id": "th-fender-r",
+     "of": "fender-r",
+     "region": "fenders"
+    },
+    {
+     "id": "th-stem",
+     "of": "stem",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-fork-blade",
+     "of": "fork-blade",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-head-block",
+     "of": "head-block",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-bar",
+     "of": "bar",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-grip-l",
+     "of": "grip-l",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-grip-r",
+     "of": "grip-r",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-fork-crown",
+     "of": "fork-crown",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-brake-lever",
+     "of": "brake-lever",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-tyre-f",
+     "of": "tyre-f",
+     "region": "tyres"
+    },
+    {
+     "id": "th-tyre-r",
+     "of": "tyre-r",
+     "region": "tyres"
+    },
+    {
+     "id": "th-rim-f",
+     "of": "rim-f",
+     "region": "hub-motor"
+    },
+    {
+     "id": "th-hub-f",
+     "of": "hub-f",
+     "region": "hub-motor"
+    },
+    {
+     "id": "th-disc-r",
+     "of": "disc-r",
+     "region": "brake-disc"
+    },
+    {
+     "id": "th-hub-r",
+     "of": "hub-r",
+     "region": "brake-disc"
+    }
+   ],
+   "structure": [
+    {
+     "id": "deck-tube",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.099,
+       -0.08
+      ],
+      [
+       0.141,
+       -0.08
+      ],
+      [
+       0.141,
+       0.08
+      ],
+      [
+       0.099,
+       0.08
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.102,
+        -0.077
+       ],
+       [
+        0.138,
+        -0.077
+       ],
+       [
+        0.138,
+        0.077
+       ],
+       [
+        0.102,
+        0.077
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.39,
+     "to": 0.36,
+     "member": "deck",
+     "part": "member"
+    },
+    {
+     "id": "stem-member",
+     "of": "stem",
+     "member": "stem",
+     "part": "member"
+    },
+    {
+     "id": "fork-member",
+     "of": "fork-blade",
+     "member": "fork",
+     "part": "member"
+    },
+    {
+     "id": "wheel-f-member",
+     "of": "rim-f",
+     "member": "wheel-f",
+     "part": "member"
+    },
+    {
+     "id": "wheel-r-member",
+     "of": "rim-r",
+     "member": "wheel-r",
+     "part": "member"
+    },
+    {
+     "id": "stem-hinge",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.016
+      ],
+      [
+       0.06,
+       0.016
+      ],
+      [
+       0.06,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.03
+     ],
+     "member": "stem",
+     "part": "joint"
+    },
+    {
+     "id": "head-bearing",
+     "kind": "revolve",
+     "bone": "fork",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.018
+      ],
+      [
+       0.03,
+       0.018
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.02,
+      0.0,
+      0.0
+     ],
+     "member": "fork",
+     "part": "joint"
+    },
+    {
+     "id": "axle-f",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.012
+      ],
+      [
+       0.07,
+       0.012
+      ],
+      [
+       0.07,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.03
+     ],
+     "member": "wheel-f",
+     "part": "joint"
+    },
+    {
+     "id": "axle-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.012
+      ],
+      [
+       0.07,
+       0.012
+      ],
+      [
+       0.07,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.03
+     ],
+     "member": "wheel-r",
+     "part": "joint"
+    },
+    {
+     "id": "mass-battery",
+     "kind": "ellipsoid",
+     "bone": "deck",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.25,
+      0.012,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0.12,
+       0.0
+      ]
+     },
+     "member": "deck",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stem",
+     "kind": "ellipsoid",
+     "bone": "stem",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.014,
+      0.014
+     ],
+     "transform": {
+      "translation": [
+       0.4,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "stem",
+     "part": "mass"
+    },
+    {
+     "id": "mass-motor",
+     "kind": "ellipsoid",
+     "bone": "wheel-f",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.05,
+      0.05,
+      0.02
+     ],
+     "member": "wheel-f",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "The kick scooter is built as the real vehicle: a hollow aluminium deck (8 mm top and bottom plates cut from the drawn plan with a notch for the rear wheel, two 8 mm side rails from the drawn side outline, end walls and notch walls), a grip-tape plate on top, the rear mudguard as a 13.5 mm arch band extruded from the drawn arch, a hollow 38 mm stem tube tapering to 30 mm, a 28 mm handlebar tube with two rubber grips, a brake lever, a head block and a single-sided fork blade with crown, and two wheels: a pneumatic tyre ring with a hub-motor housing (front, with the 22 mm cover) and a rim disc with brake disc and hub boss (rear). The battery pack and the controller sit inside the closed deck as thermal and structure solids.",
+     "de": "Der Tretroller ist als wirkliches Fahrzeug gebaut: ein hohles Aluminiumdeck (8 mm Deck- und Bodenplatte aus dem gezeichneten Grundriss mit einer Aussparung f\u00fcr das Hinterrad, zwei 8-mm-Seitenschienen aus dem gezeichneten Seitenumriss, Stirn- und Aussparungsw\u00e4nde), eine Griptape-Platte oben, das hintere Schutzblech als 13,5 mm dickes Bogenband aus dem gezeichneten Bogen, ein hohles 38-mm-Lenkrohr, das sich auf 30 mm verj\u00fcngt, ein 28-mm-Lenkerrohr mit zwei Gummigriffen, ein Bremshebel, ein Steuerkopf und eine einseitige Gabel mit Krone, und zwei R\u00e4der: ein Luftreifenring mit Nabenmotorgeh\u00e4use (vorn, mit der 22-mm-Kappe) und eine Felgenscheibe mit Bremsscheibe und Nabenansatz (hinten). Akkupack und Steuerung sitzen im geschlossenen Deck als Thermik- und Strukturk\u00f6rper."
+    },
+    {
+     "en": "Thermal: deck plates, rails and walls are the single-layer 'wall' region by reference; the controller is a hidden real box inside the deck; motor housing, hub cover, tyres, brake disc and hub, fender and every tube are references; at 1:200 motor and disc are real hidden solids.",
+     "de": "Thermik: Deck-, Bodenplatte, Schienen und W\u00e4nde sind die einschichtige Region 'wall' per Verweis; die Steuerung ist ein verdeckter echter Kasten im Deck; Motorgeh\u00e4use, Kappe, Reifen, Bremsscheibe und Nabe, Schutzblech und jedes Rohr sind Verweise; bei 1:200 sind Motor und Scheibe echte verdeckte K\u00f6rper."
+    },
+    {
+     "en": "Structure: the deck is a hollow aluminium box girder member, stem and fork blade are members, each wheel's rim is its member; the stem hinge, head bearing and the two axles are joints (1:50 and 1:100); compact masses at the battery, the stem middle and the front motor.",
+     "de": "Struktur: das Deck ist ein hohler Aluminium-Kastentr\u00e4ger als Stab, Lenkrohr und Gabelblatt sind St\u00e4be, die Felge jedes Rades ist sein Stab; Lenkrohrscharnier, Steuerkopflager und die beiden Achsen sind Gelenke (1:50 und 1:100); kompakte Massen im Akku, in der Lenkrohrmitte und im vorderen Motor."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "deck-top",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.065,
+       0.38
+      ],
+      [
+       0.065,
+       0.38
+      ],
+      [
+       0.075,
+       0.37732
+      ],
+      [
+       0.082321,
+       0.37
+      ],
+      [
+       0.085,
+       0.36
+      ],
+      [
+       0.085,
+       -0.39
+      ],
+      [
+       0.08232,
+       -0.4
+      ],
+      [
+       0.075,
+       -0.407321
+      ],
+      [
+       0.065,
+       -0.41
+      ],
+      [
+       0.03,
+       -0.41
+      ],
+      [
+       0.03,
+       -0.31
+      ],
+      [
+       -0.03,
+       -0.31
+      ],
+      [
+       -0.03,
+       -0.41
+      ],
+      [
+       -0.065,
+       -0.41
+      ],
+      [
+       -0.075,
+       -0.40732
+      ],
+      [
+       -0.082321,
+       -0.4
+      ],
+      [
+       -0.085,
+       -0.39
+      ],
+      [
+       -0.085,
+       0.36
+      ],
+      [
+       -0.08232,
+       0.37
+      ],
+      [
+       -0.075,
+       0.377321
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.13,
+     "to": 0.145
+    },
+    {
+     "id": "deck-bottom",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.065,
+       0.38
+      ],
+      [
+       0.065,
+       0.38
+      ],
+      [
+       0.075,
+       0.37732
+      ],
+      [
+       0.082321,
+       0.37
+      ],
+      [
+       0.085,
+       0.36
+      ],
+      [
+       0.085,
+       -0.39
+      ],
+      [
+       0.08232,
+       -0.4
+      ],
+      [
+       0.075,
+       -0.407321
+      ],
+      [
+       0.065,
+       -0.41
+      ],
+      [
+       0.03,
+       -0.41
+      ],
+      [
+       0.03,
+       -0.31
+      ],
+      [
+       -0.03,
+       -0.31
+      ],
+      [
+       -0.03,
+       -0.41
+      ],
+      [
+       -0.065,
+       -0.41
+      ],
+      [
+       -0.075,
+       -0.40732
+      ],
+      [
+       -0.082321,
+       -0.4
+      ],
+      [
+       -0.085,
+       -0.39
+      ],
+      [
+       -0.085,
+       0.36
+      ],
+      [
+       -0.08232,
+       0.37
+      ],
+      [
+       -0.075,
+       0.377321
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.095,
+     "to": 0.11
+    },
+    {
+     "id": "deck-side-l",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.4,
+       0.095
+      ],
+      [
+       0.37,
+       0.095
+      ],
+      [
+       0.38,
+       0.12
+      ],
+      [
+       0.37,
+       0.145
+      ],
+      [
+       -0.4,
+       0.145
+      ],
+      [
+       -0.41,
+       0.12
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.07,
+     "to": 0.085
+    },
+    {
+     "id": "deck-side-r",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.4,
+       0.095
+      ],
+      [
+       0.37,
+       0.095
+      ],
+      [
+       0.38,
+       0.12
+      ],
+      [
+       0.37,
+       0.145
+      ],
+      [
+       -0.4,
+       0.145
+      ],
+      [
+       -0.41,
+       0.12
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.085,
+     "to": -0.07
+    },
+    {
+     "id": "deck-end-front",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.015,
+      0.02,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.3725,
+       0.12,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "deck-notch-wall-l",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.1,
+      0.02,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.12,
+       0.0375
+      ]
+     }
+    },
+    {
+     "id": "deck-end-rear-l",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.015,
+      0.02,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       -0.4025,
+       0.12,
+       0.05
+      ]
+     }
+    },
+    {
+     "id": "deck-notch-wall-r",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.1,
+      0.02,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       -0.36,
+       0.12,
+       -0.0375
+      ]
+     }
+    },
+    {
+     "id": "deck-end-rear-r",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.015,
+      0.02,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       -0.4025,
+       0.12,
+       -0.05
+      ]
+     }
+    },
+    {
+     "id": "fender-r",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "plastic",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.3083,
+       0.1406
+      ],
+      [
+       -0.3127,
+       0.1541
+      ],
+      [
+       -0.3187,
+       0.167
+      ],
+      [
+       -0.326,
+       0.1791
+      ],
+      [
+       -0.3347,
+       0.1904
+      ],
+      [
+       -0.3445,
+       0.2006
+      ],
+      [
+       -0.3555,
+       0.2096
+      ],
+      [
+       -0.3674,
+       0.2173
+      ],
+      [
+       -0.3801,
+       0.2237
+      ],
+      [
+       -0.3934,
+       0.2286
+      ],
+      [
+       -0.4072,
+       0.2319
+      ],
+      [
+       -0.4213,
+       0.2337
+      ],
+      [
+       -0.4355,
+       0.2339
+      ],
+      [
+       -0.4496,
+       0.2325
+      ],
+      [
+       -0.4635,
+       0.2295
+      ],
+      [
+       -0.4769,
+       0.2249
+      ],
+      [
+       -0.4898,
+       0.2189
+      ],
+      [
+       -0.5019,
+       0.2115
+      ],
+      [
+       -0.5131,
+       0.2027
+      ],
+      [
+       -0.5232,
+       0.1928
+      ],
+      [
+       -0.5322,
+       0.1818
+      ],
+      [
+       -0.5398,
+       0.1698
+      ],
+      [
+       -0.5461,
+       0.1571
+      ],
+      [
+       -0.5508,
+       0.1437
+      ],
+      [
+       -0.5541,
+       0.1299
+      ],
+      [
+       -0.5423,
+       0.1278
+      ],
+      [
+       -0.5393,
+       0.1403
+      ],
+      [
+       -0.535,
+       0.1524
+      ],
+      [
+       -0.5293,
+       0.1639
+      ],
+      [
+       -0.5224,
+       0.1747
+      ],
+      [
+       -0.5143,
+       0.1847
+      ],
+      [
+       -0.5052,
+       0.1937
+      ],
+      [
+       -0.495,
+       0.2016
+      ],
+      [
+       -0.4841,
+       0.2083
+      ],
+      [
+       -0.4725,
+       0.2138
+      ],
+      [
+       -0.4603,
+       0.2179
+      ],
+      [
+       -0.4478,
+       0.2206
+      ],
+      [
+       -0.435,
+       0.2219
+      ],
+      [
+       -0.4221,
+       0.2217
+      ],
+      [
+       -0.4094,
+       0.2201
+      ],
+      [
+       -0.3969,
+       0.2171
+      ],
+      [
+       -0.3848,
+       0.2127
+      ],
+      [
+       -0.3734,
+       0.2069
+      ],
+      [
+       -0.3626,
+       0.1999
+      ],
+      [
+       -0.3527,
+       0.1918
+      ],
+      [
+       -0.3437,
+       0.1825
+      ],
+      [
+       -0.3359,
+       0.1724
+      ],
+      [
+       -0.3293,
+       0.1614
+      ],
+      [
+       -0.3239,
+       0.1497
+      ],
+      [
+       -0.3199,
+       0.1375
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.03,
+     "to": 0.03
+    },
+    {
+     "id": "tyre-f",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.07,
+     "profile": [
+      [
+       -0.012,
+       0.064
+      ],
+      [
+       -0.022,
+       0.072
+      ],
+      [
+       -0.022,
+       0.096
+      ],
+      [
+       -0.016,
+       0.105
+      ],
+      [
+       -0.011,
+       0.108
+      ],
+      [
+       0.011,
+       0.108
+      ],
+      [
+       0.016,
+       0.105
+      ],
+      [
+       0.022,
+       0.096
+      ],
+      [
+       0.022,
+       0.072
+      ],
+      [
+       0.012,
+       0.064
+      ],
+      [
+       -0.012,
+       0.064
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "rim-f",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "motor-alloy",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.066
+      ],
+      [
+       0.045,
+       0.066
+      ],
+      [
+       0.045,
+       0.0
+      ],
+      [
+       -0.022,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "tyre-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.07,
+     "profile": [
+      [
+       -0.012,
+       0.064
+      ],
+      [
+       -0.022,
+       0.072
+      ],
+      [
+       -0.022,
+       0.096
+      ],
+      [
+       -0.016,
+       0.105
+      ],
+      [
+       -0.011,
+       0.108
+      ],
+      [
+       0.011,
+       0.108
+      ],
+      [
+       0.016,
+       0.105
+      ],
+      [
+       0.022,
+       0.096
+      ],
+      [
+       0.022,
+       0.072
+      ],
+      [
+       0.012,
+       0.064
+      ],
+      [
+       -0.012,
+       0.064
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "rim-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.066
+      ],
+      [
+       0.022,
+       0.066
+      ],
+      [
+       0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "stem",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.65,
+     "profile": [
+      [
+       0.0,
+       0.0145
+      ],
+      [
+       0.0,
+       0.0175
+      ],
+      [
+       0.8,
+       0.0175
+      ],
+      [
+       0.8,
+       0.0145
+      ],
+      [
+       0.0,
+       0.0145
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "bar",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.65,
+     "profile": [
+      [
+       0.0,
+       0.011
+      ],
+      [
+       0.0,
+       0.014
+      ],
+      [
+       0.38,
+       0.014
+      ],
+      [
+       0.38,
+       0.011
+      ],
+      [
+       0.0,
+       0.011
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.8,
+      0.0,
+      -0.19
+     ]
+    },
+    {
+     "id": "grip-l",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.1,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.028
+      ],
+      [
+       0.095,
+       0.028
+      ],
+      [
+       0.095,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.8,
+      0.0,
+      0.12
+     ]
+    },
+    {
+     "id": "grip-r",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.1,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.028
+      ],
+      [
+       0.095,
+       0.028
+      ],
+      [
+       0.095,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.8,
+      0.0,
+      -0.215
+     ]
+    },
+    {
+     "id": "head-block",
+     "kind": "box",
+     "bone": "fork",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.08,
+      0.07,
+      0.07
+     ],
+     "cornerRadius": 0.01,
+     "transform": {
+      "translation": [
+       -0.01,
+       0.0014,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "fork-blade",
+     "kind": "capsule",
+     "bone": "fork",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "p0": [
+      0.0,
+      0.0,
+      0.0535
+     ],
+     "p1": [
+      -0.1943,
+      -0.003,
+      0.0535
+     ],
+     "r0": 0.014,
+     "r1": 0.014,
+     "lateralScale": 0.607143
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-deck-top",
+     "of": "deck-top",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-deck-bottom",
+     "of": "deck-bottom",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+v"
+     ]
+    },
+    {
+     "id": "th-deck-side-l",
+     "of": "deck-side-l",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "-w"
+     ]
+    },
+    {
+     "id": "th-deck-side-r",
+     "of": "deck-side-r",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+w"
+     ]
+    },
+    {
+     "id": "th-deck-end-front",
+     "of": "deck-end-front",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-deck-notch-wall-l",
+     "of": "deck-notch-wall-l",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+w"
+     ]
+    },
+    {
+     "id": "th-deck-notch-wall-r",
+     "of": "deck-notch-wall-r",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "-w"
+     ]
+    },
+    {
+     "id": "th-deck-end-rear-l",
+     "of": "deck-end-rear-l",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+u"
+     ]
+    },
+    {
+     "id": "th-deck-end-rear-r",
+     "of": "deck-end-rear-r",
+     "region": "deck-battery",
+     "sectionFaces": [
+      "+u"
+     ]
+    },
+    {
+     "id": "th-grip",
+     "kind": "box",
+     "bone": "deck",
+     "material": "griptape",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.66,
+      0.015,
+      0.14
+     ],
+     "cornerRadius": 0.003,
+     "transform": {
+      "translation": [
+       -0.03,
+       0.1525,
+       0.0
+      ]
+     },
+     "region": "deck-grip"
+    },
+    {
+     "id": "th-bms",
+     "kind": "box",
+     "bone": "deck",
+     "material": "plastic",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.09,
+      0.02,
+      0.1
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.3,
+       0.12,
+       0.0
+      ]
+     },
+     "region": "bms-controller"
+    },
+    {
+     "id": "th-fender-r",
+     "of": "fender-r",
+     "region": "fenders"
+    },
+    {
+     "id": "th-stem",
+     "of": "stem",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-fork-blade",
+     "of": "fork-blade",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-head-block",
+     "of": "head-block",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-bar",
+     "of": "bar",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-grip-l",
+     "of": "grip-l",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-grip-r",
+     "of": "grip-r",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-tyre-f",
+     "of": "tyre-f",
+     "region": "tyres"
+    },
+    {
+     "id": "th-tyre-r",
+     "of": "tyre-r",
+     "region": "tyres"
+    },
+    {
+     "id": "th-rim-f",
+     "of": "rim-f",
+     "region": "hub-motor"
+    },
+    {
+     "id": "th-brake-disc",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.03,
+       0.03
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0225
+     ],
+     "region": "brake-disc"
+    }
+   ],
+   "structure": [
+    {
+     "id": "deck-tube",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.099,
+       -0.08
+      ],
+      [
+       0.141,
+       -0.08
+      ],
+      [
+       0.141,
+       0.08
+      ],
+      [
+       0.099,
+       0.08
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.103,
+        -0.076
+       ],
+       [
+        0.137,
+        -0.076
+       ],
+       [
+        0.137,
+        0.076
+       ],
+       [
+        0.103,
+        0.076
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.39,
+     "to": 0.36,
+     "member": "deck",
+     "part": "member"
+    },
+    {
+     "id": "stem-member",
+     "of": "stem",
+     "member": "stem",
+     "part": "member"
+    },
+    {
+     "id": "fork-member",
+     "of": "fork-blade",
+     "member": "fork",
+     "part": "member"
+    },
+    {
+     "id": "wheel-f-member",
+     "of": "rim-f",
+     "member": "wheel-f",
+     "part": "member"
+    },
+    {
+     "id": "wheel-r-member",
+     "of": "rim-r",
+     "member": "wheel-r",
+     "part": "member"
+    },
+    {
+     "id": "stem-hinge",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.016
+      ],
+      [
+       0.06,
+       0.016
+      ],
+      [
+       0.06,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.03
+     ],
+     "member": "stem",
+     "part": "joint"
+    },
+    {
+     "id": "axle-f",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.012
+      ],
+      [
+       0.07,
+       0.012
+      ],
+      [
+       0.07,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.03
+     ],
+     "member": "wheel-f",
+     "part": "joint"
+    },
+    {
+     "id": "axle-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.012
+      ],
+      [
+       0.07,
+       0.012
+      ],
+      [
+       0.07,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.03
+     ],
+     "member": "wheel-r",
+     "part": "joint"
+    },
+    {
+     "id": "mass-battery",
+     "kind": "ellipsoid",
+     "bone": "deck",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.25,
+      0.012,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0.12,
+       0.0
+      ]
+     },
+     "member": "deck",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stem",
+     "kind": "ellipsoid",
+     "bone": "stem",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.014,
+      0.014
+     ],
+     "transform": {
+      "translation": [
+       0.4,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "stem",
+     "part": "mass"
+    },
+    {
+     "id": "mass-motor",
+     "kind": "ellipsoid",
+     "bone": "wheel-f",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.05,
+      0.05,
+      0.02
+     ],
+     "member": "wheel-f",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:100 the deck plates, rails and walls are 15 mm; the grip tape is 15 mm; the stem (38 mm), bar (28 mm) and grips are plain tubes; the head block is the 70 mm block of the drawing; wheels are a tyre ring and a 15 mm-feature rim disc; hub cover, brake lever, crown and the rear hub and disc are merged away (the disc stays in thermal).",
+     "de": "Bei 1:100 sind Deck- und Bodenplatte, Schienen und W\u00e4nde 15 mm dick; das Griptape ist 15 mm; Lenkrohr (38 mm), Lenker (28 mm) und Griffe sind glatte Rohre; der Steuerkopf ist der 70-mm-Block der Zeichnung; die R\u00e4der bestehen aus Reifenring und Felgenscheibe; Nabenkappe, Bremshebel, Krone sowie Hinternabe und -scheibe sind zusammengefasst (die Scheibe bleibt im Thermikmodell)."
+    },
+    {
+     "en": "Thermal: deck plates, rails and walls are the single-layer 'wall' region by reference; the controller is a hidden real box inside the deck; motor housing, hub cover, tyres, brake disc and hub, fender and every tube are references; at 1:200 motor and disc are real hidden solids.",
+     "de": "Thermik: Deck-, Bodenplatte, Schienen und W\u00e4nde sind die einschichtige Region 'wall' per Verweis; die Steuerung ist ein verdeckter echter Kasten im Deck; Motorgeh\u00e4use, Kappe, Reifen, Bremsscheibe und Nabe, Schutzblech und jedes Rohr sind Verweise; bei 1:200 sind Motor und Scheibe echte verdeckte K\u00f6rper."
+    },
+    {
+     "en": "Structure: the deck is a hollow aluminium box girder member, stem and fork blade are members, each wheel's rim is its member; the stem hinge, head bearing and the two axles are joints (1:50 and 1:100); compact masses at the battery, the stem middle and the front motor.",
+     "de": "Struktur: das Deck ist ein hohler Aluminium-Kastentr\u00e4ger als Stab, Lenkrohr und Gabelblatt sind St\u00e4be, die Felge jedes Rades ist sein Stab; Lenkrohrscharnier, Steuerkopflager und die beiden Achsen sind Gelenke (1:50 und 1:100); kompakte Massen im Akku, in der Lenkrohrmitte und im vorderen Motor."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "deck-body",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.065,
+       0.38
+      ],
+      [
+       0.065,
+       0.38
+      ],
+      [
+       0.075,
+       0.37732
+      ],
+      [
+       0.082321,
+       0.37
+      ],
+      [
+       0.085,
+       0.36
+      ],
+      [
+       0.085,
+       -0.39
+      ],
+      [
+       0.08232,
+       -0.4
+      ],
+      [
+       0.075,
+       -0.407321
+      ],
+      [
+       0.065,
+       -0.41
+      ],
+      [
+       0.025,
+       -0.41
+      ],
+      [
+       0.025,
+       -0.31
+      ],
+      [
+       -0.025,
+       -0.31
+      ],
+      [
+       -0.025,
+       -0.41
+      ],
+      [
+       -0.065,
+       -0.41
+      ],
+      [
+       -0.075,
+       -0.40732
+      ],
+      [
+       -0.082321,
+       -0.4
+      ],
+      [
+       -0.085,
+       -0.39
+      ],
+      [
+       -0.085,
+       0.36
+      ],
+      [
+       -0.08232,
+       0.37
+      ],
+      [
+       -0.075,
+       0.377321
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.095,
+     "to": 0.145
+    },
+    {
+     "id": "wheel-f",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.07,
+     "profile": [
+      [
+       -0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.098
+      ],
+      [
+       -0.014,
+       0.108
+      ],
+      [
+       0.014,
+       0.108
+      ],
+      [
+       0.022,
+       0.098
+      ],
+      [
+       0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "wheel-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "rubber",
+     "role": "body",
+     "tone": 0.07,
+     "profile": [
+      [
+       -0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.098
+      ],
+      [
+       -0.014,
+       0.108
+      ],
+      [
+       0.014,
+       0.108
+      ],
+      [
+       0.022,
+       0.098
+      ],
+      [
+       0.022,
+       0.0
+      ],
+      [
+       -0.022,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "stem",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.65,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.8,
+       0.02
+      ],
+      [
+       0.8,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "lateralScale": 1.25
+    },
+    {
+     "id": "bars",
+     "kind": "revolve",
+     "bone": "stem",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.65,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.031
+      ],
+      [
+       0.43,
+       0.031
+      ],
+      [
+       0.43,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.8,
+      0.0,
+      -0.215
+     ]
+    },
+    {
+     "id": "fork-blade",
+     "kind": "capsule",
+     "bone": "fork",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.6,
+     "p0": [
+      0.0,
+      0.0,
+      0.03
+     ],
+     "p1": [
+      -0.1943,
+      -0.003,
+      0.03
+     ],
+     "r0": 0.024,
+     "r1": 0.024,
+     "lateralScale": 1.25
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-deck-body",
+     "of": "deck-body",
+     "region": "deck-battery"
+    },
+    {
+     "id": "th-grip",
+     "kind": "box",
+     "bone": "deck",
+     "material": "griptape",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.66,
+      0.03,
+      0.14
+     ],
+     "cornerRadius": 0.003,
+     "transform": {
+      "translation": [
+       -0.03,
+       0.16,
+       0.0
+      ]
+     },
+     "region": "deck-grip"
+    },
+    {
+     "id": "th-bms",
+     "kind": "box",
+     "bone": "deck",
+     "material": "plastic",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.09,
+      0.03,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0.12,
+       0.0
+      ]
+     },
+     "region": "bms-controller"
+    },
+    {
+     "id": "th-fender-r",
+     "kind": "extrude",
+     "bone": "deck",
+     "material": "plastic",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.3083,
+       0.1406
+      ],
+      [
+       -0.3127,
+       0.1541
+      ],
+      [
+       -0.3187,
+       0.167
+      ],
+      [
+       -0.326,
+       0.1791
+      ],
+      [
+       -0.3347,
+       0.1904
+      ],
+      [
+       -0.3445,
+       0.2006
+      ],
+      [
+       -0.3555,
+       0.2096
+      ],
+      [
+       -0.3674,
+       0.2173
+      ],
+      [
+       -0.3801,
+       0.2237
+      ],
+      [
+       -0.3934,
+       0.2286
+      ],
+      [
+       -0.4072,
+       0.2319
+      ],
+      [
+       -0.4213,
+       0.2337
+      ],
+      [
+       -0.4355,
+       0.2339
+      ],
+      [
+       -0.4496,
+       0.2325
+      ],
+      [
+       -0.4635,
+       0.2295
+      ],
+      [
+       -0.4769,
+       0.2249
+      ],
+      [
+       -0.4898,
+       0.2189
+      ],
+      [
+       -0.5019,
+       0.2115
+      ],
+      [
+       -0.5131,
+       0.2027
+      ],
+      [
+       -0.5232,
+       0.1928
+      ],
+      [
+       -0.5322,
+       0.1818
+      ],
+      [
+       -0.5398,
+       0.1698
+      ],
+      [
+       -0.5461,
+       0.1571
+      ],
+      [
+       -0.5508,
+       0.1437
+      ],
+      [
+       -0.5541,
+       0.1299
+      ],
+      [
+       -0.5423,
+       0.1278
+      ],
+      [
+       -0.5393,
+       0.1403
+      ],
+      [
+       -0.535,
+       0.1524
+      ],
+      [
+       -0.5293,
+       0.1639
+      ],
+      [
+       -0.5224,
+       0.1747
+      ],
+      [
+       -0.5143,
+       0.1847
+      ],
+      [
+       -0.5052,
+       0.1937
+      ],
+      [
+       -0.495,
+       0.2016
+      ],
+      [
+       -0.4841,
+       0.2083
+      ],
+      [
+       -0.4725,
+       0.2138
+      ],
+      [
+       -0.4603,
+       0.2179
+      ],
+      [
+       -0.4478,
+       0.2206
+      ],
+      [
+       -0.435,
+       0.2219
+      ],
+      [
+       -0.4221,
+       0.2217
+      ],
+      [
+       -0.4094,
+       0.2201
+      ],
+      [
+       -0.3969,
+       0.2171
+      ],
+      [
+       -0.3848,
+       0.2127
+      ],
+      [
+       -0.3734,
+       0.2069
+      ],
+      [
+       -0.3626,
+       0.1999
+      ],
+      [
+       -0.3527,
+       0.1918
+      ],
+      [
+       -0.3437,
+       0.1825
+      ],
+      [
+       -0.3359,
+       0.1724
+      ],
+      [
+       -0.3293,
+       0.1614
+      ],
+      [
+       -0.3239,
+       0.1497
+      ],
+      [
+       -0.3199,
+       0.1375
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.03,
+     "to": 0.03,
+     "region": "fenders"
+    },
+    {
+     "id": "th-stem",
+     "of": "stem",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-fork-blade",
+     "of": "fork-blade",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-bars",
+     "of": "bars",
+     "region": "stem-bars"
+    },
+    {
+     "id": "th-wheel-f",
+     "of": "wheel-f",
+     "region": "tyres"
+    },
+    {
+     "id": "th-wheel-r",
+     "of": "wheel-r",
+     "region": "tyres"
+    },
+    {
+     "id": "th-motor",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "motor-alloy",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.066
+      ],
+      [
+       0.03,
+       0.066
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.01
+     ],
+     "region": "hub-motor"
+    },
+    {
+     "id": "th-brake-disc",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.03,
+       0.03
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0225
+     ],
+     "region": "brake-disc"
+    }
+   ],
+   "structure": [
+    {
+     "id": "deck-girder",
+     "kind": "box",
+     "bone": "deck",
+     "material": "anodised",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.76,
+      0.04,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       -0.01,
+       0.12,
+       0.0
+      ]
+     },
+     "member": "deck",
+     "part": "member"
+    },
+    {
+     "id": "stem-member",
+     "of": "stem",
+     "member": "stem",
+     "part": "member"
+    },
+    {
+     "id": "fork-member",
+     "of": "fork-blade",
+     "member": "fork",
+     "part": "member"
+    },
+    {
+     "id": "axle-f",
+     "kind": "revolve",
+     "bone": "wheel-f",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.08,
+       0.02
+      ],
+      [
+       0.08,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.03
+     ],
+     "member": "wheel-f",
+     "part": "member"
+    },
+    {
+     "id": "axle-r",
+     "kind": "revolve",
+     "bone": "wheel-r",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.08,
+       0.02
+      ],
+      [
+       0.08,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.03
+     ],
+     "member": "wheel-r",
+     "part": "member"
+    },
+    {
+     "id": "mass-battery",
+     "kind": "ellipsoid",
+     "bone": "deck",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.25,
+      0.02,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0.12,
+       0.0
+      ]
+     },
+     "member": "deck",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stem",
+     "kind": "ellipsoid",
+     "bone": "stem",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.1,
+      0.016,
+      0.016
+     ],
+     "transform": {
+      "translation": [
+       0.4,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "stem",
+     "part": "mass"
+    },
+    {
+     "id": "mass-motor",
+     "kind": "ellipsoid",
+     "bone": "wheel-f",
+     "material": "steel-disc",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.05,
+      0.05,
+      0.02
+     ],
+     "member": "wheel-f",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:200 the deck is one closed 50 mm block with the wheel notch, the stem a 50 mm tube, the bars one 62 mm tube, the fork blade 48 x 24 mm, each wheel one solid 44 mm tyre disc; the grip tape, battery, controller, motor and brake disc are not drawn and live in thermal and structure as real solids.",
+     "de": "Bei 1:200 ist das Deck ein geschlossener 50-mm-Block mit der Radaussparung, das Lenkrohr ein 50-mm-Rohr, der Lenker ein 62-mm-Rohr, das Gabelblatt 48 x 24 mm, jedes Rad eine massive 44-mm-Reifenscheibe; Griptape, Akku, Steuerung, Motor und Bremsscheibe werden nicht gezeichnet und stehen als echte K\u00f6rper in Thermik und Struktur."
+    },
+    {
+     "en": "Thermal: deck plates, rails and walls are the single-layer 'wall' region by reference; the controller is a hidden real box inside the deck; motor housing, hub cover, tyres, brake disc and hub, fender and every tube are references; at 1:200 motor and disc are real hidden solids.",
+     "de": "Thermik: Deck-, Bodenplatte, Schienen und W\u00e4nde sind die einschichtige Region 'wall' per Verweis; die Steuerung ist ein verdeckter echter Kasten im Deck; Motorgeh\u00e4use, Kappe, Reifen, Bremsscheibe und Nabe, Schutzblech und jedes Rohr sind Verweise; bei 1:200 sind Motor und Scheibe echte verdeckte K\u00f6rper."
+    },
+    {
+     "en": "Structure: the deck is a hollow aluminium box girder member, stem and fork blade are members, each wheel's rim is its member; the stem hinge, head bearing and the two axles are joints (1:50 and 1:100); compact masses at the battery, the stem middle and the front motor.",
+     "de": "Struktur: das Deck ist ein hohler Aluminium-Kastentr\u00e4ger als Stab, Lenkrohr und Gabelblatt sind St\u00e4be, die Felge jedes Rades ist sein Stab; Lenkrohrscharnier, Steuerkopflager und die beiden Achsen sind Gelenke (1:50 und 1:100); kompakte Massen im Akku, in der Lenkrohrmitte und im vorderen Motor."
+    }
+   ]
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

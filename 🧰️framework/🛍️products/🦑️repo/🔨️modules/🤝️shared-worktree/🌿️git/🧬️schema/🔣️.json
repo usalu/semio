@@ -1,0 +1,67 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/shared-worktree/git/v1",
+ "title": "Shared worktree git state: the local stage record and the language-agnostic vectors of the index register fold",
+ "definitions": {
+  "Oid": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+  "Hlc": {"type": "string", "pattern": "^[0-9]{13}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,39}$"},
+  "Mode": {"enum": ["100644", "100755", "120000"]},
+  "StageRecord": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["applying", "reason", "since", "state", "version"],
+   "description": "The content of `.cache/f/git-index.json`, written atomically (temporary file, fsync, rename) by the running replica: whether stage sharing works (`shared`), waits for something that will arrive (`waiting`) or needs attention (`degraded`) with the reason, and, while an apply writes to the stage, the paths it writes (`applying`), so that a restart never publishes them as local edits. The tree the stage derives from is not stored here: it is the fold of the registers this machine has published or applied.",
+   "properties": {
+    "version": {"const": 1},
+    "state": {"enum": ["shared", "waiting", "degraded"]},
+    "reason": {"oneOf": [{"enum": ["waiting-for-base", "objects-missing", "unmerged", "write-tree-failed", "git-failed", "index-busy", "index-lock-stale", "backup-failed"]}, {"type": "null"}]},
+    "since": {"type": "integer", "minimum": 0},
+    "applying": {"oneOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["base", "paths"], "properties": {"base": {"type": "boolean"}, "paths": {"type": "array", "items": {"type": "string", "minLength": 1}}}}]}
+   }
+  },
+  "File": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["content", "name"],
+   "properties": {"name": {"type": "string", "minLength": 1}, "content": {"type": "string"}}
+  },
+  "TreeEntry": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["file", "mode", "path"],
+   "properties": {"path": {"type": "string", "minLength": 1}, "mode": {"$ref": "#/definitions/Mode"}, "file": {"type": "string", "minLength": 1}}
+  },
+  "Register": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["hlc", "path"],
+   "description": "One entry register: `file` and `mode` set the path, `remove` true removes it.",
+   "properties": {
+    "hlc": {"$ref": "#/definitions/Hlc"},
+    "path": {"type": "string", "minLength": 1},
+    "file": {"type": "string", "minLength": 1},
+    "mode": {"$ref": "#/definitions/Mode"},
+    "remove": {"const": true}
+   }
+  },
+  "Fold": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["base", "baseHlc", "expect", "files", "name", "registers"],
+   "properties": {
+    "name": {"type": "string"},
+    "files": {"type": "array", "items": {"$ref": "#/definitions/File"}},
+    "base": {"type": "array", "items": {"$ref": "#/definitions/TreeEntry"}},
+    "baseHlc": {"$ref": "#/definitions/Hlc"},
+    "registers": {"type": "array", "items": {"$ref": "#/definitions/Register"}},
+    "expect": {"type": "array", "items": {"$ref": "#/definitions/TreeEntry"}}
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["folds", "version"],
+   "properties": {"version": {"const": 1}, "folds": {"type": "array", "items": {"$ref": "#/definitions/Fold"}}}
+  }
+ }
+}

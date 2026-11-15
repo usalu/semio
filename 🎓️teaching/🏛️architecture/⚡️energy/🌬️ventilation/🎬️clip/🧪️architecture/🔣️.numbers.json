@@ -1,0 +1,25 @@
+{
+  "description": "Language-agnostic expectations of the ventilation numbers shown in chapters 4 to 6: the tilted-window share, the stack-effect chain (density difference, pressure, speed, volume flow) and the latent hand-over, each derived from first principles in the test and compared with the authored value.",
+  "tilt": {"minutes": 5.0, "airChangePerHour": 1.0, "share": 0.0833, "measuredRangePerHour": [0.56, 1.38], "source": "Maas (1995), Diss. Univ. Kassel · Kap. 8.2, S. 74 – Kippfenster"},
+  "stack": {
+    "pressurePa": 101325.0,
+    "gasConstant": 287.05,
+    "gravity": 9.81,
+    "airDensityForSpeed": 1.2,
+    "dischargeCoefficient": 0.6,
+    "openingAreaM2": 0.1,
+    "cases": [
+      {"id": "summer-night-low", "heightM": 2.5, "outdoorC": 18.0, "indoorC": 26.0, "densityDifference": 0.0324, "pressurePa": 0.795, "speedMS": 1.15, "flowM3H": 248.7},
+      {"id": "summer-night-tall", "heightM": 4.4, "outdoorC": 18.0, "indoorC": 26.0, "densityDifference": 0.0324, "pressurePa": 1.399, "speedMS": 1.53, "flowM3H": 329.9},
+      {"id": "winter-tall", "heightM": 4.4, "outdoorC": 0.0, "indoorC": 20.0, "densityDifference": 0.0882, "pressurePa": 3.806, "speedMS": 2.52, "flowM3H": 544.0}
+    ]
+  },
+  "latent": {
+    "volumeFlowM3H": 220.0,
+    "density": 1.2,
+    "vaporisationKJKg": 2450.0,
+    "winter": {"humidityDifferenceGKg": 4.3, "powerW": 770.0, "sensibleW": 1500.0, "sumW": 2270.0, "sumWithRecoveryW": 1070.0},
+    "summer": {"humidityDifferenceGKg": 4.5, "powerW": 810.0, "sensibleW": 450.0, "sumW": 1260.0, "sumWithRecoveryW": 900.0},
+    "recovery": 0.8
+  }
+}

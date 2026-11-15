@@ -55,7 +55,7 @@
       "UV_CACHE_DIR": "role:cache",
       "UV_PYTHON_INSTALL_DIR": "role:global",
       "UV_PYTHON_PREFERENCE": "literal:only-managed",
-      "UV_PYTHON_DOWNLOADS": "literal:manual",
+      "UV_PYTHON_DOWNLOADS": "literal:never",
       "UV_NO_CONFIG": "literal:1",
       "UV_NO_PROGRESS": "literal:1"
     }

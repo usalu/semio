@@ -28,7 +28,7 @@ fn view(document: &Iso16757Snapshot, report: &CheckReport, id: &str, object: &Ge
     let found = object.shape.as_ref().map(|shape| leaves(document, shape)).unwrap_or_default();
     for (index, leaf) in found.iter().enumerate() {
         let (lo, hi) = leaf_extent(leaf);
-        series.push(Series::Polyline { id: format!("body-{index}"), label: loc(&format!("Body primitive {} ({})", index + 1, leaf.kind), &format!("Grundkörper {} ({})", index + 1, leaf.kind)), points: ring(lo, hi, axes), style: stroke(Tone::Info, 2.0, Dash::Solid) });
+        series.push(Series::Polyline { id: format!("body-{index}"), label: loc(&format!("Body primitive {} ({})", index + 1, leaf.shape.kind()), &format!("Grundkörper {} ({})", index + 1, leaf.shape.kind())), points: ring(lo, hi, axes), style: stroke(Tone::Info, 2.0, Dash::Solid) });
     }
     for space in &object.spaces {
         series.push(Series::Polyline { id: format!("space-{}", space.id), label: loc(&format!("Space {}", space.id), &format!("Raum {}", space.id)), points: ring(space.bounds.min, space.bounds.max, axes), style: stroke(Tone::Warning, 1.5, Dash::Dashed) });

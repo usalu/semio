@@ -7,23 +7,101 @@
         "version": 1,
         "domain": "semio.graph-generation.v1",
         "document": "^(?:m/[0-9a-f]{64}\\.json|o/[0-9a-f]{64}\\.json\\.br|x/[0-9a-f]{64}\\.facts\\.br|f/[0-9a-f]{64}\\.json\\.br)$",
+        "snapshot": "^s/[0-9a-f]{16}\\.snapshot\\.br$",
+  "closure": "^c/[il]/[0-9a-f]{64}\\.json$",
+  "maximumClosures": 20000,
+  "maximumClosureReports": 64,
+        "maximumSnapshotBytes": 134217728,
         "maximumDocuments": 20000,
         "maximumDocumentBytes": 536870912,
         "concurrency": 8,
         "probeTimeoutSeconds": 5,
-        "probeRetries": 1
+        "probeRetries": 1,
+        "restoreMarginMilliseconds": 60000,
+        "unmeasuredStale": 500,
+        "staleOwnersPerMinute": 1,
+        "ownersPerChangedPath": 0.25,
+        "shadowMarginOwners": 50,
+        "servingTotalMegabytes": 24000,
+        "rankCandidates": 3
       }
     },
     "Note": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "generation", "owners", "identity", "manifest"],
+      "required": [
+        "version",
+        "generation",
+        "owners",
+        "identity",
+        "manifest",
+        "signature",
+        "platform",
+        "publishedMs",
+        "origin",
+        "stateMs",
+        "implementation"
+      ],
       "properties": {
-        "version": { "const": 1 },
-        "generation": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
-        "owners": { "type": "integer", "minimum": 0, "maximum": 65536 },
-        "identity": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-        "manifest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        "version": {
+          "const": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "owners": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "identity": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "manifest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "platform": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+-[a-z0-9_]+$"
+        },
+        "publishedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "origin": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,39}$",
+          "description": "The machine of the group that wrote this head."
+        },
+        "stateMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "When the producer last changed its generation store: the time of the tree state the generation describes, never the time of the upload, so a head uploaded later by a machine that holds an older state does not outrank a newer state."
+        },
+        "implementation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "The digest of the code that built the generation: a reader with other code finds every owner of it stale."
+        },
+        "stale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536,
+          "description": "How many owners the producer knew stale in this generation when it was written (0 for a complete read); absent when the producer did not know, which readers count as the policy's unmeasuredStale."
+        },
+        "snapshot": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$",
+          "description": "The instance of the snapshot of the shared files this generation was verified against; the snapshot document travels beside the generation, so the machine that restores it needs a set difference, not a pass over the tree, to verify it."
+        }
       }
     }
   }

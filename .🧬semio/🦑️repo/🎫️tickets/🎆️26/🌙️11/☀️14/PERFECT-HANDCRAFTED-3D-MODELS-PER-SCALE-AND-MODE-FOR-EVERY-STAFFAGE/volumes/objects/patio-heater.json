@@ -1,0 +1,6709 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "base-plate",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.2,
+       -0.23
+      ],
+      [
+       0.207765,
+       -0.228978
+      ],
+      [
+       0.215,
+       -0.225981
+      ],
+      [
+       0.221213,
+       -0.221213
+      ],
+      [
+       0.225981,
+       -0.215
+      ],
+      [
+       0.228978,
+       -0.207765
+      ],
+      [
+       0.23,
+       -0.2
+      ],
+      [
+       0.23,
+       -0.19
+      ],
+      [
+       0.185,
+       -0.19
+      ],
+      [
+       0.185,
+       -0.09
+      ],
+      [
+       0.23,
+       -0.09
+      ],
+      [
+       0.23,
+       0.2
+      ],
+      [
+       0.228978,
+       0.207765
+      ],
+      [
+       0.225981,
+       0.215
+      ],
+      [
+       0.221213,
+       0.221213
+      ],
+      [
+       0.215,
+       0.225981
+      ],
+      [
+       0.207765,
+       0.228978
+      ],
+      [
+       0.2,
+       0.23
+      ],
+      [
+       -0.2,
+       0.23
+      ],
+      [
+       -0.207765,
+       0.228978
+      ],
+      [
+       -0.215,
+       0.225981
+      ],
+      [
+       -0.221213,
+       0.221213
+      ],
+      [
+       -0.225981,
+       0.215
+      ],
+      [
+       -0.228978,
+       0.207765
+      ],
+      [
+       -0.23,
+       0.2
+      ],
+      [
+       -0.23,
+       -0.09
+      ],
+      [
+       -0.185,
+       -0.09
+      ],
+      [
+       -0.185,
+       -0.19
+      ],
+      [
+       -0.23,
+       -0.19
+      ],
+      [
+       -0.23,
+       -0.2
+      ],
+      [
+       -0.228978,
+       -0.207765
+      ],
+      [
+       -0.225981,
+       -0.215
+      ],
+      [
+       -0.221213,
+       -0.221213
+      ],
+      [
+       -0.215,
+       -0.225981
+      ],
+      [
+       -0.207765,
+       -0.228978
+      ],
+      [
+       -0.2,
+       -0.23
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.03
+    },
+    {
+     "id": "housing",
+     "kind": "loft",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.03,
+        0.0
+       ],
+       "rx": 0.17,
+       "ry": 0.17,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.3,
+        0.0
+       ],
+       "rx": 0.17,
+       "ry": 0.17,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.6,
+        0.0
+       ],
+       "rx": 0.17,
+       "ry": 0.17,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.614063,
+        0.0
+       ],
+       "rx": 0.164805,
+       "ry": 0.164805,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.62625,
+        0.0
+       ],
+       "rx": 0.150938,
+       "ry": 0.150938,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.0,
+        0.636563,
+        0.0
+       ],
+       "rx": 0.130977,
+       "ry": 0.130977,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.0,
+        0.645,
+        0.0
+       ],
+       "rx": 0.1075,
+       "ry": 0.1075,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        0.651563,
+        0.0
+       ],
+       "rx": 0.083086,
+       "ry": 0.083086,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        0.65625,
+        0.0
+       ],
+       "rx": 0.060312,
+       "ry": 0.060312,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.0,
+        0.659063,
+        0.0
+       ],
+       "rx": 0.041758,
+       "ry": 0.041758,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.0,
+        0.66,
+        0.0
+       ],
+       "rx": 0.03,
+       "ry": 0.03,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "housing-door",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.55,
+     "size": [
+      0.24,
+      0.43,
+      0.0075
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       0.305,
+       -0.16875
+      ]
+     }
+    },
+    {
+     "id": "vent-grille",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.09,
+       0.5375
+      ],
+      [
+       0.09,
+       0.5375
+      ],
+      [
+       0.09,
+       0.6175
+      ],
+      [
+       -0.09,
+       0.6175
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.07,
+        0.546
+       ],
+       [
+        0.07,
+        0.546
+       ],
+       [
+        0.07,
+        0.554
+       ],
+       [
+        -0.07,
+        0.554
+       ]
+      ],
+      [
+       [
+        -0.07,
+        0.576
+       ],
+       [
+        0.07,
+        0.576
+       ],
+       [
+        0.07,
+        0.584
+       ],
+       [
+        -0.07,
+        0.584
+       ]
+      ],
+      [
+       [
+        -0.07,
+        0.606
+       ],
+       [
+        0.07,
+        0.606
+       ],
+       [
+        0.07,
+        0.614
+       ],
+       [
+        -0.07,
+        0.614
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.1725,
+     "to": -0.165
+    },
+    {
+     "id": "door-lock",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0125
+      ],
+      [
+       0.0125,
+       0.0125
+      ],
+      [
+       0.0125,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.085,
+      0.31,
+      -0.1825
+     ]
+    },
+    {
+     "id": "knob-escutcheon",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.038
+      ],
+      [
+       0.002,
+       0.04
+      ],
+      [
+       0.007,
+       0.04
+      ],
+      [
+       0.009,
+       0.038
+      ],
+      [
+       0.009,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.163,
+      0.46,
+      0.0
+     ]
+    },
+    {
+     "id": "wheel-tyre-left",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "plastic-black",
+     "role": "body",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.0,
+       0.022
+      ],
+      [
+       0.0,
+       0.036
+      ],
+      [
+       0.003,
+       0.04
+      ],
+      [
+       0.017,
+       0.04
+      ],
+      [
+       0.02,
+       0.036
+      ],
+      [
+       0.02,
+       0.022
+      ],
+      [
+       0.0,
+       0.022
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.14,
+      0.05,
+      0.19
+     ]
+    },
+    {
+     "id": "wheel-hub-left",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.019
+      ],
+      [
+       0.003,
+       0.022
+      ],
+      [
+       0.02,
+       0.022
+      ],
+      [
+       0.023,
+       0.019
+      ],
+      [
+       0.023,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.14,
+      0.05,
+      0.1885
+     ]
+    },
+    {
+     "id": "wheel-axle-left",
+     "kind": "capsule",
+     "bone": "base",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.4,
+     "p0": [
+      -0.14,
+      0.05,
+      0.165
+     ],
+     "p1": [
+      -0.14,
+      0.05,
+      0.2
+     ],
+     "r0": 0.0075,
+     "r1": 0.0075
+    },
+    {
+     "id": "wheel-tyre-right",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "plastic-black",
+     "role": "body",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.0,
+       0.022
+      ],
+      [
+       0.0,
+       0.036
+      ],
+      [
+       0.003,
+       0.04
+      ],
+      [
+       0.017,
+       0.04
+      ],
+      [
+       0.02,
+       0.036
+      ],
+      [
+       0.02,
+       0.022
+      ],
+      [
+       0.0,
+       0.022
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.14,
+      0.05,
+      -0.21
+     ]
+    },
+    {
+     "id": "wheel-hub-right",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.019
+      ],
+      [
+       0.003,
+       0.022
+      ],
+      [
+       0.02,
+       0.022
+      ],
+      [
+       0.023,
+       0.019
+      ],
+      [
+       0.023,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.14,
+      0.05,
+      -0.2115
+     ]
+    },
+    {
+     "id": "wheel-axle-right",
+     "kind": "capsule",
+     "bone": "base",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.4,
+     "p0": [
+      -0.14,
+      0.05,
+      -0.2
+     ],
+     "p1": [
+      -0.14,
+      0.05,
+      -0.165
+     ],
+     "r0": 0.0075,
+     "r1": 0.0075
+    },
+    {
+     "id": "pole",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       1.36,
+       0.03
+      ],
+      [
+       1.36,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "pole-joint",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.675,
+       0.0
+      ],
+      [
+       0.685,
+       0.0
+      ],
+      [
+       0.685,
+       0.033
+      ],
+      [
+       0.675,
+       0.033
+      ],
+      [
+       0.675,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "head",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "body",
+     "tone": 0.8,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.11
+      ],
+      [
+       0.003,
+       0.125
+      ],
+      [
+       0.012,
+       0.13
+      ],
+      [
+       0.108,
+       0.13
+      ],
+      [
+       0.117,
+       0.125
+      ],
+      [
+       0.12,
+       0.11
+      ],
+      [
+       0.12,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "guard-rod",
+     "kind": "capsule",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.13,
+      0.01,
+      0.0
+     ],
+     "p1": [
+      0.13,
+      0.075,
+      0.0
+     ],
+     "r0": 0.00375,
+     "r1": 0.00375,
+     "repeat": {
+      "count": 12,
+      "rotationAxis": [
+       0,
+       1,
+       0
+      ],
+      "rotationRad": 0.523599,
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "reflector-shell",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.4
+      ],
+      [
+       0.00785,
+       0.399073
+      ],
+      [
+       0.016343,
+       0.396331
+      ],
+      [
+       0.025391,
+       0.391836
+      ],
+      [
+       0.034907,
+       0.385648
+      ],
+      [
+       0.044806,
+       0.377828
+      ],
+      [
+       0.055,
+       0.368438
+      ],
+      [
+       0.065402,
+       0.357536
+      ],
+      [
+       0.075926,
+       0.345185
+      ],
+      [
+       0.086484,
+       0.331445
+      ],
+      [
+       0.096991,
+       0.316377
+      ],
+      [
+       0.107358,
+       0.300042
+      ],
+      [
+       0.1175,
+       0.2825
+      ],
+      [
+       0.127329,
+       0.263812
+      ],
+      [
+       0.136759,
+       0.244039
+      ],
+      [
+       0.145703,
+       0.223242
+      ],
+      [
+       0.154074,
+       0.201481
+      ],
+      [
+       0.161785,
+       0.178818
+      ],
+      [
+       0.16875,
+       0.155313
+      ],
+      [
+       0.174881,
+       0.131026
+      ],
+      [
+       0.180093,
+       0.106019
+      ],
+      [
+       0.184297,
+       0.080352
+      ],
+      [
+       0.187407,
+       0.054086
+      ],
+      [
+       0.189337,
+       0.027282
+      ],
+      [
+       0.19,
+       0.0
+      ],
+      [
+       0.189,
+       0.0
+      ],
+      [
+       0.188339,
+       0.027234
+      ],
+      [
+       0.186412,
+       0.053991
+      ],
+      [
+       0.183307,
+       0.080212
+      ],
+      [
+       0.179109,
+       0.105836
+      ],
+      [
+       0.173907,
+       0.130802
+      ],
+      [
+       0.167786,
+       0.155048
+      ],
+      [
+       0.160832,
+       0.178515
+      ],
+      [
+       0.153134,
+       0.201141
+      ],
+      [
+       0.144777,
+       0.222865
+      ],
+      [
+       0.135848,
+       0.243627
+      ],
+      [
+       0.126435,
+       0.263364
+      ],
+      [
+       0.116624,
+       0.282017
+      ],
+      [
+       0.106503,
+       0.299524
+      ],
+      [
+       0.096158,
+       0.315824
+      ],
+      [
+       0.085677,
+       0.330855
+      ],
+      [
+       0.075148,
+       0.344557
+      ],
+      [
+       0.064659,
+       0.356867
+      ],
+      [
+       0.054298,
+       0.367725
+      ],
+      [
+       0.044156,
+       0.377069
+      ],
+      [
+       0.034322,
+       0.384837
+      ],
+      [
+       0.024892,
+       0.390969
+      ],
+      [
+       0.015961,
+       0.395407
+      ],
+      [
+       0.007631,
+       0.398097
+      ],
+      [
+       0.0,
+       0.399
+      ],
+      [
+       0.0,
+       0.4
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dome-bead",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.03,
+       0.395336
+      ],
+      [
+       0.032351,
+       0.394572
+      ],
+      [
+       0.033804,
+       0.392572
+      ],
+      [
+       0.033804,
+       0.3901
+      ],
+      [
+       0.032351,
+       0.3881
+      ],
+      [
+       0.03,
+       0.387336
+      ],
+      [
+       0.027649,
+       0.3881
+      ],
+      [
+       0.026196,
+       0.3901
+      ],
+      [
+       0.026196,
+       0.392572
+      ],
+      [
+       0.027649,
+       0.394572
+      ],
+      [
+       0.03,
+       0.395336
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "top-cap",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.17,
+       0.0
+      ],
+      [
+       0.17,
+       0.05
+      ],
+      [
+       0.19,
+       0.045
+      ],
+      [
+       0.19,
+       0.0
+      ],
+      [
+       0.17,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dome-hanger",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.04,
+       0.0105
+      ],
+      [
+       0.1895,
+       0.0105
+      ],
+      [
+       0.1895,
+       0.0125
+      ],
+      [
+       0.04,
+       0.0125
+      ],
+      [
+       0.04,
+       0.0105
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "knob-ball",
+     "kind": "ellipsoid",
+     "bone": "knob",
+     "material": "plastic-black",
+     "role": "body",
+     "tone": 0.2,
+     "radii": [
+      0.03,
+      0.03,
+      0.03
+     ]
+    },
+    {
+     "id": "knob-pointer",
+     "kind": "box",
+     "bone": "knob",
+     "material": "plastic-black",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.014,
+      0.0075,
+      0.0075
+     ],
+     "transform": {
+      "translation": [
+       0.025,
+       0.0,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-housing",
+     "of": "housing",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-housing-door",
+     "of": "housing-door",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-vent-grille",
+     "of": "vent-grille",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-door-lock",
+     "of": "door-lock",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-knob-escutcheon",
+     "of": "knob-escutcheon",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-wheel-tyre-left",
+     "of": "wheel-tyre-left",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-wheel-tyre-right",
+     "of": "wheel-tyre-right",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-wheel-hub-left",
+     "of": "wheel-hub-left",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-wheel-hub-right",
+     "of": "wheel-hub-right",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-wheel-axle-left",
+     "of": "wheel-axle-left",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-wheel-axle-right",
+     "of": "wheel-axle-right",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-pole",
+     "of": "pole",
+     "region": "pole-stainless"
+    },
+    {
+     "id": "th-pole-joint",
+     "of": "pole-joint",
+     "region": "pole-stainless"
+    },
+    {
+     "id": "th-head",
+     "of": "head",
+     "region": "emitter-head"
+    },
+    {
+     "id": "th-guard-rod",
+     "of": "guard-rod",
+     "region": "emitter-head"
+    },
+    {
+     "id": "th-flue-gas-disc",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.12,
+       0.0
+      ],
+      [
+       0.12,
+       0.1
+      ],
+      [
+       0.1275,
+       0.1
+      ],
+      [
+       0.1275,
+       0.0
+      ],
+      [
+       0.12,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "tags": [
+      "flue-gas"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "emitter-head"
+    },
+    {
+     "id": "th-reflector-skin",
+     "kind": "loft",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "rx": 0.4001,
+       "ry": 0.4001
+      },
+      {
+       "at": [
+        0.0,
+        0.00785,
+        0.0
+       ],
+       "rx": 0.399173,
+       "ry": 0.399173
+      },
+      {
+       "at": [
+        0.0,
+        0.016343,
+        0.0
+       ],
+       "rx": 0.396431,
+       "ry": 0.396431
+      },
+      {
+       "at": [
+        0.0,
+        0.025391,
+        0.0
+       ],
+       "rx": 0.391936,
+       "ry": 0.391936
+      },
+      {
+       "at": [
+        0.0,
+        0.034907,
+        0.0
+       ],
+       "rx": 0.385748,
+       "ry": 0.385748
+      },
+      {
+       "at": [
+        0.0,
+        0.044806,
+        0.0
+       ],
+       "rx": 0.377928,
+       "ry": 0.377928
+      },
+      {
+       "at": [
+        0.0,
+        0.055,
+        0.0
+       ],
+       "rx": 0.368538,
+       "ry": 0.368538
+      },
+      {
+       "at": [
+        0.0,
+        0.065402,
+        0.0
+       ],
+       "rx": 0.357636,
+       "ry": 0.357636
+      },
+      {
+       "at": [
+        0.0,
+        0.075926,
+        0.0
+       ],
+       "rx": 0.345285,
+       "ry": 0.345285
+      },
+      {
+       "at": [
+        0.0,
+        0.086484,
+        0.0
+       ],
+       "rx": 0.331545,
+       "ry": 0.331545
+      },
+      {
+       "at": [
+        0.0,
+        0.096991,
+        0.0
+       ],
+       "rx": 0.316477,
+       "ry": 0.316477
+      },
+      {
+       "at": [
+        0.0,
+        0.107358,
+        0.0
+       ],
+       "rx": 0.300142,
+       "ry": 0.300142
+      },
+      {
+       "at": [
+        0.0,
+        0.1175,
+        0.0
+       ],
+       "rx": 0.2826,
+       "ry": 0.2826
+      },
+      {
+       "at": [
+        0.0,
+        0.127329,
+        0.0
+       ],
+       "rx": 0.263912,
+       "ry": 0.263912
+      },
+      {
+       "at": [
+        0.0,
+        0.136759,
+        0.0
+       ],
+       "rx": 0.244139,
+       "ry": 0.244139
+      },
+      {
+       "at": [
+        0.0,
+        0.145703,
+        0.0
+       ],
+       "rx": 0.223342,
+       "ry": 0.223342
+      },
+      {
+       "at": [
+        0.0,
+        0.154074,
+        0.0
+       ],
+       "rx": 0.201581,
+       "ry": 0.201581
+      },
+      {
+       "at": [
+        0.0,
+        0.161785,
+        0.0
+       ],
+       "rx": 0.178918,
+       "ry": 0.178918
+      },
+      {
+       "at": [
+        0.0,
+        0.16875,
+        0.0
+       ],
+       "rx": 0.155413,
+       "ry": 0.155413
+      },
+      {
+       "at": [
+        0.0,
+        0.174881,
+        0.0
+       ],
+       "rx": 0.131126,
+       "ry": 0.131126
+      },
+      {
+       "at": [
+        0.0,
+        0.180093,
+        0.0
+       ],
+       "rx": 0.106119,
+       "ry": 0.106119
+      },
+      {
+       "at": [
+        0.0,
+        0.184297,
+        0.0
+       ],
+       "rx": 0.080452,
+       "ry": 0.080452
+      },
+      {
+       "at": [
+        0.0,
+        0.187407,
+        0.0
+       ],
+       "rx": 0.054186,
+       "ry": 0.054186
+      },
+      {
+       "at": [
+        0.0,
+        0.189337,
+        0.0
+       ],
+       "rx": 0.027382,
+       "ry": 0.027382
+      },
+      {
+       "at": [
+        0.0,
+        0.19,
+        0.0
+       ],
+       "rx": 0.0005,
+       "ry": 0.0005
+      }
+     ],
+     "capStart": false,
+     "capEnd": false,
+     "region": "reflector"
+    },
+    {
+     "id": "th-dome-bead",
+     "of": "dome-bead",
+     "region": "reflector"
+    },
+    {
+     "id": "th-top-cap",
+     "of": "top-cap",
+     "region": "reflector"
+    },
+    {
+     "id": "th-dome-plume-disc",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "detail",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.1875,
+       0.0
+      ],
+      [
+       0.1875,
+       0.3
+      ],
+      [
+       0.195,
+       0.3
+      ],
+      [
+       0.195,
+       0.0
+      ],
+      [
+       0.1875,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "tags": [
+      "dome-plume"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "reflector"
+    },
+    {
+     "id": "th-knob-ball",
+     "of": "knob-ball",
+     "region": "control"
+    },
+    {
+     "id": "th-knob-pointer",
+     "of": "knob-pointer",
+     "region": "control"
+    }
+   ],
+   "structure": [
+    {
+     "id": "base-plate-frame",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.182,
+       0.152
+      ],
+      [
+       0.180978,
+       0.159765
+      ],
+      [
+       0.177981,
+       0.167
+      ],
+      [
+       0.173213,
+       0.173213
+      ],
+      [
+       0.167,
+       0.177981
+      ],
+      [
+       0.159765,
+       0.180978
+      ],
+      [
+       0.152,
+       0.182
+      ],
+      [
+       -0.152,
+       0.182
+      ],
+      [
+       -0.159765,
+       0.180978
+      ],
+      [
+       -0.167,
+       0.177981
+      ],
+      [
+       -0.173213,
+       0.173213
+      ],
+      [
+       -0.177981,
+       0.167
+      ],
+      [
+       -0.180978,
+       0.159765
+      ],
+      [
+       -0.182,
+       0.152
+      ],
+      [
+       -0.182,
+       -0.152
+      ],
+      [
+       -0.180978,
+       -0.159765
+      ],
+      [
+       -0.177981,
+       -0.167
+      ],
+      [
+       -0.173213,
+       -0.173213
+      ],
+      [
+       -0.167,
+       -0.177981
+      ],
+      [
+       -0.159765,
+       -0.180978
+      ],
+      [
+       -0.152,
+       -0.182
+      ],
+      [
+       0.152,
+       -0.182
+      ],
+      [
+       0.159765,
+       -0.180978
+      ],
+      [
+       0.167,
+       -0.177981
+      ],
+      [
+       0.173213,
+       -0.173213
+      ],
+      [
+       0.177981,
+       -0.167
+      ],
+      [
+       0.180978,
+       -0.159765
+      ],
+      [
+       0.182,
+       -0.152
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.1,
+        0.08
+       ],
+       [
+        0.099319,
+        0.085176
+       ],
+       [
+        0.097321,
+        0.09
+       ],
+       [
+        0.094142,
+        0.094142
+       ],
+       [
+        0.09,
+        0.097321
+       ],
+       [
+        0.085176,
+        0.099319
+       ],
+       [
+        0.08,
+        0.1
+       ],
+       [
+        -0.08,
+        0.1
+       ],
+       [
+        -0.085176,
+        0.099319
+       ],
+       [
+        -0.09,
+        0.097321
+       ],
+       [
+        -0.094142,
+        0.094142
+       ],
+       [
+        -0.097321,
+        0.09
+       ],
+       [
+        -0.099319,
+        0.085176
+       ],
+       [
+        -0.1,
+        0.08
+       ],
+       [
+        -0.1,
+        -0.08
+       ],
+       [
+        -0.099319,
+        -0.085176
+       ],
+       [
+        -0.097321,
+        -0.09
+       ],
+       [
+        -0.094142,
+        -0.094142
+       ],
+       [
+        -0.09,
+        -0.097321
+       ],
+       [
+        -0.085176,
+        -0.099319
+       ],
+       [
+        -0.08,
+        -0.1
+       ],
+       [
+        0.08,
+        -0.1
+       ],
+       [
+        0.085176,
+        -0.099319
+       ],
+       [
+        0.09,
+        -0.097321
+       ],
+       [
+        0.094142,
+        -0.094142
+       ],
+       [
+        0.097321,
+        -0.09
+       ],
+       [
+        0.099319,
+        -0.085176
+       ],
+       [
+        0.1,
+        -0.08
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0015,
+     "to": 0.0285,
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "housing-drum",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0285,
+       0.1525
+      ],
+      [
+       0.6,
+       0.1525
+      ],
+      [
+       0.610063,
+       0.147839
+      ],
+      [
+       0.62225,
+       0.1354
+      ],
+      [
+       0.632563,
+       0.117494
+      ],
+      [
+       0.641,
+       0.096434
+      ],
+      [
+       0.647563,
+       0.074533
+      ],
+      [
+       0.65225,
+       0.054104
+      ],
+      [
+       0.655063,
+       0.037459
+      ],
+      [
+       0.656,
+       0.026912
+      ],
+      [
+       0.654805,
+       0.026806
+      ],
+      [
+       0.653874,
+       0.037295
+      ],
+      [
+       0.651074,
+       0.053866
+      ],
+      [
+       0.646403,
+       0.074225
+      ],
+      [
+       0.639867,
+       0.096038
+      ],
+      [
+       0.631481,
+       0.116973
+      ],
+      [
+       0.621286,
+       0.134685
+      ],
+      [
+       0.609331,
+       0.146888
+      ],
+      [
+       0.59999,
+       0.1513
+      ],
+      [
+       0.0285,
+       0.1513
+      ],
+      [
+       0.0285,
+       0.1525
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "bottle-shell",
+     "kind": "revolve",
+     "bone": "bottle",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.04,
+       0.0
+      ],
+      [
+       0.04,
+       0.08
+      ],
+      [
+       0.042,
+       0.115
+      ],
+      [
+       0.055,
+       0.14
+      ],
+      [
+       0.08,
+       0.15
+      ],
+      [
+       0.46,
+       0.15
+      ],
+      [
+       0.51,
+       0.142
+      ],
+      [
+       0.55,
+       0.115
+      ],
+      [
+       0.578,
+       0.07
+      ],
+      [
+       0.592,
+       0.032
+      ],
+      [
+       0.6,
+       0.03
+      ],
+      [
+       0.599394,
+       0.027575
+      ],
+      [
+       0.589809,
+       0.030795
+      ],
+      [
+       0.575769,
+       0.068871
+      ],
+      [
+       0.548182,
+       0.113283
+      ],
+      [
+       0.509094,
+       0.13967
+      ],
+      [
+       0.459953,
+       0.1475
+      ],
+      [
+       0.080062,
+       0.147501
+      ],
+      [
+       0.056694,
+       0.138161
+      ],
+      [
+       0.044425,
+       0.114394
+      ],
+      [
+       0.0425,
+       0.079957
+      ],
+      [
+       0.0425,
+       0.0
+      ],
+      [
+       0.04,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.03,
+      0.0
+     ],
+     "member": "bottle",
+     "part": "member"
+    },
+    {
+     "id": "bottle-valve",
+     "kind": "revolve",
+     "bone": "bottle",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.595,
+       0.0
+      ],
+      [
+       0.595,
+       0.02
+      ],
+      [
+       0.65,
+       0.02
+      ],
+      [
+       0.65,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.03,
+      0.0
+     ],
+     "member": "bottle",
+     "part": "member"
+    },
+    {
+     "id": "pole-tube",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.027
+      ],
+      [
+       1.36,
+       0.027
+      ],
+      [
+       1.36,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.027
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "pole",
+     "part": "member"
+    },
+    {
+     "id": "head-shroud",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.8,
+     "profile": [
+      [
+       0.0025,
+       0.1275
+      ],
+      [
+       0.1175,
+       0.1275
+      ],
+      [
+       0.1175,
+       0.0
+      ],
+      [
+       0.116,
+       0.0
+      ],
+      [
+       0.116,
+       0.126
+      ],
+      [
+       0.0025,
+       0.126
+      ],
+      [
+       0.0025,
+       0.1275
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "burner-head",
+     "part": "member"
+    },
+    {
+     "id": "reflector-dish",
+     "of": "reflector-shell",
+     "member": "reflector",
+     "part": "member"
+    },
+    {
+     "id": "dome-hanger-member",
+     "of": "dome-hanger",
+     "member": "reflector",
+     "part": "member"
+    },
+    {
+     "id": "joint-pole-base",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.08,
+       0.0285
+      ],
+      [
+       0.08,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0285
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "pole",
+     "part": "joint"
+    },
+    {
+     "id": "joint-head-pole",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.08,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0295
+      ],
+      [
+       -0.08,
+       0.0295
+      ],
+      [
+       -0.08,
+       0.0285
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "burner-head",
+     "part": "joint"
+    },
+    {
+     "id": "joint-reflector-head",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.04,
+       0.0125
+      ],
+      [
+       0.06,
+       0.0125
+      ],
+      [
+       0.06,
+       0.0165
+      ],
+      [
+       0.04,
+       0.0165
+      ],
+      [
+       0.04,
+       0.0125
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "reflector",
+     "part": "joint"
+    },
+    {
+     "id": "joint-knob-pivot",
+     "kind": "revolve",
+     "bone": "knob",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.008
+      ],
+      [
+       0.04,
+       0.008
+      ],
+      [
+       0.04,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.02
+     ],
+     "member": "knob",
+     "part": "joint"
+    },
+    {
+     "id": "support-base-contact-pad",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.46,
+      0.0075,
+      0.46
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.00375,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "base-contact"
+    },
+    {
+     "id": "mass-base",
+     "kind": "ellipsoid",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.14,
+      0.1,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.3,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bottle",
+     "kind": "ellipsoid",
+     "bone": "bottle",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.13,
+      0.15,
+      0.13
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.31,
+       0.0
+      ]
+     },
+     "member": "bottle",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: every visible part of the heater is its own solid on the real centre line. Pressed base plate 460 x 460 x 30 mm (extrusion with 30 mm corner radii and two wheel bays), housing as one loft of 17 cm half-width sections with exponent 10 (flat sheet walls, tight corners) rising into the drawn domed shoulder, a 7.5 mm door panel with lock and a three-slot vent grille (an extrusion with three real 8 mm slots), knob escutcheon, two tyres with hubs and axle stubs lifted 10 mm above the ground in their bays, the 60 mm pole as a revolve with its joint collar, the burner drum with 12 guard rods, and the reflector as a real 1 mm hollow dome (revolve of the wall profile) with rim bead, top cap and the hanger tube that carries it from the burner head. The control knob is a 60 mm ball: the drawings show it as a circle in elevation and front, and the rig turns it about w, so only a sphere satisfies both (pointer ridge on it).",
+     "de": "K\u00f6rper: jedes sichtbare Teil des Heizpilzes ist ein eigener K\u00f6rper auf der wirklichen Mittellinie. Gepresste Bodenplatte 460 x 460 x 30 mm (Extrusion mit Eckradien 30 mm und zwei Radbuchten), Geh\u00e4use als eine Loft aus Schnitten mit 17 cm Halbbreite und Exponent 10 (ebene Blechw\u00e4nde, enge Ecken), die in die gezeichnete gew\u00f6lbte Schulter \u00fcbergeht, eine 7,5-mm-T\u00fcr mit Schloss und ein L\u00fcftungsgitter mit drei echten 8-mm-Schlitzen (Extrusion), Knopfrosette, zwei Reifen mit Naben und Achsstummeln, 10 mm \u00fcber dem Boden in ihren Buchten, der 60-mm-Mast als Rotation mit Verbindungsmanschette, die Brennertrommel mit 12 Schutzst\u00e4ben und der Reflektor als echte 1 mm dicke hohle Haube (Rotation des Wandprofils) mit Randwulst, Kappe und dem Haltrohr, das sie vom Brennerkopf tr\u00e4gt. Der Regelknopf ist eine Kugel von 60 mm: die Zeichnungen zeigen ihn in Ansicht und Vorderansicht als Kreis, das Rig dreht ihn um w, beides erf\u00fcllt nur eine Kugel (mit Zeigerrippe)."
+    },
+    {
+     "en": "Thermal: every region has a single wall layer (B2), so each is one surface solid: base-housing = plate, housing, door, grille, lock, escutcheon, tyres, hubs and axles (references), pole-stainless = pole and joint collar, emitter-head = drum and guard rods plus the flue-gas disc (tagged flue-gas, 200 mm, above the drum under the dome), reflector = an open skin lofted 0.1 mm outside the hollow dome (one surface instead of the two faces of the 1 mm shell, so the head under the dome stays exposed), the bead and cap, plus the dome-plume disc (tagged dome-plume, 600 mm) on the crown, control = ball and pointer. No region is hidden. Root fix of areaM2 from this model (C16, all within 1.5): base-housing 0.75 -> 0.98 (the housing walls alone are 0.75 m2, plate top and edges and wheels add the rest), reflector 0.55 -> 0.68 (the outer dome is 0.62 m2 before the bead), control 0.004 -> 0.0049.",
+     "de": "Thermik: jede Region hat eine einzige Wandschicht (B2), also je einen Oberfl\u00e4chenk\u00f6rper: base-housing = Platte, Geh\u00e4use, T\u00fcr, Gitter, Schloss, Rosette, Reifen, Naben und Achsen (Referenzen), pole-stainless = Mast und Manschette, emitter-head = Trommel und Schutzst\u00e4be plus die Abgasscheibe (markiert flue-gas, 200 mm, \u00fcber der Trommel unter der Haube), reflector = eine offene Haut, 0,1 mm au\u00dferhalb der hohlen Haube gelooft (eine Fl\u00e4che statt der zwei Fl\u00e4chen der 1-mm-Schale, so bleibt der Kopf unter der Haube frei), Wulst und Kappe sowie die Fahnenscheibe (markiert dome-plume, 600 mm) auf dem Scheitel, control = Kugel und Zeiger. Keine Region ist verdeckt. Korrektur von areaM2 aus diesem Modell (C16, alle innerhalb 1,5): base-housing 0,75 -> 0,98 (die Geh\u00e4usew\u00e4nde allein haben 0,75 m2, Plattenoberseite, Kanten und R\u00e4der den Rest), reflector 0,55 -> 0,68 (die \u00e4u\u00dfere Haube hat vor dem Wulst 0,62 m2), control 0,004 -> 0,0049."
+    },
+    {
+     "en": "Structure: the load path is real sheet and tube. Foot: contact pad under the plate (support at base-contact); a 27 mm box-section frame ring carries a 1.2 mm drum shell 3 mm inside the housing sheet (member of base) with its domed shoulder and pole socket; the 11 kg bottle (member of bottle: 2.5 mm shell with domed ends and the valve) stands on the same ring; the pole is a 60 x 1.5 mm stainless tube (member of pole) with two doubler sleeves as joints at the base and the burner head; the burner head is a 1.5 mm cup (member), and the dome (member of reflector: the body shell itself) hangs on the 25 mm hanger tube, whose collar is the reflector joint; the knob pivot is a joint inside the ball. Masses: the bottle with its propane (24.5 kg, com 0.34 m) and the sheet metal, plate and wheels (8.7 kg, com 0.30 m) as ellipsoids inside the drum; pole, head and dome are carried by their tubes and shells.",
+     "de": "Tragwerk: der Lastweg ist echtes Blech und Rohr. Fu\u00df: Aufstandsplatte unter der Bodenplatte (Auflager base-contact); ein Hohlkastenrahmen von 27 mm tr\u00e4gt einen 1,2-mm-Trommelmantel 3 mm innerhalb des Geh\u00e4useblechs (Stab von base) mit gew\u00f6lbter Schulter und Mastaufnahme; die 11-kg-Flasche (Stab von bottle: 2,5-mm-Mantel mit gew\u00f6lbten B\u00f6den und Ventil) steht auf demselben Rahmen; der Mast ist ein Edelstahlrohr 60 x 1,5 mm (Stab von pole) mit zwei Dopplerh\u00fclsen als Gelenke am Fu\u00df und am Brennerkopf; der Brennerkopf ist ein 1,5-mm-Becher (Stab), die Haube (Stab von reflector: die K\u00f6rperschale selbst) h\u00e4ngt am 25-mm-Haltrohr, dessen Manschette das Gelenk des Reflektors ist; der Knopfzapfen ist ein Gelenk in der Kugel. Massen: die Flasche mit Propan (24,5 kg, Schwerpunkt 0,34 m) und Blech, Platte und R\u00e4der (8,7 kg, Schwerpunkt 0,30 m) als Ellipsoide in der Trommel; Mast, Kopf und Haube werden von ihren Rohren und Schalen getragen."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "base-plate",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.23,
+       0.2
+      ],
+      [
+       0.228978,
+       0.207765
+      ],
+      [
+       0.225981,
+       0.215
+      ],
+      [
+       0.221213,
+       0.221213
+      ],
+      [
+       0.215,
+       0.225981
+      ],
+      [
+       0.207765,
+       0.228978
+      ],
+      [
+       0.2,
+       0.23
+      ],
+      [
+       -0.2,
+       0.23
+      ],
+      [
+       -0.207765,
+       0.228978
+      ],
+      [
+       -0.215,
+       0.225981
+      ],
+      [
+       -0.221213,
+       0.221213
+      ],
+      [
+       -0.225981,
+       0.215
+      ],
+      [
+       -0.228978,
+       0.207765
+      ],
+      [
+       -0.23,
+       0.2
+      ],
+      [
+       -0.23,
+       -0.2
+      ],
+      [
+       -0.228978,
+       -0.207765
+      ],
+      [
+       -0.225981,
+       -0.215
+      ],
+      [
+       -0.221213,
+       -0.221213
+      ],
+      [
+       -0.215,
+       -0.225981
+      ],
+      [
+       -0.207765,
+       -0.228978
+      ],
+      [
+       -0.2,
+       -0.23
+      ],
+      [
+       0.2,
+       -0.23
+      ],
+      [
+       0.207765,
+       -0.228978
+      ],
+      [
+       0.215,
+       -0.225981
+      ],
+      [
+       0.221213,
+       -0.221213
+      ],
+      [
+       0.225981,
+       -0.215
+      ],
+      [
+       0.228978,
+       -0.207765
+      ],
+      [
+       0.23,
+       -0.2
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.04
+    },
+    {
+     "id": "housing",
+     "kind": "loft",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.04,
+        0.0
+       ],
+       "rx": 0.17,
+       "ry": 0.17,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.6,
+        0.0
+       ],
+       "rx": 0.17,
+       "ry": 0.17,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.6216,
+        0.0
+       ],
+       "rx": 0.15736,
+       "ry": 0.15736,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.0,
+        0.6384,
+        0.0
+       ],
+       "rx": 0.12648,
+       "ry": 0.12648,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.0,
+        0.6504,
+        0.0
+       ],
+       "rx": 0.08792,
+       "ry": 0.08792,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        0.6576,
+        0.0
+       ],
+       "rx": 0.05224,
+       "ry": 0.05224,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.0,
+        0.66,
+        0.0
+       ],
+       "rx": 0.03,
+       "ry": 0.03,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "pole",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       1.36,
+       0.03
+      ],
+      [
+       1.36,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "head",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "body",
+     "tone": 0.8,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.115
+      ],
+      [
+       0.005,
+       0.13
+      ],
+      [
+       0.115,
+       0.13
+      ],
+      [
+       0.12,
+       0.115
+      ],
+      [
+       0.12,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "reflector-shell",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.4
+      ],
+      [
+       0.016343,
+       0.396331
+      ],
+      [
+       0.034907,
+       0.385648
+      ],
+      [
+       0.055,
+       0.368438
+      ],
+      [
+       0.075926,
+       0.345185
+      ],
+      [
+       0.096991,
+       0.316377
+      ],
+      [
+       0.1175,
+       0.2825
+      ],
+      [
+       0.136759,
+       0.244039
+      ],
+      [
+       0.154074,
+       0.201481
+      ],
+      [
+       0.16875,
+       0.155313
+      ],
+      [
+       0.180093,
+       0.106019
+      ],
+      [
+       0.187407,
+       0.054086
+      ],
+      [
+       0.19,
+       0.0
+      ],
+      [
+       0.175017,
+       0.0
+      ],
+      [
+       0.172472,
+       0.05269
+      ],
+      [
+       0.165341,
+       0.1033
+      ],
+      [
+       0.154278,
+       0.151368
+      ],
+      [
+       0.139963,
+       0.196394
+      ],
+      [
+       0.123088,
+       0.237868
+      ],
+      [
+       0.104355,
+       0.275274
+      ],
+      [
+       0.08449,
+       0.308087
+      ],
+      [
+       0.06425,
+       0.335768
+      ],
+      [
+       0.044466,
+       0.357759
+      ],
+      [
+       0.02613,
+       0.373484
+      ],
+      [
+       0.010639,
+       0.382458
+      ],
+      [
+       0.0,
+       0.385
+      ],
+      [
+       0.0,
+       0.4
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "top-cap",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.17,
+       0.0
+      ],
+      [
+       0.17,
+       0.04
+      ],
+      [
+       0.19,
+       0.035
+      ],
+      [
+       0.19,
+       0.0
+      ],
+      [
+       0.17,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "dome-hanger",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.04,
+       0.0125
+      ],
+      [
+       0.1895,
+       0.0125
+      ],
+      [
+       0.1895,
+       0.0
+      ],
+      [
+       0.04,
+       0.0
+      ],
+      [
+       0.04,
+       0.0125
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "knob-ball",
+     "kind": "ellipsoid",
+     "bone": "knob",
+     "material": "plastic-black",
+     "role": "body",
+     "tone": 0.2,
+     "radii": [
+      0.028,
+      0.028,
+      0.028
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-housing",
+     "of": "housing",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-pole",
+     "of": "pole",
+     "region": "pole-stainless"
+    },
+    {
+     "id": "th-head",
+     "of": "head",
+     "region": "emitter-head"
+    },
+    {
+     "id": "th-flue-gas-disc",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.12,
+       0.0
+      ],
+      [
+       0.12,
+       0.1
+      ],
+      [
+       0.135,
+       0.1
+      ],
+      [
+       0.135,
+       0.0
+      ],
+      [
+       0.12,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "tags": [
+      "flue-gas"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "emitter-head"
+    },
+    {
+     "id": "th-reflector-skin",
+     "kind": "loft",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "rx": 0.4001,
+       "ry": 0.4001
+      },
+      {
+       "at": [
+        0.0,
+        0.016343,
+        0.0
+       ],
+       "rx": 0.396431,
+       "ry": 0.396431
+      },
+      {
+       "at": [
+        0.0,
+        0.034907,
+        0.0
+       ],
+       "rx": 0.385748,
+       "ry": 0.385748
+      },
+      {
+       "at": [
+        0.0,
+        0.055,
+        0.0
+       ],
+       "rx": 0.368538,
+       "ry": 0.368538
+      },
+      {
+       "at": [
+        0.0,
+        0.075926,
+        0.0
+       ],
+       "rx": 0.345285,
+       "ry": 0.345285
+      },
+      {
+       "at": [
+        0.0,
+        0.096991,
+        0.0
+       ],
+       "rx": 0.316477,
+       "ry": 0.316477
+      },
+      {
+       "at": [
+        0.0,
+        0.1175,
+        0.0
+       ],
+       "rx": 0.2826,
+       "ry": 0.2826
+      },
+      {
+       "at": [
+        0.0,
+        0.136759,
+        0.0
+       ],
+       "rx": 0.244139,
+       "ry": 0.244139
+      },
+      {
+       "at": [
+        0.0,
+        0.154074,
+        0.0
+       ],
+       "rx": 0.201581,
+       "ry": 0.201581
+      },
+      {
+       "at": [
+        0.0,
+        0.16875,
+        0.0
+       ],
+       "rx": 0.155413,
+       "ry": 0.155413
+      },
+      {
+       "at": [
+        0.0,
+        0.180093,
+        0.0
+       ],
+       "rx": 0.106119,
+       "ry": 0.106119
+      },
+      {
+       "at": [
+        0.0,
+        0.187407,
+        0.0
+       ],
+       "rx": 0.054186,
+       "ry": 0.054186
+      },
+      {
+       "at": [
+        0.0,
+        0.19,
+        0.0
+       ],
+       "rx": 0.0005,
+       "ry": 0.0005
+      }
+     ],
+     "capStart": false,
+     "capEnd": false,
+     "region": "reflector"
+    },
+    {
+     "id": "th-top-cap",
+     "of": "top-cap",
+     "region": "reflector"
+    },
+    {
+     "id": "th-dome-plume-disc",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "detail",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.1875,
+       0.0
+      ],
+      [
+       0.1875,
+       0.3
+      ],
+      [
+       0.2025,
+       0.3
+      ],
+      [
+       0.2025,
+       0.0
+      ],
+      [
+       0.1875,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "tags": [
+      "dome-plume"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "reflector"
+    },
+    {
+     "id": "th-knob-ball",
+     "of": "knob-ball",
+     "region": "control"
+    }
+   ],
+   "structure": [
+    {
+     "id": "base-plate-frame",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.182,
+       0.152
+      ],
+      [
+       0.180978,
+       0.159765
+      ],
+      [
+       0.177981,
+       0.167
+      ],
+      [
+       0.173213,
+       0.173213
+      ],
+      [
+       0.167,
+       0.177981
+      ],
+      [
+       0.159765,
+       0.180978
+      ],
+      [
+       0.152,
+       0.182
+      ],
+      [
+       -0.152,
+       0.182
+      ],
+      [
+       -0.159765,
+       0.180978
+      ],
+      [
+       -0.167,
+       0.177981
+      ],
+      [
+       -0.173213,
+       0.173213
+      ],
+      [
+       -0.177981,
+       0.167
+      ],
+      [
+       -0.180978,
+       0.159765
+      ],
+      [
+       -0.182,
+       0.152
+      ],
+      [
+       -0.182,
+       -0.152
+      ],
+      [
+       -0.180978,
+       -0.159765
+      ],
+      [
+       -0.177981,
+       -0.167
+      ],
+      [
+       -0.173213,
+       -0.173213
+      ],
+      [
+       -0.167,
+       -0.177981
+      ],
+      [
+       -0.159765,
+       -0.180978
+      ],
+      [
+       -0.152,
+       -0.182
+      ],
+      [
+       0.152,
+       -0.182
+      ],
+      [
+       0.159765,
+       -0.180978
+      ],
+      [
+       0.167,
+       -0.177981
+      ],
+      [
+       0.173213,
+       -0.173213
+      ],
+      [
+       0.177981,
+       -0.167
+      ],
+      [
+       0.180978,
+       -0.159765
+      ],
+      [
+       0.182,
+       -0.152
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.1,
+        0.08
+       ],
+       [
+        0.099319,
+        0.085176
+       ],
+       [
+        0.097321,
+        0.09
+       ],
+       [
+        0.094142,
+        0.094142
+       ],
+       [
+        0.09,
+        0.097321
+       ],
+       [
+        0.085176,
+        0.099319
+       ],
+       [
+        0.08,
+        0.1
+       ],
+       [
+        -0.08,
+        0.1
+       ],
+       [
+        -0.085176,
+        0.099319
+       ],
+       [
+        -0.09,
+        0.097321
+       ],
+       [
+        -0.094142,
+        0.094142
+       ],
+       [
+        -0.097321,
+        0.09
+       ],
+       [
+        -0.099319,
+        0.085176
+       ],
+       [
+        -0.1,
+        0.08
+       ],
+       [
+        -0.1,
+        -0.08
+       ],
+       [
+        -0.099319,
+        -0.085176
+       ],
+       [
+        -0.097321,
+        -0.09
+       ],
+       [
+        -0.094142,
+        -0.094142
+       ],
+       [
+        -0.09,
+        -0.097321
+       ],
+       [
+        -0.085176,
+        -0.099319
+       ],
+       [
+        -0.08,
+        -0.1
+       ],
+       [
+        0.08,
+        -0.1
+       ],
+       [
+        0.085176,
+        -0.099319
+       ],
+       [
+        0.09,
+        -0.097321
+       ],
+       [
+        0.094142,
+        -0.094142
+       ],
+       [
+        0.097321,
+        -0.09
+       ],
+       [
+        0.099319,
+        -0.085176
+       ],
+       [
+        0.1,
+        -0.08
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0015,
+     "to": 0.0385,
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "housing-drum",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0285,
+       0.1525
+      ],
+      [
+       0.6,
+       0.1525
+      ],
+      [
+       0.610063,
+       0.147839
+      ],
+      [
+       0.62225,
+       0.1354
+      ],
+      [
+       0.632563,
+       0.117494
+      ],
+      [
+       0.641,
+       0.096434
+      ],
+      [
+       0.647563,
+       0.074533
+      ],
+      [
+       0.65225,
+       0.054104
+      ],
+      [
+       0.655063,
+       0.037459
+      ],
+      [
+       0.656,
+       0.026912
+      ],
+      [
+       0.654805,
+       0.026806
+      ],
+      [
+       0.653874,
+       0.037295
+      ],
+      [
+       0.651074,
+       0.053866
+      ],
+      [
+       0.646403,
+       0.074225
+      ],
+      [
+       0.639867,
+       0.096038
+      ],
+      [
+       0.631481,
+       0.116973
+      ],
+      [
+       0.621286,
+       0.134685
+      ],
+      [
+       0.609331,
+       0.146888
+      ],
+      [
+       0.59999,
+       0.1513
+      ],
+      [
+       0.0285,
+       0.1513
+      ],
+      [
+       0.0285,
+       0.1525
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "bottle-shell",
+     "kind": "revolve",
+     "bone": "bottle",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.04,
+       0.0
+      ],
+      [
+       0.042,
+       0.115
+      ],
+      [
+       0.08,
+       0.15
+      ],
+      [
+       0.46,
+       0.15
+      ],
+      [
+       0.55,
+       0.115
+      ],
+      [
+       0.592,
+       0.03
+      ],
+      [
+       0.65,
+       0.03
+      ],
+      [
+       0.65,
+       0.0275
+      ],
+      [
+       0.590381,
+       0.028095
+      ],
+      [
+       0.548318,
+       0.11315
+      ],
+      [
+       0.459814,
+       0.147507
+      ],
+      [
+       0.080209,
+       0.147509
+      ],
+      [
+       0.044416,
+       0.114356
+      ],
+      [
+       0.0425,
+       0.0
+      ],
+      [
+       0.04,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.03,
+      0.0
+     ],
+     "member": "bottle",
+     "part": "member"
+    },
+    {
+     "id": "pole-tube",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.027
+      ],
+      [
+       1.36,
+       0.027
+      ],
+      [
+       1.36,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.027
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "slender": false,
+     "member": "pole",
+     "part": "member"
+    },
+    {
+     "id": "head-shroud",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.8,
+     "profile": [
+      [
+       0.0025,
+       0.1275
+      ],
+      [
+       0.1175,
+       0.1275
+      ],
+      [
+       0.1175,
+       0.0
+      ],
+      [
+       0.116,
+       0.0
+      ],
+      [
+       0.116,
+       0.126
+      ],
+      [
+       0.0025,
+       0.126
+      ],
+      [
+       0.0025,
+       0.1275
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "burner-head",
+     "part": "member"
+    },
+    {
+     "id": "reflector-dish",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.3925
+      ],
+      [
+       0.013491,
+       0.389394
+      ],
+      [
+       0.030519,
+       0.379566
+      ],
+      [
+       0.049733,
+       0.363098
+      ],
+      [
+       0.070088,
+       0.340477
+      ],
+      [
+       0.09074,
+       0.312232
+      ],
+      [
+       0.110928,
+       0.278887
+      ],
+      [
+       0.129924,
+       0.240953
+      ],
+      [
+       0.147019,
+       0.198938
+      ],
+      [
+       0.161514,
+       0.15334
+      ],
+      [
+       0.172717,
+       0.104659
+      ],
+      [
+       0.17994,
+       0.053388
+      ],
+      [
+       0.182509,
+       0.0
+      ],
+      [
+       0.18151,
+       0.0
+      ],
+      [
+       0.178944,
+       0.053295
+      ],
+      [
+       0.171733,
+       0.104478
+      ],
+      [
+       0.160549,
+       0.153077
+      ],
+      [
+       0.146078,
+       0.198598
+      ],
+      [
+       0.129012,
+       0.240542
+      ],
+      [
+       0.110051,
+       0.278405
+      ],
+      [
+       0.089907,
+       0.311679
+      ],
+      [
+       0.06931,
+       0.339849
+      ],
+      [
+       0.04903,
+       0.362387
+      ],
+      [
+       0.029932,
+       0.378757
+      ],
+      [
+       0.0131,
+       0.388474
+      ],
+      [
+       0.0,
+       0.3915
+      ],
+      [
+       0.0,
+       0.3925
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "reflector",
+     "part": "member"
+    },
+    {
+     "id": "dome-hanger-member",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.04,
+       0.0105
+      ],
+      [
+       0.17,
+       0.0105
+      ],
+      [
+       0.17,
+       0.0125
+      ],
+      [
+       0.04,
+       0.0125
+      ],
+      [
+       0.04,
+       0.0105
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "reflector",
+     "part": "member"
+    },
+    {
+     "id": "joint-pole-base",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.08,
+       0.0285
+      ],
+      [
+       0.08,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0295
+      ],
+      [
+       0.0,
+       0.0285
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "pole",
+     "part": "joint"
+    },
+    {
+     "id": "joint-head-pole",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       -0.08,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0295
+      ],
+      [
+       -0.08,
+       0.0295
+      ],
+      [
+       -0.08,
+       0.0285
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "burner-head",
+     "part": "joint"
+    },
+    {
+     "id": "joint-reflector-head",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.04,
+       0.0125
+      ],
+      [
+       0.06,
+       0.0125
+      ],
+      [
+       0.06,
+       0.0165
+      ],
+      [
+       0.04,
+       0.0165
+      ],
+      [
+       0.04,
+       0.0125
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "reflector",
+     "part": "joint"
+    },
+    {
+     "id": "joint-knob-pivot",
+     "kind": "revolve",
+     "bone": "knob",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.008
+      ],
+      [
+       0.04,
+       0.008
+      ],
+      [
+       0.04,
+       0.0
+      ],
+      [
+       0.0,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.02
+     ],
+     "member": "knob",
+     "part": "joint"
+    },
+    {
+     "id": "support-base-contact-pad",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.46,
+      0.015,
+      0.46
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.0075,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "base-contact"
+    },
+    {
+     "id": "mass-base",
+     "kind": "ellipsoid",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.14,
+      0.1,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.3,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bottle",
+     "kind": "ellipsoid",
+     "bone": "bottle",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.13,
+      0.15,
+      0.13
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.31,
+       0.0
+      ]
+     },
+     "member": "bottle",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: modelled anew against the 1:100 drawing (plate 40 mm, housing from 40 mm). The two bays, wheels, door panel, lock, vent grille, escutcheon, pointer, guard rods, pole collar and dome bead (all 7.5-12 mm, below the 15 mm feature) are no longer solids: the drawing keeps them as lines. Plate, housing (loft of 6 sections), pole and burner drum (with 5 mm chamfers) stay at true size; the dome becomes a 15 mm hollow shell (the feature of the scale, a solid dish would fail the volume band) with a 40 mm cap boss and a solid 25 mm hanger rod; the knob is the 56 mm ball.",
+     "de": "K\u00f6rper: neu gegen die Zeichnung 1:100 modelliert (Platte 40 mm, Geh\u00e4use ab 40 mm). Die beiden Buchten, R\u00e4der, T\u00fcrplatte, Schloss, L\u00fcftungsgitter, Rosette, Zeiger, Schutzst\u00e4be, Mastmanschette und Haubenwulst (alle 7,5-12 mm, unter der Einzelheit 15 mm) sind keine K\u00f6rper mehr: die Zeichnung beh\u00e4lt sie als Linien. Platte, Geh\u00e4use (Loft aus 6 Schnitten), Mast und Brennertrommel (mit 5-mm-Fasen) bleiben in wahrer Gr\u00f6\u00dfe; die Haube wird eine hohle Schale von 15 mm (die Einzelheit des Ma\u00dfstabs, eine massive Schale verfehlt das Volumenband) mit 40-mm-Kappenaufsatz und einem massiven Haltestab von 25 mm; der Knopf ist die Kugel von 56 mm."
+    },
+    {
+     "en": "Thermal: references to the plate, housing, pole, drum, cap and ball, the open dome skin (10 sections) and the two emitter discs thickened to the 15 mm feature (flue-gas 200 mm, dome-plume 600 mm); all regions are within 6 % of areaM2 per region.",
+     "de": "Thermik: Referenzen auf Platte, Geh\u00e4use, Mast, Trommel, Kappe und Kugel, die offene Haubenhaut (10 Schnitte) und die beiden Emitterscheiben auf die Einzelheit 15 mm verdickt (flue-gas 200 mm, dome-plume 600 mm); alle Regionen liegen je Region innerhalb 6 % von areaM2."
+    },
+    {
+     "en": "Structure: members keep their true thin sections at this scale (they are below the body only in wall thickness, not in extent): frame ring, 1.2 mm drum shell, bottle shell (simplified profile, valve merged), 60 x 1.5 mm pole tube, 1.5 mm head cup, a 1 mm dome dish lying inside the 15 mm body shell (so the stiffness is not inflated by the thick body) and the hanger tube; four joints, the contact pad (15 mm) and the two mass ellipsoids as at 1:50.",
+     "de": "Tragwerk: die St\u00e4be behalten hier ihre wahren d\u00fcnnen Querschnitte (kleiner als der K\u00f6rper nur in der Wanddicke, nicht in der Ausdehnung): Rahmenring, 1,2-mm-Trommelmantel, Flaschenmantel (vereinfachtes Profil, Ventil aufgegangen), Mastrohr 60 x 1,5 mm, 1,5-mm-Kopfbecher, eine 1-mm-Haubenschale innerhalb der 15-mm-K\u00f6rperschale (damit die dicke K\u00f6rperschale die Steifigkeit nicht aufbl\u00e4ht) und das Haltrohr; vier Gelenke, die Aufstandsplatte (15 mm) und die beiden Massenellipsoide wie bei 1:50."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "base-plate",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.23,
+       0.2
+      ],
+      [
+       0.228978,
+       0.207765
+      ],
+      [
+       0.225981,
+       0.215
+      ],
+      [
+       0.221213,
+       0.221213
+      ],
+      [
+       0.215,
+       0.225981
+      ],
+      [
+       0.207765,
+       0.228978
+      ],
+      [
+       0.2,
+       0.23
+      ],
+      [
+       -0.2,
+       0.23
+      ],
+      [
+       -0.207765,
+       0.228978
+      ],
+      [
+       -0.215,
+       0.225981
+      ],
+      [
+       -0.221213,
+       0.221213
+      ],
+      [
+       -0.225981,
+       0.215
+      ],
+      [
+       -0.228978,
+       0.207765
+      ],
+      [
+       -0.23,
+       0.2
+      ],
+      [
+       -0.23,
+       -0.2
+      ],
+      [
+       -0.228978,
+       -0.207765
+      ],
+      [
+       -0.225981,
+       -0.215
+      ],
+      [
+       -0.221213,
+       -0.221213
+      ],
+      [
+       -0.215,
+       -0.225981
+      ],
+      [
+       -0.207765,
+       -0.228978
+      ],
+      [
+       -0.2,
+       -0.23
+      ],
+      [
+       0.2,
+       -0.23
+      ],
+      [
+       0.207765,
+       -0.228978
+      ],
+      [
+       0.215,
+       -0.225981
+      ],
+      [
+       0.221213,
+       -0.221213
+      ],
+      [
+       0.225981,
+       -0.215
+      ],
+      [
+       0.228978,
+       -0.207765
+      ],
+      [
+       0.23,
+       -0.2
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.0,
+     "to": 0.05
+    },
+    {
+     "id": "housing",
+     "kind": "loft",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.05,
+        0.0
+       ],
+       "rx": 0.17,
+       "ry": 0.17,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.6,
+        0.0
+       ],
+       "rx": 0.17,
+       "ry": 0.17,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.62625,
+        0.0
+       ],
+       "rx": 0.150938,
+       "ry": 0.150938,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.0,
+        0.645,
+        0.0
+       ],
+       "rx": 0.1075,
+       "ry": 0.1075,
+       "exponent": 4
+      },
+      {
+       "at": [
+        0.0,
+        0.65625,
+        0.0
+       ],
+       "rx": 0.060312,
+       "ry": 0.060312,
+       "exponent": 2
+      },
+      {
+       "at": [
+        0.0,
+        0.66,
+        0.0
+       ],
+       "rx": 0.03,
+       "ry": 0.03,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "pole",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.035
+      ],
+      [
+       1.36,
+       0.035
+      ],
+      [
+       1.36,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "head",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "body",
+     "tone": 0.8,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.13
+      ],
+      [
+       0.12,
+       0.13
+      ],
+      [
+       0.12,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "reflector-shell",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.01,
+       0.4
+      ],
+      [
+       0.01582,
+       0.391836
+      ],
+      [
+       0.046562,
+       0.368438
+      ],
+      [
+       0.079648,
+       0.331445
+      ],
+      [
+       0.1125,
+       0.2825
+      ],
+      [
+       0.142539,
+       0.223242
+      ],
+      [
+       0.167187,
+       0.155313
+      ],
+      [
+       0.183867,
+       0.080352
+      ],
+      [
+       0.19,
+       0.0
+      ],
+      [
+       0.160087,
+       0.0
+      ],
+      [
+       0.154186,
+       0.075992
+      ],
+      [
+       0.138369,
+       0.146977
+      ],
+      [
+       0.114979,
+       0.211392
+      ],
+      [
+       0.086563,
+       0.267425
+      ],
+      [
+       0.055847,
+       0.313183
+      ],
+      [
+       0.025944,
+       0.346646
+      ],
+      [
+       0.001202,
+       0.365639
+      ],
+      [
+       -0.01,
+       0.37
+      ],
+      [
+       -0.01,
+       0.4
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "knob-ball",
+     "kind": "ellipsoid",
+     "bone": "knob",
+     "material": "plastic-black",
+     "role": "body",
+     "tone": 0.2,
+     "radii": [
+      0.03,
+      0.03,
+      0.03
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-housing",
+     "of": "housing",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-pole",
+     "of": "pole",
+     "region": "pole-stainless"
+    },
+    {
+     "id": "th-head",
+     "of": "head",
+     "region": "emitter-head"
+    },
+    {
+     "id": "th-flue-gas-disc",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.12,
+       0.0
+      ],
+      [
+       0.12,
+       0.1
+      ],
+      [
+       0.15,
+       0.1
+      ],
+      [
+       0.15,
+       0.0
+      ],
+      [
+       0.12,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "tags": [
+      "flue-gas"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "emitter-head"
+    },
+    {
+     "id": "th-reflector-skin",
+     "kind": "loft",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        -0.01,
+        0.0
+       ],
+       "rx": 0.4001,
+       "ry": 0.4001
+      },
+      {
+       "at": [
+        0.0,
+        0.01582,
+        0.0
+       ],
+       "rx": 0.391936,
+       "ry": 0.391936
+      },
+      {
+       "at": [
+        0.0,
+        0.046562,
+        0.0
+       ],
+       "rx": 0.368538,
+       "ry": 0.368538
+      },
+      {
+       "at": [
+        0.0,
+        0.079648,
+        0.0
+       ],
+       "rx": 0.331545,
+       "ry": 0.331545
+      },
+      {
+       "at": [
+        0.0,
+        0.1125,
+        0.0
+       ],
+       "rx": 0.2826,
+       "ry": 0.2826
+      },
+      {
+       "at": [
+        0.0,
+        0.142539,
+        0.0
+       ],
+       "rx": 0.223342,
+       "ry": 0.223342
+      },
+      {
+       "at": [
+        0.0,
+        0.167187,
+        0.0
+       ],
+       "rx": 0.155413,
+       "ry": 0.155413
+      },
+      {
+       "at": [
+        0.0,
+        0.183867,
+        0.0
+       ],
+       "rx": 0.080452,
+       "ry": 0.080452
+      },
+      {
+       "at": [
+        0.0,
+        0.19,
+        0.0
+       ],
+       "rx": 0.0005,
+       "ry": 0.0005
+      }
+     ],
+     "capStart": false,
+     "capEnd": false,
+     "region": "reflector"
+    },
+    {
+     "id": "th-dome-plume-disc",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "detail",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.188,
+       0.0
+      ],
+      [
+       0.188,
+       0.3
+      ],
+      [
+       0.218,
+       0.3
+      ],
+      [
+       0.218,
+       0.0
+      ],
+      [
+       0.188,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "tags": [
+      "dome-plume"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "reflector"
+    },
+    {
+     "id": "th-knob-ball",
+     "of": "knob-ball",
+     "region": "control"
+    }
+   ],
+   "structure": [
+    {
+     "id": "base-plate-frame",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.182,
+       0.152
+      ],
+      [
+       0.180978,
+       0.159765
+      ],
+      [
+       0.177981,
+       0.167
+      ],
+      [
+       0.173213,
+       0.173213
+      ],
+      [
+       0.167,
+       0.177981
+      ],
+      [
+       0.159765,
+       0.180978
+      ],
+      [
+       0.152,
+       0.182
+      ],
+      [
+       -0.152,
+       0.182
+      ],
+      [
+       -0.159765,
+       0.180978
+      ],
+      [
+       -0.167,
+       0.177981
+      ],
+      [
+       -0.173213,
+       0.173213
+      ],
+      [
+       -0.177981,
+       0.167
+      ],
+      [
+       -0.180978,
+       0.159765
+      ],
+      [
+       -0.182,
+       0.152
+      ],
+      [
+       -0.182,
+       -0.152
+      ],
+      [
+       -0.180978,
+       -0.159765
+      ],
+      [
+       -0.177981,
+       -0.167
+      ],
+      [
+       -0.173213,
+       -0.173213
+      ],
+      [
+       -0.167,
+       -0.177981
+      ],
+      [
+       -0.159765,
+       -0.180978
+      ],
+      [
+       -0.152,
+       -0.182
+      ],
+      [
+       0.152,
+       -0.182
+      ],
+      [
+       0.159765,
+       -0.180978
+      ],
+      [
+       0.167,
+       -0.177981
+      ],
+      [
+       0.173213,
+       -0.173213
+      ],
+      [
+       0.177981,
+       -0.167
+      ],
+      [
+       0.180978,
+       -0.159765
+      ],
+      [
+       0.182,
+       -0.152
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.1,
+        0.08
+       ],
+       [
+        0.099319,
+        0.085176
+       ],
+       [
+        0.097321,
+        0.09
+       ],
+       [
+        0.094142,
+        0.094142
+       ],
+       [
+        0.09,
+        0.097321
+       ],
+       [
+        0.085176,
+        0.099319
+       ],
+       [
+        0.08,
+        0.1
+       ],
+       [
+        -0.08,
+        0.1
+       ],
+       [
+        -0.085176,
+        0.099319
+       ],
+       [
+        -0.09,
+        0.097321
+       ],
+       [
+        -0.094142,
+        0.094142
+       ],
+       [
+        -0.097321,
+        0.09
+       ],
+       [
+        -0.099319,
+        0.085176
+       ],
+       [
+        -0.1,
+        0.08
+       ],
+       [
+        -0.1,
+        -0.08
+       ],
+       [
+        -0.099319,
+        -0.085176
+       ],
+       [
+        -0.097321,
+        -0.09
+       ],
+       [
+        -0.094142,
+        -0.094142
+       ],
+       [
+        -0.09,
+        -0.097321
+       ],
+       [
+        -0.085176,
+        -0.099319
+       ],
+       [
+        -0.08,
+        -0.1
+       ],
+       [
+        0.08,
+        -0.1
+       ],
+       [
+        0.085176,
+        -0.099319
+       ],
+       [
+        0.09,
+        -0.097321
+       ],
+       [
+        0.094142,
+        -0.094142
+       ],
+       [
+        0.097321,
+        -0.09
+       ],
+       [
+        0.099319,
+        -0.085176
+       ],
+       [
+        0.1,
+        -0.08
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.002,
+     "to": 0.0485,
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "housing-drum",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0285,
+       0.1525
+      ],
+      [
+       0.6,
+       0.1525
+      ],
+      [
+       0.610063,
+       0.147839
+      ],
+      [
+       0.62225,
+       0.1354
+      ],
+      [
+       0.632563,
+       0.117494
+      ],
+      [
+       0.641,
+       0.096434
+      ],
+      [
+       0.647563,
+       0.074533
+      ],
+      [
+       0.65225,
+       0.054104
+      ],
+      [
+       0.655063,
+       0.037459
+      ],
+      [
+       0.656,
+       0.026912
+      ],
+      [
+       0.654805,
+       0.026806
+      ],
+      [
+       0.653874,
+       0.037295
+      ],
+      [
+       0.651074,
+       0.053866
+      ],
+      [
+       0.646403,
+       0.074225
+      ],
+      [
+       0.639867,
+       0.096038
+      ],
+      [
+       0.631481,
+       0.116973
+      ],
+      [
+       0.621286,
+       0.134685
+      ],
+      [
+       0.609331,
+       0.146888
+      ],
+      [
+       0.59999,
+       0.1513
+      ],
+      [
+       0.0285,
+       0.1513
+      ],
+      [
+       0.0285,
+       0.1525
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "bottle-shell",
+     "kind": "revolve",
+     "bone": "bottle",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.04,
+       0.0
+      ],
+      [
+       0.042,
+       0.115
+      ],
+      [
+       0.08,
+       0.15
+      ],
+      [
+       0.46,
+       0.15
+      ],
+      [
+       0.55,
+       0.115
+      ],
+      [
+       0.592,
+       0.03
+      ],
+      [
+       0.65,
+       0.03
+      ],
+      [
+       0.65,
+       0.0275
+      ],
+      [
+       0.590381,
+       0.028095
+      ],
+      [
+       0.548318,
+       0.11315
+      ],
+      [
+       0.459814,
+       0.147507
+      ],
+      [
+       0.080209,
+       0.147509
+      ],
+      [
+       0.044416,
+       0.114356
+      ],
+      [
+       0.0425,
+       0.0
+      ],
+      [
+       0.04,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.03,
+      0.0
+     ],
+     "member": "bottle",
+     "part": "member"
+    },
+    {
+     "id": "pole-tube",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.027
+      ],
+      [
+       1.36,
+       0.027
+      ],
+      [
+       1.36,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.027
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "slender": true,
+     "member": "pole",
+     "part": "member"
+    },
+    {
+     "id": "head-shroud",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.8,
+     "profile": [
+      [
+       0.0025,
+       0.1275
+      ],
+      [
+       0.1175,
+       0.1275
+      ],
+      [
+       0.1175,
+       0.0
+      ],
+      [
+       0.116,
+       0.0
+      ],
+      [
+       0.116,
+       0.126
+      ],
+      [
+       0.0025,
+       0.126
+      ],
+      [
+       0.0025,
+       0.1275
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "burner-head",
+     "part": "member"
+    },
+    {
+     "id": "reflector-dish",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.01,
+       0.3855
+      ],
+      [
+       0.008755,
+       0.379174
+      ],
+      [
+       0.036597,
+       0.357905
+      ],
+      [
+       0.068145,
+       0.322619
+      ],
+      [
+       0.099964,
+       0.275214
+      ],
+      [
+       0.129218,
+       0.217515
+      ],
+      [
+       0.153258,
+       0.151284
+      ],
+      [
+       0.169521,
+       0.078244
+      ],
+      [
+       0.175542,
+       0.0
+      ],
+      [
+       0.174545,
+       0.0
+      ],
+      [
+       0.168532,
+       0.078099
+      ],
+      [
+       0.152298,
+       0.151006
+      ],
+      [
+       0.1283,
+       0.21712
+      ],
+      [
+       0.099099,
+       0.274711
+      ],
+      [
+       0.067351,
+       0.32201
+      ],
+      [
+       0.035907,
+       0.357181
+      ],
+      [
+       0.008245,
+       0.378313
+      ],
+      [
+       -0.01,
+       0.3845
+      ],
+      [
+       -0.01,
+       0.3855
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "reflector",
+     "part": "member"
+    },
+    {
+     "id": "support-base-contact-pad",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.46,
+      0.03,
+      0.46
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.015,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "base-contact"
+    },
+    {
+     "id": "mass-base",
+     "kind": "ellipsoid",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.14,
+      0.1,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.3,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bottle",
+     "kind": "ellipsoid",
+     "bone": "bottle",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.13,
+      0.15,
+      0.13
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.31,
+       0.0
+      ]
+     },
+     "member": "bottle",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: modelled anew against the 1:200 drawing (plate 50 mm, pole 70 mm, plain burner drum 260 x 120 mm, dome rim 10 mm below its bone). Plate, housing (5 sections), pole, drum and ball only; the 15 mm cap boss, hanger and chamfers are gone. The dome is a 30 mm hollow shell with its rim at the drawn level.",
+     "de": "K\u00f6rper: neu gegen die Zeichnung 1:200 modelliert (Platte 50 mm, Mast 70 mm, glatte Brennertrommel 260 x 120 mm, Haubenrand 10 mm unter seinem Knochen). Nur Platte, Geh\u00e4use (5 Schnitte), Mast, Trommel und Kugel; Kappenaufsatz 15 mm, Haltrohr und Fasen entfallen. Die Haube ist eine hohle Schale von 30 mm mit ihrem Rand auf der gezeichneten H\u00f6he."
+    },
+    {
+     "en": "Thermal: references to plate, housing, pole, drum and ball, the open skin of the 8-section dome and the two emitter discs at 30 mm; every region has a solid, the total area is within 2 % of the sum of areaM2 (regions deviate by 0 to 14 % individually, only the total counts at this scale).",
+     "de": "Thermik: Referenzen auf Platte, Geh\u00e4use, Mast, Trommel und Kugel, die offene Haut der Haube aus 8 Schnitten und die beiden Emitterscheiben mit 30 mm; jede Region hat einen K\u00f6rper, die Gesamtfl\u00e4che liegt innerhalb 2 % der Summe von areaM2 (Regionen weichen einzeln um 0 bis 14 % ab, nur die Summe z\u00e4hlt in diesem Ma\u00dfstab)."
+    },
+    {
+     "en": "Structure: the same members at true section size (all extents are above 30 mm): frame ring, drum, bottle, 60 x 1.5 mm pole tube, head cup, the 1 mm dish inside the 30 mm body shell; joints and the hanger are merged into the members (their sleeves are under the 30 mm feature in length), the contact pad is 30 mm, two masses.",
+     "de": "Tragwerk: dieselben St\u00e4be in wahrer Querschnittsgr\u00f6\u00dfe (alle Ausdehnungen \u00fcber 30 mm): Rahmenring, Trommel, Flasche, Mastrohr 60 x 1,5 mm, Kopfbecher, die 1-mm-Schale innerhalb der 30-mm-K\u00f6rperschale; Gelenke und Haltrohr sind in die St\u00e4be aufgegangen (ihre H\u00fclsen sind k\u00fcrzer als die Einzelheit 30 mm), die Aufstandsplatte ist 30 mm, zwei Massen."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "base-plate",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.46,
+      0.1,
+      0.46
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.05,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "housing",
+     "kind": "loft",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.1,
+        0.0
+       ],
+       "rx": 0.17,
+       "ry": 0.17,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.58,
+        0.0
+       ],
+       "rx": 0.17,
+       "ry": 0.17,
+       "exponent": 10
+      },
+      {
+       "at": [
+        0.0,
+        0.62,
+        0.0
+       ],
+       "rx": 0.15,
+       "ry": 0.15,
+       "exponent": 6
+      },
+      {
+       "at": [
+        0.0,
+        0.66,
+        0.0
+       ],
+       "rx": 0.05,
+       "ry": 0.05,
+       "exponent": 2
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "pole",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.03
+      ],
+      [
+       1.36,
+       0.03
+      ],
+      [
+       1.36,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "slender": true
+    },
+    {
+     "id": "head",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "body",
+     "tone": 0.8,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.13
+      ],
+      [
+       0.14,
+       0.13
+      ],
+      [
+       0.14,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.02,
+      0.0
+     ]
+    },
+    {
+     "id": "reflector-shell",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.03,
+       0.4
+      ],
+      [
+       0.029687,
+       0.368438
+      ],
+      [
+       0.1025,
+       0.2825
+      ],
+      [
+       0.164062,
+       0.155313
+      ],
+      [
+       0.19,
+       0.0
+      ],
+      [
+       0.116024,
+       0.0
+      ],
+      [
+       0.09242,
+       0.133122
+      ],
+      [
+       0.039057,
+       0.2425
+      ],
+      [
+       -0.020074,
+       0.312323
+      ],
+      [
+       -0.03,
+       0.325
+      ],
+      [
+       -0.03,
+       0.4
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    {
+     "id": "knob-block",
+     "kind": "box",
+     "bone": "knob",
+     "material": "plastic-black",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.06,
+      0.12,
+      0.06
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-housing",
+     "of": "housing",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-base-plate",
+     "of": "base-plate",
+     "region": "base-housing"
+    },
+    {
+     "id": "th-pole",
+     "of": "pole",
+     "region": "pole-stainless"
+    },
+    {
+     "id": "th-head",
+     "of": "head",
+     "region": "emitter-head"
+    },
+    {
+     "id": "th-flue-gas-disc",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.12,
+       0.0
+      ],
+      [
+       0.12,
+       0.1
+      ],
+      [
+       0.195,
+       0.1
+      ],
+      [
+       0.195,
+       0.0
+      ],
+      [
+       0.12,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "tags": [
+      "flue-gas"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "emitter-head"
+    },
+    {
+     "id": "th-reflector-skin",
+     "kind": "loft",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        -0.03,
+        0.0
+       ],
+       "rx": 0.4001,
+       "ry": 0.4001
+      },
+      {
+       "at": [
+        0.0,
+        0.029687,
+        0.0
+       ],
+       "rx": 0.368538,
+       "ry": 0.368538
+      },
+      {
+       "at": [
+        0.0,
+        0.1025,
+        0.0
+       ],
+       "rx": 0.2826,
+       "ry": 0.2826
+      },
+      {
+       "at": [
+        0.0,
+        0.164062,
+        0.0
+       ],
+       "rx": 0.155413,
+       "ry": 0.155413
+      },
+      {
+       "at": [
+        0.0,
+        0.19,
+        0.0
+       ],
+       "rx": 0.0005,
+       "ry": 0.0005
+      }
+     ],
+     "capStart": false,
+     "capEnd": false,
+     "region": "reflector"
+    },
+    {
+     "id": "th-dome-plume-disc",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "detail",
+     "tone": 0.9,
+     "profile": [
+      [
+       0.1225,
+       0.0
+      ],
+      [
+       0.1225,
+       0.3
+      ],
+      [
+       0.1975,
+       0.3
+      ],
+      [
+       0.1975,
+       0.0
+      ],
+      [
+       0.1225,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "tags": [
+      "dome-plume"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "reflector"
+    },
+    {
+     "id": "th-knob-block",
+     "of": "knob-block",
+     "region": "control"
+    }
+   ],
+   "structure": [
+    {
+     "id": "base-plate-frame",
+     "kind": "extrude",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.182,
+       0.152
+      ],
+      [
+       0.180978,
+       0.159765
+      ],
+      [
+       0.177981,
+       0.167
+      ],
+      [
+       0.173213,
+       0.173213
+      ],
+      [
+       0.167,
+       0.177981
+      ],
+      [
+       0.159765,
+       0.180978
+      ],
+      [
+       0.152,
+       0.182
+      ],
+      [
+       -0.152,
+       0.182
+      ],
+      [
+       -0.159765,
+       0.180978
+      ],
+      [
+       -0.167,
+       0.177981
+      ],
+      [
+       -0.173213,
+       0.173213
+      ],
+      [
+       -0.177981,
+       0.167
+      ],
+      [
+       -0.180978,
+       0.159765
+      ],
+      [
+       -0.182,
+       0.152
+      ],
+      [
+       -0.182,
+       -0.152
+      ],
+      [
+       -0.180978,
+       -0.159765
+      ],
+      [
+       -0.177981,
+       -0.167
+      ],
+      [
+       -0.173213,
+       -0.173213
+      ],
+      [
+       -0.167,
+       -0.177981
+      ],
+      [
+       -0.159765,
+       -0.180978
+      ],
+      [
+       -0.152,
+       -0.182
+      ],
+      [
+       0.152,
+       -0.182
+      ],
+      [
+       0.159765,
+       -0.180978
+      ],
+      [
+       0.167,
+       -0.177981
+      ],
+      [
+       0.173213,
+       -0.173213
+      ],
+      [
+       0.177981,
+       -0.167
+      ],
+      [
+       0.180978,
+       -0.159765
+      ],
+      [
+       0.182,
+       -0.152
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.1,
+        0.08
+       ],
+       [
+        0.099319,
+        0.085176
+       ],
+       [
+        0.097321,
+        0.09
+       ],
+       [
+        0.094142,
+        0.094142
+       ],
+       [
+        0.09,
+        0.097321
+       ],
+       [
+        0.085176,
+        0.099319
+       ],
+       [
+        0.08,
+        0.1
+       ],
+       [
+        -0.08,
+        0.1
+       ],
+       [
+        -0.085176,
+        0.099319
+       ],
+       [
+        -0.09,
+        0.097321
+       ],
+       [
+        -0.094142,
+        0.094142
+       ],
+       [
+        -0.097321,
+        0.09
+       ],
+       [
+        -0.099319,
+        0.085176
+       ],
+       [
+        -0.1,
+        0.08
+       ],
+       [
+        -0.1,
+        -0.08
+       ],
+       [
+        -0.099319,
+        -0.085176
+       ],
+       [
+        -0.097321,
+        -0.09
+       ],
+       [
+        -0.094142,
+        -0.094142
+       ],
+       [
+        -0.09,
+        -0.097321
+       ],
+       [
+        -0.085176,
+        -0.099319
+       ],
+       [
+        -0.08,
+        -0.1
+       ],
+       [
+        0.08,
+        -0.1
+       ],
+       [
+        0.085176,
+        -0.099319
+       ],
+       [
+        0.09,
+        -0.097321
+       ],
+       [
+        0.094142,
+        -0.094142
+       ],
+       [
+        0.097321,
+        -0.09
+       ],
+       [
+        0.099319,
+        -0.085176
+       ],
+       [
+        0.1,
+        -0.08
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.002,
+     "to": 0.0985,
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "housing-drum",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0285,
+       0.1525
+      ],
+      [
+       0.6,
+       0.1525
+      ],
+      [
+       0.610063,
+       0.147839
+      ],
+      [
+       0.62225,
+       0.1354
+      ],
+      [
+       0.632563,
+       0.117494
+      ],
+      [
+       0.641,
+       0.096434
+      ],
+      [
+       0.647563,
+       0.074533
+      ],
+      [
+       0.65225,
+       0.054104
+      ],
+      [
+       0.655063,
+       0.037459
+      ],
+      [
+       0.656,
+       0.026912
+      ],
+      [
+       0.654805,
+       0.026806
+      ],
+      [
+       0.653874,
+       0.037295
+      ],
+      [
+       0.651074,
+       0.053866
+      ],
+      [
+       0.646403,
+       0.074225
+      ],
+      [
+       0.639867,
+       0.096038
+      ],
+      [
+       0.631481,
+       0.116973
+      ],
+      [
+       0.621286,
+       0.134685
+      ],
+      [
+       0.609331,
+       0.146888
+      ],
+      [
+       0.59999,
+       0.1513
+      ],
+      [
+       0.0285,
+       0.1513
+      ],
+      [
+       0.0285,
+       0.1525
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "bottle-shell",
+     "kind": "revolve",
+     "bone": "bottle",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.04,
+       0.0
+      ],
+      [
+       0.042,
+       0.115
+      ],
+      [
+       0.08,
+       0.15
+      ],
+      [
+       0.46,
+       0.15
+      ],
+      [
+       0.55,
+       0.115
+      ],
+      [
+       0.592,
+       0.03
+      ],
+      [
+       0.65,
+       0.03
+      ],
+      [
+       0.65,
+       0.0275
+      ],
+      [
+       0.590381,
+       0.028095
+      ],
+      [
+       0.548318,
+       0.11315
+      ],
+      [
+       0.459814,
+       0.147507
+      ],
+      [
+       0.080209,
+       0.147509
+      ],
+      [
+       0.044416,
+       0.114356
+      ],
+      [
+       0.0425,
+       0.0
+      ],
+      [
+       0.04,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      -0.03,
+      0.0
+     ],
+     "member": "bottle",
+     "part": "member"
+    },
+    {
+     "id": "pole-tube",
+     "kind": "revolve",
+     "bone": "pole",
+     "material": "stainless-brushed",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.027
+      ],
+      [
+       1.36,
+       0.027
+      ],
+      [
+       1.36,
+       0.0285
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       0.0,
+       0.027
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "slender": true,
+     "member": "pole",
+     "part": "member"
+    },
+    {
+     "id": "head-shroud",
+     "kind": "revolve",
+     "bone": "burner-head",
+     "material": "stainless-hot",
+     "role": "detail",
+     "tone": 0.8,
+     "profile": [
+      [
+       0.0025,
+       0.1275
+      ],
+      [
+       0.1175,
+       0.1275
+      ],
+      [
+       0.1175,
+       0.0
+      ],
+      [
+       0.116,
+       0.0
+      ],
+      [
+       0.116,
+       0.126
+      ],
+      [
+       0.0025,
+       0.126
+      ],
+      [
+       0.0025,
+       0.1275
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "burner-head",
+     "part": "member"
+    },
+    {
+     "id": "reflector-dish",
+     "kind": "revolve",
+     "bone": "reflector",
+     "material": "alu-reflector",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.03,
+       0.3625
+      ],
+      [
+       0.004807,
+       0.34038
+      ],
+      [
+       0.070779,
+       0.2625
+      ],
+      [
+       0.128241,
+       0.144217
+      ],
+      [
+       0.153012,
+       0.0
+      ],
+      [
+       0.152027,
+       0.0
+      ],
+      [
+       0.127287,
+       0.143919
+      ],
+      [
+       0.069932,
+       0.261967
+      ],
+      [
+       0.004102,
+       0.339671
+      ],
+      [
+       -0.03,
+       0.3615
+      ],
+      [
+       -0.03,
+       0.3625
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "member": "reflector",
+     "part": "member"
+    },
+    {
+     "id": "support-base-contact-pad",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.46,
+      0.075,
+      0.46
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.0375,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "base-contact"
+    },
+    {
+     "id": "mass-base",
+     "kind": "ellipsoid",
+     "bone": "base",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.14,
+      0.1,
+      0.14
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.3,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-bottle",
+     "kind": "ellipsoid",
+     "bone": "bottle",
+     "material": "powder-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.13,
+      0.15,
+      0.13
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.31,
+       0.0
+      ]
+     },
+     "member": "bottle",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: modelled anew against the 1:500 drawing, which draws a stepped mushroom sign: plain 460 x 100 x 460 mm base block, housing of 4 loft sections, 140 mm solid pole, 260 x 140 mm drum from 20 mm below its bone, a 75 mm hollow dome with its rim 30 mm below its bone, and the knob as the drawn 60 x 120 mm block (its own drawing is thinner than the 75 mm feature, C13).",
+     "de": "K\u00f6rper: neu gegen die Zeichnung 1:500 modelliert, die ein gestuftes Pilzschild zeichnet: glatter Sockelblock 460 x 100 x 460 mm, Geh\u00e4use aus 4 Loftschnitten, massiver Mast 140 mm, Trommel 260 x 140 mm ab 20 mm unter ihrem Knochen, eine hohle Haube von 75 mm mit Rand 30 mm unter ihrem Knochen und der Knopf als gezeichneter Block 60 x 120 mm (seine Zeichnung ist d\u00fcnner als die Einzelheit 75 mm, C13)."
+    },
+    {
+     "en": "Thermal: references to base block, housing, pole, drum and knob block, the 5-section open dome skin and the two emitter discs at 75 mm. Only the total counts at this scale (14 % over the sum of areaM2: the drawn 140 mm pole exposes 2.3 times the area of the 60 mm real pole and the knob block 2.7 times the ball, the 1:500 drawing enlarges them to the scale).",
+     "de": "Thermik: Referenzen auf Sockelblock, Geh\u00e4use, Mast, Trommel und Knopfblock, die offene Haubenhaut aus 5 Schnitten und die beiden Emitterscheiben mit 75 mm. In diesem Ma\u00dfstab z\u00e4hlt nur die Summe (14 % \u00fcber der Summe von areaM2: der gezeichnete Mast von 140 mm hat die 2,3-fache Fl\u00e4che des wahren Mastes von 60 mm, der Knopfblock die 2,7-fache der Kugel; die Zeichnung 1:500 vergr\u00f6\u00dfert sie auf den Ma\u00dfstab)."
+    },
+    {
+     "en": "Structure: members keep their real walls. The pole tube is the only member under the 75 mm feature (57 mm): it is a tube of 75 mm outer diameter and 0.63 mm wall that has the bending stiffness EI of the real 60 x 1.5 mm tube (1.0e-7 m4); drum, bottle, head cup, 1 mm dish inside the 75 mm shell, 75 mm contact pad and two masses as before; no joints at this scale (merged into the members).",
+     "de": "Tragwerk: die St\u00e4be behalten ihre wirklichen W\u00e4nde. Das Mastrohr ist der einzige Stab unter der Einzelheit 75 mm (57 mm): es ist ein Rohr von 75 mm Au\u00dfendurchmesser und 0,63 mm Wand mit der Biegesteifigkeit EI des wirklichen Rohrs 60 x 1,5 mm (1,0e-7 m4); Trommel, Flasche, Kopfbecher, 1-mm-Schale innerhalb der 75-mm-K\u00f6rperschale, Aufstandsplatte 75 mm und zwei Massen wie zuvor; keine Gelenke in diesem Ma\u00dfstab (in die St\u00e4be aufgegangen)."
+    }
+   ]
+  }
+ }
+}

@@ -549,7 +549,7 @@ fn column_buckling(f: &ColumnFacts, report: &CheckReport) -> Diagram2d {
     let mut series: Vec<Series> = curve_names
         .iter()
         .map(|(name, alpha)| {
-            let selected = *name == c.buckling_curve;
+            let selected = *name == c.buckling_curve.as_str();
             polyline(&format!("chi-{name}"), &format!("Curve {name}"), &format!("Linie {name}"), &curves::buckling_curve(*alpha, LAMBDA_MAX, 60), stroke(if selected { Tone::Info } else { Tone::Neutral }, if selected { 2.5 } else { 1.0 }, Dash::Solid))
         })
         .collect();
@@ -735,7 +735,7 @@ fn placements(document: &En1994Snapshot) -> Option<Diagram2d> {
 
 /// 📊️ The utilisation of every named result of a design case as one marker per result over the limit 1, with the table twin; a marker is bound to its check.
 fn case_results(report: &CheckReport, c: &super::model::CaseRow) -> Option<Diagram2d> {
-    let rows: Vec<(&str, f64, &LocalizedCopy)> = report.checks.iter().filter(|k| k.subject.entity_id == c.id && k.utilization.is_finite() && k.utilization > 0.0).map(|k| (k.id.as_str(), k.utilization, &k.title)).collect();
+    let rows: Vec<(&str, f64, &super::norm::LocalizedCopy)> = report.checks.iter().filter(|k| k.subject.entity_id == c.id && k.utilization.is_finite() && k.utilization > 0.0).map(|k| (k.id.as_str(), k.utilization, &k.title)).collect();
     if rows.is_empty() {
         return None;
     }

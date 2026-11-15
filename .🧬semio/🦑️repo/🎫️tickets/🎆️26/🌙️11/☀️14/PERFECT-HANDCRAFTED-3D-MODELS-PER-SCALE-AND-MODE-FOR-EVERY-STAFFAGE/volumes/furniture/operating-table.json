@@ -1,0 +1,4049 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "tb-plate",
+     "kind": "loft",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        0,
+        0.07,
+        0
+       ],
+       "rx": 0.2,
+       "ry": 0.4,
+       "exponent": 12,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.12,
+        0
+       ],
+       "rx": 0.2,
+       "ry": 0.4,
+       "exponent": 12,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.16,
+        0
+       ],
+       "rx": 0.15,
+       "ry": 0.3,
+       "exponent": 12,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "tb-castor-a",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "rubber-castor",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       -0.02,
+       0.03
+      ],
+      [
+       -0.016,
+       0.0376
+      ],
+      [
+       -0.008,
+       0.04
+      ],
+      [
+       0.008,
+       0.04
+      ],
+      [
+       0.016,
+       0.0376
+      ],
+      [
+       0.02,
+       0.03
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.32,
+      0.04,
+      0.15
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.34
+      ]
+     }
+    },
+    {
+     "id": "tb-castor-b",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "rubber-castor",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       -0.02,
+       0.03
+      ],
+      [
+       -0.016,
+       0.0376
+      ],
+      [
+       -0.008,
+       0.04
+      ],
+      [
+       0.008,
+       0.04
+      ],
+      [
+       0.016,
+       0.0376
+      ],
+      [
+       0.02,
+       0.03
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.32,
+      0.04,
+      0.15
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.34
+      ]
+     }
+    },
+    {
+     "id": "col-lower",
+     "kind": "loft",
+     "bone": "column",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.15,
+       "ry": 0.15,
+       "exponent": 8,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.24,
+        0
+       ],
+       "rx": 0.13,
+       "ry": 0.13,
+       "exponent": 8,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "col-upper",
+     "kind": "box",
+     "bone": "column",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.21,
+      0.34,
+      0.21
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0,
+       0.41,
+       0
+      ]
+     }
+    },
+    {
+     "id": "col-head",
+     "kind": "box",
+     "bone": "column",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.32,
+      0.04,
+      0.4
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0,
+       0.6,
+       0
+      ]
+     }
+    },
+    {
+     "id": "top-carrier",
+     "kind": "box",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      1.96,
+      0.04,
+      0.4
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0,
+       0.02,
+       0
+      ]
+     }
+    },
+    {
+     "id": "top-pad-head",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.378,
+      0.08,
+      0.5
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       -0.811,
+       0.08,
+       0
+      ]
+     }
+    },
+    {
+     "id": "top-pad-back",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.566,
+      0.08,
+      0.5
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       -0.335,
+       0.08,
+       0
+      ]
+     }
+    },
+    {
+     "id": "top-pad-seat",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.246,
+      0.08,
+      0.5
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       0.075,
+       0.08,
+       0
+      ]
+     }
+    },
+    {
+     "id": "top-pad-leg",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.798,
+      0.08,
+      0.5
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       0.601,
+       0.08,
+       0
+      ]
+     }
+    },
+    {
+     "id": "st-base",
+     "kind": "loft",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0,
+        0.06,
+        0
+       ],
+       "rx": 0.25,
+       "ry": 0.28,
+       "exponent": 12,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.105,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.24,
+       "exponent": 12,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "st-castor-a",
+     "kind": "revolve",
+     "bone": "stand-base",
+     "material": "rubber-castor",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       -0.015,
+       0.0225
+      ],
+      [
+       -0.012,
+       0.0282
+      ],
+      [
+       -0.006,
+       0.03
+      ],
+      [
+       0.006,
+       0.03
+      ],
+      [
+       0.012,
+       0.0282
+      ],
+      [
+       0.015,
+       0.0225
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.22,
+      0.03,
+      0.185
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.37
+      ]
+     }
+    },
+    {
+     "id": "st-castor-b",
+     "kind": "revolve",
+     "bone": "stand-base",
+     "material": "rubber-castor",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       -0.015,
+       0.0225
+      ],
+      [
+       -0.012,
+       0.0282
+      ],
+      [
+       -0.006,
+       0.03
+      ],
+      [
+       0.006,
+       0.03
+      ],
+      [
+       0.012,
+       0.0282
+      ],
+      [
+       0.015,
+       0.0225
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.22,
+      0.03,
+      0.185
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.37
+      ]
+     }
+    },
+    {
+     "id": "st-column",
+     "kind": "revolve",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.105,
+       0.03
+      ],
+      [
+       1.88,
+       0.03
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      -0.1,
+      0
+     ],
+     "slender": true
+    },
+    {
+     "id": "st-collar",
+     "kind": "revolve",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.88,
+       0.045
+      ],
+      [
+       1.96,
+       0.045
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      -0.1,
+      0
+     ]
+    },
+    {
+     "id": "st-arm",
+     "kind": "box",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.5,
+      0.04,
+      0.04
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       -0.25,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "st-knob",
+     "kind": "ellipsoid",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.35,
+     "radii": [
+      0.03,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.5,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "st-rod",
+     "kind": "revolve",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       1.78,
+       0.012
+      ],
+      [
+       1.9,
+       0.012
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      -0.5,
+      -1.92,
+      0
+     ]
+    },
+    {
+     "id": "head-housing",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       1.675,
+       0.25
+      ],
+      [
+       1.7,
+       0.25
+      ],
+      [
+       1.73136,
+       0.23552
+      ],
+      [
+       1.75408,
+       0.19656
+      ],
+      [
+       1.76912,
+       0.13984
+      ],
+      [
+       1.77744,
+       0.07208
+      ],
+      [
+       1.78,
+       0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      -1.66,
+      0
+     ]
+    },
+    {
+     "id": "head-lens",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-lens-glass",
+     "role": "body",
+     "tone": 0.9,
+     "profile": [
+      [
+       1.66,
+       0.24
+      ],
+      [
+       1.675,
+       0.24
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      -1.66,
+      0
+     ]
+    },
+    {
+     "id": "head-handle",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.6,
+       0.02
+      ],
+      [
+       1.66,
+       0.02
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      -1.66,
+      0
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-tb-plate",
+     "of": "tb-plate",
+     "region": "table-base",
+     "layer": "shell"
+    },
+    {
+     "id": "th-tb-castor-a",
+     "of": "tb-castor-a",
+     "region": "table-base",
+     "layer": "shell"
+    },
+    {
+     "id": "th-tb-castor-b",
+     "of": "tb-castor-b",
+     "region": "table-base",
+     "layer": "shell"
+    },
+    {
+     "id": "th-col-lower",
+     "of": "col-lower",
+     "region": "table-column",
+     "layer": "cover"
+    },
+    {
+     "id": "th-col-upper",
+     "of": "col-upper",
+     "region": "table-column",
+     "layer": "cover"
+    },
+    {
+     "id": "th-col-head",
+     "of": "col-head",
+     "region": "table-column",
+     "layer": "cover"
+    },
+    {
+     "id": "th-top-carrier",
+     "of": "top-carrier",
+     "region": "table-frame",
+     "layer": "carrier"
+    },
+    {
+     "id": "th-top-pad-head",
+     "of": "top-pad-head",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-top-pad-head-foam",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.376,
+      0.078,
+      0.498
+     ],
+     "cornerRadius": 0.029,
+     "transform": {
+      "translation": [
+       -0.811,
+       0.08,
+       0
+      ]
+     },
+     "region": "table-pad",
+     "layer": "foam"
+    },
+    {
+     "id": "th-top-pad-back",
+     "of": "top-pad-back",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-top-pad-back-foam",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.564,
+      0.078,
+      0.498
+     ],
+     "cornerRadius": 0.029,
+     "transform": {
+      "translation": [
+       -0.335,
+       0.08,
+       0
+      ]
+     },
+     "region": "table-pad",
+     "layer": "foam"
+    },
+    {
+     "id": "th-top-pad-seat",
+     "of": "top-pad-seat",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-top-pad-seat-foam",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.244,
+      0.078,
+      0.498
+     ],
+     "cornerRadius": 0.029,
+     "transform": {
+      "translation": [
+       0.075,
+       0.08,
+       0
+      ]
+     },
+     "region": "table-pad",
+     "layer": "foam"
+    },
+    {
+     "id": "th-top-pad-leg",
+     "of": "top-pad-leg",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-top-pad-leg-foam",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.796,
+      0.078,
+      0.498
+     ],
+     "cornerRadius": 0.029,
+     "transform": {
+      "translation": [
+       0.601,
+       0.08,
+       0
+      ]
+     },
+     "region": "table-pad",
+     "layer": "foam"
+    },
+    {
+     "id": "th-st-base",
+     "of": "st-base",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-castor-a",
+     "of": "st-castor-a",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-castor-b",
+     "of": "st-castor-b",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-column",
+     "of": "st-column",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-collar",
+     "of": "st-collar",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-arm",
+     "of": "st-arm",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-knob",
+     "of": "st-knob",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-rod",
+     "of": "st-rod",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-head-housing",
+     "of": "head-housing",
+     "region": "light-housing",
+     "layer": "housing"
+    },
+    {
+     "id": "th-head-lens",
+     "of": "head-lens",
+     "region": "light-lens",
+     "layer": "lens"
+    },
+    {
+     "id": "th-head-handle",
+     "of": "head-handle",
+     "region": "light-housing",
+     "layer": "housing"
+    },
+    {
+     "id": "th-light-plume",
+     "kind": "ellipsoid",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.2,
+      0.02,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     },
+     "region": "light-housing",
+     "layer": "housing"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-tb-plate",
+     "of": "tb-plate",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-col-lower",
+     "of": "col-lower",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "member-col-upper",
+     "of": "col-upper",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "member-col-head",
+     "of": "col-head",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "member-top-carrier",
+     "of": "top-carrier",
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "member-st-base",
+     "of": "st-base",
+     "member": "stand-base",
+     "part": "member"
+    },
+    {
+     "id": "member-st-column",
+     "of": "st-column",
+     "member": "stand-column",
+     "part": "member"
+    },
+    {
+     "id": "member-st-arm",
+     "of": "st-arm",
+     "member": "stand-arm",
+     "part": "member"
+    },
+    {
+     "id": "member-head-housing",
+     "of": "head-housing",
+     "member": "light-head",
+     "part": "member"
+    },
+    {
+     "id": "joint-top-tilt",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.36,
+       0.02
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.18
+     ],
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "joint-arm",
+     "kind": "ellipsoid",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       -0.48,
+       -0.0,
+       0.0
+      ]
+     },
+     "member": "stand-arm",
+     "part": "joint"
+    },
+    {
+     "id": "joint-collar",
+     "kind": "revolve",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.045
+      ],
+      [
+       0.08,
+       0.045
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      1.78,
+      0.0
+     ],
+     "member": "stand-column",
+     "part": "joint"
+    },
+    {
+     "id": "support-castor-table-rear-left",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.008,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.32,
+       0.004,
+       0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-rear-left"
+    },
+    {
+     "id": "support-castor-table-rear-right",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.008,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.32,
+       0.004,
+       -0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-rear-right"
+    },
+    {
+     "id": "support-castor-table-front-left",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.008,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.32,
+       0.004,
+       0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-front-left"
+    },
+    {
+     "id": "support-castor-table-front-right",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.008,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.32,
+       0.004,
+       -0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-front-right"
+    },
+    {
+     "id": "support-castor-stand-rear-left",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.008,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.22,
+       0.004,
+       0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-rear-left"
+    },
+    {
+     "id": "support-castor-stand-rear-right",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.008,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.22,
+       0.004,
+       -0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-rear-right"
+    },
+    {
+     "id": "support-castor-stand-front-left",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.008,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.22,
+       0.004,
+       0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-front-left"
+    },
+    {
+     "id": "support-castor-stand-front-right",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.008,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.22,
+       0.004,
+       -0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-front-right"
+    },
+    {
+     "id": "mass-base",
+     "kind": "ellipsoid",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.25,
+      0.03,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-column",
+     "kind": "ellipsoid",
+     "bone": "column",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.1,
+      0.08,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.14,
+       0.0
+      ]
+     },
+     "member": "column",
+     "part": "mass"
+    },
+    {
+     "id": "mass-top",
+     "kind": "ellipsoid",
+     "bone": "top",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.25,
+      0.028,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-base",
+     "kind": "ellipsoid",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.12,
+      0.02,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.083,
+       0.0
+      ]
+     },
+     "member": "stand-base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-column",
+     "kind": "ellipsoid",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.02,
+      0.05,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     },
+     "member": "stand-column",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-arm",
+     "kind": "ellipsoid",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.1,
+      0.015,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       -0.25,
+       -0.0,
+       0.0
+      ]
+     },
+     "member": "stand-arm",
+     "part": "mass"
+    },
+    {
+     "id": "mass-light-head",
+     "kind": "ellipsoid",
+     "bone": "light-head",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.03,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.06,
+       0.0
+      ]
+     },
+     "member": "light-head",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Detailed model from the seed: lofted table base plate with two castors, stainless column (lofted lower part, box upper part, head plate), carrier plate with four rounded pad segments, stand with lofted base, revolved column and collar, boxed arm with knob, rod, domed aluminium lamp housing, lens and handle.",
+     "de": "Detailmodell aus dem Startmodell: gelofteter Tischfu\u00df mit zwei Rollen, Edelstahls\u00e4ule (geloftetes Unterteil, Oberteil als Quader, Kopfplatte), Tr\u00e4gerplatte mit vier gerundeten Polstersegmenten, Stativ mit geloftetem Fu\u00df, gedrehter S\u00e4ule und Kragen, Quaderarm mit Knauf, Stange, gew\u00f6lbtem Leuchtengeh\u00e4use aus Aluminium, Linse und Griff."
+    },
+    {
+     "en": "Thermal: references by region; the pad has two nested shells (1 mm vinyl = body solid, foam core inside); the lamp plume emitter is a flat disc of the emitter diameter 0.4 m on the housing dome. Structure: base plate, column parts, carrier, stand parts and housing as members; table tilt pin, arm knob and collar as joints; eight castor pads at the support anchors; masses at base, column, top, stand parts and lamp.",
+     "de": "Thermik: Verweise je Region; das Polster hat zwei verschachtelte Schalen (1 mm Vinyl = K\u00f6rper, darin der Schaumkern); der Leuchten-Plume-Emitter ist eine flache Scheibe mit dem Emitterdurchmesser 0,4 m auf der Geh\u00e4usekuppel. Tragwerk: Fu\u00dfplatte, S\u00e4ulenteile, Tr\u00e4ger, Stativteile und Geh\u00e4use als St\u00e4be; Kippstift, Armknauf und Kragen als Gelenke; acht Rollenplatten an den Auflagern; Massen an Fu\u00df, S\u00e4ule, Platte, Stativteilen und Leuchte."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "tb-plate",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.8,
+      0.09,
+      0.4
+     ],
+     "cornerRadius": 0.01,
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "tb-castor-a",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "rubber-castor",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       -0.02,
+       0.04
+      ],
+      [
+       0.02,
+       0.04
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      -0.32,
+      0.04,
+      0.17
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.34
+      ]
+     }
+    },
+    {
+     "id": "tb-castor-b",
+     "kind": "revolve",
+     "bone": "base",
+     "material": "rubber-castor",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       -0.02,
+       0.04
+      ],
+      [
+       0.02,
+       0.04
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.32,
+      0.04,
+      0.17
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.34
+      ]
+     }
+    },
+    {
+     "id": "col-lower",
+     "kind": "box",
+     "bone": "column",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.3,
+      0.24,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.12,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "col-upper",
+     "kind": "box",
+     "bone": "column",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.21,
+      0.34,
+      0.21
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.41,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "col-head",
+     "kind": "box",
+     "bone": "column",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.32,
+      0.04,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.6,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-carrier",
+     "kind": "box",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      1.96,
+      0.04,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.02,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-pad-head",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.378,
+      0.08,
+      0.5
+     ],
+     "cornerRadius": 0.02,
+     "transform": {
+      "translation": [
+       -0.811,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-pad-back",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.566,
+      0.08,
+      0.5
+     ],
+     "cornerRadius": 0.02,
+     "transform": {
+      "translation": [
+       -0.335,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-pad-seat",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.246,
+      0.08,
+      0.5
+     ],
+     "cornerRadius": 0.02,
+     "transform": {
+      "translation": [
+       0.075,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-pad-leg",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.798,
+      0.08,
+      0.5
+     ],
+     "cornerRadius": 0.02,
+     "transform": {
+      "translation": [
+       0.601,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "st-base",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.045,
+      0.5
+     ],
+     "cornerRadius": 0.01,
+     "transform": {
+      "translation": [
+       0.0,
+       0.0825,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "st-castor-a",
+     "kind": "revolve",
+     "bone": "stand-base",
+     "material": "rubber-castor",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       -0.015,
+       0.03
+      ],
+      [
+       0.015,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      -0.22,
+      0.03,
+      0.2
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.4
+      ]
+     }
+    },
+    {
+     "id": "st-castor-b",
+     "kind": "revolve",
+     "bone": "stand-base",
+     "material": "rubber-castor",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       -0.015,
+       0.03
+      ],
+      [
+       0.015,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.22,
+      0.03,
+      0.2
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.4
+      ]
+     }
+    },
+    {
+     "id": "st-column",
+     "kind": "revolve",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.035
+      ],
+      [
+       1.775,
+       0.035
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      0.005,
+      0.0
+     ],
+     "slender": true
+    },
+    {
+     "id": "st-arm",
+     "kind": "box",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.52,
+      0.045,
+      0.045
+     ],
+     "transform": {
+      "translation": [
+       -0.25,
+       0.0025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "st-rod",
+     "kind": "revolve",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.015
+      ],
+      [
+       0.12,
+       0.015
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      -0.5,
+      -0.14,
+      0.0
+     ]
+    },
+    {
+     "id": "head-housing",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       1.675,
+       0.25
+      ],
+      [
+       1.7,
+       0.25
+      ],
+      [
+       1.755,
+       0.17
+      ],
+      [
+       1.78,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      -1.66,
+      0.0
+     ]
+    },
+    {
+     "id": "head-lens",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-lens-glass",
+     "role": "body",
+     "tone": 0.9,
+     "profile": [
+      [
+       1.655,
+       0.24
+      ],
+      [
+       1.675,
+       0.24
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      -1.66,
+      0.0
+     ]
+    },
+    {
+     "id": "head-handle",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.06,
+       0.02
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      -0.06,
+      0.0
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-tb-plate",
+     "of": "tb-plate",
+     "region": "table-base",
+     "layer": "shell"
+    },
+    {
+     "id": "th-tb-castor-a",
+     "of": "tb-castor-a",
+     "region": "table-base",
+     "layer": "shell"
+    },
+    {
+     "id": "th-tb-castor-b",
+     "of": "tb-castor-b",
+     "region": "table-base",
+     "layer": "shell"
+    },
+    {
+     "id": "th-col-lower",
+     "of": "col-lower",
+     "region": "table-column",
+     "layer": "cover"
+    },
+    {
+     "id": "th-col-upper",
+     "of": "col-upper",
+     "region": "table-column",
+     "layer": "cover"
+    },
+    {
+     "id": "th-col-head",
+     "of": "col-head",
+     "region": "table-column",
+     "layer": "cover"
+    },
+    {
+     "id": "th-top-carrier",
+     "of": "top-carrier",
+     "region": "table-frame",
+     "layer": "carrier"
+    },
+    {
+     "id": "th-top-pad-head",
+     "of": "top-pad-head",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-top-pad-back",
+     "of": "top-pad-back",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-top-pad-seat",
+     "of": "top-pad-seat",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-top-pad-leg",
+     "of": "top-pad-leg",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-st-base",
+     "of": "st-base",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-castor-a",
+     "of": "st-castor-a",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-castor-b",
+     "of": "st-castor-b",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-column",
+     "of": "st-column",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-arm",
+     "of": "st-arm",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-rod",
+     "of": "st-rod",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-head-housing",
+     "of": "head-housing",
+     "region": "light-housing",
+     "layer": "housing"
+    },
+    {
+     "id": "th-head-lens",
+     "of": "head-lens",
+     "region": "light-lens",
+     "layer": "lens"
+    },
+    {
+     "id": "th-head-handle",
+     "of": "head-handle",
+     "region": "light-housing",
+     "layer": "housing"
+    },
+    {
+     "id": "th-light-plume",
+     "kind": "ellipsoid",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.2,
+      0.025,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     },
+     "region": "light-housing",
+     "layer": "housing"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-tb-plate",
+     "of": "tb-plate",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-col-lower",
+     "of": "col-lower",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "member-col-upper",
+     "of": "col-upper",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "member-col-head",
+     "of": "col-head",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "member-top-carrier",
+     "of": "top-carrier",
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "member-st-base",
+     "of": "st-base",
+     "member": "stand-base",
+     "part": "member"
+    },
+    {
+     "id": "member-st-column",
+     "of": "st-column",
+     "member": "stand-column",
+     "part": "member"
+    },
+    {
+     "id": "member-st-arm",
+     "of": "st-arm",
+     "member": "stand-arm",
+     "part": "member"
+    },
+    {
+     "id": "member-head-housing",
+     "of": "head-housing",
+     "member": "light-head",
+     "part": "member"
+    },
+    {
+     "id": "joint-top-tilt",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.36,
+       0.02
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.18
+     ],
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "joint-arm",
+     "kind": "ellipsoid",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.02,
+      0.02,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       -0.48,
+       -0.0,
+       0.0
+      ]
+     },
+     "member": "stand-arm",
+     "part": "joint"
+    },
+    {
+     "id": "support-castor-table-rear-left",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.016,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.32,
+       0.008,
+       0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-rear-left"
+    },
+    {
+     "id": "support-castor-table-rear-right",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.016,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.32,
+       0.008,
+       -0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-rear-right"
+    },
+    {
+     "id": "support-castor-table-front-left",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.016,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.32,
+       0.008,
+       0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-front-left"
+    },
+    {
+     "id": "support-castor-table-front-right",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.016,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.32,
+       0.008,
+       -0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-front-right"
+    },
+    {
+     "id": "support-castor-stand-rear-left",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.016,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.22,
+       0.008,
+       0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-rear-left"
+    },
+    {
+     "id": "support-castor-stand-rear-right",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.016,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       -0.22,
+       0.008,
+       -0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-rear-right"
+    },
+    {
+     "id": "support-castor-stand-front-left",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.016,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.22,
+       0.008,
+       0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-front-left"
+    },
+    {
+     "id": "support-castor-stand-front-right",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.016,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.22,
+       0.008,
+       -0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-front-right"
+    },
+    {
+     "id": "mass-base",
+     "kind": "ellipsoid",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.25,
+      0.03,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-column",
+     "kind": "ellipsoid",
+     "bone": "column",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.1,
+      0.08,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.14,
+       0.0
+      ]
+     },
+     "member": "column",
+     "part": "mass"
+    },
+    {
+     "id": "mass-top",
+     "kind": "ellipsoid",
+     "bone": "top",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.25,
+      0.028,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-base",
+     "kind": "ellipsoid",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.12,
+      0.0155,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.083,
+       0.0
+      ]
+     },
+     "member": "stand-base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-column",
+     "kind": "ellipsoid",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.02,
+      0.05,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     },
+     "member": "stand-column",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-arm",
+     "kind": "ellipsoid",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.1,
+      0.015,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       -0.25,
+       -0.0,
+       0.0
+      ]
+     },
+     "member": "stand-arm",
+     "part": "mass"
+    },
+    {
+     "id": "mass-light-head",
+     "kind": "ellipsoid",
+     "bone": "light-head",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.03,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.06,
+       0.0
+      ]
+     },
+     "member": "light-head",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Modelled anew: column in three plain boxes, castors as plain cylinders, one pad slab, simpler lamp dome; collar and knob are merged.",
+     "de": "Neu modelliert: S\u00e4ule aus drei schlichten Quadern, Rollen als schlichte Zylinder, eine Polsterplatte, einfachere Leuchtenkuppel; Kragen und Knauf sind zusammengefasst."
+    },
+    {
+     "en": "Thermal: the base plate and its two castors reference the table-base region, the three column boxes the table-column region, the carrier the table-frame region, the four pad slabs (head, back, seat, leg) the table-pad region, the stand parts the stand region and the lamp housing, lens and handle the light-housing and light-lens regions; the light plume is the only solid of its own. Structure: members for the table base, the three column boxes, the top carrier, the stand base, column and arm and the lamp housing, a tilt joint under the top and a joint at the stand arm, eight castor supports (four under the table, four under the stand) and seven mass solids.",
+     "de": "Thermik: die Grundplatte und ihre zwei Rollen verweisen auf die Region Tischfu\u00df, die drei S\u00e4ulenquader auf die Region Tischs\u00e4ule, der Tr\u00e4ger auf die Region Tischrahmen, die vier Polsterplatten (Kopf, R\u00fccken, Sitz, Bein) auf die Region Polster, die St\u00e4nderteile auf die Region St\u00e4nder und Leuchtengeh\u00e4use, Linse und Griff auf die Regionen Leuchtengeh\u00e4use und Leuchtenlinse; die Leuchtenfahne ist der einzige eigene K\u00f6rper. Tragwerk: St\u00e4be f\u00fcr Tischfu\u00df, die drei S\u00e4ulenquader, den Plattentr\u00e4ger, St\u00e4nderfu\u00df, St\u00e4nders\u00e4ule und St\u00e4nderarm sowie das Leuchtengeh\u00e4use, ein Kippgelenk unter der Platte und ein Gelenk am St\u00e4nderarm, acht Rollenauflager (vier unter dem Tisch, vier unter dem St\u00e4nder) und sieben Massenk\u00f6rper."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "tb-plate",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.8,
+      0.16,
+      0.4
+     ],
+     "cornerRadius": 0.02,
+     "transform": {
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "col",
+     "kind": "box",
+     "bone": "column",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.65,
+     "size": [
+      0.32,
+      0.62,
+      0.32
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.31,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      2.0,
+      0.12,
+      0.5
+     ],
+     "cornerRadius": 0.02,
+     "transform": {
+      "translation": [
+       0.0,
+       0.06,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "st-base",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.105,
+      0.5
+     ],
+     "cornerRadius": 0.02,
+     "transform": {
+      "translation": [
+       0.0,
+       0.0525,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "st-column",
+     "kind": "revolve",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.105,
+       0.03
+      ],
+      [
+       1.88,
+       0.03
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      -0.1,
+      0
+     ],
+     "slender": true
+    },
+    {
+     "id": "st-arm",
+     "kind": "box",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.54,
+      0.06,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       -0.25,
+       -0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "st-rod",
+     "kind": "revolve",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.12,
+       0.02
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      -0.5,
+      -0.14,
+      0.0
+     ]
+    },
+    {
+     "id": "head",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       1.66,
+       0.25
+      ],
+      [
+       1.7,
+       0.25
+      ],
+      [
+       1.755,
+       0.17
+      ],
+      [
+       1.78,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      -1.66,
+      0.0
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-tb-plate",
+     "of": "tb-plate",
+     "region": "table-base",
+     "layer": "shell"
+    },
+    {
+     "id": "th-col",
+     "of": "col",
+     "region": "table-column",
+     "layer": "cover"
+    },
+    {
+     "id": "th-top",
+     "of": "top",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-st-base",
+     "of": "st-base",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-column",
+     "of": "st-column",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-arm",
+     "of": "st-arm",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-rod",
+     "of": "st-rod",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-head",
+     "of": "head",
+     "region": "light-housing",
+     "layer": "housing"
+    },
+    {
+     "id": "th-top-carrier",
+     "kind": "box",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      1.96,
+      0.04,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.02,
+       0.0
+      ]
+     },
+     "region": "table-frame",
+     "layer": "carrier"
+    },
+    {
+     "id": "th-head-lens",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-lens-glass",
+     "role": "body",
+     "tone": 0.9,
+     "profile": [
+      [
+       1.66,
+       0.24
+      ],
+      [
+       1.691,
+       0.24
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      -1.66,
+      0.0
+     ],
+     "region": "light-lens",
+     "layer": "lens"
+    },
+    {
+     "id": "th-light-plume",
+     "kind": "ellipsoid",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.2,
+      0.035,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     },
+     "region": "light-housing",
+     "layer": "housing"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-tb-plate",
+     "of": "tb-plate",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-col",
+     "of": "col",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "member-top-carrier",
+     "kind": "box",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      1.96,
+      0.04,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.02,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "member-st-base",
+     "of": "st-base",
+     "member": "stand-base",
+     "part": "member"
+    },
+    {
+     "id": "member-st-column",
+     "of": "st-column",
+     "member": "stand-column",
+     "part": "member"
+    },
+    {
+     "id": "member-st-arm",
+     "of": "st-arm",
+     "member": "stand-arm",
+     "part": "member"
+    },
+    {
+     "id": "member-head",
+     "of": "head",
+     "member": "light-head",
+     "part": "member"
+    },
+    {
+     "id": "joint-top-tilt",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0155
+      ],
+      [
+       0.36,
+       0.0155
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.18
+     ],
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "support-castor-table-rear-left",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.04,
+      0.031,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       -0.32,
+       0.0155,
+       0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-rear-left"
+    },
+    {
+     "id": "support-castor-table-rear-right",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.04,
+      0.031,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       -0.32,
+       0.0155,
+       -0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-rear-right"
+    },
+    {
+     "id": "support-castor-table-front-left",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.04,
+      0.031,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.32,
+       0.0155,
+       0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-front-left"
+    },
+    {
+     "id": "support-castor-table-front-right",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.04,
+      0.031,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.32,
+       0.0155,
+       -0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-front-right"
+    },
+    {
+     "id": "support-castor-stand-rear-left",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.04,
+      0.031,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       -0.22,
+       0.0155,
+       0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-rear-left"
+    },
+    {
+     "id": "support-castor-stand-rear-right",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.04,
+      0.031,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       -0.22,
+       0.0155,
+       -0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-rear-right"
+    },
+    {
+     "id": "support-castor-stand-front-left",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.04,
+      0.031,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.22,
+       0.0155,
+       0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-front-left"
+    },
+    {
+     "id": "support-castor-stand-front-right",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.04,
+      0.031,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.22,
+       0.0155,
+       -0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-front-right"
+    },
+    {
+     "id": "mass-base",
+     "kind": "ellipsoid",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.25,
+      0.03,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-column",
+     "kind": "ellipsoid",
+     "bone": "column",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.1,
+      0.08,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.14,
+       0.0
+      ]
+     },
+     "member": "column",
+     "part": "mass"
+    },
+    {
+     "id": "mass-top",
+     "kind": "ellipsoid",
+     "bone": "top",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.25,
+      0.032,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-base",
+     "kind": "ellipsoid",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.12,
+      0.03,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.083,
+       0.0
+      ]
+     },
+     "member": "stand-base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-column",
+     "kind": "ellipsoid",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.031,
+      0.05,
+      0.031
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     },
+     "member": "stand-column",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-arm",
+     "kind": "ellipsoid",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.1,
+      0.031,
+      0.031
+     ],
+     "transform": {
+      "translation": [
+       -0.25,
+       -0.0,
+       0.0
+      ]
+     },
+     "member": "stand-arm",
+     "part": "mass"
+    },
+    {
+     "id": "mass-light-head",
+     "kind": "ellipsoid",
+     "bone": "light-head",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.03,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.06,
+       0.0
+      ]
+     },
+     "member": "light-head",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Modelled anew: base plate reaches the floor (castors merged), one 0.32 m column box, one 120 mm tabletop slab (carrier and pad merged), stand base to the floor, 80 mm column, 60 mm arm, 40 mm rod, one dome for housing and lens.",
+     "de": "Neu modelliert: Fu\u00dfplatte reicht bis zum Boden (Rollen zusammengefasst), ein S\u00e4ulenquader 0,32 m, eine 120-mm-Tischplatte (Tr\u00e4ger und Polster zusammengefasst), Stativfu\u00df bis zum Boden, 80-mm-S\u00e4ule, 60-mm-Arm, 40-mm-Stange, eine Kuppel f\u00fcr Geh\u00e4use und Linse."
+    },
+    {
+     "en": "Thermal and structure follow the 1:200 body; the carrier plate and the lens are thermal-only solids inside the merged bodies.",
+     "de": "Thermik und Tragwerk folgen dem K\u00f6rper 1:200; Tr\u00e4gerplatte und Linse sind reine Thermikk\u00f6rper in den zusammengefassten K\u00f6rpern."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "tb-plate",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.8,
+      0.16,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "col",
+     "kind": "box",
+     "bone": "column",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.65,
+     "size": [
+      0.28,
+      0.62,
+      0.28
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.31,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top",
+     "kind": "box",
+     "bone": "top",
+     "material": "pad-foam",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      2.0,
+      0.12,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.06,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "st-base",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.56,
+      0.105,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0525,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "st-column",
+     "kind": "revolve",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.105,
+       0.03
+      ],
+      [
+       1.88,
+       0.03
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      -0.1,
+      0
+     ],
+     "slender": true
+    },
+    {
+     "id": "st-arm",
+     "kind": "box",
+     "bone": "stand-arm",
+     "material": "powder-coated-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.54,
+      0.075,
+      0.075
+     ],
+     "transform": {
+      "translation": [
+       -0.25,
+       -0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "head",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       1.66,
+       0.25
+      ],
+      [
+       1.7,
+       0.25
+      ],
+      [
+       1.755,
+       0.17
+      ],
+      [
+       1.78,
+       0.0
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      -1.66,
+      0.0
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-tb-plate",
+     "of": "tb-plate",
+     "region": "table-base",
+     "layer": "shell"
+    },
+    {
+     "id": "th-col",
+     "of": "col",
+     "region": "table-column",
+     "layer": "cover"
+    },
+    {
+     "id": "th-top",
+     "of": "top",
+     "region": "table-pad",
+     "layer": "vinyl"
+    },
+    {
+     "id": "th-st-base",
+     "of": "st-base",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-column",
+     "of": "st-column",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-st-arm",
+     "of": "st-arm",
+     "region": "stand",
+     "layer": "tube"
+    },
+    {
+     "id": "th-head",
+     "of": "head",
+     "region": "light-housing",
+     "layer": "housing"
+    },
+    {
+     "id": "th-top-carrier",
+     "kind": "box",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      1.96,
+      0.076,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.02,
+       0.0
+      ]
+     },
+     "region": "table-frame",
+     "layer": "carrier"
+    },
+    {
+     "id": "th-head-lens",
+     "kind": "revolve",
+     "bone": "light-head",
+     "material": "light-lens-glass",
+     "role": "body",
+     "tone": 0.9,
+     "profile": [
+      [
+       1.66,
+       0.24
+      ],
+      [
+       1.736,
+       0.24
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      -1.66,
+      0.0
+     ],
+     "region": "light-lens",
+     "layer": "lens"
+    },
+    {
+     "id": "th-light-plume",
+     "kind": "ellipsoid",
+     "bone": "light-head",
+     "material": "light-aluminium",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.2,
+      0.0385,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     },
+     "region": "light-housing",
+     "layer": "housing"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-tb-plate",
+     "of": "tb-plate",
+     "member": "base",
+     "part": "member"
+    },
+    {
+     "id": "member-col",
+     "of": "col",
+     "member": "column",
+     "part": "member"
+    },
+    {
+     "id": "member-top-carrier",
+     "kind": "box",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      1.96,
+      0.076,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.02,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "member"
+    },
+    {
+     "id": "member-st-base",
+     "of": "st-base",
+     "member": "stand-base",
+     "part": "member"
+    },
+    {
+     "id": "member-st-column",
+     "of": "st-column",
+     "member": "stand-column",
+     "part": "member"
+    },
+    {
+     "id": "member-st-arm",
+     "of": "st-arm",
+     "member": "stand-arm",
+     "part": "member"
+    },
+    {
+     "id": "member-head",
+     "of": "head",
+     "member": "light-head",
+     "part": "member"
+    },
+    {
+     "id": "joint-top-tilt",
+     "kind": "revolve",
+     "bone": "top",
+     "material": "stainless-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0.0,
+       0.0385
+      ],
+      [
+       0.4,
+       0.0385
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.02,
+      -0.2
+     ],
+     "member": "top",
+     "part": "joint"
+    },
+    {
+     "id": "support-castor-table-rear-left",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.08,
+      0.076,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       -0.32,
+       0.038,
+       0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-rear-left"
+    },
+    {
+     "id": "support-castor-table-rear-right",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.08,
+      0.076,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       -0.32,
+       0.038,
+       -0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-rear-right"
+    },
+    {
+     "id": "support-castor-table-front-left",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.08,
+      0.076,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       0.32,
+       0.038,
+       0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-front-left"
+    },
+    {
+     "id": "support-castor-table-front-right",
+     "kind": "box",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.08,
+      0.076,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       0.32,
+       0.038,
+       -0.15
+      ]
+     },
+     "member": "base",
+     "part": "support",
+     "anchor": "castor-table-front-right"
+    },
+    {
+     "id": "support-castor-stand-rear-left",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.08,
+      0.076,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       -0.22,
+       0.038,
+       0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-rear-left"
+    },
+    {
+     "id": "support-castor-stand-rear-right",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.08,
+      0.076,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       -0.22,
+       0.038,
+       -0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-rear-right"
+    },
+    {
+     "id": "support-castor-stand-front-left",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.08,
+      0.076,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       0.22,
+       0.038,
+       0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-front-left"
+    },
+    {
+     "id": "support-castor-stand-front-right",
+     "kind": "box",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.08,
+      0.076,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       0.22,
+       0.038,
+       -0.185
+      ]
+     },
+     "member": "stand-base",
+     "part": "support",
+     "anchor": "castor-stand-front-right"
+    },
+    {
+     "id": "mass-base",
+     "kind": "ellipsoid",
+     "bone": "base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.25,
+      0.0385,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.115,
+       0.0
+      ]
+     },
+     "member": "base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-column",
+     "kind": "ellipsoid",
+     "bone": "column",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.12,
+      0.08,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.14,
+       0.0
+      ]
+     },
+     "member": "column",
+     "part": "mass"
+    },
+    {
+     "id": "mass-top",
+     "kind": "ellipsoid",
+     "bone": "top",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.25,
+      0.0385,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.08,
+       0.0
+      ]
+     },
+     "member": "top",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-base",
+     "kind": "ellipsoid",
+     "bone": "stand-base",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.12,
+      0.0385,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.083,
+       0.0
+      ]
+     },
+     "member": "stand-base",
+     "part": "mass"
+    },
+    {
+     "id": "mass-stand-column",
+     "kind": "ellipsoid",
+     "bone": "stand-column",
+     "material": "powder-coated-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.0385,
+      0.05,
+      0.0385
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     },
+     "member": "stand-column",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Modelled anew: all parts are boxes of at least 75 mm: base plate, 0.28 m column, tabletop slab, stand base, 80 mm stand column, 75 mm arm, lamp dome; rod and castors are merged.",
+     "de": "Neu modelliert: alle Teile sind Quader von mindestens 75 mm: Fu\u00dfplatte, 0,28-m-S\u00e4ule, Tischplatte, Stativfu\u00df, 80-mm-Stativs\u00e4ule, 75-mm-Arm, Leuchtenkuppel; Stange und Rollen sind zusammengefasst."
+    },
+    {
+     "en": "Thermal and structure follow the 1:500 body; carrier plate and lens are thermal-only solids of 75 mm.",
+     "de": "Thermik und Tragwerk folgen dem K\u00f6rper 1:500; Tr\u00e4gerplatte und Linse sind reine Thermikk\u00f6rper von 75 mm."
+    }
+   ]
+  }
+ }
+}

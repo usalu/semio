@@ -1,0 +1,12 @@
+import {cargoLockRegistryCratesV1,cargoRegistryCacheDirectoryV1,fleetCratesPublishV1,fleetCratesRestoreV1,join,machine,mb,mkdirSync,readFileSync,readdirSync,run,scratch,seconds,size,writeFileSync,store} from "./proof-common.ts";
+const project=join(scratch,"crate-project");mkdirSync(join(project,"src"),{recursive:true});
+writeFileSync(join(project,"Cargo.toml"),'[package]\nname="probe"\nversion="0.1.0"\nedition="2021"\n[dependencies]\nserde_json="=1.0.140"\nserde={version="=1.0.219",features=["derive"]}\nregex="=1.11.1"\nclap={version="=4.5.32",features=["derive"]}\n');writeFileSync(join(project,"src","main.rs"),"fn main(){}\n");
+const A=machine("A"),B=machine("B");
+const first=await run(["cargo","fetch","-v"],project,{CARGO_HOME:A.home});
+const pins=cargoLockRegistryCratesV1(readFileSync(join(project,"Cargo.lock"),"utf8"));
+const dirA=await cargoRegistryCacheDirectoryV1(A.home),crateBytes=size(dirA);
+const published=await fleetCratesPublishV1(A.context(undefined),A.home,pins);
+const restored=await fleetCratesRestoreV1(B.context(undefined),B.home,pins);
+const second=await run(["cargo","fetch","--locked","-v"],project,{CARGO_HOME:B.home});
+const downloadedLines=(text:string)=>text.split("\n").filter(line=>/Downloaded /.test(line)).length;
+console.log(JSON.stringify({lockedCrates:pins.length,firstMachine:{code:first.code,seconds:seconds(first.ms),downloadedCrates:downloadedLines(first.err+first.out),crateFileMB:mb(crateBytes)},published,restored,secondMachine:{code:second.code,seconds:seconds(second.ms),downloadedCrates:downloadedLines(second.err+second.out),crateFilesPresent:readdirSync(await cargoRegistryCacheDirectoryV1(B.home)).length,storeMB:mb(size(store))},note:"index entries are fetched from the sparse index on both machines (mutable, small)"},null,1));

@@ -1,0 +1,106 @@
+{
+ "Path": {
+  "valid": [
+   "/semio/cas/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "/ac/0000000000000000000000000000000000000000000000000000000000000000",
+   "/semio/v1/cache/abc_12-x"
+  ],
+  "invalid": [
+   "/status",
+   "/semio/cas/zz",
+   "/semio/cas/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+   "/../ac/0000000000000000000000000000000000000000000000000000000000000000",
+   "semio/cas/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "/semio/claim/ac/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "/semio/v1/slots",
+   5
+  ]
+ },
+ "Request": {
+  "valid": [
+   {
+    "version": 1,
+    "id": "0123456789abcdef01234567",
+    "from": "g1",
+    "to": "g2",
+    "path": "/semio/cas/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "createdMs": 1
+   }
+  ],
+  "invalid": [
+   {
+    "version": 1,
+    "id": "0123",
+    "from": "g1",
+    "to": "g2",
+    "path": "/semio/cas/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "createdMs": 1
+   },
+   {
+    "version": 1,
+    "id": "0123456789abcdef01234567",
+    "from": "G1",
+    "to": "g2",
+    "path": "/semio/cas/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "createdMs": 1
+   },
+   {
+    "version": 1,
+    "id": "0123456789abcdef01234567",
+    "from": "g1",
+    "to": "g2",
+    "path": "/status",
+    "createdMs": 1
+   },
+   {
+    "version": 1,
+    "id": "0123456789abcdef01234567",
+    "from": "g1",
+    "to": "g2",
+    "path": "/semio/cas/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "createdMs": 1,
+    "extra": 1
+   }
+  ]
+ },
+ "Answer": {
+  "valid": [
+   {
+    "version": 1,
+    "id": "0123456789abcdef01234567",
+    "status": 200,
+    "size": 3,
+    "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "atMs": 1
+   },
+   {
+    "version": 1,
+    "id": "0123456789abcdef01234567",
+    "status": 404,
+    "atMs": 1
+   }
+  ],
+  "invalid": [
+   {
+    "version": 1,
+    "id": "0123456789abcdef01234567",
+    "status": 99,
+    "atMs": 1
+   },
+   {
+    "version": 1,
+    "id": "0123456789abcdef01234567",
+    "status": 200,
+    "sha256": "xyz",
+    "atMs": 1
+   },
+   {
+    "version": 1,
+    "id": "0123456789abcdef01234567",
+    "status": 200,
+    "atMs": 1,
+    "body": "x"
+   }
+  ]
+ }
+}

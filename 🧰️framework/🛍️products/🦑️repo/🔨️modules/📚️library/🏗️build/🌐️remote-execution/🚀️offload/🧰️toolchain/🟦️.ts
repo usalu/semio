@@ -1,0 +1,44 @@
+import {spawnSync} from "node:child_process";
+import {existsSync,mkdirSync,readdirSync,readFileSync,renameSync,statSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import type {RemoteExecutionPropertyV1} from "../../🟦️.ts";
+import {OFFLOAD_POLICY_V1} from "../📐️policy/🟦️.ts";
+import {parseRustcIdentityV1,type OffloadToolchainV1} from "../📜️action/🟦️.ts";
+
+const policy=OFFLOAD_POLICY_V1;
+type Environment=Readonly<Record<string,string|undefined>>;
+/** 🛠️ A tool the worker owns and the action may name: where it lives and which directories a confined action may read to use it. */
+export type OffloadToolV1=Readonly<{path:string;readable:readonly string[]}>;
+/** 🖥️ What a worker offers for rustc offload: the tool table and the platform properties that say which compiler it is. */
+export type OffloadWorkerOfferV1=Readonly<{tools:Readonly<Record<string,OffloadToolV1>>;properties:readonly RemoteExecutionPropertyV1[];toolchain:OffloadToolchainV1}>;
+
+/** 🎯️ The target triples a sysroot carries libraries for. */
+export function sysrootTargetsV1(sysroot:string):readonly string[]{
+ const base=join(sysroot,"lib","rustlib");
+ try{return readdirSync(base).filter(name=>{try{return statSync(join(base,name)).isDirectory()&&existsSync(join(base,name,"lib"));}catch{return false;}}).sort();}catch{return[];}
+}
+
+/** 🔭️ Asks the compiler the machine would use in `cwd` (the pinned toolchain of that checkout) who it is: commit hash, host triple, sysroot and installed targets. `undefined` when there is no usable compiler, so the worker simply offers nothing for rustc. */
+export function detectWorkerRustcV1(cwd:string,environment:Environment=process.env,compiler:string="rustc"):OffloadWorkerOfferV1|undefined{
+ const run=(args:readonly string[])=>spawnSync(compiler,[...args],{cwd,encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:60000});
+ const identity=run(["-vV"]),sysroot=run(["--print","sysroot"]);
+ if(identity.status!==0||sysroot.status!==0)return undefined;
+ const parsed=parseRustcIdentityV1(identity.stdout),root=sysroot.stdout.trim(),path=join(root,"bin","rustc");
+ if(!parsed||!existsSync(path))return undefined;
+ const targets=sysrootTargetsV1(root),p=policy.property;
+ return Object.freeze({
+  tools:Object.freeze({[policy.tool.name]:Object.freeze({path,readable:Object.freeze([root])})}),
+  toolchain:Object.freeze({...parsed,targets}),
+  properties:Object.freeze(targets.map(target=>({name:p.targetPrefix+target,value:"1"}))),
+ });
+}
+
+/** 🧬️ The exact `rustc -vV` text of the compiler behind `inner`, memoised for ten minutes in the unit cache root so a build of hundreds of units probes it once; `undefined` when the probe fails. */
+export function rustcVersionTextV1(root:string,inner:readonly string[],environment:Environment,now:number=Date.now()):string|undefined{
+ const path=join(root,"offload-rustc.json"),identity=JSON.stringify(inner);
+ try{const memo=JSON.parse(readFileSync(path,"utf8")) as {atMs:number;inner:string;text:string};if(memo.inner===identity&&now-memo.atMs<600000&&now>=memo.atMs)return memo.text;}catch{}
+ const result=spawnSync(inner[0]!,[...inner.slice(1),"-vV"],{encoding:"utf8",env:environment as NodeJS.ProcessEnv,timeout:20000});
+ if(result.status!==0||!result.stdout)return undefined;
+ try{mkdirSync(root,{recursive:true});const temporary=path+"."+process.pid;writeFileSync(temporary,JSON.stringify({atMs:now,inner:identity,text:result.stdout}));renameSync(temporary,path);}catch{}
+ return result.stdout;
+}

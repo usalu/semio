@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-14T16:42:13.536659+00:00",
+  "files": {
+    "round-2.md": {
+      "local_sha256": "d2d19def33a822c6131e37f996c4382080374d501f46f01c036d4dc931c2f517",
+      "journal_sha256": "d2d19def33a822c6131e37f996c4382080374d501f46f01c036d4dc931c2f517",
+      "hlc": "1794673981097-000004-g1-m08",
+      "matches": true
+    },
+    "state.json": {
+      "local_sha256": "47d55cb89e4574d444d68320c75d21e3a76f0dcc043b922f3adb06e506cc03f1",
+      "journal_sha256": "47d55cb89e4574d444d68320c75d21e3a76f0dcc043b922f3adb06e506cc03f1",
+      "hlc": "1794673981097-000005-g1-m08",
+      "matches": true
+    }
+  }
+}

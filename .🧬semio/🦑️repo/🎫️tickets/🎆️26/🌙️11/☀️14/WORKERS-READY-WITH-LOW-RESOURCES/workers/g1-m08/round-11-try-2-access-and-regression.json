@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-15T01:03:35Z",
+  "fallback_native_lines": [
+    "The graph service under the launcher was denied access; it is started again under the access of the calling app / Der Graphdienst unter dem Launcher wurde abgewiesen; er wird erneut mit dem Zugriff der aufrufenden App gestartet"
+  ],
+  "where_lines": [],
+  "source": "/var/folders/t7/ckfnmc712gsdkt0tc8042br00000gn/T/semio-repo/501/host-ac6bfe8f337c.log",
+  "contexts": {
+    "da146983": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-11-try-2-da146983-full-context.txt",
+    "742ceab8": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-11-try-2-742ceab8-full-context.txt"
+  }
+}

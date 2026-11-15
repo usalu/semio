@@ -1,0 +1,42 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔣️.json": {
+  "file": "f000",
+  "before": "00e2b23711112356b7338cb38d745cc8533dba1dc4987ab511080834c89df272",
+  "after": "59a7313399532d83ed544588e1af7bca1d10f2ce852df0716abc101d3c436cb6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🚦️trampoline/🟦️.ts": {
+  "file": "f001",
+  "before": "38667fdd4a6fcf20a14cd94c86c471eafa874b49d292518de49f118a4eb7e125",
+  "after": "1392ef4405429c7ff5ac78c69b001db725aa728d8a86a6e69b6ce2e4f49ef584"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts": {
+  "file": "f002",
+  "before": "1cbef32dbbf19feb3c46878c915d1df0116d45441fda541e06cd837e7c2182b6",
+  "after": "95803e9e72ac0d6ede0915e0d4a56c6e6ff33606f44c474b84029b78405a5dab"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🗂️store/🟦️.ts": {
+  "file": "f003",
+  "before": "dd00a0f437a25995cda41a7d4df53152488c35b654038aa7aaeda27b6839bf10",
+  "after": "691139a9b7e75ad9ff3a8295a36049230f59f626379c0364ed7ad97b0f6f53a6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🚦️trampoline/🟦️.ts": {
+  "file": "f004",
+  "before": "617bb9efea2b6312e69cf0dc4c44c2dd09e72f606d17240aeaec8fa99fe4489c",
+  "after": "fe45633c159be8d61e5323708b69ad86e086a1e89b7ef79533dc20d5516b3771"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json": {
+  "file": "f005",
+  "before": "95c98f7e6f8b428acdf3a6bcce4d987d8f8ad5e17dd144fb60774a029249afc4",
+  "after": "efbc661aa46734bf096c36a3e196da7c1b7db48d1f7a75049edaf76f5cfb891a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts": {
+  "file": "f006",
+  "before": "6b53406e23e3725510f4e7e7d1488101dda642e7cd14a3bc28ad94de5a8e0407",
+  "after": "c9df28ebfcc7be2bb37dae1f2b5395a8abdd25c83f43eaa006e7bf6c240adc58"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🧪️tests/📥️stream/🟦️.ts": {
+  "file": "f007",
+  "before": "7aefc99b984aad3c0edf49d08c2df2f115a739675fa983fd268c66a9e5b998cf",
+  "after": "ab30248f82752ee45ae90a6e93e51a286231dc6c010b2dd7752f25e13fd28a7e"
+ }
+}

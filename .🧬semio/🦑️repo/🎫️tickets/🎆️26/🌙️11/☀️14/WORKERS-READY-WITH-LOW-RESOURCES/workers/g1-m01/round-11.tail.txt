@@ -1,0 +1,200 @@
+  --priority=<band>                               scheduler run: priority band background, agent or interactive (default: agent). (used by: scheduler)
+  --depth=<n>                                     scheduler run: length of the longest chain of dependents of the target; deeper (shared) targets start first (default: 0). (used by: scheduler)
+  --peak-mb=<n>                                   scheduler run: expected peak memory in MB that is reserved for the command (default: 1024). (used by: scheduler)
+  --lane=<lane>                                   scheduler run: shared compiler lane (rustc or tsc) whose concurrency is capped. (used by: scheduler)
+  --class=<class>                                 scheduler run: job class plan, compile, test or generate (default: compile). (used by: scheduler)
+  --violations=<n>                                leases status: how many recent lock order violations to list (default: 10). (used by: leases)
+  --fix                                           doctor: apply the declared safe repairs for the findings (publications of dead processes, stale lease registry rows, gone agent sessions); with --dry-run list what they would remove. (used by: doctor)
+  --only=<area[,area]>                            doctor: limit the report to these areas (tools, storage, leases, capacity, sessions, graph, dependencies, caches, processes, host). (used by: doctor)
+  --strict                                        doctor: exit with status 1 for warnings as well as errors. (used by: doctor)
+  --facts                                         doctor: print the raw facts document the findings are derived from, as JSON, instead of the report. (used by: doctor)
+  --for=<go|python|dotnet|cpp|wit|tex>            units plan|run|emit: the source language whose units are planned (go, python, dotnet, cpp through CMake and Ninja, wit, tex; the tracked files of the checkout). (used by: units)
+  --out=<path>                                    units emit: the directory that receives the spec files and the build files; units exec: the result file of the unit (out.json). (used by: units)
+  --out-root=<path>                               units exec: read the files of the dependencies from and write the files of the unit below this directory (the layout the Nx targets use) instead of naming each file. (used by: units)
+  --spec=<path>                                   units exec: the spec file of the unit to execute. (used by: units)
+  --iface=<path>                                  units exec: the interface file (iface.json) the unit publishes. (used by: units)
+  --iface-dep=<path>                              units exec: the interface file of one dependency whose interface the unit consumes; repeatable. (used by: units)
+  --impl-dep=<path>                               units exec: a result file (out.json) of the implementation closure of the unit; repeatable. (used by: units)
+  --only=<unit-id>                                units run: run only this unit and its dependencies; repeatable. (used by: units)
+  --concurrency=<n>                               units run: units executed at the same time, 1 to 16 (default: 1). (used by: units)
+  --receipts=<path>                               units run: directory of the shared receipts, so later runs and other sessions reuse results (default: memory only). (used by: units)
+  --client=<name>                                 session open: the name of the agent client, used to name the agent of an MCP connection when no client variable identifies it. (used by: session)
+  --client-pid=<pid>                              session open: the process id of the agent client of a connection (part of the connection's identity). (used by: session)
+  --owner-pid=<pid>                               session open: a process whose end ends the session (default: the nearest agent-client ancestor). (used by: session)
+  --weight=<n>                                    session open: the weight of the session in the budget split between live sessions, 1 to 16 (default: 1). (used by: session)
+  --export                                        session open: also print the environment line NAME=value that attaches child processes to the session. (used by: session)
+  --dead                                          session close: close every gone session instead of one. (used by: session)
+  --force                                         session close: close a session although its owner process is still alive. (used by: session)
+
+Global options:
+  --tool=<nx|bazel|semio>  Select the build implementation; otherwise SEMIO_BUILD_TOOL, then the policy default (nx).
+  --workers=<on|off>       Run actions in persistent workers (on) or in one process each (off); otherwise SEMIO_BUILD_WORKERS, then the worker policy of the build policy.
+  -h, --help               Print the usage of the command and stop.
+  --lang=<en|de>           Language of the texts; otherwise SEMIO_LANGUAGE, then LANGUAGE and the locale variables (LC_ALL, LC_MESSAGES, LANG), then the operating system language. No language is assumed: the command refuses when none resolves.
+
+Examples:
+  repo run @semio-tech/semio-tech-play:serve
+      Run the serve task with the default implementation.
+  repo run-many --targets=test --projects=tag:rust
+      Run the test target in every project tagged rust.
+  repo affected --targets=test
+      Test what changed against HEAD plus untracked files.
+  repo exec --projects=@semio-tech/repo-client -- repo tools exec bun -- test
+      Run one command inside one project root.
+  repo watch --projects=@semio-tech/repo-client -- repo run @semio-tech/repo-client:build
+      Rebuild one project on every source change.
+  repo graph --file=graph.json
+      Write the graph as a report file.
+  repo show projects
+      List all projects.
+  repo --tool=nx inputs @teaching/architecture-course:test
+      List the inputs Nx hashes for the course tests.
+  repo reset --tool=bazel
+      Reset the Bazel state.
+  repo tools setup all
+      Provision Nx, Bazel and every native toolchain at its pin.
+  repo preflight
+      Check architecture, free space, tools and directory exchange.
+  repo incremental list
+      List the incremental build scenarios.
+  repo concurrency list
+      List the concurrent workloads.
+  repo conformance list
+      List the conformance scenarios.
+  repo units plan --for=go
+      Plan the Go units of the checkout.
+  repo bench list
+      List the performance objectives.
+  repo dependencies lock --all
+      Regenerate the lock after editing a package.json.
+  repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
+      Type-check one crate in the shared store.
+  repo cache status
+      Show every cache partition and area against its budget.
+  repo remote-cache serve
+      Serve a local remote cache on 127.0.0.1:6090.
+  repo capacity status
+      See how much memory the machine has left above its floor and who holds it.
+  repo leases status
+      See who holds the repository's leases, who waits behind whom and for how long.
+  repo fleet status
+      See at a glance who runs what, who waits for what and for how long, and what the disk and memory budgets look like.
+  repo scheduler status
+      See what runs and waits in the global queue and every agent's share.
+  repo service host status
+      Show the one service of this machine, its memory and how many workspaces it serves.
+  repo remote-execution serve
+      Run the service with the shared store and one local worker: gRPC for build tools on 127.0.0.1:8980, HTTP for workers, status and the fleet load table on 127.0.0.1:8981; hermetic Bazel actions can then run remotely.
+  repo doctor
+      See who waits for whom, what is slow and what is broken, with the command that fixes each finding.
+  repo session status
+      See which agent session this command belongs to and what it holds.
+
+Native commands of the repository (repo <command> --help):
+  mcp [kind]                           Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)
+  graphql [query]                      Execute a GraphQL query
+  test [testable-id-or-uri]...         Run tests for given entities
+  ticket                               Ticket management commands
+  todo                                 Todo management commands
+  goal                                 Goal management commands
+  contributor                          Contributor management commands
+  folder                               Folder management commands
+  file                                 File management commands
+  section                              Section management commands
+  move <source> <target>               Move an artifact from source to target
+  integrate [source] [target]          Integrate source code into a target file section
+  extract [source] [target]            Extract a section from a source file into a target file
+  rename <old> <new> [scope]           Rename a token across non-gitignored files (all case variants)
+  sync                                 Synchronize monorepo artifacts
+  search [query]                       Search monorepo tree
+  list [query]                         Stream a flat list of monorepo items
+  query [keywords]                     Keyword search across monorepo resources
+  tree                                 Show a repository tree
+  export [output]                      Export repo data to an event log
+  hook <event> <client>                Run a lifecycle hook (git or agent)
+  mermaid <visualization>              Generate mermaid diagram strings
+  loc                                  Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)
+  technology                           Manage technologies
+  bundle                               Bundle management commands
+  analyze [scope]                      Analyze codebase for breachs
+  entity-emojis                        List all entity-identifying emojis
+  configure                            Remove blocking git hooks; repo config files are edited manually
+  micro-commit [subcommand] [args...]  Micro-commit workflow (reset, prepare-commit-msg, stage, diff, prepare)
+  benchmark                            Run benchmarks for all ecosystems
+  update [target]                      Update dependencies (npm, python, rust, go, dotnet)
+  auth                                 Server authentication
+  autofix [scope]                      Apply autofixes for breachs
+  statute                              Statute management commands
+  checkpoint                           Checkpoint management commands
+  interaction                          Interaction management commands
+  draft                                Draft management commands
+  definition                           Definition management commands
+  dashboard [arguments]                Human control plane (not for agents).
+  dev mcp stdio os [arguments]         MCP server of the OS over stdio.
+[repo] Installed native repository command: /Users/ueli/.local/bin/repo
+[semio] Installing the dependency scopes (the planner of every later run needs them)…
+[capacity] dependencies: sized at 29% of the default from 16 earlier run(s) of its class, at least 4777 MB because of its plan phase
+[capacity] admitted dependencies: 1 job(s), 4777 MB reserved (9003 MB available, 2048 MB floor)
+[capacity] dependencies: sized at 29% of the default from 16 earlier run(s) of its class, at least 4777 MB because of its plan phase
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[repo] still working after 5 s; last phase started: source.served
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+[DATA] Store dependency sync current {"version":1,"purpose":"current-store-dependency-sync-current","scopes":6}
+[semio] workspace:setup…
+[capacity] run: sized at 102% of the default from 4 earlier run(s) of its class
+[capacity] admitted run: 1 job(s), 2048 MB reserved (8990 MB available, 2048 MB floor)
+Starting the repo graph service for this host.
+Waiting for the repo graph service (27 ms).
+Waiting for the repo graph service (2027 ms).
+Waiting for the repo graph service (4075 ms).
+Loading the project graph of 440cffa5563d.
+Planning 1 targets.
+[repo] still working after 5 s; last phase started: door.script
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+[repo] still working after 10 s; last phase started: door.script
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s).
+Reading the project graph slice (10 s).
+Reading the project graph slice (12 s).
+Reading the project graph slice (14 s).
+[repo] still working after 20 s; last phase started: door.script
+Reading the project graph slice (16 s).
+Reading the project graph slice (18 s).
+Reading the project graph slice (20 s).
+Reading the project graph slice (22 s).
+Reading the project graph slice (24 s).
+Reading the project graph slice (26 s).
+Reading the project graph slice (28 s).
+Reading the project graph slice (30 s): files 0 of 0.
+Reading the project graph slice (32 s): files 311 of 311.
+Reading the project graph slice (34 s): facts 4096 of 112135.
+Reading the project graph slice (36 s): facts 40960 of 112135.
+Reading the project graph slice (38 s): facts 49152 of 112135.
+Reading the project graph slice (40 s): facts 73728 of 112135.
+Reading the project graph slice (42 s): facts 112135 of 112135.
+Reading the project graph slice (44 s): owners 0 of 1.
+[repo] still working after 50 s; last phase started: door.script
+Reading the project graph slice (46 s): owners 0 of 1.
+Reading the project graph slice (48 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (50 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (52 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (54 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0).
+Reading the project graph slice (56 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0).
+Reading the project graph slice (58 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0).
+Reading the project graph slice (60 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0).
+Reading the project graph slice (62 s): owners 0 of 1; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0).
+Reading the project graph slice (64 s): owners 0 of 1; running (name, kind, seconds, rows): .
+Reading the project graph slice (66 s): owners 1 of 1.
+Reading the project graph slice (68 s): owners 1 of 1.
+Reading the project graph slice (70 s): owners 1 of 1.
+Reading the project graph slice (72 s): owners 1 of 1.
+Reading the project graph slice (74 s): owners 1 of 1.
+[repo] still working after 80 s; last phase started: door.script
+Reading the project graph slice (76 s): owners 1 of 1.
+Reading the project graph slice (78 s): owners 1 of 1.
+The resident service met an unexpected failure (reference 29bbd28b); try again, the details under that reference are in the service log /var/folders/gd/byw98s3s0p95zhdpzyv769740000gn/T/semio-repo/501/host-ac6bfe8f337c.log.
+end 2026-11-15T01:16:25Z
+native_rc=1

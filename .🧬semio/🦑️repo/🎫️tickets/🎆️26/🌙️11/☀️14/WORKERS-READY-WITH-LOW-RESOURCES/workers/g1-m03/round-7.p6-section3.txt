@@ -1,0 +1,71 @@
+P6 section 3 on g1-m03, 2026-11-14T20:40:35Z, after try 2 ended with native_rc=4 at 20:39:33Z (21:39:33 local)
+
+$ python3 …/P6/tcc-attribution.py --last 30m
+0 rows (of 3 consulted requests in the window)
+
+$ codesign -dvvv ~/.local/share/semio/launcher/bin/repo ~/.local/bin/repo 2>&1 | grep -E "Identifier|CDHash"
+-- /Users/ueli/.local/share/semio/launcher/bin/repo (Nov 14 21:35:26 2026)
+Identifier=a.out
+CandidateCDHash sha256=713fd0d142560c91e4fd5ed6c449b32909e667e7
+CandidateCDHashFull sha256=713fd0d142560c91e4fd5ed6c449b32909e667e754cba2ac1f50b10a6458608a
+CDHash=713fd0d142560c91e4fd5ed6c449b32909e667e7
+TeamIdentifier=not set
+-- /Users/ueli/.local/bin/repo (Nov 14 21:35:40 2026)
+Identifier=a.out
+CandidateCDHash sha256=71734f86275220c08e184dd6a8137df653e92f50
+CandidateCDHashFull sha256=71734f86275220c08e184dd6a8137df653e92f50c050d3df9782a84e0ed30361
+CDHash=71734f86275220c08e184dd6a8137df653e92f50
+TeamIdentifier=not set
+
+## graph service jobs after the exit 4
+-	4	tech.semio.repo.service.a909995b451a
+-	0	tech.semio.repo.service.d8505b2379b9
+-- tech.semio.repo.service.a909995b451a
+	state = not running
+	program = /Users/ueli/.local/share/semio/launcher/bin/repo
+	working directory = /Users/ueli/Documents/semio
+	runs = 1
+	last exit code = 4
+		state = active
+		state = active
+-- tech.semio.repo.service.d8505b2379b9
+	state = not running
+	program = /Users/ueli/.local/share/semio/launcher/bin/repo
+	working directory = /Users/ueli/Documents/semio
+	runs = 1
+	last exit code = 0
+		state = active
+		state = active
+
+## receipts
+-- client.json: {"version":1,"role":"client","pid":33170,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794688770173}
+-- launcher.json: {"version":1,"role":"launcher","pid":18618,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794687004102}
+-- service.json: {"version":1,"role":"service","pid":18649,"state":"denied","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794688773517}
+
+## graph service log host-6f286e53e68a.log: lines with access-denied, consent, request-failed, e07192d7 (and 6 lines after the first)
+1245:2026-11-14T20:39:33.489Z request-failed e07192d7 Error: Relative filesystem fstatat failed (EPERM)
+1249:2026-11-14T20:39:33.490Z shutdown access-denied
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:307)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+2026-11-14T20:39:33.490Z shutdown access-denied
+repository:command failed with exit code 4
+-- its last 12 lines
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (7143 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-14T20:39:33.489Z request-failed e07192d7 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:307)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+2026-11-14T20:39:33.490Z shutdown access-denied
+repository:command failed with exit code 4
+
+$ python3 …/P6/tcc-attribution.py --last 60m --all
+0 rows (of 3 consulted requests in the window)
+
+$ python3 …/P6/tcc-attribution.py --last 60m
+0 rows (of 3 consulted requests in the window)

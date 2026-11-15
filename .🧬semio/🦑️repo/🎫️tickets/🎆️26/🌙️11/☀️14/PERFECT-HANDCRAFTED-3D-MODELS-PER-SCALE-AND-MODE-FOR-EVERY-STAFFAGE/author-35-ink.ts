@@ -1,0 +1,13 @@
+import { measureAsset } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
+import { entryOf, loadSource, merged } from "./volumes-lib.ts";
+const { entry, asset } = entryOf(process.argv[2]!);
+const m = merged(asset, loadSource(entry)!) as any;
+const sc = Number(process.argv[3]); const view = process.argv[4] as any;
+const feature = 0.15e-3 * sc;
+const r = measureAsset(m, sc, m.presentation.defaultPose, undefined, feature);
+const v = r.views[view] as any;
+console.log("iou", v.iou, "counts", JSON.stringify(v.counts), "strokes", v.openStrokes, "shapes", v.shapes, "cell", v.cell);
+const bb = (g: any) => { const xs = g.flatMap((r: any) => r.map((p: any) => p.x)), ys = g.flatMap((r: any) => r.map((p: any) => p.y)); return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)].map((x) => x.toFixed(2)).join(" "); };
+const area = (g: any) => g.reduce((s: number, r: any) => { let a = 0; for (let i = 0; i < r.length; i++) { const p = r[i], q = r[(i + 1) % r.length]; a += p.x * q.y - q.x * p.y; } return s + Math.abs(a) / 2; }, 0);
+v.filled.forEach((g: any, i: number) => console.log("filled", i, bb(g), "area", area(g).toFixed(3)));
+console.log("outlines", v.outlines.length, "ink area", v.outlines.reduce((s: number, g: any) => s + area(g), 0).toFixed(2));

@@ -12,49 +12,49 @@
       "samples": [
        {
         "atMs": 1899999880000,
-        "ratioBasisPoints": 2441,
+        "ratioBasisPoints": 9766,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899999280000,
-        "ratioBasisPoints": 7954,
+        "ratioBasisPoints": 31816,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998680000,
-        "ratioBasisPoints": 14390,
+        "ratioBasisPoints": 57559,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998080000,
-        "ratioBasisPoints": 9858,
+        "ratioBasisPoints": 39434,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899997480000,
-        "ratioBasisPoints": 2969,
+        "ratioBasisPoints": 11875,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899996880000,
-        "ratioBasisPoints": 2495,
+        "ratioBasisPoints": 9980,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899996280000,
-        "ratioBasisPoints": 7749,
+        "ratioBasisPoints": 30996,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899995680000,
-        "ratioBasisPoints": 2441,
+        "ratioBasisPoints": 9766,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -70,7 +70,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0,
@@ -86,7 +86,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1574,
+       "megabytes": 550,
        "rampMilliseconds": 200016,
        "samples": 1,
        "shareBasisPoints": 1117
@@ -101,7 +101,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1099,
+       "megabytes": 587,
        "rampMilliseconds": 100048,
        "samples": 2,
        "shareBasisPoints": 2010
@@ -175,49 +175,49 @@
       "samples": [
        {
         "atMs": 1899999880000,
-        "ratioBasisPoints": 2441,
+        "ratioBasisPoints": 9766,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899999280000,
-        "ratioBasisPoints": 7954,
+        "ratioBasisPoints": 31816,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998680000,
-        "ratioBasisPoints": 14390,
+        "ratioBasisPoints": 57559,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998080000,
-        "ratioBasisPoints": 9858,
+        "ratioBasisPoints": 39434,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899997480000,
-        "ratioBasisPoints": 2969,
+        "ratioBasisPoints": 11875,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899996880000,
-        "ratioBasisPoints": 2495,
+        "ratioBasisPoints": 9980,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899996280000,
-        "ratioBasisPoints": 7749,
+        "ratioBasisPoints": 30996,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899995680000,
-        "ratioBasisPoints": 2441,
+        "ratioBasisPoints": 9766,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -233,13 +233,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0,
        "followUpMilliseconds": 180000
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -249,10 +249,11 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1582,
-       "rampMilliseconds": 200008,
-       "samples": 1,
-       "shareBasisPoints": 1117
+       "megabytes": 512,
+       "rampMilliseconds": 300000,
+       "samples": 0,
+       "shareBasisPoints": 0,
+       "followUpMilliseconds": 30000
       },
       "executed": true
      }
@@ -264,13 +265,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1582,
-       "rampMilliseconds": 200013,
-       "samples": 1,
-       "shareBasisPoints": 1005,
+       "megabytes": 512,
+       "rampMilliseconds": 300000,
+       "samples": 0,
+       "shareBasisPoints": 0,
        "followUpMilliseconds": 20000
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -280,12 +281,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1136,
-       "rampMilliseconds": 100045,
-       "samples": 2,
-       "shareBasisPoints": 1826
+       "megabytes": 512,
+       "rampMilliseconds": 300000,
+       "samples": 0,
+       "shareBasisPoints": 0,
+       "followUpMilliseconds": 60000
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -295,12 +297,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 680,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 2510
+       "megabytes": 512,
+       "rampMilliseconds": 300000,
+       "samples": 0,
+       "shareBasisPoints": 0,
+       "followUpMilliseconds": 60000
       },
-      "executed": false
+      "executed": true
      }
     }
    ],
@@ -308,10 +311,11 @@
     "nowMs": 1900000290000,
     "forecast": {
      "quiet": true,
-     "megabytes": 690,
-     "rampMilliseconds": 60000,
-     "samples": 4,
-     "shareBasisPoints": 3089
+     "megabytes": 512,
+     "rampMilliseconds": 300000,
+     "samples": 0,
+     "shareBasisPoints": 0,
+     "followUpMilliseconds": 60000
     }
    }
   },
@@ -324,49 +328,49 @@
       "samples": [
        {
         "atMs": 1899999880000,
-        "ratioBasisPoints": 2441,
+        "ratioBasisPoints": 9766,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899999280000,
-        "ratioBasisPoints": 7954,
+        "ratioBasisPoints": 31816,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998680000,
-        "ratioBasisPoints": 14390,
+        "ratioBasisPoints": 57559,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998080000,
-        "ratioBasisPoints": 9858,
+        "ratioBasisPoints": 39434,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899997480000,
-        "ratioBasisPoints": 2969,
+        "ratioBasisPoints": 11875,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899996880000,
-        "ratioBasisPoints": 2495,
+        "ratioBasisPoints": 9980,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899996280000,
-        "ratioBasisPoints": 7749,
+        "ratioBasisPoints": 30996,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899995680000,
-        "ratioBasisPoints": 2441,
+        "ratioBasisPoints": 9766,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -382,7 +386,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0,
@@ -398,7 +402,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0,
@@ -414,7 +418,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1581,
+       "megabytes": 554,
        "rampMilliseconds": 200640,
        "samples": 1,
        "shareBasisPoints": 1005
@@ -429,7 +433,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1112,
+       "megabytes": 596,
        "rampMilliseconds": 100672,
        "samples": 2,
        "shareBasisPoints": 1831
@@ -444,7 +448,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 655,
+       "megabytes": 637,
        "rampMilliseconds": 60000,
        "samples": 3,
        "shareBasisPoints": 2518
@@ -478,7 +482,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0
@@ -493,7 +497,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1565,
+       "megabytes": 541,
        "rampMilliseconds": 200016,
        "samples": 1,
        "shareBasisPoints": 10000
@@ -508,7 +512,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1083,
+       "megabytes": 571,
        "rampMilliseconds": 100048,
        "samples": 2,
        "shareBasisPoints": 10000
@@ -521,7 +525,7 @@
     "nowMs": 1900000180000,
     "forecast": {
      "quiet": true,
-     "megabytes": 614,
+     "megabytes": 612,
      "rampMilliseconds": 60000,
      "samples": 3,
      "shareBasisPoints": 10000
@@ -537,13 +541,13 @@
       "samples": [
        {
         "atMs": 1899996000000,
-        "ratioBasisPoints": 2344,
+        "ratioBasisPoints": 9375,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899995400000,
-        "ratioBasisPoints": 3418,
+        "ratioBasisPoints": 13672,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -559,7 +563,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1275,
+       "megabytes": 751,
        "rampMilliseconds": 102318,
        "samples": 2,
        "shareBasisPoints": 10000
@@ -574,7 +578,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 884,
+       "megabytes": 872,
        "rampMilliseconds": 60000,
        "samples": 3,
        "shareBasisPoints": 10000
@@ -666,13 +670,13 @@
       "samples": [
        {
         "atMs": 1899995800000,
-        "ratioBasisPoints": 20508,
+        "ratioBasisPoints": 82031,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899994600000,
-        "ratioBasisPoints": 3418,
+        "ratioBasisPoints": 13672,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -682,43 +686,43 @@
       "samples": [
        {
         "atMs": 1899999400000,
-        "ratioBasisPoints": 13672,
+        "ratioBasisPoints": 54688,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998800000,
-        "ratioBasisPoints": 7324,
+        "ratioBasisPoints": 29297,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998200000,
-        "ratioBasisPoints": 7324,
+        "ratioBasisPoints": 29297,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899997600000,
-        "ratioBasisPoints": 20508,
+        "ratioBasisPoints": 82031,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899997000000,
-        "ratioBasisPoints": 2344,
+        "ratioBasisPoints": 9375,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899996400000,
-        "ratioBasisPoints": 2344,
+        "ratioBasisPoints": 9375,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899995200000,
-        "ratioBasisPoints": 13672,
+        "ratioBasisPoints": 54688,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -734,7 +738,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 7,
        "shareBasisPoints": 7788
@@ -749,7 +753,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 8,
        "shareBasisPoints": 8016
@@ -764,13 +768,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 8,
        "shareBasisPoints": 7266,
        "followUpMilliseconds": 60000
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -780,10 +784,11 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 9,
-       "shareBasisPoints": 7500
+       "samples": 8,
+       "shareBasisPoints": 6644,
+       "followUpMilliseconds": 600000
       },
       "executed": true
      }
@@ -795,10 +800,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 9,
-       "shareBasisPoints": 6908,
+       "samples": 8,
+       "shareBasisPoints": 6120,
        "followUpMilliseconds": 60000
       },
       "executed": true
@@ -811,10 +816,10 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 9,
-       "shareBasisPoints": 6402
+       "samples": 8,
+       "shareBasisPoints": 5672
       },
       "executed": false
      }
@@ -826,10 +831,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 3500,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 10,
-       "shareBasisPoints": 6649
+       "samples": 9,
+       "shareBasisPoints": 5968
       },
       "executed": true
      }
@@ -841,10 +846,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 3500,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 10,
-       "shareBasisPoints": 6222,
+       "samples": 9,
+       "shareBasisPoints": 5585,
        "followUpMilliseconds": 600000
       },
       "executed": true
@@ -855,10 +860,10 @@
     "nowMs": 1900013780000,
     "forecast": {
      "quiet": true,
-     "megabytes": 3500,
+     "megabytes": 1024,
      "rampMilliseconds": 60000,
-     "samples": 10,
-     "shareBasisPoints": 5846,
+     "samples": 9,
+     "shareBasisPoints": 5248,
      "followUpMilliseconds": 60000
     }
    }
@@ -877,7 +882,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0
@@ -892,7 +897,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0
@@ -907,7 +912,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0
@@ -922,7 +927,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1576,
+       "megabytes": 541,
        "rampMilliseconds": 202117,
        "samples": 1,
        "shareBasisPoints": 3387
@@ -937,7 +942,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1576,
+       "megabytes": 541,
        "rampMilliseconds": 202118,
        "samples": 1,
        "shareBasisPoints": 2516,
@@ -953,13 +958,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1576,
+       "megabytes": 541,
        "rampMilliseconds": 202119,
        "samples": 1,
        "shareBasisPoints": 2002,
        "followUpMilliseconds": 5000
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -969,10 +974,11 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1604,
-       "rampMilliseconds": 102151,
-       "samples": 2,
-       "shareBasisPoints": 3360
+       "megabytes": 541,
+       "rampMilliseconds": 202135,
+       "samples": 1,
+       "shareBasisPoints": 1662,
+       "followUpMilliseconds": 60000
       },
       "executed": true
      }
@@ -984,12 +990,12 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 1614,
-       "rampMilliseconds": 106339,
-       "samples": 2,
-       "shareBasisPoints": 2872
+       "megabytes": 540,
+       "rampMilliseconds": 204206,
+       "samples": 1,
+       "shareBasisPoints": 1421
       },
-      "executed": false
+      "executed": true
      }
     }
    ],
@@ -997,10 +1003,11 @@
     "nowMs": 1900026630000,
     "forecast": {
      "quiet": true,
-     "megabytes": 1879,
-     "rampMilliseconds": 60000,
-     "samples": 3,
-     "shareBasisPoints": 3792
+     "megabytes": 540,
+     "rampMilliseconds": 204222,
+     "samples": 1,
+     "shareBasisPoints": 1237,
+     "followUpMilliseconds": 60000
     }
    }
   },
@@ -1018,7 +1025,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0
@@ -1033,7 +1040,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0,
@@ -1049,13 +1056,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0,
        "followUpMilliseconds": 5000
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -1064,11 +1071,11 @@
      "peakMegabytes": 9000,
      "expect": {
       "forecast": {
-       "quiet": true,
-       "megabytes": 1828,
-       "rampMilliseconds": 202117,
-       "samples": 1,
-       "shareBasisPoints": 3334
+       "quiet": false,
+       "megabytes": 512,
+       "rampMilliseconds": 300000,
+       "samples": 0,
+       "shareBasisPoints": 0
       },
       "executed": true
      }
@@ -1080,13 +1087,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1828,
-       "rampMilliseconds": 202132,
-       "samples": 1,
-       "shareBasisPoints": 2487,
+       "megabytes": 512,
+       "rampMilliseconds": 300000,
+       "samples": 0,
+       "shareBasisPoints": 0,
        "followUpMilliseconds": 60000
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -1096,10 +1103,11 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1605,
-       "rampMilliseconds": 102450,
-       "samples": 2,
-       "shareBasisPoints": 4009
+       "megabytes": 512,
+       "rampMilliseconds": 300000,
+       "samples": 0,
+       "shareBasisPoints": 0,
+       "followUpMilliseconds": 600000
       },
       "executed": false
      }
@@ -1111,10 +1119,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1382,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 5020
+       "megabytes": 541,
+       "rampMilliseconds": 200160,
+       "samples": 1,
+       "shareBasisPoints": 1687
       },
       "executed": true
      }
@@ -1126,12 +1134,12 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 1385,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 4294
+       "megabytes": 541,
+       "rampMilliseconds": 200666,
+       "samples": 1,
+       "shareBasisPoints": 1443
       },
-      "executed": false
+      "executed": true
      }
     }
    ],
@@ -1139,10 +1147,11 @@
     "nowMs": 1900013185000,
     "forecast": {
      "quiet": true,
-     "megabytes": 1375,
-     "rampMilliseconds": 60000,
-     "samples": 4,
-     "shareBasisPoints": 5018
+     "megabytes": 541,
+     "rampMilliseconds": 200682,
+     "samples": 1,
+     "shareBasisPoints": 1260,
+     "followUpMilliseconds": 60000
     }
    }
   },
@@ -1155,13 +1164,13 @@
       "samples": [
        {
         "atMs": 1899996000000,
-        "ratioBasisPoints": 20508,
+        "ratioBasisPoints": 82031,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899995400000,
-        "ratioBasisPoints": 7324,
+        "ratioBasisPoints": 29297,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -1177,7 +1186,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 106471,
        "samples": 2,
        "shareBasisPoints": 10000
@@ -1192,13 +1201,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 106782,
        "samples": 2,
        "shareBasisPoints": 6593,
        "followUpMilliseconds": 600000
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -1207,11 +1216,11 @@
      "peakMegabytes": 1100,
      "expect": {
       "forecast": {
-       "quiet": true,
-       "megabytes": 4096,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 7460
+       "quiet": false,
+       "megabytes": 1024,
+       "rampMilliseconds": 110871,
+       "samples": 2,
+       "shareBasisPoints": 4916
       },
       "executed": true
      }
@@ -1223,10 +1232,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 5921,
+       "megabytes": 1024,
+       "rampMilliseconds": 110874,
+       "samples": 2,
+       "shareBasisPoints": 3902,
        "followUpMilliseconds": 5000
       },
       "executed": false
@@ -1239,10 +1248,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 4,
-       "shareBasisPoints": 6619
+       "samples": 3,
+       "shareBasisPoints": 4945
       },
       "executed": false
      }
@@ -1254,10 +1263,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 5,
-       "shareBasisPoints": 7112
+       "samples": 4,
+       "shareBasisPoints": 5683
       },
       "executed": true
      }
@@ -1269,10 +1278,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 5,
-       "shareBasisPoints": 6205,
+       "samples": 4,
+       "shareBasisPoints": 4958,
        "followUpMilliseconds": 600000
       },
       "executed": false
@@ -1285,12 +1294,12 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 6,
-       "shareBasisPoints": 6635
+       "samples": 5,
+       "shareBasisPoints": 5529
       },
-      "executed": false
+      "executed": true
      }
     }
    ],
@@ -1298,10 +1307,11 @@
     "nowMs": 1900018470000,
     "forecast": {
      "quiet": true,
-     "megabytes": 4096,
+     "megabytes": 1024,
      "rampMilliseconds": 60000,
-     "samples": 7,
-     "shareBasisPoints": 6978
+     "samples": 5,
+     "shareBasisPoints": 4965,
+     "followUpMilliseconds": 60000
     }
    }
   },
@@ -1314,7 +1324,7 @@
       "samples": [
        {
         "atMs": 1899999395000,
-        "ratioBasisPoints": 2344,
+        "ratioBasisPoints": 9375,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -1324,25 +1334,25 @@
       "samples": [
        {
         "atMs": 1899999995000,
-        "ratioBasisPoints": 2344,
+        "ratioBasisPoints": 9375,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998795000,
-        "ratioBasisPoints": 3418,
-        "activeMilliseconds": 0,
-        "peakAtMilliseconds": 0
-       },
-       {
-        "atMs": 1899998195000,
         "ratioBasisPoints": 13672,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
+        "atMs": 1899998195000,
+        "ratioBasisPoints": 54688,
+        "activeMilliseconds": 0,
+        "peakAtMilliseconds": 0
+       },
+       {
         "atMs": 1899997595000,
-        "ratioBasisPoints": 7324,
+        "ratioBasisPoints": 29297,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -1358,7 +1368,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 3500,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 4,
        "shareBasisPoints": 7997
@@ -1373,7 +1383,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 3500,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 4,
        "shareBasisPoints": 6655
@@ -1388,12 +1398,12 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 3500,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 5,
        "shareBasisPoints": 7138
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -1402,13 +1412,13 @@
      "peakMegabytes": 2600,
      "expect": {
       "forecast": {
-       "quiet": true,
-       "megabytes": 3500,
+       "quiet": false,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 6,
-       "shareBasisPoints": 7500
+       "samples": 5,
+       "shareBasisPoints": 6233
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -1418,10 +1428,11 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 3500,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 7,
-       "shareBasisPoints": 7783
+       "samples": 5,
+       "shareBasisPoints": 5529,
+       "followUpMilliseconds": 600000
       },
       "executed": true
      }
@@ -1433,10 +1444,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 3500,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 7,
-       "shareBasisPoints": 6992,
+       "samples": 5,
+       "shareBasisPoints": 4967,
        "followUpMilliseconds": 60000
       },
       "executed": false
@@ -1447,10 +1458,10 @@
     "nowMs": 1900008320000,
     "forecast": {
      "quiet": true,
-     "megabytes": 3500,
+     "megabytes": 1024,
      "rampMilliseconds": 60000,
-     "samples": 8,
-     "shareBasisPoints": 7269
+     "samples": 6,
+     "shareBasisPoints": 5432
     }
    }
   },
@@ -1463,7 +1474,7 @@
       "samples": [
        {
         "atMs": 1899993600000,
-        "ratioBasisPoints": 20508,
+        "ratioBasisPoints": 82031,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -1473,25 +1484,25 @@
       "samples": [
        {
         "atMs": 1899996000000,
-        "ratioBasisPoints": 2344,
+        "ratioBasisPoints": 9375,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899995400000,
-        "ratioBasisPoints": 20508,
+        "ratioBasisPoints": 82031,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899994800000,
-        "ratioBasisPoints": 2344,
+        "ratioBasisPoints": 9375,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899994200000,
-        "ratioBasisPoints": 7324,
+        "ratioBasisPoints": 29297,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -1507,7 +1518,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 4,
        "shareBasisPoints": 8006
@@ -1522,12 +1533,12 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 5,
        "shareBasisPoints": 8343
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -1536,11 +1547,11 @@
      "peakMegabytes": 9000,
      "expect": {
       "forecast": {
-       "quiet": true,
-       "megabytes": 4096,
+       "quiet": false,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 6,
-       "shareBasisPoints": 8582
+       "samples": 5,
+       "shareBasisPoints": 7139
       },
       "executed": true
      }
@@ -1552,10 +1563,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 6,
-       "shareBasisPoints": 7495,
+       "samples": 5,
+       "shareBasisPoints": 6234,
        "followUpMilliseconds": 5000
       },
       "executed": false
@@ -1568,10 +1579,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 7,
-       "shareBasisPoints": 7776
+       "samples": 6,
+       "shareBasisPoints": 6658
       },
       "executed": false
      }
@@ -1583,12 +1594,12 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 8,
-       "shareBasisPoints": 8001
+       "samples": 7,
+       "shareBasisPoints": 6996
       },
-      "executed": false
+      "executed": true
      }
     }
    ],
@@ -1596,10 +1607,11 @@
     "nowMs": 1900003990000,
     "forecast": {
      "quiet": true,
-     "megabytes": 4096,
+     "megabytes": 1024,
      "rampMilliseconds": 60000,
-     "samples": 9,
-     "shareBasisPoints": 8185
+     "samples": 7,
+     "shareBasisPoints": 6350,
+     "followUpMilliseconds": 60000
     }
    }
   },
@@ -1617,7 +1629,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0
@@ -1632,12 +1644,12 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 2048,
+       "megabytes": 512,
        "rampMilliseconds": 300000,
        "samples": 0,
        "shareBasisPoints": 0
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -1646,11 +1658,11 @@
      "peakMegabytes": 300,
      "expect": {
       "forecast": {
-       "quiet": true,
-       "megabytes": 1659,
-       "rampMilliseconds": 200507,
-       "samples": 1,
-       "shareBasisPoints": 5053
+       "quiet": false,
+       "megabytes": 512,
+       "rampMilliseconds": 300000,
+       "samples": 0,
+       "shareBasisPoints": 0
       },
       "executed": false
      }
@@ -1662,10 +1674,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1268,
-       "rampMilliseconds": 100509,
-       "samples": 2,
-       "shareBasisPoints": 6720
+       "megabytes": 466,
+       "rampMilliseconds": 200001,
+       "samples": 1,
+       "shareBasisPoints": 3368
       },
       "executed": false
      }
@@ -1677,10 +1689,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 877,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 7546
+       "megabytes": 421,
+       "rampMilliseconds": 100004,
+       "samples": 2,
+       "shareBasisPoints": 5039
       },
       "executed": true
      }
@@ -1692,13 +1704,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 879,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 6027,
+       "megabytes": 421,
+       "rampMilliseconds": 100325,
+       "samples": 2,
+       "shareBasisPoints": 4025,
        "followUpMilliseconds": 600000
       },
-      "executed": false
+      "executed": true
      }
     }
    ],
@@ -1706,10 +1718,11 @@
     "nowMs": 1900010575000,
     "forecast": {
      "quiet": true,
-     "megabytes": 875,
-     "rampMilliseconds": 60000,
-     "samples": 4,
-     "shareBasisPoints": 6694
+     "megabytes": 421,
+     "rampMilliseconds": 100357,
+     "samples": 2,
+     "shareBasisPoints": 3350,
+     "followUpMilliseconds": 60000
     }
    }
   },
@@ -1722,7 +1735,7 @@
       "samples": [
        {
         "atMs": 1899999395000,
-        "ratioBasisPoints": 1465,
+        "ratioBasisPoints": 5859,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -1732,7 +1745,7 @@
       "samples": [
        {
         "atMs": 1899999995000,
-        "ratioBasisPoints": 1465,
+        "ratioBasisPoints": 5859,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -1748,7 +1761,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 1502,
+       "megabytes": 467,
        "rampMilliseconds": 202118,
        "samples": 1,
        "shareBasisPoints": 5004
@@ -1763,7 +1776,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 946,
+       "megabytes": 422,
        "rampMilliseconds": 102435,
        "samples": 2,
        "shareBasisPoints": 6694
@@ -1778,7 +1791,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 948,
+       "megabytes": 422,
        "rampMilliseconds": 102752,
        "samples": 2,
        "shareBasisPoints": 5000,
@@ -1794,7 +1807,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 950,
+       "megabytes": 422,
        "rampMilliseconds": 103068,
        "samples": 2,
        "shareBasisPoints": 3989,
@@ -1810,12 +1823,12 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 955,
+       "megabytes": 423,
        "rampMilliseconds": 104066,
        "samples": 2,
        "shareBasisPoints": 3317
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -1824,11 +1837,11 @@
      "peakMegabytes": 1100,
      "expect": {
       "forecast": {
-       "quiet": true,
-       "megabytes": 627,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 4285
+       "quiet": false,
+       "megabytes": 423,
+       "rampMilliseconds": 105059,
+       "samples": 2,
+       "shareBasisPoints": 2837
       },
       "executed": true
      }
@@ -1840,10 +1853,10 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 629,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 3740,
+       "megabytes": 423,
+       "rampMilliseconds": 105372,
+       "samples": 2,
+       "shareBasisPoints": 2476,
        "followUpMilliseconds": 600000
       },
       "executed": true
@@ -1856,10 +1869,10 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 659,
-       "rampMilliseconds": 60000,
-       "samples": 3,
-       "shareBasisPoints": 3318
+       "megabytes": 425,
+       "rampMilliseconds": 109491,
+       "samples": 2,
+       "shareBasisPoints": 2197
       },
       "executed": true
      }
@@ -1869,10 +1882,10 @@
     "nowMs": 1900022260000,
     "forecast": {
      "quiet": true,
-     "megabytes": 659,
-     "rampMilliseconds": 60000,
-     "samples": 3,
-     "shareBasisPoints": 2975,
+     "megabytes": 425,
+     "rampMilliseconds": 109522,
+     "samples": 2,
+     "shareBasisPoints": 1970,
      "followUpMilliseconds": 60000
     }
    }
@@ -1886,19 +1899,19 @@
       "samples": [
        {
         "atMs": 1899999400000,
-        "ratioBasisPoints": 13672,
+        "ratioBasisPoints": 54688,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899998200000,
-        "ratioBasisPoints": 20508,
+        "ratioBasisPoints": 82031,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899997000000,
-        "ratioBasisPoints": 20508,
+        "ratioBasisPoints": 82031,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -1908,13 +1921,13 @@
       "samples": [
        {
         "atMs": 1899998800000,
-        "ratioBasisPoints": 20508,
+        "ratioBasisPoints": 82031,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        },
        {
         "atMs": 1899997600000,
-        "ratioBasisPoints": 7324,
+        "ratioBasisPoints": 29297,
         "activeMilliseconds": 0,
         "peakAtMilliseconds": 0
        }
@@ -1930,7 +1943,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 105173,
        "samples": 2,
        "shareBasisPoints": 4000
@@ -1945,7 +1958,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 4084,
+       "megabytes": 1024,
        "rampMilliseconds": 109297,
        "samples": 2,
        "shareBasisPoints": 3319
@@ -1960,7 +1973,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 4073,
+       "megabytes": 1024,
        "rampMilliseconds": 110263,
        "samples": 2,
        "shareBasisPoints": 2827
@@ -1975,7 +1988,7 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 3,
        "shareBasisPoints": 3757
@@ -1990,7 +2003,7 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 3,
        "shareBasisPoints": 3324
@@ -2005,12 +2018,12 @@
      "expect": {
       "forecast": {
        "quiet": false,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
        "samples": 3,
        "shareBasisPoints": 2979
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -2020,12 +2033,13 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 4,
-       "shareBasisPoints": 3652
+       "samples": 3,
+       "shareBasisPoints": 2693,
+       "followUpMilliseconds": 600000
       },
-      "executed": false
+      "executed": true
      }
     },
     {
@@ -2035,10 +2049,11 @@
      "expect": {
       "forecast": {
        "quiet": true,
-       "megabytes": 4096,
+       "megabytes": 1024,
        "rampMilliseconds": 60000,
-       "samples": 5,
-       "shareBasisPoints": 4208
+       "samples": 3,
+       "shareBasisPoints": 2457,
+       "followUpMilliseconds": 5000
       },
       "executed": false
      }
@@ -2048,21 +2063,21 @@
     "nowMs": 1900030365000,
     "forecast": {
      "quiet": true,
-     "megabytes": 4096,
+     "megabytes": 1024,
      "rampMilliseconds": 60000,
-     "samples": 6,
-     "shareBasisPoints": 4675
+     "samples": 4,
+     "shareBasisPoints": 3065
     }
    }
   }
  ],
  "coverage": {
   "askedBusy": 14,
-  "outgrownBusy": 24,
-  "quiet": 53,
-  "forecastQuiet": 72,
-  "forecastFull": 19,
-  "followUp": 24,
-  "history": 48
+  "outgrownBusy": 45,
+  "quiet": 32,
+  "forecastQuiet": 66,
+  "forecastFull": 25,
+  "followUp": 33,
+  "history": 33
  }
 }

@@ -268,21 +268,21 @@ test("remote-cache status reports the contract, both renderings, a probe per pro
   expect((await fetch(server.url+"/v1/cache/777",{method:"PUT",body:"payload",headers:{authorization:"Bearer write-token-7"}})).status).toBe(200);
   const on={SEMIO_REMOTE_CACHE_ENDPOINT:server.url,SEMIO_REMOTE_CACHE_ACCESS:"read-write",SEMIO_REMOTE_CACHE_TOKEN:"write-token-7"};
   const off=await remoteCacheStatusV1([],context({}));
-  expect(off).toEqual({version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,store:null});expect(validator("Status")(off),JSON.stringify(validator("Status").errors)).toBe(true);
+  expect(off).toEqual({version:1,configured:false,contract:null,effectiveUpload:false,token:null,renderings:null,probes:null,server:null,store:null,resolution:null,remote:null});expect(validator("Status")(off),JSON.stringify(validator("Status").errors)).toBe(true);
   const status=await remoteCacheStatusV1(["--directory",folder],context(on)) as {configured:boolean;probes:{protocol:string;reachable:boolean;authorized:boolean;status:number}[];server:{readOnly:boolean;validation:string;entries:number};store:{entries:number;bytes:number}};
   expect(validator("Status")(status),JSON.stringify(validator("Status").errors)).toBe(true);
-  expect(status).toMatchObject({configured:true,effectiveUpload:true,token:{present:true},renderings:{nx:{mechanism:"nx-environment"},bazel:{mechanism:"bazel-flags"}},server:{readOnly:false,validation:"off",entries:1},store:{entries:1,bytes:7}});
+  expect(status).toMatchObject({configured:true,effectiveUpload:true,token:{present:true},renderings:{nx:{mechanism:"nx-environment"},bazel:{mechanism:"bazel-flags"}},server:{readOnly:false,validation:"off",entries:1},store:{entries:1,bytes:7},resolution:{endpointFrom:"environment",tokenFrom:"environment",factsGeneration:null},remote:{reachable:true,authorised:true,entries:1,bytes:7}});
   expect(status.probes.map(probe=>probe.protocol)).toEqual(["nx-self-hosted","bazel-http"]);for(const probe of status.probes)expect(probe).toMatchObject({reachable:true,authorized:true,status:404});
   expect(JSON.stringify(status),"never prints the token").not.toContain("write-token-7");
   const denied=await remoteCacheStatusV1([],context({...on,SEMIO_REMOTE_CACHE_TOKEN:"wrong-token"})) as {probes:{authorized:boolean;status:number}[];server:null};
-  for(const probe of denied.probes)expect(probe).toMatchObject({authorized:false,status:401});expect(denied.server).toBeNull();
+  for(const probe of denied.probes)expect(probe).toMatchObject({authorized:false,status:401});expect(denied.server).toBeNull();expect((denied as unknown as {remote:{reachable:boolean;authorised:boolean;entries:null}}).remote).toMatchObject({reachable:true,authorised:false,entries:null});
   const custom=await remoteCacheStatusV1([],context({...on,SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT:"CI_CACHE_TOKEN",CI_CACHE_TOKEN:"read-only-token-9"})) as {token:{environment:string};probes:{authorized:boolean}[];server:{entries:number}};
   expect(custom.token.environment).toBe("CI_CACHE_TOKEN");for(const probe of custom.probes)expect(probe.authorized).toBe(true);expect(custom.server.entries).toBe(1);
   const unreachable=await remoteCacheStatusV1([],context({SEMIO_REMOTE_CACHE_ENDPOINT:"http://127.0.0.1:1",SEMIO_REMOTE_CACHE_TIMEOUT_SECONDS:"2"})) as {probes:{reachable:boolean;status:null}[]};
   for(const probe of unreachable.probes)expect(probe).toMatchObject({reachable:false,status:null});
   const cancelled=new AbortController();cancelled.abort();await expect(remoteCacheStatusV1([],context(on,cancelled.signal))).rejects.toThrow();
   expect(await runRemoteCacheCommandV1(["status"],context({}))).toEqual({exitCode:0,result:expect.objectContaining({configured:false})});
-  await expect(runRemoteCacheCommandV1(["remote","clear"],context(on))).rejects.toThrow("Expected repo remote-cache serve|status|gc.");
+  await expect(runRemoteCacheCommandV1(["remote","clear"],context(on))).rejects.toThrow("Expected repo remote-cache serve|status|gc|rotate.");
  }finally{await server.stop();}
 },60000);
 
@@ -338,6 +338,19 @@ test("remote-cache gc plans first, then removes exactly the planned entries, in 
  expect(await store3.has("main","nx","key11"),"the newest entry survives").toBe(true);expect(await store3.has("main","nx","key0"),"the oldest entry goes first").toBe(false);await store3.close();
  const cancelling=new AbortController();cancelling.abort();
  expect(await collectRemoteCacheV1(["--directory",folder,"--dry-run"],{...context(()=>{},{SEMIO_LANGUAGE:"en"}),signal:cancelling.signal})).toEqual({exitCode:130});
+});
+
+test("the server counts what its retention evicted, in the store usage and in the status",async()=>{
+ const small=await serve({maximumBytes:4096,maximumEntryBytes:1024});
+ try{
+  for(let index=0;index<3;index++){const value=`evict-${index}-`.padEnd(900,"z");expect((await fetch(`${small.url}/cas/${digest(value)}`,{method:"PUT",body:value})).status).toBe(200);}
+  expect(small.store.usage().evictedEntries).toBe(0);
+  await small.store.collect(3000);
+  const usage=small.store.usage(),status=await (await fetch(small.url+"/status")).json() as Record<string,any>;
+  expect(usage.evictedEntries).toBeGreaterThan(0);expect(usage.evictedBytes).toBeGreaterThanOrEqual(900);
+  expect(status.evicted).toEqual({entries:usage.evictedEntries,bytes:usage.evictedBytes});
+  expect(validator("ServerStatus")(status),JSON.stringify(validator("ServerStatus").errors)).toBe(true);
+ }finally{await small.stop();}
 });
 
 test("the public JSON of the remote cache is schema-first: status, gc results and the message catalogue validate against the contract schema, and drifted documents are refused",async()=>{
@@ -401,6 +414,33 @@ test.skipIf(!bazelBinary)("a real Bazel client builds against the server, hits t
   const leaked=spawnSync("grep",["-rl",token,base],{encoding:"utf8"});expect(leaked.stdout.trim(),"the token appears in no file below the scratch workspace and output base").toBe("");
  }finally{await run(rw,["shutdown"]);await server.stop();}
 },900000);
+
+test("an unreachable, hanging or unauthorized remote cache keeps the Nx run local with one bilingual warning and one bounded probe per endpoint",async()=>{
+ const {nxRemoteCacheEnvironmentV1}=await import("../🧶️nx/🟦️.ts"),variables=["NX_SELF_HOSTED_REMOTE_CACHE_SERVER","NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN"];
+ const hits:{hang:number;deny:number;serve:number}={hang:0,deny:0,serve:0},servers=[
+  Bun.serve({port:0,fetch:()=>{hits.hang++;return new Promise<Response>(()=>{});}}),
+  Bun.serve({port:0,fetch:()=>{hits.deny++;return new Response("no",{status:401});}}),
+  Bun.serve({port:0,fetch:()=>{hits.serve++;return new Response("",{status:404});}})
+ ];
+ try{
+  const closed=Bun.serve({port:0,fetch:()=>new Response("")}),closedPort=closed.port;await closed.stop(true);
+  const targets=[`http://127.0.0.1:${closedPort}`,`http://127.0.0.1:${servers[0]!.port}`,`http://127.0.0.1:${servers[1]!.port}`];
+  for(const endpoint of targets){
+   const warnings:string[]=[],environment={SEMIO_REMOTE_CACHE_ENDPOINT:endpoint,SEMIO_REMOTE_CACHE_TOKEN:"tok-123"},started=performance.now();
+   const first=await nxRemoteCacheEnvironmentV1(environment,{probeMilliseconds:200,warn:text=>warnings.push(text)});
+   expect(performance.now()-started,endpoint).toBeLessThan(1500);
+   expect(Object.keys(first).sort(),endpoint).toEqual([...variables].sort());expect(Object.values(first).every(value=>value===undefined),endpoint).toBe(true);
+   expect(warnings,endpoint).toHaveLength(1);expect(warnings[0],endpoint).toContain("Warning:");expect(warnings[0],endpoint).toContain("Warnung:");expect(warnings[0],endpoint).toContain(endpoint);expect(warnings[0],endpoint).not.toContain("tok-123");
+   for(let again=0;again<3;again++)expect(Object.values(await nxRemoteCacheEnvironmentV1(environment,{probeMilliseconds:200,warn:text=>warnings.push(text)})).every(value=>value===undefined),endpoint).toBe(true);
+   expect(warnings,endpoint).toHaveLength(1);
+  }
+  expect(hits.hang).toBe(1);expect(hits.deny).toBe(1);
+  const warnings:string[]=[],base=`http://127.0.0.1:${servers[2]!.port}`,reachable=await nxRemoteCacheEnvironmentV1({SEMIO_REMOTE_CACHE_ENDPOINT:base},{probeMilliseconds:200,warn:text=>warnings.push(text)});
+  expect(reachable).toEqual({NX_SELF_HOSTED_REMOTE_CACHE_SERVER:`${base}/main`});expect(warnings).toEqual([]);expect(hits.serve).toBe(1);
+  expect(await nxRemoteCacheEnvironmentV1({SEMIO_REMOTE_CACHE_ENDPOINT:base,NX_SELF_HOSTED_REMOTE_CACHE_SERVER:`${base}/main`},{probeMilliseconds:200}),"already routed to the same cache").toEqual({});
+  expect(await nxRemoteCacheEnvironmentV1({SEMIO_REMOTE_CACHE_ENDPOINT:base,NX_SELF_HOSTED_REMOTE_CACHE_SERVER:"http://caller.example/own"},{probeMilliseconds:200}),"the caller's own Nx configuration wins").toEqual({});
+ }finally{for(const server of servers)await server.stop(true);}
+});
 
 const nxBinary=process.env.SEMIO_TEST_NX_BIN;
 

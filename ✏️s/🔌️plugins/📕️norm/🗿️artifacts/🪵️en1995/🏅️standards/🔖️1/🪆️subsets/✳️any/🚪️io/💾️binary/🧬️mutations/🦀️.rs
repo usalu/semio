@@ -39,4 +39,6 @@ impl OpBinary for En1995Mutation {
         <Self as OpText>::parse_op(text).map_err(|e| protocol::ProtocolError::Malformed { what: "json", offset: 0, detail: e.to_string() })
     }
 }
+
+semio_os_kernel::original_pack_value_operation_receiving!(En1995Mutation);
 }

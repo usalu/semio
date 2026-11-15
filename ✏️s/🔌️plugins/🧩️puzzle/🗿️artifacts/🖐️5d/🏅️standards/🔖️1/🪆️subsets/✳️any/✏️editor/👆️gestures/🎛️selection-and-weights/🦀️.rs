@@ -11,7 +11,7 @@ use semio_plugin::Emit;
 use semio_plugin::Fault;
 use semio_framework_pack_json::Value;
 use semio_framework_value::{RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, ordered_map::{RetainedOrderedMapInsertCursor, RetainedOrderedMapInsertGrant, RetainedOrderedMapInsertStep}};
+use semio_framework_value::retained_clone::{OriginalEffectReply, RetainedCloneGrant, RetainedCloneStep, ordered_map::{BoundedOrdGrant, RetainedOrderedMapInsertCursor, RetainedOrderedMapInsertGrant}};
 use semio_framework_action_bus::ToolJobAdmissionDemand;
 use crate::editor::puzzle5d::config::Puzzle5dKindWeights;
 use crate::editor::puzzle5d::interaction::Puzzle5dEditor;
@@ -340,67 +340,59 @@ impl Puzzle5dKindWeightWork {
         }
     }
 
-    /// 🧯 Admits one resumable insertion of `value` under the id at `ordinal` (the changed id when `None`); `false` while the turn grant cannot yet fund the cursor.
+    /// 🧯️ Admits one resumable insertion of `value` under the id at `ordinal` (the changed id when `None`); `false` while the turn grant cannot yet fund the cursor.
     fn start_result_insert(&mut self, ordinal: Option<usize>, value: f64, resume: Puzzle5dKindWeightStage, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         type Insert = RetainedOrderedMapInsertCursor<String, f64>;
         let key = match ordinal { Some(ordinal) => self.ids.get(ordinal).cloned(), None => self.changed_id.clone() }
             .ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "puzzle5d kind weight insertion owner is missing"))?;
-        let demand = ToolJobAdmissionDemand { items: 1, copy_bytes: Insert::constructor_copy_bytes(), capacity_bytes: Insert::constructor_capacity_bytes(), release_bytes: 0, depth: 1 };
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: 0, maximum_depth: 1 };
-        let mut map = Some(std::mem::take(&mut self.result));
-        let mut key = Some(key);
-        let admitted = semio_framework_action_bus::admit_original_tool_construction_scoped(cx, &mut self.insert, demand, |scope| {
-            scope.admit_owner(RetirementDemand { copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, depth: 1, ..Default::default() })?;
-            let (owned_map, owned_key) = (map.take().expect("insertion map is present"), key.take().expect("insertion key is present"));
-            Insert::admit(owned_map, owned_key, value, grant).result.map_err(|(error, returned_map, returned_key, _)| { map = Some(returned_map); key = Some(returned_key); error })
-        });
-        if let Some(map) = map { self.result = map; }
-        self.refused_key = key.or(self.refused_key.take());
-        let ready = admitted?;
-        if ready { self.insert_resume = Some(resume); self.insert_closing = false; }
-        Ok(ready)
-    }
-
-    /// 🧵️ Advances the admitted insertion by one funded action, then closes its cursor; `true` once the dictionary is back in `result`.
-    fn advance_result_insert(&mut self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-        let held = cx.retained_grant();
-        let Some(cursor) = self.insert.as_mut() else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "puzzle5d kind weight insertion cursor is missing").into()) };
-        let receipt = if self.insert_closing {
-            let turn = cursor.close_step(held);
-            cx.consume_fuel(turn.work);
-            let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
-            step.progress()
-        } else if cursor.output_ready() {
-            self.result = cursor.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "puzzle5d kind weight insertion lost its output"))?;
-            cursor.begin_close();
-            self.insert_closing = true;
-            RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Puzzle5dKindWeights>(), ..Default::default() }
-        } else {
-            let need = cursor.next_advance_demands(held.maximum_copy_bytes).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
-            let funded = need.retirement.maximum_copy_bytes <= held.maximum_copy_bytes && need.retirement.maximum_capacity_bytes <= held.maximum_capacity_bytes
-                && need.retirement.maximum_release_bytes <= held.maximum_release_bytes && need.retirement.maximum_depth <= held.maximum_depth
-                && need.maximum_moved_items <= held.maximum_items && need.maximum_moved_bytes <= held.maximum_copy_bytes && need.maximum_capacity_bytes <= held.maximum_capacity_bytes;
-            if !funded || held.maximum_items == 0 { return Ok(false); }
-            let grant = RetainedOrderedMapInsertGrant { retirement: held, comparison: need.comparison, maximum_moved_items: held.maximum_items, maximum_moved_bytes: held.maximum_copy_bytes, maximum_capacity_bytes: held.maximum_capacity_bytes };
-            let turn = cursor.advance(grant);
-            cx.consume_fuel(turn.work);
-            match turn.result {
-                Ok(RetainedOrderedMapInsertStep::Progress(progress) | RetainedOrderedMapInsertStep::Complete { progress, .. }) => progress.retirement
-                    .checked_add(RetainedCloneProgress { copied_items: progress.moved_items, copied_bytes: progress.moved_bytes, retained_capacity_bytes: progress.retained_capacity_bytes, ..Default::default() })
-                    .map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?,
-                Err(error) => {
-                    if cursor.refused_workspace_ready() {
-                        self.result = cursor.take_refused_workspace().unwrap_or_default();
-                        cursor.begin_close();
-                        self.insert_closing = true;
-                    }
-                    return Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx));
-                }
-            }
-        };
+        let grant = cx.retained_grant();
+        let bytes = size_of::<Insert>();
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < bytes || cx.fuel_remaining() == 0 { return Ok(false); }
+        self.insert = Some(Insert::new(std::mem::take(&mut self.result), key, value));
+        self.insert_resume = Some(resume);
+        self.insert_closing = false;
+        let receipt = RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() };
         let result = cx.consume_retained(receipt);
         cx.consume_fuel(1);
         result.map_err(|error| semio_framework_job::OriginalTurnFailure::from(error.with_retained_progress(receipt)))?;
+        Ok(true)
+    }
+
+    /// 🧵️ Advances the admitted insertion by one funded action under the turn's original effect, then closes its cursor; `true` once the dictionary is back in `result`.
+    fn advance_result_insert(&mut self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let grant = cx.retained_grant();
+        let Some(cursor) = self.insert.as_mut() else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "puzzle5d kind weight insertion cursor is missing").into()) };
+        let debit = |error: ValueError, cx: &mut StepContext<'_>| semio_framework_job::OriginalTurnFailure::debit_original(error, cx);
+        let step: Option<Result<Option<RetainedCloneStep>, ValueError>> = if self.insert_closing {
+            cx.with_original_effect(grant, |_, effect| cursor.close_turn(grant.maximum_copy_bytes, effect)).map_err(|error| debit(error, cx))?.map(|(step, _)| step)
+        } else if cursor.output_ready() {
+            let mut output = None;
+            let taken = cx.with_original_effect(grant, |_, effect| cursor.take_turn(&mut output, effect)).map_err(|error| debit(error, cx))?.map(|(step, _)| step);
+            if let Some(map) = output { self.result = map; self.insert_closing = true; }
+            taken
+        } else {
+            let insert = RetainedOrderedMapInsertGrant { retirement: grant, comparison: BoundedOrdGrant { maximum_items: 1, maximum_bytes: 1 }, maximum_moved_items: grant.maximum_items, maximum_moved_bytes: grant.maximum_copy_bytes, maximum_capacity_bytes: grant.maximum_capacity_bytes };
+            cx.with_original_effect(grant, |_, effect| cursor.advance_turn(grant.maximum_copy_bytes, insert, effect)).map_err(|error| debit(error, cx))?.map(|(step, _)| step)
+        };
+        let Some(step) = step else { return Ok(false) };
+        match step {
+            Ok(Some(step)) => {
+                let receipt = step.progress();
+                let result = cx.consume_retained(receipt);
+                cx.consume_fuel(1);
+                result.map_err(|error| semio_framework_job::OriginalTurnFailure::from(error.with_retained_progress(receipt)))?;
+            }
+            Ok(None) => {}
+            Err(error) => {
+                if cursor.refused_workspace_ready() {
+                    let mut output = None;
+                    let mut slot = None;
+                    let _ = cx.with_original_effect(grant, |_, effect| -> Result<(), ValueError> { let reply = OriginalEffectReply::borrow(&mut slot)?; drop(cursor.take_refused_workspace_into(&mut output, effect, reply)?); Ok(()) });
+                    if let Some(map) = output { self.result = map; self.insert_closing = true; }
+                }
+                return Err(debit(error, cx));
+            }
+        }
         if self.insert_closing && self.insert.as_ref().is_some_and(|cursor| cursor.terminal_is_empty()) {
             self.insert = None;
             self.insert_closing = false;

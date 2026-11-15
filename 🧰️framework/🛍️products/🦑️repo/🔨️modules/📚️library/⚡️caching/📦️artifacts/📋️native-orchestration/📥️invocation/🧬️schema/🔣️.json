@@ -260,6 +260,7 @@
     "NativeDependencyKind": {
       "enum": [
         "python",
+        "python-energy-oracle",
         "cargo",
         "cargo-lock",
         "go",

@@ -37,6 +37,7 @@
         "kind": { "enum": ["external", "in-house"] },
         "default": { "type": "boolean" },
         "module": { "type": "string", "pattern": "^\\.\\./.+\\.ts$" },
+        "launch": { "type": "string", "pattern": "^\\.\\./.+\\.ts$" },
         "driver": { "type": "string", "pattern": "^\\.\\./.+\\.ts$" },
         "dependencyModel": { "enum": ["all", "consumers"] },
         "plansScoped": { "type": "boolean" },

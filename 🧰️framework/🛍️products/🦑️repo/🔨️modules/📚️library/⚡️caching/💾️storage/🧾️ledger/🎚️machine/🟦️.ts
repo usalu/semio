@@ -14,8 +14,8 @@ export type MachinePolicyV1=Readonly<{version:1;defaultTotalBytes:number;environ
 export type MachineSourceV1="argument"|"environment"|"file"|"default";
 /** 💰️ The resolved total in bytes and its source. */
 export type MachineTotalV1=Readonly<{bytes:number;source:MachineSourceV1}>;
-/** 📥️ What one store holds right now; `envelopeBytes` is the fixed host allocation of an image, `evictableBytes` what a collector may free without touching a holder (null: unknown, everything counts). */
-export type MachineUseV1=Readonly<{id:string;usedBytes:number;envelopeBytes:number|null;evictableBytes:number|null}>;
+/** 📥️ What one store holds right now; `envelopeBytes` is the fixed size of an image, `allocatedBytes` the bytes the host really holds for it (freed blocks inside a raw image are never returned, so this can be far above the used bytes and counts in the footprint), `evictableBytes` what a collector may free without touching a holder (null: unknown, everything counts). */
+export type MachineUseV1=Readonly<{id:string;usedBytes:number;envelopeBytes:number|null;evictableBytes:number|null;allocatedBytes?:number|null}>;
 /** 📤️ The plan of one store: its share of the total, what must go, what cannot go and the image size that would fit. */
 export type MachineStorePlanV1=Readonly<{id:string;usedBytes:number;demandBytes:number;quotaBytes:number;contentLimitBytes:number;excessBytes:number;evictBytes:number;blockedBytes:number;envelopeBytes:number|null;resizeToBytes:number|null;state:"within"|"evict"|"blocked"}>;
 /** 🧮️ The plan of the whole machine. */
@@ -109,7 +109,7 @@ const alignDown=(value:number,align:number):number=>Math.floor(value/align)*alig
  * Applying the planned evictions and planning again plans nothing further (the plan converges in one step; an excess within the tolerance is rounding, not work); a store whose demand is below its fair share is never cut.
  */
 export function planMachineBudgetV1(input:Readonly<{totalBytes:number;hostFreeBytes:number|null;uses:readonly MachineUseV1[]}>,declared:MachinePolicyV1=machinePolicyV1()):MachinePlanV1{
- const stores=declared.stores,use=new Map(input.uses.map(row=>[row.id,row])),rows=stores.map(store=>{const held=use.get(store.id);return{store,used:held?.usedBytes??0,envelope:held?.envelopeBytes??null,evictable:held?.evictableBytes??null};});
+ const stores=declared.stores,use=new Map(input.uses.map(row=>[row.id,row])),rows=stores.map(store=>{const held=use.get(store.id);return{store,used:held?.usedBytes??0,envelope:held?.envelopeBytes??null,allocated:held?.allocatedBytes??null,evictable:held?.evictableBytes??null};});
  const demands=rows.map(row=>demandOf(row.used,row.store.headroomBasisPoints)),floors=stores.reduce((sum,store)=>sum+store.floorBytes,0),demandTotal=demands.reduce((sum,value)=>sum+value,0);
  const pressureBytes=input.hostFreeBytes!==null&&input.hostFreeBytes<declared.hostFreeFloorBytes?declared.hostFreeFloorBytes-input.hostFreeBytes:0,effectiveTotalBytes=Math.max(floors,Math.min(input.totalBytes,pressureBytes>0?demandTotal-pressureBytes:input.totalBytes));
  const quotas=splitMachineBudgetV1(effectiveTotalBytes,rows.map((row,index)=>({id:row.store.id,weight:row.store.weightBasisPoints,floor:row.store.floorBytes,demand:demands[index]!})),true);
@@ -118,7 +118,7 @@ export function planMachineBudgetV1(input:Readonly<{totalBytes:number;hostFreeBy
   const fit=row.envelope===null?null:quotaBytes>=demandBytes?Math.max(alignUp(demandBytes,declared.alignBytes),alignDown(quotaBytes,declared.alignBytes)):alignDown(quotaBytes,declared.alignBytes),resizeToBytes=fit!==null&&row.envelope!==null&&row.envelope-fit>=declared.alignBytes?fit:null;
   return Object.freeze({id:row.store.id,usedBytes:row.used,demandBytes,quotaBytes,contentLimitBytes,excessBytes,evictBytes,blockedBytes,envelopeBytes:row.envelope,resizeToBytes,state:blockedBytes>0?"blocked":evictBytes>0?"evict":"within"});
  });
- const usedBytes=rows.reduce((sum,row)=>sum+row.used,0),footprintBytes=rows.reduce((sum,row)=>sum+(row.envelope??row.used),0),evictBytes=plans.reduce((sum,plan)=>sum+plan.evictBytes,0),blockedBytes=plans.reduce((sum,plan)=>sum+plan.blockedBytes,0);
+ const usedBytes=rows.reduce((sum,row)=>sum+row.used,0),footprintBytes=rows.reduce((sum,row)=>sum+Math.max(row.allocated??row.envelope??row.used,row.used),0),evictBytes=plans.reduce((sum,plan)=>sum+plan.evictBytes,0),blockedBytes=plans.reduce((sum,plan)=>sum+plan.blockedBytes,0);
  return Object.freeze({version:1,totalBytes:input.totalBytes,effectiveTotalBytes,pressureBytes,usedBytes,footprintBytes,overBytes:Math.max(0,footprintBytes-input.totalBytes),evictBytes,blockedBytes,converged:blockedBytes===0,stores:Object.freeze(plans)});
 }
 

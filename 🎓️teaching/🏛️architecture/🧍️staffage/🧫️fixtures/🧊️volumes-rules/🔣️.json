@@ -1,0 +1,2258 @@
+{
+  "description": "Vectors of the rules of the per-scale volumes: the design limits, one invalid vector per rule on the sample figure (a rule must report it, at the scale it names, and a measured value must move the wrong way against the baseline), the scales on which the unpatched sample passes each rule, and hand-computed meshes for the geometry that the owned checks and the oracle (shapely, trimesh) both measure.",
+  "rules": [
+    "volumes-availability",
+    "volumes-silhouette",
+    "volumes-bounds",
+    "volumes-feature",
+    "volumes-monotonic",
+    "volumes-cross-scale",
+    "volumes-thermal-coverage",
+    "volumes-structure-coverage",
+    "volumes-bones",
+    "volumes-solids",
+    "volumes-copied",
+    "volumes-slender",
+    "volumes-views-disagree"
+  ],
+  "limits": {
+    "silhouetteIouElevation": 0.9,
+    "silhouetteIouOther": 0.88,
+    "silhouetteP95FeaturesElevation": 2,
+    "silhouetteP95FeaturesOther": 4,
+    "softMassExtentFraction": 0.02,
+    "softRegionKinds": [
+      "foliage",
+      "fur",
+      "feather",
+      "hair"
+    ],
+    "areaBasisRequiredModels": [
+      "leaf"
+    ],
+    "areaBasisRequiredKinds": [
+      "foliage",
+      "fur",
+      "feather",
+      "hair"
+    ],
+    "bodyAreaModels": [
+      "body"
+    ],
+    "smallRegionFeatures": 6,
+    "boundsFeatures": 1,
+    "boundsFraction": 0.02,
+    "viewsDisagreeFeatures": 1,
+    "crossIou": 0.85,
+    "crossToleranceFeatures": 1,
+    "crossVolumeBandFeatures": 1,
+    "thermalAreaFine": 0.15,
+    "thermalAreaCoarse": 0.3,
+    "thermalBoxFeatures": 1,
+    "thinRoles": [
+      "glazing",
+      "texture",
+      "ground"
+    ],
+    "minimalDecision": "Minimal:",
+    "minFeatureMm": 0.15,
+    "slenderRatio": 20,
+    "monotonicChordM": 0.002,
+    "monotonicSegments": 32,
+    "sectionAngleDeg": 45,
+    "crossDistanceFeatures": 2,
+    "crossDistancePlus2DFeatures": 1,
+    "crossIouMarginTo2D": 0.05
+  },
+  "baselinePasses": {
+    "volumes-availability": [
+      50,
+      100,
+      200,
+      500
+    ],
+    "volumes-bones": [
+      50,
+      100,
+      200
+    ],
+    "volumes-feature": [
+      50,
+      100,
+      200,
+      500
+    ],
+    "volumes-solids": [
+      50,
+      100,
+      200,
+      500
+    ],
+    "volumes-bounds": [
+      100,
+      200,
+      500
+    ],
+    "volumes-monotonic": [
+      100,
+      200
+    ],
+    "volumes-cross-scale": [
+      100,
+      200
+    ]
+  },
+  "baselineCovered": {
+    "volumes-thermal-coverage": [
+      50,
+      100,
+      200,
+      500
+    ],
+    "volumes-structure-coverage": [
+      50,
+      100,
+      200,
+      500
+    ]
+  },
+  "invalid": [
+    {
+      "name": "a volume that is unavailable where its representation is authored",
+      "rule": "volumes-availability",
+      "scale": 100,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/100",
+          "value": {
+            "status": "unavailable",
+            "denominator": 100
+          }
+        }
+      ]
+    },
+    {
+      "name": "a foot bone with drawn shapes and no body solid",
+      "rule": "volumes-bones",
+      "scale": 100,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/volumes/100/body/id=shoe-l"
+        },
+        {
+          "op": "remove",
+          "path": "/volumes/100/body/id=sole-l"
+        }
+      ]
+    },
+    {
+      "name": "a nose thinner than the smallest feature of 1:50",
+      "rule": "volumes-feature",
+      "scale": 50,
+      "measure": "minDimensionM:nose",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/50/body/id=nose/radii",
+          "value": [
+            0.001,
+            0.001,
+            0.001
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a head that grows past the dimensions",
+      "rule": "volumes-bounds",
+      "scale": 100,
+      "measure": "bboxDeviationM:heightM",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/volumes/100/body/-",
+          "value": {
+            "id": "spire",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "skin",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [
+              0.5,
+              0.05,
+              0.05
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a coarser scale that is as complex as the finer one without declaring it minimal",
+      "rule": "volumes-monotonic",
+      "scale": 200,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/volumes/200/decisions/1"
+        }
+      ]
+    },
+    {
+      "name": "a head three times as large as the finer scale",
+      "rule": "volumes-cross-scale",
+      "scale": 200,
+      "measure": "iou:elevation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/200/body/id=head/radii",
+          "value": [
+            0.3,
+            0.3,
+            0.3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a head that leaves the drawn silhouette",
+      "rule": "volumes-silhouette",
+      "scale": 100,
+      "measure": "iou:elevation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/100/body/id=head/radii",
+          "value": [
+            0.3,
+            0.3,
+            0.3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a thermal region without any solid",
+      "rule": "volumes-thermal-coverage",
+      "scale": 50,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/volumes/50/thermal/id=head-head"
+        },
+        {
+          "op": "remove",
+          "path": "/volumes/50/thermal/id=hair-head"
+        },
+        {
+          "op": "remove",
+          "path": "/volumes/50/thermal/id=neck-head"
+        },
+        {
+          "op": "remove",
+          "path": "/volumes/50/thermal/id=nose-head"
+        }
+      ]
+    },
+    {
+      "name": "a thermal solid far outside the body",
+      "rule": "volumes-thermal-coverage",
+      "scale": 100,
+      "measure": "outsideBodyBoxM",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/volumes/100/thermal/-",
+          "value": {
+            "id": "stray",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "skin",
+            "role": "detail",
+            "tone": 0.5,
+            "radii": [
+              0.05,
+              0.05,
+              0.05
+            ],
+            "transform": {
+              "translation": [
+                0,
+                1,
+                0
+              ]
+            },
+            "region": "head"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a load-bearing bone without a member solid",
+      "rule": "volumes-structure-coverage",
+      "scale": 100,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/volumes/100/structure/id=member-head"
+        }
+      ]
+    },
+    {
+      "name": "a member solid far outside the body silhouette",
+      "rule": "volumes-structure-coverage",
+      "scale": 100,
+      "measure": "outsideBodyM:elevation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/100/structure/id=member-head/p1",
+          "value": [
+            0.22,
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a solid with a zero radius",
+      "rule": "volumes-solids",
+      "scale": 100,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/100/body/id=head/radii/1",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "a coarser scale that is a filtered copy of the finer one",
+      "rule": "volumes-copied",
+      "scale": 200,
+      "patch": [],
+      "base": "mechanical"
+    },
+    {
+      "name": "a head declared slender that is as thick as it is long",
+      "rule": "volumes-slender",
+      "scale": 100,
+      "measure": "slenderRatio:head",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/volumes/100/body/id=head/slender",
+          "value": true
+        }
+      ]
+    },
+    {
+      "name": "a front elevation that draws the head far taller than the elevation does",
+      "rule": "volumes-views-disagree",
+      "scale": 100,
+      "measure": "extentDifferenceM:y",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/representations/100/geometry/front/id=head/ry",
+          "value": 1.2
+        }
+      ]
+    }
+  ],
+  "boxes": {
+    "cell": 0.05,
+    "cases": [
+      {
+        "name": "two overlapping unit cubes",
+        "boxes": [
+          {
+            "centre": [
+              0,
+              0,
+              0
+            ],
+            "size": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "centre": [
+              0.5,
+              0,
+              0
+            ],
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        ],
+        "unionVolume": 1.5,
+        "meshVolume": 2,
+        "outerArea": null,
+        "view": "elevation",
+        "silhouetteArea": 1.5
+      },
+      {
+        "name": "a cube inside a larger shell",
+        "boxes": [
+          {
+            "centre": [
+              0,
+              0,
+              0
+            ],
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "centre": [
+              0,
+              0,
+              0
+            ],
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        ],
+        "unionVolume": 8,
+        "meshVolume": 9,
+        "outerArea": 24,
+        "view": "plan",
+        "silhouetteArea": 4
+      },
+      {
+        "name": "two separate cubes",
+        "boxes": [
+          {
+            "centre": [
+              0,
+              0,
+              0
+            ],
+            "size": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "centre": [
+              3,
+              0,
+              0
+            ],
+            "size": [
+              1,
+              2,
+              1
+            ]
+          }
+        ],
+        "unionVolume": 3,
+        "meshVolume": 3,
+        "outerArea": 16,
+        "view": "front",
+        "silhouetteArea": 3
+      }
+    ]
+  },
+  "copied": {
+    "valid": {
+      "name": "every coarser scale gains a solid of its own in every list",
+      "scales": [
+        100,
+        200,
+        500
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/volumes/100/body/-",
+          "value": {
+            "id": "marker-100",
+            "kind": "box",
+            "bone": "torso",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.11,
+              0.11,
+              0.11
+            ]
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/100/thermal/-",
+          "value": {
+            "id": "marker-100",
+            "kind": "box",
+            "bone": "torso",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.11,
+              0.11,
+              0.11
+            ],
+            "region": "torso"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/100/structure/-",
+          "value": {
+            "id": "marker-100",
+            "kind": "box",
+            "bone": "torso",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.11,
+              0.11,
+              0.11
+            ],
+            "member": "torso",
+            "part": "mass"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/200/body/-",
+          "value": {
+            "id": "marker-200",
+            "kind": "box",
+            "bone": "torso",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.13,
+              0.13,
+              0.13
+            ]
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/200/thermal/-",
+          "value": {
+            "id": "marker-200",
+            "kind": "box",
+            "bone": "torso",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.13,
+              0.13,
+              0.13
+            ],
+            "region": "torso"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/200/structure/-",
+          "value": {
+            "id": "marker-200",
+            "kind": "box",
+            "bone": "torso",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.13,
+              0.13,
+              0.13
+            ],
+            "member": "torso",
+            "part": "mass"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/500/body/-",
+          "value": {
+            "id": "marker-500",
+            "kind": "box",
+            "bone": "torso",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.17,
+              0.17,
+              0.17
+            ]
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/500/thermal/-",
+          "value": {
+            "id": "marker-500",
+            "kind": "box",
+            "bone": "torso",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.17,
+              0.17,
+              0.17
+            ],
+            "region": "torso"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/500/structure/-",
+          "value": {
+            "id": "marker-500",
+            "kind": "box",
+            "bone": "torso",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.5,
+            "size": [
+              0.17,
+              0.17,
+              0.17
+            ],
+            "member": "torso",
+            "part": "mass"
+          }
+        }
+      ]
+    },
+    "referencesOnly": {
+      "name": "a thermal list made only of references is not judged",
+      "scale": 200,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/volumes/200/thermal",
+          "value": [
+            {
+              "id": "ref-head",
+              "of": "head",
+              "region": "head"
+            }
+          ]
+        }
+      ]
+    },
+    "lists": {
+      "fine": [
+        {
+          "id": "a",
+          "kind": "box",
+          "bone": "torso",
+          "material": "skin",
+          "role": "body",
+          "tone": 0.5,
+          "size": [
+            1,
+            2,
+            3
+          ],
+          "transform": {
+            "translation": [
+              0.5,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "b",
+          "kind": "capsule",
+          "bone": "torso",
+          "material": "skin",
+          "role": "body",
+          "tone": 0.5,
+          "p0": [
+            0,
+            0,
+            0
+          ],
+          "p1": [
+            1,
+            0,
+            0
+          ],
+          "r0": 0.2,
+          "r1": 0.1
+        }
+      ],
+      "cases": [
+        {
+          "name": "the same solids under other ids",
+          "kind": "identical",
+          "denominator": 100,
+          "fineDenominator": 50,
+          "coarse": [
+            {
+              "id": "x",
+              "kind": "box",
+              "bone": "torso",
+              "material": "skin",
+              "role": "body",
+              "tone": 0.5,
+              "size": [
+                1,
+                2,
+                3
+              ],
+              "transform": {
+                "translation": [
+                  0.5,
+                  0,
+                  0
+                ]
+              }
+            },
+            {
+              "id": "y",
+              "kind": "capsule",
+              "bone": "torso",
+              "material": "skin",
+              "role": "body",
+              "tone": 0.5,
+              "p0": [
+                0,
+                0,
+                0
+              ],
+              "p1": [
+                1,
+                0,
+                0
+              ],
+              "r0": 0.2,
+              "r1": 0.1
+            }
+          ]
+        },
+        {
+          "name": "the finer list with a solid deleted",
+          "kind": "subset",
+          "denominator": 100,
+          "fineDenominator": 50,
+          "coarse": [
+            {
+              "id": "x",
+              "kind": "box",
+              "bone": "torso",
+              "material": "skin",
+              "role": "body",
+              "tone": 0.5,
+              "size": [
+                1,
+                2,
+                3
+              ],
+              "transform": {
+                "translation": [
+                  0.5,
+                  0,
+                  0
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "every length of the finer list halved at twice the denominator",
+          "kind": "scaled",
+          "denominator": 100,
+          "fineDenominator": 50,
+          "coarse": [
+            {
+              "id": "x",
+              "kind": "box",
+              "bone": "torso",
+              "material": "skin",
+              "role": "body",
+              "tone": 0.5,
+              "size": [
+                0.5,
+                1,
+                1.5
+              ],
+              "transform": {
+                "translation": [
+                  0.25,
+                  0,
+                  0
+                ]
+              }
+            },
+            {
+              "id": "y",
+              "kind": "capsule",
+              "bone": "torso",
+              "material": "skin",
+              "role": "body",
+              "tone": 0.5,
+              "p0": [
+                0,
+                0,
+                0
+              ],
+              "p1": [
+                0.5,
+                0,
+                0
+              ],
+              "r0": 0.1,
+              "r1": 0.05
+            }
+          ]
+        },
+        {
+          "name": "one solid redrawn",
+          "kind": "distinct",
+          "denominator": 100,
+          "fineDenominator": 50,
+          "coarse": [
+            {
+              "id": "x",
+              "kind": "box",
+              "bone": "torso",
+              "material": "skin",
+              "role": "body",
+              "tone": 0.5,
+              "size": [
+                1,
+                2.5,
+                3
+              ],
+              "transform": {
+                "translation": [
+                  0.5,
+                  0,
+                  0
+                ]
+              }
+            },
+            {
+              "id": "y",
+              "kind": "capsule",
+              "bone": "torso",
+              "material": "skin",
+              "role": "body",
+              "tone": 0.5,
+              "p0": [
+                0,
+                0,
+                0
+              ],
+              "p1": [
+                1,
+                0,
+                0
+              ],
+              "r0": 0.2,
+              "r1": 0.1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "exposed": [
+    {
+      "name": "a cube on the ground",
+      "boxes": [
+        {
+          "centre": [
+            0,
+            0.5,
+            0
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "target": 0,
+      "planes": [
+        {
+          "point": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ],
+          "toleranceM": 0.001
+        }
+      ],
+      "area": 5
+    },
+    {
+      "name": "a cube with a declared section face",
+      "boxes": [
+        {
+          "centre": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ],
+          "sectionFaces": [
+            "+u"
+          ]
+        }
+      ],
+      "target": 0,
+      "area": 5
+    },
+    {
+      "name": "a cube with two section faces",
+      "boxes": [
+        {
+          "centre": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            2,
+            1,
+            1
+          ],
+          "sectionFaces": [
+            "+u",
+            "-u"
+          ]
+        }
+      ],
+      "target": 0,
+      "area": 8
+    },
+    {
+      "name": "a small cube buried in a larger one",
+      "boxes": [
+        {
+          "centre": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "centre": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "target": 1,
+      "area": 0
+    },
+    {
+      "name": "a larger cube around a buried one",
+      "boxes": [
+        {
+          "centre": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "centre": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "target": 0,
+      "area": 24
+    }
+  ],
+  "bands": {
+    "cell": 0.025,
+    "distance": 0.05,
+    "cases": [
+      {
+        "name": "a unit cube against itself",
+        "fine": [
+          {
+            "centre": [
+              0,
+              0,
+              0
+            ],
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        ],
+        "coarse": [
+          {
+            "centre": [
+              0,
+              0,
+              0
+            ],
+            "size": [
+              1,
+              1,
+              1
+            ]
+          }
+        ],
+        "eroded": 0.729,
+        "dilated": 1.32408,
+        "fineVolume": 1
+      }
+    ],
+    "excavator": {
+      "description": "A 12 m long bar of 0.4 m cross section seen against a copy shortened by 5 mm: the band is not collapsed to the voxel count of the fine body.",
+      "bar": {
+        "size": [
+          12,
+          0.4,
+          0.4
+        ]
+      },
+      "shortenM": 0.005,
+      "distanceM": 0.015
+    }
+  },
+  "winding": {
+    "cell": 0.005,
+    "outer": 1,
+    "area": 1.12257,
+    "evenOddArea": 0.777
+  },
+  "envelope": {
+    "bars": [
+      {
+        "centre": [
+          0,
+          0.5,
+          0
+        ],
+        "size": [
+          0.1,
+          1,
+          0.1
+        ]
+      },
+      {
+        "centre": [
+          0.45,
+          0.5,
+          0
+        ],
+        "size": [
+          0.1,
+          1,
+          0.1
+        ]
+      },
+      {
+        "centre": [
+          0.9,
+          0.5,
+          0
+        ],
+        "size": [
+          0.1,
+          1,
+          0.1
+        ]
+      }
+    ],
+    "prism": {
+      "centre": [
+        0.45,
+        0.5,
+        0
+      ],
+      "size": [
+        1,
+        1,
+        0.1
+      ]
+    },
+    "feature": 0.05
+  },
+  "support": {
+    "missing": {
+      "name": "a support anchor without a support solid",
+      "rule": "volumes-structure-coverage",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/structure/supports/-",
+          "value": "contact-l"
+        }
+      ]
+    },
+    "wrongAnchor": {
+      "name": "a support solid naming an anchor that is not a support",
+      "code": "volume-anchor",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/volumes/100/structure/-",
+          "value": {
+            "id": "pad",
+            "kind": "box",
+            "bone": "foot-l",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "member": "foot-l",
+            "part": "support",
+            "anchor": "contact-l"
+          }
+        }
+      ]
+    },
+    "valid": {
+      "name": "a support anchor with exactly one support solid",
+      "scales": [
+        50,
+        100,
+        200,
+        500
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/structure/supports/-",
+          "value": "contact-l"
+        },
+        {
+          "op": "add",
+          "path": "/volumes/50/structure/-",
+          "value": {
+            "id": "pad",
+            "kind": "box",
+            "bone": "foot-l",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "member": "foot-l",
+            "part": "support",
+            "anchor": "contact-l"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/100/structure/-",
+          "value": {
+            "id": "pad",
+            "kind": "box",
+            "bone": "foot-l",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "member": "foot-l",
+            "part": "support",
+            "anchor": "contact-l"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/200/structure/-",
+          "value": {
+            "id": "pad",
+            "kind": "box",
+            "bone": "foot-l",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "member": "foot-l",
+            "part": "support",
+            "anchor": "contact-l"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/volumes/500/structure/-",
+          "value": {
+            "id": "pad",
+            "kind": "box",
+            "bone": "foot-l",
+            "material": "cotton-clothing",
+            "role": "body",
+            "tone": 0.4,
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "member": "foot-l",
+            "part": "support",
+            "anchor": "contact-l"
+          }
+        }
+      ]
+    }
+  },
+  "outlines": {
+    "name": "an unfilled closed outline around a part the 3D fills counts as filled in every boundary measure",
+    "scale": 100,
+    "patch": [
+      {
+        "op": "replace",
+        "path": "/representations/100/geometry/front/id=head/filled",
+        "value": false
+      },
+      {
+        "op": "replace",
+        "path": "/representations/100/geometry/front/id=torso/filled",
+        "value": false
+      }
+    ],
+    "measures": [
+      "iou:front",
+      "p95M:front"
+    ]
+  },
+  "areaBasis": {
+    "name": "a leaf region",
+    "undeclared": [
+      {
+        "op": "replace",
+        "path": "/thermal/regions/id=head/model",
+        "value": "leaf"
+      }
+    ],
+    "declared": [
+      {
+        "op": "replace",
+        "path": "/thermal/regions/id=head/model",
+        "value": "leaf"
+      },
+      {
+        "op": "add",
+        "path": "/thermal/regions/id=head/areaBasis",
+        "value": "exchange"
+      }
+    ]
+  },
+  "envelopeArea": {
+    "name": "the arms of the sample modelled as porous envelope prisms",
+    "scale": 200,
+    "region": "arms",
+    "patch": [
+      {
+        "op": "add",
+        "path": "/volumes/200/body/id=arm-l/envelope",
+        "value": true
+      },
+      {
+        "op": "add",
+        "path": "/volumes/200/body/id=arm-r/envelope",
+        "value": true
+      }
+    ],
+    "fineScale": 50,
+    "finePatch": [
+      {
+        "op": "add",
+        "path": "/volumes/50/body/id=arm-l/envelope",
+        "value": true
+      },
+      {
+        "op": "add",
+        "path": "/volumes/50/body/id=arm-r/envelope",
+        "value": true
+      }
+    ]
+  },
+  "retained": {
+    "description": "Per view three cuboids along the cut axis (wholly on the low side, wholly on the high side, crossing the plane at 0) with projected footprints 1, 2 and 3 m2: the area of the projection of the retained half, far (default) and near, by hand.",
+    "cell": 0.01,
+    "toleranceM2": 0.1,
+    "cases": [
+      {
+        "view": "elevation",
+        "axis": 2,
+        "far": 5,
+        "near": 4
+      },
+      {
+        "view": "front",
+        "axis": 0,
+        "far": 4,
+        "near": 5
+      },
+      {
+        "view": "plan",
+        "axis": 1,
+        "far": 4,
+        "near": 5
+      }
+    ],
+    "sampleSection": {
+      "scale": 200,
+      "view": "front",
+      "plane": 0.1,
+      "label": {
+        "en": "A-A",
+        "de": "A-A"
+      }
+    }
+  },
+  "emitters": {
+    "scale": 50,
+    "region": "torso",
+    "solid": "emit-body-plume",
+    "untagged": [
+      {
+        "op": "replace",
+        "path": "/volumes/50/thermal/id=emit-body-plume/tags",
+        "value": []
+      }
+    ],
+    "removed": [
+      {
+        "op": "remove",
+        "path": "/volumes/50/thermal/id=emit-body-plume"
+      }
+    ]
+  },
+  "stroke": {
+    "description": "Slender cuboids drawn as strokes (C24): a bar of 1 m x 10 mm and a copy 2 m beside it, pen 50 mm; and a bar of 1 m x 80 mm (wider than the pen) keeps its true width. Stroke area = (length + width) x width.",
+    "pen": 0.05,
+    "cases": [
+      {
+        "name": "thin",
+        "size": [
+          1,
+          0.01,
+          0.01
+        ],
+        "centres": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            2,
+            0
+          ]
+        ],
+        "area": 0.105
+      },
+      {
+        "name": "wide",
+        "size": [
+          1,
+          0.08,
+          0.08
+        ],
+        "centres": [
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "area": 0.0864
+      }
+    ]
+  },
+  "mechanical": {
+    "description": "Undoes what makes the sample figure a valid asset (a 1 mm shift of the head per scale and shoes at 1:500) so that it is again the mechanical copy that the copied and bones rules must flag.",
+    "patch": [
+      {
+        "op": "replace",
+        "path": "/volumes/100/body/id=head/transform/translation",
+        "value": [
+          0.1,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "remove",
+        "path": "/volumes/100/structure/id=member-head/transform"
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/200/body/id=head/transform/translation",
+        "value": [
+          0.1,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "remove",
+        "path": "/volumes/200/structure/id=member-head/transform"
+      },
+      {
+        "op": "replace",
+        "path": "/volumes/500/body/id=head/transform/translation",
+        "value": [
+          0.1,
+          0,
+          0
+        ]
+      },
+      {
+        "op": "remove",
+        "path": "/volumes/500/structure/id=member-head/transform"
+      },
+      {
+        "op": "remove",
+        "path": "/volumes/500/body/id=shoe-l"
+      },
+      {
+        "op": "remove",
+        "path": "/volumes/500/body/id=shoe-r"
+      }
+    ]
+  },
+  "burial": {
+    "description": "A laptop base 0.4 x 0.02 x 0.3 m standing on a table top 2 x 0.05 x 1 m: the top face of the table is two triangles of 1 m2, of which the laptop buries its footprint of 0.12 m2 only; the exposed area of the table is its surface 2 x (2 x 0.05 + 2 x 1 + 0.05 x 1) = 4.3 m2 minus 0.12 m2.",
+    "table": {
+      "centre": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        2,
+        0.05,
+        1
+      ]
+    },
+    "laptop": {
+      "centre": [
+        0.3,
+        0.035,
+        0.1
+      ],
+      "size": [
+        0.4,
+        0.02,
+        0.3
+      ]
+    },
+    "area": 4.18,
+    "probeM": 0.0005,
+    "toleranceM2": 0.03
+  },
+  "outer": {
+    "description": "C29: the outer area of the union of the solids of one region, faces buried by the same region left out. A unit cube and a cube of 0.5 sticking out of its +x face by 0.25: the unit cube loses 0.25 of one face, the small cube shows 0.25 + 4 x 0.125; total 6.5.",
+    "solids": [
+      {
+        "centre": [
+          0,
+          0,
+          0
+        ],
+        "size": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "centre": [
+          0.5,
+          0,
+          0
+        ],
+        "size": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      }
+    ],
+    "area": 6.5,
+    "toleranceFraction": 0.03
+  },
+  "porous": {
+    "description": "C26: the torso and the arms of the sample declared as exchange regions; their 2D shapes are bound to them, so their outlines are soft in the silhouette and their solids are a soft band in the cross-scale volume.",
+    "scale": 200,
+    "patch": [
+      {
+        "op": "add",
+        "path": "/thermal/regions/id=torso/areaBasis",
+        "value": "exchange"
+      },
+      {
+        "op": "add",
+        "path": "/thermal/regions/id=arms/areaBasis",
+        "value": "exchange"
+      },
+      {
+        "op": "add",
+        "path": "/representations/200/geometry/elevation/id=torso/region",
+        "value": "torso"
+      }
+    ]
+  },
+  "hollow": {
+    "description": "C30: a cup modelled as a hollow revolve with a wall of 0.2 mm, 100 mm long and 80 mm across: volumes-feature judges its overall extents (80 mm), not its wall.",
+    "solid": {
+      "id": "cup",
+      "kind": "revolve",
+      "bone": "head",
+      "material": "skin",
+      "role": "body",
+      "tone": 0.5,
+      "profile": [
+        [
+          0,
+          0.0398
+        ],
+        [
+          0,
+          0.04
+        ],
+        [
+          0.1,
+          0.04
+        ],
+        [
+          0.1,
+          0.0398
+        ]
+      ]
+    },
+    "smallestM": 0.08
+  },
+  "tangent": {
+    "description": "A roof of 2 m x 1.004 m and a bar of 1 m x 0.5 m above it tessellated inside its outline, in one elevation with a raster cell of 10 mm: the hairline between them lies under the centre of one row of cells. Gaps of 2 mm (a fifth of a cell) are closed, a gap of 3 mm (0.3 cell) is real and stays; the closing of shapely with the radius of an eighth of a cell is the oracle.",
+    "cell": 0.01,
+    "roof": { "centre": [0, 0.502, 0], "size": [2, 1.004, 0.2] },
+    "cases": [
+      { "name": "gap of 2 mm", "bar": { "centre": [0, 1.256, 0], "size": [1, 0.5, 0.2] }, "gapM": 0.002, "rowCells": 100, "closed": true },
+      { "name": "gap of 3 mm", "bar": { "centre": [0, 1.257, 0], "size": [1, 0.5, 0.2] }, "gapM": 0.003, "rowCells": 0, "closed": false }
+    ]
+  },
+  "follow": {
+    "description": "C24 refined: a slender solid is drawn like the 2D shape it follows. A bar of 1 m x 10 mm on bone b along x; the drawn shapes of the viewpoint are given by bone, closedness, fill, rings and pen; the stroke area is (length + width) x width. A hoop (a revolve loop of a 16-gon tube of 10 mm radius, 0.5 m from the axis) is slender by the path it follows and is drawn as an annulus.",
+    "bar": {
+      "centre": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        1,
+        0.01,
+        0.01
+      ]
+    },
+    "cases": [
+      {
+        "name": "an open stroke draws its own pen",
+        "drawn": [
+          {
+            "bone": "b",
+            "closed": false,
+            "filled": false,
+            "rings": [
+              [
+                [
+                  -0.5,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ]
+            ],
+            "penM": 0.08
+          }
+        ],
+        "widthM": 0.08
+      },
+      {
+        "name": "a filled strip draws its own width across the axis",
+        "drawn": [
+          {
+            "bone": "b",
+            "closed": true,
+            "filled": true,
+            "rings": [
+              [
+                [
+                  -0.5,
+                  -0.06
+                ],
+                [
+                  0.5,
+                  -0.06
+                ],
+                [
+                  0.5,
+                  0.06
+                ],
+                [
+                  -0.5,
+                  0.06
+                ]
+              ]
+            ],
+            "penM": 0
+          }
+        ],
+        "widthM": 0.12
+      },
+      {
+        "name": "the nearest centre line of the bone wins",
+        "drawn": [
+          {
+            "bone": "b",
+            "closed": false,
+            "filled": false,
+            "rings": [
+              [
+                [
+                  -0.5,
+                  0.5
+                ],
+                [
+                  0.5,
+                  0.5
+                ]
+              ]
+            ],
+            "penM": 0.04
+          },
+          {
+            "bone": "b",
+            "closed": false,
+            "filled": false,
+            "rings": [
+              [
+                [
+                  -0.5,
+                  0.01
+                ],
+                [
+                  0.5,
+                  0.01
+                ]
+              ]
+            ],
+            "penM": 0.1
+          }
+        ],
+        "widthM": 0.1
+      },
+      {
+        "name": "a shape of another bone is not followed, the true width is drawn",
+        "drawn": [
+          {
+            "bone": "other",
+            "closed": false,
+            "filled": false,
+            "rings": [
+              [
+                [
+                  -0.5,
+                  0
+                ],
+                [
+                  0.5,
+                  0
+                ]
+              ]
+            ],
+            "penM": 0.2
+          }
+        ],
+        "widthM": 0.01
+      },
+      {
+        "name": "a filled shape that is no strip is not followed",
+        "drawn": [
+          {
+            "bone": "b",
+            "closed": true,
+            "filled": true,
+            "rings": [
+              [
+                [
+                  -0.5,
+                  -0.4
+                ],
+                [
+                  0.5,
+                  -0.4
+                ],
+                [
+                  0.5,
+                  0.4
+                ],
+                [
+                  -0.5,
+                  0.4
+                ]
+              ]
+            ],
+            "penM": 0
+          }
+        ],
+        "widthM": 0.01
+      }
+    ],
+    "hoop": {
+      "radiusM": 0.5,
+      "tubeM": 0.01,
+      "penM": 0.05,
+      "solid": {
+        "kind": "revolve",
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "profile": [
+          [
+            0.01,
+            0.5
+          ],
+          [
+            0.009239,
+            0.503827
+          ],
+          [
+            0.007071,
+            0.507071
+          ],
+          [
+            0.003827,
+            0.509239
+          ],
+          [
+            0.0,
+            0.51
+          ],
+          [
+            -0.003827,
+            0.509239
+          ],
+          [
+            -0.007071,
+            0.507071
+          ],
+          [
+            -0.009239,
+            0.503827
+          ],
+          [
+            -0.01,
+            0.5
+          ],
+          [
+            -0.009239,
+            0.496173
+          ],
+          [
+            -0.007071,
+            0.492929
+          ],
+          [
+            -0.003827,
+            0.490761
+          ],
+          [
+            -0.0,
+            0.49
+          ],
+          [
+            0.003827,
+            0.490761
+          ],
+          [
+            0.007071,
+            0.492929
+          ],
+          [
+            0.009239,
+            0.496173
+          ],
+          [
+            0.01,
+            0.5
+          ]
+        ]
+      },
+      "outline": [
+        [
+          0.5,
+          0.0
+        ],
+        [
+          0.498929,
+          0.032702
+        ],
+        [
+          0.495722,
+          0.065263
+        ],
+        [
+          0.490393,
+          0.097545
+        ],
+        [
+          0.482963,
+          0.12941
+        ],
+        [
+          0.473465,
+          0.16072
+        ],
+        [
+          0.46194,
+          0.191342
+        ],
+        [
+          0.448436,
+          0.221144
+        ],
+        [
+          0.433013,
+          0.25
+        ],
+        [
+          0.415735,
+          0.277785
+        ],
+        [
+          0.396677,
+          0.304381
+        ],
+        [
+          0.37592,
+          0.329673
+        ],
+        [
+          0.353553,
+          0.353553
+        ],
+        [
+          0.329673,
+          0.37592
+        ],
+        [
+          0.304381,
+          0.396677
+        ],
+        [
+          0.277785,
+          0.415735
+        ],
+        [
+          0.25,
+          0.433013
+        ],
+        [
+          0.221144,
+          0.448436
+        ],
+        [
+          0.191342,
+          0.46194
+        ],
+        [
+          0.16072,
+          0.473465
+        ],
+        [
+          0.12941,
+          0.482963
+        ],
+        [
+          0.097545,
+          0.490393
+        ],
+        [
+          0.065263,
+          0.495722
+        ],
+        [
+          0.032702,
+          0.498929
+        ],
+        [
+          0.0,
+          0.5
+        ],
+        [
+          -0.032702,
+          0.498929
+        ],
+        [
+          -0.065263,
+          0.495722
+        ],
+        [
+          -0.097545,
+          0.490393
+        ],
+        [
+          -0.12941,
+          0.482963
+        ],
+        [
+          -0.16072,
+          0.473465
+        ],
+        [
+          -0.191342,
+          0.46194
+        ],
+        [
+          -0.221144,
+          0.448436
+        ],
+        [
+          -0.25,
+          0.433013
+        ],
+        [
+          -0.277785,
+          0.415735
+        ],
+        [
+          -0.304381,
+          0.396677
+        ],
+        [
+          -0.329673,
+          0.37592
+        ],
+        [
+          -0.353553,
+          0.353553
+        ],
+        [
+          -0.37592,
+          0.329673
+        ],
+        [
+          -0.396677,
+          0.304381
+        ],
+        [
+          -0.415735,
+          0.277785
+        ],
+        [
+          -0.433013,
+          0.25
+        ],
+        [
+          -0.448436,
+          0.221144
+        ],
+        [
+          -0.46194,
+          0.191342
+        ],
+        [
+          -0.473465,
+          0.16072
+        ],
+        [
+          -0.482963,
+          0.12941
+        ],
+        [
+          -0.490393,
+          0.097545
+        ],
+        [
+          -0.495722,
+          0.065263
+        ],
+        [
+          -0.498929,
+          0.032702
+        ],
+        [
+          -0.5,
+          0.0
+        ],
+        [
+          -0.498929,
+          -0.032702
+        ],
+        [
+          -0.495722,
+          -0.065263
+        ],
+        [
+          -0.490393,
+          -0.097545
+        ],
+        [
+          -0.482963,
+          -0.12941
+        ],
+        [
+          -0.473465,
+          -0.16072
+        ],
+        [
+          -0.46194,
+          -0.191342
+        ],
+        [
+          -0.448436,
+          -0.221144
+        ],
+        [
+          -0.433013,
+          -0.25
+        ],
+        [
+          -0.415735,
+          -0.277785
+        ],
+        [
+          -0.396677,
+          -0.304381
+        ],
+        [
+          -0.37592,
+          -0.329673
+        ],
+        [
+          -0.353553,
+          -0.353553
+        ],
+        [
+          -0.329673,
+          -0.37592
+        ],
+        [
+          -0.304381,
+          -0.396677
+        ],
+        [
+          -0.277785,
+          -0.415735
+        ],
+        [
+          -0.25,
+          -0.433013
+        ],
+        [
+          -0.221144,
+          -0.448436
+        ],
+        [
+          -0.191342,
+          -0.46194
+        ],
+        [
+          -0.16072,
+          -0.473465
+        ],
+        [
+          -0.12941,
+          -0.482963
+        ],
+        [
+          -0.097545,
+          -0.490393
+        ],
+        [
+          -0.065263,
+          -0.495722
+        ],
+        [
+          -0.032702,
+          -0.498929
+        ],
+        [
+          -0.0,
+          -0.5
+        ],
+        [
+          0.032702,
+          -0.498929
+        ],
+        [
+          0.065263,
+          -0.495722
+        ],
+        [
+          0.097545,
+          -0.490393
+        ],
+        [
+          0.12941,
+          -0.482963
+        ],
+        [
+          0.16072,
+          -0.473465
+        ],
+        [
+          0.191342,
+          -0.46194
+        ],
+        [
+          0.221144,
+          -0.448436
+        ],
+        [
+          0.25,
+          -0.433013
+        ],
+        [
+          0.277785,
+          -0.415735
+        ],
+        [
+          0.304381,
+          -0.396677
+        ],
+        [
+          0.329673,
+          -0.37592
+        ],
+        [
+          0.353553,
+          -0.353553
+        ],
+        [
+          0.37592,
+          -0.329673
+        ],
+        [
+          0.396677,
+          -0.304381
+        ],
+        [
+          0.415735,
+          -0.277785
+        ],
+        [
+          0.433013,
+          -0.25
+        ],
+        [
+          0.448436,
+          -0.221144
+        ],
+        [
+          0.46194,
+          -0.191342
+        ],
+        [
+          0.473465,
+          -0.16072
+        ],
+        [
+          0.482963,
+          -0.12941
+        ],
+        [
+          0.490393,
+          -0.097545
+        ],
+        [
+          0.495722,
+          -0.065263
+        ],
+        [
+          0.498929,
+          -0.032702
+        ]
+      ]
+    }
+  },
+  "minimumWidth": {"description": "The smallest width of a drawn filled shape over all directions (volumes-feature, C13): a rectangle of 1 m x 30 mm and a capsule of 32 mm across and 0.33 m long, both turned off the axes, read their true cross extent, never the box around them; shapely's minimum rotated rectangle is the oracle.", "cases": [{"name": "rectangle turned by 40 degrees", "points": [[0.009642, -0.011491], [0.775686, 0.631297], [0.756403, 0.654278], [-0.009642, 0.011491]], "widthM": 0.03}, {"name": "capsule turned by 72 degrees", "points": [[0.107922, 0.280373], [0.108594, 0.283436], [0.108656, 0.286572], [0.108104, 0.28966], [0.106961, 0.292581], [0.10527, 0.295222], [0.103096, 0.297483], [0.100523, 0.299277], [0.097649, 0.300534], [0.094586, 0.301206], [0.09145, 0.301268], [0.088362, 0.300716], [0.085441, 0.299573], [0.0828, 0.297882], [0.080539, 0.295708], [0.078745, 0.293135], [0.077488, 0.290261], [-0.015217, 0.004944], [-0.015889, 0.001881], [-0.015951, -0.001255], [-0.015399, -0.004343], [-0.014256, -0.007264], [-0.012565, -0.009906], [-0.010391, -0.012166], [-0.007818, -0.01396], [-0.004944, -0.015217], [-0.001881, -0.015889], [0.001255, -0.015951], [0.004343, -0.015399], [0.007264, -0.014256], [0.009906, -0.012565], [0.012166, -0.010391], [0.01396, -0.007818], [0.015217, -0.004944]], "widthM": 0.032}]}
+}

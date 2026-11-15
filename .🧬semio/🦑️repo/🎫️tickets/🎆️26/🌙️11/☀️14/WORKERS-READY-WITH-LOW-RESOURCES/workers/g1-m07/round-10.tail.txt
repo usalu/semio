@@ -1,0 +1,200 @@
+Reading the project graph slice (68 s): verification 294 of 1022.
+Reading the project graph slice (70 s): flush 1 of 1.
+Reading the project graph slice (72 s): flush 1 of 1.
+Reading the project graph slice (74 s): flush 1 of 1.
+Reading the project graph slice (76 s): flush 1 of 1.
+Reading the project graph slice (78 s): flush 1 of 1.
+Reading the project graph slice (80 s): flush 1 of 1.
+Reading the project graph slice (82 s): flush 1 of 1.
+[repo] still working after 950 s; last phase started: door.script
+Reading the project graph slice (84 s): flush 1 of 1.
+Reading the project graph slice (86 s): flush 1 of 1.
+Reading the project graph slice (88 s): flush 1 of 1.
+Reading the project graph slice (90 s): flush 1 of 1.
+Reading the project graph slice (92 s): flush 1 of 1.
+Reading the project graph slice (94 s): flush 1 of 1.
+Reading the project graph slice (96 s): flush 1 of 1.
+Reading the project graph slice (98 s): flush 1 of 1.
+Reading the project graph slice (100 s): flush 1 of 1.
+Reading the project graph slice (102 s): flush 1 of 1.
+Reading the project graph slice (104 s): flush 1 of 1.
+Reading the project graph slice (106 s): flush 1 of 1.
+Reading the project graph slice (108 s): flush 1 of 1.
+Reading the project graph slice (110 s): flush 1 of 1.
+Reading the project graph slice (112 s): flush 1 of 1.
+[repo] still working after 980 s; last phase started: door.script
+Reading the project graph slice (114 s): flush 1 of 1.
+Reading the project graph slice (116 s): flush 1 of 1.
+Reading the project graph slice (118 s): flush 1 of 1.
+Reading the project graph slice (120 s): flush 1 of 1.
+Reading the project graph slice (122 s): flush 1 of 1.
+Reading the project graph slice (124 s): flush 1 of 1.
+Reading the project graph slice (126 s): flush 1 of 1.
+Reading the project graph slice (128 s): flush 1 of 1.
+Reading the project graph slice (130 s): flush 1 of 1.
+Reading the project graph slice (132 s): flush 1 of 1.
+Reading the project graph slice (134 s): flush 1 of 1.
+Reading the project graph slice (136 s): flush 1 of 1.
+Reading the project graph slice (138 s): flush 1 of 1.
+Reading the project graph slice (140 s): flush 1 of 1.
+Reading the project graph slice (142 s): flush 1 of 1.
+Reading the project graph slice (0 s): the code on this machine changed under the slice worker (it ended with exit code 75), so it is started again with the current code, attempt 2 of 3.
+[repo] still working after 1010 s; last phase started: door.script
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s).
+Reading the project graph slice (10 s): files 744 of 744.
+Reading the project graph slice (12 s): directories 62 of 62.
+Reading the project graph slice (14 s): files 2253 of 2253.
+Reading the project graph slice (16 s): facts 49152 of 306748.
+Reading the project graph slice (18 s): facts 65536 of 306748.
+Reading the project graph slice (20 s): facts 143360 of 306748.
+Reading the project graph slice (22 s): facts 176128 of 306748.
+Reading the project graph slice (24 s): facts 176128 of 306748.
+Reading the project graph slice (26 s): facts 176128 of 306748.
+Reading the project graph slice (28 s): facts 180224 of 306748.
+Reading the project graph slice (30 s): facts 180224 of 306748.
+[repo] still working after 1040 s; last phase started: door.script
+Reading the project graph slice (32 s): facts 184320 of 306748.
+Reading the project graph slice (34 s): facts 204800 of 306748.
+Reading the project graph slice (36 s): facts 245760 of 306748.
+Reading the project graph slice (38 s): facts 245760 of 306748.
+Reading the project graph slice (40 s): facts 306748 of 306748.
+Reading the project graph slice (42 s): facts 306748 of 306748.
+Reading the project graph slice (44 s): verification 1 of 1022.
+Reading the project graph slice (46 s): verification 2 of 1022.
+Reading the project graph slice (48 s): verification 88 of 1022.
+Reading the project graph slice (50 s): verification 122 of 1022.
+Reading the project graph slice (52 s): verification 224 of 1022.
+Reading the project graph slice (54 s): parts 1000 of 14267.
+Reading the project graph slice (56 s): parts 10122 of 14267.
+Reading the project graph slice (58 s): rederivation 256 of 256.
+Reading the project graph slice (60 s): rederivation 256 of 256.
+[repo] still working after 1070 s; last phase started: door.script
+Reading the project graph slice (62 s): verification 601 of 1022.
+Reading the project graph slice (64 s): flush 1 of 1.
+Reading the project graph slice (66 s): flush 1 of 1.
+Reading the project graph slice (68 s): flush 1 of 1.
+Reading the project graph slice (70 s): flush 1 of 1.
+Reading the project graph slice (72 s): flush 1 of 1.
+Reading the project graph slice (74 s): flush 1 of 1.
+Reading the project graph slice (76 s): flush 1 of 1.
+Reading the project graph slice (78 s): flush 1 of 1.
+Reading the project graph slice (80 s): flush 1 of 1.
+Reading the project graph slice (82 s): flush 1 of 1.
+Reading the project graph slice (84 s): flush 1 of 1.
+Reading the project graph slice (86 s): flush 1 of 1.
+Reading the project graph slice (88 s): flush 1 of 1.
+Reading the project graph slice (90 s): flush 1 of 1.
+[repo] still working after 1100 s; last phase started: door.script
+Reading the project graph slice (92 s): flush 1 of 1.
+Reading the project graph slice (94 s): flush 1 of 1.
+Reading the project graph slice (96 s): flush 1 of 1.
+Reading the project graph slice (98 s): flush 1 of 1.
+Reading the project graph slice (100 s): flush 1 of 1.
+Reading the project graph slice (102 s): flush 1 of 1.
+Reading the project graph slice (104 s): flush 1 of 1.
+Reading the project graph slice (106 s): flush 1 of 1.
+Reading the project graph slice (108 s): flush 1 of 1.
+Reading the project graph slice (110 s): flush 1 of 1.
+Reading the project graph slice (112 s): flush 1 of 1.
+Reading the project graph slice (114 s): flush 1 of 1.
+Reading the project graph slice (116 s): flush 1 of 1.
+Reading the project graph slice (118 s): flush 1 of 1.
+Reading the project graph slice (120 s): flush 1 of 1.
+[repo] still working after 1130 s; last phase started: door.script
+Reading the project graph slice (122 s): flush 1 of 1.
+Reading the project graph slice (124 s): flush 1 of 1.
+Reading the project graph slice (126 s): flush 1 of 1.
+Reading the project graph slice (128 s): flush 1 of 1.
+Reading the project graph slice (130 s): flush 1 of 1.
+Reading the project graph slice (132 s): flush 1 of 1.
+Reading the project graph slice (134 s): flush 1 of 1.
+Reading the project graph slice (136 s): flush 1 of 1.
+Reading the project graph slice (138 s): flush 1 of 1.
+Reading the project graph slice (140 s): flush 1 of 1.
+Reading the project graph slice (142 s): flush 1 of 1.
+Reading the project graph slice (144 s): flush 1 of 1.
+Reading the project graph slice (0 s): the code on this machine changed under the slice worker (it ended with exit code 75), so it is started again with the current code, attempt 3 of 3.
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+[repo] still working after 1160 s; last phase started: door.script
+Reading the project graph slice (6 s).
+Reading the project graph slice (8 s).
+Reading the project graph slice (10 s): files 0 of 0.
+Reading the project graph slice (12 s): directories 1 of 1.
+Reading the project graph slice (14 s): facts 24576 of 306748.
+Reading the project graph slice (16 s): facts 90112 of 306748.
+Reading the project graph slice (18 s): facts 106496 of 306748.
+Reading the project graph slice (20 s): facts 147456 of 306748.
+Reading the project graph slice (22 s): facts 172032 of 306748.
+Reading the project graph slice (24 s): facts 180224 of 306748.
+Reading the project graph slice (26 s): facts 200704 of 306748.
+Reading the project graph slice (28 s): facts 208896 of 306748.
+Reading the project graph slice (30 s): facts 221184 of 306748.
+Reading the project graph slice (32 s): facts 225280 of 306748.
+Reading the project graph slice (34 s): facts 237568 of 306748.
+[repo] still working after 1190 s; last phase started: door.script
+Reading the project graph slice (36 s): facts 253952 of 306748.
+Reading the project graph slice (38 s): facts 306748 of 306748.
+Reading the project graph slice (40 s): facts 306748 of 306748.
+Reading the project graph slice (42 s): verification 1 of 1022.
+Reading the project graph slice (44 s): verification 1 of 1022.
+Reading the project graph slice (46 s): verification 56 of 1022.
+Reading the project graph slice (48 s): verification 184 of 1022.
+Reading the project graph slice (50 s): verification 256 of 1022.
+Reading the project graph slice (52 s): parts 2156 of 14267.
+Reading the project graph slice (54 s): parts 7556 of 14267.
+Reading the project graph slice (56 s): parts 10225 of 14267.
+Reading the project graph slice (58 s): flush 1 of 1.
+Reading the project graph slice (60 s): verification 425 of 1022.
+Reading the project graph slice (62 s): verification 599 of 1022.
+Reading the project graph slice (64 s): flush 1 of 1.
+[repo] still working after 1220 s; last phase started: door.script
+Reading the project graph slice (66 s): flush 1 of 1.
+Reading the project graph slice (68 s): flush 1 of 1.
+Reading the project graph slice (70 s): flush 1 of 1.
+Reading the project graph slice (72 s): flush 1 of 1.
+Reading the project graph slice (74 s): flush 1 of 1.
+Reading the project graph slice (76 s): flush 1 of 1.
+Reading the project graph slice (78 s): flush 1 of 1.
+Reading the project graph slice (80 s): flush 1 of 1.
+Reading the project graph slice (82 s): flush 1 of 1.
+Reading the project graph slice (84 s): flush 1 of 1.
+Reading the project graph slice (86 s): flush 1 of 1.
+Reading the project graph slice (88 s): flush 1 of 1.
+Reading the project graph slice (90 s): flush 1 of 1.
+Reading the project graph slice (92 s): flush 1 of 1.
+Reading the project graph slice (94 s): flush 1 of 1.
+[repo] still working after 1250 s; last phase started: door.script
+Reading the project graph slice (96 s): flush 1 of 1.
+Reading the project graph slice (98 s): flush 1 of 1.
+Reading the project graph slice (100 s): flush 1 of 1.
+Reading the project graph slice (102 s): flush 1 of 1.
+Reading the project graph slice (104 s): flush 1 of 1.
+Reading the project graph slice (106 s): flush 1 of 1.
+Reading the project graph slice (108 s): flush 1 of 1.
+Reading the project graph slice (110 s): flush 1 of 1.
+Reading the project graph slice (112 s): flush 1 of 1.
+Reading the project graph slice (114 s): flush 1 of 1.
+Reading the project graph slice (116 s): flush 1 of 1.
+Reading the project graph slice (118 s): flush 1 of 1.
+Reading the project graph slice (120 s): flush 1 of 1.
+Reading the project graph slice (122 s): flush 1 of 1.
+Reading the project graph slice (124 s): flush 1 of 1.
+[repo] still working after 1280 s; last phase started: door.script
+Reading the project graph slice (126 s): flush 1 of 1.
+Reading the project graph slice (128 s): flush 1 of 1.
+Reading the project graph slice (130 s): flush 1 of 1.
+Reading the project graph slice (132 s): flush 1 of 1.
+Reading the project graph slice (134 s): flush 1 of 1.
+Reading the project graph slice (136 s): flush 1 of 1.
+Reading the project graph slice (138 s): flush 1 of 1.
+Reading the project graph slice (140 s): flush 1 of 1.
+Reading the project graph slice (142 s): flush 1 of 1.
+Reading the project graph slice (144 s): flush 1 of 1.
+Reading the project graph slice (146 s): flush 1 of 1.
+The plan cannot continue: the slice worker ended 4 times in a row with exit code 75 because the code on this machine kept changing under it; try again once the replica has settled.
+end 2026-11-15T00:31:00Z
+native_rc=1

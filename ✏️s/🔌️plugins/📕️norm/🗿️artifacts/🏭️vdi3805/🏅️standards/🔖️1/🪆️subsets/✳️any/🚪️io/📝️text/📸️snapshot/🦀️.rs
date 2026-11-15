@@ -312,4 +312,3 @@ pub fn assert_native_round_trip(catalog: &ManufacturerCatalog, limits: SecurityL
 }
 pub use crate::snapshot::snapshot_wire2_codec::*;
 
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text Vdi3805Snapshot, extension="vdi3805", envelope_id="norm.vdi3805");

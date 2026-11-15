@@ -101,3 +101,30 @@ impl VdiUnit {
         Self { symbol: symbol.into(), kind, delta: true, si_factor }
     }
 }
+
+impl From<VdiQuantityKind> for QuantityKind {
+    fn from(value: VdiQuantityKind) -> Self {
+        match value {
+            VdiQuantityKind::Dimensionless => QuantityKind::Dimensionless,
+            VdiQuantityKind::Length => QuantityKind::Length,
+            VdiQuantityKind::Area => QuantityKind::Area,
+            VdiQuantityKind::Volume => QuantityKind::Volume,
+            VdiQuantityKind::Mass => QuantityKind::Mass,
+            VdiQuantityKind::Time => QuantityKind::Time,
+            VdiQuantityKind::Temperature => QuantityKind::Temperature,
+            VdiQuantityKind::Force => QuantityKind::Force,
+            VdiQuantityKind::Pressure => QuantityKind::Pressure,
+            VdiQuantityKind::Stress => QuantityKind::Stress,
+            VdiQuantityKind::Moment => QuantityKind::Moment,
+            VdiQuantityKind::Energy => QuantityKind::Energy,
+            VdiQuantityKind::Power => QuantityKind::Power,
+            VdiQuantityKind::ThermalConductivity => QuantityKind::ThermalConductivity,
+            VdiQuantityKind::ThermalResistance => QuantityKind::ThermalResistance,
+            VdiQuantityKind::HeatTransferCoefficient => QuantityKind::HeatTransferCoefficient,
+            VdiQuantityKind::AirPermeability => QuantityKind::AirPermeability,
+            VdiQuantityKind::VentilationRate => QuantityKind::VentilationRate,
+            VdiQuantityKind::Acceleration => QuantityKind::Acceleration,
+            VdiQuantityKind::Velocity => QuantityKind::Velocity,
+        }
+    }
+}

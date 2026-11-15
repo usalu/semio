@@ -194,9 +194,9 @@ export class OwnedVerifyScript extends BundleScript {
       return;
     }
     if (segments[0] === "video-render-export") {
-      const { testVideoRenderProgramContract } = await import("../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🧪️testing/🎞️video-render-program/🟦️.ts");
-      const { testVideoRenderJobContract } = await import("../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🧪️testing/🧵️video-render-job/🟦️.ts");
-      const { testRasterVideoAvcPcmContract } = await import("../../../../📦️packages/🟦️typescript/🖌️raster/🎥️video/🧪️testing/🔬️unit/🟦️.ts");
+      const { testVideoRenderProgramContract } = await import("../../../../🔨️modules/🎠️kernel/🧪️tests/🎞️video-render-program/🟦️.ts");
+      const { testVideoRenderJobContract } = await import("../../../../🔨️modules/🎠️kernel/🧪️tests/🧵️video-render-job/🟦️.ts");
+      const { testRasterVideoAvcPcmContract } = await import("../../../../🔨️modules/🖌️raster/🎥️video/🧪️tests/🔬️unit/🟦️.ts");
       const { testVideoRenderHostContract } = await import("../../📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🧪️testing/🔬️unit/🟦️.ts");
       testVideoRenderProgramContract();
       testVideoRenderJobContract();

@@ -207,3 +207,9 @@ pub use crate::mutation_bridge::*;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod mutation_leaf_tests;
 //#endregion 🪢️Mounts
+
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;

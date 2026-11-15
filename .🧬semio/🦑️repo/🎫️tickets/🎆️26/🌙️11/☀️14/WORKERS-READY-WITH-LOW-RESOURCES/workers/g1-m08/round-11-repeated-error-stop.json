@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-15T01:06:30.208511+00:00",
+  "reason": "Stop further retries after identical underlying ENOENT hash/reference repeated in tries2,3,4; generic frontend try-again text is not treated as a transient cache-class exception",
+  "observer_pid": 71076,
+  "observer_command": "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python -u -",
+  "active_native_children": [],
+  "observer_signal_sent": "SIGTERM to own idle observer only; all native tries already exited",
+  "native_signal_sent": null
+}

@@ -31,8 +31,8 @@ silos [id:TEXT height-m:QTY radius-m:QTY permanent-gk-n:QTY content-qk-n:QTY con
 tanks [id:TEXT height-m:QTY radius-m:QTY permanent-gk-n:QTY content-qk-n:QTY content-category:ENUM filling-ratio:NUM v-rd-n:QTY shell-strength-mpa:NUM shell-thickness-m:NUM] {
   tk-weak 12m 4m 800000N 6000000N e 1 50000N 0 0
 }
-foundations [id:TEXT supported-building-id:TEXT area-m2:QTY p-rd-pa:QTY passive-resistance-n:QTY k-foundation:NUM k-soil:NUM liq-n1-60:NUM liq-fines-percent:NUM liq-depth-m:NUM liq-water-depth-m:NUM liq-unit-weight-n-m3:NUM liq-magnitude:NUM liq-layer-thickness-m:NUM footing-width-m:NUM bearing-axial-n:NUM bearing-shear-n:NUM bearing-moment-nm:NUM bearing-n-max-n:NUM soil-friction-angle-deg:NUM pile-diameter-m:NUM pile-length-m:NUM pile-modulus-pa:NUM pile-subgrade-modulus-n-m3:NUM pile-head-shear-n:NUM pile-head-fixed:NUM pile-interface-depth-m:NUM pile-upper-vs-m-s:NUM pile-lower-vs-m-s:NUM pile-moment-rd-nm:NUM base-friction-angle-deg:NUM base-pore-pressure-pa:NUM] {
-  fd-weak bldg-weak 40m2 80000Pa 20000N 200000 100000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+foundations [id:TEXT supported-building-id:TEXT area-m2:QTY p-rd-pa:QTY passive-resistance-n:QTY k-foundation:NUM k-soil:NUM liq-n1-60:NUM liq-fines-percent:NUM liq-depth-m:NUM liq-water-depth-m:NUM liq-unit-weight-n-m3:NUM liq-magnitude:NUM liq-layer-thickness-m:NUM footing-width-m:NUM bearing-axial-n:NUM bearing-shear-n:NUM bearing-moment-nm:NUM bearing-n-max-n:NUM soil-friction-angle-deg:NUM pile-diameter-m:NUM pile-length-m:NUM pile-modulus-pa:NUM pile-subgrade-modulus-n-m3:NUM pile-head-shear-n:NUM pile-head-fixed:NUM pile-interface-depth-m:NUM pile-upper-vs-m-s:NUM pile-lower-vs-m-s:NUM pile-moment-rd-nm:NUM base-friction-angle-deg:NUM base-pore-pressure-pa:NUM pile-axial-load-n:QTY] {
+  fd-weak bldg-weak 40m2 80000Pa 20000N 200000 100000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0N
 }
 retaining-walls [id:TEXT height-m:QTY phi-deg:NUM soil-gamma:NUM r:NUM h-rd-n-per-m:NUM water-height-m:NUM saturated-gamma:NUM permeability-m-s:NUM] {
   rw-weak 6m 25 19000 1 20000 0 0 0

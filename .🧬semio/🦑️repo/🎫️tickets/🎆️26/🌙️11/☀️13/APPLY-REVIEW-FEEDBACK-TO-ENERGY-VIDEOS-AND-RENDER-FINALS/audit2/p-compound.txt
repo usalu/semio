@@ -1,0 +1,1 @@
+\\mathrm\{W\}\s*/|\\mathrm\{Wh\}\s*/|\\mathrm\{kWh\}\s*/|W/\(m|Wh/\(m|kWh/\(m|W/m\^|W/m²|W/\(m²|W/\(m\s*²|W/\(mK|W/\(m·K|W/m·K|m³/h|m³/\(h|m\^3/h|1/h|h⁻¹|kg/m³|kg/\(m|\\mathrm\{m\^\{?3\}?\}\s*/|\\mathrm\{m\^\{?2\}?\}\s*\\,?\s*\\mathrm\{K\}|J/\(kg|kJ/\(kg|\\mathrm\{J\}/|\\mathrm\{Wh\}/|\\mathrm\{W\}/\\mathrm|\\mathrm\{W\}\\cdot|W\\cdot|m\^2\\,K|m²K|m²·K|m²\s*K

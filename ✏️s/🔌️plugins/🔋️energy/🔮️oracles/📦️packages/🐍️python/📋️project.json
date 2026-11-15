@@ -137,10 +137,11 @@
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
-        "command": "repo ./📜️script.ts deps"
+        "command": "repo \"../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync python-energy-oracle"
       },
       "metadata": {
         "semio": {
+          "execution": { "version": 1, "kind": "orchestration" },
           "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
         }
       }

@@ -59,7 +59,7 @@ pub fn emissivity() -> f64 { semio_s_plugin_norm_compliance::ndp_common("ndp.en1
 
 /// 🌡️ Unprotected member temperature after `duration_s` from the start temperature `theta_0` by explicit stepping of Δθ = k_sh·(A_m/V)/(c_a·ρ)·h_net·Δt (k_sh = 1, Δt ≤ 5 s).
 pub fn unprotected_temperature_c(theta_0: f64, am_over_v: f64, duration_s: f64) -> f64 {
-    let dt = 5.0;
+    let dt: f64 = 5.0;
     let mut theta = theta_0.max(20.0);
     let (alpha_c, emissivity) = (alpha_c(), emissivity());
     let mut t = 0.0;
@@ -87,7 +87,7 @@ impl From<&semio_s_artifact_norm_en1999_model::FireInsulation> for Insulation {
 pub fn protected_temperature_c(theta_0: f64, ap_over_v: f64, duration_s: f64, insulation: &Insulation) -> f64 {
     if insulation.thickness <= 0.0 { return unprotected_temperature_c(theta_0, ap_over_v, duration_s); }
     let (k_1, k_2) = (semio_s_plugin_norm_compliance::ndp_common("ndp.en1999.fire-protected-denominator"), semio_s_plugin_norm_compliance::ndp_common("ndp.en1999.fire-protected-exponent"));
-    let dt = 5.0;
+    let dt: f64 = 5.0;
     let mut theta = theta_0.max(20.0);
     let mut t = 0.0;
     while t < duration_s - 1e-9 {

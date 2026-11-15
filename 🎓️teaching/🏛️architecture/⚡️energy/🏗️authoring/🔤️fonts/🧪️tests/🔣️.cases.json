@@ -1,6 +1,6 @@
 {
   "body_font": "Anta",
-  "required_symbols": "%+<=>|~°±²³·×÷ΔΣΦΨηθλμπρτφχψϑ…₂←↑→↓⇒−√∞∮≈≠≤≥",
+  "required_symbols": "()[]%+<=>|~°±²³·×÷ΔΣΦΨηθλμπρτφχψϑ…₂←↑→↓⇒−√∞∮≈≠≤≥",
   "missing_in_body": "ΔΣΦΨηθλμπρτφχψϑ₂←↑→↓⇒√∞∮≈≠≤≥",
   "coverage_samples": "Größe Wärme Lüftung ÄÖÜ äöü ß😀𝑄",
   "rendered_glyphs": [
@@ -9,6 +9,12 @@
     {"family": "Anta", "source": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf", "text": "Im Alltag fällt dabei oft das Wort: „Energie verbraucht“.", "run": true, "characters": "ä:„“."}
   ],
   "outline_distance": 0.04,
+  "distinct_parentheses": {
+    "text": "(20°C)[x]",
+    "characters": "()",
+    "family": "Kelly Slab",
+    "source": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf"
+  },
   "cmaps": [
     {
       "id": "format4-delta-and-missing-glyphs",

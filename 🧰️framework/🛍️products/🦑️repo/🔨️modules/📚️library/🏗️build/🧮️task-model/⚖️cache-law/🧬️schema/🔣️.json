@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:cache-law:v1",
+  "title": "Cache Conformance Law",
+  "description": "⚖️ A task is shared through the fleet cache only when a hit gives the same result as running it: it declares every file it writes (outputs complete and restorable), declares what it reads (inputs expand without anything uninterpreted, a gitignored input is covered by a runtime digest), carries no absolute path or machine identity in its outputs, inputs or command, and does not depend on the machine. A task that cannot satisfy this is uncacheable with a stated reason, or guarded (local cache only) until its fix lands. States: `shared`, `guarded`, `uncacheable` (with the policy's physical reason) and `violation` (cacheable although the law finds a defect: a defect fails the conformance test).",
+  "oneOf": [{ "$ref": "#/definitions/Policy" }, { "$ref": "#/definitions/Row" }],
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "const": {
+        "version": 1,
+        "absolutePath": ["^/", "^[A-Za-z]:[\\\\/]", "^~", "^\\\\\\\\"],
+        "machineIdentity": ["/Users/", "/home/", "/private/var/", "/var/folders/", "[A-Za-z]:\\\\Users", "\\$\\{?(HOSTNAME|HOME|USER|USERNAME|TMPDIR)\\b"],
+        "machineEnvironment": ["HOSTNAME", "HOME", "USER", "USERNAME", "TMPDIR", "PWD", "SEMIO_WORKSPACE_ROOT"],
+        "tokens": ["{projectRoot}", "{workspaceRoot}", "{projectName}"],
+        "ignoredInputDirectories": ["🤖️generated", "node_modules", ".cache", ".nx", "dist", "target", "🗑️generated"],
+        "ignoredInputExceptions": ["{projectRoot}/.🧾️store"],
+        "findings": ["outputs-missing", "output-absolute", "output-machine-identity", "output-escapes-workspace", "output-not-restorable", "input-uninterpretable", "input-gitignored-without-digest", "input-machine-environment", "command-machine-identity"]
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "state", "findings"],
+      "properties": {
+        "id": { "type": "string" },
+        "state": { "enum": ["shared", "guarded", "uncacheable", "violation"] },
+        "reason": { "type": "string" },
+        "findings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

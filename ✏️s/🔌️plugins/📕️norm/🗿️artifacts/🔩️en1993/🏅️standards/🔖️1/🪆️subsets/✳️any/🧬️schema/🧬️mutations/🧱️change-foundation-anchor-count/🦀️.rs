@@ -11,7 +11,7 @@ use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 #[value(rename_all = "camelCase")]
 pub struct ChangeFoundationAnchorCount {
     pub id: String,
-    pub new_anchor_count: usize,
+    pub new_anchor_count: u32,
 }
 
 impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeFoundationAnchorCount where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::change_foundation_anchor_count::ChangeFoundationAnchorCount> {

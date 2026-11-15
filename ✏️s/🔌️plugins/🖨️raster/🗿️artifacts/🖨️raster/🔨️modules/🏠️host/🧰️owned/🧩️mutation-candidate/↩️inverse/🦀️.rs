@@ -2,7 +2,7 @@
 use super::*;
 use semio_s_artifact_raster_raster_model::{RasterLayerMask,RasterPixelContent,RasterTransform};
 use semio_s_artifact_raster_raster_mutations_layers::{create_layer,delete_layer,reorder_layers,rename_layer,move_layer};
-use semio_s_artifact_raster_raster_mutations_layer_properties::{change_layer_visible,change_layer_locked,change_layer_opacity,change_layer_blend_mode,change_layer_adjustment_kind,change_layer_transform,change_layer_adjustment_parameter};
+use semio_s_artifact_raster_raster_mutations_layer_props::{change_layer_visible,change_layer_locked,change_layer_opacity,change_layer_blend_mode,change_layer_adjustment_kind,change_layer_transform,change_layer_adjustment_parameter};
 use semio_s_artifact_raster_raster_mutations_pixels::{change_layer_pixels,change_layer_mask};
 
 enum Row<'a>{

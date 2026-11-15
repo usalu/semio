@@ -1,0 +1,39 @@
+{
+  "at": "2026-11-15T01:08:24.302698+00:00",
+  "audit": [
+    {
+      "attempt": 2,
+      "original_observer_classification": {
+        "graph_retry_advice": true,
+        "transient_task": false,
+        "same_nontransient_errors_twice": false,
+        "task_error_signature": [],
+        "has_failed_tasks": false
+      },
+      "corrected_underlying_signature": "ENOENT:build-input-closures/287b569798f6854f56082d3a0cd1b5638507649556b6edc64c75ce8160921a77.json"
+    },
+    {
+      "attempt": 3,
+      "original_observer_classification": {
+        "graph_retry_advice": true,
+        "transient_task": false,
+        "same_nontransient_errors_twice": false,
+        "task_error_signature": [],
+        "has_failed_tasks": false
+      },
+      "corrected_underlying_signature": "ENOENT:build-input-closures/287b569798f6854f56082d3a0cd1b5638507649556b6edc64c75ce8160921a77.json"
+    },
+    {
+      "attempt": 4,
+      "original_observer_classification": {
+        "graph_retry_advice": true,
+        "transient_task": false,
+        "same_nontransient_errors_twice": false,
+        "task_error_signature": [],
+        "has_failed_tasks": false
+      },
+      "corrected_underlying_signature": "ENOENT:build-input-closures/287b569798f6854f56082d3a0cd1b5638507649556b6edc64c75ce8160921a77.json"
+    }
+  ],
+  "observer_mistake": "Generic frontend try-again advice was classified too broadly; the same underlying error in tries2 and3 should have stopped retries. Try4 also ran, then the idle observer was terminated before try5. No native process was active at observer termination."
+}

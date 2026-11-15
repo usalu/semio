@@ -4,8 +4,8 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
     "📦️packages/🦀️rust",
-    "🧩️component/📦️packages/🦀️rust",
     "🥽️mesh/📦️packages/🦀️rust",
+    "🧩️component/📦️packages/🦀️rust",
     "🧪️tests/🔬️unit/📦️packages/🦀️rust",
 ]
 exclude = [

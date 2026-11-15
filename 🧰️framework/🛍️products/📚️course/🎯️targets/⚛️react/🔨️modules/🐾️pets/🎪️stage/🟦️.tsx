@@ -132,9 +132,10 @@ export const COURSE_PET_KEEPOUTS = "[data-course-item], [data-course-drop], .cou
 
 /** 🖱️ What of the quiz acts on a press although the layer's own rules call it no control, so a press there is never a
  * pet's: the grip that starts the drag of an item (an `aria-hidden` span), the zones an item is dropped on, and the cards
- * of the overview, which open their page on a click anywhere but on a control. Their actions are buttons, which every
- * layer leaves to the learner anyway. */
-export const COURSE_PET_CONTROLS = "[data-course-grip], [data-course-drop], [data-layered-card]";
+ * of the overview, which open their page on a click anywhere on the card but on a control. The empty space of a card's
+ * cell around it is no card: a pet standing there is the hand's. Their actions are buttons, which every layer leaves to
+ * the learner anyway. */
+export const COURSE_PET_CONTROLS = "[data-course-grip], [data-course-drop], [data-layered-card] [data-card]";
 
 /** 🧸️ What pets may play with in the quiz: every element marked with a topic key (`data-pet-prop`) — except the copy of
  * a row a drag carries, a deep clone of the row with all of its attributes. */

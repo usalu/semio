@@ -29,9 +29,46 @@
         ],
         "resources": [],
         "view": "native",
+        "selection": "included",
         "contract": {
-          "en": "The cargo driver every Rust target runs its compiles through (the native command fallback of every native target).",
-          "de": "Der Cargo-Treiber, über den jedes Rust-Target seine Kompilate ausführt (der native Befehls-Fallback jedes nativen Targets)."
+          "en": "The cargo driver every Rust target runs its compiles through (the native command fallback of every native target). A command that runs the driver with some router words is covered by the whole driver closure.",
+          "de": "Der Cargo-Treiber, über den jedes Rust-Target seine Kompilate ausführt (der native Befehls-Fallback jedes nativen Targets). Ein Befehl, der den Treiber mit einzelnen Router-Wörtern ausführt, ist durch den ganzen Treiberabschluss gedeckt."
+        }
+      },
+      "driver-stages": {
+        "entries": [
+          "../../../../../💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📜️script.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The plugin driver stages script that every plugin driver stage target runs.",
+          "de": "Das Treiberstufen-Skript, das jedes Plugin-Treiberstufen-Target ausführt."
+        }
+      },
+      "process-router": {
+        "entries": [
+          "../../../../../../🔨️modules/🏃️process/📜️script.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The process module router script, the command framework that the commands of the repository tooling load.",
+          "de": "Das Router-Skript des Prozessmoduls, das Befehlsgerüst, das die Befehle der Repository-Werkzeuge laden."
+        }
+      },
+      "testing-framework": {
+        "entries": [
+          "../../📦️packages/🟦️typescript/🧪️testing/🟦️.ts"
+        ],
+        "resources": [],
+        "view": "scheduling",
+        "selection": "included",
+        "contract": {
+          "en": "The testing framework module that the package scripts of Go, TypeScript and .NET packages load to run their tests, with everything the test runners import.",
+          "de": "Das Testgerüst-Modul, das die Paketskripte von Go-, TypeScript- und .NET-Paketen zum Ausführen ihrer Tests laden, mit allem, was die Test-Läufer importieren."
         }
       },
       "cargo-lock-owner": {

@@ -74,7 +74,7 @@ impl InstanceInferenceSessions {
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.sessions.terminal_is_empty()}
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some((_,session))=self.sessions.last(){return if session.terminal_is_empty(){Ok(RetirementDemand{release_bytes:std::mem::size_of_val(session.as_ref()),depth:self.sessions.next_pop_depth_demand().map_err(ValueError::from)?,..Default::default()})}else{session.retirement_demands(body)}}
-  Ok(RetirementDemand{release_bytes:self.sessions.next_release_allocation_bytes().map_err(ValueError::from)?,depth:if self.sessions.terminal_is_empty(){usize::from(!self.closed)}else{self.sessions.next_release_depth_demand().map_err(ValueError::from)?},..Default::default()})
+  Ok(RetirementDemand{copy_bytes:self.sessions.next_release_copy_byte_demand().map_err(ValueError::from)?,release_bytes:self.sessions.next_release_allocation_bytes().map_err(ValueError::from)?,depth:if self.sessions.terminal_is_empty(){usize::from(!self.closed)}else{self.sessions.next_release_depth_demand().map_err(ValueError::from)?},..Default::default()})
  }
  /// 🎟️ Advances only the same original data retirement after all independent currencies admit it.
  pub fn close_granted(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,ValueError>{

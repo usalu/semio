@@ -795,7 +795,7 @@ pub fn print_change_joint_col_moment_rd_nm(p: &ChangeJointColMomentRdNm) -> Stri
 /// 📖 Parses the arguments of `change-joint-col-moment-rd-nm`.
 pub fn parse_change_joint_col_moment_rd_nm(args: &Args) -> Result<ChangeJointColMomentRdNm, String> {
     let arg = |k: &str| required(args, "change-joint-col-moment-rd-nm", k);
-    Ok(ChangeJointColMomentRdNm { index: opt_index(args)?, new_column_moment_rd_nm: dec_json(&arg("new-column-moment-rd-nm")?)? })
+    Ok(ChangeJointColMomentRdNm { index: dec_json(&arg("index")?)?, new_column_moment_rd_nm: dec_json(&arg("new-column-moment-rd-nm")?)? })
 }
 
 /// ✍️ Prints `change-assessment-mid-steel-area-m2` as an op-text line.

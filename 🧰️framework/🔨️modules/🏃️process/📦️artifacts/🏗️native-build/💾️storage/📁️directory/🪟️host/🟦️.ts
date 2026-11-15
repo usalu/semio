@@ -22,7 +22,7 @@ export type NativeWindowsResultV1=Readonly<{ok:boolean;error:number}>;
 export type NativeWindowsHostPortV1=Readonly<{
  moveFile(from:string,to:string):NativeWindowsResultV1;
  flushDirectory(path:string):NativeWindowsResultV1;
- setCaseSensitive(path:string):Readonly<{opened:boolean;error:number;status:number}>;
+ setCaseSensitive(path:string,sensitive?:boolean):Readonly<{opened:boolean;error:number;status:number}>;
  availableBytes(path:string):Readonly<{ok:boolean;error:number;bytes:number}>;
  openExclusive(path:string):NativeWindowsResultV1;
 }>;
@@ -47,7 +47,7 @@ export function createNativeWindowsHostPortV1(binding:NativeWindowsBindingV1):Na
   flushDirectory:(path:string)=>{const handle=open(path,(windows.createFile.genericRead|windows.createFile.genericWrite)>>>0,windows.createFile.backupSemantics|windows.createFile.openReparsePoint);if(handle===undefined)return Object.freeze({ok:false,error:binding.lastError()});const ok=binding.flushFileBuffers(handle)===1;return finish(handle,ok,ok?0:binding.lastError());},
   openExclusive:(path:string)=>{const handle=open(path,windows.createFile.fileReadAttributes,windows.createFile.backupSemantics,0);if(handle===undefined)return Object.freeze({ok:false,error:binding.lastError()});return finish(handle,true,0);},
   availableBytes:(path:string)=>{const available=Buffer.alloc(8);return binding.getDiskFreeSpaceEx(nativeWindowsUtf16V1(nativeWindowsExtendedPathV1(path)),available)===1?Object.freeze({ok:true,error:0,bytes:Number(available.readBigUInt64LE(0))}):Object.freeze({ok:false,error:binding.lastError(),bytes:0});},
-  setCaseSensitive:(path:string)=>{const handle=open(path,windows.createFile.fileWriteAttributes,windows.createFile.backupSemantics);if(handle===undefined)return Object.freeze({opened:false,error:binding.lastError(),status:0});const information=Buffer.alloc(windows.caseSensitive.informationBytes);information.writeUInt32LE(windows.caseSensitive.flag,0);const status=binding.setCaseInformation(handle,Buffer.alloc(windows.caseSensitive.statusBlockBytes),information,information.length,windows.caseSensitive.informationClass)>>>0;binding.closeHandle(handle);return Object.freeze({opened:true,error:0,status});}
+  setCaseSensitive:(path:string,sensitive:boolean=true)=>{const handle=open(path,windows.createFile.fileWriteAttributes,windows.createFile.backupSemantics);if(handle===undefined)return Object.freeze({opened:false,error:binding.lastError(),status:0});const information=Buffer.alloc(windows.caseSensitive.informationBytes);information.writeUInt32LE(sensitive?windows.caseSensitive.flag:0,0);const status=binding.setCaseInformation(handle,Buffer.alloc(windows.caseSensitive.statusBlockBytes),information,information.length,windows.caseSensitive.informationClass)>>>0;binding.closeHandle(handle);return Object.freeze({opened:true,error:0,status});}
  });
 }
 

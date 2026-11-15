@@ -1,0 +1,27 @@
+Delta-Theta
+Delta Theta
+Q-Punkt
+Q Punkt
+Theta
+Rho
+Phi
+Lambda
+Eta
+Delta
+Kühlung\b
+Pettenkoferwert
+verblasst
+erscheint
+leuchtet auf
+fades?\b
+blendet
+verschwindet
+DIN
+VDI
+Bohne
+Willems
+GEG
+Pettenkofer
+JAZ
+IWU
+Maas

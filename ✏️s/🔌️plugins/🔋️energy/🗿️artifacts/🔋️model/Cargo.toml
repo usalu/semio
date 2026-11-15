@@ -441,7 +441,7 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-energy-model-mut-window-layer-optics]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️window-layer-optics/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-energy-model-mut-window-layer-optics-visible]
+[workspace.dependencies.semio-s-artifact-energy-model-mut-layer-optics-visible]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️window-layer-optics/🔭️visible/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-energy-model-mut-construction]
@@ -680,7 +680,7 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-energy-model-native-mutations-lifecycle]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native-lifecycle/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-energy-model-native-mutations-singletons]
+[workspace.dependencies.semio-s-artifact-energy-model-native-mutations-single]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native-singletons/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-energy-model-native-derive]

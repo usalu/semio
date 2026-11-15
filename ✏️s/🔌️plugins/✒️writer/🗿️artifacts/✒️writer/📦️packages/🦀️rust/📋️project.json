@@ -7,7 +7,7 @@
     "role:artifact",
     "family:writer"
   ],
-  "namedInputs": {
+  "namedInputs": { "default": ["{projectRoot}/**/*", "sharedGlobals", { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🤖️generated\"" }],
     "nativeSources": [
       "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/**/*"

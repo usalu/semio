@@ -38,6 +38,7 @@ function role(name:string):string{
  if(name==="snapshots/retained.ledger")return"retention-ledger";
  if(name==="authority.json"||/^selected\/[a-f0-9]{64}\.authority\.json$/u.test(name))return"authority";
  if(name==="graph.json")return"allocation";
+ if(name==="directory-stamps.json")return"directory-stamps";
  if(name==="format.json")return"store-format";
  if(name==="canonical.json"||/^selected\/[a-f0-9]{64}(?:\.authority)?\.json$/u.test(name))return"json";
  if(name==="generations/current.json")return"generation-pointer";
@@ -49,6 +50,7 @@ function role(name:string):string{
   if(/\/ip\/[a-f0-9]{24}\.json$/u.test(name))return"precision";
   if(/\/rr\/[a-f0-9]{24}\.json$/u.test(name))return"cargo-receipt";
   if(/\/np\/[a-f0-9]{24}\.json$/u.test(name)||/\/(?:emoji-project-json|test-cases)\.json$/u.test(name))return"inference";
+  if(/\/np\/[a-f0-9]{24}\.json\.fleet$/u.test(name))return"fleet-marker";
   if(/\/ob\/[a-f0-9]{64}\.br$/u.test(name))return"observation";
   if(/\/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\.pack$/u.test(name))return"pack";
   if(/\/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\.idx$/u.test(name))return"index";
@@ -71,7 +73,7 @@ function acceptLinks(proof:Proof,links:readonly{path:string;missing:string}[]){f
 /** 🗂️ Vouches for rows without reading one leaf byte: a group member by its group's append-only member index plus the lstat stamp, a closure inventory by its content-addressed name, a member pinned by a retirement plan by that plan; a member the index cannot vouch for keeps its group unproven (never retired, references unknown so every inventory stays retained). Only what remains is opened by the read child. */
 function resolveIncrementalRows(proof:Proof){
  const root=proof.image.root,groups=new Map<string,{directory:string;index?:Row;rows:Row[]}>();
- for(const row of proof.rows.values()){const group=row.kind==="retired"?undefined:memberGroupOfPathV1(relative(root,row.path).split(sep).join("/"));if(!group)continue;const entry=groups.get(group.group)??{directory:join(root,...group.directory.split("/")),rows:[]};groups.set(group.group,entry);if(row.kind==="member-index")entry.index=row;else entry.rows.push(row);}
+ for(const row of proof.rows.values()){const group=row.kind==="retired"||row.kind==="fleet-marker"?undefined:memberGroupOfPathV1(relative(root,row.path).split(sep).join("/"));if(!group)continue;const entry=groups.get(group.group)??{directory:join(root,...group.directory.split("/")),rows:[]};groups.set(group.group,entry);if(row.kind==="member-index")entry.index=row;else entry.rows.push(row);}
  for(const[name,entry]of groups){
   const directory=entry.directory;let text="";
   if(entry.index&&entry.index.bytes<=P.maximumIndexBytes){const bytes=smallBytes(proof,entry.index);entry.index.hash=hash(bytes);entry.index.trusted=true;text=bytes.toString("utf8");}

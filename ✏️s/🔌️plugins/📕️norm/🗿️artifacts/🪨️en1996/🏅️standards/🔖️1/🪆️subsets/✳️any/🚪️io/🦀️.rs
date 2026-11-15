@@ -190,4 +190,4 @@ semio_plugin::derive_artifact_facets!(
     composer: En1996Composer,
 );
 
-pub use mutation_bridge::*;
+pub use semio_s_artifact_norm_en1996_mutations::mutation_bridge::*;

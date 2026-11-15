@@ -1,5 +1,5 @@
 //! 🧪️ Field close start uses the real original Work and caller receipt.
-use semio_framework_replication_retained_field_preparation::RetainedFieldPreparation;
+use semio_framework_replication_retained_field_prep::RetainedFieldPreparation;
 use semio_framework_value_retained_clone::*;
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 use semio_framework_value_testing_allocator::observe_retirement_allocations;

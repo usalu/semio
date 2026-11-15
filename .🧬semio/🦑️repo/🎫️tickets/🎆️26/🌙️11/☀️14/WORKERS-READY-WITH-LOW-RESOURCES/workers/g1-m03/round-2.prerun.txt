@@ -1,0 +1,10 @@
+Pre-run facts, 2026-11-14T16:00:16Z
+- replica code digest (.cache/f/health.json): 39e3688eb315d48831772ca305d78bcb6f35975794444da47750bc5fa7459759, store ok
+- `ps -axo pid,etime,rss,args | grep "service host"`: no process (nothing to stop; `repo service host stop` was not run)
+- last 5 lines of .cache/f/sidecars/build-agent.log (file last written 2026-11-14 12:41 UTC):
+2026-11-14T12:40:56.618Z worker finished: 4a7a2173-282d-42b5-b885-7be5638be7ad.2 failed 9
+2026-11-14T12:41:03.525Z worker started: 539c4618-9ea9-4f67-8d94-5379112a68da.1 78efb837fdf1
+2026-11-14T12:41:05.282Z worker finished: 539c4618-9ea9-4f67-8d94-5379112a68da.1 completed 0
+2026-11-14T12:41:23.232Z worker started: 141f9cfe-afdd-439c-b34d-1170276d4bab.1 6fd9d8c2f08c
+2026-11-14T12:41:24.846Z worker finished: 141f9cfe-afdd-439c-b34d-1170276d4bab.1 completed 0
+- memory pressure level 1, free disk 100 GiB of 228 GiB

@@ -1,0 +1,96 @@
+{
+  "title": "Create Heating and Cooling Fingerübung Assignment",
+  "emoji": "📄",
+  "status": "closed",
+  "description": "Create a complete bilingual heating and cooling assignment from supplied slide content using the assignment print class and return the German PDF.",
+  "summary": "Created and delivered a four-page German Heating + Cooling assignment PDF, with bilingual course sources, build declarations and independent numerical fixtures. Both actual assignment-class PDFs compile and pass visual review; 156 course/integration tests pass. Standard target planning was stopped by host memory, so native target publication remains unverified; registered direct compiler succeeded. See completion.md. Temporary generated outputs removed.",
+  "goal": "energy",
+  "sessions": [
+    "5f266037-6590-444e-955c-32ebf0f44257"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-12 20:28:08",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "prompt": "Create a complete bilingual heating and cooling assignment from supplied slide content using the assignment print class and return the German PDF."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-12 20:39:40",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "codex",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Created and delivered a four-page German Heating + Cooling assignment PDF, with bilingual course sources, build declarations and independent numerical fixtures. Both actual assignment-class PDFs compile and pass visual review; 156 course/integration tests pass. Standard target planning was stopped by host memory, so native target publication remains unverified; registered direct compiler succeeded. See completion.md. Temporary generated outputs removed.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/model.tex"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/en.content.tex"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/en.tex"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/de.tex"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/de.content.tex"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/🧪️tests/🧬️cases.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/🧪️tests/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/🧪️tests/🧫️cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🏗️builder/📖️assignments/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📜️script.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📖️assignment-pdfs/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/README.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️12/CREATE-HEATING-AND-COOLING-FINGER-BUNG-ASSIGNMENT/review-pdf.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️12/CREATE-HEATING-AND-COOLING-FINGER-BUNG-ASSIGNMENT/completion.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️12/CREATE-HEATING-AND-COOLING-FINGER-BUNG-ASSIGNMENT/prepare-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️12/CREATE-HEATING-AND-COOLING-FINGER-BUNG-ASSIGNMENT/brief.md"
+        },
+        {
+          "path": "output/pdf/Fingeruebung-Heizen-Kuehlen.pdf"
+        }
+      ]
+    }
+  ]
+}

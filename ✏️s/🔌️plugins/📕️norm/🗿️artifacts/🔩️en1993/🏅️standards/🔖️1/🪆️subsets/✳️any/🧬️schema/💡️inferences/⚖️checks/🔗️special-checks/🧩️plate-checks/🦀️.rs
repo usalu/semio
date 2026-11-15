@@ -114,8 +114,8 @@ pub fn check_joint_plates(document: &En1993Snapshot, annex: AnnexChoice, params:
             annex,
             &[AnnexParams::GAMMA_M0, AnnexParams::GAMMA_M2],
             loc(
-                &format!("Block tearing: A_nt={a_nt:.0} mm², A_nv={a_nv:.0} mm², V_eff,{}Rd={:.1} kN.", if p.eccentricity <= 0.0 { "1,", "2," }, block / 1e3),
-                &format!("Blockversagen: A_nt={a_nt:.0} mm², A_nv={a_nv:.0} mm², V_eff,{}Rd={:.1} kN.", if p.eccentricity <= 0.0 { "1,", "2," }, block / 1e3),
+                &format!("Block tearing: A_nt={a_nt:.0} mm², A_nv={a_nv:.0} mm², V_eff,{}Rd={:.1} kN.", if p.eccentricity <= 0.0 { "1," } else { "2," }, block / 1e3),
+                &format!("Blockversagen: A_nt={a_nt:.0} mm², A_nv={a_nv:.0} mm², V_eff,{}Rd={:.1} kN.", if p.eccentricity <= 0.0 { "1," } else { "2," }, block / 1e3),
             ),
         ));
         if p.role == "flangeCover" && p.plate_width > 0.0 {

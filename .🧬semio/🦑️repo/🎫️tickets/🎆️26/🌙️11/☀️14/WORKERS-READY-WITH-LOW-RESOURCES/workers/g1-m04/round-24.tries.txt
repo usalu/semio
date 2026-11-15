@@ -1,0 +1,13 @@
+try 1: start 2026-11-15T07:21:21Z end 2026-11-15T08:32:22Z native_rc=75 retry_lines=0 ended at 2026-11-15T08:32:24Z peak_rss_kib=1793840 slice_peak_mb=1906 stop=none
+try 2: start 2026-11-15T08:35:24Z end 2026-11-15T08:43:13Z native_rc=1 retry_lines=1 ended at 2026-11-15T08:43:14Z peak_rss_kib=5394056 slice_peak_mb=5267 stop=none
+try 3: start 2026-11-15T08:46:14Z end 2026-11-15T08:52:14Z native_rc=1 retry_lines=1 ended at 2026-11-15T08:52:18Z peak_rss_kib=1810236 slice_peak_mb=5147 stop=none
+try 4: start 2026-11-15T08:55:18Z end 2026-11-15T09:00:01Z native_rc=1 retry_lines=1 ended at 2026-11-15T09:00:06Z peak_rss_kib=5996444 slice_peak_mb=6035 stop=none
+try 5: start 2026-11-15T09:03:06Z end 2026-11-15T09:07:39Z native_rc=1 retry_lines=1 ended at 2026-11-15T09:07:43Z peak_rss_kib=1504992 slice_peak_mb=5609 stop=none
+try 6: start 2026-11-15T09:10:44Z end 2026-11-15T09:15:30Z native_rc=1 retry_lines=1 ended at 2026-11-15T09:15:31Z peak_rss_kib=6025984 slice_peak_mb=6247 stop=none
+try 7: start 2026-11-15T09:18:31Z end 2026-11-15T09:23:21Z native_rc=1 retry_lines=1 ended at 2026-11-15T09:23:24Z peak_rss_kib=5947156 slice_peak_mb=6377 stop=none
+try 8: start 2026-11-15T09:26:24Z end 2026-11-15T09:32:22Z native_rc=1 retry_lines=1 ended at 2026-11-15T09:32:23Z peak_rss_kib=4019188 slice_peak_mb=6262 stop=none
+try 9: start 2026-11-15T09:35:23Z end 2026-11-15T09:40:00Z native_rc=1 retry_lines=1 ended at 2026-11-15T09:40:01Z peak_rss_kib=6410512 slice_peak_mb=6258 stop=none
+try 10: start 2026-11-15T09:43:01Z end 2026-11-15T09:48:53Z native_rc=1 retry_lines=1 ended at 2026-11-15T09:48:54Z peak_rss_kib=5184864 slice_peak_mb=6253 stop=none
+try 11: start 2026-11-15T09:51:54Z end 2026-11-15T09:56:36Z native_rc=1 retry_lines=1 ended at 2026-11-15T09:56:37Z peak_rss_kib=6223460 slice_peak_mb=6268 stop=none
+try 12: start 2026-11-15T09:59:37Z end 2026-11-15T10:04:23Z native_rc=1 retry_lines=1 ended at 2026-11-15T10:04:25Z peak_rss_kib=6167004 slice_peak_mb=6351 stop=none
+round 24 finished at 2026-11-15T10:04:25Z

@@ -1,5 +1,5 @@
 //! 🧪️ Field production keeps the actual Source, request and result resident.
-use semio_framework_replication_retained_field_preparation::{RetainedFieldPreparation,RetainedFieldProducer,RetainedFieldProducerContext};
+use semio_framework_replication_retained_field_prep::{RetainedFieldPreparation,RetainedFieldProducer,RetainedFieldProducerContext};
 use semio_framework_value_retained_clone::*;
 use semio_framework_value_clone_source_testing::{FixtureSource,FixtureCloseStep};
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};

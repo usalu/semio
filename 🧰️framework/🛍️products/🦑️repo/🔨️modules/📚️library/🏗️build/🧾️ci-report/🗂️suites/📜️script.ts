@@ -1,4 +1,5 @@
-import {freemem,totalmem} from "node:os";
+import {totalmem} from "node:os";
+import {hostAvailableBytesV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {resolve} from "node:path";
 import {isMainModuleV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
@@ -51,7 +52,7 @@ export function defaultCiSuitePortsV1(environment:Readonly<Record<string,string|
    return {atMs:Date.now(),availableMegabytes:host.availableMegabytes,totalMegabytes:host.totalMegabytes,swapMegabytes:host.swapUsedMegabytes,treeMegabytes:tree===null?null:Math.round(tree),pressure:host.pressure};
   };
  };
- const system=():CiSampleV1=>({atMs:Date.now(),availableMegabytes:Math.floor(freemem()/1048576),totalMegabytes:Math.max(1,Math.floor(totalmem()/1048576)),swapMegabytes:null,treeMegabytes:null,pressure:null});
+ const system=():CiSampleV1=>({atMs:Date.now(),availableMegabytes:Math.floor((hostAvailableBytesV1()??totalmem())/1048576),totalMegabytes:Math.max(1,Math.floor(totalmem()/1048576)),swapMegabytes:null,treeMegabytes:null,pressure:null});
  return {
   start:async(row,tool,timeoutMs,onLine,signal)=>{
    const {OwnedCommandFailure,runOwnedCommand}=await import("../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");

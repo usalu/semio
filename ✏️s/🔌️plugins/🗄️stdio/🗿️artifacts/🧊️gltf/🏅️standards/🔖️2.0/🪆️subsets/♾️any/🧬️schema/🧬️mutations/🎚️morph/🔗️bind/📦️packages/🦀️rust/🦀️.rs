@@ -29,7 +29,7 @@ pub mod standards {
                         pub mod move_texture;
                         #[path = "../../../../📣️used/🚚️move/🦀️.rs"]
                         pub mod move_used_extension;
-                        pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::mutations::remove_used_extension;
+                        pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::mutations::remove_used_extension;
                         #[path = "../../../../📐️accessor/🔀️reorder/🦀️.rs"]
                         pub mod reorder_accessors;
                         #[path = "../../../../🎞️animation/🔀️reorder/🦀️.rs"]
@@ -79,9 +79,9 @@ pub mod standards {
                     pub mod modules {
                         #[path = "."]
                         pub mod mutation_support {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::modules::mutation_support::structure_geometry;
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level;
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level_collections;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::modules::mutation_support::structure_geometry;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level_collections;
                         }
                     }
                 }

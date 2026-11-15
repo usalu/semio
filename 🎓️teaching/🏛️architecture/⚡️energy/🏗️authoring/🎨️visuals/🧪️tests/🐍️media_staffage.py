@@ -6,14 +6,16 @@ import json
 import os
 import re
 import tempfile
+import time
 import types
+from collections import OrderedDict
 import unittest
 from pathlib import Path
 
 BRIDGE = Path(__file__).parent.parent / "🧍️staffage/🐍️.py"
 CASES = json.loads((BRIDGE.parent / "🧪️tests/🔣️.json").read_text(encoding="utf-8"))
-FUNCTIONS = {"_lf", "_number", "canonical_json", "revision_of", "_source_digest", "_catalog_bytes", "_presets", "asset_revision", "preset_revision", "_preset_revisions", "entry_issues", "cast_key", "casts_in"}
-CONSTANTS = {"_INDEX", "_VIEWPOINTS", "_VIEWS", "_THEMES", "_SCALES", "_TRANSPORT_LAYERS", "_CAST_KEYS", "_BUNDLED", "_KEY_LENGTH"}
+FUNCTIONS = {"_fresh", "_imports", "_digest_label", "_lf","_number", "canonical_json", "revision_of", "_source_digest", "_catalog_bytes", "_presets", "asset_revision", "preset_revision", "_preset_revisions", "entry_issues", "cast_key", "casts_in"}
+CONSTANTS = {"_FRESH_S", "_IMPORT", "_INDEX","_VIEWPOINTS", "_VIEWS", "_THEMES", "_SCALES", "_TRANSPORT_LAYERS", "_CAST_KEYS", "_BUNDLED", "_KEY_LENGTH"}
 
 
 def bridge():
@@ -21,7 +23,7 @@ def bridge():
     tree = ast.parse(BRIDGE.read_text(encoding="utf-8"))
     nodes = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in FUNCTIONS or isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id in CONSTANTS for target in node.targets)]
     module = types.ModuleType("staffage_freshness")
-    module.__dict__.update({"ast": ast, "hashlib": hashlib, "json": json, "re": re, "Path": Path, "lru_cache": functools.lru_cache, "_SOURCES": BRIDGE.parent})
+    module.__dict__.update({"ast": ast, "hashlib": hashlib, "json": json, "re": re, "Path": Path, "os": os, "lru_cache": functools.lru_cache, "_WORKSPACE": next(parent for parent in BRIDGE.parents if (parent / "🧰️framework").is_dir()), "functools": functools, "time": time, "OrderedDict": OrderedDict, "_SOURCES": BRIDGE.parent})
     exec(compile(ast.Module(body=nodes, type_ignores=[]), str(BRIDGE), "exec"), module.__dict__)
     return module
 
@@ -45,6 +47,8 @@ class MediaFreshness(unittest.TestCase):
             with self.subTest(vector["path"]), tempfile.TemporaryDirectory(dir=os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT")) as directory:
                 root = Path(directory)
                 staffage = bridge()
+                clock = [0.0]
+                staffage.time = types.SimpleNamespace(monotonic=lambda: clock[0])
                 for path, content in CASES["mediaInputs"].items():
                     file = root / path
                     file.parent.mkdir(parents=True, exist_ok=True)
@@ -64,8 +68,9 @@ class MediaFreshness(unittest.TestCase):
                 target = root / vector["path"]
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(vector["after"], encoding="utf-8")
-                after = staffage.casts_in([source], manifest, root)
-                self.assertNotEqual(before, after)
+                clock[0] += staffage._FRESH_S + 1
+                after =staffage.casts_in([source], manifest, root)
+                (self.assertNotEqual if vector.get("changes", True) else self.assertEqual)(before, after)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,2360 @@
+{
+ "version": 1,
+ "decisions": [
+  {
+   "name": "the code that runs is admitted",
+   "input": {
+    "digest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "running"
+   }
+  },
+  {
+   "name": "a refusal blocks the digest even when it is authored here",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": true,
+    "peers": [],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [
+     {
+      "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "originId": "g1-m07",
+      "reason": "self-check failed",
+      "wallMs": 1
+     }
+    ],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "refused",
+    "origin": "g1-m07",
+    "seconds": 0
+   }
+  },
+  {
+   "name": "a refusal blocks the digest even with a store snapshot and a healthy canary",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [
+     "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    ],
+    "refusals": [
+     {
+      "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "originId": "g1-m07",
+      "reason": "self-check failed",
+      "wallMs": 1
+     }
+    ],
+    "healthy": {
+     "g1-server": 600000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "refused",
+    "origin": "g1-m07",
+    "seconds": 0
+   }
+  },
+  {
+   "name": "a refusal of another digest does not matter",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [
+     {
+      "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "originId": "g1-m07",
+      "reason": "self-check failed",
+      "wallMs": 1
+     }
+    ],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-server",
+    "seconds": 120
+   }
+  },
+  {
+   "name": "the earliest refusal is named, a tie goes to the lower id",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [
+     {
+      "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "originId": "g1-m07",
+      "reason": "self-check failed",
+      "wallMs": 50
+     },
+     {
+      "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "originId": "g1-m03",
+      "reason": "self-check failed",
+      "wallMs": 20
+     },
+     {
+      "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "originId": "g1-m01",
+      "reason": "self-check failed",
+      "wallMs": 20
+     }
+    ],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "refused",
+    "origin": "g1-m01",
+    "seconds": 0
+   }
+  },
+  {
+   "name": "a store snapshot admits at once",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [
+     "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    ],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "snapshot"
+   }
+  },
+  {
+   "name": "a snapshot of another digest does not",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [
+     "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    ],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-server",
+    "seconds": 120
+   }
+  },
+  {
+   "name": "a canary healthy for the set time admits the follower",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-server": 60000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "follower"
+   }
+  },
+  {
+   "name": "a canary one second short of the set time keeps the follower waiting",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-server": 59000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "canary",
+    "origin": "g1-server",
+    "seconds": 1
+   }
+  },
+  {
+   "name": "a canary seen for the first time makes the follower wait the whole time",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "canary",
+    "origin": "g1-server",
+    "seconds": 60
+   }
+  },
+  {
+   "name": "a half second short rounds up to a whole second",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-server": 59500
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "canary",
+    "origin": "g1-server",
+    "seconds": 1
+   }
+  },
+  {
+   "name": "the healthiest of several canaries decides",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-m01": 70000,
+     "g1-server": 1000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "follower"
+   }
+  },
+  {
+   "name": "a canary with a stale attestation is no canary",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999939000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-server": 600000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-m01",
+    "seconds": 120
+   }
+  },
+  {
+   "name": "a canary with a fresh attestation 60 s old still counts",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999940000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-server": 60000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "follower"
+   }
+  },
+  {
+   "name": "a canary that runs a fallback code is no canary",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": true
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-server": 600000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-m01",
+    "seconds": 120
+   }
+  },
+  {
+   "name": "a canary with sync off is no canary",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": false,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-server": 600000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-m02",
+    "seconds": 120
+   }
+  },
+  {
+   "name": "a canary of another group is no canary",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g2-server",
+      "groupId": "g2",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g2-server": 600000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-m02",
+    "seconds": 120
+   }
+  },
+  {
+   "name": "a retired canary is no canary",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-m09",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [
+     "g1-m09"
+    ],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-m09": 600000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-m02",
+    "seconds": 120
+   }
+  },
+  {
+   "name": "the own attestation is never a canary",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {
+     "g1-m02": 600000
+    },
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-m02",
+    "seconds": 120
+   }
+  },
+  {
+   "name": "code written entirely here goes first at once",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": true,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "author"
+   }
+  },
+  {
+   "name": "a canary running the code outranks authorship",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": true,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "canary",
+    "origin": "g1-server",
+    "seconds": 60
+   }
+  },
+  {
+   "name": "the deadlock: the closure was written on three origins, the group server waits the set time first",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-server",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-server",
+    "seconds": 120
+   }
+  },
+  {
+   "name": "the group server one second before its time",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-server",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 119001,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-server",
+    "seconds": 1
+   }
+  },
+  {
+   "name": "the group server at its time goes first",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-server",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "a worker waits behind the group server and the lower ids",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "turn",
+    "origin": "g1-m01",
+    "seconds": 600
+   }
+  },
+  {
+   "name": "a worker at half its turn",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 420000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "turn",
+    "origin": "g1-m01",
+    "seconds": 300
+   }
+  },
+  {
+   "name": "the third candidate goes after two turns",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 720000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "the second candidate waits one turn",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m01",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "turn",
+    "origin": "g1-server",
+    "seconds": 300
+   }
+  },
+  {
+   "name": "a stale server does not lead, the lowest fresh id does",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m01",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999939000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "with a stale server the next id waits one turn behind the lowest",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999939000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "turn",
+    "origin": "g1-m01",
+    "seconds": 300
+   }
+  },
+  {
+   "name": "without a server the lowest id leads",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m01",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m03",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "two candidates racing at the same moment: the lower id goes",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m01",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999939000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "two candidates racing at the same moment: the higher id waits",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999939000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "turn",
+    "origin": "g1-m01",
+    "seconds": 300
+   }
+  },
+  {
+   "name": "an origin with sync off never leads",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m03",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": false,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": false,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "turn",
+    "origin": "g1-m02",
+    "seconds": 300
+   }
+  },
+  {
+   "name": "an origin on a fallback code never leads",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": true
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": true
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "a retired origin never leads",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [
+     "g1-server",
+     "g1-m01"
+    ],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "an origin of another group never leads",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g2-server",
+      "groupId": "g2",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     },
+     {
+      "originId": "g1-m01",
+      "groupId": "g2",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "a writer clock 30 s ahead still counts as fresh",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m01",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 1000000030000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "turn",
+    "origin": "g1-server",
+    "seconds": 300
+   }
+  },
+  {
+   "name": "a writer clock 61 s ahead is stale",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m01",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-server",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 1000000061000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "ordering is bytewise: m10 comes after m02",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m10",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [
+     {
+      "originId": "g1-m02",
+      "groupId": "g1",
+      "code": "1111111111111111111111111111111111111111111111111111111111111111",
+      "wallMs": 999999999000,
+      "sync": true,
+      "fallback": false
+     }
+    ],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "turn",
+    "origin": "g1-m02",
+    "seconds": 300
+   }
+  },
+  {
+   "name": "a lone origin goes after the wait",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 120000,
+    "authored": false,
+    "peers": [],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": true,
+    "role": "leader"
+   }
+  },
+  {
+   "name": "a lone origin before the wait",
+   "input": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "running": "1111111111111111111111111111111111111111111111111111111111111111",
+    "originId": "g1-m02",
+    "groupId": "g1",
+    "now": 1000000000000,
+    "waitedMs": 0,
+    "authored": false,
+    "peers": [],
+    "retired": [],
+    "snapshots": [],
+    "refusals": [],
+    "healthy": {},
+    "limits": {
+     "freshMs": 60000,
+     "waitMs": 120000,
+     "turnMs": 300000,
+     "canaryMs": 60000
+    }
+   },
+   "expected": {
+    "ok": false,
+    "why": "mixed",
+    "origin": "g1-m02",
+    "seconds": 120
+   }
+  }
+ ],
+ "trackers": [
+  {
+   "name": "the time starts at the first reading and grows with the readings",
+   "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+   "originId": "g1-m02",
+   "freshMs": 60000,
+   "steps": [
+    {
+     "now": 1000000000000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000000000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 0
+     }
+    },
+    {
+     "now": 1000000005000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000005000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 5000
+     }
+    },
+    {
+     "now": 1000000065000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000065000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 65000
+     }
+    }
+   ]
+  },
+  {
+   "name": "a gap longer than the freshness window starts the time again",
+   "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+   "originId": "g1-m02",
+   "freshMs": 60000,
+   "steps": [
+    {
+     "now": 1000000000000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000000000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 0
+     }
+    },
+    {
+     "now": 1000000061000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000061000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "a gap of exactly the freshness window keeps the time",
+   "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+   "originId": "g1-m02",
+   "freshMs": 60000,
+   "steps": [
+    {
+     "now": 1000000000000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000000000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 0
+     }
+    },
+    {
+     "now": 1000000060000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000060000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 60000
+     }
+    }
+   ]
+  },
+  {
+   "name": "an unhealthy reading forgets the origin and a healthy one starts again",
+   "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+   "originId": "g1-m02",
+   "freshMs": 60000,
+   "steps": [
+    {
+     "now": 1000000000000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000000000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 0
+     }
+    },
+    {
+     "now": 1000000010000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000010000,
+       "sync": true,
+       "fallback": true
+      }
+     ],
+     "expected": {}
+    },
+    {
+     "now": 1000000020000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000020000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 0
+     }
+    },
+    {
+     "now": 1000000030000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000030000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 10000
+     }
+    }
+   ]
+  },
+  {
+   "name": "a stale attestation is not healthy",
+   "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+   "originId": "g1-m02",
+   "freshMs": 60000,
+   "steps": [
+    {
+     "now": 1000000000000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 999999939000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {}
+    },
+    {
+     "now": 1000000001000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000001000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "other codes, sync off, the own attestation and a missing origin are not healthy",
+   "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+   "originId": "g1-m02",
+   "freshMs": 60000,
+   "steps": [
+    {
+     "now": 1000000000000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+       "wallMs": 1000000000000,
+       "sync": true,
+       "fallback": false
+      },
+      {
+       "originId": "g1-m01",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000000000,
+       "sync": false,
+       "fallback": false
+      },
+      {
+       "originId": "g1-m02",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000000000,
+       "sync": true,
+       "fallback": false
+      },
+      {
+       "originId": "g1-m03",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000000000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-m03": 0
+     }
+    },
+    {
+     "now": 1000000001000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000001000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "two origins have their own times",
+   "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+   "originId": "g1-m02",
+   "freshMs": 60000,
+   "steps": [
+    {
+     "now": 1000000000000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000000000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 0
+     }
+    },
+    {
+     "now": 1000000010000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000010000,
+       "sync": true,
+       "fallback": false
+      },
+      {
+       "originId": "g1-m01",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000010000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 10000,
+      "g1-m01": 0
+     }
+    },
+    {
+     "now": 1000000020000,
+     "peers": [
+      {
+       "originId": "g1-server",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000020000,
+       "sync": true,
+       "fallback": false
+      },
+      {
+       "originId": "g1-m01",
+       "groupId": "g1",
+       "code": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+       "wallMs": 1000000020000,
+       "sync": true,
+       "fallback": false
+      }
+     ],
+     "expected": {
+      "g1-server": 20000,
+      "g1-m01": 10000
+     }
+    }
+   ]
+  }
+ ]
+}

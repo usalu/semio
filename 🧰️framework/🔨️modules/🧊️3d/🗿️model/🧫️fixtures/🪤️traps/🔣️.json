@@ -1,0 +1,477 @@
+{
+ "revolveClosure": [
+  {
+   "name": "cylinder-reaching-the-axis",
+   "profile": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     0.1
+    ],
+    [
+     0.5,
+     0.1
+    ],
+    [
+     0.5,
+     0
+    ]
+   ],
+   "kind": "onAxis"
+  },
+  {
+   "name": "open-profile-one-end-on-axis",
+   "profile": [
+    [
+     0,
+     0
+    ],
+    [
+     0.2,
+     0.1
+    ],
+    [
+     0.5,
+     0.1
+    ]
+   ],
+   "kind": "onAxis"
+  },
+  {
+   "name": "closed-loop-with-repeated-first-point",
+   "profile": [
+    [
+     0,
+     0.09
+    ],
+    [
+     0,
+     0.1
+    ],
+    [
+     0.5,
+     0.1
+    ],
+    [
+     0.5,
+     0.09
+    ],
+    [
+     0,
+     0.09
+    ]
+   ],
+   "kind": "loop"
+  },
+  {
+   "name": "wall-without-repeated-first-point",
+   "profile": [
+    [
+     0,
+     0.09
+    ],
+    [
+     0,
+     0.1
+    ],
+    [
+     0.5,
+     0.1
+    ],
+    [
+     0.5,
+     0.09
+    ]
+   ],
+   "kind": "shell",
+   "filledAreaM2": 0.05,
+   "loopAreaM2": 0.005
+  },
+  {
+   "name": "two-points-off-axis-is-a-plain-cylinder",
+   "profile": [
+    [
+     0,
+     0.1
+    ],
+    [
+     0.5,
+     0.1
+    ]
+   ],
+   "kind": "axis",
+   "filledAreaM2": 0.05
+  },
+  {
+   "name": "cup-section-open",
+   "profile": [
+    [
+     0,
+     0.04
+    ],
+    [
+     0,
+     0.05
+    ],
+    [
+     0.1,
+     0.05
+    ],
+    [
+     0.1,
+     0.04
+    ]
+   ],
+   "kind": "shell",
+   "filledAreaM2": 0.005000000000000001,
+   "loopAreaM2": 0.001
+  },
+  {
+   "name": "end-within-two-percent-of-the-axis",
+   "profile": [
+    [
+     0,
+     0.001
+    ],
+    [
+     0,
+     0.1
+    ],
+    [
+     0.5,
+     0.1
+    ],
+    [
+     0.5,
+     0.002
+    ]
+   ],
+   "kind": "onAxis"
+  }
+ ],
+ "taper": [
+  {
+   "name": "absent",
+   "taperTo": null,
+   "fault": null
+  },
+  {
+   "name": "pyramid",
+   "taperTo": [
+    1,
+    0
+   ],
+   "fault": null
+  },
+  {
+   "name": "apex-at-from",
+   "taperTo": [
+    0,
+    1
+   ],
+   "fault": null
+  },
+  {
+   "name": "frustum",
+   "taperTo": [
+    1,
+    0.5
+   ],
+   "fault": null
+  },
+  {
+   "name": "widening",
+   "taperTo": [
+    0.5,
+    1
+   ],
+   "fault": null
+  },
+  {
+   "name": "identity",
+   "taperTo": [
+    1,
+    1
+   ],
+   "fault": null
+  },
+  {
+   "name": "both-zero",
+   "taperTo": [
+    0,
+    0
+   ],
+   "fault": "collapsed"
+  },
+  {
+   "name": "speck",
+   "taperTo": [
+    1,
+    0.0001
+   ],
+   "fault": "needle"
+  },
+  {
+   "name": "read-as-scale-u-and-v",
+   "taperTo": [
+    0.4,
+    0.4
+   ],
+   "fault": "uniform"
+  }
+ ],
+ "loftFold": [
+  {
+   "name": "straight",
+   "sections": [
+    {
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rx": 0.1,
+     "ry": 0.1
+    },
+    {
+     "at": [
+      0,
+      0,
+      1
+     ],
+     "rx": 0.1,
+     "ry": 0.1
+    }
+   ],
+   "fold": null
+  },
+  {
+   "name": "gentle-arch",
+   "sections": [
+    {
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0.4,
+      0.1
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0.6,
+      0.3
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0.6,
+      0.6
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0.4,
+      0.8
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.9
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    }
+   ],
+   "fold": null
+  },
+  {
+   "name": "reversed-gentle-arch",
+   "sections": [
+    {
+     "at": [
+      0,
+      0,
+      0.9
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0.4,
+      0.8
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0.6,
+      0.6
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0.6,
+      0.3
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0.4,
+      0.1
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    },
+    {
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rx": 0.03,
+     "ry": 0.03
+    }
+   ],
+   "fold": null
+  },
+  {
+   "name": "hairpin-tighter-than-the-section",
+   "sections": [
+    {
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rx": 0.2,
+     "ry": 0.2
+    },
+    {
+     "at": [
+      0,
+      0,
+      1
+     ],
+     "rx": 0.2,
+     "ry": 0.2
+    },
+    {
+     "at": [
+      0,
+      0.05,
+      0.9
+     ],
+     "rx": 0.2,
+     "ry": 0.2
+    }
+   ],
+   "fold": [
+    1,
+    2
+   ]
+  },
+  {
+   "name": "right-angle-elbow-tighter-than-the-section",
+   "sections": [
+    {
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rx": 0.2,
+     "ry": 0.2
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.05
+     ],
+     "rx": 0.2,
+     "ry": 0.2
+    },
+    {
+     "at": [
+      0.05,
+      0,
+      0.05
+     ],
+     "rx": 0.2,
+     "ry": 0.2
+    }
+   ],
+   "fold": [
+    0,
+    1
+   ]
+  },
+  {
+   "name": "right-angle-elbow-wide-enough",
+   "sections": [
+    {
+     "at": [
+      0,
+      0,
+      0
+     ],
+     "rx": 0.02,
+     "ry": 0.02
+    },
+    {
+     "at": [
+      0,
+      0,
+      0.3
+     ],
+     "rx": 0.02,
+     "ry": 0.02
+    },
+    {
+     "at": [
+      0.3,
+      0,
+      0.3
+     ],
+     "rx": 0.02,
+     "ry": 0.02
+    }
+   ],
+   "fold": null
+  }
+ ]
+}

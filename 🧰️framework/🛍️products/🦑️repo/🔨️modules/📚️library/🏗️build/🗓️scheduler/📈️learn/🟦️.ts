@@ -28,3 +28,17 @@ export async function recordHostServicePeakV1(environment:NodeJS.ProcessEnv,peak
  const bounded=Math.max(1,Math.min(Math.round(peakMegabytes),Math.round(boundMegabytes)));
  await updateHostEstimateStoreV1(hostCapacityDirectoryV1(environment),BUILD_HOST_CAPACITY_POLICY_V1,store=>recordHostPhasesV1(BUILD_HOST_CAPACITY_POLICY_V1,store,[HOST_SERVICE_CLASS_V1],"service",bounded,{jobs:1,peakMegabytes:bounded,activeMilliseconds:1000,peakAtMilliseconds:0,endedAtMs:now(),keepPeak:true}),{now});
 }
+
+/** 🏷️ The capacity class of one slice load of the host graph service: the only place the peak of a slice is learned (the host estimate store, with its decay, quantile and outlier rules), so no second file can disagree with the gate. */
+export const HOST_SLICE_CLASS_V1="slice:graph";
+
+/** 🍰 The peak, in megabytes, a slice load of this host was measured to need, once enough runs back it, never above `ceilingMegabytes` (what the gate can ever grant a slice on this machine) and 0 while nothing is measured or the store cannot be read: a stored history never makes the host unable to start. */
+export function learnedHostSlicePeakV1(environment:NodeJS.ProcessEnv,ceilingMegabytes:number,now:()=>number=Date.now):number{
+ try{const bound=hostClassBoundV1(BUILD_HOST_CAPACITY_POLICY_V1,readHostEstimateStoreV1(hostCapacityDirectoryV1(environment)),[HOST_SLICE_CLASS_V1],now());return bound.source==="measured"?Math.max(0,Math.min(bound.megabytes,ceilingMegabytes)):0;}catch{return 0;}
+}
+
+/** 🍰 Records the peak one slice load reached, bounded by `ceilingMegabytes`, so one spike or a killed load cannot teach a booking above what the machine can give. */
+export async function recordHostSlicePeakV1(environment:NodeJS.ProcessEnv,peakMegabytes:number,ceilingMegabytes:number,now:()=>number=Date.now):Promise<void>{
+ const bounded=Math.max(1,Math.min(Math.round(peakMegabytes),Math.round(ceilingMegabytes)));
+ await updateHostEstimateStoreV1(hostCapacityDirectoryV1(environment),BUILD_HOST_CAPACITY_POLICY_V1,store=>recordHostPhasesV1(BUILD_HOST_CAPACITY_POLICY_V1,store,[HOST_SLICE_CLASS_V1],"slice",bounded,{jobs:1,peakMegabytes:bounded,activeMilliseconds:1000,peakAtMilliseconds:0,endedAtMs:now(),keepPeak:true}),{now});
+}

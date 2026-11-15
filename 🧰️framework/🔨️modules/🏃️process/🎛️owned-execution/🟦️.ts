@@ -10,7 +10,7 @@ import {tmpdir} from "node:os";
 import {prepareTestCommandV1,testProtocolMessageV1} from "../🧪️testing/🚦️protocol/🟦️.ts";
 export {withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,readOwnedCommandChannelTerminalV1,writeOwnedCommandChannelV1,closeOwnedCommandChannelV1,readOwnedCommandChannelDiagnosticsV1,type OwnedCommandChannelV1,type OwnedCommandTerminalV1,writeOwnedCommandOutputV1,type OwnedCommandOutputSinkV1,captureOwnedCommandResultV1,readOwnedCommandEncodingContextV1,readOwnedCommandCaptureV1,type OwnedCommandCaptureV1,type OwnedCommandCaptureOptionsV1,type OwnedCommandSpawnHookV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
 import { terminateOwnedChildTree } from "../🪓️termination/🟦️.ts";
-import { checkResourceLeaseControl, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
+import { checkResourceLeaseControl, watchResourceLeaseControlDeadlineV1, type ResourceLeaseControl } from "../🔒️leases/🟦️.ts";
 import { StringDecoder } from "node:string_decoder";
 import { spawn } from "node:child_process";
 import { settleOwnedChildV1 } from "./🏁️settlement/🟦️.ts";
@@ -30,12 +30,13 @@ export { OwnedCommandFailure, isOwnedCommandFailureV1, ownedCommandExitCodeV1, r
 /** 🌓️ Names the closed stdout and stderr roles declared by the owned output stream schema. */
 export type OwnedCommandStreamV1="stdout"|"stderr";
 
-/** 🎛️ Receives actual output, cancellation and awaited publication ports. */
+/** 🎛️ Receives actual output, cancellation and awaited publication ports. `deadline` is the live control whose possibly renewable (progress-aware) deadline supervises the command: it is read again whenever it is believed due, so output, child CPU time and declared waits that renew it keep the command alive, where a remaining time passed as `timeoutMs` would be a fixed wall clock. */
 export interface OwnedCommandOptions {
   readonly stdout?: "inherit" | "ignore" | "stderr";
   readonly outputStyle?: "stream" | "stream-without-prefixes" | "static";
   readonly progressIntervalMs?: number;
   readonly control?: ResourceLeaseControl;
+  readonly deadline?: ResourceLeaseControl;
   readonly input?: string | Uint8Array;
   readonly auxiliaryInput?: OwnedCommandAuxiliaryInputV1;
   readonly output?: Readonly<{maximumBytes:number;maximumLines:number}>;
@@ -82,6 +83,13 @@ export function startOwnedCommandTimeoutV1(milliseconds:number,expire:()=>void):
   return()=>{active=false;if(timer!==undefined)clearTimeout(timer);};
 }
 
+/** 🧭️ The typed refusal of a caller deadline that ended: a progress deadline names its idle or maximum reason in every selected language, a cancelled control is a cancellation, anything else is an exhausted deadline. */
+function deadlineRefusalV1(label: string, control: ResourceLeaseControl, reason: unknown): RepoErrorV1 {
+  return reason instanceof ProgressDeadlineExpiredV1 ? refuseProcessV1("timeout", "execution.progress-expired", { label, notice: reason.message })
+    : control.signal.aborted ? stopRefusalV1(label, "cancelled")
+    : refuseProcessV1("timeout", "execution.deadline-exhausted", { label });
+}
+
 /** 🛑️ The typed refusal of a stop the owner decided: cancellation, termination, a timeout or an output limit, each with its exit class. */
 function stopRefusalV1(label: string, stop: "cancelled" | "SIGTERM" | "timeout" | "output-limit", milliseconds = 0): RepoErrorV1 {
   return stop === "cancelled" ? refuseProcessV1("cancelled", "execution.cancelled", { label })
@@ -113,7 +121,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     if (!closed) terminateOwnedChildTree(child);
   };
   const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, terminate) : undefined;
-  const abort = (): void => commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? terminate(commandSignal.reason.message) : terminate("cancelled", stopRefusalV1(label, "cancelled"));
+  const abort = (): void => commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? terminate(commandSignal.reason.message, refuseProcessV1("timeout", "execution.progress-expired", { label, notice: commandSignal.reason.message })) : terminate("cancelled", stopRefusalV1(label, "cancelled"));
   const observe = (stream: NodeJS.ReadableStream,source:OwnedCommandStreamV1): void => {
     const decoder = new StringDecoder("utf8");
     let pending = "";
@@ -168,7 +176,9 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     });
   };
   const stopProgress = startNativeProgress(label, options.progressIntervalMs ?? 10_000, publish);
-  const stopTimeout = startOwnedCommandTimeoutV1(timeoutMs,() => terminate(`timeout ${timeoutMs}ms`, stopRefusalV1(label, "timeout", timeoutMs)));
+  const stopFixed = startOwnedCommandTimeoutV1(timeoutMs,() => terminate(`timeout ${timeoutMs}ms`, stopRefusalV1(label, "timeout", timeoutMs))),
+    stopLive = options.deadline === undefined ? undefined : watchResourceLeaseControlDeadlineV1(options.deadline, reason => terminate("deadline", deadlineRefusalV1(label, options.deadline!, reason))),
+    stopTimeout = (): void => { stopFixed(); stopLive?.(); };
   let auxiliaryFailed=false,auxiliaryFailure:unknown;
   try {
     const auxiliaryPublication=auxiliary?publishOwnedAuxiliaryInputV1(child.stdio[3] as import("node:stream").Writable|null,auxiliary.text,(error,phase)=>{if(!auxiliaryFailed){auxiliaryFailed=true;auxiliaryFailure=new OwnedAuxiliaryPublicationFailureV1(error,phase);}terminate("auxiliary input publication refused");}):Promise.resolve();

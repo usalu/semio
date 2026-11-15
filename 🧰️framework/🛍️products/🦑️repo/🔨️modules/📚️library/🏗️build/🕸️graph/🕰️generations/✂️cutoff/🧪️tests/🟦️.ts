@@ -275,7 +275,7 @@ test("a closure is stored as references to the row parts it reached: shared part
   const settled=await createClosureSettlerV1({store:createNodeStoreV1({root})}).settle({pseudoRows:suspectRowsV1(index,suspects),derive:async(row:{path:string})=>({fact:"old",parts:[shared,[own[names.indexOf(row.path)]!]]}),hold:async()=>true});
   expect(settled.failed).toBe(0);
   const files=readdirSync(join(root,"n")),closureBytes=files.map(file=>statSync(join(root,"n",file)).size);
-  expect(files.length,"three closures, four parts, the four path summaries of the parts and the settle manifest").toBe(3+4+4+1);
+  expect(files.length,"three closures, four parts, the four path summaries of the parts and the settle manifest (its head and the shards that hold something)").toBeGreaterThanOrEqual(3+4+4+2);
   for(const name of suspects){const rows=[...settled.held.get(name)!];expect(rows.length).toBe(1+3000+1);expect(new Set(rows.map(row=>row.path)).size).toBe(rows.length);}
   expect(Math.max(...closureBytes.filter(size=>size<20000)),"a closure record holds ids, not 3,000 rows").toBeLessThan(6000);
  }finally{rmSync(root,{recursive:true,force:true});}

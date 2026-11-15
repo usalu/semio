@@ -1,5 +1,5 @@
 import { isAbsolute, join, resolve } from "node:path";
-import { readBuildMode } from "@semio-tech/process/build-mode";
+import { readBuildMode } from "../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 /** 🔤️ Resolves one stable font publication per intent without issuing reader or writer custody. */
 export function fontAssetPublicationRootV1(productsRoot: string, mode: string): string {

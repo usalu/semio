@@ -1,0 +1,2757 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "casing",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.42,
+     "profile": [
+      [
+       0,
+       0.0515
+      ],
+      [
+       0.006,
+       0.0575
+      ],
+      [
+       0.044,
+       0.0575
+      ],
+      [
+       0.05,
+       0.0515
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0.015
+     ]
+    },
+    {
+     "id": "union-l",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "brass",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0,
+       0.021
+      ],
+      [
+       0.013,
+       0.021
+      ],
+      [
+       0.013,
+       0.0195
+      ],
+      [
+       0.0235,
+       0.0195
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.0775,
+      0,
+      0.04
+     ]
+    },
+    {
+     "id": "union-r",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "brass",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0,
+       0.0195
+      ],
+      [
+       0.0105,
+       0.0195
+      ],
+      [
+       0.0105,
+       0.021
+      ],
+      [
+       0.0235,
+       0.021
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.054,
+      0,
+      0.04
+     ]
+    },
+    {
+     "id": "stub-l",
+     "kind": "extrude",
+     "bone": "housing",
+     "material": "copper",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.014,
+       0.04
+      ],
+      [
+       0.01373,
+       0.04273
+      ],
+      [
+       0.01293,
+       0.04536
+      ],
+      [
+       0.01164,
+       0.04778
+      ],
+      [
+       0.0099,
+       0.0499
+      ],
+      [
+       0.00778,
+       0.05164
+      ],
+      [
+       0.00536,
+       0.05293
+      ],
+      [
+       0.00273,
+       0.05373
+      ],
+      [
+       0.0,
+       0.054
+      ],
+      [
+       -0.00273,
+       0.05373
+      ],
+      [
+       -0.00536,
+       0.05293
+      ],
+      [
+       -0.00778,
+       0.05164
+      ],
+      [
+       -0.0099,
+       0.0499
+      ],
+      [
+       -0.01164,
+       0.04778
+      ],
+      [
+       -0.01293,
+       0.04536
+      ],
+      [
+       -0.01373,
+       0.04273
+      ],
+      [
+       -0.014,
+       0.04
+      ],
+      [
+       -0.01373,
+       0.03727
+      ],
+      [
+       -0.01293,
+       0.03464
+      ],
+      [
+       -0.01164,
+       0.03222
+      ],
+      [
+       -0.0099,
+       0.0301
+      ],
+      [
+       -0.00778,
+       0.02836
+      ],
+      [
+       -0.00536,
+       0.02707
+      ],
+      [
+       -0.00273,
+       0.02627
+      ],
+      [
+       0.0,
+       0.026
+      ],
+      [
+       0.00273,
+       0.02627
+      ],
+      [
+       0.00536,
+       0.02707
+      ],
+      [
+       0.00778,
+       0.02836
+      ],
+      [
+       0.0099,
+       0.0301
+      ],
+      [
+       0.01164,
+       0.03222
+      ],
+      [
+       0.01293,
+       0.03464
+      ],
+      [
+       0.01373,
+       0.03727
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.09,
+     "to": -0.075,
+     "holes": [
+      [
+       [
+        0.009,
+        0.04
+       ],
+       [
+        0.00883,
+        0.04176
+       ],
+       [
+        0.00831,
+        0.04344
+       ],
+       [
+        0.00748,
+        0.045
+       ],
+       [
+        0.00636,
+        0.04636
+       ],
+       [
+        0.005,
+        0.04748
+       ],
+       [
+        0.00344,
+        0.04831
+       ],
+       [
+        0.00176,
+        0.04883
+       ],
+       [
+        0.0,
+        0.049
+       ],
+       [
+        -0.00176,
+        0.04883
+       ],
+       [
+        -0.00344,
+        0.04831
+       ],
+       [
+        -0.005,
+        0.04748
+       ],
+       [
+        -0.00636,
+        0.04636
+       ],
+       [
+        -0.00748,
+        0.045
+       ],
+       [
+        -0.00831,
+        0.04344
+       ],
+       [
+        -0.00883,
+        0.04176
+       ],
+       [
+        -0.009,
+        0.04
+       ],
+       [
+        -0.00883,
+        0.03824
+       ],
+       [
+        -0.00831,
+        0.03656
+       ],
+       [
+        -0.00748,
+        0.035
+       ],
+       [
+        -0.00636,
+        0.03364
+       ],
+       [
+        -0.005,
+        0.03252
+       ],
+       [
+        -0.00344,
+        0.03169
+       ],
+       [
+        -0.00176,
+        0.03117
+       ],
+       [
+        0.0,
+        0.031
+       ],
+       [
+        0.00176,
+        0.03117
+       ],
+       [
+        0.00344,
+        0.03169
+       ],
+       [
+        0.005,
+        0.03252
+       ],
+       [
+        0.00636,
+        0.03364
+       ],
+       [
+        0.00748,
+        0.035
+       ],
+       [
+        0.00831,
+        0.03656
+       ],
+       [
+        0.00883,
+        0.03824
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "stub-r",
+     "kind": "extrude",
+     "bone": "housing",
+     "material": "copper",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0.014,
+       0.04
+      ],
+      [
+       0.01373,
+       0.04273
+      ],
+      [
+       0.01293,
+       0.04536
+      ],
+      [
+       0.01164,
+       0.04778
+      ],
+      [
+       0.0099,
+       0.0499
+      ],
+      [
+       0.00778,
+       0.05164
+      ],
+      [
+       0.00536,
+       0.05293
+      ],
+      [
+       0.00273,
+       0.05373
+      ],
+      [
+       0.0,
+       0.054
+      ],
+      [
+       -0.00273,
+       0.05373
+      ],
+      [
+       -0.00536,
+       0.05293
+      ],
+      [
+       -0.00778,
+       0.05164
+      ],
+      [
+       -0.0099,
+       0.0499
+      ],
+      [
+       -0.01164,
+       0.04778
+      ],
+      [
+       -0.01293,
+       0.04536
+      ],
+      [
+       -0.01373,
+       0.04273
+      ],
+      [
+       -0.014,
+       0.04
+      ],
+      [
+       -0.01373,
+       0.03727
+      ],
+      [
+       -0.01293,
+       0.03464
+      ],
+      [
+       -0.01164,
+       0.03222
+      ],
+      [
+       -0.0099,
+       0.0301
+      ],
+      [
+       -0.00778,
+       0.02836
+      ],
+      [
+       -0.00536,
+       0.02707
+      ],
+      [
+       -0.00273,
+       0.02627
+      ],
+      [
+       0.0,
+       0.026
+      ],
+      [
+       0.00273,
+       0.02627
+      ],
+      [
+       0.00536,
+       0.02707
+      ],
+      [
+       0.00778,
+       0.02836
+      ],
+      [
+       0.0099,
+       0.0301
+      ],
+      [
+       0.01164,
+       0.03222
+      ],
+      [
+       0.01293,
+       0.03464
+      ],
+      [
+       0.01373,
+       0.03727
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.075,
+     "to": 0.09,
+     "holes": [
+      [
+       [
+        0.009,
+        0.04
+       ],
+       [
+        0.00883,
+        0.04176
+       ],
+       [
+        0.00831,
+        0.04344
+       ],
+       [
+        0.00748,
+        0.045
+       ],
+       [
+        0.00636,
+        0.04636
+       ],
+       [
+        0.005,
+        0.04748
+       ],
+       [
+        0.00344,
+        0.04831
+       ],
+       [
+        0.00176,
+        0.04883
+       ],
+       [
+        0.0,
+        0.049
+       ],
+       [
+        -0.00176,
+        0.04883
+       ],
+       [
+        -0.00344,
+        0.04831
+       ],
+       [
+        -0.005,
+        0.04748
+       ],
+       [
+        -0.00636,
+        0.04636
+       ],
+       [
+        -0.00748,
+        0.045
+       ],
+       [
+        -0.00831,
+        0.04344
+       ],
+       [
+        -0.00883,
+        0.04176
+       ],
+       [
+        -0.009,
+        0.04
+       ],
+       [
+        -0.00883,
+        0.03824
+       ],
+       [
+        -0.00831,
+        0.03656
+       ],
+       [
+        -0.00748,
+        0.035
+       ],
+       [
+        -0.00636,
+        0.03364
+       ],
+       [
+        -0.005,
+        0.03252
+       ],
+       [
+        -0.00344,
+        0.03169
+       ],
+       [
+        -0.00176,
+        0.03117
+       ],
+       [
+        0.0,
+        0.031
+       ],
+       [
+        0.00176,
+        0.03117
+       ],
+       [
+        0.00344,
+        0.03169
+       ],
+       [
+        0.005,
+        0.03252
+       ],
+       [
+        0.00636,
+        0.03364
+       ],
+       [
+        0.00748,
+        0.035
+       ],
+       [
+        0.00831,
+        0.03656
+       ],
+       [
+        0.00883,
+        0.03824
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "motor-head",
+     "kind": "revolve",
+     "bone": "motor",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0,
+       0.0415
+      ],
+      [
+       0.004,
+       0.0455
+      ],
+      [
+       0.071,
+       0.0455
+      ],
+      [
+       0.075,
+       0.0415
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.06
+     ]
+    },
+    {
+     "id": "bezel",
+     "kind": "extrude",
+     "bone": "motor",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0305,
+       0.0
+      ],
+      [
+       0.03012,
+       0.00477
+      ],
+      [
+       0.02901,
+       0.00943
+      ],
+      [
+       0.02718,
+       0.01385
+      ],
+      [
+       0.02468,
+       0.01793
+      ],
+      [
+       0.02157,
+       0.02157
+      ],
+      [
+       0.01793,
+       0.02468
+      ],
+      [
+       0.01385,
+       0.02718
+      ],
+      [
+       0.00943,
+       0.02901
+      ],
+      [
+       0.00477,
+       0.03012
+      ],
+      [
+       0.0,
+       0.0305
+      ],
+      [
+       -0.00477,
+       0.03012
+      ],
+      [
+       -0.00943,
+       0.02901
+      ],
+      [
+       -0.01385,
+       0.02718
+      ],
+      [
+       -0.01793,
+       0.02468
+      ],
+      [
+       -0.02157,
+       0.02157
+      ],
+      [
+       -0.02468,
+       0.01793
+      ],
+      [
+       -0.02718,
+       0.01385
+      ],
+      [
+       -0.02901,
+       0.00943
+      ],
+      [
+       -0.03012,
+       0.00477
+      ],
+      [
+       -0.0305,
+       0.0
+      ],
+      [
+       -0.03012,
+       -0.00477
+      ],
+      [
+       -0.02901,
+       -0.00943
+      ],
+      [
+       -0.02718,
+       -0.01385
+      ],
+      [
+       -0.02468,
+       -0.01793
+      ],
+      [
+       -0.02157,
+       -0.02157
+      ],
+      [
+       -0.01793,
+       -0.02468
+      ],
+      [
+       -0.01385,
+       -0.02718
+      ],
+      [
+       -0.00943,
+       -0.02901
+      ],
+      [
+       -0.00477,
+       -0.03012
+      ],
+      [
+       0.0,
+       -0.0305
+      ],
+      [
+       0.00477,
+       -0.03012
+      ],
+      [
+       0.00943,
+       -0.02901
+      ],
+      [
+       0.01385,
+       -0.02718
+      ],
+      [
+       0.01793,
+       -0.02468
+      ],
+      [
+       0.02157,
+       -0.02157
+      ],
+      [
+       0.02468,
+       -0.01793
+      ],
+      [
+       0.02718,
+       -0.01385
+      ],
+      [
+       0.02901,
+       -0.00943
+      ],
+      [
+       0.03012,
+       -0.00477
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.065,
+     "to": -0.057,
+     "holes": [
+      [
+       [
+        0.0265,
+        0.0
+       ],
+       [
+        0.02617,
+        0.00415
+       ],
+       [
+        0.0252,
+        0.00819
+       ],
+       [
+        0.02361,
+        0.01203
+       ],
+       [
+        0.02144,
+        0.01558
+       ],
+       [
+        0.01874,
+        0.01874
+       ],
+       [
+        0.01558,
+        0.02144
+       ],
+       [
+        0.01203,
+        0.02361
+       ],
+       [
+        0.00819,
+        0.0252
+       ],
+       [
+        0.00415,
+        0.02617
+       ],
+       [
+        0.0,
+        0.0265
+       ],
+       [
+        -0.00415,
+        0.02617
+       ],
+       [
+        -0.00819,
+        0.0252
+       ],
+       [
+        -0.01203,
+        0.02361
+       ],
+       [
+        -0.01558,
+        0.02144
+       ],
+       [
+        -0.01874,
+        0.01874
+       ],
+       [
+        -0.02144,
+        0.01558
+       ],
+       [
+        -0.02361,
+        0.01203
+       ],
+       [
+        -0.0252,
+        0.00819
+       ],
+       [
+        -0.02617,
+        0.00415
+       ],
+       [
+        -0.0265,
+        0.0
+       ],
+       [
+        -0.02617,
+        -0.00415
+       ],
+       [
+        -0.0252,
+        -0.00819
+       ],
+       [
+        -0.02361,
+        -0.01203
+       ],
+       [
+        -0.02144,
+        -0.01558
+       ],
+       [
+        -0.01874,
+        -0.01874
+       ],
+       [
+        -0.01558,
+        -0.02144
+       ],
+       [
+        -0.01203,
+        -0.02361
+       ],
+       [
+        -0.00819,
+        -0.0252
+       ],
+       [
+        -0.00415,
+        -0.02617
+       ],
+       [
+        0.0,
+        -0.0265
+       ],
+       [
+        0.00415,
+        -0.02617
+       ],
+       [
+        0.00819,
+        -0.0252
+       ],
+       [
+        0.01203,
+        -0.02361
+       ],
+       [
+        0.01558,
+        -0.02144
+       ],
+       [
+        0.01874,
+        -0.01874
+       ],
+       [
+        0.02144,
+        -0.01558
+       ],
+       [
+        0.02361,
+        -0.01203
+       ],
+       [
+        0.0252,
+        -0.00819
+       ],
+       [
+        0.02617,
+        -0.00415
+       ]
+      ]
+     ]
+    },
+    {
+     "id": "window",
+     "kind": "revolve",
+     "bone": "motor",
+     "material": "window-glass",
+     "role": "glazing",
+     "tone": 0.18,
+     "profile": [
+      [
+       0,
+       0.0265
+      ],
+      [
+       0.0015,
+       0.0265
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.065
+     ]
+    },
+    {
+     "id": "dial",
+     "kind": "revolve",
+     "bone": "motor",
+     "material": "polyamide",
+     "role": "texture",
+     "tone": 0.25,
+     "profile": [
+      [
+       0,
+       0.0265
+      ],
+      [
+       0.0015,
+       0.0265
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.0635
+     ]
+    },
+    {
+     "id": "terminal-neck",
+     "kind": "box",
+     "bone": "terminal",
+     "material": "polyamide",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.04,
+      0.008,
+      0.04
+     ],
+     "cornerRadius": 0.002,
+     "transform": {
+      "translation": [
+       0.0,
+       -0.0035,
+       -0.025
+      ]
+     }
+    },
+    {
+     "id": "terminal-box",
+     "kind": "box",
+     "bone": "terminal",
+     "material": "polyamide",
+     "role": "body",
+     "tone": 0.78,
+     "size": [
+      0.06,
+      0.025,
+      0.05
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.0,
+       0.0125,
+       -0.025
+      ]
+     }
+    },
+    {
+     "id": "terminal-lid",
+     "kind": "box",
+     "bone": "terminal",
+     "material": "polyamide",
+     "role": "body",
+     "tone": 0.82,
+     "size": [
+      0.061,
+      0.0175,
+      0.051
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.0,
+       0.03375,
+       -0.025
+      ]
+     }
+    },
+    {
+     "id": "gland",
+     "kind": "revolve",
+     "bone": "terminal",
+     "material": "polyamide",
+     "role": "detail",
+     "tone": 0.4,
+     "profile": [
+      [
+       0,
+       0.0068
+      ],
+      [
+       0.0165,
+       0.0068
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.0465,
+      0.01125,
+      -0.025
+     ]
+    },
+    {
+     "id": "led",
+     "kind": "ellipsoid",
+     "bone": "terminal",
+     "material": "polyamide",
+     "role": "detail",
+     "tone": 0.95,
+     "radii": [
+      0.0045,
+      0.0045,
+      0.004
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0.033,
+       -0.047
+      ]
+     }
+    },
+    {
+     "id": "pointer",
+     "kind": "extrude",
+     "bone": "rotor",
+     "material": "window-glass",
+     "role": "detail",
+     "tone": 0.95,
+     "profile": [
+      [
+       -0.007,
+       0
+      ],
+      [
+       0.007,
+       0
+      ],
+      [
+       0,
+       0.026
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0625,
+     "to": -0.055
+    },
+    {
+     "id": "tail",
+     "kind": "extrude",
+     "bone": "rotor",
+     "material": "window-glass",
+     "role": "detail",
+     "tone": 0.7,
+     "profile": [
+      [
+       -0.005,
+       0
+      ],
+      [
+       0.005,
+       0
+      ],
+      [
+       0,
+       -0.012
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.0625,
+     "to": -0.055
+    },
+    {
+     "id": "hub",
+     "kind": "revolve",
+     "bone": "rotor",
+     "material": "window-glass",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.0055
+      ],
+      [
+       0.0075,
+       0.0055
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.0625
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-casing",
+     "of": "casing",
+     "region": "casing",
+     "layer": "shell"
+    },
+    {
+     "id": "th-union-l",
+     "of": "union-l",
+     "region": "casing",
+     "layer": "shell"
+    },
+    {
+     "id": "th-union-r",
+     "of": "union-r",
+     "region": "casing",
+     "layer": "shell"
+    },
+    {
+     "id": "th-stub-l",
+     "of": "stub-l",
+     "region": "casing",
+     "layer": "shell"
+    },
+    {
+     "id": "th-stub-r",
+     "of": "stub-r",
+     "region": "casing",
+     "layer": "shell"
+    },
+    {
+     "id": "th-motor-head",
+     "of": "motor-head",
+     "region": "motor",
+     "layer": "head"
+    },
+    {
+     "id": "th-bezel",
+     "of": "bezel",
+     "region": "motor",
+     "layer": "head"
+    },
+    {
+     "id": "th-terminal-box",
+     "of": "terminal-box",
+     "region": "terminal-box",
+     "layer": "box"
+    },
+    {
+     "id": "th-terminal-lid",
+     "of": "terminal-lid",
+     "region": "terminal-box",
+     "layer": "box"
+    },
+    {
+     "id": "th-rotor-window",
+     "of": "window",
+     "region": "rotor-window",
+     "layer": "pane"
+    },
+    {
+     "id": "th-motor-plume",
+     "kind": "loft",
+     "bone": "motor",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.62,
+     "layer": "head",
+     "sections": [
+      {
+       "at": [
+        0,
+        0.0345,
+        -0.025
+       ],
+       "rx": 0.04,
+       "ry": 0.04,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.0425,
+        -0.025
+       ],
+       "rx": 0.04,
+       "ry": 0.04,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": false,
+     "capEnd": false,
+     "tags": [
+      "motor-plume"
+     ],
+     "region": "motor"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-housing",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "housing",
+     "part": "member",
+     "profile": [
+      [
+       0,
+       0.0185
+      ],
+      [
+       0.165,
+       0.0185
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.0825,
+      0,
+      0.04
+     ]
+    },
+    {
+     "id": "member-motor",
+     "of": "motor-head",
+     "member": "motor",
+     "part": "member"
+    },
+    {
+     "id": "member-terminal",
+     "of": "terminal-box",
+     "member": "terminal",
+     "part": "member"
+    },
+    {
+     "id": "member-rotor",
+     "kind": "revolve",
+     "bone": "rotor",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "rotor",
+     "part": "member",
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.095,
+       0.008
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.06
+     ]
+    },
+    {
+     "id": "joint-motor",
+     "kind": "revolve",
+     "bone": "motor",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "motor",
+     "part": "joint",
+     "profile": [
+      [
+       0,
+       0.0415
+      ],
+      [
+       0.015,
+       0.0415
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0.0075
+     ]
+    },
+    {
+     "id": "joint-terminal",
+     "kind": "box",
+     "bone": "terminal",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "terminal",
+     "part": "joint",
+     "size": [
+      0.04,
+      0.008,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.0035,
+       -0.025
+      ]
+     }
+    },
+    {
+     "id": "joint-rotor",
+     "kind": "revolve",
+     "bone": "rotor",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "rotor",
+     "part": "joint",
+     "profile": [
+      [
+       0,
+       0.0105
+      ],
+      [
+       0.015,
+       0.0105
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.06
+     ]
+    },
+    {
+     "id": "mass-housing",
+     "kind": "ellipsoid",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.15,
+     "member": "housing",
+     "part": "mass",
+     "radii": [
+      0.04,
+      0.04,
+      0.0125
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       0.04
+      ]
+     }
+    },
+    {
+     "id": "mass-motor",
+     "kind": "ellipsoid",
+     "bone": "motor",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.15,
+     "member": "motor",
+     "part": "mass",
+     "radii": [
+      0.035,
+      0.035,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.0225
+      ]
+     }
+    },
+    {
+     "id": "support-pipe-left",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "housing",
+     "part": "support",
+     "profile": [
+      [
+       0,
+       0.0075
+      ],
+      [
+       0.028,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.085,
+      0,
+      0.026
+     ],
+     "tags": [
+      "pipe-left"
+     ],
+     "anchor": "pipe-left"
+    },
+    {
+     "id": "support-pipe-right",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "housing",
+     "part": "support",
+     "profile": [
+      [
+       0,
+       0.0075
+      ],
+      [
+       0.028,
+       0.0075
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.085,
+      0,
+      0.026
+     ],
+     "tags": [
+      "pipe-right"
+     ],
+     "anchor": "pipe-right"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Own 1:50 model from the three drawings: the pump head is a chamfered 0.115 m cast disc about the lateral axis w (z 0.015..0.065), the wet-rotor motor a 0.091 m revolved cylinder (z -0.06..0.015) with an 8 mm bezel ring and the glass window and dial sheet in the recess, the terminal box a rounded box on a neck block with lid, cable gland and LED lens; the two unions are stepped brass revolves and the copper stubs hollow rings (18 mm bore, end-on in the front view). Rotor pointer, tail and hub are 7.5 mm bodies behind the glass.",
+     "de": "Eigenes 1:50-Modell aus den drei Zeichnungen: der Pumpenkopf ist eine gefaste Gussscheibe von 0,115 m um die Querachse w (z 0,015..0,065), der Nassläufermotor ein gedrehter Zylinder von 0,091 m (z -0,06..0,015) mit 8-mm-Blendenring sowie Glas und Zifferblattblech in der Vertiefung, der Klemmenkasten ein gerundeter Kasten auf einem Halsblock mit Deckel, Kabelverschraubung und LED-Linse; die zwei Verschraubungen sind gestufte Messingdrehteile, die Kupferstutzen hohle Ringe (Bohrung 18 mm, stirnseitig in der Ansicht). Zeiger, Schwanz und Nabe des Rotors sind 7,5-mm-Körper hinter dem Glas."
+    },
+    {
+     "en": "Repaired for the 7.5 mm feature: bezel ring 8 mm deep, hub and pointer 7.5 mm thick, LED a domed lens; the 0.7 mm motor ring is merged into the motor head, the glass pane and the dial sheet stay as thin sheets (roles glazing and texture). The unions' z axis follows the plan (w = 0.04 m, the middle of the casing).",
+     "de": "Für das 7,5-mm-Merkmal repariert: Blendenring 8 mm tief, Nabe und Zeiger 7,5 mm dick, LED als gewölbte Linse; der 0,7-mm-Motorring geht im Motorkopf auf, Glasscheibe und Zifferblattblech bleiben dünne Bleche (Rollen glazing und texture). Die z-Achse der Verschraubungen folgt dem Grundriss (w = 0,04 m, Gehäusemitte)."
+    },
+    {
+     "en": "Thermal (area = exposed surface, buried faces do not count): casing = cast head, unions and copper stubs, motor = motor head and bezel, terminal box = box and lid, rotor window = the glass pane, all by reference to the body solids; the motor plume is a 0.08 m ring at the motor-top anchor (tag motor-plume). Single-layer regions are surfaces; areaM2 of motor, casing and terminal box was corrected at the root to the modelled exposed surfaces (see report).",
+     "de": "Thermik (Fläche = freie Oberfläche, verdeckte Flächen zählen nicht): Gehäuse = Gusskopf, Verschraubungen und Kupferstutzen, Motor = Motorkopf und Blende, Klemmenkasten = Kasten und Deckel, Schauglas = die Glasscheibe, alles als Verweis auf die Körper; die Motorfahne ist ein Ring von 0,08 m am Anker motor-top (Markierung motor-plume). Einlagige Regionen sind Flächen; areaM2 von Motor, Gehäuse und Klemmenkasten wurde an der Wurzel auf die modellierten freien Flächen korrigiert (siehe Bericht)."
+    },
+    {
+     "en": "Structure: a 0.037 m solid bar through both unions is the housing member, the motor head and the terminal box are the motor and terminal members, a 15 mm shaft is the rotor member; flange, neck and bearing sleeve are the joints; mass ellipsoids sit in casing and motor. The union pin is a 15 mm cross pin through the left stub; the roller support is a 15 mm roller on the right stub.",
+     "de": "Tragwerk: ein Vollstab von 0,037 m durch beide Verschraubungen ist der Gehäusestab, Motorkopf und Klemmenkasten sind Motor- und Klemmenstab, eine 15-mm-Welle ist der Rotorstab; Flansch, Hals und Lagerhülse sind die Gelenke; Massenellipsoide sitzen in Gehäuse und Motor. Das Festlager ist ein 15-mm-Querbolzen durch den linken Stutzen; das Rollenlager ist eine 15-mm-Rolle am rechten Stutzen."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "casing",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.42,
+     "profile": [
+      [
+       0,
+       0.0515
+      ],
+      [
+       0.006,
+       0.0575
+      ],
+      [
+       0.044,
+       0.0575
+      ],
+      [
+       0.05,
+       0.0515
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0.015
+     ]
+    },
+    {
+     "id": "stub-l",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "copper",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0,
+       0.017
+      ],
+      [
+       0.035,
+       0.017
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.09,
+      0,
+      0.04
+     ]
+    },
+    {
+     "id": "stub-r",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "copper",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0,
+       0.017
+      ],
+      [
+       0.035,
+       0.017
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.055,
+      0,
+      0.04
+     ]
+    },
+    {
+     "id": "motor-head",
+     "kind": "revolve",
+     "bone": "motor",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0,
+       0.0415
+      ],
+      [
+       0.004,
+       0.0455
+      ],
+      [
+       0.076,
+       0.0455
+      ],
+      [
+       0.08,
+       0.0415
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.065
+     ]
+    },
+    {
+     "id": "window",
+     "kind": "revolve",
+     "bone": "motor",
+     "material": "window-glass",
+     "role": "glazing",
+     "tone": 0.18,
+     "profile": [
+      [
+       0,
+       0.026
+      ],
+      [
+       0.0015,
+       0.026
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.0665
+     ]
+    },
+    {
+     "id": "terminal-neck",
+     "kind": "box",
+     "bone": "terminal",
+     "material": "polyamide",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.04,
+      0.0155,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       -0.00725,
+       -0.025
+      ]
+     }
+    },
+    {
+     "id": "terminal-box",
+     "kind": "box",
+     "bone": "terminal",
+     "material": "polyamide",
+     "role": "body",
+     "tone": 0.78,
+     "size": [
+      0.06,
+      0.0425,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.02125,
+       -0.025
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-casing",
+     "of": "casing",
+     "region": "casing",
+     "layer": "shell"
+    },
+    {
+     "id": "th-stub-l",
+     "of": "stub-l",
+     "region": "casing",
+     "layer": "shell"
+    },
+    {
+     "id": "th-stub-r",
+     "of": "stub-r",
+     "region": "casing",
+     "layer": "shell"
+    },
+    {
+     "id": "th-motor-head",
+     "of": "motor-head",
+     "region": "motor",
+     "layer": "head"
+    },
+    {
+     "id": "th-terminal-box",
+     "of": "terminal-box",
+     "region": "terminal-box",
+     "layer": "box"
+    },
+    {
+     "id": "th-rotor-window",
+     "of": "window",
+     "region": "rotor-window",
+     "layer": "pane"
+    },
+    {
+     "id": "th-motor-plume",
+     "kind": "loft",
+     "bone": "motor",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.62,
+     "layer": "head",
+     "sections": [
+      {
+       "at": [
+        0,
+        0.0275,
+        -0.025
+       ],
+       "rx": 0.04,
+       "ry": 0.04,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.0425,
+        -0.025
+       ],
+       "rx": 0.04,
+       "ry": 0.04,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": false,
+     "capEnd": false,
+     "tags": [
+      "motor-plume"
+     ],
+     "region": "motor"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-housing",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "housing",
+     "part": "member",
+     "profile": [
+      [
+       0,
+       0.017
+      ],
+      [
+       0.18,
+       0.017
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.09,
+      0,
+      0.04
+     ]
+    },
+    {
+     "id": "member-motor",
+     "of": "motor-head",
+     "member": "motor",
+     "part": "member"
+    },
+    {
+     "id": "member-terminal",
+     "of": "terminal-box",
+     "member": "terminal",
+     "part": "member"
+    },
+    {
+     "id": "member-rotor",
+     "kind": "revolve",
+     "bone": "rotor",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "rotor",
+     "part": "member",
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.095,
+       0.008
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.06
+     ]
+    },
+    {
+     "id": "joint-motor",
+     "kind": "revolve",
+     "bone": "motor",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "motor",
+     "part": "joint",
+     "profile": [
+      [
+       0,
+       0.0415
+      ],
+      [
+       0.015,
+       0.0415
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0.0075
+     ]
+    },
+    {
+     "id": "joint-terminal",
+     "of": "terminal-neck",
+     "member": "terminal",
+     "part": "joint"
+    },
+    {
+     "id": "mass-housing",
+     "kind": "ellipsoid",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.15,
+     "member": "housing",
+     "part": "mass",
+     "radii": [
+      0.04,
+      0.04,
+      0.0125
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       0.04
+      ]
+     }
+    },
+    {
+     "id": "mass-motor",
+     "kind": "ellipsoid",
+     "bone": "motor",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.15,
+     "member": "motor",
+     "part": "mass",
+     "radii": [
+      0.035,
+      0.035,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.0225
+      ]
+     }
+    },
+    {
+     "id": "support-pipe-left",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "housing",
+     "part": "support",
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.03,
+       0.008
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.085,
+      0,
+      0.025
+     ],
+     "tags": [
+      "pipe-left"
+     ],
+     "anchor": "pipe-left"
+    },
+    {
+     "id": "support-pipe-right",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "housing",
+     "part": "support",
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.03,
+       0.008
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.085,
+      0,
+      0.025
+     ],
+     "tags": [
+      "pipe-right"
+     ],
+     "anchor": "pipe-right"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Own 1:100 model against the 1:100 shapes: the head disc with a plain 6 mm chamfer, the two unions and stubs merged into one 34 mm cylinder each (nut, step and bore are below 15 mm), the motor as one 0.08 m cylinder that now reaches the window face at z -0.065, and the terminal box without lid, gland and LED on a 15 mm neck. Bezel, dial sheet and rotor parts are dropped: they sit behind the window and are smaller than 15 mm.",
+     "de": "Eigenes 1:100-Modell gegen die 1:100-Formen: die Kopfscheibe mit einfacher 6-mm-Fase, die zwei Verschraubungen samt Stutzen zu je einem 34-mm-Zylinder zusammengefasst (Mutter, Stufe und Bohrung liegen unter 15 mm), der Motor als ein Zylinder von 0,08 m, der nun bis zur Glasfläche bei z -0,065 reicht, und der Klemmenkasten ohne Deckel, Verschraubung und LED auf einem 15-mm-Hals. Blende, Zifferblattblech und Rotorteile entfallen: sie liegen hinter dem Fenster und sind kleiner als 15 mm."
+    },
+    {
+     "en": "Thermal and structure are rebuilt on the 1:100 solids: casing and motor by reference, the terminal box, a 1.5 mm glass disc on the motor face and the plume ring, all by reference to the 1:100 body; structure keeps all four bones as members (bar, motor head, terminal box, 15 mm rotor shaft), flange and neck joints, two mass ellipsoids, pin and roller supports at 15 mm.",
+     "de": "Thermik und Tragwerk sind auf den 1:100-Körpern neu aufgebaut: Gehäuse und Motor als Verweis, der Klemmenkasten, eine 1,5-mm-Glasscheibe auf der Motorfläche und der Fahnenring, alles als Verweis auf den 1:100-Körper; das Tragwerk behält alle vier Knochen als Stäbe (Stab, Motorkopf, Klemmenkasten, 15-mm-Rotorwelle), Flansch- und Halsgelenk, zwei Massenellipsoide, Fest- und Rollenlager in 15 mm."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "body",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.42,
+     "profile": [
+      [
+       0,
+       0.0
+      ],
+      [
+       0.0,
+       0.0455
+      ],
+      [
+       0.08,
+       0.0455
+      ],
+      [
+       0.08,
+       0.0575
+      ],
+      [
+       0.13,
+       0.0575
+      ],
+      [
+       0.13,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.065
+     ]
+    },
+    {
+     "id": "pipe",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "copper",
+     "role": "body",
+     "tone": 0.7,
+     "profile": [
+      [
+       0,
+       0.0195
+      ],
+      [
+       0.18,
+       0.0195
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.09,
+      0,
+      0.04
+     ]
+    },
+    {
+     "id": "window",
+     "kind": "revolve",
+     "bone": "motor",
+     "material": "window-glass",
+     "role": "glazing",
+     "tone": 0.18,
+     "profile": [
+      [
+       0,
+       0.026
+      ],
+      [
+       0.0015,
+       0.026
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.0665
+     ]
+    },
+    {
+     "id": "terminal-box",
+     "kind": "box",
+     "bone": "terminal",
+     "material": "polyamide",
+     "role": "body",
+     "tone": 0.78,
+     "size": [
+      0.06,
+      0.0425,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.02125,
+       -0.025
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-casing",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.42,
+     "layer": "shell",
+     "profile": [
+      [
+       0,
+       0.0523
+      ],
+      [
+       0.006,
+       0.0583
+      ],
+      [
+       0.044,
+       0.0583
+      ],
+      [
+       0.05,
+       0.0523
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0.015
+     ],
+     "region": "casing"
+    },
+    {
+     "id": "th-motor-head",
+     "kind": "revolve",
+     "bone": "motor",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.62,
+     "layer": "head",
+     "profile": [
+      [
+       0,
+       0.0423
+      ],
+      [
+       0.004,
+       0.0463
+      ],
+      [
+       0.076,
+       0.0463
+      ],
+      [
+       0.08,
+       0.0423
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.065
+     ],
+     "region": "motor"
+    },
+    {
+     "id": "th-pipe-l",
+     "kind": "loft",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.42,
+     "layer": "shell",
+     "sections": [
+      {
+       "at": [
+        -0.09,
+        0,
+        0.04
+       ],
+       "rx": 0.0203,
+       "ry": 0.0203,
+       "exponent": 2,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        -0.0585,
+        0,
+        0.04
+       ],
+       "rx": 0.0203,
+       "ry": 0.0203,
+       "exponent": 2,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": false,
+     "capEnd": false,
+     "region": "casing"
+    },
+    {
+     "id": "th-pipe-r",
+     "kind": "loft",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "body",
+     "tone": 0.42,
+     "layer": "shell",
+     "sections": [
+      {
+       "at": [
+        0.0585,
+        0,
+        0.04
+       ],
+       "rx": 0.0203,
+       "ry": 0.0203,
+       "exponent": 2,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      },
+      {
+       "at": [
+        0.09,
+        0,
+        0.04
+       ],
+       "rx": 0.0203,
+       "ry": 0.0203,
+       "exponent": 2,
+       "rotation": [
+        0.70711,
+        0.0,
+        0.70711,
+        0.0
+       ]
+      }
+     ],
+     "capStart": false,
+     "capEnd": false,
+     "region": "casing"
+    },
+    {
+     "id": "th-terminal-box",
+     "of": "terminal-box",
+     "region": "terminal-box",
+     "layer": "box"
+    },
+    {
+     "id": "th-rotor-window",
+     "of": "window",
+     "region": "rotor-window",
+     "layer": "pane"
+    },
+    {
+     "id": "th-motor-plume",
+     "kind": "loft",
+     "bone": "motor",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.62,
+     "layer": "head",
+     "sections": [
+      {
+       "at": [
+        0,
+        0.0125,
+        -0.025
+       ],
+       "rx": 0.04,
+       "ry": 0.04,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0,
+        0.0425,
+        -0.025
+       ],
+       "rx": 0.04,
+       "ry": 0.04,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": false,
+     "capEnd": false,
+     "tags": [
+      "motor-plume"
+     ],
+     "region": "motor"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-housing",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "housing",
+     "part": "member",
+     "profile": [
+      [
+       0,
+       0.0185
+      ],
+      [
+       0.18,
+       0.0185
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.09,
+      0,
+      0.04
+     ]
+    },
+    {
+     "id": "member-motor",
+     "of": "body",
+     "member": "motor",
+     "part": "member"
+    },
+    {
+     "id": "member-terminal",
+     "of": "terminal-box",
+     "member": "terminal",
+     "part": "member"
+    },
+    {
+     "id": "member-rotor",
+     "kind": "revolve",
+     "bone": "rotor",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "rotor",
+     "part": "member",
+     "profile": [
+      [
+       0,
+       0.0155
+      ],
+      [
+       0.095,
+       0.0155
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      -0.06
+     ]
+    },
+    {
+     "id": "mass-housing",
+     "kind": "ellipsoid",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.15,
+     "member": "housing",
+     "part": "mass",
+     "radii": [
+      0.04,
+      0.04,
+      0.0155
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       0.04
+      ]
+     }
+    },
+    {
+     "id": "mass-motor",
+     "kind": "ellipsoid",
+     "bone": "motor",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.15,
+     "member": "motor",
+     "part": "mass",
+     "radii": [
+      0.035,
+      0.035,
+      0.0375
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.0225
+      ]
+     }
+    },
+    {
+     "id": "support-pipe-left",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "housing",
+     "part": "support",
+     "profile": [
+      [
+       0,
+       0.0155
+      ],
+      [
+       0.031,
+       0.0155
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.085,
+      0,
+      0.0245
+     ],
+     "tags": [
+      "pipe-left"
+     ],
+     "anchor": "pipe-left"
+    },
+    {
+     "id": "support-pipe-right",
+     "kind": "revolve",
+     "bone": "housing",
+     "material": "cast-iron",
+     "role": "detail",
+     "tone": 0.25,
+     "member": "housing",
+     "part": "support",
+     "profile": [
+      [
+       0,
+       0.0155
+      ],
+      [
+       0.031,
+       0.0155
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.085,
+      0,
+      0.0245
+     ],
+     "tags": [
+      "pipe-right"
+     ],
+     "anchor": "pipe-right"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Own 1:200 model: casing and motor are one stepped revolve (r 0.0455 for z -0.065..0.015, r 0.0575 for z 0.015..0.065, as the 1:200 plan and front outline), the two unions and stubs are one 0.18 m through pipe of 39 mm diameter, and the terminal box is a plain 0.06 x 0.0425 x 0.05 m block; neck, bezel, glass, lid and gland are merged.",
+     "de": "Eigenes 1:200-Modell: Gehäuse und Motor sind ein gestufter Revolve (r 0,0455 für z -0,065..0,015, r 0,0575 für z 0,015..0,065, wie im 1:200-Umriss von Grundriss und Ansicht), die zwei Verschraubungen samt Stutzen ein durchgehendes Rohr von 0,18 m und 39 mm Durchmesser, und der Klemmenkasten ein einfacher Block 0,06 x 0,0425 x 0,05 m; Hals, Blende, Glas, Deckel und Verschraubung sind zusammengefasst."
+    },
+    {
+     "en": "Thermal and structure at 1:200: casing and motor skins (0.8 mm outside the merged body), two pipe-end skins, the terminal block, the glass disc and the plume ring; structure keeps the four members (through pipe, stepped body, terminal block, 30 mm shaft), two mass ellipsoids and the pin and roller supports at 30 mm. Flange, neck and bearing joints are merged into the members.",
+     "de": "Thermik und Tragwerk bei 1:200: Gehäuse- und Motorhaut (0,8 mm ausserhalb des zusammengefassten Körpers), zwei Rohrendhäute, der Klemmenblock, die Glasscheibe und der Fahnenring; das Tragwerk behält die vier Stäbe (Durchgangsrohr, gestufter Körper, Klemmenblock, 30-mm-Welle), zwei Massenellipsoide sowie Fest- und Rollenlager in 30 mm. Flansch-, Hals- und Lagergelenk sind in den Stäben aufgegangen."
+    }
+   ]
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

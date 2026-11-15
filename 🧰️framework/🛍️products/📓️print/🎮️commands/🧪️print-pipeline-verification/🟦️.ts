@@ -4,6 +4,7 @@ import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦
 import { TEST_LEVELS } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 import { verifyVizChartInferences } from "@semio-tech/print-viz-inference/verification";
+import { prepareRepositoryBrowserV1 } from "../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🧰️preparation/🟦️.ts";
 import { BundleScript } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🩺️coverage-verification/🟦️.ts";
 import { writePrintGalleryEvidence } from "../../🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts";
@@ -49,6 +50,7 @@ export class PrintPipelineVerificationCommand extends BundleScript {
       await verifyPrintGalleryCarrier(context);
       await verifyPrintKindPaintFixtures(context);
       await verifyPrintApiTitleRendering(context);
+      await prepareRepositoryBrowserV1(this.repoRoot, this.invocation);
       await verifyVizChartInferences(["quick"]);
       verifyVisualizationCoverage();
       if (mode === "full") await verifyPrintVisualizationBuild(context);
@@ -56,6 +58,7 @@ export class PrintPipelineVerificationCommand extends BundleScript {
     }
     const { level } = resolveTestLevel(segments);
     await verifyPrintPipelineQuick(context);
+    await prepareRepositoryBrowserV1(this.repoRoot, this.invocation);
     await verifyVizChartInferences([level === "exhaustive" ? "exhaustive" : level === "long" ? "long" : "quick"]);
     if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) await verifyPrintPipelineLong(context);
     }));

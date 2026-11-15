@@ -109,6 +109,10 @@
           "realpathNative",
           "typescriptRealpath"
         ],
+        "fileRowKinds": [
+          "field",
+          "digest"
+        ],
         "texts": {
           "en": {
             "unrecorded": "No verified change journal cursor is recorded for generation {generation}; verifying the tree once.",
@@ -120,7 +124,8 @@
           }
         },
         "resolveKind": "resolve",
-        "maximumCarry": 20000,
+        "maximumCarry": 400000,
+        "maximumCarriedCursors": 2,
         "installStore": ".cache/b/d/m/j/",
         "lockfile": "bun.lock"
       }

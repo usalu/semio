@@ -1,4 +1,4 @@
-//! ↩️ `change-isolation-system-yield-disp-m` inverse: restores the previous `yield_displacement_m`.
+//! ↩️ `change-isolation-system-yield-displacement-m` inverse: restores the previous `yield_displacement_m`.
 
 use crate::change_isolation_system_yield_disp_m::ChangeIsolationSystemYieldDisplacementM;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

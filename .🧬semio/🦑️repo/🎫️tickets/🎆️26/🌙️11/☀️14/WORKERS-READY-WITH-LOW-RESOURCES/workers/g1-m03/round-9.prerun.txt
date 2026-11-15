@@ -1,0 +1,26 @@
+Pre-run facts, 2026-11-14T22:05:48Z
+- replica agent: launchctl print gui/501/tech.semio.fleet.replica:
+    	state = running
+    	runs = 45
+    	pid = 37539
+    	last exit code = 0
+    		state = active
+    		state = active
+- replica code digest (.cache/f/health.json): 590fdef8b75853d124d6f615cd2612d607146e27aaf2b94715a5d7b7606ad2f1, store ok, daemon pid 37556 , health.json age 1 s
+- "bootVersion":6
+- replica agent kickstarted: 0 times (state = running)
+- graph service jobs:
+    -	4	tech.semio.repo.service.a909995b451a
+    -	0	tech.semio.repo.service.d8505b2379b9
+- `repo service host` processes:
+  (0 process(es))
+- last 8 lines of .cache/f/sidecars/build-agent.log:
+    2026-11-14T21:58:54.732Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T21:58:56.231Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T21:58:57.529Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T21:58:58.579Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T21:58:59.656Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T21:59:00.862Z worker registered: 4c7b5b5e-1eb8-41f6-92a3-e0616dd21798 cache http://192.168.178.70:6094
+    2026-11-14T21:59:02.976Z load report sent: reachable again
+    2026-11-14T22:02:46.121Z graph-server: alive, 0 machines seen, 0 requests held, read none
+- memory pressure level 1, free disk 87Gi

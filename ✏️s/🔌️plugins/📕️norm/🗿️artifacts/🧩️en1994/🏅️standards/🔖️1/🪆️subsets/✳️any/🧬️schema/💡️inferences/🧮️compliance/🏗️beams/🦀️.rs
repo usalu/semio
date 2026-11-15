@@ -656,9 +656,9 @@ fn sls_stress(r: &mut CheckReport, c: &BeamCtx) {
     let n0 = cat::modular_ratio(b.concrete_e_cm_pa, 0.0, 0.0);
     let nl = cat::modular_ratio(b.concrete_e_cm_pa, cat::constants::PSI_L_PERMANENT, cat::constants::CREEP_PHI);
     let perm: Vec<CharacteristicAction> = b.actions.iter().filter(|x| x.kind == semio_s_artifact_norm_en1994_model::ActionKind::Permanent).cloned().collect();
-    let m_g = part_en1990::stage_effects(&perm, span, b.adjacent_span_m, support, spacing, "composite", a, c.reliability_class, "sls_char").m_nm;
+    let m_g = part_en1990::stage_effects(&perm, span, b.adjacent_span_m, support, spacing, semio_s_artifact_norm_en1994_model::ActionStage::Composite, a, c.reliability_class, "sls_char").m_nm;
     let m_q = (c.sls_char.m_nm - m_g).max(0.0);
-    let m_a = if b.construction == semio_s_artifact_norm_en1994_model::ConstructionMethod::Unpropped { part_en1990::stage_effects(&b.actions, span, b.adjacent_span_m, support, spacing, "construction", a, c.reliability_class, "sls_char").m_nm } else { 0.0 };
+    let m_a = if b.construction == semio_s_artifact_norm_en1994_model::ConstructionMethod::Unpropped { part_en1990::stage_effects(&b.actions, span, b.adjacent_span_m, support, spacing, semio_s_artifact_norm_en1994_model::ActionStage::Construction, a, c.reliability_class, "sls_char").m_nm } else { 0.0 };
     let (sa_t, sa_b) = cat::steel_stresses(&c.sec, m_a);
     let el_l = cat::transformed(&c.sec, c.ys, c.beff, c.hc, nl);
     let el_0 = cat::transformed(&c.sec, c.ys, c.beff, c.hc, n0);
@@ -707,7 +707,7 @@ fn deflection(r: &mut CheckReport, c: &BeamCtx) {
     let nl = cat::modular_ratio(b.concrete_e_cm_pa, cat::constants::PSI_L_PERMANENT, cat::constants::CREEP_PHI);
     let ns = cat::modular_ratio(b.concrete_e_cm_pa, cat::constants::PSI_L_SHRINKAGE, cat::constants::CREEP_PHI);
     let perm: Vec<CharacteristicAction> = b.actions.iter().filter(|x| x.kind == semio_s_artifact_norm_en1994_model::ActionKind::Permanent).cloned().collect();
-    let m_g = governing(&part_en1990::stage_effects(&perm, span, b.adjacent_span_m, support, spacing, "composite", a, c.reliability_class, "sls_char"), position);
+    let m_g = governing(&part_en1990::stage_effects(&perm, span, b.adjacent_span_m, support, spacing, semio_s_artifact_norm_en1994_model::ActionStage::Composite, a, c.reliability_class, "sls_char"), position);
     let g = m_g / unit_moment(semio_s_artifact_norm_en1994_model::ActionKind::Permanent, b);
     let q = (governing(&c.sls_freq, position) - m_g).max(0.0) / unit_moment(semio_s_artifact_norm_en1994_model::ActionKind::Imposed, b);
     let i_l = cat::transformed(&c.sec, c.ys, c.beff, c.hc, nl).i;
@@ -716,7 +716,7 @@ fn deflection(r: &mut CheckReport, c: &BeamCtx) {
     let d_perm = defl(g, cat::continuous::Pattern::AllSpans, stiffness(c, i_l));
     let d_var = defl(q, cat::continuous::Pattern::OwnSpan, stiffness(c, i_0));
     let d_c = if b.construction == semio_s_artifact_norm_en1994_model::ConstructionMethod::Unpropped {
-        let qc = governing(&part_en1990::stage_effects(&b.actions, span, b.adjacent_span_m, support, spacing, "construction", a, c.reliability_class, "sls_char"), position) / unit_moment(semio_s_artifact_norm_en1994_model::ActionKind::Permanent, b);
+        let qc = governing(&part_en1990::stage_effects(&b.actions, span, b.adjacent_span_m, support, spacing, semio_s_artifact_norm_en1994_model::ActionStage::Construction, a, c.reliability_class, "sls_char"), position) / unit_moment(semio_s_artifact_norm_en1994_model::ActionKind::Permanent, b);
         defl(qc, cat::continuous::Pattern::AllSpans, cat::continuous::Stiffness::uniform(cat::constants::E_A * c.sec.i_y))
     } else {
         0.0

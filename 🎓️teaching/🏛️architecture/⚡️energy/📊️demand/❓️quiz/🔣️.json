@@ -254,8 +254,8 @@
           },
           "category": "profile-a",
           "explanation": {
-            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a).",
-            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a)."
+            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU residential building typology (2015)), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a).",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU Wohngebäudetypologie (2015)), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a)."
           }
         },
         {
@@ -542,8 +542,8 @@
           },
           "category": "profile-a",
           "explanation": {
-            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
-            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU residential building typology (2015)), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU Wohngebäudetypologie (2015)), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
           },
           "short": {
             "en": "Heat-pump terrace with heat recovery",
@@ -562,8 +562,8 @@
           },
           "category": "profile-a",
           "explanation": {
-            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
-            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU residential building typology (2015)), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU Wohngebäudetypologie (2015)), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
           },
           "short": {
             "en": "Efficient heat-recovery flat",
@@ -582,8 +582,8 @@
           },
           "category": "profile-a",
           "explanation": {
-            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
-            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU residential building typology (2015)), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU Wohngebäudetypologie (2015)), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
           },
           "short": {
             "en": "Efficiency House forty duplex",
@@ -602,8 +602,8 @@
           },
           "category": "profile-a",
           "explanation": {
-            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
-            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+            "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU residential building typology (2015)), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teaching envelope and supply profile, not a certification claim.",
+            "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU Wohngebäudetypologie (2015)), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
           },
           "short": {
             "en": "Efficient timber heat-pump house",
@@ -634,7 +634,7 @@
           "id": "passive-flat-profile",
           "label": {
             "en": "Passive apartment with very low useful heating demand",
-            "de": "Passivwohnung mit sehr geringem Nutzwärmebedarf"
+            "de": "Passivwohnung mit sehr geringem Heizwärmebedarf"
           },
           "icon": {
             "emoji": "🏢",
@@ -873,8 +873,8 @@
             "final-energy": 14
           },
           "explanation": {
-            "en": "About 14 kWh/(m²·a): (26 heating + 12.5 hot water) ÷ seasonal performance factor 3.5 + 3 for fans and pumps; the heat pump takes more than two thirds of the heat from the environment.",
-            "de": "Rund 14 kWh/(m²·a): (26 Heizwärme + 12,5 Warmwasser) ÷ Jahresarbeitszahl 3,5 + 3 für Ventilatoren und Pumpen; die Wärmepumpe holt mehr als zwei Drittel der Wärme aus der Umwelt."
+            "en": "About 14 kWh/(m²·a): (26 heating + 12.5 hot water) ÷ seasonal performance factor (JAZ) 3.5 + 3 for fans and pumps; the heat pump takes more than two thirds of the heat from the environment.",
+            "de": "Rund 14 kWh/(m²·a): (26 Heizwärme + 12,5 Warmwasser) ÷ Jahresarbeitszahl (JAZ) 3,5 + 3 für Ventilatoren und Pumpen; die Wärmepumpe holt mehr als zwei Drittel der Wärme aus der Umwelt."
           }
         },
         {
@@ -895,8 +895,8 @@
             "final-energy": 23
           },
           "explanation": {
-            "en": "About 23 kWh/(m²·a): the heating demand falls from 303 to 54 kWh/(m²·a) (IWU package 2, type EFH_E); (54 + 12.5) ÷ seasonal performance factor 3.3 + 3.",
-            "de": "Rund 23 kWh/(m²·a): der Heizwärmebedarf sinkt von 303 auf 54 kWh/(m²·a) (IWU-Paket 2, Typ EFH_E); (54 + 12,5) ÷ Jahresarbeitszahl 3,3 + 3."
+            "en": "About 23 kWh/(m²·a): the heating demand falls from 303 to 54 kWh/(m²·a) (IWU package 2, type EFH_E); (54 + 12.5) ÷ seasonal performance factor (JAZ) 3.3 + 3.",
+            "de": "Rund 23 kWh/(m²·a): der Heizwärmebedarf sinkt von 303 auf 54 kWh/(m²·a) (IWU-Paket 2, Typ EFH_E); (54 + 12,5) ÷ Jahresarbeitszahl (JAZ) 3,3 + 3."
           }
         },
         {
@@ -961,8 +961,8 @@
             "final-energy": 80
           },
           "explanation": {
-            "en": "About 80 kWh/(m²·a): 55 heating ÷ 0.9 + 12.5 hot water (the standard value of DIN V 4108-6) ÷ 0.8 + 3 auxiliary energy.",
-            "de": "Rund 80 kWh/(m²·a): 55 Heizwärme ÷ 0,9 + 12,5 Warmwasser (der Standardwert der DIN V 4108-6) ÷ 0,8 + 3 Hilfsenergie."
+            "en": "About 80 kWh/(m²·a): 55 heating ÷ 0.9 + 12.5 hot water (flat rate for residential buildings, DIN V 4108-6:2003-06, Annex D) ÷ 0.8 + 3 auxiliary energy.",
+            "de": "Rund 80 kWh/(m²·a): 55 Heizwärme ÷ 0,9 + 12,5 Warmwasser (der Pauschalwert für Wohngebäude nach DIN V 4108-6:2003-06) ÷ 0,8 + 3 Hilfsenergie."
           }
         },
         {
@@ -983,8 +983,8 @@
             "final-energy": 122
           },
           "explanation": {
-            "en": "About 122 kWh/(m²·a): (303 + 12.5) ÷ seasonal performance factor 2.7 + 5; even without insulation, a heat pump cuts the purchased energy to less than a third (field tests in existing buildings measured about 3, Fraunhofer ISE).",
-            "de": "Rund 122 kWh/(m²·a): (303 + 12,5) ÷ Jahresarbeitszahl 2,7 + 5; selbst ohne Dämmung senkt eine Wärmepumpe die bezogene Energie auf weniger als ein Drittel (Feldtests im Bestand maßen etwa 3, Fraunhofer ISE)."
+            "en": "About 122 kWh/(m²·a): (303 + 12.5) ÷ seasonal performance factor (JAZ) 2.7 + 5; even without insulation, a heat pump cuts the purchased energy to less than a third (field tests in existing buildings measured about 3, Fraunhofer ISE).",
+            "de": "Rund 122 kWh/(m²·a): (303 + 12,5) ÷ Jahresarbeitszahl (JAZ) 2,7 + 5; selbst ohne Dämmung senkt eine Wärmepumpe die bezogene Energie auf weniger als ein Drittel (Feldtests im Bestand maßen etwa 3, Fraunhofer ISE)."
           }
         },
         {
@@ -1051,8 +1051,8 @@
           },
           "familiar": true,
           "explanation": {
-            "en": "About 409 kWh/(m²·a): 303 heating (IWU type EFH_E) ÷ 0.8 + 12.5 hot water ÷ 0.5 + 5 auxiliary energy, far beyond the 250 kWh/(m²·a) that marks efficiency class H in the energy certificate (German Buildings Energy Act, GEG, Annex 10).",
-            "de": "Rund 409 kWh/(m²·a): 303 Heizwärme (IWU-Typ EFH_E) ÷ 0,8 + 12,5 Warmwasser ÷ 0,5 + 5 Hilfsenergie, weit jenseits der 250 kWh/(m²·a), ab denen der Energieausweis Effizienzklasse H zeigt (GEG Anlage 10)."
+            "en": "About 409 kWh/(m²·a): 303 heating (IWU type EFH_E) ÷ 0.8 + 12.5 hot water ÷ 0.5 + 5 auxiliary energy, far beyond the 250 kWh/(m²·a) that marks efficiency class H in the energy certificate (German Buildings Energy Act, GModG, Annex 10).",
+            "de": "Rund 409 kWh/(m²·a): 303 Heizwärme (IWU-Typ EFH_E) ÷ 0,8 + 12,5 Warmwasser ÷ 0,5 + 5 Hilfsenergie, weit jenseits der 250 kWh/(m²·a), ab denen der Energieausweis Effizienzklasse H zeigt (GModG Anlage 10)."
           }
         },
         {
@@ -1069,8 +1069,8 @@
             "final-energy": 12
           },
           "explanation": {
-            "en": "12 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "12 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "12 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "12 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Efficient heat-pump flat",
@@ -1091,8 +1091,8 @@
             "final-energy": 16
           },
           "explanation": {
-            "en": "16 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "16 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "16 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "16 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Passive home with air-source heat pump",
@@ -1113,8 +1113,8 @@
             "final-energy": 13
           },
           "explanation": {
-            "en": "13 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "13 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "13 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "13 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Efficient ground-source heat-pump home",
@@ -1135,8 +1135,8 @@
             "final-energy": 15
           },
           "explanation": {
-            "en": "15 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "15 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "15 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "15 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Passive block with central heat pump",
@@ -1157,8 +1157,8 @@
             "final-energy": 24
           },
           "explanation": {
-            "en": "24 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "24 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "24 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "24 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Heat-pump retrofit duplex",
@@ -1179,8 +1179,8 @@
             "final-energy": 21
           },
           "explanation": {
-            "en": "21 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "21 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "21 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "21 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Heat-pump retrofit flat",
@@ -1201,8 +1201,8 @@
             "final-energy": 26
           },
           "explanation": {
-            "en": "26 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "26 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "26 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "26 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Efficient bungalow + heat pump",
@@ -1223,8 +1223,8 @@
             "final-energy": 22
           },
           "explanation": {
-            "en": "22 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "22 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "22 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "22 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Heat-pump retrofit terrace",
@@ -1245,8 +1245,8 @@
             "final-energy": 28
           },
           "explanation": {
-            "en": "28 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "28 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "28 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "28 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Passive flat with electric heating",
@@ -1267,8 +1267,8 @@
             "final-energy": 32
           },
           "explanation": {
-            "en": "32 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "32 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "32 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "32 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Electrically heated passive terrace",
@@ -1289,8 +1289,8 @@
             "final-energy": 34
           },
           "explanation": {
-            "en": "34 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "34 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "34 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "34 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Efficient retrofit with heat pump",
@@ -1311,8 +1311,8 @@
             "final-energy": 29
           },
           "explanation": {
-            "en": "29 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "29 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "29 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "29 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Compact electrically heated passive home",
@@ -1333,8 +1333,8 @@
             "final-energy": 45
           },
           "explanation": {
-            "en": "45 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "45 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "45 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "45 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Efficient gas-and-solar flat",
@@ -1355,8 +1355,8 @@
             "final-energy": 52
           },
           "explanation": {
-            "en": "52 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "52 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "52 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "52 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Efficient gas-condensing terrace",
@@ -1377,8 +1377,8 @@
             "final-energy": 55
           },
           "explanation": {
-            "en": "55 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "55 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "55 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "55 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Retrofit with condensing gas heating",
@@ -1399,8 +1399,8 @@
             "final-energy": 49
           },
           "explanation": {
-            "en": "49 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "49 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "49 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "49 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Efficient gas-and-solar duplex",
@@ -1421,8 +1421,8 @@
             "final-energy": 85
           },
           "explanation": {
-            "en": "85 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "85 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "85 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "85 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Modern insulated bungalow + gas heating",
@@ -1443,8 +1443,8 @@
             "final-energy": 75
           },
           "explanation": {
-            "en": "75 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "75 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "75 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "75 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Modern gas-heated terrace",
@@ -1465,8 +1465,8 @@
             "final-energy": 70
           },
           "explanation": {
-            "en": "70 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "70 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "70 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "70 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Modern apartment + condensing gas boiler",
@@ -1487,8 +1487,8 @@
             "final-energy": 90
           },
           "explanation": {
-            "en": "90 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "90 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "90 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "90 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Moderate retrofit with gas heating",
@@ -1509,8 +1509,8 @@
             "final-energy": 110
           },
           "explanation": {
-            "en": "110 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "110 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "110 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "110 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Older air-source heat-pump flat",
@@ -1531,8 +1531,8 @@
             "final-energy": 165
           },
           "explanation": {
-            "en": "165 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "165 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "165 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "165 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Nineties duplex with gas boiler",
@@ -1553,8 +1553,8 @@
             "final-energy": 150
           },
           "explanation": {
-            "en": "150 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "150 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "150 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "150 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Partly retrofitted gas-heated house",
@@ -1575,8 +1575,8 @@
             "final-energy": 135
           },
           "explanation": {
-            "en": "135 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "135 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "135 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "135 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Older high-temperature heat-pump home",
@@ -1597,8 +1597,8 @@
             "final-energy": 360
           },
           "explanation": {
-            "en": "360 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "360 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "360 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "360 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Old villa + old gas heating",
@@ -1619,8 +1619,8 @@
             "final-energy": 390
           },
           "explanation": {
-            "en": "390 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "390 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "390 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "390 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Bare oil-heated farmhouse",
@@ -1641,8 +1641,8 @@
             "final-energy": 290
           },
           "explanation": {
-            "en": "290 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "290 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "290 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "290 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Old oil-heated masonry block",
@@ -1663,8 +1663,8 @@
             "final-energy": 420
           },
           "explanation": {
-            "en": "420 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies useful heat using less purchased electricity; resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
-            "de": "420 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Nutzwärme mit weniger bezogenem Strom; Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
+            "en": "420 kWh/(m²·a). Teaching estimate of purchased energy at the building boundary. A heat pump supplies heat (useful energy) using less purchased electricity (final energy); resistance heat and older boilers require more. Includes hot water and auxiliaries, without PV credit or primary-energy factors.",
+            "de": "420 kWh/(m²·a). Lehrannahme der bezogenen Energie an der Gebäudegrenze. Eine Wärmepumpe liefert Wärme (Nutzenergie) mit weniger bezogenem Strom (Endenergie); Widerstandsheizung und ältere Kessel benötigen mehr. Enthält Warmwasser und Hilfsenergie, ohne PV-Gutschrift und Primärenergiefaktoren."
           },
           "short": {
             "en": "Bare bungalow + old gas boiler",

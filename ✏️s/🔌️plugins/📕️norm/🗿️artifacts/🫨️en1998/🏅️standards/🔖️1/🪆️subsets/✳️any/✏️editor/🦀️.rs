@@ -15,7 +15,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::NormHost;
-use crate::commands::{apply_remedy, insert_item, remove_item, selected_check, set_field, set_fields, preview_remedy, clear_preview, cancel_evaluation, evaluate_units, copy_entities, duplicate_entities, paste_entities, move_entity, delete_entities};
+use crate::commands::{apply_remedy, insert_item, remove_item, selected_check, set_field, set_fields, preview_remedy, clear_preview, cancel_evaluation, evaluate_units, copy_entities, duplicate_entities, paste_entities, move_entity, delete_entities, viewport_act};
 use crate::modes::edit as edit_mode;
 use crate::modes::edit::windows::{checks, diagrams, outliner, properties, viewport};
 use crate::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -279,8 +279,10 @@ fn live_handles(document: &En1998Snapshot, selection: &[semio_s_plugin_norm_stru
     viewport::handles_of(document, selection)
 }
 
-semio_s_plugin_norm_app_surface::norm_live_editor!(En1998PlayApp, En1998Command, handles = live_handles, entities = live_entities, palette = viewport::insert_specs, resolve = semio_s_artifact_norm_en1998_edit_rules::resolve_edit, scene = |d, r, _| viewport::scene_of(d, r), diagrams = |d, r| diagrams::all(d, r));
+semio_s_plugin_norm_app_surface::norm_live_editor!(En1998PlayApp, En1998Command, handles = live_handles, entities = live_entities, palette = viewport::insert_specs, resolve = semio_s_artifact_norm_en1998_mutations::resolve_edit, scene = |d, r, _| viewport::scene_of(d, r), diagrams = |d, r| diagrams::all(d, r));
+#[cfg(test)]
 semio_s_plugin_norm_app_surface::norm_live_acceptance!(En1998PlayApp, entities = live_entities);
+#[cfg(test)]
 semio_s_plugin_norm_app_surface::norm_latency_bench!(En1998PlayApp, variant = "en1998", seed = semio_s_artifact_norm_en1998_model::En1998Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), scene = viewport::scene_of, full = viewport::full_scene_of);
 //#endregion 🫧️LiveEditor
 
@@ -372,6 +374,7 @@ pub fn create_en1998_app() -> semio_plugin::AppDefinition {
             .mode_def(edit_mode::definition())
             .default_mode_id(semio_s_plugin_norm_app_surface::MODE_EDIT)
             .interaction(semio_s_plugin_norm_app_surface::viewport_interaction_definition(VARIANT, LocalizedLabel::native("EN 1998 model", "EN-1998-Modell"), ENTITY_KIND_SCENE_KINDS))
+            .utility(semio_s_plugin_norm_app_surface::transform_utility_definition())
             .window_kind_def(outliner::definition())
             .window_kind_def(properties::definition())
             .window_kind_def(viewport::definition())
@@ -510,12 +513,6 @@ pub fn create_en1998_app() -> semio_plugin::AppDefinition {
 //#endregion ðï¸Manifest
 
 //#region ð§ªï¸UnitTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
-#[cfg(test)]
-#[path = "🧪️tests/📚️assets/🦀️.rs"]
-mod asset_laws;
 //#endregion ð§ªï¸UnitTests
 
 //#region 🪢️TaxonomyMounts

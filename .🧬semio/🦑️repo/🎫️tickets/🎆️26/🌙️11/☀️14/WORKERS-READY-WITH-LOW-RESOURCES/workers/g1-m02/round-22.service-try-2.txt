@@ -1,0 +1,1041 @@
+=== /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-791f67a6efd8.log from byte 41158
+[repository:command] still running after 1740 s
+[repository:command] still running after 1750 s
+[repo] still working after 1761 s; last phase started: source.served
+[repository:command] still running after 1760 s
+[repository:command] still running after 1770 s
+[repository:command] still running after 1780 s
+[repo] still working after 1791 s; last phase started: source.served
+[repository:command] still running after 1790 s
+[repository:command] still running after 1800 s
+[repository:command] still running after 1810 s
+[repo] still working after 1821 s; last phase started: source.served
+[repository:command] still running after 1820 s
+[repository:command] still running after 1830 s
+[repository:command] still running after 1840 s
+[repo] still working after 1851 s; last phase started: source.served
+2026-11-15T05:38:50.990Z shutdown superseded
+[repository:command] still running after 1850 s
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+=== /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-b814083e21d9.log from byte 26845
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[repo] still working after 5 s; last phase started: source.served
+[capacity] waiting 0s for graph-plan: not enough free memory (need 2048 MB; 1851 MB spare above the 2048 MB floor, load 9.28; 2 running, 0 ahead); behind projects (running, 1 job(s), 7199 MB), workspace:setup (quiet, 1 job(s), 45 MB)
+[repo] still working after 10 s; last phase started: source.served
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (4619 MB available, 2048 MB floor)
+[repository:command] still running after 10 s
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[repo] still working after 20 s; last phase started: source.served
+[repository:command] still running after 20 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:0:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 0 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:58317:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 58317 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:94295:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 94295 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:95676:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 95676 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:98305:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 98305 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:100424:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 100424 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:100751:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 100751 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:100978:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 100978 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:101185:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 101185 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:101410:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 101410 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:101570:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 101570 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:101697:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 101697 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:102368:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 102368 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:102486:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 102486 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:102713:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 102713 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:103094:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 103094 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:103714:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 103714 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:106327:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 106327 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:107953:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 107953 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:108785:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 108785 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:109385:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 109385 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:113378:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 113378 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:117678:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 117678 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:120458:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 120458 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:122878:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 122878 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:124932:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 124932 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:125799:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 125799 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:126777:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 126777 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:126959:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 126959 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:127067:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 127067 of 127190 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:127190:127190","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 127190 of 127190 entries
+[repository:command] still running after 30 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:0:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 0 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:5","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 5 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:5:5","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 5 of 5 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:11","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 11 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:11:11","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 11 of 11 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:22","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 22 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:22:22","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 22 of 22 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:118","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 118 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:118:118","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 118 of 118 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:192","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 192 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:192:192","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 192 of 192 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:98","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 98 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:98:98","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 98 of 98 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:49152:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 49152 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:228","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 228 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:228:228","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 228 of 228 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:317","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 317 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:317:317","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 317 of 317 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:160","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 160 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:160:160","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 160 of 160 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:489","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 489 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:489:489","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 489 of 489 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:4850","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 4850 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:4850:4850","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 4850 of 4850 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:3977","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 3977 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:3977:3977","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 3977 of 3977 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:4534","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 4534 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:4534:4534","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 4534 of 4534 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:6712","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 6712 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:6712:6712","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 6712 of 6712 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:114688:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 114688 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:5926","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 5926 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:5926:5926","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 5926 of 5926 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:2420","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 2420 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:2420:2420","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 2420 of 2420 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1270","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1270 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1270:1270","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1270 of 1270 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1950","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1950 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1950:1950","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1950 of 1950 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1298","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1298 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1298:1298","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1298 of 1298 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:2109","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 2109 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:2109:2109","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 2109 of 2109 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:2262","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 2262 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:2262:2262","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 2262 of 2262 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:172032:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 172032 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:2280","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 2280 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:2280:2280","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 2280 of 2280 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:702","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 702 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:702:702","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 702 of 702 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:296","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 296 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:296:296","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 296 of 296 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:525","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 525 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:525:525","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 525 of 525 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:739","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 739 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:739:739","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 739 of 739 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:431","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 431 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:431:431","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 431 of 431 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:481","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 481 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:481:481","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 481 of 481 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:27","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 27 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:27:27","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 27 of 27 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:237568:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 237568 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:133","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 133 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:133:133","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 133 of 133 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:223","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 223 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:223:223","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 223 of 223 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:253952:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 253952 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:102","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 102 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:102:102","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 102 of 102 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:224","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 224 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:224:224","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 224 of 224 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:240","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 240 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:240:240","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 240 of 240 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:278528:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 278528 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:179","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 179 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:179:179","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 179 of 179 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:482","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 482 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:482:482","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 482 of 482 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:515","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 515 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:515:515","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 515 of 515 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:4","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 4 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:4:4","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 4 of 4 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:303104:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 303104 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1175","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1175 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1175:1175","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1175 of 1175 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:4","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 4 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:4:4","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 4 of 4 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:2043","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 2043 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:2043:2043","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 2043 of 2043 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1806","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1806 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1806:1806","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1806 of 1806 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:327680:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 327680 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1107","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1107 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1107:1107","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1107 of 1107 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:531","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 531 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:531:531","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 531 of 531 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:1","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 1 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:1:1","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 1 of 1 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:38","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 38 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:38:38","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 38 of 38 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:7","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 7 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:7:7","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 7 of 7 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:94","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 94 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:94:94","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 94 of 94 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:7","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 7 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:7:7","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 7 of 7 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:442368:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 442368 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:11","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 11 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:11:11","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 11 of 11 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:453239:453239","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 453239 of 453239 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:0:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 0 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:4096:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 4096 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:12288:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 12288 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:20480:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 20480 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:24576:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 24576 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:32768:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 32768 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:36864:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 36864 of 324136 facts
+[repository:command] still running after 40 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:45056:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 45056 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:53248:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 53248 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:57344:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 57344 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:61440:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 61440 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:73728:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 73728 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:81920:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 81920 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:94208:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 94208 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:102400:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 102400 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:110592:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 110592 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:118784:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 118784 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:131072:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 131072 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:135168:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 135168 of 324136 facts
+[repo] still working after 50 s; last phase started: source.served
+[repository:command] still running after 50 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:143360:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 143360 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:147456:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 147456 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:155648:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 155648 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:159744:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 159744 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:163840:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 163840 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:176128:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 176128 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:188416:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 188416 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:192512:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 192512 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:200704:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 200704 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:204800:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 204800 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:217088:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 217088 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:225280:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 225280 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:237568:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 237568 of 324136 facts
+[repository:command] still running after 60 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:241664:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 241664 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:245760:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 245760 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:249856:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 249856 of 324136 facts
+[repository:command] still running after 70 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:253952:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 253952 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:258048:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 258048 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:266240:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 266240 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:270336:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 270336 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:274432:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 274432 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:282624:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 282624 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:290816:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 290816 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:294912:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 294912 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:299008:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 299008 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:303104:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 303104 of 324136 facts
+[repo] still working after 80 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:307200:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 307200 of 324136 facts
+[repository:command] still running after 80 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:311296:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 311296 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:315944:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 315944 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:320040:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 320040 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:324136:324136","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 324136 of 324136 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:0:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 0 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:5:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 5 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:26:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 26 of 3536 closures
+[repository:command] still running after 90 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:60:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 60 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:87:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 87 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:110:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 110 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:117:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 117 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:160:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 160 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:170:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 170 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:202:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 202 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:231:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 231 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:250:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 250 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:252:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 252 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:9138","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:9138:9138","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:257:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 257 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:400:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 400 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:7491","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:7491:7491","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:513:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 513 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:697:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 697 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:8118","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:8118:8118","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:769:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 769 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:937:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 937 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1024:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1024 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:9710","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:9710:9710","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1027:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1027 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1064:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1064 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1096:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1096 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1102:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1102 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1109:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1109 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1114:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1114 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1140:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1140 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1232:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1232 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:9654","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:9654:9654","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1302:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1302 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1470:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1470 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:9596","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:9596:9596","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1537:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1537 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1618:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1618 of 3536 closures
+[repository:command] still running after 100 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1792:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1792 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:10977","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:10977:10977","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1793:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1793 of 3536 closures
+[repo] still working after 110 s; last phase started: source.served
+[repository:command] still running after 110 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1806:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1806 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1807:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1807 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:2008:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 2008 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:2048:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 2048 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:9866","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:9866:9866","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:2049:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 2049 of 3536 closures
+[repository:command] still running after 120 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:2269:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 2269 of 3536 closures
+[repository:command] still running after 130 s
+[repo] still working after 140 s; last phase started: source.served
+[repository:command] still running after 140 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:2304:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 2304 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:9058","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:9058:9058","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:255","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:255:255","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:2305:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 2305 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:8293","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:8293:8293","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:2561:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 2561 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:9144","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:9144:9144","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:2817:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 2817 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:11073","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:11073:11073","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3073:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3073 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3256:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3256 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:10703","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:10703:10703","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3329:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3329 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3536:3536","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3536 of 3536 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:8176","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:8176:8176","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:208","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:208:208","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+graph: 175 stale projects, 0 taken from the fleet, 10 too heavy for this machine (@semio-tech/framework-os-dev (about 23864 MB), @semio-tech/repo-lib (about 18422 MB), @semio-tech/framework-pack-json-rs (about 14696 MB), workspace (about 13876 MB), repo (about 13460 MB), @semio-tech/framework-plugin (about 8098 MB), and 4 more; it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 175
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 20 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 150 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 31 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 160 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 41 s ago, estimated time left: about 11 h 13 min
+[repo] still working after 170 s; last phase started: source.served
+[repository:command] still running after 170 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 51 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 180 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 62 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 190 s
+[repo] still working after 200 s; last phase started: source.served
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 72 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 200 s
+[repository:command] still running after 210 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 82 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 220 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 92 s ago, estimated time left: about 11 h 13 min
+[repo] still working after 230 s; last phase started: source.served
+[repository:command] still running after 230 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 103 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 240 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 113 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 250 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 123 s ago, estimated time left: about 11 h 13 min
+[repo] still working after 260 s; last phase started: source.served
+[repository:command] still running after 260 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 133 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 270 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 143 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 280 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 154 s ago, estimated time left: about 11 h 13 min
+[repo] still working after 290 s; last phase started: source.served
+[repository:command] still running after 290 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 164 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 300 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 174 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 310 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 184 s ago, estimated time left: about 11 h 13 min
+[repo] still working after 320 s; last phase started: source.served
+[repository:command] still running after 320 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 194 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 330 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 204 s ago, estimated time left: about 11 h 13 min
+[repository:command] still running after 340 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 214 s ago, estimated time left: about 11 h 13 min
+[repo] still working after 350 s; last phase started: source.served
+[repository:command] still running after 350 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 350 s ago, estimated time left: about 3 min
+[repository:command] still running after 360 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 360 s ago, estimated time left: about 3 min
+[repository:command] still running after 370 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 370 s ago, estimated time left: about 3 min
+[repo] still working after 380 s; last phase started: source.served
+[repository:command] still running after 380 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 380 s ago, estimated time left: about 3 min
+[repository:command] still running after 390 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 390 s ago, estimated time left: about 3 min
+[repository:command] still running after 400 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 401 s ago, estimated time left: about 3 min
+[repo] still working after 410 s; last phase started: source.served
+[repository:command] still running after 410 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 411 s ago, estimated time left: about 3 min
+[repository:command] still running after 420 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 26 s ago, estimated time left: about 3 min
+[repository:command] still running after 430 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 36 s ago, estimated time left: about 3 min
+[repo] still working after 440 s; last phase started: source.served
+[repository:command] still running after 440 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 48 s ago, estimated time left: about 3 min
+[repository:command] still running after 450 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 59 s ago, estimated time left: about 3 min
+[repository:command] still running after 460 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 69 s ago, estimated time left: about 3 min
+[repo] still working after 470 s; last phase started: source.served
+[repository:command] still running after 470 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 79 s ago, estimated time left: about 3 min
+[repository:command] still running after 480 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 87 s ago, estimated time left: about 3 min
+[repository:command] still running after 490 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 97 s ago, estimated time left: about 3 min
+[repo] still working after 500 s; last phase started: source.served
+[repository:command] still running after 500 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 108 s ago, estimated time left: about 3 min
+[repository:command] still running after 510 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 118 s ago, estimated time left: about 3 min
+[repository:command] still running after 520 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 128 s ago, estimated time left: about 3 min
+[repo] still working after 530 s; last phase started: source.served
+[repository:command] still running after 530 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 138 s ago, estimated time left: about 3 min
+[repository:command] still running after 540 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 27 s ago, estimated time left: about 3 min
+[repository:command] still running after 550 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 38 s ago, estimated time left: about 3 min
+[repo] still working after 560 s; last phase started: source.served
+[repository:command] still running after 560 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 48 s ago, estimated time left: about 3 min
+[repository:command] still running after 570 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 58 s ago, estimated time left: about 3 min
+[repository:command] still running after 580 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 68 s ago, estimated time left: about 3 min
+[repo] still working after 590 s; last phase started: source.served
+[repository:command] still running after 590 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 78 s ago, estimated time left: about 3 min
+[repository:command] still running after 600 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 90 s ago, estimated time left: about 3 min
+[repository:command] still running after 610 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 100 s ago, estimated time left: about 3 min
+[repo] still working after 620 s; last phase started: source.served
+[repository:command] still running after 620 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 110 s ago, estimated time left: about 3 min
+[repository:command] still running after 630 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 120 s ago, estimated time left: about 3 min
+[repository:command] still running after 640 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 130 s ago, estimated time left: about 3 min
+[repo] still working after 650 s; last phase started: source.served
+[repository:command] still running after 650 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 140 s ago, estimated time left: about 3 min
+[repository:command] still running after 660 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 150 s ago, estimated time left: about 3 min
+[repository:command] still running after 670 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 160 s ago, estimated time left: about 3 min
+[repo] still working after 680 s; last phase started: source.served
+[repository:command] still running after 680 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 170 s ago, estimated time left: about 3 min
+[repository:command] still running after 690 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 180 s ago, estimated time left: about 3 min
+[repository:command] still running after 700 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 190 s ago, estimated time left: about 3 min
+[repo] still working after 710 s; last phase started: source.served
+[repository:command] still running after 710 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 200 s ago, estimated time left: about 3 min
+[repository:command] still running after 720 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 210 s ago, estimated time left: about 3 min
+[repository:command] still running after 730 s
+[repo] still working after 740 s; last phase started: source.served
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 220 s ago, estimated time left: about 3 min
+[repository:command] still running after 740 s
+[repository:command] still running after 750 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 232 s ago, estimated time left: about 3 min
+[repository:command] still running after 760 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 243 s ago, estimated time left: about 3 min
+[repo] still working after 770 s; last phase started: source.served
+[repository:command] still running after 770 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 252 s ago, estimated time left: about 3 min
+[repository:command] still running after 780 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 263 s ago, estimated time left: about 3 min
+[repository:command] still running after 790 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 273 s ago, estimated time left: about 3 min
+[repo] still working after 800 s; last phase started: source.served
+[repository:command] still running after 800 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 283 s ago, estimated time left: about 3 min
+[repository:command] still running after 810 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 293 s ago, estimated time left: about 3 min
+[repository:command] still running after 820 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 303 s ago, estimated time left: about 3 min
+[repo] still working after 830 s; last phase started: source.served
+[repository:command] still running after 830 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 314 s ago, estimated time left: about 3 min
+[repository:command] still running after 840 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 324 s ago, estimated time left: about 3 min
+[repository:command] still running after 850 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 334 s ago, estimated time left: about 3 min
+[repo] still working after 860 s; last phase started: source.served
+[repository:command] still running after 860 s
+graph: waiting for the fleet: 0 of 175 projects arrived; the server last progressed 344 s ago, estimated time left: about 3 min
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+graph: plan answered, managed 107 MB, resident 217 MB (released 0 MB)
+[repository:command] still running after 870 s
+[repository:command] still running after 880 s
+[repo] still working after 890 s; last phase started: source.served
+[repository:command] still running after 890 s

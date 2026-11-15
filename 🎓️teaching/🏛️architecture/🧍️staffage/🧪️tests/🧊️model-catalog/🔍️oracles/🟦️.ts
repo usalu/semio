@@ -1,6 +1,8 @@
 /** 🔍️ The oracles of the catalog-wide 3D model guard: one set of checks for a freshly built export and for a file read back from the batch output, so the in-process guard and the validation of a whole output directory are the same code.
  *
- * THE REFERENCES (tests only, no runtime dependency): the Khronos `gltf-validator` and three's `GLTFLoader` for a GLB, three's `FBXLoader` and assimp (`assimpjs`) for an FBX, Ajv with the `semio.model/v1` JSON Schema for a model document, three's skinned extent against `dimensions`, and an independent weld-and-count of edges for watertightness.
+ * Every authored scale of an asset is checked: a GLB holds one glTF scene per scale and mode (`s50-body`, `s50-thermal`, `s50-structure`, …) whose triangles, extents and bounding box are read back by three, a model JSON the same scenes, an FBX one scene per clip, scale and view, and the triangles of an FBX equal those of the matching GLB scene.
+ *
+ * THE REFERENCES (tests only, no runtime dependency): the Khronos `gltf-validator`, three's `GLTFLoader` and glTF-Transform for a GLB, three's `FBXLoader` and assimp (`assimpjs`) for an FBX, Ajv with the `semio.model/v1` JSON Schema for a model document, three's skinned extent against `dimensions`, and an independent weld-and-count of edges for watertightness.
  *
  * Every check returns {@link Finding}s (check code, item, message) and facts; nothing here asserts, so a caller decides what is a failure and which finding is a stated limitation.
  *
@@ -9,12 +11,14 @@
  */
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { tessellate, tessellateSolid, validateModel, type ModelDocument, type Solid } from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
-import type { Asset, VolumeSolid } from "../../../🧬️schema/🟦️.ts";
-import { VIEWS } from "../../../🔨️modules/🔗️contracts/🟦️.ts";
+import { scenesOf, tessellateSolid, validateModel, type ModelDocument, type Solid } from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+import type { Asset } from "../../../🧬️schema/🟦️.ts";
+import { VIEWS, type View } from "../../../🔨️modules/🔗️contracts/🟦️.ts";
 import { qualityOf } from "../../../🔨️modules/🧊️volume/⏱️job/🟦️.ts";
-import { modelOf } from "../../../🔨️modules/🧊️volume/🟦️.ts";
+import { MODES, authoredScales, modeOf, modelOfAsset, sceneIdOf } from "../../../🔨️modules/🧊️volume/🟦️.ts";
+import { resolveScenes } from "../../../🔨️modules/📤️export/🗿️model/🧩️scenes/🟦️.ts";
 import { type Extent, loadFbx, loadGlb, sceneExtent, validateGlb } from "../../🧰️support/🧊️.ts";
+import { NodeIO } from "@gltf-transform/core";
 
 /** 🏷️ The checks a finding can belong to. */
 export type Check = "model" | "geometry" | "closed" | "bounds" | "glb" | "variants" | "fbx" | "json" | "budget" | "determinism" | "set";
@@ -43,30 +47,63 @@ export function schemaErrors(document: unknown): string[] {
   return modelValidator(document) ? [] : (modelValidator.errors ?? []).slice(0, 6).map((e) => `${e.instancePath} ${e.message}`);
 }
 
-/** 🧾️ The JSON chunk of a GLB container and the triangle, line segment and primitive counts it describes. */
-export function glbFacts(bytes: Uint8Array): { readonly json: any; readonly triangles: number; readonly segments: number; readonly primitives: number; readonly variants: readonly string[] } {
+/** 🎞️ The triangles and line segments of one glTF scene: every primitive of every mesh of the nodes reachable from its root nodes. */
+export type SceneFacts = { readonly triangles: number; readonly segments: number };
+
+/** 🧾️ The JSON chunk of a GLB container and the triangle, line segment and primitive counts it describes, in total and per glTF scene. */
+export function glbFacts(bytes: Uint8Array): { readonly json: any; readonly triangles: number; readonly segments: number; readonly primitives: number; readonly variants: readonly string[]; readonly scenes: Readonly<Record<string, SceneFacts>> } {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (view.getUint32(0, true) !== 0x46546c67 || view.getUint32(16, true) !== 0x4e4f534a) throw new Error("not a GLB container");
   const json = JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + view.getUint32(12, true))));
   let triangles = 0;
   let segments = 0;
   let primitives = 0;
-  for (const mesh of json.meshes ?? []) {
+  const counts = (mesh: any): SceneFacts => {
+    let tri = 0;
+    let seg = 0;
     for (const primitive of mesh.primitives) {
-      primitives += 1;
       const count: number = json.accessors[primitive.indices].count;
-      if (primitive.mode === undefined || primitive.mode === 4) triangles += count / 3;
-      else if (primitive.mode === 1) segments += count / 2;
+      if (primitive.mode === undefined || primitive.mode === 4) tri += count / 3;
+      else if (primitive.mode === 1) seg += count / 2;
     }
+    return { triangles: tri, segments: seg };
+  };
+  for (const mesh of json.meshes ?? []) {
+    primitives += mesh.primitives.length;
+    const c = counts(mesh);
+    triangles += c.triangles;
+    segments += c.segments;
   }
-  return { json, triangles, segments, primitives, variants: (json.extensions?.KHR_materials_variants?.variants ?? []).map((v: { name: string }) => v.name) };
+  const scenes: Record<string, SceneFacts> = {};
+  for (const scene of json.scenes ?? []) {
+    let tri = 0;
+    let seg = 0;
+    const walk = (index: number): void => {
+      const node = json.nodes[index];
+      if (node.mesh !== undefined) {
+        const c = counts(json.meshes[node.mesh]);
+        tri += c.triangles;
+        seg += c.segments;
+      }
+      for (const child of node.children ?? []) walk(child);
+    };
+    for (const root of scene.nodes ?? []) walk(root);
+    scenes[scene.name ?? `scene-${Object.keys(scenes).length}`] = { triangles: tri, segments: seg };
+  }
+  return { json, triangles, segments, primitives, variants: (json.extensions?.KHR_materials_variants?.variants ?? []).map((v: { name: string }) => v.name), scenes };
 }
 
-/** 🧊️ The facts and findings of one GLB: Khronos validation, three load, seven variants, extent in the staffage axes. */
-export type GlbReport = { readonly facts: { readonly bytes: number; readonly triangles: number; readonly segments: number; readonly errors: number; readonly warnings: number; readonly extent: Extent }; readonly findings: Finding[] };
+/** 🏛️ The scene ids a model of an asset must hold: one per authored scale and mode, scales finest first, then body, thermal, structure. */
+export const expectedScenes = (asset: Asset): readonly string[] => authoredScales(asset.volumes).flatMap((scale) => MODES.map((mode) => sceneIdOf(scale, mode)));
 
-/** 🛑️ Checks a GLB of one pose: 0 errors and 0 warnings from the validator, all seven variants, a scene three loads, finite extent, no animation. */
-export async function checkGlb(bytes: Uint8Array, name: string, item: string): Promise<GlbReport> {
+/** 📏️ The extent tolerance at a scale: the authoring gate, never tighter than the smallest feature of the scale (0.15 mm of paper). */
+export const extentToleranceAt = (length: number, scale: number): number => Math.max(extentTolerance(length), 0.00015 * scale);
+
+/** 🧊️ The facts and findings of one GLB: Khronos validation, three and glTF-Transform loads, seven variants, one glTF scene per authored scale and mode, extent per scene in the staffage axes. */
+export type GlbReport = { readonly facts: { readonly bytes: number; readonly triangles: number; readonly segments: number; readonly errors: number; readonly warnings: number; readonly extent: Extent; readonly scenes: Readonly<Record<string, SceneFacts & { readonly extent: Extent }>> }; readonly findings: Finding[] };
+
+/** 🛑️ Checks a GLB of one pose: 0 errors and 0 warnings from the validator, all seven variants, exactly the scenes `scenes` (default one implicit scene) in that order with triangles in each, scenes that three and glTF-Transform both read, finite extent per scene, no animation. */
+export async function checkGlb(bytes: Uint8Array, name: string, item: string, scenes?: readonly string[]): Promise<GlbReport> {
   const findings: Finding[] = [];
   const report = await validateGlb(bytes, name);
   for (const message of report.messages) findings.push({ check: "glb", item, message: `${message.code} ${message.pointer ?? ""} ${message.message}` });
@@ -74,21 +111,42 @@ export async function checkGlb(bytes: Uint8Array, name: string, item: string): P
   if (facts.variants.join() !== VARIANT_ORDER.join()) findings.push({ check: "variants", item, message: `variants ${facts.variants.join(",")}` });
   if (!(facts.triangles > 0)) findings.push({ check: "glb", item, message: "no triangles" });
   if ((facts.json.animations ?? []).length > 0) findings.push({ check: "glb", item, message: "a static pose carries an animation" });
+  if (scenes !== undefined) {
+    const found = Object.keys(facts.scenes);
+    if (found.join() !== scenes.join()) findings.push({ check: "glb", item, message: `glTF scenes ${found.join(",")}, expected ${scenes.join(",")}` });
+    for (const scene of scenes) if (!((facts.scenes[scene]?.triangles ?? 0) > 0)) findings.push({ check: "glb", item, message: `scene ${scene} has no triangles` });
+    if (facts.json.scene !== 0) findings.push({ check: "glb", item, message: `default scene ${facts.json.scene}, expected 0` });
+  }
+  try {
+    const document = await new NodeIO().readBinary(bytes);
+    const names = document.getRoot().listScenes().map((s) => s.getName());
+    if (scenes !== undefined && names.join() !== scenes.join()) findings.push({ check: "glb", item, message: `glTF-Transform reads scenes ${names.join(",")}` });
+  } catch (error) {
+    findings.push({ check: "glb", item, message: `glTF-Transform: ${(error as Error).message}` });
+  }
+  const sceneFacts: Record<string, SceneFacts & { extent: Extent }> = {};
   let extent: Extent = { min: [NaN, NaN, NaN], max: [NaN, NaN, NaN] };
   try {
-    extent = sceneExtent((await loadGlb(bytes)).scene);
+    const loaded = await loadGlb(bytes);
+    extent = sceneExtent(loaded.scene);
+    for (const [index, scene] of loaded.scenes.entries()) {
+      const key = facts.json.scenes[index]?.name ?? `scene-${index}`;
+      const own = sceneExtent(scene);
+      sceneFacts[key] = { ...(facts.scenes[key] ?? { triangles: 0, segments: 0 }), extent: own };
+      if (![...own.min, ...own.max].every(Number.isFinite)) findings.push({ check: "glb", item, message: `scene ${key} has a non-finite extent` });
+    }
   } catch (error) {
     findings.push({ check: "glb", item, message: `three GLTFLoader: ${(error as Error).message}` });
   }
   if (![...extent.min, ...extent.max].every(Number.isFinite)) findings.push({ check: "glb", item, message: "extent is not finite" });
-  return { facts: { bytes: bytes.length, triangles: facts.triangles, segments: facts.segments, errors: report.errors, warnings: report.warnings, extent }, findings };
+  return { facts: { bytes: bytes.length, triangles: facts.triangles, segments: facts.segments, errors: report.errors, warnings: report.warnings, extent, scenes: sceneFacts }, findings };
 }
 
 /** ⛔️ Extent against `dimensions`: the worst relative miss in units of the tolerance (at most 1 passes) and the signed relative error per axis (ahead, up, lateral). */
-export function extentMiss(asset: Asset, extent: Extent): { readonly miss: number; readonly error: readonly [number, number, number] } {
+export function extentMiss(asset: Asset, extent: Extent, scale?: number): { readonly miss: number; readonly error: readonly [number, number, number] } {
   const dims = [asset.dimensions.widthM, asset.dimensions.heightM, asset.dimensions.depthM] as const;
   const size = dims.map((_, at) => extent.max[at]! - extent.min[at]!);
-  return { miss: Math.max(...dims.map((d, at) => Math.abs(size[at]! - d) / extentTolerance(d))), error: size.map((s, at) => (s - dims[at]!) / dims[at]!) as [number, number, number] };
+  return { miss: Math.max(...dims.map((d, at) => Math.abs(size[at]! - d) / (scale === undefined ? extentTolerance(d) : extentToleranceAt(d, scale)))), error: size.map((s, at) => (s - dims[at]!) / dims[at]!) as [number, number, number] };
 }
 
 /** 🌟️ The A6 bounds verdict: the presentation pose decides; where it misses, the best-matching authored pose is reported (never the rest pose), and the asset passes only when the presentation pose is within the tolerance. */
@@ -185,8 +243,8 @@ export async function checkFbx(bytes: Uint8Array, item: string, expect: FbxExpec
   return { facts: { bytes: bytes.length, triangles, bonesFound, threeBones, meshBones, tracks, durationS, assimpDurationS, assimpChannels }, findings };
 }
 
-/** 🗿️ Checks a model document text: JSON, Ajv against `semio.model/v1`, no kernel validation error, seven variants, the rig bones as nodes. */
-export function checkModelText(text: string, item: string, bones: readonly string[], expectAnimation?: string): { readonly facts: { readonly bytes: number; readonly nodes: number; readonly solids: number }; readonly findings: Finding[] } {
+/** 🗿️ Checks a model document text: JSON, Ajv against `semio.model/v1`, no kernel validation error, seven variants, the rig bones as nodes and, when `scenes` is given, exactly those kernel scenes in that order. */
+export function checkModelText(text: string, item: string, bones: readonly string[], expectAnimation?: string, scenes?: readonly string[]): { readonly facts: { readonly bytes: number; readonly nodes: number; readonly solids: number }; readonly findings: Finding[] } {
   const findings: Finding[] = [];
   let document: ModelDocument;
   try {
@@ -198,6 +256,7 @@ export function checkModelText(text: string, item: string, bones: readonly strin
   for (const issue of validateModel(document).filter((i) => i.severity === "error")) findings.push({ check: "json", item, message: `validateModel ${issue.code} ${issue.path}` });
   if (document.version !== "semio.model/v1") findings.push({ check: "json", item, message: `version ${document.version}` });
   if ([...document.variants.map((v) => v.id)].sort().join() !== [...VIEWS].sort().join()) findings.push({ check: "json", item, message: `${document.variants.length} variants` });
+  if (scenes !== undefined && (document.scenes ?? []).map((s) => s.id).join() !== scenes.join()) findings.push({ check: "json", item, message: `scenes ${(document.scenes ?? []).map((s) => s.id).join(",")}, expected ${scenes.join(",")}` });
   const ids = new Set(document.nodes.map((n) => n.id));
   const missing = bones.filter((b) => !ids.has(b));
   if (missing.length > 0) findings.push({ check: "json", item, message: `missing bone nodes ${missing.slice(0, 3).join(",")}` });
@@ -264,24 +323,34 @@ export function solidReport(solid: Solid, geometry: { readonly positions: readon
   return { id: solid.id, kind: solid.kind, triangles: geometry.indices.length / 3, degenerate, nonFinite, boundary, overlapped, volume, closedExpected: closedKind(solid), glyph: solid.tags?.includes("glyph") === true };
 }
 
-/** 📊️ The triangles of the solids of an asset at a scale: the volume solids only (what a scale filter by `maxDenominator` acts on). */
-export async function trianglesAt(asset: Asset, scale: number): Promise<{ readonly solids: number; readonly triangles: number }> {
-  const document = await modelOf(asset, { scale, views: ["light-solid"], poses: [], clips: [] });
-  const quality = qualityOf(asset);
-  let triangles = 0;
-  for (const solid of document.solids) triangles += tessellateSolid(solid, quality).indices.length / 3;
-  return { solids: document.solids.length, triangles };
-}
+/** 🔺️ The facts of one scene of the multi-scene model: its solids, and the triangles at the quality of its own scale. */
+export type SceneGeometry = { readonly scene: string; readonly scale: number; readonly mode: string; readonly solids: number; readonly glyphs: number; readonly triangles: number };
 
-/** 🗂️ The geometry audit of an asset: the procedural model validated, tessellated as a whole (the kernel's own path) and solid by solid, the closed-kind and degenerate counts, the triangles per preset scale and whether a coarser scale drops solids. */
-export async function auditGeometry(asset: Asset): Promise<{ readonly facts: { readonly nodes: number; readonly solids: number; readonly glyphs: number; readonly triangles: Record<string, number>; readonly volumeSolids: Record<string, number>; readonly maxDenominators: number; readonly byKind: Record<string, { solids: number; closed: number; open: number; closedExpected: number }>; readonly degenerate: number; readonly nonFinite: number }; readonly solids: readonly SolidReport[]; readonly findings: Finding[] }> {
+/** 🗂️ The geometry audit of an asset over every authored scale and scene: the procedural multi-scene model validated, every scene tessellated at the quality of its scale (the kernel's own path, then joined) and solid by solid, the closed-kind and degenerate counts, the triangles per scene, and that the triangles of a mode never grow towards coarser scales. */
+export async function auditGeometry(asset: Asset): Promise<{ readonly facts: { readonly nodes: number; readonly solids: number; readonly glyphs: number; readonly scenes: readonly SceneGeometry[]; readonly byKind: Record<string, { solids: number; closed: number; open: number; closedExpected: number }>; readonly degenerate: number; readonly nonFinite: number }; readonly solids: readonly SolidReport[]; readonly findings: Finding[] }> {
   const findings: Finding[] = [];
-  const document = await modelOf(asset, { scale: 50, views: [...VIEWS], poses: "all", clips: [] });
+  const document = await modelOfAsset(asset, { poses: "all", clips: [] });
   for (const issue of validateModel(document).filter((i) => i.severity === "error")) findings.push({ check: "model", item: asset.id, message: `validateModel ${issue.code} ${issue.path}` });
-  const resolved = await tessellate(document, qualityOf(asset));
-  const quality = qualityOf(asset);
+  const sceneIds = scenesOf(document).map((s) => s.id);
+  if (sceneIds.join() !== expectedScenes(asset).join()) findings.push({ check: "model", item: asset.id, message: `scenes ${sceneIds.join(",")}, expected ${expectedScenes(asset).join(",")}` });
+  const resolved = await resolveScenes(document, (scale) => qualityOf(asset, scale), { report: () => {}, cancelled: () => false });
+  const scaleOf = (scene: string): number => Number(/^s(\d+)-/u.exec(scene)![1]);
   const reports: SolidReport[] = [];
-  for (const solid of document.solids) reports.push(solidReport(solid, tessellateSolid(solid, quality)));
+  const scenes: SceneGeometry[] = [];
+  for (const scene of scenesOf(document)) {
+    const quality = qualityOf(asset, scaleOf(scene.id));
+    const members = new Set(scene.nodes);
+    let glyphs = 0;
+    let triangles = 0;
+    const own = document.solids.filter((s) => members.has(s.node));
+    for (const solid of own) {
+      const report = solidReport(solid, tessellateSolid(solid, quality));
+      reports.push(report);
+      triangles += report.triangles;
+      if (report.glyph) glyphs += 1;
+    }
+    scenes.push({ scene: scene.id, scale: scaleOf(scene.id), mode: scene.tags?.find((tag) => MODES.includes(tag as never)) ?? "?", solids: own.length, glyphs, triangles });
+  }
   let wholeTriangles = 0;
   for (const mesh of resolved.meshes) for (const primitive of mesh.primitives) {
     wholeTriangles += primitive.indices.length / 3;
@@ -302,19 +371,14 @@ export async function auditGeometry(asset: Asset): Promise<{ readonly facts: { r
     if (r.closedExpected && !closed) findings.push({ check: "closed", item: r.id, message: `${r.kind} is not watertight: ${r.boundary} boundary and ${r.overlapped} overlapped edges` });
     if (r.closedExpected && closed && !(r.volume > 0)) findings.push({ check: "closed", item: r.id, message: `${r.kind} has signed volume ${r.volume} (inside out)` });
   }
-  const triangles: Record<string, number> = {};
-  const volumeSolids: Record<string, number> = {};
-  for (const scale of SCALES) {
-    const t = await trianglesAt(asset, scale);
-    triangles[String(scale)] = t.triangles;
-    volumeSolids[String(scale)] = t.solids;
+  for (const mode of MODES) {
+    const row = scenes.filter((s) => s.mode === mode).sort((a, b) => a.scale - b.scale);
+    for (let i = 1; i < row.length; i++) if (row[i]!.triangles > row[i - 1]!.triangles) findings.push({ check: "budget", item: asset.id, message: `${mode} triangles grow from 1:${row[i - 1]!.scale} (${row[i - 1]!.triangles}) to 1:${row[i]!.scale} (${row[i]!.triangles})` });
+    const finest = row[0];
+    if (finest !== undefined && finest.triangles > BUDGET.triangles) findings.push({ check: "budget", item: asset.id, message: `${finest.triangles} ${mode} triangles at 1:${finest.scale} (budget ${BUDGET.triangles})` });
   }
-  const maxDenominators = asset.volume.solids.filter((s: VolumeSolid) => s.maxDenominator !== undefined).length;
-  for (let i = 1; i < SCALES.length; i++) if (triangles[String(SCALES[i])]! > triangles[String(SCALES[i - 1])]!) findings.push({ check: "budget", item: asset.id, message: `triangles grow from 1:${SCALES[i - 1]} (${triangles[String(SCALES[i - 1])]}) to 1:${SCALES[i]} (${triangles[String(SCALES[i])]})` });
-  if (maxDenominators > 0 && !(triangles["500"]! < triangles["50"]!)) findings.push({ check: "budget", item: asset.id, message: `${maxDenominators} solids carry maxDenominator but 1:500 has ${triangles["500"]} triangles, 1:50 ${triangles["50"]}` });
-  if (triangles["50"]! > BUDGET.triangles) findings.push({ check: "budget", item: asset.id, message: `${triangles["50"]} triangles at 1:50 (budget ${BUDGET.triangles})` });
   const glyphs = reports.filter((r) => r.glyph).length;
-  return { facts: { nodes: document.nodes.length, solids: document.solids.length, glyphs, triangles, volumeSolids, maxDenominators, byKind, degenerate: reports.reduce((n, r) => n + r.degenerate, 0), nonFinite: reports.reduce((n, r) => n + r.nonFinite, 0) }, solids: reports, findings };
+  return { facts: { nodes: document.nodes.length, solids: document.solids.length, glyphs, scenes, byKind, degenerate: reports.reduce((n, r) => n + r.degenerate, 0), nonFinite: reports.reduce((n, r) => n + r.nonFinite, 0) }, solids: reports, findings };
 }
 
 /** 🗜️ The member names of a ZIP read from its central directory (so a duplicated name is seen, which an unzip into a map hides). */
@@ -337,7 +401,7 @@ export function zipNames(bytes: Uint8Array): string[] {
 }
 
 /** 📁️ One file of a set as the manifest lists it. */
-export type SetFile = { readonly asset: string; readonly subject: "pose" | "clip" | "asset"; readonly item: string; readonly view: string; readonly kind: "glb" | "fbx" | "model" | "zip"; readonly file: string; readonly bytes: number; readonly sha256: string; readonly triangles: number | null };
+export type SetFile = { readonly asset: string; readonly subject: "pose" | "clip" | "asset"; readonly item: string; readonly scale: number | null; readonly view: string; readonly kind: "glb" | "fbx" | "model" | "zip"; readonly file: string; readonly bytes: number; readonly sha256: string; readonly triangles: number | null };
 
 /** 📂️ The audit of the files of one asset in an output directory: manifest bytes and hashes, every pose GLB, every clip FBX, every model JSON, the ZIP and the budgets. */
 export type FilesAudit = {
@@ -351,7 +415,7 @@ export type FilesAudit = {
 };
 
 /** 🧪️ Reads the files of `asset` from `root` (paths as the manifest gives them, `/` separated) and checks each with the oracles above. `read` returns the bytes of a path under the root. */
-export async function auditFiles(asset: Asset, files: readonly SetFile[], read: (file: string) => Uint8Array, plannedNames: readonly { readonly subject: string; readonly item: string; readonly kind: string; readonly name: string }[]): Promise<FilesAudit> {
+export async function auditFiles(asset: Asset, files: readonly SetFile[], read: (file: string) => Uint8Array, plannedNames: readonly { readonly subject: string; readonly item: string; readonly kind: string; readonly name: string; readonly scale?: number | null; readonly view?: string }[]): Promise<FilesAudit> {
   const findings: Finding[] = [];
   const decoder = new TextDecoder();
   const bones = asset.rig.bones.map((b) => b.id);
@@ -362,6 +426,8 @@ export async function auditFiles(asset: Asset, files: readonly SetFile[], read: 
   const extra = [...byName.keys()].filter((n) => !expectedNames.includes(n));
   if (missing.length > 0) findings.push({ check: "set", item: asset.id, message: `manifest lacks ${missing.join(", ")}` });
   if (extra.length > 0) findings.push({ check: "set", item: asset.id, message: `manifest lists unplanned ${extra.join(", ")}` });
+  const scenes = expectedScenes(asset);
+  const sceneTriangles = new Map<string, number>();
   const poses: { id: string; bytes: number; triangles: number; segments: number; extent: Extent }[] = [];
   const clips: FilesAudit["clips"][number][] = [];
   let models = 0;
@@ -386,19 +452,35 @@ export async function auditFiles(asset: Asset, files: readonly SetFile[], read: 
     if (entry.file.length + 1 > MAX_PATH) findings.push({ check: "set", item, message: `relative path of ${entry.file.length} characters` });
     members.set(`${planned.kind === "zip" ? "" : planned.kind}/${planned.name}`, bytes);
     if (planned.kind === "glb") {
-      const report = await checkGlb(bytes, planned.name, item);
+      const report = await checkGlb(bytes, planned.name, item, scenes);
       findings.push(...report.findings);
-      poses.push({ id: planned.item, bytes: bytes.length, triangles: report.facts.triangles, segments: report.facts.segments, extent: report.facts.extent });
+      const finest = authoredScales(asset.volumes)[0];
+      const body = finest === undefined ? undefined : report.facts.scenes[sceneIdOf(finest, "body")];
+      poses.push({ id: planned.item, bytes: bytes.length, triangles: report.facts.triangles, segments: report.facts.segments, extent: body?.extent ?? report.facts.extent });
+      if (planned.item === asset.presentation.defaultPose || sceneTriangles.size === 0) {
+        sceneTriangles.clear();
+        for (const [scene, facts] of Object.entries(report.facts.scenes)) sceneTriangles.set(scene, facts.triangles);
+      }
+      if (planned.item === asset.presentation.defaultPose) {
+        for (const scale of authoredScales(asset.volumes)) {
+          const own = report.facts.scenes[sceneIdOf(scale, "body")];
+          if (own === undefined) continue;
+          const miss = extentMiss(asset, own.extent, scale);
+          if (miss.miss > 1) findings.push({ check: "bounds", item, message: `1:${scale} body scene misses dimensions by ${miss.error.map((e) => `${(e * 100).toFixed(1)} %`).join(" / ")}` });
+        }
+      }
       if (report.facts.triangles !== entry.triangles) findings.push({ check: "set", item, message: `manifest says ${entry.triangles} triangles, file ${report.facts.triangles}` });
       if (bytes.length > BUDGET.glbBytes) findings.push({ check: "budget", item, message: `GLB of ${(bytes.length / 1048576).toFixed(1)} MB (budget 8 MB)` });
     } else if (planned.kind === "fbx") {
       const clip = asset.clips.find((c) => c.id === planned.item)!;
       const report = await checkFbx(bytes, item, { clip: clip.id, durationS: clip.durationS, fps: clip.fps, bones });
       findings.push(...report.findings);
+      const glbScene = planned.scale === null || planned.scale === undefined || modeOf(planned.view as View) === "structure" ? undefined : sceneTriangles.get(sceneIdOf(planned.scale, modeOf(planned.view as View)));
+      if (glbScene !== undefined && Math.round(report.facts.triangles) !== Math.round(glbScene)) findings.push({ check: "set", item, message: `FBX at 1:${planned.scale} ${planned.view} has ${report.facts.triangles} triangles, the GLB scene ${glbScene}` });
       clips.push({ id: clip.id, bytes: bytes.length, triangles: report.facts.triangles, tracks: report.facts.tracks, durationS: report.facts.durationS, bonesFound: report.facts.bonesFound, meshBones: report.facts.meshBones, assimpChannels: report.facts.assimpChannels });
       if (report.facts.triangles !== entry.triangles) findings.push({ check: "set", item, message: `manifest says ${entry.triangles} triangles, file ${report.facts.triangles}` });
     } else if (planned.kind === "model") {
-      const report = checkModelText(decoder.decode(bytes), item, bones, planned.subject === "clip" ? planned.item : undefined);
+      const report = checkModelText(decoder.decode(bytes), item, bones, planned.subject === "clip" ? planned.item : undefined, scenes);
       findings.push(...report.findings);
       models += 1;
     } else {

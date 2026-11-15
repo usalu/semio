@@ -231,7 +231,7 @@ pub fn check_pile(report: &mut CheckReport, annex: AnnexChoice, f: &Foundation, 
 type SoilLayer = semio_s_artifact_norm_en1998_model::En1998SoilLayer;
 
 /// 🪨️ The layered soil profile of a foundation (rows of `soilLayers` with its id, top to bottom) with the ground water, magnitude and a_g S of the foundation, `None` without layers.
-pub fn soil_profile(annex: AnnexChoice, document: &En1998Snapshot, f: &Foundation, a_g_s: f64) -> Option<(part_5::SoilProfile, Vec<&SoilLayer>)> {
+pub fn soil_profile<'a>(annex: AnnexChoice, document: &'a En1998Snapshot, f: &Foundation, a_g_s: f64) -> Option<(part_5::SoilProfile, Vec<&'a SoilLayer>)> {
     let rows: Vec<&SoilLayer> = document.soil_layers.iter().filter(|l| l.foundation_id == f.id).collect();
     if rows.is_empty() {
         return None;

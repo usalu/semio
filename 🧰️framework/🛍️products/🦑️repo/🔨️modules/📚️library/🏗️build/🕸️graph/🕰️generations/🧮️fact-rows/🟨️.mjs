@@ -7,6 +7,22 @@ const rowKeys=new WeakMap();
 export function rowKeyV1(row){let key=rowKeys.get(row);if(key===undefined){key=canonicalKeyV1([row.kind,row.path,row.fact],ROW_KEY_TEXT_LIMIT_V1);rowKeys.set(row,key);}return key;}
 export const ROW_KEY_TEXT_LIMIT_V1=P.rowKeyTextLimit;
 
+/** 🟰️ Whether two facts are structurally the same, key order aside: true only where their canonical texts are equal, false wherever that cannot be told cheaply (NaN, objects with `toJSON`, members present on one side only), which the caller settles with {@link rowKeyV1}. An unchanged row of a patch is recognised without rendering a canonical text of it. */
+export function sameFactV1(a,b){
+ if(a===b)return true;
+ if(a===null||b===null||typeof a!=="object"||typeof b!=="object"||typeof a.toJSON==="function"||typeof b.toJSON==="function")return false;
+ if(Array.isArray(a)){
+  if(!Array.isArray(b)||a.length!==b.length)return false;
+  for(let at=0;at<a.length;at++)if(!sameFactV1(a[at],b[at]))return false;
+  return true;
+ }
+ if(Array.isArray(b))return false;
+ const keys=Object.keys(a);
+ if(keys.length!==Object.keys(b).length)return false;
+ for(const key of keys)if(!Object.hasOwn(b,key)||!sameFactV1(a[key],b[key]))return false;
+ return true;
+}
+
 const ownerIdMaps=new WeakMap();
 const ownerIdMap=index=>{let map=ownerIdMaps.get(index);if(!map){map=new Map(index.owners.map((name,id)=>[name,id]));ownerIdMaps.set(index,map);}return map;};
 
@@ -127,5 +143,22 @@ export function selectFactClassesV1(index,only){
 export function staleConsumersV1(index,classes,stale){
  const names=new Set();
  for(const at of classes){const cls=index.classes[at];if(cls.r.some(id=>stale.has(id)))for(const owner of cls.o)names.add(index.owners[owner]);}
+ return names;
+}
+
+/** 🧭️ The names of up to `limit` owners, derived ones left out, that hold each of the `wanted` rows, in the order of `classes`: one pass over the classes and one set lookup per row of a class, never a pass over the classes per row (a stale set of tens of thousands of rows with no owner to name used to read every class tens of thousands of times). */
+export function rowOwnerNamesV1(index,classes,wanted,isDerived,limit=3){
+ const names=new Map(),open=new Set(wanted);
+ for(const at of classes){
+  if(open.size===0)break;
+  const cls=index.classes[at];let owners;
+  for(const id of cls.r){
+   if(!open.has(id))continue;
+   owners??=cls.o.map(owner=>index.owners[owner]).filter(name=>!isDerived(name));
+   const list=names.get(id)??[];names.set(id,list);
+   for(const name of owners){if(list.length>=limit)break;if(!list.includes(name))list.push(name);}
+   if(list.length>=limit)open.delete(id);
+  }
+ }
  return names;
 }

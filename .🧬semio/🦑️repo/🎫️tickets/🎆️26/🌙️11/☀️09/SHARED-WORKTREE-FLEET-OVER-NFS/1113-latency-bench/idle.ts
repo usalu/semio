@@ -1,0 +1,14 @@
+let gcMs=0,gcN=0;const origGc=(Bun as any).gc;(Bun as any).gc=(f:boolean)=>{const t=performance.now();const r=origGc(f);gcMs+=performance.now()-t;gcN++;return r;};
+const [module,worktree,store,configText,secondsText="30"]=process.argv.slice(2);
+const config=JSON.parse(configText!) as Record<string,number|boolean>,seconds=+secondsText;
+const replica=await import(`${module}/🔁️replica/🟦️.ts`),journal=await import(`${module}/📒️journal/🟦️.ts`);
+const options={worktree,storeRoot:store,originId:"b1",groupId:"g1",pollMilliseconds:250,scanSeconds:3600,debounceMilliseconds:150,persistMilliseconds:5000,watch:false,...config};
+const controller=new AbortController(),events:any[]=[];
+const running=replica.runV1(options,controller.signal,(e:any)=>events.push(e));
+await Bun.sleep(+(process.env.WARMUP??"15")*1000);
+const cpu0=process.cpuUsage(),t0=performance.now(),n0=events.length;
+await Bun.sleep(seconds*1000);
+const cpu=process.cpuUsage(cpu0),wall=performance.now()-t0;
+const rss=Math.round(process.memoryUsage().rss/1048576);
+controller.abort();await running.catch(()=>{});
+console.log(JSON.stringify({gcCalls:gcN,gcMs:Math.round(gcMs),seconds,cpuPercent:+(((cpu.user+cpu.system)/1000)/wall*100).toFixed(2),userMs:Math.round(cpu.user/1000),sysMs:Math.round(cpu.system/1000),events:events.length-n0,rssMiB:rss}));

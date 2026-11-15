@@ -143,7 +143,7 @@ repo dashboard run playground:s --param renderer=react --detach --wait-ready  # 
 ```
 
 `semio …` is the native executable behind `repo dashboard …`: it takes the same verbs and is installed by the first `repo dashboard` start; `repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream` prints its path, and `repo dashboard …` is the supported way to invoke it (see *The four golden paths* below). The
-command activates the shell first (the cached `activate-s-react-dev` prerequisite stages and compiles the
+command activates the shell first (the cached `activate-s-react-prototype` prerequisite stages and compiles the
 components) and then serves it. The first activation compiles every plugin to WebAssembly and takes tens of
 minutes; later starts take seconds. The same command is a row of the dashboard (`repo dashboard`,
 `Ctrl+B n`, type `s react`), where `renderer`, `example`, `user-slot` and the hub are parameters. Another
@@ -701,10 +701,10 @@ Task output, restart, stop and cancellation use the same dashboard controls. A r
 
 | what | dashboard command id | build task it resolves to |
 |---|---|---|
-| `s` React frontend | `playground:s` (6070), `@semio-tech/framework-os-dev:serve-s-react-dev` (no rebuild) | `@semio-tech/framework-os-dev:dev-s-react-dev` / `serve-s-react-dev` |
-| `s` wgpu frontend | `playground:s renderer=wgpu-wasm` (6066) | `@semio-tech/framework-os-dev:dev-s-wgpu-dev` |
+| `s` React frontend | `playground:s` (6070), `@semio-tech/framework-os-dev:serve-s-react-prototype` (no rebuild) | `@semio-tech/framework-os-dev:dev-s-react-prototype` / `serve-s-react-prototype` |
+| `s` wgpu frontend | `playground:s renderer=wgpu-wasm` (6066) | `@semio-tech/framework-os-dev:dev-s-wgpu-prototype` |
 | hub backend | `os-hub:dev` (8787, `/admin`) | `os-hub:dev` |
-| two-user collaboration | `compound:workspace/s-users-with-hub` (hub + `playground:s renderer=react user-slot=1` 6072 + `user-slot=2` 6073), or `os-hub:dev-collaboration` for the automated scenario | `os-hub:dev` + `@semio-tech/framework-os-dev:dev-s-react-dev` ×2 |
+| two-user collaboration | `compound:workspace/s-users-with-hub` (hub + `playground:s renderer=react user-slot=1` 6072 + `user-slot=2` 6073), or `os-hub:dev-collaboration` for the automated scenario | `os-hub:dev` + `@semio-tech/framework-os-dev:dev-s-react-prototype` ×2 |
 | MCP servers | `tool:workspace/repo-mcp` (repo, stdio; `client=<name>`), `tool:workspace/os-mcp-stdio` (os, stdio) / `tool:workspace/os-mcp-http` (os, port 8792) | Select HTTP or Inspector in New Task for development. `workspace:agents-write` derives headless agent client files from the stdio tool declarations. |
 
 The `renderer` parameter of a playground command (`react`, `wgpu-wasm`, `wgpu-native`) picks the build

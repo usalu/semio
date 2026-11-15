@@ -3,15 +3,18 @@ import{closeSync,createReadStream,fstatSync,openSync}from"node:fs";
 import{constants as osConstants}from"node:os";
 import{relative}from"node:path";
 import{fileURLToPath}from"node:url";
-import{repositoryCommandKernelV1}from"../../⌨️command/🧭️selection/🟦️.ts";
+import{repositoryCommandKernelV1,repositoryCommandReadsGraphV1}from"../../⌨️command/🧭️selection/🟦️.ts";
+import{graphChildEnvironmentV1}from"../../🧠️memory/🐏️child-environment/🟨️.mjs";
 import kernelSchema from"../../⌨️command/🧭️selection/🧬️schema/🔣️.json"with{type:"json"};
-import{acquirePartitionGroupV1,adoptPartitionPinV1,partitionGroupV1,readPartitionPinV1,releasePartitionPinV1}from"../🔀️partition/📌️retention/🟦️.ts";
+import{acquirePartitionGroupV1,adoptPartitionPinV1,partitionGroupV1,partitionUsableV1,readPartitionPinV1,releasePartitionPinV1}from"../🔀️partition/📌️retention/🟦️.ts";
 import door from"../../🚪️door/🔣️.json"with{type:"json"};
 import stamps from"../../🧷️format-stamps/🧬️schema/🔣️.json"with{type:"json"};
 import{implementationModeV1,readSealedBlockedV1,readSealedCheckedV1,readSealedLoaderV1,readSealedPointerV1,readSealedReceiptV1,sealedEntryOfV1,sealedExplicitActionV1,sealedLanguagesV1,sealedLightActionV1,sealedLightCommandV1,sealedPolicyV1,sealedTextV1,sealedTreeDriftV1,writeSealedCheckedV1,type ImplementationModeV1,type SealedEntryV1,type SealedPointerV1,type SealedPolicyV1}from"../🟦️.ts";
 
 /** 🏷️ The role argument that makes the sealed entry run the front door (the same literal the entry module exports; a law compares the two). */
 const doorRoleV1="--semio-role=door";
+/** 🤝️ How often a start re-promotes the door and its kernels from the moving live tree until their captures agree. */
+const partitionAttemptsV1=4;
 /** 🔁️ What a promotion answers the trampoline. */
 export interface TrampolinePromotionV1{readonly status:string;readonly pointer:Readonly<{digest:string}>}
 /** 🔌️ What the trampoline needs beyond Node: the entry of the store and the promotion of a drifted tree (live code, loaded only when the tree drifted). */
@@ -77,15 +80,21 @@ export async function startImplementationV1(root:string,argv:readonly string[],e
   if(kernelVerdict.action!=="run"){try{await promotePartition(selectedEntry);}catch(error){promotionAccepted=false;say(String((error as Error).message??error)+"\n");}selected=readSealedPointerV1(kernelStore);}
   if(selected)selectedPointers.push(selected);
  }
+ for(let attempt=0;!inheritedGroup&&allKernels.length&&promotionAccepted&&pointer&&selectedPointers.length===allKernels.length&&attempt<partitionAttemptsV1&&!partitionUsableV1(root,partitionGroupV1(pointer,selectedPointers),policy);attempt++){
+  try{await promotePartition(entry);for(const selectedEntry of allKernels)await promotePartition(selectedEntry);}catch(error){promotionAccepted=false;say(String((error as Error).message??error)+"\n");break;}
+  pointer=readSealedPointerV1(store);selectedPointers.length=0;
+  for(const selectedEntry of allKernels){const selected=readSealedPointerV1(sealedEntryOfV1(root,selectedEntry,policy));if(selected)selectedPointers.push(selected);}
+ }
  if(inheritedGroup&&inheritedToken){try{pin=adoptPartitionPinV1(root,inheritedToken,policy);}catch(error){say(String((error as Error).message??error)+"\n");process.exitCode=1;return;}}
  else if(allKernels.length){try{const candidate=promotionAccepted&&pointer&&selectedPointers.length===allKernels.length?partitionGroupV1(pointer,selectedPointers):undefined,admission=acquirePartitionGroupV1(root,entry,allKernels,candidate,policy);pin=admission.token;pointer=admission.group.door;if(mode==="promote"){releasePartitionPinV1(root,pin,policy);process.exitCode=admission.committed?0:1;return;}}catch(error){say(String((error as Error).message??error)+"\n");process.exitCode=1;return;}}
  const loader=pointer&&readSealedLoaderV1(store,pointer);
+ let readsGraph=false;try{readsGraph=repositoryCommandReadsGraphV1(kernelArgs,environment);}catch{}
  if(!pointer||loader===undefined){if(pin){releasePartitionPinV1(root,pin,policy);say("Pinned authenticated door is unavailable.\n");process.exitCode=1;return;}return live();}
  try{
  let snapshot:number|undefined;
  if(process.platform!=="win32")try{snapshot=openSync(store.snapshot(pointer.digest),"r");if(fstatSync(snapshot).size!==pointer.bytes){closeSync(snapshot);if(pin){say("Pinned authenticated door changed.\n");process.exitCode=1;return;}return live();}}catch{if(snapshot!==undefined)try{closeSync(snapshot);}catch{}if(pin){say("Pinned authenticated door is unavailable.\n");process.exitCode=1;return;}return live();}
  const code=await new Promise<number|undefined>(accept=>{
-  const child=spawn(process.execPath,["--eval",loader,"--",pointer.digest,doorRoleV1,...argv],{stdio:["inherit","inherit","inherit",snapshot??"pipe","pipe"],env:{...environment,...(pin?{SEMIO_SEALED_PARTITION_PIN:pin}:{}),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}}),forwards=(["SIGINT","SIGTERM","SIGHUP"] as const).map(signal=>[signal,()=>{stopped=true;try{child.kill(signal);}catch{}}] as const);
+  const child=spawn(process.execPath,["--eval",loader,"--",pointer.digest,doorRoleV1,...argv],{stdio:["inherit","inherit","inherit",snapshot??"pipe","pipe"],env:{...environment,...(readsGraph?graphChildEnvironmentV1():{}),...(pin?{SEMIO_SEALED_PARTITION_PIN:pin}:{}),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}}),forwards=(["SIGINT","SIGTERM","SIGHUP"] as const).map(signal=>[signal,()=>{stopped=true;try{child.kill(signal);}catch{}}] as const);
   let ready=false,stopped=false;
   for(const[signal,forward] of forwards)process.on(signal,forward);
   const finish=(value:number|undefined)=>{for(const[signal,forward] of forwards)process.off(signal,forward);accept(value);};

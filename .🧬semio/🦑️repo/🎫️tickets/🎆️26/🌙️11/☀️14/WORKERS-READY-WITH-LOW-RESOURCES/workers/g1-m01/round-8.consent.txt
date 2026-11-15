@@ -1,0 +1,53 @@
+
+##### 2026-11-14T21:07:04Z consent wait after try 1
+A macOS dialog waits for your answer: "repo would like to access files in your Documents folder" (/Users/ueli/.local/share/semio/launcher/bin/repo). Click "Allow" in the session of the logged-in user (or switch on Documents Folder for `repo` under System Settings, Privacy & Security, Files & Folders), then run the command again. /Users/ueli/Documents/semio cannot be read before that.
+0 rows (of 3 consulted requests in the window)
+21:07:08Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:08:12Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:09:15Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:10:18Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:11:22Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:12:25Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:13:29Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:14:33Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:15:35Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:16:38Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:17:41Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:18:44Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:19:47Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:20:51Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:21:56Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:22:59Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:24:04Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:25:07Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:26:10Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:27:12Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:28:15Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:29:18Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:30:22Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:31:25Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:32:29Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:33:33Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:34:36Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:35:40Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:36:45Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:37:49Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:38:49Z no consent within 30 minutes; next try runs anyway
+
+##### 2026-11-14T21:41:50Z consent wait after try 2
+A macOS dialog waits for your answer: "repo would like to access files in your Documents folder" (/Users/ueli/.local/share/semio/launcher/bin/repo). Click "Allow" in the session of the logged-in user (or switch on Documents Folder for `repo` under System Settings, Privacy & Security, Files & Folders), then run the command again. /Users/ueli/Documents/semio cannot be read before that.
+0 rows (of 3 consulted requests in the window)
+21:41:55Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:42:58Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:44:01Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:45:04Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:46:07Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:47:11Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:48:14Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:49:16Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:50:20Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:51:23Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:52:26Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:53:29Z preflight exit 0; access line: (none printed); receipts: launcher=waiting service=ok client=ok 
+21:54:32Z preflight exit 0; access line: (none printed); receipts: launcher= service=ok client=ok 
+21:54:32Z access ok

@@ -1,0 +1,16 @@
+pre-run facts, taken 2026-11-14T18:29:11Z
+replica code digest: "code":"39e3688eb315d48831772ca305d78bcb6f35975794444da47750bc5fa7459759"
+repo show projects / repo service host processes (pid ppid etime rss command):
+2312203    1977       31:58 142872 … 📜️script.ts repo service host run
+(end of list)
+last 8 lines of .cache/f/sidecars/build-agent.log:
+2026-11-14T18:13:24.871Z graph-server: alive, 0 machines seen, 0 requests held, read none
+2026-11-14T18:18:25.148Z graph-server: alive, 0 machines seen, 0 requests held, read none
+2026-11-14T18:23:25.427Z graph-server: alive, 0 machines seen, 0 requests held, read none
+2026-11-14T18:26:58.927Z agent code changed, restarting
+2026-11-14T18:26:58.936Z worker stopped: ueli-workstation-lin-1-2304179
+2026-11-14T18:26:59.789Z joining http://192.168.178.70:8981 offering rustc for 4 target(s)
+2026-11-14T18:26:59.841Z worker sandbox: linux-sandbox confined network denied
+2026-11-14T18:26:59.851Z worker registered: 911124a3-d275-405c-b024-50a3e6afb505 cache http://192.168.178.70:6094
+memory: Mem:           15848        5934        1975          24        8299        9913 | Swap:          25331       10271       15060
+psi: full avg10=0.01 avg60=0.12 avg300=0.04 total=21082423125

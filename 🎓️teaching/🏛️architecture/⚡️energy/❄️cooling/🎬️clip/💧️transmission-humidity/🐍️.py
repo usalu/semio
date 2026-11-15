@@ -55,14 +55,13 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 load_vo_timing = _manim_module.load_vo_timing
 
-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
-set_vo_language("de")
+# 🗣️ Measured clause durations live in vo_timing.json.
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -213,17 +212,17 @@ class Beat1_TransmissionOpaque(Scene):
          "A dark roof under midday sun absorbs solar radiation and heats the outer surface.",
          "Ein dunkles Dach absorbiert unter der Mittagssonne Strahlung und heizt die Außenfläche auf."),
         ("formula",
-         "The opaque transmission load Q-dot T is U times A times the equivalent temperature difference Delta-theta eq, in watts.",
-         "Die opake Transmissionslast Q-Punkt-T ist U mal A mal Delta-Theta-äquivalent — in Watt."),
+         r"The heat flow $\Phi$ through the opaque envelope, as a load on the room $\dot{Q}_{\mathrm{T}}$, is $U\cdot A\cdot\Delta\theta_{\mathrm{eq}}$, in $\mathrm{W}$.",
+         r"Der Wärmestrom $\Phi$ durch die opake Hülle, als Last am Raum $\dot{Q}_{\mathrm{T}}$, ist $U\cdot A\cdot\Delta\theta_{\mathrm{eq}}$ — in $\mathrm{W}$."),
         ("u",
-         "U is the thermal transmittance in watts per square metre kelvin. On the design day a lower U cuts the inward heat flow.",
-         "U ist der Wärmedurchgangskoeffizient in W/(m²·K). Am Auslegungstag senkt ein niedrigeres U den Wärmestrom nach innen."),
+         r"$U$ is the thermal transmittance in $\mathrm{W/(m^2K)}$. On the design day a lower $U$ cuts the inward heat flow.",
+         r"$U$ ist der Wärmedurchgangskoeffizient in $\mathrm{W/(m^2K)}$. Am Auslegungstag senkt ein niedrigeres $U$ den Wärmestrom nach innen."),
         ("a",
-         "A is the opaque surface area in square metres.",
-         "A ist die opake Bauteilfläche in Quadratmetern."),
+         r"$A$ is the opaque surface area in $\mathrm{m^2}$.",
+         r"$A$ ist die opake Bauteilfläche in $\mathrm{m^2}$."),
         ("dt",
-         "Delta-theta eq is the sol-air equivalent temperature difference — surface heating from radiation, not indoor-to-outdoor air Delta-theta.",
-         "Delta-Theta-eq ist die äquivalente Temperaturdifferenz nach Sol-Air — solare Oberflächenerwärmung, nicht das Luft-Delta-Theta."),
+         r"$\Delta\theta_{\mathrm{eq}}$ is the sol-air equivalent temperature difference: surface heating from radiation, not the indoor-to-outdoor air temperature difference $\Delta\theta$.",
+         r"$\Delta\theta_{\mathrm{eq}}$ ist die äquivalente Temperaturdifferenz nach Sol-Air: solare Oberflächenerwärmung, nicht die Lufttemperaturdifferenz $\Delta\theta$."),
     ]
 
     def construct(self):
@@ -231,7 +230,7 @@ class Beat1_TransmissionOpaque(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Opaque components under summer radiation", "Opake Bauteile unter Sommerstrahlung"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-2078", "opak")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -285,11 +284,11 @@ class Beat1_TransmissionOpaque(Scene):
         hold_for(self, self.NARRATION, "sun", during=surface_heat)
 
         row, box, items = math_panel([
-            ("qt", r"\dot{Q}_{T}", P_WHITE), (None, "=", P_WHITE),
+            ("qt", r"\dot{Q}_{\mathrm{T}}", P_WHITE), (None, "=", P_WHITE),
             ("u", "U", P_ORANGE), (None, r"\cdot", P_WHITE),
             ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("dt", r"\Delta\theta_{eq}", P_BLUE),
-            (None, r"\;[\mathrm{W}]", P_WHITE),
+            ("dt", r"\Delta\theta_{\mathrm{eq}}", P_BLUE),
+            (None, r"\quad\dot{Q}_{\mathrm{T}}\;\text{in}\;\mathrm{W}", P_PRIMARY),
         ])
 
         # U belongs to the sunlit right wall, A to the envelope band on the left —
@@ -361,20 +360,20 @@ class Beat3_LueftungslastImSommer(Scene):
 
     NARRATION = [
         ("intro",
-         "Opaque envelope: 68 W/K × 10 K ≈ 680 W. Summer airflow adds another load, covered in the ventilation video.",
-         "Die opake Hülle liefert hier rund 680 W (68 W/K mal 10 K).\nIm Sommer kommt die Luft als zweite Last hinzu."),
+         r"Opaque envelope: $68\,\mathrm{W/K}\cdot 10\,\mathrm{K}\approx 680\,\mathrm{W}$. Summer airflow adds another load, covered in the ventilation video.",
+         r"Die opake Hülle liefert hier rund $680\,\mathrm{W}$ ($68\,\mathrm{W/K}\cdot 10\,\mathrm{K}$). Im Sommer kommt die Luft als zweite Last hinzu."),
         ("sens",
-         "From ventilation: 220 m³/h at 6 K adds about 450 W of sensible heat through the now-reversed openings.",
-         "Kurz zur Erinnerung aus dem Lüftungsvideo: 220 m³/h bei 6 K\nbringen rund 450 W sensible Wärme herein."),
+         r"From ventilation: $220\,\mathrm{m^3/h}\cdot 0.34\,\mathrm{Wh/(m^3K)}\cdot 6\,\mathrm{K}$ adds about $450\,\mathrm{W}$ of sensible heat through the now-reversed openings.",
+         r"Kurz zur Erinnerung aus dem Lüftungsvideo: $220\,\mathrm{m^3/h}\cdot 0{,}34\,\mathrm{Wh/(m^3K)}\cdot 6\,\mathrm{K}$ bringen rund $450\,\mathrm{W}$ sensible Wärme herein."),
         ("lat",
-         "The moisture of the outdoor air adds about 810 watts of latent load.",
-         "Die Feuchte der Außenluft bringt rund 810 W latente Last dazu."),
+         r"The moisture of the outdoor air adds about $810\,\mathrm{W}$ of latent load $\dot{Q}_{\mathrm{V,lat}}$.",
+         r"Die Feuchte der Außenluft bringt rund $810\,\mathrm{W}$ latente Last $\dot{Q}_{\mathrm{V,lat}}$ dazu."),
         ("sum",
-         "Together the ventilation load Q-dot L is about 1260 watts, almost twice the 680 watts of the opaque envelope.",
-         "Zusammen ergibt sich Q-Punkt-L von rund 1260 W —\nfast doppelt so viel wie die 680 W der opaken Hülle."),
+         r"Sensible and latent part add up to the ventilation load $\dot{Q}_{\mathrm{V}}\approx 1260\,\mathrm{W}$, almost twice $\dot{Q}_{\mathrm{T}}=680\,\mathrm{W}$. Together $1940\,\mathrm{W}$.",
+         r"Sensibler und latenter Anteil ergeben die Lüftungslast $\dot{Q}_{\mathrm{V}}\approx 1260\,\mathrm{W}$ — fast doppelt so viel wie $\dot{Q}_{\mathrm{T}}=680\,\mathrm{W}$. Zusammen $1940\,\mathrm{W}$."),
         ("close",
-         "A plate exchanger recovers only the sensible part; the 810 watts stay. Window, cross and night ventilation are in chapter 4.",
-         "Der Plattentauscher holt nur den sensiblen Teil zurück, die 810 W bleiben.\nFenster-, Quer- und Nachtlüftung: Kapitel 4."),
+         r"A plate exchanger recovers only the sensible part; the $810\,\mathrm{W}$ stay. Window, cross and night ventilation are in chapter 4.",
+         r"Der Plattentauscher holt nur den sensiblen Teil zurück, die $810\,\mathrm{W}$ bleiben. Fenster-, Quer- und Nachtlüftung: Kapitel 4."),
     ]
 
     def construct(self):
@@ -382,7 +381,7 @@ class Beat3_LueftungslastImSommer(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Air as the second load", "Die Luft als zweite Last"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-2078", "aussenluft")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -431,9 +430,9 @@ class Beat3_LueftungslastImSommer(Scene):
             return lambda: np.array([label_x, (seg(k)[0] + seg(k)[1]) / 2 + dy, 0.0])
 
         bar = always_redraw(stack)
-        read_op = math_readout(lambda: rf"\dot{{Q}}_{{T}} \approx {label_number(round(t_op.get_value(), -1))}\,\mathrm{{W}}",
+        read_op = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{T}}}} \approx {label_number(round(t_op.get_value(), -1))}\,\mathrm{{W}}",
                                mid(0, 0.16), size=LABEL_FONT_SIZE + 1, color=OPAQUE)
-        sub_op = math_label(rf"{label_number(UA_OPAQUE)}\,\mathrm{{W/K}} \cdot {label_number(D_THETA_EQ)}\,\mathrm{{K}}",
+        sub_op = math_label(rf"{label_number(UA_OPAQUE)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}} \cdot {label_number(D_THETA_EQ)}\,\mathrm{{K}}",
                             np.array([label_x, bar_y0 + W_OPAQUE * unit / 2 - 0.2, 0.0]), size=LABEL_FONT_SIZE - 2,
                             color=P_WHITE, edge="left")
         read_s = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V,sens}}}} \approx {label_number(round(t_s.get_value(), -1))}\,\mathrm{{W}}",
@@ -484,23 +483,26 @@ class Beat3_LueftungslastImSommer(Scene):
         #region ventilation load next to the opaque load
         caption = swap_caption(self, caption, subtitle_text(N, "sum"))
         sum_row, sum_box, sum_items = math_panel([
-            ("l", r"\dot{Q}_{\mathrm{L}}", P_WHITE), (None, "=", P_WHITE),
+            ("l", r"\dot{Q}_{\mathrm{V}}", P_WHITE), (None, "=", P_WHITE),
             ("s", r"\dot{Q}_{\mathrm{V,sens}}", SENS), (None, "+", P_WHITE), ("lat", r"\dot{Q}_{\mathrm{V,lat}}", LATENT),
-            (None, r"\;[\mathrm{W}]", P_WHITE),
+            (None, r"\quad\dot{Q}\;\text{in}\;\mathrm{W}", P_PRIMARY),
         ])
         lo_s, hi_l = seg(1)[0], seg(2)[1]
         brace = dim_arrow(np.array([bar_x - bar_w / 2 - 0.25, lo_s, 0.0]), np.array([bar_x - bar_w / 2 - 0.25, hi_l, 0.0]),
                           color=P_WHITE)
         mid_y = (lo_s + hi_l) / 2
-        ql = math_label(rf"\dot{{Q}}_{{\mathrm{{L}}}} \approx {label_number(W_SENS + W_LAT)}\,\mathrm{{W}}",
-                        np.array([bar_x - bar_w / 2 - 0.5, mid_y + 0.2, 0.0]), size=BODY_FONT_SIZE, color=P_WHITE, edge="right")
-        ratio = math_label(rf"\dot{{Q}}_{{\mathrm{{L}}}} / \dot{{Q}}_{{T}} \approx {label_number((W_SENS + W_LAT) / W_OPAQUE, 1)}",
-                           np.array([bar_x - bar_w / 2 - 0.5, mid_y - 0.2, 0.0]), size=LABEL_FONT_SIZE + 1, color=P_WHITE,
+        ql = math_label(rf"\dot{{Q}}_{{\mathrm{{V}}}} \approx {label_number(W_SENS + W_LAT)}\,\mathrm{{W}}",
+                        np.array([bar_x - bar_w / 2 - 0.5, mid_y + 0.35, 0.0]), size=BODY_FONT_SIZE, color=P_WHITE, edge="right")
+        ratio = math_label(rf"\dot{{Q}}_{{\mathrm{{V}}}} / \dot{{Q}}_{{\mathrm{{T}}}} \approx {label_number((W_SENS + W_LAT) / W_OPAQUE, 1)}",
+                           np.array([bar_x - bar_w / 2 - 0.5, mid_y - 0.05, 0.0]), size=LABEL_FONT_SIZE + 1, color=P_WHITE,
+                           edge="right")
+        total = math_label(rf"\dot{{Q}}_{{\mathrm{{T}}}} + \dot{{Q}}_{{\mathrm{{V}}}} \approx {label_number(W_OPAQUE + W_SENS + W_LAT)}\,\mathrm{{W}}",
+                           np.array([bar_x - bar_w / 2 - 0.5, mid_y - 0.5, 0.0]), size=BODY_FONT_SIZE, color=P_YELLOW,
                            edge="right")
         new_chip = _back_chip(tr("← Ventilation · Chapter 3:", "← Lüftung · Kapitel 3:"), r"\dot{Q}_{\mathrm{V,sens}} + \dot{Q}_{\mathrm{V,lat}}").move_to(chip_now)
         self.play(FadeIn(sum_row), Create(sum_box), FadeOut(chip_now), FadeIn(new_chip), *air(0.8), run_time=0.8)
         chip_now = new_chip
-        self.play(Create(brace), FadeIn(ql), FadeIn(ratio), *air(1.0), run_time=1.0)
+        self.play(Create(brace), FadeIn(ql), FadeIn(ratio), FadeIn(total), *air(1.0), run_time=1.0)
         hold_for(self, N, "sum", during=air)
         #endregion
 
@@ -511,7 +513,7 @@ class Beat3_LueftungslastImSommer(Scene):
         chips = VGroup(chip_wrg, chip_win).arrange(RIGHT, buff=0.3).move_to(np.array([0.2, chip_y, 0.0]))
         for part in gain_tag.get_family():
             part.clear_updaters()
-        self.play(FadeOut(brace), FadeOut(ql), FadeOut(ratio), FadeOut(gain_tag), FadeOut(chip_now), FadeIn(chips),
+        self.play(FadeOut(brace), FadeOut(ql), FadeOut(ratio), FadeOut(total), FadeOut(gain_tag), FadeOut(chip_now), FadeIn(chips),
                   *air(0.6), run_time=0.6)
         self.play(_ramp(t_s, W_SENS_WRG), *air(2.0), run_time=2.0)
         hold_for(self, N, "close", during=air)

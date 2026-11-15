@@ -132,6 +132,14 @@
     "workers.start": {
       "en": "Worker {name} joins {url} with {concurrency} slot(s) on {platform}.",
       "de": "Worker {name} tritt {url} bei mit {concurrency} Slot(s) auf {platform}."
+    },
+    "workers.refused": {
+      "en": "Refused {detail}: this machine has no headroom, the scheduler places the action elsewhere.",
+      "de": "Abgelehnt: {detail}. Diese Maschine hat keinen Spielraum, der Scheduler platziert die Aktion anderswo."
+    },
+    "error.confinement": {
+      "en": "This host has no confining sandbox and the policy requires one (worker.confinement is required).",
+      "de": "Dieser Rechner hat keine einschränkende Sandbox, die Richtlinie verlangt aber eine (worker.confinement ist required)."
     }
   }
 }

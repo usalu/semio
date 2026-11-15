@@ -1,4 +1,4 @@
-import{readNativeStorageReservationPolicyV1}from"@semio-tech/process/artifacts/native-build/storage";
+import{readNativeStorageReservationPolicyV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {testWebFixtureContractsV1,testWebDeclarationDataV1} from "./🧪️tests/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {withArtifactScratchV1,withArtifactDestinationTaskV1,type ArtifactDestinationV1,type ArtifactDestinationContextV1} from "../../📦️artifacts/💾️storage/🟦️.ts";

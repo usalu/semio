@@ -105,7 +105,7 @@ pub fn surfaces(ctx: &Ctx, out: &mut Out) {
     }
 }
 
-fn surface(out: &mut Out, id: &str, collection: &str, points: &[Vec3], name: LocalizedCopy, detail: LocalizedCopy, layer: &'static str, bound: Option<UtilisationBinding>, grips: Vec<String>) {
+pub(crate) fn surface(out: &mut Out, id: &str, collection: &str, points: &[Vec3], name: LocalizedCopy, detail: LocalizedCopy, layer: &'static str, bound: Option<UtilisationBinding>, grips: Vec<String>) {
     out.push(
         Spec::new(EntityKind::Surface, id.to_string(), collection, Geometry::Surface(SurfaceGeometry { shape: SurfaceShape::Polygon { polygon: polygon3(points) } }), load(LoadKind::Variable), name, layer)
             .bound(bound)

@@ -1,4 +1,5 @@
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{fleetFetchContextV1,pinnedFetchV1}from"../../🛰️fleet-fetch/🟦️.ts";
 import {createHash} from "node:crypto";
 import {chmod,lstat,mkdir,mkdtemp,open,readFile,rename,rm} from "node:fs/promises";
 import {dirname,join} from "node:path";
@@ -46,7 +47,7 @@ export async function prepareBazel(workspace:string,store:RepositoryToolingStore
   if(offline)throw new Error("Pinned Bazel executable is not prepared for the original offline invocation");
   const staging=await mkdtemp(join(base,".prepare-")),target=join(staging,name);
   try{
-   const response=await fetch(`${manifest.release}/${row.file}`,{signal});checkResourceLeaseControl(phaseControl);if(!response.ok||!response.body)throw new Error(`Bazel download failed: ${response.status}`);
+   const response=await pinnedFetchV1(fleetFetchContextV1(process.env,workspace),{url:`${manifest.release}/${row.file}`,sha256:row.sha256,bytes:row.bytes},{signal});checkResourceLeaseControl(phaseControl);if(!response.ok||!response.body)throw new Error(`Bazel download failed: ${response.status}`);
    const file=await open(target,"wx"),reader=response.body.getReader(),hash=createHash("sha256");let bytes=0;
    try{for(let read=await reader.read();!read.done;read=await reader.read()){checkResourceLeaseControl(phaseControl);bytes+=read.value.length;if(bytes>row.bytes)throw new Error("Bazel executable exceeds its pinned size");hash.update(read.value);await file.writeFile(read.value);checkResourceLeaseControl(phaseControl);await progress({phase:"downloading",bytes,total:row.bytes});}}
    catch(error){await reader.cancel().catch(()=>undefined);throw error;}

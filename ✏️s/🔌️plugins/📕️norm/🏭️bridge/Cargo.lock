@@ -5274,6 +5274,66 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-norm-en1993-mut-cold-support-more"
+version = "0.1.0"
+dependencies = [
+ "semio-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-norm-en1993-diff",
+ "semio-s-artifact-norm-en1993-model",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1993-mut-plated-spacing"
+version = "0.1.0"
+dependencies = [
+ "semio-os-kernel",
+ "semio-framework-schema",
+ "semio-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-norm-en1993-diff",
+ "semio-s-artifact-norm-en1993-model",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1997-mut-wall-reinforcement"
+version = "0.1.0"
+dependencies = [
+ "semio-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-norm-en1997-diff",
+ "semio-s-artifact-norm-en1997-model",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1998-mutations-text-slopes"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1998-mut-seismic-slopes",
+ "semio-s-artifact-norm-en1998-mutations-text-kit",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1998-mutations-text-towers"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1998-mut-bridges-towers",
+ "semio-s-artifact-norm-en1998-mutations-text-kit",
+]
+
+[[package]]
 name = "semio-ui-contract"
 version = "0.1.0"
 dependencies = [
@@ -7635,29 +7695,14 @@ dependencies = [
 name = "semio-s-artifact-norm-en1993-mut-cold-formed-support"
 version = "0.1.0"
 dependencies = [
- "semio-os-kernel",
  "semio-framework-schema",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
- "semio-s-artifact-norm-en1993-diff",
- "semio-s-artifact-norm-en1993-model",
- "semio-s-artifact-norm-en1993-mut-cold-formed-support-more",
- "serde",
-]
-
-[[package]]
-name = "semio-s-artifact-norm-en1993-mut-cold-formed-support-more"
-version = "0.1.0"
-dependencies = [
  "semio-os-kernel",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
  "semio-s-artifact-norm-en1993-diff",
  "semio-s-artifact-norm-en1993-model",
+ "semio-s-artifact-norm-en1993-mut-cold-support-more",
+ "semio-ui-locale",
  "serde",
 ]
 
@@ -8755,20 +8800,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-norm-en1993-mut-plated-stiffener-spacing"
-version = "0.1.0"
-dependencies = [
- "semio-os-kernel",
- "semio-framework-schema",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-norm-en1993-diff",
- "semio-s-artifact-norm-en1993-model",
- "serde",
-]
-
-[[package]]
 name = "semio-s-artifact-norm-en1993-mut-restraint"
 version = "0.1.0"
 dependencies = [
@@ -9223,17 +9254,16 @@ name = "semio-s-artifact-norm-en1993-mutations"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
  "semio-framework-pack-json",
  "semio-framework-schema",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-test-fixtures",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
  "semio-s-artifact-norm-en1993-diff",
  "semio-s-artifact-norm-en1993-model",
  "semio-s-artifact-norm-en1993-mut-bridge",
@@ -9299,9 +9329,9 @@ dependencies = [
  "semio-s-artifact-norm-en1993-mut-plated-flange",
  "semio-s-artifact-norm-en1993-mut-plated-patch",
  "semio-s-artifact-norm-en1993-mut-plated-patch-moment",
+ "semio-s-artifact-norm-en1993-mut-plated-spacing",
  "semio-s-artifact-norm-en1993-mut-plated-stiffener",
  "semio-s-artifact-norm-en1993-mut-plated-stiffener-shape",
- "semio-s-artifact-norm-en1993-mut-plated-stiffener-spacing",
  "semio-s-artifact-norm-en1993-mut-restraint",
  "semio-s-artifact-norm-en1993-mut-restraint-lateral",
  "semio-s-artifact-norm-en1993-mut-section",
@@ -9329,6 +9359,7 @@ dependencies = [
  "semio-s-artifact-norm-en1993-mutations-protocol",
  "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
+ "semio-ui-locale",
  "serde",
 ]
 
@@ -10964,14 +10995,14 @@ dependencies = [
 name = "semio-s-artifact-norm-en1997-mut-wall"
 version = "0.1.0"
 dependencies = [
- "semio-os-kernel",
  "semio-framework-schema",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-kernel",
  "semio-s-artifact-norm-en1997-diff",
  "semio-s-artifact-norm-en1997-model",
- "semio-s-artifact-norm-en1997-mut-wall-seismic-reinforcement",
+ "semio-s-artifact-norm-en1997-mut-wall-reinforcement",
+ "semio-ui-locale",
  "serde",
 ]
 
@@ -10990,33 +11021,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-norm-en1997-mut-wall-seismic-reinforcement"
-version = "0.1.0"
-dependencies = [
- "semio-os-kernel",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-norm-en1997-diff",
- "semio-s-artifact-norm-en1997-model",
- "serde",
-]
-
-[[package]]
 name = "semio-s-artifact-norm-en1997-mutations"
 version = "0.1.0"
 dependencies = [
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
  "semio-framework-schema",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
  "semio-s-artifact-norm-en1997-diff",
  "semio-s-artifact-norm-en1997-model",
  "semio-s-artifact-norm-en1997-mut-anchor",
@@ -11048,7 +11063,7 @@ dependencies = [
  "semio-s-artifact-norm-en1997-mut-uplift",
  "semio-s-artifact-norm-en1997-mut-wall",
  "semio-s-artifact-norm-en1997-mut-wall-loads",
- "semio-s-artifact-norm-en1997-mut-wall-seismic-reinforcement",
+ "semio-s-artifact-norm-en1997-mut-wall-reinforcement",
  "semio-s-artifact-norm-en1997-mutations-graphql",
  "semio-s-artifact-norm-en1997-mutations-json-schema",
  "semio-s-artifact-norm-en1997-mutations-proto",
@@ -11056,6 +11071,7 @@ dependencies = [
  "semio-s-artifact-norm-en1997-mutations-typescript",
  "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
+ "semio-ui-locale",
  "serde",
 ]
 
@@ -11265,15 +11281,14 @@ dependencies = [
 name = "semio-s-artifact-norm-en1998-mutations"
 version = "0.1.0"
 dependencies = [
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
  "semio-framework-schema",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
  "semio-s-artifact-norm-en1998-diff",
  "semio-s-artifact-norm-en1998-model",
  "semio-s-artifact-norm-en1998-mut-bridges-towers",
@@ -11287,17 +11302,18 @@ dependencies = [
  "semio-s-artifact-norm-en1998-mutations-json-schema",
  "semio-s-artifact-norm-en1998-mutations-proto",
  "semio-s-artifact-norm-en1998-mutations-protocol",
- "semio-s-artifact-norm-en1998-mutations-text-bridges-towers",
  "semio-s-artifact-norm-en1998-mutations-text-buildings",
  "semio-s-artifact-norm-en1998-mutations-text-foundations",
  "semio-s-artifact-norm-en1998-mutations-text-kit",
  "semio-s-artifact-norm-en1998-mutations-text-members",
  "semio-s-artifact-norm-en1998-mutations-text-placements",
- "semio-s-artifact-norm-en1998-mutations-text-seismic-slopes",
  "semio-s-artifact-norm-en1998-mutations-text-silos-tanks",
+ "semio-s-artifact-norm-en1998-mutations-text-slopes",
  "semio-s-artifact-norm-en1998-mutations-text-tie-beams",
+ "semio-s-artifact-norm-en1998-mutations-text-towers",
  "semio-s-artifact-norm-en1998-mutations-typescript",
  "semio-s-plugin-norm-app-surface",
+ "semio-ui-locale",
  "serde",
 ]
 
@@ -11333,14 +11349,6 @@ version = "0.1.0"
 [[package]]
 name = "semio-s-artifact-norm-en1998-mutations-protocol"
 version = "0.1.0"
-
-[[package]]
-name = "semio-s-artifact-norm-en1998-mutations-text-bridges-towers"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-norm-en1998-mut-bridges-towers",
- "semio-s-artifact-norm-en1998-mutations-text-kit",
-]
 
 [[package]]
 name = "semio-s-artifact-norm-en1998-mutations-text-buildings"
@@ -11379,14 +11387,6 @@ name = "semio-s-artifact-norm-en1998-mutations-text-placements"
 version = "0.1.0"
 dependencies = [
  "semio-s-artifact-norm-en1998-mut-placements",
- "semio-s-artifact-norm-en1998-mutations-text-kit",
-]
-
-[[package]]
-name = "semio-s-artifact-norm-en1998-mutations-text-seismic-slopes"
-version = "0.1.0"
-dependencies = [
- "semio-s-artifact-norm-en1998-mut-seismic-slopes",
  "semio-s-artifact-norm-en1998-mutations-text-kit",
 ]
 

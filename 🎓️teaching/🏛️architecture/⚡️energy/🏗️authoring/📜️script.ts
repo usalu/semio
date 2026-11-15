@@ -32,6 +32,8 @@ const commands: Record<string, string[]> = {
 
   render: [join(root, "🎬️clip", "🖌️render", "🐍️.py"), ...args],
 
+  posters: [join(root, "🎬️clip", "🪟️presentation", "🖼️posters", "🖌️capture", "🐍️.py"), ...args],
+
   morph: [join(workspace, "🎓️teaching", "🏛️architecture", "🔀️morph", "✏️authoring", "🐍️.py"), ...args],
 
   test: [
@@ -97,6 +99,10 @@ const commands: Record<string, string[]> = {
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🥞️hierarchy.🧪️tests.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🥞️hierarchy.🧪️tests.🧩️chapters.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧪️tests.🌍️captions.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📝️narration.🧪️tests.🧮️tex.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📝️narration.🧪️tests.🪟️caption-layout.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📝️narration.🧪️tests.🛡️guard.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔊️speech.🧪️tests.🗣️lexicon.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧪️tests.📟️readout.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🧪️tests.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧪️tests.🐍️",
@@ -109,6 +115,22 @@ const commands: Record<string, string[]> = {
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧪️tests.🐍️scenes",
     "🎓️teaching.🏛️architecture.⚡️energy.🌬️ventilation.🎬️clip.📦️volume.🧪️tests.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🌬️ventilation.🎬️clip.🧪️architecture.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🌬️ventilation.🎬️clip.🧪️architecture.🐍️numbers",
+    "🎓️teaching.🏛️architecture.⚡️energy.🌬️ventilation.🎬️clip.🧪️architecture.🐍️transitions",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧪️tests.🐍️labels",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎞️playback.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🖼️posters.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🥞️hierarchy.🧪️tests.🧩️chapters.🐍️pointer",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🧪️tests.⏱️purity.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📏️running-example.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🗺️roadmap.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.📊️demand.🎬️clip.🏭️primary-energy.🧪️tests.🐍️chain",
+    "🎓️teaching.🏛️architecture.⚡️energy.📊️demand.🎬️clip.🏭️primary-energy.🧪️tests.🐍️scale",
+    "🎓️teaching.🏛️architecture.⚡️energy.📊️demand.🎬️clip.🔁️recap.🧪️tests.🧮️balance.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.📊️demand.🎬️clip.🧪️tests.🔗️chain.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🧲️physics.🎬️clip.🧲️fundamentals.🧪️tests.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧪️tests.🐍️transforms",
     "🎓️teaching.🏛️architecture.⚡️energy.🔥️heating.🎬️clip.🧱️conduction.🧪️tests.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.❄️cooling.🎬️clip.📐️system-sizing.🧪️tests.🐍️",

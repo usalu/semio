@@ -90,11 +90,11 @@ export function generationResolveV1(location:string,workspace:string,storeRoot:s
 /** 🧮️ Digests a directory listing projection into a short fixed width key. */
 export const generationProjectionDigestV1=(rows:readonly Readonly<{name:string;kind:string}>[]):string=>generationSha256V1(JSON.stringify(rows.map(row=>({name:row.name,kind:row.kind})))).slice(0,protocol.projectionDigestUnits);
 const fields=(facts:BigIntStats,names:readonly string[]):string=>names.map(name=>String(facts[name as keyof BigIntStats])).join(":");
-/** 🪪️ Renders the full physical stamp exactly as the provider walk compares it. */
-export const generationStampV1=(facts:BigIntStats):string=>fields(facts,protocol.stampFields);
+/** 🪪️ Renders the full physical stamp exactly as the provider walk compares it: a symbolic link carries a fixed change time, because its attributes can be bumped without the link moving (the walk's `javascriptDependencyStampV1` does the same, a receipt that stamped the real change time of every link could never verify what the walk had just observed). */
+export const generationStampV1=(facts:BigIntStats):string=>protocol.stampFields.map((name:string)=>name==="ctimeNs"&&(facts.mode&0o170000n)===0o120000n?"0":String(facts[name as keyof BigIntStats])).join(":");
 /** ⚓️ Renders the stable identity anchor exactly as the provider walk compares it. */
 export const generationAnchorV1=(facts:BigIntStats):string=>fields(facts,protocol.anchorFields);
-const lstatBig=(path:string):BigIntStats|undefined=>lstatSync(path,{bigint:true,throwIfNoEntry:false});
+const lstatBig=(path:string):BigIntStats|undefined=>{try{return lstatSync(path,{bigint:true,throwIfNoEntry:false});}catch(error){if((error as NodeJS.ErrnoException).code==="ENOTDIR")return undefined;throw error;}};
 /** 📖️ Reads one repository DATA file through a descriptor, so a manifest that lives in a schema directory is data and never an implementation read of the loader's captured file path. */
 function readGenerationData(path:string,maximumBytes:number):Buffer{
  const descriptor=openSync(path,"r");
@@ -263,6 +263,14 @@ export async function confirmGenerationWalkV1<W extends Readonly<{sha256:string}
  if(replayed.status==="match")return Object.freeze({via:"replay",sha256:replayed.sha256});
  const walk=await ports.walk();
  return Object.freeze({via:"walk",sha256:walk.sha256,walk});
+}
+/** 🛑️ A receipt capture that failed by itself, not because the tree differs, which must stop the synchronization that proved it. */
+export class GenerationReceiptFaultV1 extends Error {
+ constructor(message:string){super(message);this.name="GenerationReceiptFaultV1";}
+}
+/** 🔊️ Refuses to swallow a proof that is unreadable or whose evidence is invalid: those mean the capture machinery broke (a link taken for a directory, a vanished file), so an error line with exit code 0 would hide a defect; a proof that merely differs stays a quiet stale outcome. */
+export function requireSoundGenerationProofV1(scope:string,result:GenerationVerifyResultV1|Readonly<{status:"absent"}>,language:string):void{
+ if(result.status==="mismatch"&&(result.class==="unreadable"||result.class==="evidence-invalid"))throw new GenerationReceiptFaultV1(describeGenerationMismatchV1(language,{class:"stale"},{scope,reason:describeGenerationMismatchV1(language,result)}));
 }
 /** 🕊️ Closes every way one receipt publication ends; only a cancelled run throws. */
 export type GenerationPublishOutcomeV1="published"|"present"|"deferred"|"stale"|"failed"|"busy";

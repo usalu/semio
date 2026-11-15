@@ -3297,7 +3297,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "concrete",
-          "areaM2": 0.5,
+          "areaM2": 0.3,
           "characteristicLengthM": 0.3,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -3330,7 +3330,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "aluminium-anodised",
-          "areaM2": 0.18,
+          "areaM2": 0.22,
           "characteristicLengthM": 0.06,
           "geometry": "cylinder",
           "skyViewFactor": 0.7,
@@ -3363,7 +3363,7 @@
           "kind": "lamp",
           "model": "operating",
           "material": "aluminium-anodised",
-          "areaM2": 0.25,
+          "areaM2": 0.23,
           "characteristicLengthM": 0.2,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.7,
@@ -3398,7 +3398,7 @@
           "kind": "glazing",
           "model": "passive",
           "material": "polycarbonate",
-          "areaM2": 0.08,
+          "areaM2": 0.05,
           "characteristicLengthM": 0.2,
           "geometry": "horizontal-plate-down",
           "skyViewFactor": 0.3,
@@ -3480,308 +3480,2176 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "plinth",
-          "kind": "box",
-          "bone": "foundation",
-          "material": "concrete",
-          "role": "body",
-          "tone": 0.65,
-          "region": "plinth-concrete",
-          "size": [0.3, 0.1, 0.3],
-          "transform": {
-            "translation": [0.0, 0.05, 0.0]
-          }
-        },
-        {
-          "id": "base-plate",
-          "kind": "box",
-          "bone": "foundation",
-          "material": "galv-steel",
-          "role": "body",
-          "tone": 0.35,
-          "region": "pole-galv",
-          "size": [0.3, 0.02, 0.3],
-          "cornerRadius": 0.002,
-          "transform": {
-            "translation": [0.0, 0.11, 0.0]
-          }
-        },
-        {
-          "id": "base-nut",
-          "kind": "revolve",
-          "bone": "foundation",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.2,
-          "region": "pole-galv",
-          "maxDenominator": 100,
-          "profile": [[0.0, 0.0], [0.0, 0.0125], [0.014, 0.0125], [0.014, 0.0]],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [0.12, 0.12, 0.12]
-          },
-          "repeat": {
-            "count": 4,
-            "rotationAxis": [0, 1, 0],
-            "rotationRad": 1.570796,
-            "origin": [0, 0, 0]
-          }
-        },
-        {
-          "id": "base-cover",
-          "kind": "revolve",
-          "bone": "foundation",
-          "material": "galv-steel",
-          "role": "body",
-          "tone": 0.33,
-          "region": "pole-galv",
-          "maxDenominator": 100,
-          "profile": [
-            [0.13, 0.0],
-            [0.13, 0.12],
-            [0.15494, 0.11562],
-            [0.17766, 0.11027],
-            [0.19873, 0.10437],
-            [0.21875, 0.09838],
-            [0.2383, 0.09271],
-            [0.25797, 0.0878],
-            [0.27834, 0.08408],
-            [0.3, 0.082]
-          ],
-          "axis": [0, 1, 0],
-          "origin": [0, 0, 0]
-        },
-        {
-          "id": "pole",
-          "kind": "revolve",
-          "bone": "pole",
-          "material": "galv-steel",
-          "role": "body",
-          "tone": 0.4,
-          "region": "pole-galv",
-          "profile": [
-            [0.0, 0.0],
-            [0.0, 0.085],
-            [0.49993, 0.08345],
-            [0.99944, 0.08132],
-            [1.49812, 0.07867],
-            [1.99556, 0.07556],
-            [2.49132, 0.07202],
-            [2.985, 0.06813],
-            [3.47618, 0.06391],
-            [3.96444, 0.05944],
-            [4.44937, 0.05477],
-            [4.93056, 0.04993],
-            [5.40757, 0.04499],
-            [5.88, 0.04],
-            [5.8705, 0.034],
-            [5.877, 0.022],
-            [5.88, 0.0]
-          ],
-          "axis": [1, 0, 0],
-          "origin": [0, 0, 0]
-        },
-        {
-          "id": "pole-collar",
-          "kind": "revolve",
-          "bone": "pole",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "pole-galv",
-          "maxDenominator": 100,
-          "profile": [[0.0, 0.0], [0.0, 0.055], [0.08, 0.055], [0.08, 0.0]],
-          "axis": [1, 0, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [5.6, 0.0, 0.0]
-          }
-        },
-        {
-          "id": "pole-hatch",
-          "kind": "box",
-          "bone": "pole",
-          "material": "galv-steel",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "pole-galv",
-          "maxDenominator": 50,
-          "size": [0.5, 0.09, 0.004],
-          "cornerRadius": 0.002,
-          "transform": {
-            "translation": [0.8, 0.0, -0.0815]
-          }
-        },
-        {
-          "id": "arm",
-          "kind": "capsule",
-          "bone": "arm",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.5,
-          "region": "arm-alu",
-          "p0": [0.0, 0.0, 0.0],
-          "p1": [0.95, 0.0, 0.0],
-          "r0": 0.034,
-          "r1": 0.01
-        },
-        {
-          "id": "arm-brace",
-          "kind": "capsule",
-          "bone": "arm",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.45,
-          "region": "arm-alu",
-          "p0": [0.02, -0.46, 0.0],
-          "p1": [0.62, -0.012, 0.0],
-          "r0": 0.012,
-          "r1": 0.012
-        },
-        {
-          "id": "arm-brace-joint",
-          "kind": "ellipsoid",
-          "bone": "arm",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "arm-alu",
-          "maxDenominator": 100,
-          "radii": [0.02, 0.02, 0.02],
-          "transform": {
-            "translation": [0.62, -0.012, 0.0]
-          }
-        },
-        {
-          "id": "arm-clamp",
-          "kind": "box",
-          "bone": "arm",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "arm-alu",
-          "maxDenominator": 100,
-          "size": [0.1, 0.1, 0.1],
-          "cornerRadius": 0.008
-        },
-        {
-          "id": "head-housing",
-          "kind": "loft",
-          "bone": "head",
-          "material": "aluminium-anodised",
-          "role": "body",
-          "tone": 0.5,
-          "region": "lamp-housing",
-          "sections": [
-            {
-              "at": [0.0, -0.005, 0.0],
-              "rx": 0.07,
-              "ry": 0.035,
-              "exponent": 3,
-              "rotation": [0.70689, 0.01766, 0.70689, -0.01766]
-            },
-            {
-              "at": [0.05, -0.0025, 0.0],
-              "rx": 0.125,
-              "ry": 0.0575,
-              "exponent": 3,
-              "rotation": [0.70595, 0.04046, 0.70595, -0.04046]
-            },
-            {
-              "at": [0.15, 0.009, 0.0],
-              "rx": 0.13,
-              "ry": 0.071,
-              "exponent": 3,
-              "rotation": [0.7071, 0.00354, 0.7071, -0.00354]
-            },
-            {
-              "at": [0.25, 0.01, 0.0],
-              "rx": 0.125,
-              "ry": 0.068,
-              "exponent": 3,
-              "rotation": [0.69961, -0.10268, 0.69961, 0.10268]
-            },
-            {
-              "at": [0.3, -0.005, 0.0],
-              "rx": 0.08,
-              "ry": 0.045,
-              "exponent": 3,
-              "rotation": [0.7047, -0.05832, 0.7047, 0.05832]
-            },
-            {
-              "at": [0.33, -0.01, 0.0],
-              "rx": 0.04,
-              "ry": 0.015,
-              "exponent": 3,
-              "rotation": [0.7047, -0.05832, 0.7047, 0.05832]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "plinth",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.65,
+            "size": [0.3, 0.1, 0.3],
+            "transform": {
+              "translation": [0.0, 0.05, 0.0]
             }
-          ],
-          "capStart": true,
-          "capEnd": true
-        },
-        {
-          "id": "head-spigot",
-          "kind": "revolve",
-          "bone": "head",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.35,
-          "region": "lamp-housing",
-          "maxDenominator": 100,
-          "profile": [[0.0, 0.0], [0.0, 0.028], [0.07, 0.028], [0.07, 0.0]],
-          "axis": [1, 0, 0],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [-0.04, 0.005, 0.0]
-          }
-        },
-        {
-          "id": "head-fin",
-          "kind": "box",
-          "bone": "head",
-          "material": "aluminium-anodised",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "lamp-housing",
-          "maxDenominator": 50,
-          "size": [0.004, 0.023, 0.15],
-          "transform": {
-            "translation": [0.15, 0.0775, 0.0]
           },
-          "repeat": {
-            "count": 6,
-            "translation": [0.028, 0, 0]
+          {
+            "id": "base-plate",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.35,
+            "size": [0.3, 0.02, 0.3],
+            "cornerRadius": 0.002,
+            "transform": {
+              "translation": [0.0, 0.11, 0.0]
+            }
+          },
+          {
+            "id": "base-nut-0",
+            "kind": "revolve",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.2,
+            "profile": [[0.0, 0.0], [0.0, 0.014], [0.0125, 0.014], [0.0125, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.12, 0.12, 0.12]
+          },
+          {
+            "id": "base-nut-1",
+            "kind": "revolve",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.2,
+            "profile": [[0.0, 0.0], [0.0, 0.014], [0.0125, 0.014], [0.0125, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.12, 0.12, -0.12]
+          },
+          {
+            "id": "base-nut-2",
+            "kind": "revolve",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.2,
+            "profile": [[0.0, 0.0], [0.0, 0.014], [0.0125, 0.014], [0.0125, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [-0.12, 0.12, -0.12]
+          },
+          {
+            "id": "base-nut-3",
+            "kind": "revolve",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.2,
+            "profile": [[0.0, 0.0], [0.0, 0.014], [0.0125, 0.014], [0.0125, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [-0.12, 0.12, 0.12]
+          },
+          {
+            "id": "base-cover",
+            "kind": "revolve",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.33,
+            "profile": [
+              [0.13, 0.12],
+              [0.155, 0.1105],
+              [0.1775, 0.1005],
+              [0.21, 0.092],
+              [0.24, 0.0875],
+              [0.27, 0.0852],
+              [0.3, 0.0843],
+              [0.3, 0.0803],
+              [0.27, 0.0812],
+              [0.24, 0.0835],
+              [0.21, 0.088],
+              [0.1775, 0.0965],
+              [0.155, 0.1065],
+              [0.13, 0.116]
+            ],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [
+              [0.0, 0.085],
+              [0.49993, 0.08345],
+              [0.99944, 0.08132],
+              [1.49812, 0.07867],
+              [1.99556, 0.07556],
+              [2.49132, 0.07202],
+              [2.985, 0.06813],
+              [3.47618, 0.06391],
+              [3.96444, 0.05944],
+              [4.44937, 0.05477],
+              [4.93056, 0.04993],
+              [5.40757, 0.04499],
+              [5.88, 0.04],
+              [5.88, 0.036],
+              [5.40757, 0.04099],
+              [4.93056, 0.04593],
+              [4.44937, 0.05077],
+              [3.96444, 0.05544],
+              [3.47618, 0.05991],
+              [2.985, 0.06413],
+              [2.49132, 0.06802],
+              [1.99556, 0.07156],
+              [1.49812, 0.07467],
+              [0.99944, 0.07732],
+              [0.49993, 0.07945],
+              [0.0, 0.081]
+            ],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "pole-cap",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [[5.86, 0.0], [5.86, 0.042], [5.87, 0.0415], [5.88, 0.0385], [5.888, 0.032], [5.892, 0.02], [5.893, 0.004], [5.893, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "pole-collar",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[5.6, 0.0435], [5.6, 0.055], [5.68, 0.055], [5.68, 0.0435]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "pole-hatch",
+            "kind": "box",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.5, 0.09, 0.004],
+            "cornerRadius": 0.002,
+            "transform": {
+              "translation": [0.8, 0.0, -0.0815]
+            },
+            "texture": true
+          },
+          {
+            "id": "arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.035], [0.35, 0.031], [0.8, 0.017], [0.95, 0.01], [0.95, 0.007], [0.8, 0.014], [0.35, 0.028], [0.0, 0.032]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "arm-brace",
+            "kind": "extrude",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.011087, -0.004592],
+              [0.008485, -0.008485],
+              [0.004592, -0.011087],
+              [-0.0, -0.012],
+              [-0.004592, -0.011087],
+              [-0.008485, -0.008485],
+              [-0.011087, -0.004592],
+              [-0.012, 0.0],
+              [-0.011087, 0.004592],
+              [-0.008485, 0.008485],
+              [-0.004592, 0.011087],
+              [0.0, 0.012],
+              [0.004592, 0.011087],
+              [0.008485, 0.008485],
+              [0.011087, 0.004592],
+              [0.012, 0.0]
+            ],
+            "holes": [
+              [
+                [0.009701, -0.004018],
+                [0.007425, -0.007425],
+                [0.004018, -0.009701],
+                [-0.0, -0.0105],
+                [-0.004018, -0.009701],
+                [-0.007425, -0.007425],
+                [-0.009701, -0.004018],
+                [-0.0105, 0.0],
+                [-0.009701, 0.004018],
+                [-0.007425, 0.007425],
+                [-0.004018, 0.009701],
+                [0.0, 0.0105],
+                [0.004018, 0.009701],
+                [0.007425, 0.007425],
+                [0.009701, 0.004018],
+                [0.0105, 0.0]
+              ]
+            ],
+            "plane": "xy",
+            "from": 0.0,
+            "to": 0.748802,
+            "transform": {
+              "translation": [0.02, -0.46, 0.0],
+              "rotation": [-0.632117, 0.316903, -0.316903, 0.632117]
+            }
+          },
+          {
+            "id": "arm-brace-joint",
+            "kind": "ellipsoid",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.02, 0.02, 0.02],
+            "transform": {
+              "translation": [0.62, -0.012, 0.0]
+            }
+          },
+          {
+            "id": "arm-clamp",
+            "kind": "extrude",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.05, -0.042], [-0.05, 0.042], [-0.042, 0.05], [0.042, 0.05], [0.05, 0.042], [0.05, -0.042], [0.042, -0.05], [-0.042, -0.05]],
+            "holes": [
+              [
+                [0.041371, -0.013442],
+                [0.035192, -0.025569],
+                [0.025569, -0.035192],
+                [0.013442, -0.041371],
+                [-0.0, -0.0435],
+                [-0.013442, -0.041371],
+                [-0.025569, -0.035192],
+                [-0.035192, -0.025569],
+                [-0.041371, -0.013442],
+                [-0.0435, 0.0],
+                [-0.041371, 0.013442],
+                [-0.035192, 0.025569],
+                [-0.025569, 0.035192],
+                [-0.013442, 0.041371],
+                [0.0, 0.0435],
+                [0.013442, 0.041371],
+                [0.025569, 0.035192],
+                [0.035192, 0.025569],
+                [0.041371, 0.013442],
+                [0.0435, 0.0]
+              ]
+            ],
+            "plane": "zx",
+            "from": -0.05,
+            "to": 0.05
+          },
+          {
+            "id": "head-housing",
+            "kind": "loft",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "sections": [
+              {
+                "at": [0, -0.005, 0],
+                "rx": 0.07,
+                "ry": 0.035,
+                "exponent": 3,
+                "rotation": [0.70689, 0.01766, 0.70689, -0.01766]
+              },
+              {
+                "at": [0.05, -0.0025, 0],
+                "rx": 0.125,
+                "ry": 0.0575,
+                "exponent": 3,
+                "rotation": [0.70595, 0.04046, 0.70595, -0.04046]
+              },
+              {
+                "at": [0.15, 0.009, 0],
+                "rx": 0.13,
+                "ry": 0.071,
+                "exponent": 3,
+                "rotation": [0.7071, 0.00354, 0.7071, -0.00354]
+              },
+              {
+                "at": [0.25, 0.01, 0],
+                "rx": 0.125,
+                "ry": 0.068,
+                "exponent": 3,
+                "rotation": [0.69961, -0.10268, 0.69961, 0.10268]
+              },
+              {
+                "at": [0.3, -0.005, 0],
+                "rx": 0.08,
+                "ry": 0.045,
+                "exponent": 3,
+                "rotation": [0.7047, -0.05832, 0.7047, 0.05832]
+              },
+              {
+                "at": [0.33, -0.01, 0],
+                "rx": 0.04,
+                "ry": 0.015,
+                "exponent": 3,
+                "rotation": [0.7047, -0.05832, 0.7047, 0.05832]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "head-spigot",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.35,
+            "profile": [[0.0, 0.0], [0.0, 0.028], [0.07, 0.028], [0.07, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [-0.04, 0.005, 0.0]
+          },
+          {
+            "id": "head-fin-0",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.004, 0.023, 0.15],
+            "transform": {
+              "translation": [0.15, 0.0775, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "head-fin-1",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.004, 0.023, 0.15],
+            "transform": {
+              "translation": [0.178, 0.0775, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "head-fin-2",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.004, 0.023, 0.15],
+            "transform": {
+              "translation": [0.206, 0.0775, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "head-fin-3",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.004, 0.023, 0.15],
+            "transform": {
+              "translation": [0.234, 0.0775, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "head-fin-4",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.004, 0.023, 0.15],
+            "transform": {
+              "translation": [0.262, 0.0775, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "head-fin-5",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.004, 0.023, 0.15],
+            "transform": {
+              "translation": [0.29, 0.0775, 0.0]
+            },
+            "texture": true
+          },
+          {
+            "id": "lens",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "polycarbonate",
+            "role": "glazing",
+            "tone": 0.85,
+            "radii": [0.135, 0.03, 0.1],
+            "transform": {
+              "translation": [0.165, -0.058, 0.0]
+            }
           }
-        },
-        {
-          "id": "lens",
-          "kind": "ellipsoid",
-          "bone": "head",
-          "material": "polycarbonate",
-          "role": "glazing",
-          "tone": 0.85,
-          "region": "lamp-lens",
-          "radii": [0.135, 0.03, 0.1],
-          "transform": {
-            "translation": [0.165, -0.058, 0.0]
+        ],
+        "thermal": [
+          {
+            "id": "th-plinth",
+            "of": "plinth",
+            "region": "plinth-concrete"
+          },
+          {
+            "id": "th-base-plate",
+            "of": "base-plate",
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-base-nut-0",
+            "of": "base-nut-0",
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-base-nut-1",
+            "of": "base-nut-1",
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-base-nut-2",
+            "of": "base-nut-2",
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-base-nut-3",
+            "of": "base-nut-3",
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-base-cover",
+            "kind": "revolve",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.33,
+            "profile": [[0.13, 0.0], [0.13, 0.12], [0.155, 0.1105], [0.1775, 0.1005], [0.21, 0.092], [0.24, 0.0875], [0.27, 0.0852], [0.3, 0.0843], [0.3, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["-v", "+v"],
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [
+              [0.0, 0.0],
+              [0.0, 0.085],
+              [0.49993, 0.08345],
+              [0.99944, 0.08132],
+              [1.49812, 0.07867],
+              [1.99556, 0.07556],
+              [2.49132, 0.07202],
+              [2.985, 0.06813],
+              [3.47618, 0.06391],
+              [3.96444, 0.05944],
+              [4.44937, 0.05477],
+              [4.93056, 0.04993],
+              [5.40757, 0.04499],
+              [5.88, 0.04],
+              [5.88, 0.0]
+            ],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["-u", "+u"],
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-pole-cap",
+            "of": "pole-cap",
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-pole-collar",
+            "of": "pole-collar",
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.035], [0.35, 0.031], [0.8, 0.017], [0.95, 0.01], [0.95, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["-u", "+u"],
+            "region": "arm-alu"
+          },
+          {
+            "id": "th-arm-brace",
+            "of": "arm-brace",
+            "region": "arm-alu"
+          },
+          {
+            "id": "th-arm-brace-joint",
+            "of": "arm-brace-joint",
+            "region": "arm-alu"
+          },
+          {
+            "id": "th-arm-clamp",
+            "of": "arm-clamp",
+            "region": "arm-alu"
+          },
+          {
+            "id": "th-head-housing",
+            "of": "head-housing",
+            "region": "lamp-housing"
+          },
+          {
+            "id": "th-head-spigot",
+            "of": "head-spigot",
+            "region": "lamp-housing"
+          },
+          {
+            "id": "th-lens",
+            "of": "lens",
+            "region": "lamp-lens"
+          },
+          {
+            "id": "th-lamp-plume",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.9,
+            "profile": [[0.0, 0.0], [0.0, 0.06], [0.0075, 0.06], [0.0075, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.1163, -0.05, 0.0],
+            "tags": ["lamp-plume"],
+            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"],
+            "region": "lamp-housing"
           }
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The pole is one revolve of the drawn tapering outline (0.17 m at the foot to 0.08 m at the top, the 1:50 front view agrees) with a rounded cap; arm, brace, clamp and lamp head are bound to their own bones so the 1.8 degree wind lean of the pole carries them along. The dimension 1.2 m wide is the plinth edge at x -0.15 to the head tip at x 1.05.",
-          "de": "Der Mast ist ein Revolve der gezeichneten konischen Kontur (0,17 m am Fuss bis 0,08 m oben, die Vorderansicht 1:50 stimmt überein) mit gerundeter Kappe; Ausleger, Strebe, Klemme und Leuchtenkopf sind an eigene Knochen gebunden, damit die Windneigung des Mastes von 1,8 Grad sie mitnimmt. Die Breite 1,2 m reicht von der Sockelkante bei x -0,15 bis zur Kopfspitze bei x 1,05."
-        },
-        {
-          "en": "The lamp head is a loft of six superelliptic sections whose lateral half widths follow the plan outline and heights the elevation outline, with six cooling fins as one repeated plate and a flattened-ellipsoid lens under it; the base cover, plinth nuts (four, as the plan shows, one repeated solid) and the hand-hole plate on the pole are details shown to 1:100 or 1:50.",
-          "de": "Der Leuchtenkopf ist ein Loft aus sechs superelliptischen Schnitten, deren seitliche Halbbreiten der Umriss der Draufsicht und deren Höhen dem Umriss der Ansicht folgen, mit sechs Kühlrippen als eine wiederholte Platte und einer flachen Ellipsoidlinse darunter; Sockelabdeckung, Fundamentmuttern (vier wie in der Draufsicht, ein wiederholter Körper) und die Handlochplatte am Mast sind Details bis 1:100 beziehungsweise 1:50."
-        }
-      ]
+        ],
+        "structure": [
+          {
+            "id": "member-plinth",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.65,
+            "size": [0.29, 0.09, 0.29],
+            "transform": {
+              "translation": [0.0, 0.05, 0.0]
+            },
+            "member": "foundation",
+            "part": "member"
+          },
+          {
+            "id": "member-pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [
+              [0.0, 0.084],
+              [0.49993, 0.08245],
+              [0.99944, 0.08032],
+              [1.49812, 0.07767],
+              [1.99556, 0.07456],
+              [2.49132, 0.07102],
+              [2.985, 0.06713],
+              [3.47618, 0.06291],
+              [3.96444, 0.05844],
+              [4.44937, 0.05377],
+              [4.93056, 0.04893],
+              [5.40757, 0.04399],
+              [5.88, 0.039],
+              [5.88, 0.037],
+              [5.40757, 0.04199],
+              [4.93056, 0.04693],
+              [4.44937, 0.05177],
+              [3.96444, 0.05644],
+              [3.47618, 0.06091],
+              [2.985, 0.06513],
+              [2.49132, 0.06902],
+              [1.99556, 0.07256],
+              [1.49812, 0.07567],
+              [0.99944, 0.07832],
+              [0.49993, 0.08045],
+              [0.0, 0.082]
+            ],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "pole",
+            "part": "member"
+          },
+          {
+            "id": "member-arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0342], [0.35, 0.0302], [0.8, 0.0162], [0.95, 0.0092], [0.95, 0.0077], [0.8, 0.0147], [0.35, 0.0287], [0.0, 0.0327]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "arm",
+            "part": "member"
+          },
+          {
+            "id": "member-arm-brace",
+            "kind": "extrude",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.009701, -0.004018],
+              [0.007425, -0.007425],
+              [0.004018, -0.009701],
+              [-0.0, -0.0105],
+              [-0.004018, -0.009701],
+              [-0.007425, -0.007425],
+              [-0.009701, -0.004018],
+              [-0.0105, 0.0],
+              [-0.009701, 0.004018],
+              [-0.007425, 0.007425],
+              [-0.004018, 0.009701],
+              [0.0, 0.0105],
+              [0.004018, 0.009701],
+              [0.007425, 0.007425],
+              [0.009701, 0.004018],
+              [0.0105, 0.0]
+            ],
+            "holes": [
+              [
+                [0.008777, -0.003635],
+                [0.006718, -0.006718],
+                [0.003635, -0.008777],
+                [-0.0, -0.0095],
+                [-0.003635, -0.008777],
+                [-0.006718, -0.006718],
+                [-0.008777, -0.003635],
+                [-0.0095, 0.0],
+                [-0.008777, 0.003635],
+                [-0.006718, 0.006718],
+                [-0.003635, 0.008777],
+                [0.0, 0.0095],
+                [0.003635, 0.008777],
+                [0.006718, 0.006718],
+                [0.008777, 0.003635],
+                [0.0095, 0.0]
+              ]
+            ],
+            "plane": "xy",
+            "from": 0.0,
+            "to": 0.748802,
+            "transform": {
+              "translation": [0.02, -0.46, 0.0],
+              "rotation": [-0.632117, 0.316903, -0.316903, 0.632117]
+            },
+            "member": "arm",
+            "part": "member"
+          },
+          {
+            "id": "member-head-core",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.06, 0.12],
+            "transform": {
+              "translation": [0.15, 0.0, 0.0]
+            },
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "joint-base-ring",
+            "kind": "extrude",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [
+              [0.081621, -0.02187],
+              [0.073179, -0.04225],
+              [0.059751, -0.059751],
+              [0.04225, -0.073179],
+              [0.02187, -0.081621],
+              [-0.0, -0.0845],
+              [-0.02187, -0.081621],
+              [-0.04225, -0.073179],
+              [-0.059751, -0.059751],
+              [-0.073179, -0.04225],
+              [-0.081621, -0.02187],
+              [-0.0845, 0.0],
+              [-0.081621, 0.02187],
+              [-0.073179, 0.04225],
+              [-0.059751, 0.059751],
+              [-0.04225, 0.073179],
+              [-0.02187, 0.081621],
+              [0.0, 0.0845],
+              [0.02187, 0.081621],
+              [0.04225, 0.073179],
+              [0.059751, 0.059751],
+              [0.073179, 0.04225],
+              [0.081621, 0.02187],
+              [0.0845, 0.0]
+            ],
+            "holes": [
+              [
+                [0.077757, -0.020835],
+                [0.069715, -0.04025],
+                [0.056922, -0.056922],
+                [0.04025, -0.069715],
+                [0.020835, -0.077757],
+                [-0.0, -0.0805],
+                [-0.020835, -0.077757],
+                [-0.04025, -0.069715],
+                [-0.056922, -0.056922],
+                [-0.069715, -0.04025],
+                [-0.077757, -0.020835],
+                [-0.0805, 0.0],
+                [-0.077757, 0.020835],
+                [-0.069715, 0.04025],
+                [-0.056922, 0.056922],
+                [-0.04025, 0.069715],
+                [-0.020835, 0.077757],
+                [0.0, 0.0805],
+                [0.020835, 0.077757],
+                [0.04025, 0.069715],
+                [0.056922, 0.056922],
+                [0.069715, 0.04025],
+                [0.077757, 0.020835],
+                [0.0805, 0.0]
+              ]
+            ],
+            "plane": "zx",
+            "from": 0.12,
+            "to": 0.14,
+            "member": "foundation",
+            "part": "joint"
+          },
+          {
+            "id": "joint-arm-clamp",
+            "kind": "extrude",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [
+              [0.04993, -0.016223],
+              [0.042473, -0.030859],
+              [0.030859, -0.042473],
+              [0.016223, -0.04993],
+              [-0.0, -0.0525],
+              [-0.016223, -0.04993],
+              [-0.030859, -0.042473],
+              [-0.042473, -0.030859],
+              [-0.04993, -0.016223],
+              [-0.0525, 0.0],
+              [-0.04993, 0.016223],
+              [-0.042473, 0.030859],
+              [-0.030859, 0.042473],
+              [-0.016223, 0.04993],
+              [0.0, 0.0525],
+              [0.016223, 0.04993],
+              [0.030859, 0.042473],
+              [0.042473, 0.030859],
+              [0.04993, 0.016223],
+              [0.0525, 0.0]
+            ],
+            "holes": [
+              [
+                [0.043273, -0.01406],
+                [0.03681, -0.026744],
+                [0.026744, -0.03681],
+                [0.01406, -0.043273],
+                [-0.0, -0.0455],
+                [-0.01406, -0.043273],
+                [-0.026744, -0.03681],
+                [-0.03681, -0.026744],
+                [-0.043273, -0.01406],
+                [-0.0455, 0.0],
+                [-0.043273, 0.01406],
+                [-0.03681, 0.026744],
+                [-0.026744, 0.03681],
+                [-0.01406, 0.043273],
+                [0.0, 0.0455],
+                [0.01406, 0.043273],
+                [0.026744, 0.03681],
+                [0.03681, 0.026744],
+                [0.043273, 0.01406],
+                [0.0455, 0.0]
+              ]
+            ],
+            "plane": "zx",
+            "from": -0.04,
+            "to": 0.04,
+            "member": "arm",
+            "part": "joint"
+          },
+          {
+            "id": "joint-brace",
+            "kind": "ellipsoid",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.3,
+            "radii": [0.015, 0.015, 0.015],
+            "transform": {
+              "translation": [0.62, -0.012, 0.0]
+            },
+            "member": "arm",
+            "part": "joint"
+          },
+          {
+            "id": "joint-head-spigot",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.35,
+            "profile": [[0.0, 0.0], [0.0, 0.024], [0.06, 0.024], [0.06, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [-0.035, 0.005, 0.0],
+            "member": "head",
+            "part": "joint"
+          },
+          {
+            "id": "mass-foundation",
+            "kind": "ellipsoid",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.05, 0.03, 0.05],
+            "transform": {
+              "translation": [0.0, 0.11, 0.0]
+            },
+            "member": "foundation",
+            "part": "mass"
+          },
+          {
+            "id": "mass-pole",
+            "kind": "ellipsoid",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.15, 0.03, 0.03],
+            "transform": {
+              "translation": [2.94, 0.0, 0.0]
+            },
+            "member": "pole",
+            "part": "mass"
+          },
+          {
+            "id": "mass-arm",
+            "kind": "ellipsoid",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.05, 0.015, 0.015],
+            "transform": {
+              "translation": [0.475, 0.0, 0.0]
+            },
+            "member": "arm",
+            "part": "mass"
+          },
+          {
+            "id": "mass-head",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.03, 0.015, 0.03],
+            "transform": {
+              "translation": [0.115, -0.03, 0.0]
+            },
+            "member": "head",
+            "part": "mass"
+          },
+          {
+            "id": "support-foundation-support",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.1,
+            "size": [0.28, 0.02, 0.28],
+            "transform": {
+              "translation": [0.0, 0.01, 0.0]
+            },
+            "member": "foundation",
+            "part": "support",
+            "anchor": "foundation-support"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: hand-built from the 1:50 drawings: concrete plinth 0.30 x 0.10 m, base plate with four nuts, a flared 4 mm cover shell, the 5.88 m galvanised pole as a hollow revolve of the drawn taper (0.17 m at the base to 0.08 m at the top, 4 mm wall) with domed cap and the arm clamp collar, the aluminium arm as a hollow tapered tube with a ring clamp, a 24 mm brace tube to the pole, the luminaire housing as the drawn loft with its spigot, the polycarbonate lens as a thin glazing dome; the pole hatch and the six cooling fins are texture decals (below every feature).",
+            "de": "Körper: von Hand aus den Zeichnungen 1:50 gebaut: Betonsockel 0,30 x 0,10 m, Fußplatte mit vier Muttern, eine ausgestellte Hülle von 4 mm, der 5,88 m lange verzinkte Mast als hohler Drehkörper der gezeichneten Verjüngung (0,17 m unten bis 0,08 m oben, 4 mm Wand) mit gewölbter Kappe und Klemmring für den Ausleger, der Aluminium-Ausleger als hohles konisches Rohr mit Ringklemme, ein Strebenrohr von 24 mm zum Mast, das Leuchtengehäuse als gezeichneter Loft mit seinem Zapfen, die Polycarbonat-Linse als dünne Glaskalotte; Mastklappe und die sechs Kühlrippen sind Texturdecals (unter jeder Schwelle)."
+          },
+          {
+            "en": "Thermal: the pole and the base cover are closed outer envelopes with their end faces as section faces (the declared 2.4 m2 is the outer tube surface; a hollow reference would count the inside as well), all other regions reference the body solids.",
+            "de": "Thermik: Mast und Fußhülle sind geschlossene Außenhüllen mit ihren Stirnflächen als Schnittflächen (die angegebenen 2,4 m2 sind die äußere Rohrfläche, ein hohler Verweis würde die Innenseite mitzählen), alle anderen Regionen verweisen auf die Körper."
+          },
+          {
+            "en": "Structure: the pole and the arm are the real hollow tubes (2 mm and 1.5 mm walls inside the skin), the brace a thin tube, the plinth and the head core blocks inside their bodies; joints are the weld ring at the plate, the clamp ring, the brace pin and the head spigot; masses lumped at the declared centres of the four bones (the 70 kg pole lump at 2.94 m), the fixed support is the plinth footing.",
+            "de": "Tragwerk: Mast und Ausleger sind die echten hohlen Rohre (Wände 2 mm und 1,5 mm unter der Haut), die Strebe ein dünnes Rohr, Sockel und Kopfkern Blöcke in ihren Körpern; Gelenke sind der Schweißring an der Platte, der Klemmring, der Strebenbolzen und der Kopfzapfen; Massen in den angegebenen Schwerpunkten der vier Knochen (das 70-kg-Stück des Mastes bei 2,94 m), das feste Auflager ist die Sockelsohle."
+          }
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "plinth",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.65,
+            "size": [0.3, 0.12, 0.3],
+            "transform": {
+              "translation": [0.0, 0.06, 0.0]
+            }
+          },
+          {
+            "id": "base-cover",
+            "kind": "revolve",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.33,
+            "profile": [[0.13, 0.12], [0.21, 0.092], [0.3, 0.0843], [0.3, 0.0783], [0.21, 0.086], [0.13, 0.114]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [
+              [0.0, 0.085],
+              [0.99944, 0.08132],
+              [1.99556, 0.07556],
+              [2.985, 0.06813],
+              [3.96444, 0.05944],
+              [4.93056, 0.04993],
+              [5.88, 0.04],
+              [5.88, 0.034],
+              [4.93056, 0.04393],
+              [3.96444, 0.05344],
+              [2.985, 0.06213],
+              [1.99556, 0.06956],
+              [0.99944, 0.07532],
+              [0.0, 0.079]
+            ],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "pole-collar",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[5.6, 0.0435], [5.6, 0.055], [5.68, 0.055], [5.68, 0.0435]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.035], [0.45, 0.029], [0.95, 0.01], [0.95, 0.006], [0.45, 0.025], [0.0, 0.031]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "arm-brace",
+            "kind": "extrude",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.007361, -0.00425],
+              [0.00425, -0.007361],
+              [-0.0, -0.0085],
+              [-0.00425, -0.007361],
+              [-0.007361, -0.00425],
+              [-0.0085, 0.0],
+              [-0.007361, 0.00425],
+              [-0.00425, 0.007361],
+              [0.0, 0.0085],
+              [0.00425, 0.007361],
+              [0.007361, 0.00425],
+              [0.0085, 0.0]
+            ],
+            "plane": "xy",
+            "from": 0.0,
+            "to": 0.748802,
+            "transform": {
+              "translation": [0.02, -0.46, 0.0],
+              "rotation": [-0.632117, 0.316903, -0.316903, 0.632117]
+            }
+          },
+          {
+            "id": "head-housing",
+            "kind": "loft",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "sections": [
+              {
+                "at": [0, -0.005, 0],
+                "rx": 0.07,
+                "ry": 0.035,
+                "exponent": 3,
+                "rotation": [0.70689, 0.01766, 0.70689, -0.01766]
+              },
+              {
+                "at": [0.05, -0.0025, 0],
+                "rx": 0.125,
+                "ry": 0.0575,
+                "exponent": 3,
+                "rotation": [0.70595, 0.04046, 0.70595, -0.04046]
+              },
+              {
+                "at": [0.15, 0.009, 0],
+                "rx": 0.13,
+                "ry": 0.071,
+                "exponent": 3,
+                "rotation": [0.7071, 0.00354, 0.7071, -0.00354]
+              },
+              {
+                "at": [0.3, -0.005, 0],
+                "rx": 0.08,
+                "ry": 0.045,
+                "exponent": 3,
+                "rotation": [0.7047, -0.05832, 0.7047, 0.05832]
+              },
+              {
+                "at": [0.33, -0.01, 0],
+                "rx": 0.04,
+                "ry": 0.015,
+                "exponent": 3,
+                "rotation": [0.7047, -0.05832, 0.7047, 0.05832]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "lens",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "polycarbonate",
+            "role": "glazing",
+            "tone": 0.85,
+            "radii": [0.135, 0.03, 0.1],
+            "transform": {
+              "translation": [0.165, -0.058, 0.0]
+            }
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-plinth",
+            "of": "plinth",
+            "region": "plinth-concrete"
+          },
+          {
+            "id": "th-pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.0], [0.0, 0.085], [0.99944, 0.08132], [1.99556, 0.07556], [2.985, 0.06813], [3.96444, 0.05944], [4.93056, 0.04993], [5.88, 0.04], [5.88, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["-u", "+u"],
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.035], [0.45, 0.029], [0.95, 0.01], [0.95, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["-u", "+u"],
+            "region": "arm-alu"
+          },
+          {
+            "id": "th-arm-brace",
+            "of": "arm-brace",
+            "region": "arm-alu"
+          },
+          {
+            "id": "th-head-housing",
+            "of": "head-housing",
+            "region": "lamp-housing"
+          },
+          {
+            "id": "th-lamp-plume",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.9,
+            "profile": [[0.0, 0.0], [0.0, 0.06], [0.015, 0.06], [0.015, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.1163, -0.05, 0.0],
+            "tags": ["lamp-plume"],
+            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"],
+            "region": "lamp-housing"
+          },
+          {
+            "id": "th-base-cover",
+            "kind": "revolve",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.33,
+            "profile": [[0.13, 0.0], [0.13, 0.12], [0.21, 0.092], [0.3, 0.0843], [0.3, 0.0]],
+            "axis": [0, 1, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["-v", "+v"],
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-pole-collar",
+            "of": "pole-collar",
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-lens",
+            "of": "lens",
+            "region": "lamp-lens"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-plinth",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.65,
+            "size": [0.29, 0.1, 0.29],
+            "transform": {
+              "translation": [0.0, 0.06, 0.0]
+            },
+            "member": "foundation",
+            "part": "member"
+          },
+          {
+            "id": "member-pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [
+              [0.0, 0.084],
+              [0.99944, 0.08032],
+              [1.99556, 0.07456],
+              [2.985, 0.06713],
+              [3.96444, 0.05844],
+              [4.93056, 0.04893],
+              [5.88, 0.039],
+              [5.88, 0.035],
+              [4.93056, 0.04493],
+              [3.96444, 0.05444],
+              [2.985, 0.06313],
+              [1.99556, 0.07056],
+              [0.99944, 0.07632],
+              [0.0, 0.08]
+            ],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "pole",
+            "part": "member"
+          },
+          {
+            "id": "member-arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0342], [0.45, 0.0282], [0.95, 0.0092], [0.95, 0.0062], [0.45, 0.0252], [0.0, 0.0312]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "arm",
+            "part": "member"
+          },
+          {
+            "id": "member-arm-brace",
+            "kind": "extrude",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.006495, -0.00375],
+              [0.00375, -0.006495],
+              [-0.0, -0.0075],
+              [-0.00375, -0.006495],
+              [-0.006495, -0.00375],
+              [-0.0075, 0.0],
+              [-0.006495, 0.00375],
+              [-0.00375, 0.006495],
+              [0.0, 0.0075],
+              [0.00375, 0.006495],
+              [0.006495, 0.00375],
+              [0.0075, 0.0]
+            ],
+            "holes": [
+              [
+                [0.00433, -0.0025],
+                [0.0025, -0.00433],
+                [-0.0, -0.005],
+                [-0.0025, -0.00433],
+                [-0.00433, -0.0025],
+                [-0.005, 0.0],
+                [-0.00433, 0.0025],
+                [-0.0025, 0.00433],
+                [0.0, 0.005],
+                [0.0025, 0.00433],
+                [0.00433, 0.0025],
+                [0.005, 0.0]
+              ]
+            ],
+            "plane": "xy",
+            "from": 0.0,
+            "to": 0.748802,
+            "transform": {
+              "translation": [0.02, -0.46, 0.0],
+              "rotation": [-0.632117, 0.316903, -0.316903, 0.632117]
+            },
+            "member": "arm",
+            "part": "member"
+          },
+          {
+            "id": "member-head-core",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.06, 0.12],
+            "transform": {
+              "translation": [0.15, 0.0, 0.0]
+            },
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "joint-base-ring",
+            "kind": "extrude",
+            "bone": "foundation",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [
+              [0.080364, -0.026112],
+              [0.068362, -0.049668],
+              [0.049668, -0.068362],
+              [0.026112, -0.080364],
+              [-0.0, -0.0845],
+              [-0.026112, -0.080364],
+              [-0.049668, -0.068362],
+              [-0.068362, -0.049668],
+              [-0.080364, -0.026112],
+              [-0.0845, 0.0],
+              [-0.080364, 0.026112],
+              [-0.068362, 0.049668],
+              [-0.049668, 0.068362],
+              [-0.026112, 0.080364],
+              [0.0, 0.0845],
+              [0.026112, 0.080364],
+              [0.049668, 0.068362],
+              [0.068362, 0.049668],
+              [0.080364, 0.026112],
+              [0.0845, 0.0]
+            ],
+            "holes": [
+              [
+                [0.073707, -0.023949],
+                [0.062699, -0.045553],
+                [0.045553, -0.062699],
+                [0.023949, -0.073707],
+                [-0.0, -0.0775],
+                [-0.023949, -0.073707],
+                [-0.045553, -0.062699],
+                [-0.062699, -0.045553],
+                [-0.073707, -0.023949],
+                [-0.0775, 0.0],
+                [-0.073707, 0.023949],
+                [-0.062699, 0.045553],
+                [-0.045553, 0.062699],
+                [-0.023949, 0.073707],
+                [0.0, 0.0775],
+                [0.023949, 0.073707],
+                [0.045553, 0.062699],
+                [0.062699, 0.045553],
+                [0.073707, 0.023949],
+                [0.0775, 0.0]
+              ]
+            ],
+            "plane": "zx",
+            "from": 0.12,
+            "to": 0.14,
+            "member": "foundation",
+            "part": "joint"
+          },
+          {
+            "id": "joint-arm-clamp",
+            "kind": "extrude",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [
+              [0.048504, -0.020091],
+              [0.037123, -0.037123],
+              [0.020091, -0.048504],
+              [-0.0, -0.0525],
+              [-0.020091, -0.048504],
+              [-0.037123, -0.037123],
+              [-0.048504, -0.020091],
+              [-0.0525, 0.0],
+              [-0.048504, 0.020091],
+              [-0.037123, 0.037123],
+              [-0.020091, 0.048504],
+              [0.0, 0.0525],
+              [0.020091, 0.048504],
+              [0.037123, 0.037123],
+              [0.048504, 0.020091],
+              [0.0525, 0.0]
+            ],
+            "holes": [
+              [
+                [0.042037, -0.017412],
+                [0.032173, -0.032173],
+                [0.017412, -0.042037],
+                [-0.0, -0.0455],
+                [-0.017412, -0.042037],
+                [-0.032173, -0.032173],
+                [-0.042037, -0.017412],
+                [-0.0455, 0.0],
+                [-0.042037, 0.017412],
+                [-0.032173, 0.032173],
+                [-0.017412, 0.042037],
+                [0.0, 0.0455],
+                [0.017412, 0.042037],
+                [0.032173, 0.032173],
+                [0.042037, 0.017412],
+                [0.0455, 0.0]
+              ]
+            ],
+            "plane": "zx",
+            "from": -0.01,
+            "to": 0.01,
+            "member": "arm",
+            "part": "joint"
+          },
+          {
+            "id": "joint-brace",
+            "kind": "ellipsoid",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.3,
+            "radii": [0.0125, 0.0125, 0.0125],
+            "transform": {
+              "translation": [0.62, -0.012, 0.0]
+            },
+            "member": "arm",
+            "part": "joint"
+          },
+          {
+            "id": "mass-foundation",
+            "kind": "ellipsoid",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.05, 0.03, 0.05],
+            "transform": {
+              "translation": [0.0, 0.11, 0.0]
+            },
+            "member": "foundation",
+            "part": "mass"
+          },
+          {
+            "id": "mass-pole",
+            "kind": "ellipsoid",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.15, 0.03, 0.03],
+            "transform": {
+              "translation": [2.94, 0.0, 0.0]
+            },
+            "member": "pole",
+            "part": "mass"
+          },
+          {
+            "id": "mass-arm",
+            "kind": "ellipsoid",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.05, 0.015, 0.015],
+            "transform": {
+              "translation": [0.475, 0.0, 0.0]
+            },
+            "member": "arm",
+            "part": "mass"
+          },
+          {
+            "id": "mass-head",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.03, 0.015, 0.03],
+            "transform": {
+              "translation": [0.115, -0.03, 0.0]
+            },
+            "member": "head",
+            "part": "mass"
+          },
+          {
+            "id": "support-foundation-support",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.1,
+            "size": [0.28, 0.02, 0.28],
+            "transform": {
+              "translation": [0.0, 0.01, 0.0]
+            },
+            "member": "foundation",
+            "part": "support",
+            "anchor": "foundation-support"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: the 1:100 drawings: plinth block 0.30 x 0.12 m with the plate merged in (nuts and plate edge are below the scale), the flared cover, the pole as a 6 mm hollow tube on the drawn Bezier taper in six segments, the collar ring, a hollow tapered arm, a 17 mm brace tube, the housing loft in five sections and the glazing lens; cap, hatch, fins and spigot are not drawn.",
+            "de": "Körper: die Zeichnungen 1:100: Sockelblock 0,30 x 0,12 m mit eingearbeiteter Platte (Muttern und Plattenkante liegen unter dem Maßstab), die ausgestellte Hülle, der Mast als hohles Rohr von 6 mm auf der gezeichneten Bézier-Verjüngung in sechs Abschnitten, der Klemmring, ein hohler konischer Ausleger, ein Strebenrohr von 17 mm, das Gehäuse als Loft aus fünf Schnitten und die Glaslinse; Kappe, Klappe, Rippen und Zapfen sind nicht gezeichnet."
+          },
+          {
+            "en": "Thermal: the pole and the base cover are closed outer envelopes with their end faces as section faces (the declared 2.4 m2 is the outer tube surface; a hollow reference would count the inside as well), all other regions reference the body solids.",
+            "de": "Thermik: Mast und Fußhülle sind geschlossene Außenhüllen mit ihren Stirnflächen als Schnittflächen (die angegebenen 2,4 m2 sind die äußere Rohrfläche, ein hohler Verweis würde die Innenseite mitzählen), alle anderen Regionen verweisen auf die Körper."
+          },
+          {
+            "en": "Structure: the pole and the arm are the real hollow tubes (2 mm and 1.5 mm walls inside the skin), the brace a thin tube, the plinth and the head core blocks inside their bodies; joints are the weld ring at the plate, the clamp ring, the brace pin and the head spigot; masses lumped at the declared centres of the four bones (the 70 kg pole lump at 2.94 m), the fixed support is the plinth footing.",
+            "de": "Tragwerk: Mast und Ausleger sind die echten hohlen Rohre (Wände 2 mm und 1,5 mm unter der Haut), die Strebe ein dünnes Rohr, Sockel und Kopfkern Blöcke in ihren Körpern; Gelenke sind der Schweißring an der Platte, der Klemmring, der Strebenbolzen und der Kopfzapfen; Massen in den angegebenen Schwerpunkten der vier Knochen (das 70-kg-Stück des Mastes bei 2,94 m), das feste Auflager ist die Sockelsohle."
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "plinth",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.65,
+            "size": [0.3, 0.12, 0.3],
+            "transform": {
+              "translation": [0.0, 0.06, 0.0]
+            }
+          },
+          {
+            "id": "pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.09], [2.985, 0.07313], [5.88, 0.045], [5.88, 0.033], [2.985, 0.06113], [0.0, 0.078]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.025], [0.82, 0.025], [0.82, 0.017], [0.0, 0.017]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "arm-brace",
+            "kind": "extrude",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.015244, -0.006314],
+              [0.011667, -0.011667],
+              [0.006314, -0.015244],
+              [-0.0, -0.0165],
+              [-0.006314, -0.015244],
+              [-0.011667, -0.011667],
+              [-0.015244, -0.006314],
+              [-0.0165, 0.0],
+              [-0.015244, 0.006314],
+              [-0.011667, 0.011667],
+              [-0.006314, 0.015244],
+              [0.0, 0.0165],
+              [0.006314, 0.015244],
+              [0.011667, 0.011667],
+              [0.015244, 0.006314],
+              [0.0165, 0.0]
+            ],
+            "plane": "xy",
+            "from": 0.0,
+            "to": 0.748802,
+            "transform": {
+              "translation": [0.02, -0.46, 0.0],
+              "rotation": [-0.632117, 0.316903, -0.316903, 0.632117]
+            }
+          },
+          {
+            "id": "head-housing",
+            "kind": "loft",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "sections": [
+              {
+                "at": [0, -0.005, 0],
+                "rx": 0.07,
+                "ry": 0.035,
+                "exponent": 3,
+                "rotation": [0.70689, 0.01766, 0.70689, -0.01766]
+              },
+              {
+                "at": [0.15, 0.009, 0],
+                "rx": 0.13,
+                "ry": 0.071,
+                "exponent": 3,
+                "rotation": [0.7071, 0.00354, 0.7071, -0.00354]
+              },
+              {
+                "at": [0.3, -0.005, 0],
+                "rx": 0.08,
+                "ry": 0.045,
+                "exponent": 3,
+                "rotation": [0.7047, -0.05832, 0.7047, 0.05832]
+              },
+              {
+                "at": [0.33, -0.01, 0],
+                "rx": 0.04,
+                "ry": 0.015,
+                "exponent": 3,
+                "rotation": [0.7047, -0.05832, 0.7047, 0.05832]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "lens",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "polycarbonate",
+            "role": "glazing",
+            "tone": 0.85,
+            "radii": [0.125, 0.012, 0.1],
+            "transform": {
+              "translation": [0.165, -0.06, 0.0]
+            }
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-plinth",
+            "of": "plinth",
+            "region": "plinth-concrete"
+          },
+          {
+            "id": "th-pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.0], [0.0, 0.09], [2.985, 0.07313], [5.88, 0.045], [5.88, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["-u", "+u"],
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.0], [0.0, 0.025], [0.82, 0.025], [0.82, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["-u", "+u"],
+            "region": "arm-alu"
+          },
+          {
+            "id": "th-arm-brace",
+            "of": "arm-brace",
+            "region": "arm-alu"
+          },
+          {
+            "id": "th-head-housing",
+            "of": "head-housing",
+            "region": "lamp-housing"
+          },
+          {
+            "id": "th-lamp-plume",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.9,
+            "profile": [[0.0, 0.0], [0.0, 0.06], [0.03, 0.06], [0.03, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.1163, -0.05, 0.0],
+            "tags": ["lamp-plume"],
+            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"],
+            "region": "lamp-housing"
+          },
+          {
+            "id": "th-lens",
+            "of": "lens",
+            "region": "lamp-lens"
+          },
+          {
+            "id": "th-pole-collar",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.3,
+            "profile": [[5.6, 0.0], [5.6, 0.055], [5.68, 0.055], [5.68, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "sectionFaces": ["-u", "+u"],
+            "region": "pole-galv"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-plinth",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.65,
+            "size": [0.27, 0.09, 0.27],
+            "transform": {
+              "translation": [0.0, 0.06, 0.0]
+            },
+            "member": "foundation",
+            "part": "member"
+          },
+          {
+            "id": "member-pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.088], [2.985, 0.07113], [5.88, 0.043], [5.88, 0.033], [2.985, 0.06113], [0.0, 0.078]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "pole",
+            "part": "member"
+          },
+          {
+            "id": "member-arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.01, 0.023], [0.81, 0.023], [0.81, 0.017], [0.01, 0.017]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "arm",
+            "part": "member"
+          },
+          {
+            "id": "member-arm-brace",
+            "kind": "extrude",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.45,
+            "profile": [
+              [0.01432, -0.005932],
+              [0.01096, -0.01096],
+              [0.005932, -0.01432],
+              [-0.0, -0.0155],
+              [-0.005932, -0.01432],
+              [-0.01096, -0.01096],
+              [-0.01432, -0.005932],
+              [-0.0155, 0.0],
+              [-0.01432, 0.005932],
+              [-0.01096, 0.01096],
+              [-0.005932, 0.01432],
+              [0.0, 0.0155],
+              [0.005932, 0.01432],
+              [0.01096, 0.01096],
+              [0.01432, 0.005932],
+              [0.0155, 0.0]
+            ],
+            "holes": [
+              [
+                [0.008315, -0.003444],
+                [0.006364, -0.006364],
+                [0.003444, -0.008315],
+                [-0.0, -0.009],
+                [-0.003444, -0.008315],
+                [-0.006364, -0.006364],
+                [-0.008315, -0.003444],
+                [-0.009, 0.0],
+                [-0.008315, 0.003444],
+                [-0.006364, 0.006364],
+                [-0.003444, 0.008315],
+                [0.0, 0.009],
+                [0.003444, 0.008315],
+                [0.006364, 0.006364],
+                [0.008315, 0.003444],
+                [0.009, 0.0]
+              ]
+            ],
+            "plane": "xy",
+            "from": 0.0,
+            "to": 0.748802,
+            "transform": {
+              "translation": [0.02, -0.46, 0.0],
+              "rotation": [-0.632117, 0.316903, -0.316903, 0.632117]
+            },
+            "member": "arm",
+            "part": "member"
+          },
+          {
+            "id": "member-head-core",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.24, 0.06, 0.12],
+            "transform": {
+              "translation": [0.15, 0.0, 0.0]
+            },
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "mass-foundation",
+            "kind": "ellipsoid",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.05, 0.03, 0.05],
+            "transform": {
+              "translation": [0.0, 0.11, 0.0]
+            },
+            "member": "foundation",
+            "part": "mass"
+          },
+          {
+            "id": "mass-pole",
+            "kind": "ellipsoid",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.15, 0.03, 0.03],
+            "transform": {
+              "translation": [2.94, 0.0, 0.0]
+            },
+            "member": "pole",
+            "part": "mass"
+          },
+          {
+            "id": "mass-arm",
+            "kind": "ellipsoid",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.05, 0.015, 0.015],
+            "transform": {
+              "translation": [0.475, 0.0, 0.0]
+            },
+            "member": "arm",
+            "part": "mass"
+          },
+          {
+            "id": "mass-head",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.03, 0.015, 0.03],
+            "transform": {
+              "translation": [0.115, -0.03, 0.0]
+            },
+            "member": "head",
+            "part": "mass"
+          },
+          {
+            "id": "support-foundation-support",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.1,
+            "size": [0.28, 0.03, 0.28],
+            "transform": {
+              "translation": [0.0, 0.015, 0.0]
+            },
+            "member": "foundation",
+            "part": "support",
+            "anchor": "foundation-support"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: modelled against the 1:200 drawings: the plinth block, the pole as a 12 mm hollow tube in two segments (0.18 m to 0.09 m), the arm as the 50 mm tube the pen-width stroke shows, a 33 mm brace tube, the housing loft in four sections and a thin glazing lens; cover, collar, cap and details are below the scale.",
+            "de": "Körper: gegen die Zeichnungen 1:200 modelliert: der Sockelblock, der Mast als hohles Rohr von 12 mm in zwei Abschnitten (0,18 m auf 0,09 m), der Ausleger als das Rohr von 50 mm, das der stiftbreite Strich zeigt, ein Strebenrohr von 33 mm, das Gehäuse als Loft aus vier Schnitten und eine dünne Glaslinse; Hülle, Klemmring, Kappe und Einzelheiten liegen unter dem Maßstab."
+          },
+          {
+            "en": "Thermal: the pole and the base cover are closed outer envelopes with their end faces as section faces (the declared 2.4 m2 is the outer tube surface; a hollow reference would count the inside as well), all other regions reference the body solids.",
+            "de": "Thermik: Mast und Fußhülle sind geschlossene Außenhüllen mit ihren Stirnflächen als Schnittflächen (die angegebenen 2,4 m2 sind die äußere Rohrfläche, ein hohler Verweis würde die Innenseite mitzählen), alle anderen Regionen verweisen auf die Körper."
+          },
+          {
+            "en": "Structure: the pole and the arm are the real hollow tubes (2 mm and 1.5 mm walls inside the skin), the brace a thin tube, the plinth and the head core blocks inside their bodies; joints are the weld ring at the plate, the clamp ring, the brace pin and the head spigot; masses lumped at the declared centres of the four bones (the 70 kg pole lump at 2.94 m), the fixed support is the plinth footing.",
+            "de": "Tragwerk: Mast und Ausleger sind die echten hohlen Rohre (Wände 2 mm und 1,5 mm unter der Haut), die Strebe ein dünnes Rohr, Sockel und Kopfkern Blöcke in ihren Körpern; Gelenke sind der Schweißring an der Platte, der Klemmring, der Strebenbolzen und der Kopfzapfen; Massen in den angegebenen Schwerpunkten der vier Knochen (das 70-kg-Stück des Mastes bei 2,94 m), das feste Auflager ist die Sockelsohle."
+          }
+        ]
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "body": [
+          {
+            "id": "plinth",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.65,
+            "size": [0.3, 0.12, 0.3],
+            "transform": {
+              "translation": [0.0, 0.06, 0.0]
+            }
+          },
+          {
+            "id": "pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.0, 0.07], [5.88, 0.05], [5.88, 0.03], [0.0, 0.05]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, 0.045], [0.72, 0.045], [0.72, 0.03], [0.0, 0.03]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0]
+          },
+          {
+            "id": "head",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.33, 0.12, 0.24],
+            "transform": {
+              "translation": [0.165, 0.0, 0.0]
+            }
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-plinth",
+            "of": "plinth",
+            "region": "plinth-concrete"
+          },
+          {
+            "id": "th-pole",
+            "of": "pole",
+            "region": "pole-galv"
+          },
+          {
+            "id": "th-arm",
+            "of": "arm",
+            "region": "arm-alu"
+          },
+          {
+            "id": "th-head",
+            "of": "head",
+            "region": "lamp-housing"
+          },
+          {
+            "id": "th-lens",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "polycarbonate",
+            "role": "glazing",
+            "tone": 0.85,
+            "radii": [0.1, 0.0375, 0.0375],
+            "transform": {
+              "translation": [0.165, 0.0, 0.0]
+            },
+            "region": "lamp-lens"
+          },
+          {
+            "id": "th-lamp-plume",
+            "kind": "revolve",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "detail",
+            "tone": 0.9,
+            "profile": [[0.0, 0.0], [0.0, 0.06], [0.075, 0.06], [0.075, 0.0]],
+            "axis": [1, 0, 0],
+            "origin": [0.1163, -0.05, 0.0],
+            "tags": ["lamp-plume"],
+            "sectionFaces": ["-u", "+u", "-v", "+v", "-w", "+w"],
+            "region": "lamp-housing"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-plinth",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.65,
+            "size": [0.27, 0.09, 0.27],
+            "transform": {
+              "translation": [0.0, 0.06, 0.0]
+            },
+            "member": "foundation",
+            "part": "member"
+          },
+          {
+            "id": "member-pole",
+            "kind": "revolve",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.4,
+            "profile": [[0.01, 0.065], [5.87, 0.046], [5.87, 0.016], [0.01, 0.035]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "pole",
+            "part": "member"
+          },
+          {
+            "id": "member-arm",
+            "kind": "revolve",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.01, 0.043], [0.71, 0.043], [0.71, 0.023], [0.01, 0.023]],
+            "axis": [1, 0, 0],
+            "origin": [0.0, 0.0, 0.0],
+            "member": "arm",
+            "part": "member"
+          },
+          {
+            "id": "member-head-core",
+            "kind": "box",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.3, 0.09, 0.2],
+            "transform": {
+              "translation": [0.165, 0.0, 0.0]
+            },
+            "member": "head",
+            "part": "member"
+          },
+          {
+            "id": "mass-foundation",
+            "kind": "ellipsoid",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.0375, 0.0375, 0.0375],
+            "transform": {
+              "translation": [0.0, 0.11, 0.0]
+            },
+            "member": "foundation",
+            "part": "mass"
+          },
+          {
+            "id": "mass-pole",
+            "kind": "ellipsoid",
+            "bone": "pole",
+            "material": "galv-steel",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.0375, 0.0375, 0.0375],
+            "transform": {
+              "translation": [2.94, 0.0, 0.0]
+            },
+            "member": "pole",
+            "part": "mass"
+          },
+          {
+            "id": "mass-arm",
+            "kind": "ellipsoid",
+            "bone": "arm",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.0375, 0.0375, 0.0375],
+            "transform": {
+              "translation": [0.475, 0.0, 0.0]
+            },
+            "member": "arm",
+            "part": "mass"
+          },
+          {
+            "id": "mass-head",
+            "kind": "ellipsoid",
+            "bone": "head",
+            "material": "aluminium-anodised",
+            "role": "body",
+            "tone": 0.5,
+            "radii": [0.0375, 0.0375, 0.0375],
+            "transform": {
+              "translation": [0.115, 0.0, 0.0]
+            },
+            "member": "head",
+            "part": "mass"
+          },
+          {
+            "id": "support-foundation-support",
+            "kind": "box",
+            "bone": "foundation",
+            "material": "concrete",
+            "role": "body",
+            "tone": 0.1,
+            "size": [0.28, 0.075, 0.28],
+            "transform": {
+              "translation": [0.0, 0.0375, 0.0]
+            },
+            "member": "foundation",
+            "part": "support",
+            "anchor": "foundation-support"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: the four drawn parts: the plinth block, the pole as a conical tube of 0.14 m to 0.10 m, the arm as the 90 mm tube of the stroke and the head as the drawn 0.33 x 0.12 x 0.24 m block; brace, lens and plume are not drawn at this scale.",
+            "de": "Körper: die vier gezeichneten Teile: der Sockelblock, der Mast als konisches Rohr von 0,14 m auf 0,10 m, der Ausleger als das Rohr von 90 mm des Strichs und der Kopf als der gezeichnete Block 0,33 x 0,12 x 0,24 m; Strebe, Linse und Fahne sind in diesem Maßstab nicht gezeichnet."
+          },
+          {
+            "en": "Thermal: the pole and the base cover are closed outer envelopes with their end faces as section faces (the declared 2.4 m2 is the outer tube surface; a hollow reference would count the inside as well), all other regions reference the body solids.",
+            "de": "Thermik: Mast und Fußhülle sind geschlossene Außenhüllen mit ihren Stirnflächen als Schnittflächen (die angegebenen 2,4 m2 sind die äußere Rohrfläche, ein hohler Verweis würde die Innenseite mitzählen), alle anderen Regionen verweisen auf die Körper."
+          },
+          {
+            "en": "Structure: the pole and the arm are the real hollow tubes (2 mm and 1.5 mm walls inside the skin), the brace a thin tube, the plinth and the head core blocks inside their bodies; joints are the weld ring at the plate, the clamp ring, the brace pin and the head spigot; masses lumped at the declared centres of the four bones (the 70 kg pole lump at 2.94 m), the fixed support is the plinth footing.",
+            "de": "Tragwerk: Mast und Ausleger sind die echten hohlen Rohre (Wände 2 mm und 1,5 mm unter der Haut), die Strebe ein dünnes Rohr, Sockel und Kopfkern Blöcke in ihren Körpern; Gelenke sind der Schweißring an der Platte, der Klemmring, der Strebenbolzen und der Kopfzapfen; Massen in den angegebenen Schwerpunkten der vier Knochen (das 70-kg-Stück des Mastes bei 2,94 m), das feste Auflager ist die Sockelsohle."
+          }
+        ]
+      }
     },
     "presentation": {
       "defaultPose": "dusk-off",

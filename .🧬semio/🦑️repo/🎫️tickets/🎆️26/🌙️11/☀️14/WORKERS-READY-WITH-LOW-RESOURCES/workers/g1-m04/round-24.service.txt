@@ -1,0 +1,450 @@
+## /run/user/1000/semio-repo/1000/host-1a39c23fa9e8.log
+2026-11-15T07:11:15.200Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=3980536 ppid=3980510
+## last waiting line: 
+## last 30 lines
+[repository:command] still running after 700 s
+[repo] still working after 710 s; last phase started: source.served
+[repository:command] still running after 710 s
+[repository:command] still running after 720 s
+[repository:command] still running after 730 s
+[repo] still working after 740 s; last phase started: source.served
+[repository:command] still running after 740 s
+[repository:command] still running after 750 s
+[repository:command] still running after 760 s
+[repo] still working after 770 s; last phase started: source.served
+[repository:command] still running after 770 s
+[repository:command] still running after 780 s
+[repository:command] still running after 790 s
+[repo] still working after 800 s; last phase started: source.served
+[repository:command] still running after 800 s
+[repository:command] still running after 810 s
+[repository:command] still running after 820 s
+[repo] still working after 830 s; last phase started: source.served
+[repository:command] still running after 830 s
+[repository:command] still running after 840 s
+[repository:command] still running after 850 s
+[repo] still working after 860 s; last phase started: source.served
+[repository:command] still running after 860 s
+[repository:command] still running after 870 s
+[repository:command] still running after 880 s
+[repo] still working after 890 s; last phase started: source.served
+[repository:command] still running after 890 s
+[repository:command] still running after 900 s
+2026-11-15T07:26:05.290Z shutdown superseded
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+## /run/user/1000/semio-repo/1000/host-238ad1a10a8f.log
+2026-11-15T07:25:04.352Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=4010099 ppid=4010042
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: 703 stale projects, 0 taken from the fleet, 6 too heavy for this machine (workspace (about 10216 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), @semio-tech/s-dev-composition (about 4466 MB); it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 703
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 290 s ago, estimated time left: about 1 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 301 s ago, estimated time left: about 1 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 311 s ago, estimated time left: about 1 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 321 s ago, estimated time left: about 1 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 332 s ago, estimated time left: about 1 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 342 s ago, estimated time left: about 1 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 353 s ago, estimated time left: about 1 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 363 s ago, estimated time left: about 1 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 373 s ago, estimated time left: about 1 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 88 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 98 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 108 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 119 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 129 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 139 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 149 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 160 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 170 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 180 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 192 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 202 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 213 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 223 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 232 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 243 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 252 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 263 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 273 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 283 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 293 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 303 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 313 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 323 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 334 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 344 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 355 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 365 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 374 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 384 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 396 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 406 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 416 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 426 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 436 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 447 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 456 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 467 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 477 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 487 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 498 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 508 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 517 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 527 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 539 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 549 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 559 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 569 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 579 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 589 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 599 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 610 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 622 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 632 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 640 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 651 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 661 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 672 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 682 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 692 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 702 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 712 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 722 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 733 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 745 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 755 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 766 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 775 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 785 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 796 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 807 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 816 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 826 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 837 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 847 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 857 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 867 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 878 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 14 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 24 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 34 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 45 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 54 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 64 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 76 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 86 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 95 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 106 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 117 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 127 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 137 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 148 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 158 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 168 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 178 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 188 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 198 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 208 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 218 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 228 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 238 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 248 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 258 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 269 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 280 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 290 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 300 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 312 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 322 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 331 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 342 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 352 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 362 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 372 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 382 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 393 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 403 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 414 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 425 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 433 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 443 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 455 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 465 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 475 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 485 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 496 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 506 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 536 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 547 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 557 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 567 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 578 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 588 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 599 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 610 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 619 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 630 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 643 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 654 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 664 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 676 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 686 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 696 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 707 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 718 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 728 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 738 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 748 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 758 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 768 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 778 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 788 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 798 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 809 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 819 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 830 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 841 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 850 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 860 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 871 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 881 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 891 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 901 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 912 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 923 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 935 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 945 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 955 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 965 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 976 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 987 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 996 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1006 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1018 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1029 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1039 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1049 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1058 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1069 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1079 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1089 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1101 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1111 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1121 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1132 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1143 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1153 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1162 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1172 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1183 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1193 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1203 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1213 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1224 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1235 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1245 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1256 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1266 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1276 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1286 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1297 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1307 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1317 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1327 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1337 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1347 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1358 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1368 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1378 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1388 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1400 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1410 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1420 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1430 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1440 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1451 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1461 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1471 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1481 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 1491 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 2376 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 11 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 22 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 31 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 42 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 51 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 62 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 73 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 83 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 93 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 103 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 113 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 123 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 134 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 144 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 154 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 165 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 176 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 186 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 197 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 205 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 216 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 8 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 18 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 29 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 39 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 49 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 57 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 67 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 81 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 94 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 104 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 115 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 126 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 137 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 148 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 158 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 168 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 178 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 191 s ago, estimated time left: about 10 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 212 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 222 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 233 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 244 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 254 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 264 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 275 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 285 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 297 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 307 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 317 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 327 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 338 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 349 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 359 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 370 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 380 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 390 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 400 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 410 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 420 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 430 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 441 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 452 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 462 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 474 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 12 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 22 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 33 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 43 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 53 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 63 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 73 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 83 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 105 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 115 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 125 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 135 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 145 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 156 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 166 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 176 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 185 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 196 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 207 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 217 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 227 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 237 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 247 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 257 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 268 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 279 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 289 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 300 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 311 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 321 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 332 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 342 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 352 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 363 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 372 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 382 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 393 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 403 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 413 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 423 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 434 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 444 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 453 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 463 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 484 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 496 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 506 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 515 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 525 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 535 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 545 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 555 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 566 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 577 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 587 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 597 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 607 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 618 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 628 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 639 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 649 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 659 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 670 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 680 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 690 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 701 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 711 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 721 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 732 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 742 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 752 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 763 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 773 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 783 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 794 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 804 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 814 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 824 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 835 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 845 s ago, estimated time left: about 11 min
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 855 s ago, estimated time left: about 11 min
+graph: this machine is linux-x64 (class posix-shared); machines of every class serve its request except the projects bound to its host, which only a machine of that class or this machine infers, and their graph server logs 'serving' for it
+graph: no machine of this class gave a sign of life for 5 min, so no one holds the request
+graph: nothing to wait for any longer: asked the fleet for 703 stale projects and received 0 within 3941 s, 703 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+graph: plan answered, managed 105 MB, resident 214 MB (released 18 MB)
+## last waiting line: graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 855 s ago, estimated time left: about 11 min
+## last 30 lines
+[repo] still working after 3950 s; last phase started: source.served
+[repository:command] still running after 3950 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 763 s ago, estimated time left: about 11 min
+[repository:command] still running after 3960 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 773 s ago, estimated time left: about 11 min
+[repository:command] still running after 3970 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 783 s ago, estimated time left: about 11 min
+[repo] still working after 3980 s; last phase started: source.served
+[repository:command] still running after 3980 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 794 s ago, estimated time left: about 11 min
+[repository:command] still running after 3990 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 804 s ago, estimated time left: about 11 min
+[repository:command] still running after 4000 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 814 s ago, estimated time left: about 11 min
+[repo] still working after 4010 s; last phase started: source.served
+[repository:command] still running after 4010 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 824 s ago, estimated time left: about 11 min
+[repository:command] still running after 4020 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 835 s ago, estimated time left: about 11 min
+[repository:command] still running after 4030 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 845 s ago, estimated time left: about 11 min
+[repo] still working after 4040 s; last phase started: source.served
+[repository:command] still running after 4040 s
+graph: waiting for the fleet: 0 of 703 projects arrived; the server last progressed 855 s ago, estimated time left: about 11 min
+graph: this machine is linux-x64 (class posix-shared); machines of every class serve its request except the projects bound to its host, which only a machine of that class or this machine infers, and their graph server logs 'serving' for it
+graph: no machine of this class gave a sign of life for 5 min, so no one holds the request
+graph: nothing to wait for any longer: asked the fleet for 703 stale projects and received 0 within 3941 s, 703 remain and this machine can infer only 0; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-15T08:32:21.616Z graph-wanted-expired {"wanted":"703","arrived":"0","seconds":"3941","missing":"703","local":"0","heavy":""}
+graph: plan answered, managed 105 MB, resident 214 MB (released 18 MB)
+[repository:command] still running after 4050 s

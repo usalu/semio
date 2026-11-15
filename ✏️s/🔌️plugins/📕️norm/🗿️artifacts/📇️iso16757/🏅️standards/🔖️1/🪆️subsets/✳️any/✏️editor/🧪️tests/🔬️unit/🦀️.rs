@@ -1,5 +1,6 @@
 pub(crate) mod context {
     use crate::*;
+    use semio_s_artifact_norm_iso16757_editor::modes::edit::windows::checks;
     use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
@@ -57,7 +58,7 @@ pub(crate) mod context {
                 focused_window_id: Some(checks::WINDOW_CHECKS.into()),
                 window_instances: vec![ViewWindowInstance { id: checks::WINDOW_CHECKS.into(), window_kind_id: checks::WINDOW_CHECKS.into() }],
                 ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
-            });
+            }.into());
         }
         let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
@@ -71,6 +72,18 @@ pub(crate) mod context {
 
 use crate::*;
 use semio_plugin::PluginApp;
+use semio_s_artifact_norm_iso16757_editor::commands::selected_check;
+use semio_s_artifact_norm_iso16757_editor::commands::set_field;
+use semio_s_artifact_norm_iso16757_editor::modes::edit::windows::checks;
+use semio_s_artifact_norm_iso16757_editor::modes::edit::windows::diagrams;
+use semio_s_artifact_norm_iso16757_editor::modes::edit::windows::outliner;
+use semio_s_artifact_norm_iso16757_editor::modes::edit::windows::properties;
+use semio_s_artifact_norm_iso16757_editor::modes::edit::windows::viewport;
+use semio_s_artifact_norm_iso16757_editor::panels::catalogue as catalogue_panel;
+use semio_s_artifact_norm_iso16757_editor::panels::document as document_panel;
+use semio_s_artifact_norm_iso16757_editor::panels::inspection as inspection_panel;
+use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
+use semio_plugin::InteractiveJobClassification;
 
 #[test]
 fn retained_command_dispositions_match_the_language_neutral_oracle() {

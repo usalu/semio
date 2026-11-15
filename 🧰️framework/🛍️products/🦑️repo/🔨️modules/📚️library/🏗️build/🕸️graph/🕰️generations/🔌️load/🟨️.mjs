@@ -2,11 +2,12 @@ import{createBoundedCacheV1}from"../../../🧊️bounded/🟨️.mjs";
 import{createHash}from"node:crypto";
 import{join}from"node:path";
 import{graphQueueRequestedAtV1,graphQueueYieldsV1,yieldGraphQueueV1}from"../🛌️yield/🟨️.mjs";
-import{GENERATION_POLICY_V1,canonicalJsonV1,compareCodePointsV1,createAnswersV1,createGenerationStoreV1,createNodeFilePortV1,readGenerationExternalInputsV1,resolveGenerationExternalInputV1,rowKeyV1}from"../🟨️.mjs";
+import{GENERATION_POLICY_V1,carriedStagesV1,canonicalJsonV1,compareCodePointsV1,createAnswersV1,createGenerationStoreV1,createNodeFilePortV1,readGenerationExternalInputsV1,resolveGenerationExternalInputV1,rowKeyV1}from"../🟨️.mjs";
 import{createGraphPhaseClockV1}from"../../⏱️phases/🟨️.mjs";
 import{decodeVerifiedScopeV1}from"../🔭️coverage/🟨️.mjs";
 import{readPinnedGenerationV1}from"../🧷️pin/🟨️.mjs";
 import{CUSTODY_POLICY_V1}from"../🔐️custody/🟨️.mjs";
+import{closureMissingErrorV1}from"../../🩹️closure-repair/🟨️.mjs";
 
 /** 🗣️ The bilingual texts of the graph generation; the schema file declares the same table and a law keeps both equal. */
 export const GENERATION_MESSAGES_V1=Object.freeze({
@@ -43,7 +44,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   changeRemoved:"removed",
   changeChanged:"changed",
   merged:"graph: generation {generation} published, {computed} projects refreshed in {seconds} s ({carried} kept their edges) and merged onto the generation a peer published meanwhile ({theirs} projects of peers kept)",
-  restored:"graph: generation {generation} ({owners} projects) restored from the remote cache, {documents} documents ({megabytes} MB) downloaded in {seconds} s",
+  restored:"graph: generation {generation} ({owners} projects) restored from the remote cache, {documents} documents ({megabytes} MB) downloaded in {seconds} s, from a state {age} min old with {stale} projects stale",
   uploaded:"graph: generation {generation} ({owners} projects) uploaded to the remote cache, {documents} documents ({megabytes} MB) in {seconds} s",
   exchangeFailed:"graph: the remote cache did not exchange the generation ({reason}), going on without it",
  }),
@@ -80,7 +81,7 @@ export const GENERATION_MESSAGES_V1=Object.freeze({
   changeRemoved:"entfernt",
   changeChanged:"geändert",
   merged:"Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert ({carried} behielten ihre Kanten) und auf die Generation eines anderen Prozesses zusammengeführt ({theirs} Projekte anderer Prozesse übernommen)",
-  restored:"Graph: Generation {generation} ({owners} Projekte) aus dem Remote-Cache wiederhergestellt, {documents} Dokumente ({megabytes} MB) in {seconds} s geladen",
+  restored:"Graph: Generation {generation} ({owners} Projekte) aus dem Remote-Cache wiederhergestellt, {documents} Dokumente ({megabytes} MB) in {seconds} s geladen, von einem Stand von vor {age} Min. mit {stale} veralteten Projekten",
   uploaded:"Graph: Generation {generation} ({owners} Projekte) in den Remote-Cache hochgeladen, {documents} Dokumente ({megabytes} MB) in {seconds} s",
   exchangeFailed:"Graph: der Remote-Cache hat die Generation nicht ausgetauscht ({reason}), es geht ohne sie weiter",
  }),
@@ -228,7 +229,7 @@ export function shapeComputeResultV1({workspaceRoot,part,stubs,separator="/",imp
  for(const owner of part.owners)owners.push({name:owner.name,root:owner.root,kind:owner.unavailable?"unavailable":"project",node:owner.unavailable??owner.node,edges:orderedEdgesV1(edgesOf.get(owner.name)??[]),targets:owner.unavailable?[]:Object.keys(owner.node?.targets??{}),...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),...(owner.reads?{reads:owner.reads}:{}),rows:joined(claim(owner.nodeRows??[],[owner.root,owner.nativeRoot]),implementation.all)});
  for(const owner of part.edgeOnly){const stub=stubs[owner.name];owners.push({name:owner.name,partial:"edges",...(owner.streamed?{}:{edges:orderedEdgesV1(edgesOf.get(owner.name)??[]),...(part.readsOf?.(owner.name)?{reads:part.readsOf(owner.name)}:{})}),rows:claim([],[stub.root,stub.nativeRoot])});}
  const environment=[...part.env.rows,...part.rows.filter(row=>!claimed.has(rowKeyV1(row))),...implementation.all,...implementation.environment];
- return{owners,...(part.carried?.length?{carried:part.carried}:{}),...(part.readsOf?{readsOf:part.readsOf}:{}),...(part.reEdge?{reEdge:async(name,fragment)=>orderedEdgesV1(await part.reEdge(name,fragment))}:{}),...(part.derived?.length?{derived:part.derived}:{}),env:{digest:part.env.digest,rows:environment,...(part.env.parts?{parts:part.env.parts}:{})},global:{version:1,externalNodes:part.externalNodes??{},edges:other,unavailable:part.parseUnavailable??[]},replaceTags:part.replaceTags??[],...(part.dispose?{dispose:part.dispose}:{})};
+ return{owners,...(part.carried?.length?{carried:part.carried}:{}),...(part.readsOf?{readsOf:part.readsOf}:{}),...(part.reEdge?{reEdge:async(name,fragment)=>orderedEdgesV1(await part.reEdge(name,fragment))}:{}),...(part.derived?.length?{derived:part.derived}:{}),env:{digest:part.env.digest,rows:environment,...(part.env.parts?{parts:part.env.parts}:{})},global:{version:1,externalNodes:part.externalNodes??{},edges:other,unavailable:part.parseUnavailable??[]},replaceTags:part.replaceTags??[],...(Number.isSafeInteger(part.inferred)?{inferred:part.inferred}:{}),...(part.phases?{phases:part.phases}:{}),...(part.dispose?{dispose:part.dispose}:{})};
 }
 
 /** 🔍️ Names the exact input behind one stale reason of a plan: the stamp of an inferrer, an input file, a directory listing, a declared data file, a source analysis or a workspace file that appeared, vanished or changed. `current` maps stamp paths to the stamps this process carries. */
@@ -253,8 +254,8 @@ export function describeGenerationReasonV1(reason,{workspaceRoot,separator="/",c
 /** 📢️ Says why a build starts: the reason of a cold start, or the number of stale projects followed by the first stale inputs by name. */
 export function announceGenerationBuildV1(host,spec,rows){
  if(spec.cold){host.say("cold",{reason:spec.coldReason??"empty"});return;}
- host.say("building",{dirty:spec.owners.length,generation:spec.generation??0});
- if(spec.staleKinds&&(spec.staleRows??0)>0)host.say("summary",{rows:spec.staleRows,kinds:Object.entries(spec.staleKinds).sort((x,y)=>y[1]-x[1]||(x[0]<y[0]?-1:1)).map(([kind,count])=>kind+" "+count).join(", "),projects:spec.owners.length});
+ if(spec.done)return;host.say("building",{dirty:spec.total??spec.owners.length,generation:spec.generation??0});
+ if(spec.staleKinds&&(spec.staleRows??0)>0)host.say("summary",{rows:spec.staleRows,kinds:Object.entries(spec.staleKinds).sort((x,y)=>y[1]-x[1]||(x[0]<y[0]?-1:1)).map(([kind,count])=>kind+" "+count).join(", "),projects:spec.total??spec.owners.length});
  const current=new Map(rows.filter(row=>row.kind==="stamp").map(row=>[row.path,row.fact])),language=host.language;
  for(const reason of spec.reasons??[]){const row=describeGenerationReasonV1(reason,{workspaceRoot:host.workspaceRoot,separator:host.separator,current,language});host.say("reason",{project:row.project,why:row.why});}
  const listed=(spec.reasons??[]).filter(reason=>reason.row).length;
@@ -306,22 +307,49 @@ export async function expandStreamV1(entries,expand,{maximumProjects,maximumByte
 }
 
 /** ⬇️ Lets an empty generation store take the generation another machine of the group uploaded to the shared remote cache; a refusal or a failure only says so and the build goes on. */
-async function restoreRemoteGenerationV1(host,options){
- const started=Date.now(),outcome=await host.exchange.restore({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal});
- if(outcome.status==="restored")host.say("restored",{generation:outcome.generation,owners:outcome.owners,documents:outcome.documents,megabytes:Math.round(outcome.bytes/1048576),seconds:Math.round((Date.now()-started)/1000)});
+async function restoreRemoteGenerationV1(host,options,implementation){
+ const started=Date.now(),outcome=await host.exchange.restore({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal,implementation});
+ if(outcome.status==="restored")host.say("restored",{generation:outcome.generation,owners:outcome.owners,documents:outcome.documents,megabytes:Math.round(outcome.bytes/1048576),seconds:Math.round((Date.now()-started)/1000),age:Math.round((outcome.ageSeconds??0)/60),stale:outcome.stale??"?"});
  else if(outcome.status==="failed"||outcome.status==="incomplete")host.say("exchangeFailed",{reason:outcome.reason??outcome.status});
+ return outcome;
+}
+
+/** 🧲️ Makes a restored generation complete: the owners that name a closure leaf neither this machine nor the fleet cache holds are marked stale by removing their records (`host.settleClosure`, one log line per leaf) and the generation is invalidated once, so the same request derives exactly those owners again; the heavy ones are asked of the fleet by the normal path (`host.fleetRead`). Never fails the load. */
+async function settleRestoredClosuresV1(host,engine,outcome,implementation){
+ const missing=outcome?.closures?.missing??[];
+ if(!missing.length)return;
+ const current=await engine.read(host.signal).catch(()=>undefined),owners=current?.manifest.owners??{};
+ for(const row of missing)await host.settleClosure?.({key:row.key,namespace:row.namespace,projects:row.projects}).catch(()=>undefined);
+ await askFleetForClosureOwnersV1(host,owners,[...new Set(missing.flatMap(row=>row.projects))],current?.manifest.generation??-1,implementation);
+ await engine.invalidate({reason:"closure-missing",signal:host.signal});
+}
+
+/** 🛰️ Asks the fleet-first decision of a read about the owners that name a leaf nobody could give: the normal path of stale owners (`host.fleetRead`) serves the heavy ones from the fleet and leaves the light ones to this machine. */
+async function askFleetForClosureOwnersV1(host,owners,projects,generation,implementation){
+ const named=projects.filter(name=>Object.hasOwn(owners,name));
+ if(host.fleetRead&&named.length)await host.fleetRead({generation,dirty:named,roots:Object.fromEntries(named.map(name=>[name,owners[name].root])),structural:true,implementation});
 }
 
 /** ⬆️ Offers the newest sealed generation to the shared remote cache of the group (only a machine whose access may write); `ifAbsent` offers it only when the cache holds none. */
 async function publishRemoteGenerationV1(host,ifAbsent){
  if(!host.exchange?.upload)return;
  await host.withShared(async(store,control)=>{
-  const options=host.storeOptions(store,control),started=Date.now(),outcome=await host.exchange.publish({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal,ifAbsent});
+  const options=host.storeOptions(store,control),started=Date.now(),outcome=await host.exchange.publish({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal,ifAbsent,stale:0});
   if(outcome.status==="uploaded")host.say("uploaded",{generation:outcome.generation,owners:outcome.owners,documents:outcome.documents,megabytes:Math.round(outcome.bytes/1048576),seconds:Math.round((Date.now()-started)/1000)});
   else if(outcome.status==="failed"||outcome.status==="incomplete"||outcome.status==="oversized")host.say("exchangeFailed",{reason:outcome.reason??outcome.status});
  });
 }
 
+/** 🩹️ How many times one load rebuilds after a build input closure leaf turned out missing: the first rebuild recomputes from a cold plan, each later one first removes the records that still name the leaf (`host.repairClosure`), then the load fails with the original error. */
+const CLOSURE_REPAIR_ROUNDS_V1=3;
+/** 🔎️ The key of the build input closure leaf a failure says is missing: the `missingClosure` tag, else the `closure-missing:<key>` text or the leaf path of an ENOENT message, on the error or one of its causes (a failure that crossed a boundary keeps its text, not its properties). */
+export function missingClosureOfV1(error,depth=4){
+ if(error===null||typeof error!=="object"||depth<0)return undefined;
+ if(typeof error.missingClosure==="string")return error.missingClosure;
+ const match=/closure-missing:([a-f0-9]{64})|build-(?:input|lock)-closures[\\/]([a-f0-9]{64})\.json/u.exec(String(error.message??""));
+ if(match&&(error.code==="ENOENT"||/ENOENT|closure-missing/u.test(String(error.message))))return match[1]??match[2];
+ return missingClosureOfV1(error.cause,depth-1);
+}
 /** 🕰️ Loads the all-workspace graph (a command whose front door offered a yield ticket and that only waits for a peer's build ends instead of waiting: see `../🛌️yield`), the closure of some projects, or the slice of a selected scope (tasks or literal owners) from the newest sealed generation; `lean` answers only project and target names. A shared reader verifies and serves it without ever taking a writer; only a stale or missing generation enters the builder custody, where a holder that finds the work done by a peer serves that generation. Complete derived answers stay within this load and store root; each fresh attempt rechecks their support and compares them to its current rows.
  * `host` binds the repository: `release()` (optional: drops the in-process caches a construction filled, called once the graph is assembled so a process that goes on to run for hours keeps only the graph), `identity()`, `implementationRows()`, `withShared(body)`, `withBuilder(body)`, `storeOptions(store, control)`, `membership(previous, signal)`, `discoverPart(spec, signal)`, `expand(projects, control)`, `expansionLimits`, `readGraph(value)`, `readLean(value)`, `clock(control)`, `say(key, fields)` and the constants `workspaceRoot`, `namedInputs`, `registryDigest`, `signal`.
  */
@@ -330,18 +358,22 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
  await host.preflight?.();
  const requestedAt=graphQueueRequestedAtV1()??Date.now(),identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=pin===undefined?await host.implementationRows():[],implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:GENERATION_POLICY_V1.expansionMaximumProjects,maximumBytes:GENERATION_POLICY_V1.expansionMaximumBytes};
  host.scope?.(roots===undefined&&pin===undefined);
- const answersByRoot=new Map();let pointer,published=false;
+ const answersByRoot=new Map();let pointer,published=false,repairs=0,carried;
  const attempt=async(builder,store,control)=>{
-  const options=host.storeOptions(store,control);if(builder&&host.exchange)await restoreRemoteGenerationV1(host,options);let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=createAnswersV1({root:options.root,fs:options.fs,durable:options.durableAnswers!==false,workspaceRoot:host.workspaceRoot}));
-  const engine=createGenerationStoreV1({...options,answers}),progress=createGenerationProgressV1(host.clock(control));
-  const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const wanted=spec.owners.length+spec.discover.length;let inferred=0;if(wanted)await progress({phase:"owners",done:0,total:wanted});await host.releaseCutoff?.();const part=await host.discoverPart(spec,signal,control,()=>{if(wanted&&inferred<wanted-1)progress({phase:"owners",done:++inferred,total:wanted}).catch(()=>undefined);},(running,decision)=>progress({phase:"owners",done:inferred,total:wanted,running,decision}).catch(()=>undefined));if(wanted)await progress({phase:"owners",done:wanted,total:wanted});announceWithheldProjectsV1(host,part);await host.release?.();return shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});}:async()=>{throw Error("A shared graph reader never computes");};
+  const options=host.storeOptions(store,control);
+  if(!builder&&host.exchange?.ahead&&pin===undefined&&await host.exchange.ahead({root:options.root,fs:options.fs??createNodeFilePortV1(),signal:host.signal,implementation}).catch(()=>false))return{needsBuild:true,pending:{generation:-1,dirty:[],roots:{},structural:true},generation:-1};
+  const restored=builder&&host.exchange?await restoreRemoteGenerationV1(host,options,implementation):undefined;let answers=answersByRoot.get(options.root);if(!answers)answersByRoot.set(options.root,answers=createAnswersV1({root:options.root,fs:options.fs,durable:options.durableAnswers!==false,workspaceRoot:host.workspaceRoot}));
+  const engine=createGenerationStoreV1({...options,answers,workspaceRoot:host.workspaceRoot}),progress=createGenerationProgressV1(host.clock(control));
+  await settleRestoredClosuresV1(host,engine,restored,implementation);
+  let reached=0;const owners=(done,total,more)=>progress({phase:"owners",done:reached=Math.max(reached,done),total,...more});
+  const compute=builder?async(spec,signal)=>{announceGenerationBuildV1(host,spec,rows);const wanted=spec.owners.length+spec.discover.length,before=spec.done??0,overall=(spec.total??spec.owners.length)+spec.discover.length;let inferred=0;if(wanted)await owners(before,overall);const cutAt=Date.now();await host.releaseCutoff?.();const cutMs=Date.now()-cutAt;const part=await host.discoverPart(spec,signal,control,()=>{if(wanted&&inferred<wanted-1)owners(before+ ++inferred,overall).catch(()=>undefined);},(running,decision)=>owners(before+inferred,overall,{running,decision}).catch(()=>undefined));if(wanted)await owners(before+wanted,overall);announceWithheldProjectsV1(host,part);const releaseAt=Date.now();await host.release?.({more:spec.more===true});const shaped=shapeComputeResultV1({workspaceRoot:host.workspaceRoot,separator:host.separator,part,stubs:spec.stubs,implementation:scoped});return{...shaped,phases:{...shaped.phases,cutoff:cutMs,release:Date.now()-releaseAt}};}:async()=>{throw Error("A shared graph reader never computes");};
   pointer=join(options.root,GENERATION_POLICY_V1.pointer);
-  const base={identity,implementation,policy:builder?"fresh":policy,membership:host.membership,compute,prime:builder?host.prime:undefined,signal:host.signal,progress,requestedAt,builder:builder?body=>body(builder===true?undefined:builder):needsBuild};
+  const base={identity,implementation,policy:builder?"fresh":policy,published:builder&&host.published?(generation,info)=>host.published(generation,info):undefined,membership:host.membership,compute,prime:builder?host.prime:undefined,signal:host.signal,progress,requestedAt,builder:builder?body=>body(builder===true?undefined:builder):needsBuild,planned:builder&&carried&&host.planUnchanged?{...carried,holds:()=>host.planUnchanged(carried.live)}:undefined};
   const closeFn=slice?async(current)=>{const global=await engine.readGlobal(current.manifest);return sliceClosureV1({owners:Object.fromEntries(Object.entries(current.manifest.owners).map(([name,row])=>[name,row.root])),external:Object.keys(global.externalNodes??{}),fragment:name=>engine.readFragment(current.manifest.owners[name]).then(value=>{if(!value)throw Object.assign(Error("Fragment of "+name+" is missing"),{code:"GENERATION_INCOMPLETE"});return sliceViewV1(value);}),selection:slice.selection,roots:slice.roots,providers:slice.providers??[]});}:undefined;
   const started=Date.now(),result=pin!==undefined?await readPinnedGenerationV1({engine,pin,identity,roots,closure:closeFn,signal:host.signal}):roots?await engine.refreshClosure({...base,roots,closure:closeFn}):await engine.refresh(base);
   engine.dropIndexes();if(typeof builder==="object")await builder.release();
   if(result.served==="built"&&result.published)published=true;
-  if(result.needsBuild)return{needsBuild:true,pending:result.pending,generation:(await engine.read(host.signal))?.pointer.generation??-1};
+  if(result.needsBuild)return{needsBuild:true,pending:result.pending,planned:result.planned,generation:(await engine.read(host.signal))?.pointer.generation??-1};
   const generation=result.current.manifest.generation;
   if(result.served==="current")host.say(result.current.manifest.implementation===implementation?"current":"stale",{generation});
   else if(result.served==="covered")host.say("covered",{generation});
@@ -352,20 +384,34 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
   if(result.plan?.cutoff?.questions)host.say("cutoff",{questions:result.plan.cutoff.questions,rows:result.plan.stale??0,held:result.plan.cutoff.held,changed:result.plan.cutoff.changed});
   if(lean){const listing=await engine.catalog(result.current,{signal:host.signal});return{graph:host.readLean({version:1,lean:true,projects:Object.fromEntries(listing.projects.map(row=>[row.name,{name:row.name,root:row.root,targets:Object.fromEntries(row.targets.map(target=>[target,{}]))}])),dependencies:[],...(listing.unavailable.length?{unavailable:listing.unavailable}:{})}),result};}
   const stream=engine.assembleStream(result.current,{names:result.names&&[...result.names],externalInputs,compare:(a,b)=>a.localeCompare(b),signal:host.signal,progress});
-  const projects=await expandStreamV1(stream.nodes(),chunk=>host.expand(chunk,control),limits),assembled=await stream.finish(),externalRoots=[...new Set(externalInputs.map(name=>resolveGenerationExternalInputV1(assembled.externalNodes,name)))].sort(compareCodePointsV1);
+  let projects;
+  try{projects=await expandStreamV1(stream.nodes(),chunk=>host.expand(chunk,control),limits);}
+  catch(error){
+   const missing=missingClosureOfV1(error);if(missing===undefined)throw error;
+   if(repairs>=CLOSURE_REPAIR_ROUNDS_V1)throw error.code==="closure-missing"?error:closureMissingErrorV1({namespace:error.missingNamespace??"build-input-closures",key:missing,projects:error.missingProjects??[],cause:error});
+   const owners=result.current.manifest.owners,projects=(Array.isArray(error.missingProjects)?error.missingProjects:[]).filter(name=>Object.hasOwn(owners,name)),generation=result.current.manifest.generation;
+   if(builder){
+    const round=repairs++,settle=host.settleClosure?await host.settleClosure({key:missing,namespace:error.missingNamespace??"build-input-closures",projects}):(round>0?(await host.repairClosure?.(missing),"re-derived"):"re-derived");
+    if(settle!=="refetched"){await askFleetForClosureOwnersV1(host,owners,projects,generation,implementation);await engine.invalidate({reason:"closure-missing",signal:host.signal});}
+   }
+   return{needsBuild:true,pending:{generation,dirty:builder?[]:projects,roots:builder?{}:Object.fromEntries(projects.map(name=>[name,owners[name].root])),structural:true},generation};
+  }
+  const assembled=await stream.finish(),externalRoots=[...new Set(externalInputs.map(name=>resolveGenerationExternalInputV1(assembled.externalNodes,name)))].sort(compareCodePointsV1);
   const closureDigest=selection?createHash("sha256").update(canonicalJsonV1([assembled.membership,[...result.names].sort(),...externalRoots.length?[externalRoots]:[]])).digest("hex"):assembled.membership;
   const graph=host.readGraph({version:1,projects,dependencies:assembled.dependencies,namedInputs:host.namedInputs,externalNodes:assembled.externalNodes,...(assembled.unavailable.length?{unavailable:assembled.unavailable}:{}),admission:{selection:selection??{kind:"all"},registry:host.registryDigest,closure:closureDigest,...externalRoots.length?{externalInputs:externalRoots}:{}}});
   if(host.sealed){const manifest=result.current.manifest,owners=Object.keys(manifest.owners).sort(compareCodePointsV1);host.sealed({generation:manifest.generation,manifest:result.current.pointer.manifest,owners,covered:pin!==undefined?decodeVerifiedScopeV1(owners,pin.covered):result.names,atMs:pin!==undefined?pin.covered.atMs:requestedAt});}
   return{graph,result,stats:generationLoadStatsV1(result,Date.now()-started)};
  };
- const first=await host.withShared((store,control)=>attempt(false,store,control));
+ const readerAt=Date.now(),first=await host.withShared((store,control)=>attempt(false,store,control));carriedStagesV1["start.reader"]=(carriedStagesV1["start.reader"]??0)+Date.now()-readerAt;
  if(!first.needsBuild){await host.release?.();await publishRemoteGenerationV1(host,true);return{graph:first.graph,stats:first.stats};}
- const queued=Date.now();
+ carried=first.planned;const queued=Date.now();
  const request=first.pending?.dirty.length?{generation:first.pending.generation,dirty:first.pending.dirty,roots:first.pending.roots,structural:first.pending.structural,implementation}:undefined;
- if(host.prefetch&&request&&!await host.builderIdle?.(request)){host.carryClosures?.(true);try{await host.prefetch(request);}finally{host.carryClosures?.(false);}}
+ if(host.fleetRead&&request)await host.fleetRead(request);
+ if(host.attach&&request){const attached=await host.attach(request,async()=>{const again=await host.withShared((store,control)=>attempt(false,store,control));return again.needsBuild?undefined:again;});if(attached){await host.release?.();await publishRemoteGenerationV1(host,true);return{graph:attached.graph,stats:attached.stats};}}
+ if(host.prefetch&&request&&!await host.builderIdle?.(request)){host.carryClosures?.(true);const prefetchAt=Date.now();try{await host.prefetch(request);}finally{host.carryClosures?.(false);carriedStagesV1["start.prefetch"]=(carriedStagesV1["start.prefetch"]??0)+Date.now()-prefetchAt;}}
  let held=false;
  const notice=setInterval(()=>{if(held)return;host.say("waiting",{seconds:Math.round((Date.now()-queued)/1000),generation:first.generation});if(pointer!==undefined&&graphQueueYieldsV1({queuedMs:Date.now()-queued,yieldAfterMilliseconds:host.yieldAfterMilliseconds}))yieldGraphQueueV1({generation:first.generation,pointer,requestedAt,queuedMs:Date.now()-queued,exit:host.exitProcess});},host.waitNoticeMilliseconds??GENERATION_POLICY_V1.waitNoticeMilliseconds);notice.unref?.();
- let built,want=first.pending;try{for(let round=1;;round++){built=await host.withBuilder((store,control,claim)=>{held=true;return attempt(claim??true,store,control);},want);if(!built.needsBuild)break;held=false;want={...built.pending,structural:built.pending.structural||round>=CUSTODY_POLICY_V1.widenRounds};}}finally{clearInterval(notice);}
+ let built,want=first.pending;try{for(let round=1;;round++){built=await host.withBuilder((store,control,claim)=>{held=true;return attempt(claim??true,store,control);},want);carried=undefined;if(!built.needsBuild)break;held=false;want={...built.pending,structural:built.pending.structural||round>=CUSTODY_POLICY_V1.widenRounds};}}finally{clearInterval(notice);}
  await host.release?.();
  if(published)await publishRemoteGenerationV1(host,false);
  return{graph:built.graph,stats:built.stats};

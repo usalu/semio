@@ -10,7 +10,7 @@ use building_regularity_and_base_shear_checks::{check_building_base_shear};
 mod building_details;
 use building_details::{check_building_details, check_capacity_joints, check_site_ground};
 
-use semio_s_artifact_norm_en1998_inferences_structural_system::check_building_systems;
+use semio_s_artifact_norm_en1998_inferences_structural::check_building_systems;
 
 /// 📋️ Full EN 1998 evaluate across claimed parts (scoped; empty lists → NotApplicable).
 pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {

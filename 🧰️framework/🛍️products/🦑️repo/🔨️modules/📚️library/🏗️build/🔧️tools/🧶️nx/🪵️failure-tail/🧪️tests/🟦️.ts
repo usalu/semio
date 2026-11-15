@@ -103,7 +103,7 @@ test("the Nx lane feeds every chunk of the nx process into the tail and settles 
  const source=readFileSync(fileURLToPath(new URL("../../../../../⚡️caching/🚀️bootstrap/📜️script.ts",import.meta.url)),"utf8");
  expect(source).toContain('from "../../🏗️build/🔧️tools/🧶️nx/🪵️failure-tail/🟦️.ts"');
  expect(source).toMatch(/state\.output\.push\(chunk, output === process\.stderr \? "stderr" : "stdout"\);\s*state\.tail/u);
- const settled=source.indexOf("code = await settleNxRunV1("),loop=source.indexOf("graphChanges.get(completed)?.changed"),generation=source.indexOf("if(pendingGeneration!==undefined&&code===0");
+ const settled=source.indexOf("code = await settleNxRunReportedV1("),loop=source.indexOf("graphChanges.get(completed)?.changed"),generation=source.indexOf("if(pendingGeneration!==undefined&&code===0");
  expect(loop).toBeGreaterThan(0);expect(settled).toBeGreaterThan(loop);expect(generation).toBeGreaterThan(settled);
  const block=source.slice(source.lastIndexOf("if (code !== 0",settled),generation);expect(block).toContain("!cancelled && !invocation.watch");expect(block).toContain("signal: actualPhase.signal");
 });

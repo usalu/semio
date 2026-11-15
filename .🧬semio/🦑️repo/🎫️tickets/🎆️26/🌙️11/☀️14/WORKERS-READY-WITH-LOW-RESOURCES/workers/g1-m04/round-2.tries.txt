@@ -1,0 +1,2 @@
+try 1: start 2026-11-14T16:00:09Z end 2026-11-14T16:07:43Z native_rc=1 fleet_lines=0 ended at 2026-11-14T16:08:41Z wait_rc=0 peak_rss_kib=7571404 hard_stop=memory pressure (PSI full avg10 27.87 %)
+round 2 finished at 2026-11-14T16:08:41Z

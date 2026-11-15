@@ -73,6 +73,7 @@ class VideoContractTest(unittest.TestCase):
         state = patch.object(runtime, "presentation_state", return_value={"presentation": "isolated-runtime-fixture"})
         state.start()
         self.addCleanup(state.stop)
+        self.enterContext(patch.object(importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🖼️posters.🐍️"), "prepare", return_value={}))
 
     def test_canonical_modules_and_asset_paths(self):
         case = CONTRACT["canonical_paths"]
@@ -149,7 +150,7 @@ class VideoContractTest(unittest.TestCase):
         runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
         video = next(video for video in runtime.load_manifest() if video["id"] == "physical_fundamentals")
         expected = case["scenes"]
-        self.assertEqual([segment["scene"] for segment in video["chapters"][0]["segments"]], expected)
+        self.assertEqual([segment["scene"] for segment in video["chapters"][0]["segments"]], [case["roadmap"], *expected])
         self.assertEqual([beat.__name__ for beat in physics.BEATS], expected)
         for beat in physics.BEATS:
             self.assertTrue(issubclass(beat, Scene))

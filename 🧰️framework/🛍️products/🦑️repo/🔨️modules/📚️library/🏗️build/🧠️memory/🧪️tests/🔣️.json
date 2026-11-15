@@ -20,27 +20,52 @@
   "maximumParsedManifests": 256,
   "childHeapMegabytes": 512,
   "serviceHeapMegabytes": 1024,
-  "serviceLimitMegabytes": 4096,
+  "serviceHostShare": 0.6,
+  "serviceMinimumMegabytes": 2048,
   "initialOwnerMegabytes": 256,
   "safetyMarginBasisPoints": 1000,
+  "parentManagedMegabytes": 1536,
+  "parentHostShare": 0.0625,
+  "serveHostMegabytes": 24000,
+  "serveHostShare": 0.25,
+  "collectEveryProjects": 2,
+  "collectAboveMegabytes": 768,
+  "collectGrowthMegabytes": 384,
+  "collectMinimumIntervalMilliseconds": 3000,
   "hostAvailableFloorMegabytes": 1536,
   "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
+  "heapEnvironment": "BUN_JSC_forceRAMSize",
   "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
   "limitEnvironment": "SEMIO_GRAPH_MEMORY_LIMIT_MB",
-  "peakSamples": 8
+  "peakSamples": 8,
+  "peakCeilingMegabytes": 4608,
+  "stopCollectMinimumMilliseconds": 1000,
+  "waitBoundMilliseconds": 60000,
+  "fleetFallbackMilliseconds": 180000,
+  "fleetAskMilliseconds": 10000,
+  "grantMegabytes": 2048,
+  "refusalExitCode": 75
  },
  "messages": {
   "en": {
-   "waiting": "graph: waiting for memory headroom ({used} of {budget} MB reserved, {running} projects running)",
+   "waiting": "graph: waiting for memory headroom ({used} of {budget} MB reserved, {running} projects running): {key} needs {need} MB and has waited {seconds} s; after {limit} s it runs alone if it fits the {available} MB one project is granted, otherwise the run is refused with exit 75",
    "serial": "graph: headroom of {budget} MB is below one project ({used} MB), inferring one project at a time",
    "resumed": "graph: headroom of {budget} MB again ({used} MB taken), resuming",
-   "learning": "graph: no memory peak learned for {kind} projects yet ({used} MB assumed, {budget} MB headroom), inferring one at a time"
+   "learning": "graph: no memory peak learned for {kind} projects yet ({used} MB assumed, {budget} MB headroom), inferring one at a time: {key} has waited {seconds} s for the running project, at most {limit} s",
+   "stopped": "graph: project {key} ({kind}) grew by {used} MB, more than the {budget} MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here",
+   "admittedAlone": "graph: {key} waited {seconds} s for {need} MB of headroom ({budget} MB free, {running} project(s) running) and now runs because it fits the {available} MB one project is granted",
+   "refused": "graph: {key} needs {need} MB but one project is granted {available} MB here and {budget} MB are free after {seconds} s: refused with exit 75 (try again later or let the fleet infer it)",
+   "fleet": "graph: waited {seconds} s for memory headroom, asking the fleet to infer the remaining {count} project(s)"
   },
   "de": {
-   "waiting": "Graph: wartet auf Speicherreserve ({used} von {budget} MB reserviert, {running} Projekte laufen)",
+   "waiting": "Graph: wartet auf Speicherreserve ({used} von {budget} MB reserviert, {running} Projekte laufen): {key} braucht {need} MB und wartet seit {seconds} s; nach {limit} s läuft es allein, wenn es in die {available} MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen",
    "serial": "Graph: Reserve von {budget} MB unter einem Projekt ({used} MB), Projekte werden einzeln abgeleitet",
    "resumed": "Graph: Reserve von {budget} MB wieder da ({used} MB belegt), es geht weiter",
-   "learning": "Graph: für {kind}-Projekte ist noch kein Speicherbedarf gelernt ({used} MB angenommen, {budget} MB Reserve), Projekte werden einzeln abgeleitet"
+   "learning": "Graph: für {kind}-Projekte ist noch kein Speicherbedarf gelernt ({used} MB angenommen, {budget} MB Reserve), Projekte werden einzeln abgeleitet: {key} wartet seit {seconds} s auf das laufende Projekt, höchstens {limit} s",
+   "stopped": "Graph: das Projekt {key} ({kind}) ist um {used} MB gewachsen, mehr als die {budget} MB, die diese Maschine einem Projekt gibt; die Berechnung wird gestoppt, bevor dem Rechner der Speicher ausgeht, und das Projekt ist hier als zu schwer markiert",
+   "admittedAlone": "Graph: {key} hat {seconds} s auf {need} MB Reserve gewartet ({budget} MB frei, {running} Projekt(e) laufen) und läuft jetzt, weil es in die {available} MB passt, die ein Projekt bekommt",
+   "refused": "Graph: {key} braucht {need} MB, ein Projekt bekommt hier aber {available} MB und nach {seconds} s sind {budget} MB frei: abgewiesen mit Exit 75 (später erneut versuchen oder von der Flotte ableiten lassen)",
+   "fleet": "Graph: nach {seconds} s Warten auf Speicherreserve wird die Flotte gebeten, die übrigen {count} Projekt(e) abzuleiten"
   }
  },
  "languages": [
@@ -128,13 +153,18 @@
    "fields": {
     "used": 1234,
     "budget": 3072,
-    "running": 5
+    "running": 5,
+    "key": "@semio-tech/stdio-semio-rs",
+    "need": 465,
+    "seconds": 12,
+    "limit": 60,
+    "available": 2048
    },
    "environment": {
     "LANG": "en_US"
    },
    "expect": [
-    "graph: waiting for memory headroom (1234 of 3072 MB reserved, 5 projects running)"
+    "graph: waiting for memory headroom (1234 of 3072 MB reserved, 5 projects running): @semio-tech/stdio-semio-rs needs 465 MB and has waited 12 s; after 60 s it runs alone if it fits the 2048 MB one project is granted, otherwise the run is refused with exit 75"
    ]
   },
   {
@@ -142,13 +172,18 @@
    "fields": {
     "used": 1234,
     "budget": 3072,
-    "running": 5
+    "running": 5,
+    "key": "@semio-tech/stdio-semio-rs",
+    "need": 465,
+    "seconds": 12,
+    "limit": 60,
+    "available": 2048
    },
    "environment": {
     "LANG": "de_DE"
    },
    "expect": [
-    "Graph: wartet auf Speicherreserve (1234 von 3072 MB reserviert, 5 Projekte laufen)"
+    "Graph: wartet auf Speicherreserve (1234 von 3072 MB reserviert, 5 Projekte laufen): @semio-tech/stdio-semio-rs braucht 465 MB und wartet seit 12 s; nach 60 s läuft es allein, wenn es in die 2048 MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen"
    ]
   },
   {
@@ -156,12 +191,17 @@
    "fields": {
     "used": 1234,
     "budget": 3072,
-    "running": 5
+    "running": 5,
+    "key": "@semio-tech/stdio-semio-rs",
+    "need": 465,
+    "seconds": 12,
+    "limit": 60,
+    "available": 2048
    },
    "environment": {},
    "expect": [
-    "graph: waiting for memory headroom (1234 of 3072 MB reserved, 5 projects running)",
-    "Graph: wartet auf Speicherreserve (1234 von 3072 MB reserviert, 5 Projekte laufen)"
+    "graph: waiting for memory headroom (1234 of 3072 MB reserved, 5 projects running): @semio-tech/stdio-semio-rs needs 465 MB and has waited 12 s; after 60 s it runs alone if it fits the 2048 MB one project is granted, otherwise the run is refused with exit 75",
+    "Graph: wartet auf Speicherreserve (1234 von 3072 MB reserviert, 5 Projekte laufen): @semio-tech/stdio-semio-rs braucht 465 MB und wartet seit 12 s; nach 60 s läuft es allein, wenn es in die 2048 MB passt, die ein Projekt bekommt, sonst wird der Lauf mit Exit 75 abgewiesen"
    ]
   },
   {
@@ -249,31 +289,170 @@
   {
    "key": "learning",
    "fields": {
-    "kind": "rust",
+    "kind": "language:rust",
     "used": 256,
-    "budget": 1386,
-    "running": 1
+    "budget": 900,
+    "key": "@semio-tech/stdio-semio",
+    "seconds": 7,
+    "limit": 60
    },
    "environment": {
     "LANG": "en_US"
    },
    "expect": [
-    "graph: no memory peak learned for rust projects yet (256 MB assumed, 1386 MB headroom), inferring one at a time"
+    "graph: no memory peak learned for language:rust projects yet (256 MB assumed, 900 MB headroom), inferring one at a time: @semio-tech/stdio-semio has waited 7 s for the running project, at most 60 s"
    ]
   },
   {
    "key": "learning",
    "fields": {
-    "kind": "rust",
+    "kind": "language:rust",
     "used": 256,
-    "budget": 1386,
-    "running": 1
+    "budget": 900,
+    "key": "@semio-tech/stdio-semio",
+    "seconds": 7,
+    "limit": 60
    },
    "environment": {
     "LANG": "de_DE"
    },
    "expect": [
-    "Graph: für rust-Projekte ist noch kein Speicherbedarf gelernt (256 MB angenommen, 1386 MB Reserve), Projekte werden einzeln abgeleitet"
+    "Graph: für language:rust-Projekte ist noch kein Speicherbedarf gelernt (256 MB angenommen, 900 MB Reserve), Projekte werden einzeln abgeleitet: @semio-tech/stdio-semio wartet seit 7 s auf das laufende Projekt, höchstens 60 s"
+   ]
+  },
+  {
+   "key": "admittedAlone",
+   "fields": {
+    "key": "@semio-tech/stdio-semio-rs",
+    "seconds": 61,
+    "need": 465,
+    "budget": 413,
+    "running": 1,
+    "available": 2048
+   },
+   "environment": {
+    "LANG": "en_US"
+   },
+   "expect": [
+    "graph: @semio-tech/stdio-semio-rs waited 61 s for 465 MB of headroom (413 MB free, 1 project(s) running) and now runs because it fits the 2048 MB one project is granted"
+   ]
+  },
+  {
+   "key": "admittedAlone",
+   "fields": {
+    "key": "@semio-tech/stdio-semio-rs",
+    "seconds": 61,
+    "need": 465,
+    "budget": 413,
+    "running": 1,
+    "available": 2048
+   },
+   "environment": {
+    "LANG": "de_DE"
+   },
+   "expect": [
+    "Graph: @semio-tech/stdio-semio-rs hat 61 s auf 465 MB Reserve gewartet (413 MB frei, 1 Projekt(e) laufen) und läuft jetzt, weil es in die 2048 MB passt, die ein Projekt bekommt"
+   ]
+  },
+  {
+   "key": "admittedAlone",
+   "fields": {
+    "key": "@semio-tech/stdio-semio-rs",
+    "seconds": 61,
+    "need": 465,
+    "budget": 413,
+    "running": 1,
+    "available": 2048
+   },
+   "environment": {},
+   "expect": [
+    "graph: @semio-tech/stdio-semio-rs waited 61 s for 465 MB of headroom (413 MB free, 1 project(s) running) and now runs because it fits the 2048 MB one project is granted",
+    "Graph: @semio-tech/stdio-semio-rs hat 61 s auf 465 MB Reserve gewartet (413 MB frei, 1 Projekt(e) laufen) und läuft jetzt, weil es in die 2048 MB passt, die ein Projekt bekommt"
+   ]
+  },
+  {
+   "key": "refused",
+   "fields": {
+    "key": "@semio-tech/stdio-semio-rs",
+    "need": 4096,
+    "available": 2048,
+    "budget": 413,
+    "seconds": 61
+   },
+   "environment": {
+    "LANG": "en_US"
+   },
+   "expect": [
+    "graph: @semio-tech/stdio-semio-rs needs 4096 MB but one project is granted 2048 MB here and 413 MB are free after 61 s: refused with exit 75 (try again later or let the fleet infer it)"
+   ]
+  },
+  {
+   "key": "refused",
+   "fields": {
+    "key": "@semio-tech/stdio-semio-rs",
+    "need": 4096,
+    "available": 2048,
+    "budget": 413,
+    "seconds": 61
+   },
+   "environment": {
+    "LANG": "de_DE"
+   },
+   "expect": [
+    "Graph: @semio-tech/stdio-semio-rs braucht 4096 MB, ein Projekt bekommt hier aber 2048 MB und nach 61 s sind 413 MB frei: abgewiesen mit Exit 75 (später erneut versuchen oder von der Flotte ableiten lassen)"
+   ]
+  },
+  {
+   "key": "refused",
+   "fields": {
+    "key": "@semio-tech/stdio-semio-rs",
+    "need": 4096,
+    "available": 2048,
+    "budget": 413,
+    "seconds": 61
+   },
+   "environment": {},
+   "expect": [
+    "graph: @semio-tech/stdio-semio-rs needs 4096 MB but one project is granted 2048 MB here and 413 MB are free after 61 s: refused with exit 75 (try again later or let the fleet infer it)",
+    "Graph: @semio-tech/stdio-semio-rs braucht 4096 MB, ein Projekt bekommt hier aber 2048 MB und nach 61 s sind 413 MB frei: abgewiesen mit Exit 75 (später erneut versuchen oder von der Flotte ableiten lassen)"
+   ]
+  },
+  {
+   "key": "fleet",
+   "fields": {
+    "seconds": 181,
+    "count": 14
+   },
+   "environment": {
+    "LANG": "en_US"
+   },
+   "expect": [
+    "graph: waited 181 s for memory headroom, asking the fleet to infer the remaining 14 project(s)"
+   ]
+  },
+  {
+   "key": "fleet",
+   "fields": {
+    "seconds": 181,
+    "count": 14
+   },
+   "environment": {
+    "LANG": "de_DE"
+   },
+   "expect": [
+    "Graph: nach 181 s Warten auf Speicherreserve wird die Flotte gebeten, die übrigen 14 Projekt(e) abzuleiten"
+   ]
+  },
+  {
+   "key": "fleet",
+   "fields": {
+    "seconds": 181,
+    "count": 14
+   },
+   "environment": {},
+   "expect": [
+    "graph: waited 181 s for memory headroom, asking the fleet to infer the remaining 14 project(s)",
+    "Graph: nach 181 s Warten auf Speicherreserve wird die Flotte gebeten, die übrigen 14 Projekt(e) abzuleiten"
    ]
   }
  ],

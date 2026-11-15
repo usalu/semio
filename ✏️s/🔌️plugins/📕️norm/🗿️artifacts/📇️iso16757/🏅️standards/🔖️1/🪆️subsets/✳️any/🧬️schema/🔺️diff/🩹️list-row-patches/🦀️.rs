@@ -146,7 +146,7 @@ protocol::list_delta! {
 pub struct Iso16757ProductSeriesPatch {
     pub class_id: Option<String>,
     pub names: Option<semio_s_artifact_norm_iso16757_model::Names>,
-    pub shared_property_values: Option<std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::CatalogueValue>>,
+    pub shared_property_values: Option<semio_s_artifact_norm_iso16757_model::IdMap<semio_s_artifact_norm_iso16757_model::CatalogueValue>>,
     pub geometry_id: Option<Iso16757ProductSeriesPatchGeometryIdValue>,
 }
 

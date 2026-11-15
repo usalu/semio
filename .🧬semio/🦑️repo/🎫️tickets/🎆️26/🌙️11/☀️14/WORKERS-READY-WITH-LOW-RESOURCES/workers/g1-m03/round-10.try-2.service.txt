@@ -1,0 +1,36 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ac6bfe8f337c.log (lines after 6305)
+-- graph lines
+graph: refreshing 459 projects (generation 62)
+graph: 91 stale facts (analysis 66, file 25) leave 459 projects stale
+graph: asking the host for up to 8 worker processes for 48 projects; the projects wait for them
+-- last 30 lines when the try ended
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"resource-directory-admission:v1","mode":"shared","elapsedMs":1}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"resource-directory-admission:v1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"resource-directory-admission:v1","mode":"shared","elapsedMs":1}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:160:176:8:0:semio-framework-io-failure-owner|language%3Acargo|0|0,semio-framework-io-binary-source|language%3Acargo|0|0,semio-framework-manifest-input-compiler|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 160 of 176 projects · 8 running, longest 0 s: semio-framework-io-failure-owner (language:cargo, 0 s, 0 rows), semio-framework-io-binary-source (language:cargo, 0 s, 0 rows), semio-framework-manifest-input-compiler (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:400:459:8:0:semio-framework-io-failure-owner|language%3Acargo|0|0,semio-framework-io-binary-source|language%3Acargo|0|0,semio-framework-manifest-input-compiler|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:168:176:2:0:semio-framework-job-outcome|language%3Acargo|0|0,semio-framework-job-outcome-borrow|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 168 of 176 projects · 2 running, longest 0 s: semio-framework-job-outcome (language:cargo, 0 s, 0 rows), semio-framework-job-outcome-borrow (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:408:459:2:0:semio-framework-job-outcome|language%3Acargo|0|0,semio-framework-job-outcome-borrow|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:412:459:1:0:semio-framework-job-native-turn|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:171:176","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 171 of 176 projects
+graph: 1 of 176 projects inferred by 4 worker processes in 147 s (0 failed, 0 lost, 0 restarts)
+[fleet] projects from the fleet: 1 taken, 0 stored, 0 offered, 0 waited for another machine, 0 computed here | Projekte aus der Flotte: 1 übernommen, 0 gespeichert, 0 angeboten, 0 auf eine andere Maschine gewartet, 0 hier berechnet
+2026-11-14T23:48:53.644Z request-failed 3420bc16 Error
+    at requireRepositoryBuildGraphWriterV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:204:162)
+    at repositoryBuildGraphWriterDirectoryV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:210:2)
+    at ownerCachePathV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:86:62)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:290:242)
+    at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.mjs:183:21)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:290:101)
+    at processTicksAndRejections (unknown:7:39)
+[repository:command] still running after 2191 s
+[repository:command] still running after 2201 s
+[repo] still working after 2210 s; last phase started: source.served
+[repository:command] still running after 2211 s

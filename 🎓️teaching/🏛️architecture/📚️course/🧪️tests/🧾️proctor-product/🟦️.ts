@@ -34,7 +34,7 @@ import {
   uncoveredProctorSources,
   ProctorProductError,
 } from "../../../../🛂️proctor/🏗️bootstrap/🧾️product/🟦️.ts";
-import { proctorSourceDirectories } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { proctorReachedRoots, proctorSourceDirectories } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
 const manifestPath = process.env.PROCTOR_MANIFEST ?? join(repository, "🎓️teaching", "🛂️proctor", "📦️packages", "🦀️rust", "📋️project.json");
@@ -246,6 +246,20 @@ describe("the capture of a cargo build", () => {
     expect(english).toContain("do not declare");
     expect(german).toContain("nicht deklarieren");
     expect(existsSync(join(proctorProductDirectory(root, "prototype"), PROCTOR_PRODUCT_RECEIPT))).toBe(false);
+  });
+});
+
+describe("the sibling owners a crate builds through #[path]", () => {
+  it("are added to the owner roots unless a #[cfg(test)] module reaches them or they lie in a root already", () => {
+    const root = directory();
+    const write = (file: string, text: string): string => { mkdirSync(dirname(join(root, file)), { recursive: true }); writeFileSync(join(root, file), text); return join(root, file); };
+    const manifest = write("a/📦️packages/🦀️rust/Cargo.toml", '[package]\nname = "a"\n[lib]\npath = "../../🦀️.rs"\n');
+    write("a/🦀️.rs", '#[path="../b/🦀️.rs"]\nmod b;\n#[path="inner/🦀️.rs"]\nmod inner;\n#[cfg(test)]\n#[path="../t/🦀️.rs"]\nmod t;\n');
+    write("b/🦀️.rs", '#[path="../c/d/🦀️.rs"]\nmod d;\n');
+    write("c/d/🦀️.rs", "");
+    write("t/🦀️.rs", "");
+    write("a/inner/🦀️.rs", "");
+    expect(proctorReachedRoots(root, [join(root, "a")], [manifest])).toEqual([join(root, "a"), join(root, "b"), join(root, "c", "d")]);
   });
 });
 

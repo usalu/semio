@@ -1,0 +1,19 @@
+{
+  "classes": [
+    {"name": "neutral is one class for every host", "kind": "neutral", "host": {"platform": "darwin", "arch": "arm64"}, "tag": "any"},
+    {"name": "neutral on Windows", "kind": "neutral", "host": {"platform": "win32", "arch": "x64"}, "tag": "any"},
+    {"name": "posix on macOS shares the class of Linux", "kind": "posix", "host": {"platform": "darwin", "arch": "arm64"}, "tag": "posix-shared"},
+    {"name": "posix on Linux", "kind": "posix", "host": {"platform": "linux", "arch": "x64", "libc": "gnu"}, "tag": "posix-shared"},
+    {"name": "posix on Windows stays alone", "kind": "posix", "host": {"platform": "win32", "arch": "x64"}, "tag": "win32-x64"},
+    {"name": "host on macOS is the exact platform", "kind": "host", "host": {"platform": "darwin", "arch": "arm64"}, "tag": "darwin-arm64"},
+    {"name": "host on Linux names the libc (glibc)", "kind": "host", "host": {"platform": "linux", "arch": "x64", "libc": "gnu"}, "tag": "linux-x64-gnu"},
+    {"name": "host on Linux names the libc (musl)", "kind": "host", "host": {"platform": "linux", "arch": "x64", "libc": "musl"}, "tag": "linux-x64-musl"},
+    {"name": "host on Windows", "kind": "host", "host": {"platform": "win32", "arch": "x64"}, "tag": "win32-x64"},
+    {"name": "a platform outside the three has no class", "kind": "host", "host": {"platform": "freebsd", "arch": "x64"}, "tag": null}
+  ],
+  "keys": [
+    {"task": "cargo-tool:trunk", "inputs": {"crate": "trunk", "version": "0.21.14", "channel": "nightly-2026-07-20", "locked": "true"}, "kind": "host", "roots": ["bin/trunk"], "host": {"platform": "darwin", "arch": "arm64"}},
+    {"task": "cargo-tool:wasm-bindgen-cli", "inputs": {"version": "0.2.129", "crate": "wasm-bindgen-cli", "channel": "nightly-2026-07-20", "locked": "true"}, "kind": "host", "roots": ["bin/wasm2es6js", "bin/wasm-bindgen", "bin/wasm-bindgen-test-runner"], "host": {"platform": "linux", "arch": "x64", "libc": "gnu"}},
+    {"task": "go-modules", "inputs": {"go.sum": "aa", "go": "1.24.1"}, "kind": "neutral", "roots": ["pkg/mod"], "host": {"platform": "win32", "arch": "x64"}}
+  ]
+}

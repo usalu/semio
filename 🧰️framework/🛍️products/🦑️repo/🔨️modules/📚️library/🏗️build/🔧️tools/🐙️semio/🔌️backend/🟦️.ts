@@ -11,7 +11,8 @@ import ledgerPolicy from "../../../../⚡️caching/💾️storage/🧾️ledger
 import type {BackendContextV1,BackendExecutionContextV1,BuildBackendV1} from "../../../🔌️backends/🟦️.ts";
 import type { BuildCacheContextV1, BuildCacheToolV1 } from "../../../⚙️operations/📋️contract/🟦️.ts";
 import type {RemoteCacheToolV1} from "../../../🌐️remote-cache/⌨️command/🟦️.ts";
-import {readRemoteCacheTokenV1,remoteCacheBaseUrlV1,remoteCacheEffectiveUploadV1,resolveRemoteCacheContractV1} from "../../../🌐️remote-cache/🟦️.ts";
+import {remoteCacheBaseUrlV1,remoteCacheEffectiveUploadV1} from "../../../🌐️remote-cache/🟦️.ts";
+import {refreshFleetCacheFactsV1,remoteCacheFetchV1,resolveRemoteCacheV1} from "../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
 import {buildOptionV1,affectedBuildProjectsV1,selectBuildTasksV1} from "../../../🧭️selection/🟦️.ts";
 import {buildExecEnvironmentV1} from "../../../⚙️operations/🌱️exec-environment/🟦️.ts";
 import {buildDryRunPlanV1,buildTaskInputsV1,planBuildTasksV1,type BuildTaskRequestV1,type BuildTaskV1} from "../../../🧮️task-model/🟦️.ts";
@@ -73,9 +74,10 @@ export function semioCargoDirectoriesV1(root:string,task:BuildTaskV1):Record<str
 }
 
 async function run(context:BackendExecutionContextV1,request:BuildTaskRequestV1,watch?:string):Promise<void>{
- const {root,invocation,graph,phase}=context,caller=await import("../../../📥️caller/🟦️.ts"),orchestration=await import("../../../📥️caller/📤️orchestration/🟨️.mjs") as {buildOrchestrationContextV1(projects:unknown,selection:unknown):unknown};
- const contract=resolveRemoteCacheContractV1(process.env),token=contract?readRemoteCacheTokenV1(contract,process.env):undefined;
- const client:SemioRemoteV1|undefined=contract?semioHttpRemoteV1({url:remoteCacheBaseUrlV1(contract),...(token?{token}:{})}):undefined,upload=contract?remoteCacheEffectiveUploadV1(contract):false;
+ const {root,invocation,graph,phase}=context,caller=await import("../../../📥️caller/🟦️.ts"),orchestration=await import("../../../📥️caller/📤️orchestration/🟨️.mjs") as {buildOrchestrationContextV1(projects:unknown,selection:unknown):unknown;buildOrchestrationDelegatesV1(execution:unknown):boolean};
+ await refreshFleetCacheFactsV1({root});
+ const resolved=resolveRemoteCacheV1({...process.env,SEMIO_WORKSPACE_ROOT:process.env.SEMIO_WORKSPACE_ROOT??root}),contract=resolved?.contract,token=resolved?.token;
+ const client:SemioRemoteV1|undefined=contract?semioHttpRemoteV1({url:remoteCacheBaseUrlV1(contract),...(token?{token}:{}),fetch:remoteCacheFetchV1({...process.env,SEMIO_WORKSPACE_ROOT:process.env.SEMIO_WORKSPACE_ROOT??root},{root})}):undefined,upload=contract?remoteCacheEffectiveUploadV1(contract):false;
  const remoteClient:SemioRemoteV1|undefined=client&&{get:client.get,put:upload?client.put:async()=>{}};
  const authorized=semioAuthorizedRequestV1(request,(readIssuedScriptProcessEnvelopeV1(invocation).capabilities as {buildMode?:string}).buildMode),plan=planBuildTasksV1(graph,authorized);
  const namespace=hash(JSON.stringify({selected:plan.selected,args:authorized.args,configuration:authorized.configuration})).slice(0,16),chain=(process.env.SEMIO_BUILD_SELECTION_CHAIN??"").split(":").filter(Boolean);
@@ -99,7 +101,7 @@ async function run(context:BackendExecutionContextV1,request:BuildTaskRequestV1,
  };
  const scope:SemioEnvironmentScopeV1=async(task,body)=>{
   const delegation=(task.definition.metadata as {semio?:{execution?:{kind?:string;children?:unknown}}}|undefined)?.semio?.execution;
-  if(delegation?.kind==="orchestration"&&delegation.children!==undefined){
+  if(orchestration.buildOrchestrationDelegatesV1(delegation)){
    const context=orchestration.buildOrchestrationContextV1(graph.projects,{project:task.project,target:task.target,...(task.configuration?{configuration:task.configuration}:{})}) as object;
    await authorize(task);
    return caller.withBuildOrchestrationTaskEnvironmentV1(root,invocation,phase,task.definition.execution,task.args,base(task),context,(planned,asked)=>planBuildTasksV1(planned,semioAuthorizedRequestV1(asked,(readIssuedScriptProcessEnvelopeV1(invocation).capabilities as {buildMode?:string}).buildMode)),(environment,actual)=>body({...environment,...semioCargoDirectoriesV1(root,task)},actual.signal));

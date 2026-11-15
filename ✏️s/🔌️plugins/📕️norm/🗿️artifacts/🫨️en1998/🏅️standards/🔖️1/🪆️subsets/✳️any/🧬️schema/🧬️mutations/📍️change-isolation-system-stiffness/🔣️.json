@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-isolation-system-stiffness",
-  "semanticKind": "change-isolation-system-stiffness",
+  "semanticKind": "change-isolation-system-stiffness-n-per-m",
   "displayName": "Change isolation system: post-yield stiffness",
   "emoji": "📍️",
   "aggregateVariant": "ChangeIsolationSystemStiffnessNPerM",

@@ -8,7 +8,7 @@ extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use std::collections::BTreeMap;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 
 use semio_s_artifact_norm_vdi3805_model::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ParametricGeometry, SecurityLimits};
 use ::framework_schema::ArtifactSchema;
@@ -25,7 +25,7 @@ pub struct Vdi3805Artifact {
     #[state(artifact)]
     pub catalog: ManufacturerCatalog,
     #[state(artifact)]
-    pub edition_profile: BTreeMap<String, EditionProfileChoice>,
+    pub edition_profile: RetainedOrderedMap<String, EditionProfileChoice>,
     #[state(artifact)]
     pub correction_as_of: EditionId,
     #[state(artifact)]
@@ -33,9 +33,9 @@ pub struct Vdi3805Artifact {
     #[state(artifact)]
     pub index: CatalogIndex,
     #[state(artifact)]
-    pub geometry: BTreeMap<String, ParametricGeometry>,
+    pub geometry: RetainedOrderedMap<String, ParametricGeometry>,
     #[state(artifact)]
-    pub curves: BTreeMap<String, CharacteristicCurve>,
+    pub curves: RetainedOrderedMap<String, CharacteristicCurve>,
     #[state(artifact)]
     pub limits: SecurityLimits,
 }

@@ -1,0 +1,89 @@
+{
+  "api": [
+    {"call": "designation", "args": ["din-4108-2"], "expect": "DIN 4108-2:2026-05"},
+    {"call": "designation", "args": ["din-4108-beiblatt-2"], "expect": "DIN 4108 Beiblatt 2:2019-06"},
+    {"call": "designation", "args": ["vdi-4650-1"], "expect": "VDI 4650 Blatt 1:2024-02"},
+    {"call": "designation", "args": ["din-ts-18599-10"], "expect": "DIN/TS 18599-10:2025-10"},
+    {"call": "designation", "args": ["gmodg"], "expect": "GModG"},
+    {"call": "short", "args": ["din-en-16798-3"], "expect": "DIN EN 16798-3"},
+    {"call": "ref", "args": ["din-4108-2", "abschn8"], "language": "de", "expect": "DIN 4108-2:2026-05 · Abschn. 8 – Sommerlicher Wärmeschutz"},
+    {"call": "ref", "args": ["din-4108-2", "abschn8"], "language": "en", "expect": "DIN 4108-2:2026-05 · Sec. 8 – summer heat protection"},
+    {"call": "ref", "args": ["din-en-12831-1"], "language": "de", "expect": "DIN EN 12831-1:2017-09"},
+    {"call": "ref", "args": ["gmodg", "p14"], "language": "de", "expect": "GModG (Stand 2026-07-29) · § 14 Sommerlicher Wärmeschutz"},
+    {"call": "chip", "args": [[["gmodg", "p20-22"], ["din-ts-18599-1", "primaerenergie"]]], "language": "de", "expect": "GModG (Stand 2026-07-29) · § 20 Jahres-Primärenergiebedarf · § 22 Primärenergiefaktoren · Anlage 4\nDIN/TS 18599-1:2025-10 · Primärenergie"},
+    {"call": "chip", "args": [["din-en-12831-1", ["vdi-2078", "kuehllast"]]], "language": "de", "expect": "DIN EN 12831-1:2017-09 · VDI 2078:2015-06 · Kühllast"},
+    {"call": "status_chip", "args": ["din-v-4108-6"], "language": "de", "expect": "DIN V 4108-6:2003-06 (zurückgezogen) – Symbolik; aktuell: DIN/TS 18599"},
+    {"call": "status_chip", "args": ["din-v-4108-6"], "language": "en", "expect": "DIN V 4108-6:2003-06 (withdrawn) – notation; current: DIN/TS 18599"},
+    {"call": "status_chip", "args": ["din-v-4701-10"], "language": "de", "expect": "DIN V 4701-10:2003-08 (zurückgezogen) – Anlagenaufwandszahl; aktuell: DIN/TS 18599-5"},
+    {"call": "status_chip", "args": ["din-v-18599-1"], "language": "en", "expect": "DIN V 18599-1:2018-09 (superseded) – named in GModG paragraph 20; current: DIN/TS 18599-1"},
+    {"call": "bibliography", "args": ["bohne-2026"], "language": "de", "expect": "Bohne, D.; Bohne, M. (2026): Gebäudetechnik – Technischer Ausbau und nachhaltige Gebäudesysteme. 13. Aufl., Springer Vieweg, Heidelberg, ISBN 978-3-658-51570-6"},
+    {"call": "bibliography", "args": ["willems-2024"], "language": "en", "expect": "Willems, W. M.; Schild, K.; Stricker, D. (2024): Formeln und Tabellen Bauphysik: Wärmeschutz – Feuchteschutz – Klima – Akustik – Brandschutz. 8th ed., Springer Vieweg, Wiesbaden, ISBN 978-3-658-44973-5, DOI 10.1007/978-3-658-44974-2"},
+    {"call": "bibliography", "args": ["maas-1995"], "language": "de", "expect": "Maas, A. (1995): Experimentelle Quantifizierung des Luftwechsels bei Fensterlüftung. Diss. Universität Gesamthochschule Kassel"},
+    {"call": "bibliography", "args": ["adhoc-ag-2008"], "language": "de", "expect": "Ad-hoc-Arbeitsgruppe Innenraumrichtwerte des Umweltbundesamtes und der Obersten Landesgesundheitsbehörden (2008): Gesundheitliche Bewertung von Kohlendioxid in der Innenraumluft. Bundesgesundheitsblatt – Gesundheitsforschung – Gesundheitsschutz 51, 1358–1369. DOI 10.1007/s00103-008-0707-2"},
+    {"call": "citation", "args": ["willems-2024"], "language": "de", "expect": "Willems, Schild, Stricker (2024), 8. Aufl."},
+    {"call": "card", "args": ["willems-2024"], "language": "en", "expect": {"who": "Willems, Schild, Stricker (2024), 8th ed.", "title": "Formeln und Tabellen Bauphysik", "subtitle": "Wärmeschutz – Feuchteschutz – Klima – Akustik – Brandschutz", "imprint": "Springer Vieweg, Wiesbaden · ISBN 978-3-658-44973-5", "link": "https://doi.org/10.1007/978-3-658-44974-2"}},
+    {"call": "card", "args": ["bohne-2026"], "language": "de", "expect": {"who": "Bohne, Bohne (2026), 13. Aufl.", "title": "Gebäudetechnik", "subtitle": "Technischer Ausbau und nachhaltige Gebäudesysteme", "imprint": "Springer Vieweg, Heidelberg · ISBN 978-3-658-51570-6", "link": ""}}
+  ],
+  "registry": {
+    "requiredPerKind": {
+      "standard": ["edition", "url", "verified"],
+      "guideline": ["edition", "url", "verified"],
+      "law": ["version", "url", "verified"],
+      "book": ["year", "url", "verified"],
+      "article": ["year", "url", "verified"],
+      "thesis": ["year", "url", "verified"],
+      "dataset": ["year", "url", "verified"],
+      "agency": ["year", "url", "verified"]
+    },
+    "mustBeWithdrawnOrSuperseded": ["din-v-4108-6", "din-v-4701-10", "din-v-18599", "din-v-18599-1", "din-v-18599-2", "din-v-18599-10", "din-4108-2-2013"],
+    "mustBeCurrent": ["din-4108-2", "din-ts-18599", "din-ts-18599-1", "din-ts-18599-2", "din-ts-18599-5", "din-ts-18599-10", "gmodg"]
+  },
+  "scan": {
+    "designationPattern": "(?<![A-Za-z0-9])(?:DIN(?:[ /](?:EN|V|TS|SPEC|ISO))*|VDI(?:-MT)?|ISO|EN|IEST-RP-CC|ASHRAE)\\s?\\d{3,5}(?:-\\d{1,2})*(?: (?:Beiblatt|Bbl\\.|Blatt) \\d)?(?::\\d{4}(?:-\\d{2})?)?",
+    "lawPattern": "(?<![A-Za-z])GEG(?![A-Za-z])",
+    "lawAliasPrefixes": ["vormals ", "formerly "],
+    "namePatterns": {
+      "Willems": "willems-2024",
+      "Bohne": "bohne-2026",
+      "Maas": "maas-1995",
+      "Pettenkofer": "pettenkofer-1858",
+      "Bundesgesundheitsbl": "adhoc-ag-2008",
+      "Wohngebäudetypologie": "iwu-typologie-2015",
+      "building typology": "iwu-typologie-2015",
+      "IWU 2015": "iwu-typologie-2015"
+    },
+    "forbiddenText": ["Revision 2027", "revision announced for 2027", "Revision für 2027", "Tab. 7", "Tab. B.2", "Anh. B.4"],
+    "shortAllowedIn": ["narration"],
+    "supersededContext": ["GModG", "zurückgezogen", "withdrawn", "ersetzt", "superseded"],
+    "shortRuleJustification": "Narration clauses are spoken and subtitled; the edition is not read aloud and is shown by the beat's reference chip. The only other short form is the law name GModG in a sentence (the pattern does not flag it); the old name GEG is allowed only inside the registry phrase 'vormals GEG' / 'formerly GEG'.",
+    "roots": ["🧲️physics", "🌬️ventilation", "🔥️heating", "❄️cooling", "📊️demand", "📖️concepts", "🎬️clip", "🏗️authoring/🎨️visuals", "🏗️authoring/🎬️clip", "🏗️authoring/📝️narration", "🏗️authoring/🗺️roadmap", "🏗️authoring/📏️running-example", "🏗️authoring/🔤️fonts", "🏗️authoring/🎨️theme"],
+    "extensions": [".py", ".json", ".md"],
+    "excludedDirs": [".venv", "__pycache__", "site-packages", "node_modules", "📚️references", "🗑️generated", "🔊️speech"],
+    "narrationKeyPattern": "^[a-z][a-z0-9_]*$",
+    "mustFlag": [
+      {"text": "DIN 4108-2:2012-02 · Abschn. 8", "narration": false},
+      {"text": "Heizlast nach DIN EN 12831-1", "narration": false},
+      {"text": "VDI 4650-1:2024-02", "narration": true},
+      {"text": "DIN EN ISO 6946:2018-03, Tab. 7", "narration": true},
+      {"text": "nach DIN 1946-6", "narration": false},
+      {"text": "DIN 4108 Bbl. 2:2019-06", "narration": true},
+      {"text": "GEG § 20", "narration": false},
+      {"text": "Rechenverfahren DIN V 18599-1:2018-09", "narration": false},
+      {"text": "Interne Wärmegewinne nach DIN V 4701-10:2003-08", "narration": false},
+      {"text": "Quelle: Willems 2024", "narration": false}
+    ],
+    "mustPass": [
+      {"text": "DIN 4108-2:2026-05 · Abschn. 8 – Sommerlicher Wärmeschutz", "narration": false},
+      {"text": "Heizlast nach DIN EN 12831-1:2017-09", "narration": false},
+      {"text": "Die Heizlast folgt DIN EN 12831-1.", "narration": true},
+      {"text": "GModG (Stand 2026-07-29) · § 14 Sommerlicher Wärmeschutz", "narration": false},
+      {"text": "GModG, vormals GEG", "narration": false},
+      {"text": "§ 20 GModG", "narration": false},
+      {"text": "GModG § 20 nennt noch DIN V 18599-1:2018-09", "narration": false},
+      {"text": "DIN V 4108-6:2003-06 · Symbole und Einheiten", "narration": false},
+      {"text": "DIN V 4108-6:2003-06 (zurückgezogen) – Symbolik; aktuell: DIN/TS 18599", "narration": false},
+      {"text": "Willems, Schild, Stricker (2024), 8. Aufl.", "narration": false},
+      {"text": "Grenzwert nach Pettenkofer.", "narration": true}
+    ]
+  }
+}

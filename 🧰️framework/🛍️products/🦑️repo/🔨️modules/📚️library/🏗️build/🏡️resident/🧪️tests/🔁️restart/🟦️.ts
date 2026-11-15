@@ -1,0 +1,42 @@
+/** 🔁️ Contract: a slice worker that ends with the restart exit code (75: the code on this machine changed under it and the outermost command is to start again) is started again with the current code, a bounded number of times and with a progress line in English and German, never reported to the person as a failure of the plan; a worker that ends otherwise, a cancelled plan and a fourth restart in a row are not retried, and the last says in both languages what happened.
+ * @see ../../../🧷️format-stamps/🟨️.mjs */
+import {expect,test} from "bun:test";
+import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
+import {HOST_POLICY_V1,renderTextV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
+
+const elasticity=HOST_POLICY_V1.sliceHostElasticity as {maximumMegabytes:number;hostCapBasisPoints:number;minimumMegabytes:number};
+const harness=(exits:(number|"done")[])=>{
+ const started:number[]=[],released:number[]=[],progress:any[]=[];let index=0;
+ const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,hostMegabytes:16384,elasticity,unlearnedMegabytes:2048,
+  reserve:async({megabytes}:{megabytes:number})=>{const id=started.length;return{megabytes,attach:()=>undefined,release:()=>{released.push(id);}};},
+  createWorker:()=>{const outcome=exits[index++]!,listeners:Record<string,(value:unknown)=>void>={};started.push(index);queueMicrotask(()=>outcome==="done"?listeners.message?.({type:"done",graph:{}}):listeners.exit?.(outcome));return{pid:undefined,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0};}});
+ return{pool,started,released,progress};
+};
+
+test("two restarts and then a finished load answer the plan, each restart is announced and every reservation is released",async()=>{
+ const{pool,started,released,progress}=harness([75,75,"done"]);
+ await pool.run({root:"/tmp/restart"},{onProgress:(_ms:number,detail:any)=>progress.push(detail)});await pool.close();
+ expect(started.length).toBe(3);for(let wait=0;released.length<3&&wait<100;wait++)await new Promise(done=>setTimeout(done,20));expect(released.length).toBe(3);
+ const restarts=progress.filter(detail=>detail?.decision?.key==="restarted").map(detail=>detail.decision);
+ expect(restarts).toEqual([{key:"restarted",used:1,budget:3,kind:"75"},{key:"restarted",used:2,budget:3,kind:"75"}]);
+ const text=renderTextV1("host-slice-owners-restarted",{seconds:7,phase:"reservation",done:0,total:0,owners:"",used:2,budget:3,kind:"75"},["en","de"])!;
+ for(const language of["en","de"] as const){expect(text[language]).toContain("75");expect(text[language]).toContain("2");expect(text[language]).toContain("3");expect(text[language]).not.toMatch(/\{[a-z]+\}/u);}
+ expect(text.en).toContain("started again");expect(text.de).toContain("neu gestartet");
+});
+
+test("a fourth restart in a row is not retried and the typed error names both languages",async()=>{
+ const{pool,started}=harness([75,75,75,75,"done"]);
+ const error:any=await pool.run({root:"/tmp/restart"}).then(()=>undefined,failure=>failure);await pool.close();
+ expect(started.length).toBe(4);expect(error.code).toBe("slice-restarts");expect(error.restarts).toBe(4);expect(error.exit).toBe(75);
+ expect(error.message).toContain("replica has settled");expect(error.message).toContain("Replikat");
+});
+
+test("another exit code fails at once and a cancelled plan is not started again",async()=>{
+ const other=harness([1,"done"]);
+ const failure:any=await other.pool.run({root:"/tmp/other"}).then(()=>undefined,reason=>reason);await other.pool.close();
+ expect(other.started.length).toBe(1);expect(failure.message).toBe("Slice worker exited with code 1");expect(failure.restart).toBe(false);
+ const controller=new AbortController(),cancelled=harness([75,"done"]);
+ controller.abort(new Error("stop"));
+ const stopped:any=await cancelled.pool.run({root:"/tmp/cancel"},{signal:controller.signal}).then(()=>undefined,reason=>reason);await cancelled.pool.close();
+ expect(stopped.message).toBe("stop");expect(cancelled.started.length).toBe(0);
+});

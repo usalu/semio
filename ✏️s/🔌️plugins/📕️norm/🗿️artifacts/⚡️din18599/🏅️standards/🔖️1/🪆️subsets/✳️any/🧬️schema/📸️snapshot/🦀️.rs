@@ -575,3 +575,9 @@ pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
 pub const DIN18599_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.norm.din18599", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 pub const DIN18599_DOCUMENT_SCHEMA: &str = "semio.norm.din18599/v1";
+
+#[path = "../../🚪️io/🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[path = "../../🚪️io/🪞️records/🦀️.rs"]
+mod records;

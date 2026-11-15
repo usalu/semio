@@ -187,9 +187,15 @@ export function memoryOwnerTree(files: Readonly<Record<string, string>>, policy:
   };
 }
 
+/** 🌳️ Whether `root` is itself a git work tree root: a directory below another repository (a scratch workspace inside the cache) must not borrow that repository's listing, ignore rules or tracking. */
+function ownsGitWorkTreeV1(root: string): boolean {
+  const top = runToolSyncV1("git", ["rev-parse", "--show-prefix"], { cwd: root });
+  return top.status === 0 && top.stdout.toString("utf8").trim() === "";
+}
+
 function listManifests(root: string, policy: OwnerTreePolicy, scope?: OwnerScope): string[] {
   const scopes = scopesOf(scope);
-  const listed = runToolSyncV1("git", ["ls-files", "-z", "-c", "-o", "--exclude-standard", ...(scopes && !scopes.includes(".") ? ["--", ...scopes.map((prefix) => `:(literal)${prefix}`)] : [])], { cwd: root, maxBuffer: 1 << 29 });
+  const listed = ownsGitWorkTreeV1(root) ? runToolSyncV1("git", ["ls-files", "-z", "-c", "-o", "--exclude-standard", ...(scopes && !scopes.includes(".") ? ["--", ...scopes.map((prefix) => `:(literal)${prefix}`)] : [])], { cwd: root, maxBuffer: 1 << 29 }) : { status: 1, stdout: Buffer.alloc(0) };
   const names = [PROJECT, CARGO];
   if (listed.status === 0) return listed.stdout.toString("utf8").split("\0").filter((path) => names.includes(basename(path)) && !excludedFromOwners(path, policy) && existsSync(join(root, path))).sort(compareBytes);
   const found: string[] = [];
@@ -203,8 +209,9 @@ function listManifests(root: string, policy: OwnerTreePolicy, scope?: OwnerScope
   return [...new Set(found)].sort(compareBytes);
 }
 
-/** 💽️ Reads the workspace below `root` from the file system; git lists the manifest candidates and decides ignore state, and a directory without git is walked instead. */
+/** 💽️ Reads the workspace below `root` from the file system; git lists the manifest candidates and decides ignore state, and a directory that is not itself a git work tree root (a scratch directory inside another repository included) is walked instead. */
 export function readOwnerTree(root: string, policy: OwnerTreePolicy = OWNER_TREE_POLICY, scope?: OwnerScope): OwnerTree {
+  const owned = ownsGitWorkTreeV1(root);
   const ignoredCache = new Map<string, boolean>();
   const trackedCache = new Map<string, boolean>();
   return {
@@ -212,11 +219,13 @@ export function readOwnerTree(root: string, policy: OwnerTreePolicy = OWNER_TREE
     exists: (path) => existsSync(join(root, path)),
     file: (path) => { const facts = lstatSync(join(root, path), { throwIfNoEntry: false }); return facts !== undefined && facts.isFile(); },
     tracked: (path) => {
+      if (!owned) return false;
       if (!trackedCache.has(path)) { const listed = runToolSyncV1("git", ["ls-files", "-z", "-c", "--", `:(literal)${path}`], { cwd: root, maxBuffer: 1 << 29 }); trackedCache.set(path, listed.status === 0 && listed.stdout.length > 0); }
       return trackedCache.get(path)!;
     },
     read: (path) => { try { return readFileSync(join(root, path), "utf8"); } catch { return undefined; } },
     ignored: (path) => {
+      if (!owned) return false;
       if (!ignoredCache.has(path)) ignoredCache.set(path, runToolSyncV1("git", ["check-ignore", "-q", "--", path], { cwd: root }).status === 0);
       return ignoredCache.get(path)!;
     },

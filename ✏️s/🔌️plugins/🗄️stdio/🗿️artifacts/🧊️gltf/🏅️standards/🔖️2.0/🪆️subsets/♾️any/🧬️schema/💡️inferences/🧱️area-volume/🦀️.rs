@@ -1,7 +1,7 @@
 //! 🧱 GLTF area-volume indicators.
 
-pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::area_volume::contact_area;
-pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::area_volume::enclosed_volume;
+pub use semio_s_artifact_stdio_gltf_inferences_connected::standards::v2_0::subsets::any::schema::inferences::area_volume::contact_area;
+pub use semio_s_artifact_stdio_gltf_inferences_connected::standards::v2_0::subsets::any::schema::inferences::area_volume::enclosed_volume;
 pub use semio_s_artifact_stdio_gltf_inferences_exposed_area::standards::v2_0::subsets::any::schema::inferences::area_volume::exposed_area;
 pub use semio_s_artifact_stdio_gltf_inferences_exposed_area::standards::v2_0::subsets::any::schema::inferences::area_volume::material_volume;
 pub use semio_s_artifact_stdio_gltf_inferences_exposed_area::standards::v2_0::subsets::any::schema::inferences::area_volume::surface_area;

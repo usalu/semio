@@ -1,0 +1,29 @@
+== fleet endpoints seen from g1-m03, 2026-11-15T02:53:36Z (after tries 2 and 3 ended with 'the fleet cache cannot be reached')
+tcp 6090: Connection to 192.168.178.70 port 6090 [tcp/*] succeeded!
+tcp 6094: Connection to 192.168.178.70 port 6094 [tcp/*] succeeded!
+tcp 8980: Connection to 192.168.178.70 port 8980 [tcp/*] succeeded!
+tcp 8981: Connection to 192.168.178.70 port 8981 [tcp/*] succeeded!
+GET :6090/healthz -> 200 in 0.002240s (curl exit 0)
+GET :6094/healthz -> 200 in 0.002594s (curl exit 0)
+GET :6094/mirror/healthz -> 200 in 0.002199s (curl exit 0)
+GET :6094/ -> 404 in 0.002534s (curl exit 0)
+GET :8981/healthz -> 200 in 0.002212s (curl exit 0)
+-- repo remote-cache status (login shell), lines with endpoint, reachable, authorised:
+    "endpoint": "http://192.168.178.70:6094",
+    "access": "read-write",
+      "reachable": true,
+      "reachable": true,
+      "reachable": true,
+    "endpointFrom": "fleet-facts",
+    "endpoint": "http://192.168.178.70:6094",
+    "reachable": true,
+    "authorised": true,
+-- last 8 lines of .cache/f/sidecars/build-agent.log
+2026-11-15T02:53:06.829Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+2026-11-15T02:53:08.067Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+2026-11-15T02:53:09.525Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+2026-11-15T02:53:10.689Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+2026-11-15T02:53:11.815Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+2026-11-15T02:53:12.841Z worker registered: 05727e17-b42d-4632-842a-b0bd585466e1 cache http://192.168.178.70:6094
+2026-11-15T02:53:16.091Z load report sent: reachable again
+2026-11-15T02:53:31.258Z worker stopped: ueli-workstation-mac-mini-m4-16gb-256gb-03-lan.fritz.box-34167

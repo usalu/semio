@@ -1,4 +1,4 @@
-/** 📍️ `change-pier-base-soil-unit-weight-n-m3` wire twin: the leaf payload `ChangePierBaseSoilUnitWeightNM3`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+/** 📍️ `change-pier-base-soil-unit-weight-nm3` wire twin: the leaf payload `ChangePierBaseSoilUnitWeightNM3`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
  * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireLiteral, normWireNumber, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";

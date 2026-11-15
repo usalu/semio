@@ -786,12 +786,6 @@ protocol::list_delta! {
 }
 //#endregion 🔖️Rows
 
-protocol::list_delta! {
-    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
-    /// 📋️ Keyed row delta of one `JointPlate` list.
-    pub En1993JointPlateDelta { removal: En1993JointPlateRemoval, insertion: En1993JointPlateInsertion, relocation: En1993JointPlateRelocation, modification: En1993JointPlateModification, row: semio_s_artifact_norm_en1993_model::JointPlate, patch: En1993JointPlatePatch, list: Vec<semio_s_artifact_norm_en1993_model::JointPlate>, key: String = by En1993JointPlateDeltaKey }
-}
 protocol::row_patch! {
     #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
@@ -843,12 +837,6 @@ protocol::list_delta! {
 }
 //#endregion 🔖️Rows
 
-protocol::list_delta! {
-    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
-    /// 📋️ Keyed row delta of one `JointPlate` list.
-    pub En1993JointPlateDelta { removal: En1993JointPlateRemoval, insertion: En1993JointPlateInsertion, relocation: En1993JointPlateRelocation, modification: En1993JointPlateModification, row: semio_s_artifact_norm_en1993_model::JointPlate, patch: En1993JointPlatePatch, list: Vec<semio_s_artifact_norm_en1993_model::JointPlate>, key: String = by En1993JointPlateDeltaKey }
-}
 protocol::row_patch! {
     #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
@@ -1168,3 +1156,9 @@ mod tests;
 /// 🍃️ The five handcrafted leaves of the `diff` schema facet.
 pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: semio_s_artifact_norm_en1993_diff_typescript::LEAF, graphql: semio_s_artifact_norm_en1993_diff_graphql::LEAF, json_schema: semio_s_artifact_norm_en1993_diff_json_schema::LEAF, proto: semio_s_artifact_norm_en1993_diff_proto::LEAF };
 //#endregion 🍃️FacetLeaves
+
+#[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+pub mod binary;

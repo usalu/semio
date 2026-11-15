@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:project-records:v1",
+  "title": "Project inference record in portable form",
+  "description": "One project's inference record as it travels through the fleet cache: the digest it was stored under, the authority rows and every observation row of the producer, and the result text. The record is stored in the neutral form of `./🧳️portable` (root token and forward slashes, neutral provider owner and closure keys) and spelled the reading machine's way when it is taken, whatever the platform of the two, and the reader accepts it only through its own record lookup, which checks every observation row against its own tree.",
+  "definitions": {
+    "PortableRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest", "authority", "observations", "image"],
+      "properties": {
+        "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "authority": { "type": "array" },
+        "observations": { "type": "array" },
+        "image": { "type": "string" }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": { "progress": "graph: {seeded} projects taken from the fleet with {closures} closure entries, {reinferred} of them did not hold here and were inferred again, {refused} not shared, {computed} inferred here", "summary": "projects from the fleet: {seeded} taken with {closures} closure entries ({reinferred} did not hold here and were inferred again), {published} stored, {refused} not shared, {offered} offered, {waited} waited for another machine, {computed} computed here" },
+        "de": { "progress": "Graph: {seeded} Projekte aus der Flotte übernommen, dazu {closures} Closure-Einträge, davon {reinferred} hier nicht gültig und neu berechnet, {refused} nicht geteilt, {computed} hier berechnet", "summary": "Projekte aus der Flotte: {seeded} übernommen mit {closures} Closure-Einträgen ({reinferred} hier nicht gültig und neu berechnet), {published} gespeichert, {refused} nicht geteilt, {offered} angeboten, {waited} auf eine andere Maschine gewartet, {computed} hier berechnet" }
+      }
+    }
+  }
+}

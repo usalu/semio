@@ -102,6 +102,180 @@
         }
       ]
     },
+    "cpython": {
+      "release": "https://github.com/astral-sh/python-build-standalone/releases/download/20260408",
+      "versionArguments": [
+        "--version"
+      ],
+      "series": {
+        "3.12": {
+          "version": "3.12.13",
+          "distributions": [
+            {
+              "host": "darwin-arm64",
+              "archive": "cpython-3.12.13+20260408-aarch64-apple-darwin-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 17756116,
+              "sha256": "ac167e74961316ceabdbe4839f19aa6000c592b08e5a1fab4646cb225ede13d5",
+              "prefix": "python",
+              "binaryDirectory": "bin",
+              "binaries": [
+                "python3.12"
+              ],
+              "directory": "cpython-3.12.13-macos-aarch64-none"
+            },
+            {
+              "host": "darwin-x64",
+              "archive": "cpython-3.12.13+20260408-x86_64-apple-darwin-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 17652298,
+              "sha256": "1fee0596ba791fd83c33babf2ae8e00b0a1056b957955f2a34f7178ca8b80525",
+              "prefix": "python",
+              "binaryDirectory": "bin",
+              "binaries": [
+                "python3.12"
+              ],
+              "directory": "cpython-3.12.13-macos-x86_64-none"
+            },
+            {
+              "host": "linux-arm64",
+              "archive": "cpython-3.12.13+20260408-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 29588470,
+              "sha256": "bd5011c956391391620931ea35632dc7aa7391a4558ced126ccf0708d1346915",
+              "prefix": "python",
+              "binaryDirectory": "bin",
+              "binaries": [
+                "python3.12"
+              ],
+              "directory": "cpython-3.12.13-linux-aarch64-gnu"
+            },
+            {
+              "host": "linux-x64",
+              "archive": "cpython-3.12.13+20260408-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 34531100,
+              "sha256": "ddd48f521f79395d9b8b094d34a86d7ec86772ab66c96b0de65a3b561ea7cf10",
+              "prefix": "python",
+              "binaryDirectory": "bin",
+              "binaries": [
+                "python3.12"
+              ],
+              "directory": "cpython-3.12.13-linux-x86_64-gnu"
+            },
+            {
+              "host": "win32-arm64",
+              "archive": "cpython-3.12.13+20260408-aarch64-pc-windows-msvc-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 20558462,
+              "sha256": "3079f210cfe53a8165163da5f8ad3487915bf80263b3a7c252a567b20ae44b2c",
+              "prefix": "python",
+              "binaryDirectory": ".",
+              "binaries": [
+                "python.exe"
+              ],
+              "directory": "cpython-3.12.13-windows-aarch64-none"
+            },
+            {
+              "host": "win32-x64",
+              "archive": "cpython-3.12.13+20260408-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 21844649,
+              "sha256": "802162fb50165fc138db0c737abda695e1cb819bfb52e4d230d14f8a5af880b2",
+              "prefix": "python",
+              "binaryDirectory": ".",
+              "binaries": [
+                "python.exe"
+              ],
+              "directory": "cpython-3.12.13-windows-x86_64-none"
+            }
+          ]
+        },
+        "3.14": {
+          "version": "3.14.4",
+          "distributions": [
+            {
+              "host": "darwin-arm64",
+              "archive": "cpython-3.14.4+20260408-aarch64-apple-darwin-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 18329648,
+              "sha256": "f1ce5d79bceecbed25a37b611d6dae147b27857dda8181e3a5e29e73dd1c57c3",
+              "prefix": "python",
+              "binaryDirectory": "bin",
+              "binaries": [
+                "python3.14"
+              ],
+              "directory": "cpython-3.14.4-macos-aarch64-none"
+            },
+            {
+              "host": "darwin-x64",
+              "archive": "cpython-3.14.4+20260408-x86_64-apple-darwin-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 18366364,
+              "sha256": "1c9615f872058332b74b2be1b248078c636b6f4b116eed3e17f50eb7efe1a989",
+              "prefix": "python",
+              "binaryDirectory": "bin",
+              "binaries": [
+                "python3.14"
+              ],
+              "directory": "cpython-3.14.4-macos-x86_64-none"
+            },
+            {
+              "host": "linux-arm64",
+              "archive": "cpython-3.14.4+20260408-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 30678130,
+              "sha256": "c84d61ae07e3b255f8bac6a28147bd373c3c1862d1d5598a9543a5b103fcb595",
+              "prefix": "python",
+              "binaryDirectory": "bin",
+              "binaries": [
+                "python3.14"
+              ],
+              "directory": "cpython-3.14.4-linux-aarch64-gnu"
+            },
+            {
+              "host": "linux-x64",
+              "archive": "cpython-3.14.4+20260408-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 36388085,
+              "sha256": "c838ac128a6e9c944b30301880472349eca8cd1abc79fb0d359ac2a358569389",
+              "prefix": "python",
+              "binaryDirectory": "bin",
+              "binaries": [
+                "python3.14"
+              ],
+              "directory": "cpython-3.14.4-linux-x86_64-gnu"
+            },
+            {
+              "host": "win32-arm64",
+              "archive": "cpython-3.14.4+20260408-aarch64-pc-windows-msvc-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 21330971,
+              "sha256": "a3473a32c414237d814687adbbf935d21c4a9592050ab7ebbe48f307176fb5a9",
+              "prefix": "python",
+              "binaryDirectory": ".",
+              "binaries": [
+                "python.exe"
+              ],
+              "directory": "cpython-3.14.4-windows-aarch64-none"
+            },
+            {
+              "host": "win32-x64",
+              "archive": "cpython-3.14.4+20260408-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+              "format": "tar.gz",
+              "bytes": 22348288,
+              "sha256": "472f4f0d91429661db1b28a72e36adc593b6bd5d19db222d7faca635b3005313",
+              "prefix": "python",
+              "binaryDirectory": ".",
+              "binaries": [
+                "python.exe"
+              ],
+              "directory": "cpython-3.14.4-windows-x86_64-none"
+            }
+          ]
+        }
+      }
+    },
     "interpreters": {
       "main": {
         "series": "3.14"
@@ -149,7 +323,7 @@
     "variables": {
       "UV_NO_CONFIG": "1",
       "UV_PYTHON_PREFERENCE": "only-managed",
-      "UV_PYTHON_DOWNLOADS": "manual",
+      "UV_PYTHON_DOWNLOADS": "never",
       "PYTHONDONTWRITEBYTECODE": "1"
     },
     "environment": [
@@ -563,8 +737,8 @@
         "de": "Die Installation von {tool} {version} weicht von ihrer Quittung ab: {path}."
       },
       "python": {
-        "en": "The pinned interpreter {series} is not provisioned; run `repo run deps-python`.",
-        "de": "Der gepinnte Interpreter {series} ist nicht bereitgestellt; führe `repo run deps-python` aus."
+        "en": "The interpreter series {series} is not pinned for this host.",
+        "de": "Die Interpreter-Serie {series} ist für diesen Host nicht gepinnt."
       },
       "pin": {
         "en": "{tool} {actual} differs from the pin {expected} ({source}).",

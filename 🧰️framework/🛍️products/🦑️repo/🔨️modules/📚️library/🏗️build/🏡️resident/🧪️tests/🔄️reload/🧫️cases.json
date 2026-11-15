@@ -1,0 +1,34 @@
+{
+ "policy": {"quietMilliseconds": 100, "maximumDeferralMilliseconds": 1000, "retryMilliseconds": 500},
+ "implementation": "old",
+ "cases": [
+  {"name": "same implementation keeps the service", "ticks": [
+   {"at": 0, "identify": {"implementation": "old"}},
+   {"at": 5000, "identify": {"implementation": "old"}}]},
+  {"name": "a changed implementation waits for its quiet period and then replaces and drains", "replace": {"started": true}, "ticks": [
+   {"at": 0, "identify": {"implementation": "new"}},
+   {"at": 50, "identify": {"implementation": "new"}},
+   {"at": 120, "identify": {"implementation": "new"}},
+   {"at": 400, "identify": {"implementation": "new"}}]},
+  {"name": "an edit storm is replaced after the maximum deferral", "replace": {"started": true}, "ticks": [
+   {"at": 0, "identify": {"implementation": "n1"}},
+   {"at": 90, "identify": {"implementation": "n2"}},
+   {"at": 180, "identify": {"implementation": "n3"}},
+   {"at": 270, "identify": {"implementation": "n4"}},
+   {"at": 1000, "identify": {"implementation": "n5"}}]},
+  {"name": "a reverted edit cancels the wait", "replace": {"started": true}, "ticks": [
+   {"at": 0, "identify": {"implementation": "new"}},
+   {"at": 60, "identify": {"implementation": "old"}},
+   {"at": 90, "identify": {"implementation": "new"}},
+   {"at": 150, "identify": {"implementation": "new"}}]},
+  {"name": "a snapshot that fails to seal keeps the service and never replaces", "replace": {"started": true}, "ticks": [
+   {"at": 0, "identify": {"implementation": "new", "blocked": "broken"}},
+   {"at": 5000, "identify": {"implementation": "new", "blocked": "broken"}},
+   {"at": 6000, "identify": {"implementation": "old"}}]},
+  {"name": "a replacement that does not start keeps the service and is retried after the retry delay", "replace": {"started": false, "reason": "boom"}, "ticks": [
+   {"at": 0, "identify": {"implementation": "new"}},
+   {"at": 200, "identify": {"implementation": "new"}},
+   {"at": 300, "identify": {"implementation": "new"}},
+   {"at": 800, "identify": {"implementation": "new"}}]}
+ ]
+}

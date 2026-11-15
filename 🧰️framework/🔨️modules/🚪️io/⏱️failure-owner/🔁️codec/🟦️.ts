@@ -1,6 +1,6 @@
-import {ValueError,type ValueErrorRetainedProgress} from "@semio-tech/value-ts/refusal";
-import {encodeValueErrorControlled,decodeValueErrorControlled,encodeRetainedProgressControlled,decodeRetainedProgressControlled,type ValueRefusalCodecControl} from "@semio-tech/value-ts/refusal/codec";
-import {ownDiagnosticText} from "@semio-tech/framework-diagnostic-ts/controlled";
+import {ValueError,type ValueErrorRetainedProgress} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
+import {encodeValueErrorControlled,decodeValueErrorControlled,encodeRetainedProgressControlled,decodeRetainedProgressControlled,type ValueRefusalCodecControl} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🔁️codec/🟦️.ts";
+import {ownDiagnosticText} from "../../../⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts";
 import type {IntrinsicValue,IntrinsicMember} from "@semio-tech/value-ts/schema/intrinsic";
 import {NativeSnapshotFailure,type NativeSnapshotFailureParts,type OriginalReceivingRetirementFailure} from "../🟦️.ts";
 interface Codec{readonly fieldCount?:number;encode(value:unknown,c:ValueRefusalCodecControl):Promise<IntrinsicValue>;decode(value:IntrinsicValue,c:ValueRefusalCodecControl):Promise<unknown>}

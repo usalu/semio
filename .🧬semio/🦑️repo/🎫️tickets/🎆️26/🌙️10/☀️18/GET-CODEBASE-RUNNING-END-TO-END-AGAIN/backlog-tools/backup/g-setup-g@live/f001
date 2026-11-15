@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "closures": [
+    {
+      "id": "repo-cli",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+      "mode": "full",
+      "reason": "repo boots without node_modules for help, preflight, tools setup and dependencies lock and sync"
+    },
+    {
+      "id": "repo-door",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts",
+      "mode": "full",
+      "reason": "repo boots without node_modules for help, refusals and the light commands leases, capacity and doctor through the front door, and hands every other command to the build script"
+    },
+    {
+      "id": "dependencies-js",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "mode": "full",
+      "reason": "workspace:deps-js-lock, deps-js-all and deps-javascript install the JavaScript dependencies themselves"
+    },
+    {
+      "id": "dependencies-native",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "mode": "full",
+      "reason": "workspace:deps-cargo, deps-go, deps-python, deps-dotnet, deps-cpp, deps-browsers, deps-tools and deps-trunk run before every JavaScript package is linked"
+    },
+    {
+      "id": "wasm-tools",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+      "mode": "full",
+      "reason": "workspace:deps-wasm-opt prepares the wasm toolchain during setup"
+    },
+    {
+      "id": "bazel-bootstrap",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
+      "mode": "full",
+      "reason": "repo tools setup bazel provisions Bazel before dependencies exist"
+    },
+    {
+      "id": "nx-authorizer-runtime",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts",
+      "mode": "full",
+      "reason": "repo tools setup nx captures this closure by source before any workspace link exists; a bare workspace specifier fails the capture"
+    },
+    {
+      "id": "nx-authorizer-compiler",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📜️script.ts",
+      "mode": "full",
+      "reason": "repo tools setup nx captures and compiles this closure before any workspace link exists"
+    },
+    {
+      "id": "cargo-compiler",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts",
+      "mode": "full",
+      "reason": "repo cargo captures this closure by source on a checkout whose workspace links are not installed yet"
+    },
+    {
+      "id": "build-bootstrap",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+      "mode": "full",
+      "reason": "ensureBuildEnvironment and the Nx adapter run before any task"
+    },
+    {
+      "id": "root-router",
+      "entry": "📜️script.ts",
+      "mode": "static",
+      "reason": "every root route starts here; lazy routes load after install, the repo route is the repo-cli closure"
+    },
+    {
+      "id": "root-setup",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🔧️setup/🟦️.ts",
+      "mode": "full",
+      "reason": "repo ./📜️script.ts setup provisions the checkout and runs inside a half-installed workspace"
+    },
+    {
+      "id": "root-entrypoints",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧭️entrypoints/🟦️.ts",
+      "mode": "full",
+      "reason": "every non-repo root route dispatches through the workspace script main"
+    },
+    {
+      "id": "bootstrap-source-ui-axes",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🎚️ui-axes/🟦️.ts",
+      "mode": "full",
+      "reason": "The declarative ui-axes source prerequisite runs before any dependency installation or graph import."
+    },
+    {
+      "id": "bootstrap-source-flow-core-package",
+      "entry": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🌱️bootstrap/🟦️.ts",
+      "mode": "full",
+      "reason": "The declarative flow-core-package source prerequisite runs before any dependency installation or graph import."
+    },
+    {
+      "id": "native-repo-script",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+      "reason": "The native repository command must build and install before JavaScript dependencies or the workspace graph exist.",
+      "mode": "full"
+    },
+    {
+      "id": "native-repo-build",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/🟦️.ts",
+      "reason": "The authenticated native recovery dispatcher invokes the Go build owner directly before dependency preparation.",
+      "mode": "full"
+    },
+    {
+      "id": "native-repo-go-plan",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts",
+      "reason": "Canonical native recovery reads the authored Go layout and compiler inputs without loading taxonomy audits or workspace package aliases.",
+      "mode": "full"
+    },
+    {
+      "id": "current-compiler-maintenance",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️script.ts",
+      "reason": "Current-domain recovery runs before JavaScript dependency image admission.",
+      "mode": "full"
+    },
+    {
+      "id": "inactive-nx-cache-reset",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/📜️script.ts",
+      "mode": "full",
+      "reason": "The exact inactive Nx cache control must recover its recomputable namespace before graph, Nx cache or dependency preparation."
+    },
+    {
+      "id": "root-registry",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🟦️.ts",
+      "mode": "full",
+      "reason": "the root router reads the command registry and renders every command's help before any dependency exists"
+    },
+    {
+      "id": "root-provision",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🗂️registry/🥾️provision/🟦️.ts",
+      "mode": "full",
+      "reason": "the gate that installs the locked dependencies before a dependent root command is loaded runs on a fresh clone"
+    },
+    {
+      "id": "root-policy",
+      "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts",
+      "mode": "full",
+      "reason": "repo ./📜️script.ts policy loads this lint from a checkout whose dependencies may not be installed"
+    },
+    {
+      "id": "catalog-provider",
+      "entry": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts",
+      "mode": "full",
+      "reason": "The build graph imports the application's catalog provider while it infers projects, before any dependency is installed; it reaches the publication contract by relative path."
+    },
+    {
+      "id": "tectonic-toolchain",
+      "entry": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
+      "mode": "full",
+      "reason": "`tools setup all` runs the Tectonic provisioning script on a fresh clone before any dependency is installed."
+    }
+  ],
+  "seams": [
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+      "reason": "The build graph is inferred through the TypeScript compiler and the TOML parser of the installed workspace; the graph module loads it lazily for run, run-many, affected and show."
+    },
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+      "reason": "The Nx graph consumer path analyses sources through the installed TypeScript compiler; nx --version never loads it."
+    },
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+      "reason": "The public inference entry re-exports the graph inference seam statically, so it is itself post-install; importers reach it by a dynamic import only."
+    },
+    {
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+      "reason": "The public Nx consumer entry re-exports the Nx graph consumer seam statically, so it is itself post-install; importers reach it by a dynamic import only."
+    }
+  ]
+}

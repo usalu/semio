@@ -1,0 +1,90 @@
+# Package R40: crate-level dependency inputs and the interface token for check tasks (2026-11-15, live tree, load 7 to 13). PREPARED ONLY: nothing landed, no lock taken, no graph command, no `repo tools setup`, no live file edited except this report and `T/🧰️scripts/R40/`.
+
+T = `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/FLEET-ONE-MACHINE-SHARED-HOT-CACHE-AND-REMOTE-EXECUTION`, LIB = `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library`, B = `LIB/🏗️build`, UC = `LIB/⚡️caching/🦀️cargo/🗃️unit-cache`. Scripts: `T/🧰️scripts/R40/` (`land.py` = ONE window for R29 + R37 + R39 + R40, `edits.py` = 19 anchored edits in 6 files, `new/n01..n04` = 4 new files, `baseline.json`, `lab/` = every measurement script, `lab/run-all.sh` = the order). Scratch (outside the worktree, 128 MB): `/private/tmp/claude-501/-Users-ueli-Documents-semio/9f6d3d77-cfd2-486b-942c-2101ee51a1fb/scratchpad/R40/` (`ov/` = the composite overlay, `rh/` and `rh2/` = the rehearsal roots).
+
+## Verdicts
+1. **Part 1 (crate-granular dependency inputs) is already true in the persisted records; there is nothing to build, and R39's explanation was a measurement artifact.** R39 mapped a crate to its project by walking up to the nearest `📋️project.json`. Crates without one are projects of their own (root = crate directory, config = `Cargo.toml`: all 4 453 Rust owners have a distinct root), and the `nativeSources` group of a dependency is a closure token over that crate's static source set (crate sources as `rust-source-set` reads them, `Cargo.toml`, the 17 digest helpers), never the project glob `nx.json` shows. Measured on all 4 453 Rust owners of generation 237 against Cargo's own reading (`cargo metadata --no-deps` over 294 workspaces, 4 452 packages): **0 records list a dependency Cargo does not resolve**, and the dependency lists equal Cargo's transitive path-dependency closure for 4 449 of 4 452 `check`, 4 451 of 4 452 `test` and 4 407 of 4 452 `build` targets (the rest are other input shapes, `^default` or `^nativeTestSources` through the project graph, not lists).
+2. **The re-key counts R39 quoted are right, the "1 033 to 420" saving is not available because 420 is today's value.** Editing the lib entry of each of 4 308 crates re-keys on average **445.3 `check`, 436.3 `build`, 465.4 `test` owners** today (median 22, 21, 23); Cargo's transitive dependents average **438.9**. For `semio-framework-value-source-turn`: 3 897 `check`, 3 853 `build`, 4 010 `test` owners, 1 045 projects in R39's sense (R39: 3 855 crates, 1 040 projects), equal to the Cargo dependents (3 896) plus the crate.
+3. **Part 2 (interface token) is built, sound for `check` only, and its measured yield depends entirely on the kind of edit.** A dependency crate of a production `check` task is keyed by what a type check can observe of its sources (R39's masker), never by bytes; `build`, `test`, `lint`, `check-*` keep bytes. A body-only edit of any of the 10 most depended-on crates re-keys **4 `check` owners instead of about 3 880** (the crate and three owners that read it through a path or glob); an interface edit re-keys what it re-keys today. On the 14 days of history the saving is **2.6 percent** of the check owner-stales (8 873 227 to 8 643 622), because only **3.2 percent** of the crate edits are body-only (32.5 percent change an interface, 59.5 percent touch a manifest or asset, 4.9 percent could not be classified and count as changed).
+4. **Correctness is by construction plus tests, not by a graph run.** The interface closure uses the SAME token family, the same closure inventory shape and namespace, the same Nx patch, capture, seal, reuse and repair code (`SEMIO_SOURCE_CLOSURE_<key>`); only the digest function branches, on a marker file in the roster. Nothing was run through a real graph refresh (section 6).
+
+## 1. Part 1, the evidence
+Method: 4 453 Rust owners and their fragments from generation 237 (`.cache/b/g/m`, streamed, peak 0.6 GB RSS), the closure leaves of `build-input-closures` (7 192 of 7 314 reached tokens present on this machine), the independent oracle `lab/oracle_meta.py` (`cargo metadata --offline --no-deps`, pinned nightly-2026-07-20, `build.rustc-wrapper` emptied; 148 extra single-crate calls for the manifests no workspace covers; one workspace under `🤖️generated` fails to load and is skipped). Both sides map name to root through the owners and the Cargo package names (the generation predates some project renames).
+
+| check | result |
+|---|---|
+| dependency lists vs Cargo's closure (`lab/cmp_deps.py`) | `check` 4 449 equal / 3 other shape; `test` 4 451 / 1; `build` 4 407 / 45; **over-listed: 0** |
+| edit of a crate's lib entry vs Cargo's dependents (`lab/analyze3.py`, 4 308 crates whose lib entry is in a token) | `check`: 2 722 exact, 1 575 superset (extra owners are aggregators that read crate trees by path or glob: `plugins/stdio` 1 343 times, hub `compositions/stdio` 607, `os/host` 419; mean 5.7 extra owners per crate), 11 not covered |
+| the 11 not covered | 10 are name collisions of my comparison (crate and dependent carry the same project name at two roots: 9 `ui-wgpu-*-laws-rs`, 1 `framework-value-dynamic-clone-tests`), 1 unexplained (`wfc-bitmap` tests: the dependent's `check` has a different input shape) |
+| key sets that shrink | none: Part 1 changes no code and no record |
+
+New law test (checked in, green): `B/📥️inputs/🔭️interface/🧪️tests/🧱️crate-granularity/🟦️.ts` runs the repo's own `nativeDependencyRoots` against `cargo metadata` for a stride sample of **52 framework crates** and requires equality (44 s, needs the pinned toolchain; skipped when it is missing).
+
+## 2. Part 2, what was built
+Schema first: `B/📥️inputs/🔭️interface/🧬️schema/🔣️.json` (closed policy constant: namespace, group `nativeInterface`, marker, four members, the target rule, `.rs`; the `Facts` shape).
+- `B/📥️inputs/🔭️interface/🟦️.ts` (pure, strict-typed): `interfaceFileFactsV1` (one `.rs` file to masked digest, bodies, void, splice; the masker is R39's `maskRustSourceV1`, imported, not copied), `interfaceClosureDigestV1` (the set rule of R39: a `.rs` file by its masked text, any other file by bytes, absence by absence; one unmaskable or splicing file puts every `.rs` file of the closure back to bytes), `isInterfaceClosureV1` (the roster lists the marker), `interfaceClosureFilesV1` (roster plus the four members), `interfaceTargetV1` and `interfaceDependencyInputV1`.
+- `B/📥️inputs/🧮️digest/🟨️.mjs`: `digestClosure` branches on the marker to `digestInterfaceClosure`; plain closures run the old code unchanged (proven against an independent re-implementation of the old digest in the new test).
+- `B/📥️inputs/🧮️digest/📥️read/🟨️.mjs` (+ `.d.mts`): new `readExactSourceInterfaceV1`, a fifth read kind `interface`: same admission as `source` (role mapped to `source`, same byte budget, same descriptor and settle checks), retains the file once, keeps only the facts, zeroes the buffer.
+- `B/📥️inputs/🟨️.mjs` (+ `.d.mts`): `compactSourceInputs(..., digest)`; for the group `nativeInterface` the roster gets the four members and is ONE unchunked record (a chunk boundary must not split a crate: the splice rule needs all of its files). `inferProjectInputs` adds the group for cargo projects, same list as `nativeSources`.
+- `B/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs`: `withNativePreparation` names `{input:"nativeInterface", projects}` for the `^nativeSources` of a `check` target of production scope, `{input:"nativeSources", ...}` everywhere else (as before).
+- Members of the interface closure (bytes, so a change of the rule re-keys every interface closure): the policy file, the adapter, R39's masker and its policy.
+
+Tests (new, `B/📥️inputs/🔭️interface/🧪️tests/🟦️.ts`, **8 green** through the overlay rig, plus the granularity law 1 green): policy closed by its schema and every member exists; all 37 compiler-checked vectors of R39 give the same equality as the unit-cache rule, alone and with a crate around them; the set rule (include, unlexable file, other files, absence, order); roster and marker; the target rule (check/production only); the real exact-Source reader on a fixture (interface digest equals the pure rule, a body edit keeps it, an interface edit changes it, a data file and a member change it, a plain roster equals the legacy digest and changes with a body edit); the graph names the group exactly as the policy does; `withNativePreparation` on a three-crate fixture with the real manifest reader (`c` names `nativeInterface` for `[a,b]` in `check`, `nativeSources` in `build`, `test` and `check-more`).
+
+## 3. Numbers
+### 3.1 The 10 most depended-on crates (edit of the lib entry file; owners = crates = projects; `lab/top10.py`)
+| crate | Cargo dependents | check / build / test re-keyed today | projects (R39 sense) today | check after, body-only edit | check after, interface edit |
+|---|---|---|---|---|---|
+| value-source-turn | 3 896 | 3 897 / 3 853 / 4 010 | 1 045 | 4 | 3 897 |
+| value-control-physical | 3 895 | 3 896 / 3 852 / 4 009 | 1 045 | 4 | 3 896 |
+| value-control-reply | 3 894 | 3 895 / 3 851 / 4 008 | 1 045 | 4 | 3 895 |
+| value-control-contract | 3 893 | 3 894 / 3 850 / 4 007 | 1 045 | 4 | 3 894 |
+| framework-trace | 3 883 | 3 884 / 3 840 / 4 012 | 1 044 | 4 | 3 884 |
+| value-retirement-contract | 3 882 | 3 883 / 3 839 / 3 998 | 1 041 | 4 | 3 883 |
+| value-allocation-return | 3 882 | 3 883 / 3 839 / 3 997 | 1 042 | 4 | 3 883 |
+| value-paged-list | 3 880 | 3 881 / 3 837 / 3 996 | 1 041 | 4 | 3 881 |
+| value-retirement | 3 879 | 3 880 / 3 836 / 3 996 | 1 040 | 4 | 3 880 |
+| value-receiving | 3 869 | 3 870 / 3 826 / 3 989 | 1 035 | 4 | 3 870 |
+The three extra owners of a body-only edit are `framework-rs`, `framework-schema` and `ui-contract-rs`: their `check` reads the tree through `^nativeTestSources` and path globs (bytes). `build` is `cache:false` (side-effecting) and `test` keeps bytes by design, so their columns do not change.
+
+### 3.2 14-day replay (33 commits, archivist snapshots; `lab/replay.py`, `lab/replay2.py`, `lab/ifacejobs.ts`)
+The masker ran on the real before and after blobs (4 051 crate digests). Crate edits (a crate with a changed file in its set, helpers excluded) 11 365: body-only 362 (3.2 percent), `.rs` interface change 3 689 (32.5 percent), a manifest or asset changed 6 758 (59.5 percent), no digest possible (leaf missing on this machine, counted as changed) 556. Owner-stales of `check` summed over crate edits (the cost unit of R37): **8 873 227 before, 8 643 622 after (-2.6 percent)**. The union per commit does not move (94 477 to 94 476) because every commit touches at least one foundation interface. History is coarse (a commit holds many edits per file), so it understates an interactive loop of body edits; no edit-rate data exists on this machine.
+Manifest projection (what Cargo reads of `Cargo.toml`) was measured and **not built**: of 6 395 `Cargo.toml` edits only 646 (10 percent) leave the projection unchanged (`lab/manifest_proj.ts`).
+
+### 3.3 The masker on the whole workspace (R39 unverified item 1)
+45 644 `.rs` files (293 MB) of all crate source sets: **0 files unlexable, 408 files splice (`include!`), 166 747 bodies masked**, lexing 6.6 s (reading 8.5 s cold). 225 of 4 453 crates contain a splice file and fall back to bytes; the crates that can be masked carry 93.6 percent of the dependency fan-out. Hash-time cost: one lex per file per batch (the batch cache keeps the facts), about 15 s CPU for a batch that reaches every crate once.
+
+### 3.4 Size
+`nativeInterface` is a copy of the `nativeSources` group (mean 385 bytes, 1.7 MB over all nodes) plus 4 453 unchunked closure records (a few KB each). The dependency lists in nodes do not grow.
+
+## 4. Soundness
+- Coverage: the interface closure of a project lists exactly the files of its `nativeSources` closure plus four implementation members; only the digest function differs. Every file a dependent's `check` key reads today stays read; the only change is which differences in `.rs` files change the digest.
+- What a type check observes: R39's masker replaces a function body only for plain, non-generic, non-const, non-async, non-inline functions with allowed attributes, no `impl Trait`, no item in the body, known macros only; compiler-checked on 37 vectors (12 unobservable cases give the same outcome against the old and the new library, the `const fn`, `-> impl Trait` and constant-initializer cases differ and are refused).
+- **The one semantic decision, for the coordinator**: a cached `check` of X attests "X type checks against the interfaces of its dependencies". If a dependency's body is broken, that dependency's own `check` is red (its bytes changed) while X's cached `check` stays green until X's key changes. A fresh `cargo check -p X` would fail on the broken dependency. The rule needs no change if "each crate's check attests its own crate" is accepted, and it is switched off by removing `"check"` from the policy (`targets.names`).
+- The Nx key contains `SEMIO_BUILD_MODE`, so a `release` check also uses the interface digest. R39's unit rule requires opt-level 0; for a check task (metadata only, no code) the opt level does not change what the type check observes, but this was not tested at opt-level above 0.
+- Mixed fleets: a machine without the landing computes the byte digest for the same token key and gets another task hash, so it misses the cache instead of hitting a wrong entry.
+
+## 5. Landing
+`python3 -I "T/🧰️scripts/R40/land.py" --land --merge` (default `--dry-run`; `--overlay DIR` writes the composite tree under the session scratch; `--rollback DIR`). It orders R29, R37, R39, R40, skips every set already in the live tree (by its own anchors), takes `T/landing.lock`, needs `N/LAND-OK` or `--authorized`, writes with temp-and-rename, runs the test files before (outside the lock) and after, flags only new red tests, appends `T/landings.md`, keeps originals in `T/🗑️generated/R40-landing-<time>-<pid>`; rollback restores every byte, removes the new files and the directories they leave empty.
+- Now: `sets: R29, R37, R39, R40`, **28 files (14 copy, 1 merge: `script-inputs/🟨️.mjs`, a peer edited it since R29's baseline and the anchors still apply, 13 new)**, 0 refused with `--merge`. R40 alone is 12 files.
+- Rehearsal in scratch roots with copies of the live originals: (a) all four sets: 28 files landed, byte-identical to the overlay, second run `nothing to land`, rollback byte-identical (cmp over all 28); (b) R29+R37+R39 first, then R40 alone: 12 files, stamp `script-inputs/5` to `/6`, second run no-op, rollback restores the state before R40 (only the landing log and the backup folder remain).
+- **Cost**: in the combined window no additional refresh (R29's stamp `/4` to `/5` already re-infers every project once; R37 and R40 change what the nodes hold inside that refresh). R40 after R29 costs one more full refresh (stamp `/6`, computed from the live number). Every Rust owner's `check` key changes once (cold `check` pass, cheap with the unit cache), R39 adds one cold pass of check units. Tests run by `land.py` for R40: 2 files (9 tests, about 47 s), plus the 4 existing native-manifests and chunk test files.
+- R40 imports R39's masker from the graph digest path: `land.py` refuses `LAND_SKIP=R39` with R40.
+
+## 6. Not built, not verified
+Not built: manifest projection (10 percent of manifest edits); `lint` (clippy) targets (4 owners name `nativeSources` in `lint`; their command was not identified as clippy); `check-*` variants (12 targets, semantics unknown); any code tier.
+Unverified:
+1. No graph run: `inferProjectInputs` with the real writer custody, `compactSourceInputs(..., "interface")` (only its roster function and the source text are tested), the real `nativeInterface` records and their interning into `sharedSources*` groups were never produced.
+2. Nx with `{input:"nativeInterface", projects}` was not run; it relies on every dependency owner being a cargo project that gets the group (true by construction of `inferProjectInputs`, not exercised).
+3. The existing test files for the touched modules were run in the overlay rig against the live baseline: identical results with and without R40 for `📥️inputs/🧪️tests` (2 pass 2 fail both), `output-stamps` (4 pass); `source-inputs-memo`, `build-script`, `project-assembly`, `stamps` fail in the rig with and without R40 (overlay paths of fixtures, children that import overlay paths; `stamps` reads the live schema against the overlay stamp); `🧮️digest/🧪️tests` cannot run in the rig (3 of 6 fail on child-process paths). `land.py` runs all of them live after the landing.
+4. The replay maps history onto today's token membership (122 tokens, 96 owners' leaves are missing on this machine and count as changed), uses the git snapshots (not edit events) and the one-hop dependency lists of generation 237.
+5. The set rule has no Python model (the masking has, in R39); it is checked against R39's TypeScript rule and the compiler-checked vectors.
+6. `release` mode and opt-level above 0 for the Nx-level cutoff, Linux and Windows (member paths use `/`, the granularity law looks for the toolchain under `~/.rustup`), a machine without cargo skips the granularity law.
+7. The remote cache or fleet movement of the new closure records (they are ordinary `build-input-closures` leaves).
+8. Cross-checks of R39's own unverified items 2 to 10 are unchanged.
+
+## 7. What the other packages must know
+- R39: the masker is now also executed on the graph hash path (every `.rs` file of a check task's dependency cone, per batch). A change of masking rules changes interface closures through the member list; it needs no namespace bump.
+- R29/R37: unchanged; their tests run before and after in the same list.
+- Retention (C) and fleet (B/S): no new namespace, no new leaf kind, no Nx patch change, 4 453 new small leaves of `build-input-closures`.
+- The cost model of every future edit in a foundation crate: Part 2 removes the check cone for body-only edits; build and test cones (3 800 owners) stay, a property of rustc's crate hash (R39 section 2).

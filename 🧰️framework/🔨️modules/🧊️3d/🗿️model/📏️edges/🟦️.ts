@@ -6,11 +6,13 @@ import type { Mesh, ModelDocument, Operation, Primitive, PrimitiveSolid, Slug } 
 import { cross, dot, length, normalize, sub, type V3 } from "../🧮️math/🟦️.ts";
 import { Pace, silentOperation } from "../⏱️operation/🟦️.ts";
 import * as portable from "../🧮️math/🎯️portable/🟦️.ts";
+import { selectScene } from "../🎞️scenes/🟦️.ts";
 
 const QUANTUM = 1e8;
 
-/** 🔆️ Adds feature `lines` primitives; the input is not modified. Rejects with `CancelledError` when cancelled: checked between meshes, between primitives and every few thousand vertices, triangles and edges inside one primitive. */
-export async function featureEdges(document: ModelDocument, angleRad: number, options: { readonly material?: Slug | ((source: Primitive) => Slug) } = {}, operation: Operation = silentOperation): Promise<ModelDocument> {
+/** 🔆️ Adds feature `lines` primitives; the input is not modified. With `options.scene` only that scene's meshes are processed and the result is that single-scene document (`selectScene`). Rejects with `CancelledError` when cancelled: checked between meshes, between primitives and every few thousand vertices, triangles and edges inside one primitive. */
+export async function featureEdges(source: ModelDocument, angleRad: number, options: { readonly material?: Slug | ((source: Primitive) => Slug); readonly scene?: Slug } = {}, operation: Operation = silentOperation): Promise<ModelDocument> {
+  const document = options.scene === undefined ? source : selectScene(source, options.scene);
   const pace = new Pace(operation);
   const meshes: Mesh[] = [];
   let clock = Date.now();

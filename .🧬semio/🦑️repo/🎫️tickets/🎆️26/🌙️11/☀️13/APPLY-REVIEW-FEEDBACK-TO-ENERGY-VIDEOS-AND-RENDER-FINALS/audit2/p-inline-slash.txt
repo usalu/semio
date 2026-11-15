@@ -1,0 +1,1 @@
+(\$|r"|rf"|f"|"|\\text\{|\\mathrm\{)[^$"]*(\\mathrm\{[A-Za-z²³0-9^{}\\ ,·]+\}|\\text\{[^}]+\}|\bW|\bK|\bm|\bkWh|\bWh)\s*/\s*(\\mathrm\{|\(|[A-Za-z]|\\text\{)

@@ -3,7 +3,10 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../.
 import {validateJsonSchemaSubset} from "../../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readJavascriptDependencySelectedRetirementCommandV1,type JavascriptDependencySelectedRetirementCommandV1,type JavascriptDependencySelectedRetirementSnapshotV1} from "../../../../../../../🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
 import {javascriptInstallSchemaV1} from "../../../../../../../🚀️bootstrap/📦️dependencies/💾️storage/🧱️schemas/🟦️.ts";
-import {planSelectedRepositoryDependencyGenerationsV1,maintainSelectedRepositoryDependencyGenerationV1} from "../../🟦️.ts";
+import {planSelectedRepositoryDependencyGenerationsV1,maintainSelectedRepositoryDependencyGenerationV1,repositoryCacheImagePublicationOptionsV1} from "../../🟦️.ts";
+import {retryWhileDependencyStoreBusyV1,dependencyStoreWaitPortsForV1,type DependencyStoreWaitPortsV1} from "../💰️funding/🟦️.ts";
+import {refuseCachingV1,sayCachingV1} from "../../../../../../../📖️texts/🟦️.ts";
+import {isRepoErrorV1} from "../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/🚨️error/🟦️.ts";
 import {observeRepositoryDependencyMaintenanceParentV1} from "../../📸️observation/🟦️.ts";
 import retirementSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 
@@ -17,22 +20,38 @@ interface Candidate{readonly prefix:string;readonly generation:string|null;reado
 interface Plan{readonly artifact:JavascriptDependencySelectedRetirementCommandV1["artifact"];readonly current:Readonly<{sha256:string;scopes:readonly Readonly<{generation:string}>[]}>;readonly generations:Readonly<{names:readonly string[]}>;readonly candidates:readonly Candidate[]}
 interface Settlement{readonly selected:JavascriptDependencySelectedRetirementSnapshotV1;readonly retired:boolean;readonly operation:"observe"|"retire";readonly journalSha256:string;readonly journalBytes:number}
 
-/** ♻️ Retires only proven obsolete physical prefixes through genuine fresh plan, observe and retire owners, preserving the retained whole charge. */
-export async function retireObsoleteRepositoryDependencyGenerationsV1(invocation:ScriptInvocation,control:ResourceLeaseControl):Promise<readonly string[]>{
- const retired:string[]=[],started=performance.now(),check=()=>{checkResourceLeaseControl(control);control.signal.throwIfAborted();};
- for(;;){
-  check();const observed=await observeRepositoryDependencyMaintenanceParentV1(invocation,control),plan=readRepositoryDependencyRetirementPlanV1(await planSelectedRepositoryDependencyGenerationsV1(invocation,control,{version:1,purpose:"plan-current-dependency-generations",selectedPrefix:null,parent:observed.parent})),candidate=selectRepositoryDependencyRetirementCandidateV1(plan);check();
-  if(candidate===null)return Object.freeze(retired);if(retired.includes(candidate.prefix))throw Error("Retired dependency generation reappeared");if(retired.length>=retirementProtocol.maximumRetirements)throw Error("Dependency obsolete retirement count exhausted");
+/** 🔌️ The owner calls and the wait ports of the retirement driver, so that a store in any state can be rehearsed without the native owners. */
+export interface RetirementOwnersV1{observe(invocation:ScriptInvocation,control:ResourceLeaseControl):Promise<Readonly<{parent:unknown}>>;plan(invocation:ScriptInvocation,control:ResourceLeaseControl,value:unknown):Promise<unknown>;maintain(invocation:ScriptInvocation,control:ResourceLeaseControl,value:unknown):Promise<unknown>;waits(invocation:ScriptInvocation,control:ResourceLeaseControl):DependencyStoreWaitPortsV1}
+
+/** 🏛️ The genuine owners and the wait ports of the dependency store with the bounded retirement wait of the schema; a rehearsal binds a model of a store in any state instead. */
+export const retirementOwnersV1:RetirementOwnersV1=Object.freeze({observe:observeRepositoryDependencyMaintenanceParentV1,plan:planSelectedRepositoryDependencyGenerationsV1,maintain:maintainSelectedRepositoryDependencyGenerationV1,waits:(invocation,control)=>{const options=repositoryCacheImagePublicationOptionsV1(invocation,control,"dependencies");return Object.freeze({...dependencyStoreWaitPortsForV1(()=>({directory:options.leaseDirectory,resource:"native-fixed-image:"+options.directory})),limitMilliseconds:retirementProtocol.maximumBusyWaitMilliseconds});}});
+
+/** 🔎️ Whether an owner answered that the dependency store parent is held by another process: exactly `{acquired:false}`, any other shape is data to be validated, never a wait. */
+function busyRepositoryDependencyOwnerResultV1(value:unknown):boolean{return typeof value==="object"&&value!==null&&(value as{acquired?:unknown}).acquired===false&&Object.keys(value).length===1;}
+
+/** ♻️ Retires only proven obsolete physical prefixes through genuine fresh plan, observe and retire owners, preserving the retained whole charge. A store held by another process is waited for with a progress line that names the holder and, past the bounded retirement wait, the rest is deferred to the next setup; every phase replans from the store, so an interrupted or half-retired store resumes where it stopped. */
+export async function retireObsoleteRepositoryDependencyGenerationsV1(invocation:ScriptInvocation,control:ResourceLeaseControl,owners:RetirementOwnersV1=retirementOwnersV1):Promise<readonly string[]>{
+ const retired:string[]=[],started=performance.now(),check=()=>{checkResourceLeaseControl(control);control.signal.throwIfAborted();},waits=owners.waits(invocation,control),acquire=(call:()=>Promise<unknown>):Promise<unknown>=>retryWhileDependencyStoreBusyV1(control,async()=>{const value=await call();return busyRepositoryDependencyOwnerResultV1(value)?Object.freeze({acquired:false as const}):Object.freeze({acquired:true as const,value});},waits);
+ try{
+  for(;;){
+   check();const plan=readRepositoryDependencyRetirementPlanV1(await acquire(async()=>owners.plan(invocation,control,{version:1,purpose:"plan-current-dependency-generations",selectedPrefix:null,parent:(await owners.observe(invocation,control)).parent}))),candidate=selectRepositoryDependencyRetirementCandidateV1(plan);check();
+   if(candidate===null)return Object.freeze(retired);if(retired.includes(candidate.prefix))throw Error("Retired dependency generation reappeared");if(retired.length>=retirementProtocol.maximumRetirements)throw Error("Dependency obsolete retirement count exhausted");
   const selection=candidate.status==="inactive"||candidate.status==="retained-unready"?{kind:candidate.status==="inactive"?"inactive-generation"as const:"retained-unready"as const,prefix:candidate.prefix,generation:candidate.generation!,receiptFingerprint:candidate.receiptFingerprint!,rootStamp:candidate.rootStamp,currentBindingsSha256:plan.current.sha256}:{kind:candidate.status==="unready"?"unready-generation"as const:candidate.status==="unready-metadata"?"unready-metadata"as const:"empty-generation"as const,prefix:candidate.prefix,rootStamp:candidate.rootStamp,currentBindingsSha256:plan.current.sha256};
-  const beforeObserve=await observeRepositoryDependencyMaintenanceParentV1(invocation,control),observe=readJavascriptDependencySelectedRetirementCommandV1({version:1,operation:"observe",selection,parent:beforeObserve.parent,artifact:plan.artifact,expected:null}),snapshot=readRepositoryDependencyRetirementSettlementV1(await maintainSelectedRepositoryDependencyGenerationV1(invocation,control,observe),"observe",observe.selection,plan.artifact);check();
-  const beforeRetire=await observeRepositoryDependencyMaintenanceParentV1(invocation,control),request=readJavascriptDependencySelectedRetirementCommandV1({version:1,operation:"retire",selection,parent:beforeRetire.parent,artifact:plan.artifact,expected:snapshot.selected});
-  readRepositoryDependencyRetirementSettlementV1(await maintainSelectedRepositoryDependencyGenerationV1(invocation,control,request),"retire",request.selection,plan.artifact);retired.push(candidate.prefix);await control.publish({resource:retirementProtocol.progressResource+":"+retired.length,mode:"exclusive",elapsedMs:performance.now()-started});await control.yieldContinuation();check();
+   sayCachingV1("dependency-store.retiring",{prefix:candidate.prefix,retired:retired.length});
+   const snapshot=readRepositoryDependencyRetirementSettlementV1(await acquire(async()=>owners.maintain(invocation,control,readJavascriptDependencySelectedRetirementCommandV1({version:1,operation:"observe",selection,parent:(await owners.observe(invocation,control)).parent,artifact:plan.artifact,expected:null}))),"observe",selection,plan.artifact);check();
+   readRepositoryDependencyRetirementSettlementV1(await acquire(async()=>owners.maintain(invocation,control,readJavascriptDependencySelectedRetirementCommandV1({version:1,operation:"retire",selection,parent:(await owners.observe(invocation,control)).parent,artifact:plan.artifact,expected:snapshot.selected}))),"retire",selection,plan.artifact);retired.push(candidate.prefix);await control.publish({resource:retirementProtocol.progressResource+":"+retired.length,mode:"exclusive",elapsedMs:performance.now()-started});await control.yieldContinuation();check();
+  }
+ }catch(error){
+  if(isRepoErrorV1(error)&&error.key==="caching.dependency-store.busy-timeout"){sayCachingV1("dependency-store.retirement-deferred",{seconds:Number(error.values.seconds),retired:retired.length},"warn");return Object.freeze(retired);}
+  throw error;
  }
 }
 
 /** 📋️ Accepts only complete acquired qualified plan DATA; a busy or malformed observation never becomes an empty plan. */
 function readRepositoryDependencyRetirementPlanV1(value:unknown):Plan{
- const text=JSON.stringify(value);if(typeof text!=="string"||Buffer.byteLength(text)>retirementProtocol.maximumPlanBytes||validateJsonSchemaSubset(retirementWireSchema.$defs.AcquiredPlan as never,value,retirementWireSchema as never).length)throw Error("Complete acquired dependency retirement plan required");return(value as{value:Plan}).value;
+ const text=JSON.stringify(value),bytes=typeof text==="string"?Buffer.byteLength(text):0,limit=retirementProtocol.maximumPlanBytes,held=typeof value==="object"&&value!==null&&(value as{acquired?:unknown}).acquired===false,fail=(reason:string,violation:string):never=>{throw refuseCachingV1("failed","dependency-store.retirement-plan-incomplete",{reason,bytes,violation});};
+ if(held)fail("not-acquired","the store was held by another process");if(typeof text!=="string")fail("malformed","no JSON answer");if(bytes>limit)fail("oversized","more than "+limit+" bytes");
+ const violations=validateJsonSchemaSubset(retirementWireSchema.$defs.AcquiredPlan as never,value,retirementWireSchema as never);if(violations.length)fail("malformed",String(violations[0]).slice(0,200));return(value as{value:Plan}).value;
 }
 
 /** 🌳️ Orders known obsolete references without treating graph metadata as deletion authority. */
@@ -67,6 +86,6 @@ function selectRepositoryDependencyRetirementCandidateV1(plan:Plan):Candidate|nu
 
 /** 🎯️ Revalidates exact selected owner settlement DATA before constructing another real command. */
 function readRepositoryDependencyRetirementSettlementV1(value:unknown,operation:"observe"|"retire",selection:JavascriptDependencySelectedRetirementCommandV1["selection"],artifact:JavascriptDependencySelectedRetirementCommandV1["artifact"]):Settlement{
- if(validateJsonSchemaSubset(retirementWireSchema.$defs.AcquiredSettlement as never,value,retirementWireSchema as never).length)throw Error("Acquired closed dependency retirement settlement required");const result=(value as{value:Settlement}).value,snapshot=result.selected;
+ const violations=validateJsonSchemaSubset(retirementWireSchema.$defs.AcquiredSettlement as never,value,retirementWireSchema as never);if(violations.length)throw refuseCachingV1("failed","dependency-store.retirement-settlement-incomplete",{operation,prefix:selection.prefix,violation:String(violations[0]).slice(0,200)});const result=(value as{value:Settlement}).value,snapshot=result.selected;
  if(result.operation!==operation||result.retired!==(operation==="retire")||result.journalSha256!==artifact.journalSha256||result.journalBytes!==artifact.journalBytes||snapshot.kind!==selection.kind||snapshot.prefix!==selection.prefix||snapshot.rootStamp!==selection.rootStamp||snapshot.currentBindingsSha256!==selection.currentBindingsSha256||snapshot.generation!==("generation"in selection?selection.generation:null)||snapshot.receiptFingerprint!==("receiptFingerprint"in selection?selection.receiptFingerprint:null))throw Error("Exact unchanged-funding dependency retirement settlement required");return result;
 }

@@ -41,7 +41,16 @@ test("targets that differ only in their arguments share one stored closure value
    scriptInputs.releaseOwnerStateV1(shared);
    heaps.push(managed());
   }
+  for(let at=0;at<32;at++)scriptInputs.releaseOwnerStateV1(shared);
   expect([shared.files,shared.closures,shared.commandDependencies,shared.declared,shared.paths].map(memo=>memo.size)).toEqual([0,0,0,0,0]);
+  shared.reachState={graph:new Map()};
+  while(shared.reachState!==undefined)scriptInputs.releaseOwnerStateV1(shared,{shrink:true});
+  shared.files.set("pressure",1);shared.reachState={graph:new Map()};
+  const reach=shared.reachState;
+  scriptInputs.releaseOwnerStateV1(shared,{shrink:true});
+  expect([shared.files.size,shared.reachState]).toEqual([0,reach]);
+  for(let at=0;at<7;at++)scriptInputs.releaseOwnerStateV1(shared,{shrink:true});
+  expect(shared.reachState).toBeUndefined();
   stored=readdirSync(join(scriptInputs.closureStoreDirectoryV1(root),"v")).length;
  });
  expect(rosterOf!).toEqual(python(root,"owner/📜️script.ts").closure.sort());
@@ -51,3 +60,11 @@ test("targets that differ only in their arguments share one stored closure value
  console.log("[DATA] target fan-out "+JSON.stringify({targets:fixture.targets,stored,growthMegabytes:Math.round(growth*10)/10,slopeKilobytesPerTarget:Math.round(slope),last:Math.round(heaps[heaps.length-1]!/MEGABYTE)}));
  expect(growth).toBeLessThan(fixture.maximumGrowthMegabytes);expect(slope).toBeLessThan(fixture.maximumSlopeKilobytesPerTarget);
 }),600000);
+
+test("a walk that builds the shared reach state is credited to the cache and the running owner scope",async()=>{
+ const cache:any={reachState:{graph:new Map()}},owner=await import("../../../../🧠️memory/🎯️owner-scope/🟨️.mjs") as any,scope=owner.createOwnerScopeV1("owner");
+ const kept:unknown[]=[];
+ await owner.runInOwnerScopeV1(scope,()=>scriptInputs.chargedToSharedV1(cache,async()=>{kept.push(new Array(2_000_000).fill(0).map((_,at)=>"s"+at));cache.reachState.graph.set(1,{});}));
+ expect(cache.sharedBytes).toBeGreaterThan(0);expect(scope.credited).toBe(cache.sharedBytes);
+ const idle:any={reachState:{graph:new Map()}};await scriptInputs.chargedToSharedV1(idle,async()=>{kept.push(new Array(1000).fill(0));});expect(idle.sharedBytes).toBeUndefined();
+});

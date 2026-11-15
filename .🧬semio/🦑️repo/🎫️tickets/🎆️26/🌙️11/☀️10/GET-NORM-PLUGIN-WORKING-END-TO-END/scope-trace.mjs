@@ -1,5 +1,9 @@
+import { execFileSync as gitExecFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+const T = fileURLToPath(new URL(".", import.meta.url)).replace(/[\\/]$/, "");
+const R = gitExecFileSync("git", ["-C", T, "rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
 import{readFileSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";
-const root="/home/deck/semio",L=await import(root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs");
+const root=R,L=await import(root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🟨️.mjs");
 const g=root+"/.cache/b/g/m/generations",cur=JSON.parse(readFileSync(g+"/current.json","utf8")),man=JSON.parse(readFileSync(g+"/m/"+cur.manifest+".json","utf8"));
 const name=process.argv[2],target=process.argv[3]||"check";
 const frag=n=>{const row=man.owners[n];const f=row.fragment;for(const d of["a","c","f","o","s","x"]){try{return JSON.parse(brotliDecompressSync(readFileSync(g+"/"+d+"/"+f+".json.br")));}catch{}}throw Error("nofrag "+n+" "+f);};

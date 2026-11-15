@@ -1,0 +1,46 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ac6bfe8f337c.log (lines after 0)
+-- graph lines
+graph: 659 stale projects, 0 taken from the fleet, 7 too heavy for this machine (@semio-tech/repo-lib (about 27770 MB), workspace (about 13780 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-dev (about 8452 MB), @semio-tech/framework-os (about 8368 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 1 more; it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 659
+graph: waiting for the fleet: 0 of 659 projects arrived
+graph: waiting for the fleet: 552 of 659 projects arrived
+graph: refreshing 659 projects (generation 60)
+graph: 130 stale facts (analysis 77, readdir 28, file 25) leave 659 projects stale
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔐️consent/🔎️probe/🟨️.mjs was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.d.mts was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.mjs was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🔐️consent/🟦️.ts was added
+graph: breach-_framework_products_repo_script_ts is stale: the workspace file 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🛡️consent-service/🟦️.ts was added
+graph: asking the host for up to 8 worker processes for 48 projects; the projects wait for them
+graph: asking the host for up to 9 worker processes for 151 projects; the projects wait for them
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:162:659:1:0:%40semio-tech%2Fframework-os-mcp-consent-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+-- last 30 lines when the try ended
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:286:659:3:0:%40semio-tech%2Fos-spr-rs|language%3Arust|0|0,%40semio-tech%2Fos-plugin-registry-schema-rs|language%3Arust|0|0,%40semio-tech%2Fos-dsl-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:86:99:2:0:%40semio-tech%2Fos-plugin-registry-schema-rs|language%3Arust|0|0,%40semio-tech%2Fos-dsl-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 86 of 99 projects · 2 running, longest 0 s: @semio-tech/os-plugin-registry-schema-rs (language:rust, 0 s, 0 rows), @semio-tech/os-dsl-rs (language:rust, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:90:99:2:0:%40semio-tech%2Fos-services-rs|language%3Acargo|0|0,%40semio-tech%2Fos-extension-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 90 of 99 projects · 2 running, longest 0 s: @semio-tech/os-services-rs (language:cargo, 0 s, 0 rows), @semio-tech/os-extension-rs (language:rust, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:289:659:2:0:%40semio-tech%2Fos-services-rs|language%3Acargo|0|0,%40semio-tech%2Fos-extension-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:290:659:2:0:%40semio-tech%2Fos-services-rs|language%3Acargo|0|0,%40semio-tech%2Fos-extension-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:90:99:1:0:%40semio-tech%2Fos-extension-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 90 of 99 projects · 1 running, longest 0 s: @semio-tech/os-extension-rs (language:rust, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:293:659:1:0:%40semio-tech%2Fos-space-sqlite-cells-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:93:99","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 93 of 99 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 99 projects inferred by 8 worker processes in 41 s (0 failed, 0 lost, 0 restarts)
+[fleet] projects from the fleet: 0 taken, 0 stored, 0 offered, 0 waited for another machine, 0 computed here | Projekte aus der Flotte: 0 übernommen, 0 gespeichert, 0 angeboten, 0 auf eine andere Maschine gewartet, 0 hier berechnet
+2026-11-14T23:36:15.205Z request-failed 3420bc16 Error
+    at requireRepositoryBuildGraphWriterV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:204:162)
+    at repositoryBuildGraphWriterDirectoryV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:210:2)
+    at ownerCachePathV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:86:62)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:290:242)
+    at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.mjs:183:21)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🟨️.mjs:290:101)
+    at processTicksAndRejections (unknown:7:39)

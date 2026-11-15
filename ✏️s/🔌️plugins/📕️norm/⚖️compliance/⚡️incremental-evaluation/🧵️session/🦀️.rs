@@ -196,7 +196,15 @@ impl<S: UnitSource> EvaluationSession<S> {
         self.in_flight = false;
         self.document = document;
         self.rebuild();
-        self.plan(changed, focus, token)
+        let plan = self.plan(changed, focus, token);
+        for planned in &plan.units {
+            let unit = &self.units[planned.index];
+            let hash = self.hashes.of(&self.value, &unit.reads);
+            if self.memo.get(&unit.id).is_none_or(|(known, _)| *known != hash) {
+                self.stale.insert(unit.id.clone());
+            }
+        }
+        plan
     }
 
     /// 🗺️ Plans without adopting a new document (initial full run: `ChangedSet::all()`).

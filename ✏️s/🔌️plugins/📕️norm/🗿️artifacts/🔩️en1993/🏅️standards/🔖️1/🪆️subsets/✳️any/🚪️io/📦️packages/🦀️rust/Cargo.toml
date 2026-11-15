@@ -44,9 +44,9 @@ semio-s-artifact-norm-en1993-mut-thin-walled = { workspace = true }
 semio-s-artifact-norm-en1993-mut-towers = { workspace = true }
 semio-s-artifact-norm-en1993-mut-member-ltb-restraint = { workspace = true }
 semio-s-artifact-norm-en1993-mut-joint-column-flange = { workspace = true }
-semio-s-artifact-norm-en1993-mut-fire-exposure-protection = { workspace = true }
+semio-s-artifact-norm-en1993-mut-fire-protection = { workspace = true }
 semio-s-artifact-norm-en1993-mut-cold-formed-required = { workspace = true }
-semio-s-artifact-norm-en1993-mut-plated-stiffener-eccentricity = { workspace = true }
+semio-s-artifact-norm-en1993-mut-plated-eccentricity = { workspace = true }
 semio-s-artifact-norm-en1993-mut-tension-cable = { workspace = true }
 semio-s-artifact-norm-en1993-mut-tower-lateral = { workspace = true }
 semio-s-artifact-norm-en1993-mut-pile-interlock-bending = { workspace = true }
@@ -64,7 +64,7 @@ semio-s-artifact-norm-en1993-mut-member-web = { workspace = true }
 semio-s-artifact-norm-en1993-mut-fatigue-detail-stress = { workspace = true }
 semio-s-artifact-norm-en1993-mut-plated-stiffener-shape = { workspace = true }
 semio-s-artifact-norm-en1993-mut-built-up-chord = { workspace = true }
-semio-s-artifact-norm-en1993-mut-plated-stiffener-spacing = { workspace = true }
+semio-s-artifact-norm-en1993-mut-plated-spacing = { workspace = true }
 semio-s-artifact-norm-en1993-mut-cold-formed-purlin = { workspace = true }
 semio-s-artifact-norm-en1993-mut-plated-corrugation = { workspace = true }
 semio-s-artifact-norm-en1993-mut-silo-ring = { workspace = true }

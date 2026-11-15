@@ -5,6 +5,7 @@ import {mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} fr
 import {tmpdir} from "node:os";
 import {dirname,join,relative,resolve} from "node:path";
 import Ajv from "ajv";
+import {testRustEnvironmentV1} from "../../../../🌐️remote-execution/🚀️offload/🧪️tests/🧰️workspace/🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 
@@ -13,7 +14,7 @@ await libraryBootstrap;
 const slash=(path:string)=>path.split("\\").join("/");
 const closure=(root:string,compiled:boolean)=>cacheInternals.rustSourceFiles([join(root,corpus.entry)],root,undefined,new Map(),compiled).map((path:string)=>slash(relative(root,path))).sort();
 const rustc=(root:string,flags:string[])=>{
- const out=join(root,"oracle.d"),run=spawnSync("rustc",["--edition=2021","--emit=dep-info","-o",out,...flags,corpus.entry],{cwd:root,encoding:"utf8"});
+ const out=join(root,"oracle.d"),run=spawnSync("rustc",["--edition=2021","--emit=dep-info","-o",out,...flags,corpus.entry],{cwd:root,encoding:"utf8",env:testRustEnvironmentV1()});
  expect(run.status,run.stderr).toBe(0);
  return [...new Set(readFileSync(out,"utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/u).map(path=>slash(relative(root,resolve(root,path)))))].sort();
 };
@@ -59,7 +60,7 @@ test("an inner cfg(test) attribute of an inline module never marks the whole fil
   for(const[path,text]of Object.entries(corpus.innerAttribute.files)){mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}
   const entry=corpus.innerAttribute.entry,compiled=cacheInternals.rustSourceFiles([join(root,entry)],root,undefined,new Map(),true).map((path:string)=>slash(relative(root,path))).sort();
   expect(compiled).toEqual([...corpus.innerAttribute.compiled].sort());
-  const out=join(root,"oracle.d"),run=spawnSync("rustc",["--edition=2021","--crate-type=lib","--emit=dep-info","-o",out,entry],{cwd:root,encoding:"utf8"});
+  const out=join(root,"oracle.d"),run=spawnSync("rustc",["--edition=2021","--crate-type=lib","--emit=dep-info","-o",out,entry],{cwd:root,encoding:"utf8",env:testRustEnvironmentV1()});
   expect(run.status,run.stderr).toBe(0);
   for(const path of readFileSync(out,"utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/u))expect(compiled,`rustc reads ${path}`).toContain(slash(relative(root,resolve(root,path))));
  }finally{rmSync(root,{recursive:true,force:true});}

@@ -101,7 +101,7 @@
   },
   "solar_layout": {
     "clearance": 0.2,
-    "factor": "I_{S,max} = 800"
+    "factor": "I_{s,max} = 800"
   },
   "transport_figure": {
     "casts": [

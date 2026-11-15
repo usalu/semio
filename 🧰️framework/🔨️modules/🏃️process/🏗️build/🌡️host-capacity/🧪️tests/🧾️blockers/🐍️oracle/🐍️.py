@@ -19,7 +19,7 @@ def blockers(policy, ledger, waiters, evaluation, ident, now, limit=3):
     if position < 0 or decisions[position]["verdict"] != "wait":
         return []
     reason = decisions[position]["reason"]
-    def ramping(g): return now - g.get("resumedAtMs", g["admittedAtMs"]) < g.get("rampMilliseconds", policy["memory"]["rampMilliseconds"])
+    def ramping(g): return g.get("quiet") is not True and now - g.get("resumedAtMs", g["admittedAtMs"]) < g.get("rampMilliseconds", policy["memory"]["rampMilliseconds"])
     def committed(g):
         if ramping(g): return max(g["reservedMegabytes"], g["observedMegabytes"] or 0)
         return g["observedMegabytes"] if g["observedMegabytes"] is not None else g["reservedMegabytes"]

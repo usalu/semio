@@ -1,0 +1,51 @@
+## /run/user/1000/semio-repo/1000/host-83cab94e8485.log
+2026-11-15T08:49:47.871Z access-proof version=3 root=/home/deck/semio protected=no sample=ok reproof=off route=direct pid=19057 ppid=18676
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 8123 MB
+graph: 703 stale projects, 0 taken from the fleet, 5 too heavy for this machine (@semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB); it can give about 3298 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 703
+graph: inferring 698 light projects here while the fleet works, continuously and lightest first (the server works heaviest first); what the fleet delivers meanwhile is taken and dropped here
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left
+graph: preparing 698 of the 698 open stale projects (1 compute slots), 0 of 698 already prepared
+graph: plan stage inference starts (managed 1158 MB, resident 1421 MB)
+graph: inferring 694 projects in this process (memory)
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 511 s ago, estimated time left: unknown
+graph: waiting for memory headroom (741 of 749 MB reserved, 1 projects running): semio-plugin-typing-edit needs 741 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 526 s ago, estimated time left: unknown
+graph: plan answered, managed 107 MB, resident 196 MB (released 7 MB)
+graph: memory readings: machine 15848 MB (physical 15848 MB, cgroup limit none), available 8696 MB
+graph: plan stage inference starts (managed 1023 MB, resident 1144 MB)
+graph: waiting for memory headroom (741 of 807 MB reserved, 1 projects running): semio-plugin-typing-edit needs 741 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 974 s ago, estimated time left: unknown
+graph: plan answered, managed 103 MB, resident 205 MB (released 18 MB)
+## last waiting line: 
+## last 30 lines
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repo] still working after 590 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:694:1:0:shared%20closures%201%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 694 projects · 1 running, longest 0 s: shared closures 1/24
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:694:1:0:shared%20closures%2016%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 694 projects · 1 running, longest 0 s: shared closures 16/24
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:694:1:0:shared%20closures%2022%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 694 projects · 1 running, longest 0 s: shared closures 22/24
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:694:1:0:shared%20closures%2024%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 694 projects · 1 running, longest 0 s: shared closures 24/24
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (741 of 807 MB reserved, 1 projects running): semio-plugin-typing-edit needs 741 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 974 s ago, estimated time left: unknown
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 590 s
+[repository:command] still running after 600 s
+[repository:command] still running after 610 s
+[repo] still working after 620 s; last phase started: source.served
+[repository:command] still running after 620 s
+graph: plan answered, managed 103 MB, resident 205 MB (released 18 MB)

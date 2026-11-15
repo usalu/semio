@@ -41,7 +41,6 @@ class NativeEntrypointCatalogTestScript extends BundleScript {
 }
 
 const repoRoot = findWorkspaceRoot();
-const rustPackageRoot = resolve(import.meta.dirname, "../🦀️rust");
 const crateName = "semio-renderer-wgpu";
 
 function assertRendererOutputOwnership(): number {
@@ -49,7 +48,7 @@ function assertRendererOutputOwnership(): number {
   for (const profile of ["prototype", "release"]) {
     const target = { ...project.targets.wasm, ...project.targets.wasm.configurations[profile] };
     assert.equal(target.cache, true);
-    assert.deepEqual(target.outputs.map((path:string)=>path.replaceAll("{options.env.SEMIO_BUILD_MODE}",profile)), ["{workspaceRoot}/" + relative(repoRoot, join(rustPackageRoot, "dist", "wasm-" + profile)).replaceAll(sep, "/")]);
+    assert.deepEqual(target.outputs, ["{projectRoot}/.🧾️store/wasm.json"]);
   }
   return 2;
 }

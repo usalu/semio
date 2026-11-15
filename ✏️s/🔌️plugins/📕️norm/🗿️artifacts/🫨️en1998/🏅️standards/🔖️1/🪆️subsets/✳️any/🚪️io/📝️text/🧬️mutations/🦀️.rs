@@ -2,12 +2,12 @@
 
 use crate::En1998Mutation;
 
-use semio_s_artifact_norm_en1998_mutations_text_bridges_towers as text_bridges_towers;
+use semio_s_artifact_norm_en1998_mutations_text_towers as text_bridges_towers;
 use semio_s_artifact_norm_en1998_mutations_text_buildings as text_buildings;
 use semio_s_artifact_norm_en1998_mutations_text_foundations as text_foundations;
 use semio_s_artifact_norm_en1998_mutations_text_members as text_members;
 use semio_s_artifact_norm_en1998_mutations_text_placements as text_placements;
-use semio_s_artifact_norm_en1998_mutations_text_seismic_slopes as text_seismic_slopes;
+use semio_s_artifact_norm_en1998_mutations_text_slopes as text_seismic_slopes;
 use semio_s_artifact_norm_en1998_mutations_text_silos_tanks as text_silos_tanks;
 use semio_s_artifact_norm_en1998_mutations_text_tie_beams as text_tie_beams;
 use semio_s_artifact_norm_en1998_mutations_text_kit::parse_args;
@@ -209,6 +209,7 @@ fn print_en1998_mutation(mutation: &En1998Mutation) -> String {
         En1998Mutation::ChangeFoundationPileModulusPa(p) => text_foundations::print_change_foundation_pile_modulus_pa(p),
         En1998Mutation::ChangeFoundationPileKsNM3(p) => text_foundations::print_change_foundation_pile_ks_n_m3(p),
         En1998Mutation::ChangeFoundationPileHeadShearN(p) => text_foundations::print_change_foundation_pile_head_shear_n(p),
+        En1998Mutation::ChangeFoundationPileAxialLoadN(p) => text_foundations::print_change_foundation_pile_axial_load_n(p),
         En1998Mutation::ChangeFoundationPileHeadFixed(p) => text_foundations::print_change_foundation_pile_head_fixed(p),
         En1998Mutation::ChangeFoundationPileIfaceM(p) => text_foundations::print_change_foundation_pile_iface_m(p),
         En1998Mutation::ChangeFoundationPileUpVsMS(p) => text_foundations::print_change_foundation_pile_up_vs_m_s(p),
@@ -576,6 +577,7 @@ fn parse_en1998_mutation(line: &str) -> Result<En1998Mutation, String> {
         "change-foundation-pile-modulus-pa" => text_foundations::parse_change_foundation_pile_modulus_pa(&args).map(En1998Mutation::ChangeFoundationPileModulusPa),
         "change-foundation-pile-ks-nm3" => text_foundations::parse_change_foundation_pile_ks_n_m3(&args).map(En1998Mutation::ChangeFoundationPileKsNM3),
         "change-foundation-pile-head-shear-n" => text_foundations::parse_change_foundation_pile_head_shear_n(&args).map(En1998Mutation::ChangeFoundationPileHeadShearN),
+        "change-foundation-pile-axial-load-n" => text_foundations::parse_change_foundation_pile_axial_load_n(&args).map(En1998Mutation::ChangeFoundationPileAxialLoadN),
         "change-foundation-pile-head-fixed" => text_foundations::parse_change_foundation_pile_head_fixed(&args).map(En1998Mutation::ChangeFoundationPileHeadFixed),
         "change-foundation-pile-iface-m" => text_foundations::parse_change_foundation_pile_iface_m(&args).map(En1998Mutation::ChangeFoundationPileIfaceM),
         "change-foundation-pile-up-vs-ms" => text_foundations::parse_change_foundation_pile_up_vs_m_s(&args).map(En1998Mutation::ChangeFoundationPileUpVsMS),
@@ -700,16 +702,16 @@ fn parse_en1998_mutation(line: &str) -> Result<En1998Mutation, String> {
         "change-isolation-system-bridge-id" => text_tie_beams::parse_change_isolation_system_bridge_id(&args).map(En1998Mutation::ChangeIsolationSystemBridgeId),
         "change-isolation-system-building-id" => text_tie_beams::parse_change_isolation_system_building_id(&args).map(En1998Mutation::ChangeIsolationSystemBuildingId),
         "change-isolation-system-strength-n" => text_tie_beams::parse_change_isolation_system_strength_n(&args).map(En1998Mutation::ChangeIsolationSystemStrengthN),
-        "change-isolation-system-stiffness" => text_tie_beams::parse_change_isolation_system_stiffness(&args).map(En1998Mutation::ChangeIsolationSystemStiffnessNPerM),
-        "change-isolation-system-yield-disp-m" => text_tie_beams::parse_change_isolation_system_yield_disp_m(&args).map(En1998Mutation::ChangeIsolationSystemYieldDisplacementM),
+        "change-isolation-system-stiffness-n-per-m" => text_tie_beams::parse_change_isolation_system_stiffness(&args).map(En1998Mutation::ChangeIsolationSystemStiffnessNPerM),
+        "change-isolation-system-yield-displacement-m" => text_tie_beams::parse_change_isolation_system_yield_disp_m(&args).map(En1998Mutation::ChangeIsolationSystemYieldDisplacementM),
         "change-isolation-system-capacity-m" => text_tie_beams::parse_change_isolation_system_capacity_m(&args).map(En1998Mutation::ChangeIsolationSystemCapacityM),
         "insert-pier-base" => text_tie_beams::parse_insert_pier_base(&args).map(En1998Mutation::InsertPierBase),
         "remove-pier-base" => text_tie_beams::parse_remove_pier_base(&args).map(En1998Mutation::RemovePierBase),
         "change-pier-base-bridge-id" => text_tie_beams::parse_change_pier_base_bridge_id(&args).map(En1998Mutation::ChangePierBaseBridgeId),
         "change-pier-base-pier-id" => text_tie_beams::parse_change_pier_base_pier_id(&args).map(En1998Mutation::ChangePierBasePierId),
         "change-pier-base-radius-m" => text_tie_beams::parse_change_pier_base_radius_m(&args).map(En1998Mutation::ChangePierBaseRadiusM),
-        "change-pier-base-soil-vs-m-s" => text_tie_beams::parse_change_pier_base_soil_vs_m_s(&args).map(En1998Mutation::ChangePierBaseSoilVsMS),
-        "change-pier-base-soil-unit-weight-n-m3" => text_tie_beams::parse_change_pier_base_soil_unit_weight_n_m3(&args).map(En1998Mutation::ChangePierBaseSoilUnitWeightNM3),
+        "change-pier-base-soil-vs-ms" => text_tie_beams::parse_change_pier_base_soil_vs_m_s(&args).map(En1998Mutation::ChangePierBaseSoilVsMS),
+        "change-pier-base-soil-unit-weight-nm3" => text_tie_beams::parse_change_pier_base_soil_unit_weight_n_m3(&args).map(En1998Mutation::ChangePierBaseSoilUnitWeightNM3),
         "change-pier-base-poisson-ratio" => text_tie_beams::parse_change_pier_base_poisson_ratio(&args).map(En1998Mutation::ChangePierBasePoissonRatio),
         "insert-critical-region" => text_tie_beams::parse_insert_critical_region(&args).map(En1998Mutation::InsertCriticalRegion),
         "remove-critical-region" => text_tie_beams::parse_remove_critical_region(&args).map(En1998Mutation::RemoveCriticalRegion),
@@ -722,18 +724,18 @@ fn parse_en1998_mutation(line: &str) -> Result<En1998Mutation, String> {
         "change-critical-region-core-width-m" => text_tie_beams::parse_change_critical_region_core_width_m(&args).map(En1998Mutation::ChangeCriticalRegionCoreWidthM),
         "change-critical-region-core-depth-m" => text_tie_beams::parse_change_critical_region_core_depth_m(&args).map(En1998Mutation::ChangeCriticalRegionCoreDepthM),
         "change-critical-region-axial-force-n" => text_tie_beams::parse_change_critical_region_axial_force_n(&args).map(En1998Mutation::ChangeCriticalRegionAxialForceN),
-        "change-critical-region-concrete-fcd" => text_tie_beams::parse_change_critical_region_concrete_fcd(&args).map(En1998Mutation::ChangeCriticalRegionConcreteDesignStrengthMpa),
-        "change-critical-region-steel-fyd" => text_tie_beams::parse_change_critical_region_steel_fyd(&args).map(En1998Mutation::ChangeCriticalRegionSteelDesignYieldMpa),
-        "change-critical-region-hoop-fywd" => text_tie_beams::parse_change_critical_region_hoop_fywd(&args).map(En1998Mutation::ChangeCriticalRegionHoopDesignYieldMpa),
-        "change-critical-region-long-steel-area" => text_tie_beams::parse_change_critical_region_long_steel_area(&args).map(En1998Mutation::ChangeCriticalRegionLongitudinalSteelAreaM2),
-        "change-critical-region-long-bar-dia" => text_tie_beams::parse_change_critical_region_long_bar_dia(&args).map(En1998Mutation::ChangeCriticalRegionLongitudinalBarDiameterM),
-        "change-critical-region-long-bar-max" => text_tie_beams::parse_change_critical_region_long_bar_max(&args).map(En1998Mutation::ChangeCriticalRegionLongitudinalBarMaxDiameterM),
+        "change-critical-region-concrete-design-strength-mpa" => text_tie_beams::parse_change_critical_region_concrete_fcd(&args).map(En1998Mutation::ChangeCriticalRegionConcreteDesignStrengthMpa),
+        "change-critical-region-steel-design-yield-mpa" => text_tie_beams::parse_change_critical_region_steel_fyd(&args).map(En1998Mutation::ChangeCriticalRegionSteelDesignYieldMpa),
+        "change-critical-region-hoop-design-yield-mpa" => text_tie_beams::parse_change_critical_region_hoop_fywd(&args).map(En1998Mutation::ChangeCriticalRegionHoopDesignYieldMpa),
+        "change-critical-region-longitudinal-steel-area-m2" => text_tie_beams::parse_change_critical_region_long_steel_area(&args).map(En1998Mutation::ChangeCriticalRegionLongitudinalSteelAreaM2),
+        "change-critical-region-longitudinal-bar-diameter-m" => text_tie_beams::parse_change_critical_region_long_bar_dia(&args).map(En1998Mutation::ChangeCriticalRegionLongitudinalBarDiameterM),
+        "change-critical-region-longitudinal-bar-max-diameter-m" => text_tie_beams::parse_change_critical_region_long_bar_max(&args).map(En1998Mutation::ChangeCriticalRegionLongitudinalBarMaxDiameterM),
         "change-critical-region-hoop-diameter-m" => text_tie_beams::parse_change_critical_region_hoop_diameter_m(&args).map(En1998Mutation::ChangeCriticalRegionHoopDiameterM),
         "change-critical-region-hoop-spacing-m" => text_tie_beams::parse_change_critical_region_hoop_spacing_m(&args).map(En1998Mutation::ChangeCriticalRegionHoopSpacingM),
         "change-critical-region-hoop-legs-x" => text_tie_beams::parse_change_critical_region_hoop_legs_x(&args).map(En1998Mutation::ChangeCriticalRegionHoopLegsX),
         "change-critical-region-hoop-legs-y" => text_tie_beams::parse_change_critical_region_hoop_legs_y(&args).map(En1998Mutation::ChangeCriticalRegionHoopLegsY),
-        "change-critical-region-restr-bar-count" => text_tie_beams::parse_change_critical_region_restr_bar_count(&args).map(En1998Mutation::ChangeCriticalRegionRestrainedBarCount),
-        "change-critical-region-restr-bar-space" => text_tie_beams::parse_change_critical_region_restr_bar_space(&args).map(En1998Mutation::ChangeCriticalRegionRestrainedBarSpacingM),
+        "change-critical-region-restrained-bar-count" => text_tie_beams::parse_change_critical_region_restr_bar_count(&args).map(En1998Mutation::ChangeCriticalRegionRestrainedBarCount),
+        "change-critical-region-restrained-bar-spacing-m" => text_tie_beams::parse_change_critical_region_restr_bar_space(&args).map(En1998Mutation::ChangeCriticalRegionRestrainedBarSpacingM),
         "change-seismic-slope-circle-radius" => text_seismic_slopes::parse_change_seismic_slope_circle_radius(&args).map(En1998Mutation::ChangeSeismicSlopeCircleRadius),
         "change-seismic-slope-circle-centre-z" => text_seismic_slopes::parse_change_seismic_slope_circle_centre_z(&args).map(En1998Mutation::ChangeSeismicSlopeCircleCentreZ),
         "change-seismic-slope-circle-centre-x" => text_seismic_slopes::parse_change_seismic_slope_circle_centre_x(&args).map(En1998Mutation::ChangeSeismicSlopeCircleCentreX),

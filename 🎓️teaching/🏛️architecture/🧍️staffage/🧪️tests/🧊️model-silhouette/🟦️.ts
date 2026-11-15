@@ -4,6 +4,7 @@
  *
  * @see ./🥒️.feature — the scenarios
  */
+import { bodyOf } from "../🧰️support/🧊️volumes/🟦️.ts";
 import polygonClipping from "polygon-clipping";
 import { describe, expect, it } from "vitest";
 import { tessellateSolid } from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
@@ -42,7 +43,7 @@ function shapesOf(asset: Asset): Record<(typeof VIEWPOINTS)[number], { readonly 
   const state = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "scale", scale: { denominator: SCALE } });
   const pens = asset.representations[SCALE] as unknown as { pens: Record<string, number | null> };
   const triangles: [number, number, number][][] = [];
-  const solids = asset.volume.solids.filter((s: VolumeSolid) => s.maxDenominator === undefined || SCALE <= s.maxDenominator);
+  const solids = bodyOf(asset, SCALE);
   for (const solid of solids) {
     const g = tessellateSolid({ ...solid, node: solid.bone } as never, COARSE);
     const frame = state.bones[solid.bone]!.frame as never;
@@ -134,7 +135,10 @@ export function rasterIou(authored: readonly Polygon[], volume: readonly Polygon
 }
 
 const assets: Asset[] = [sampleFigure()];
-for (const entry of await assetPathsFromFiles()) if ((IDS as readonly string[]).includes(entry.folder)) assets.push((await readStreamedAsset(entry)).asset);
+for (const entry of await assetPathsFromFiles()) if ((IDS as readonly string[]).includes(entry.folder)) {
+  const candidate = (await readStreamedAsset(entry)).asset;
+  if (candidate.volumes?.[`${SCALE}` as "50"]?.status === "authored") assets.push(candidate);
+}
 
 describe("🧊️ the volume agrees with the authored silhouettes of the presentation pose", () => {
   describe.each(assets.map((a) => [a.id, a] as const))("%s", (_id, asset) => {

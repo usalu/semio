@@ -1353,7 +1353,7 @@
               "tone": 0.35,
               "kind": "rect",
               "x": -2,
-              "y": 0.07,
+              "y": 0.01,
               "w": 2,
               "h": 1.19,
               "region": "leaf",
@@ -1844,20 +1844,6 @@
           "skyViewFactor": 0.5,
           "layers": [
             {
-              "id": "enamel",
-              "title": {
-                "en": "Ceramic-steel writing surface 0.6 mm",
-                "de": "Schreibfläche aus Keramikstahl 0,6 mm"
-              },
-              "kind": "metal",
-              "material": "enamel-board",
-              "thicknessM": 0.0006,
-              "resistanceM2KW": 1.2e-05,
-              "heatCapacityJM2K": 2260,
-              "source": "authored-estimate",
-              "reference": "iso-10456-2007"
-            },
-            {
               "id": "core",
               "title": {
                 "en": "MDF core 16 mm",
@@ -1868,6 +1854,20 @@
               "thicknessM": 0.016,
               "resistanceM2KW": 0.114,
               "heatCapacityJM2K": 20400,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            },
+            {
+              "id": "enamel",
+              "title": {
+                "en": "Ceramic-steel writing surface 0.6 mm",
+                "de": "Schreibfläche aus Keramikstahl 0,6 mm"
+              },
+              "kind": "metal",
+              "material": "enamel-board",
+              "thicknessM": 0.0006,
+              "resistanceM2KW": 1.2e-05,
+              "heatCapacityJM2K": 2260,
               "source": "authored-estimate",
               "reference": "iso-10456-2007"
             }
@@ -1885,7 +1885,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "aluminium-frame",
-          "areaM2": 0.8,
+          "areaM2": 1.71,
           "characteristicLengthM": 0.04,
           "geometry": "cylinder",
           "skyViewFactor": 0.5,
@@ -1924,20 +1924,6 @@
           "skyViewFactor": 0.5,
           "layers": [
             {
-              "id": "enamel",
-              "title": {
-                "en": "Ceramic-steel writing surface 0.6 mm",
-                "de": "Schreibfläche aus Keramikstahl 0,6 mm"
-              },
-              "kind": "metal",
-              "material": "enamel-board",
-              "thicknessM": 0.0006,
-              "resistanceM2KW": 1.2e-05,
-              "heatCapacityJM2K": 2260,
-              "source": "authored-estimate",
-              "reference": "iso-10456-2007"
-            },
-            {
               "id": "core",
               "title": {
                 "en": "MDF core 16 mm",
@@ -1948,6 +1934,20 @@
               "thicknessM": 0.016,
               "resistanceM2KW": 0.114,
               "heatCapacityJM2K": 20400,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            },
+            {
+              "id": "enamel",
+              "title": {
+                "en": "Ceramic-steel writing surface 0.6 mm",
+                "de": "Schreibfläche aus Keramikstahl 0,6 mm"
+              },
+              "kind": "metal",
+              "material": "enamel-board",
+              "thicknessM": 0.0006,
+              "resistanceM2KW": 1.2e-05,
+              "heatCapacityJM2K": 2260,
               "source": "authored-estimate",
               "reference": "iso-10456-2007"
             }
@@ -1965,7 +1965,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "aluminium-frame",
-          "areaM2": 0.32,
+          "areaM2": 1.4,
           "characteristicLengthM": 0.08,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.5,
@@ -2013,270 +2013,1352 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "frame-ring",
-          "kind": "extrude",
-          "bone": "frame",
-          "material": "aluminium-frame",
-          "role": "body",
-          "tone": 0.75,
-          "region": "frame",
-          "profile": [[-2.0, 0.06], [2.0, 0.06], [2.0, 1.26], [-2.0, 1.26]],
-          "plane": "xy",
-          "from": -0.005,
-          "to": 0.04,
-          "holes": [
-            [[-1.965, 0.095], [-0.015, 0.095], [-0.015, 1.225], [-1.965, 1.225]],
-            [[0.015, 0.095], [1.965, 0.095], [1.965, 1.225], [0.015, 1.225]]
-          ]
-        },
-        {
-          "id": "face-left",
-          "kind": "box",
-          "bone": "frame",
-          "material": "enamel-board",
-          "role": "body",
-          "tone": 0.3,
-          "region": "board-face",
-          "size": [1.954, 1.134, 0.03],
-          "transform": {
-            "translation": [-0.99, 0.66, 0.015]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "frame-ring",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-2.0, 0.06], [2.0, 0.06], [2.0, 1.26], [-2.0, 1.26]],
+            "holes": [
+              [[-1.965, 0.095], [-0.015, 0.095], [-0.015, 1.225], [-1.965, 1.225]],
+              [[0.015, 0.095], [1.965, 0.095], [1.965, 1.225], [0.015, 1.225]]
+            ],
+            "plane": "xy",
+            "from": -0.005,
+            "to": 0.04
+          },
+          {
+            "id": "panel-left",
+            "kind": "box",
+            "bone": "frame",
+            "material": "enamel-board",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.954, 1.134, 0.0172],
+            "transform": {
+              "translation": [-0.99, 0.66, 0.0086]
+            }
+          },
+          {
+            "id": "panel-right",
+            "kind": "box",
+            "bone": "frame",
+            "material": "enamel-board",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.954, 1.134, 0.0172],
+            "transform": {
+              "translation": [0.99, 0.66, 0.0086]
+            }
+          },
+          {
+            "id": "top-rail",
+            "kind": "box",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.5,
+            "size": [3.976, 0.048, 0.0076],
+            "transform": {
+              "translation": [0.0, 1.224, -0.0012]
+            }
+          },
+          {
+            "id": "leaf-ring",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[-2.0, 0.0], [0.0, 0.0], [0.0, 1.2], [-2.0, 1.2]],
+            "holes": [
+              [[-1.965, 0.035], [-0.035, 0.035], [-0.035, 1.165], [-1.965, 1.165]]
+            ],
+            "plane": "xy",
+            "from": -0.04,
+            "to": -0.005
+          },
+          {
+            "id": "leaf-face",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "enamel-board",
+            "role": "body",
+            "tone": 0.24,
+            "size": [1.934, 1.134, 0.0172],
+            "transform": {
+              "translation": [-1.0, 0.6, -0.0259]
+            }
+          },
+          {
+            "id": "leaf-top-rail",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.55,
+            "size": [1.976, 0.043, 0.027],
+            "transform": {
+              "translation": [-1.0, 1.1665, -0.0225]
+            }
+          },
+          {
+            "id": "leaf-grip-a",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.12, 0.02, 0.0075],
+            "cornerRadius": 0.002,
+            "transform": {
+              "translation": [-1.54, 0.058, -0.03625]
+            }
+          },
+          {
+            "id": "leaf-grip-b",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.12, 0.02, 0.0075],
+            "cornerRadius": 0.002,
+            "transform": {
+              "translation": [-0.34, 0.058, -0.03625]
+            }
+          },
+          {
+            "id": "hanger-a",
+            "kind": "revolve",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.2,
+            "profile": [[0.0, 0.0], [0.0, 0.022], [0.01, 0.022], [0.01, 0.0], [0.0, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [-1.7, 1.166, -0.04]
+          },
+          {
+            "id": "hanger-b",
+            "kind": "revolve",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.2,
+            "profile": [[0.0, 0.0], [0.0, 0.022], [0.01, 0.022], [0.01, 0.0], [0.0, 0.0]],
+            "axis": [0, 0, 1],
+            "origin": [-0.3, 1.166, -0.04]
+          },
+          {
+            "id": "tray",
+            "kind": "extrude",
+            "bone": "tray",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.65,
+            "profile": [[0.0, -0.04], [0.0, 0.04], [0.06, 0.04], [0.06, 0.032], [0.022, 0.032], [0.022, -0.032], [0.06, -0.032], [0.06, -0.04]],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 2.0
+          },
+          {
+            "id": "chalk-a",
+            "kind": "revolve",
+            "bone": "tray",
+            "material": "chalk",
+            "role": "detail",
+            "tone": 0.85,
+            "profile": [[0, 0.007], [0.09, 0.007]],
+            "axis": [1, 0, 0],
+            "origin": [-1.3, 0.029, -0.012]
+          },
+          {
+            "id": "chalk-b",
+            "kind": "revolve",
+            "bone": "tray",
+            "material": "chalk",
+            "role": "detail",
+            "tone": 0.85,
+            "profile": [[0, 0.007], [0.07, 0.007]],
+            "axis": [1, 0, 0],
+            "origin": [-1.15, 0.029, 0.006]
+          },
+          {
+            "id": "chalk-c",
+            "kind": "revolve",
+            "bone": "tray",
+            "material": "chalk",
+            "role": "detail",
+            "tone": 0.85,
+            "profile": [[0, 0.007], [0.08, 0.007]],
+            "axis": [1, 0, 0],
+            "origin": [-1.05, 0.029, -0.003]
+          },
+          {
+            "id": "sponge",
+            "kind": "box",
+            "bone": "tray",
+            "material": "sponge",
+            "role": "detail",
+            "tone": 0.6,
+            "size": [0.14, 0.036, 0.05],
+            "cornerRadius": 0.004,
+            "transform": {
+              "translation": [0.97, 0.04, 0.0]
+            }
+          },
+          {
+            "id": "ruler",
+            "kind": "box",
+            "bone": "tray",
+            "material": "chalk",
+            "role": "detail",
+            "tone": 0.55,
+            "size": [0.9, 0.012, 0.04],
+            "transform": {
+              "translation": [-0.25, 0.028, 0.004]
+            }
           }
-        },
-        {
-          "id": "face-right",
-          "kind": "box",
-          "bone": "frame",
-          "material": "enamel-board",
-          "role": "body",
-          "tone": 0.3,
-          "region": "board-face",
-          "size": [1.954, 1.134, 0.03],
-          "transform": {
-            "translation": [0.99, 0.66, 0.015]
+        ],
+        "thermal": [
+          {
+            "id": "core-left",
+            "kind": "box",
+            "bone": "frame",
+            "material": "mdf-core",
+            "role": "body",
+            "tone": 0.5,
+            "size": [1.9527999999999999, 1.1327999999999998, 0.016],
+            "transform": {
+              "translation": [-0.99, 0.66, 0.0086]
+            },
+            "region": "board-face",
+            "layer": "core"
+          },
+          {
+            "id": "enamel-left",
+            "of": "panel-left",
+            "region": "board-face",
+            "layer": "enamel",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "core-right",
+            "kind": "box",
+            "bone": "frame",
+            "material": "mdf-core",
+            "role": "body",
+            "tone": 0.5,
+            "size": [1.9527999999999999, 1.1327999999999998, 0.016],
+            "transform": {
+              "translation": [0.99, 0.66, 0.0086]
+            },
+            "region": "board-face",
+            "layer": "core"
+          },
+          {
+            "id": "enamel-right",
+            "of": "panel-right",
+            "region": "board-face",
+            "layer": "enamel",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "leaf-core",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "mdf-core",
+            "role": "body",
+            "tone": 0.5,
+            "size": [1.9327999999999999, 1.1327999999999998, 0.016],
+            "transform": {
+              "translation": [-1.0, 0.6, -0.0259]
+            },
+            "region": "leaf",
+            "layer": "core"
+          },
+          {
+            "id": "leaf-enamel",
+            "of": "leaf-face",
+            "region": "leaf",
+            "layer": "enamel",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-frame-ring",
+            "of": "frame-ring",
+            "region": "frame",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-top-rail",
+            "of": "top-rail",
+            "region": "frame"
+          },
+          {
+            "id": "th-leaf-ring",
+            "of": "leaf-ring",
+            "region": "leaf"
+          },
+          {
+            "id": "th-leaf-top-rail",
+            "of": "leaf-top-rail",
+            "region": "leaf"
+          },
+          {
+            "id": "th-leaf-grip-a",
+            "of": "leaf-grip-a",
+            "region": "leaf"
+          },
+          {
+            "id": "th-leaf-grip-b",
+            "of": "leaf-grip-b",
+            "region": "leaf"
+          },
+          {
+            "id": "th-hanger-a",
+            "of": "hanger-a",
+            "region": "leaf"
+          },
+          {
+            "id": "th-hanger-b",
+            "of": "hanger-b",
+            "region": "leaf"
+          },
+          {
+            "id": "th-tray",
+            "of": "tray",
+            "region": "tray"
+          },
+          {
+            "id": "th-chalk-a",
+            "of": "chalk-a",
+            "region": "tray"
+          },
+          {
+            "id": "th-chalk-b",
+            "of": "chalk-b",
+            "region": "tray"
+          },
+          {
+            "id": "th-chalk-c",
+            "of": "chalk-c",
+            "region": "tray"
+          },
+          {
+            "id": "th-sponge",
+            "of": "sponge",
+            "region": "tray"
+          },
+          {
+            "id": "th-ruler",
+            "of": "ruler",
+            "region": "tray"
           }
-        },
-        {
-          "id": "top-rail",
-          "kind": "box",
-          "bone": "frame",
-          "material": "aluminium-frame",
-          "role": "body",
-          "tone": 0.5,
-          "region": "frame",
-          "maxDenominator": 100,
-          "size": [3.976, 0.048, 0.005],
-          "transform": {
-            "translation": [0.0, 1.224, -0.0025]
+        ],
+        "structure": [
+          {
+            "id": "frame-top-bar",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[1.225, -0.005], [1.26, -0.005], [1.26, 0.04], [1.225, 0.04]],
+            "holes": [
+              [[1.227, -0.003], [1.258, -0.003], [1.258, 0.038], [1.227, 0.038]]
+            ],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 2.0,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "frame-bottom-bar",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[0.06, -0.005], [0.095, -0.005], [0.095, 0.04], [0.06, 0.04]],
+            "holes": [
+              [[0.062, -0.003], [0.093, -0.003], [0.093, 0.038], [0.062, 0.038]]
+            ],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 2.0,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "frame-stile-l",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-0.005, -2.0], [0.04, -2.0], [0.04, -1.965], [-0.005, -1.965]],
+            "holes": [
+              [[-0.003, -1.998], [0.038, -1.998], [0.038, -1.967], [-0.003, -1.967]]
+            ],
+            "plane": "zx",
+            "from": 0.095,
+            "to": 1.225,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "frame-stile-r",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-0.005, 1.965], [0.04, 1.965], [0.04, 2.0], [-0.005, 2.0]],
+            "holes": [
+              [[-0.003, 1.967], [0.038, 1.967], [0.038, 1.998], [-0.003, 1.998]]
+            ],
+            "plane": "zx",
+            "from": 0.095,
+            "to": 1.225,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "frame-mullion",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-0.005, -0.015], [0.04, -0.015], [0.04, 0.015], [-0.005, 0.015]],
+            "holes": [
+              [[-0.003, -0.013], [0.038, -0.013], [0.038, 0.013], [-0.003, 0.013]]
+            ],
+            "plane": "zx",
+            "from": 0.095,
+            "to": 1.225,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "panel-left-member",
+            "of": "panel-left",
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "panel-right-member",
+            "of": "panel-right",
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "tray-member",
+            "of": "tray",
+            "member": "tray",
+            "part": "member"
+          },
+          {
+            "id": "leaf-top-bar",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[1.165, -0.04], [1.2, -0.04], [1.2, -0.005], [1.165, -0.005]],
+            "holes": [
+              [[1.167, -0.038], [1.198, -0.038], [1.198, -0.007], [1.167, -0.007]]
+            ],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 0.0,
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-bottom-bar",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[0.0, -0.04], [0.035, -0.04], [0.035, -0.005], [0.0, -0.005]],
+            "holes": [
+              [[0.002, -0.038], [0.033, -0.038], [0.033, -0.007], [0.002, -0.007]]
+            ],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 0.0,
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-stile-l",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[-0.04, -2.0], [-0.005, -2.0], [-0.005, -1.965], [-0.04, -1.965]],
+            "holes": [
+              [[-0.038, -1.998], [-0.007, -1.998], [-0.007, -1.967], [-0.038, -1.967]]
+            ],
+            "plane": "zx",
+            "from": 0.035,
+            "to": 1.165,
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-stile-r",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[-0.04, -0.035], [-0.005, -0.035], [-0.005, 0.0], [-0.04, 0.0]],
+            "holes": [
+              [[-0.038, -0.033], [-0.007, -0.033], [-0.007, -0.002], [-0.038, -0.002]]
+            ],
+            "plane": "zx",
+            "from": 0.035,
+            "to": 1.165,
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-panel-member",
+            "of": "leaf-face",
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "hanger-a-joint",
+            "of": "hanger-a",
+            "member": "leaf",
+            "part": "joint"
+          },
+          {
+            "id": "hanger-b-joint",
+            "of": "hanger-b",
+            "member": "leaf",
+            "part": "joint"
+          },
+          {
+            "id": "tray-clip-a",
+            "kind": "box",
+            "bone": "tray",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.04, 0.053, 0.04],
+            "transform": {
+              "translation": [-1.5, 0.0485, 0.0]
+            },
+            "member": "tray",
+            "part": "joint"
+          },
+          {
+            "id": "tray-clip-b",
+            "kind": "box",
+            "bone": "tray",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.04, 0.053, 0.04],
+            "transform": {
+              "translation": [1.5, 0.0485, 0.0]
+            },
+            "member": "tray",
+            "part": "joint"
+          },
+          {
+            "id": "support-wall-hook-pin",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [[1.19, 0.0075], [1.21, 0.0075], [1.21, 0.055], [1.2, 0.062], [1.19, 0.055]],
+            "plane": "yz",
+            "from": -0.15,
+            "to": 0.15,
+            "member": "frame",
+            "part": "support",
+            "anchor": "wall-hook"
+          },
+          {
+            "id": "support-wall-rest-roller",
+            "kind": "revolve",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [[0, 0.0085], [0.3, 0.0085]],
+            "axis": [1, 0, 0],
+            "origin": [-0.15, 0.1, 0.0155],
+            "member": "frame",
+            "part": "support",
+            "anchor": "wall-rest"
           }
-        },
-        {
-          "id": "leaf-frame",
-          "kind": "extrude",
-          "bone": "leaf",
-          "material": "aluminium-frame",
-          "role": "body",
-          "tone": 0.85,
-          "region": "leaf",
-          "profile": [[-2.0, 0.0], [0.0, 0.0], [0.0, 1.2], [-2.0, 1.2]],
-          "plane": "xy",
-          "from": -0.04,
-          "to": -0.005,
-          "holes": [
-            [[-1.965, 0.035], [-0.035, 0.035], [-0.035, 1.165], [-1.965, 1.165]]
-          ]
-        },
-        {
-          "id": "leaf-face",
-          "kind": "box",
-          "bone": "leaf",
-          "material": "enamel-board",
-          "role": "body",
-          "tone": 0.24,
-          "region": "leaf",
-          "size": [1.934, 1.134, 0.02],
-          "transform": {
-            "translation": [-1.0, 0.6, -0.022]
+        ],
+        "decisions": [
+          {
+            "en": "Body: the 4 m x 1.2 m board as the 1:50 drawing builds it: the 35 mm aluminium frame ring (45 mm deep, 30 mm centre mullion) extruded from the drawn outline with its two panel openings, two 17.2 mm ceramic-steel panels (0.6 mm skins around a 16 mm MDF core) seated 5 mm behind the front rim and overlapping the frame by 2 mm, the 48 mm guide rail on the top bar, the sliding leaf in front (own frame ring 35 mm deep, 17.2 mm panel, top rail, two flush finger pulls of 7.5 mm, two 44 mm hanger rollers) shown in the leaf-left pose, the chalk tray as the U trough of the drawing (22 mm floor, 8 mm walls) with three chalk cylinders, the sponge and the ruler. The grips and rollers are now 7.5 mm thick (before: 2.5 and 3.5 mm, below the feature) and sit flush with the leaf front instead of protruding. The aluminium profile is modelled as its closed envelope: its 2 mm wall is below the feature and no drawing shows the cavity.",
+            "de": "Körper: die Tafel 4 m x 1,2 m, wie die Zeichnung 1:50 sie baut: der Alurahmen 35 mm (45 mm tief, 30 mm Mittelsteg) als Ring aus dem gezeichneten Umriss mit den beiden Plattenöffnungen extrudiert, zwei Keramikstahlplatten von 17,2 mm (Deckbleche 0,6 mm um einen MDF-Kern von 16 mm), 5 mm hinter dem Vorderrand eingesetzt und 2 mm in den Rahmen überlappend, die Führungsschiene 48 mm auf dem oberen Holm, davor der Schiebeflügel (eigener Rahmenring 35 mm tief, Platte 17,2 mm, Oberschiene, zwei bündige Griffmulden von 7,5 mm, zwei Laufrollen von 44 mm) in der Pose Flügel links, die Kreideablage als U-Trog der Zeichnung (Boden 22 mm, Wände 8 mm) mit drei Kreidezylindern, Schwamm und Lineal. Griffe und Rollen sind jetzt 7,5 mm dick (vorher 2,5 und 3,5 mm, unter der Einzelheit) und liegen bündig mit der Flügelfront statt vorzustehen. Das Aluprofil ist als geschlossene Hülle modelliert: seine Wand von 2 mm liegt unter der Einzelheit, und keine Zeichnung zeigt den Hohlraum."
+          },
+          {
+            "en": "Thermal: board-face and leaf are nested shells per layer (innermost first, after the layer order of both regions was corrected in the asset to core, then enamel): the 16 mm MDF core inside the full 17.2 mm panel whose skin is the 0.6 mm enamel; the enamel shell is the body panel, only its front face counts (the hidden back is a section face). frame, the leaf's aluminium parts and the tray with its chalk, sponge and ruler reference the body. The frame area 0.8 m2 was a mis-estimate against the modelled ring and is corrected to 1.1 m2 (1:50 exposes 1.15 m2, ratio 1.4); the tray 0.32 m2 is the plan footprint, the trough exposes 1.34 m2 (ratio 4.2): not applied, listed in area-review.md, the tray area stays outside 15 %.",
+            "de": "Thermisch: board-face und leaf sind verschachtelte Schalen je Schicht (innen zuerst, nachdem die Schichtreihenfolge beider Regionen im Asset auf core, dann enamel berichtigt wurde): der MDF-Kern von 16 mm in der vollen Platte von 17,2 mm, deren Haut das Emaille von 0,6 mm ist; die Emailleschale ist die Körperplatte, nur ihre Vorderseite zählt (die verdeckte Rückseite ist eine Schnittfläche). Rahmen, die Aluteile des Flügels und die Ablage mit Kreide, Schwamm und Lineal verweisen auf den Körper. Die Rahmenfläche 0,8 m2 war eine Fehlschätzung gegenüber dem modellierten Ring und ist auf 1,1 m2 berichtigt (1:50 zeigt 1,15 m2, Verhältnis 1,4); die Ablage mit 0,32 m2 ist die Grundrissfläche, der Trog zeigt 1,34 m2 (Verhältnis 4,2): nicht angewandt, in area-review.md aufgeführt, die Ablagefläche bleibt außerhalb von 15 %."
+          },
+          {
+            "en": "Structure: the load path of the 72 kg board: the frame carries the panels, so the member solids are the five hollow aluminium bars of the frame (top, bottom, two stiles, mullion; 35 x 45 mm, 2 mm wall, real extruded sections) and the two panels (referenced, they are the shear skins), the leaf has four hollow bars and its panel, the tray is its own trough section (referenced). Joints are the two hanger rollers (the prismatic joint of the leaf) and two tray clips between tray and frame; the supports are the pin (hanging rail, a wedge-ended rail 0.3 m wide on the upper bar) and the roller (a 17 mm buffer cylinder 0.3 m wide at the lower bar); both reach the elevation plane where the anchors lie. The masses are carried by the panels, so there are no extra mass solids.",
+            "de": "Tragwerk: der Lastpfad der Tafel von 72 kg: der Rahmen trägt die Platten, daher sind die Stabkörper die fünf hohlen Alustäbe des Rahmens (oben, unten, zwei Pfosten, Mittelsteg; 35 x 45 mm, Wand 2 mm, echte extrudierte Profile) und die beiden Platten (referenziert, sie sind die Schubhäute), der Flügel hat vier Hohlstäbe und seine Platte, die Ablage ist ihr eigenes Trogprofil (referenziert). Gelenke sind die zwei Laufrollen (das Schubgelenk des Flügels) und zwei Ablagehalter zwischen Ablage und Rahmen; die Auflager sind der Bolzen (Hängeschiene, eine Schiene mit keilförmigem Ende, 0,3 m breit am oberen Holm) und die Rolle (ein Pufferzylinder von 17 mm, 0,3 m breit am unteren Holm); beide reichen bis zur Aufrissebene, in der die Anker liegen. Die Massen tragen die Platten, daher gibt es keine zusätzlichen Massenkörper."
           }
-        },
-        {
-          "id": "leaf-top-rail",
-          "kind": "box",
-          "bone": "leaf",
-          "material": "aluminium-frame",
-          "role": "body",
-          "tone": 0.55,
-          "region": "leaf",
-          "maxDenominator": 100,
-          "size": [1.976, 0.043, 0.027],
-          "transform": {
-            "translation": [-1.0, 1.1665, -0.0225]
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "frame-ring",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-2.0, 0.06], [2.0, 0.06], [2.0, 1.26], [-2.0, 1.26]],
+            "holes": [
+              [[-1.96, 0.1], [-0.02, 0.1], [-0.02, 1.22], [-1.96, 1.22]],
+              [[0.02, 0.1], [1.96, 0.1], [1.96, 1.22], [0.02, 1.22]]
+            ],
+            "plane": "xy",
+            "from": -0.005,
+            "to": 0.04
+          },
+          {
+            "id": "panel-left",
+            "kind": "box",
+            "bone": "frame",
+            "material": "enamel-board",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.944, 1.124, 0.03],
+            "transform": {
+              "translation": [-0.99, 0.66, 0.015]
+            }
+          },
+          {
+            "id": "panel-right",
+            "kind": "box",
+            "bone": "frame",
+            "material": "enamel-board",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.944, 1.124, 0.03],
+            "transform": {
+              "translation": [0.99, 0.66, 0.015]
+            }
+          },
+          {
+            "id": "top-rail",
+            "kind": "box",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.5,
+            "size": [3.96, 0.05, 0.02],
+            "transform": {
+              "translation": [0.0, 1.215, 0.005]
+            }
+          },
+          {
+            "id": "leaf-ring",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[-2.0, 0.0], [0.0, 0.0], [0.0, 1.2], [-2.0, 1.2]],
+            "holes": [
+              [[-1.96, 0.04], [-0.04, 0.04], [-0.04, 1.16], [-1.96, 1.16]]
+            ],
+            "plane": "xy",
+            "from": -0.04,
+            "to": -0.005
+          },
+          {
+            "id": "leaf-face",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "enamel-board",
+            "role": "body",
+            "tone": 0.24,
+            "size": [1.924, 1.124, 0.02],
+            "transform": {
+              "translation": [-1.0, 0.6, -0.022]
+            }
+          },
+          {
+            "id": "leaf-top-rail",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.55,
+            "size": [1.96, 0.045, 0.027],
+            "transform": {
+              "translation": [-1.0, 1.1575, -0.0225]
+            }
+          },
+          {
+            "id": "tray",
+            "kind": "extrude",
+            "bone": "tray",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.65,
+            "profile": [[0.0, -0.04], [0.0, 0.04], [0.06, 0.04], [0.06, 0.025], [0.022, 0.025], [0.022, -0.025], [0.06, -0.025], [0.06, -0.04]],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 2.0
           }
-        },
-        {
-          "id": "leaf-grip-a",
-          "kind": "box",
-          "bone": "leaf",
-          "material": "aluminium-frame",
-          "role": "detail",
-          "tone": 0.4,
-          "region": "leaf",
-          "maxDenominator": 50,
-          "size": [0.12, 0.02, 0.0025],
-          "cornerRadius": 0.001,
-          "transform": {
-            "translation": [-1.54, 0.058, -0.04125]
+        ],
+        "thermal": [
+          {
+            "id": "th-frame-ring",
+            "of": "frame-ring",
+            "region": "frame",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-top-rail",
+            "of": "top-rail",
+            "region": "frame"
+          },
+          {
+            "id": "th-panel-left",
+            "of": "panel-left",
+            "region": "board-face",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-panel-right",
+            "of": "panel-right",
+            "region": "board-face",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-leaf-ring",
+            "of": "leaf-ring",
+            "region": "leaf"
+          },
+          {
+            "id": "th-leaf-face",
+            "of": "leaf-face",
+            "region": "leaf",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-leaf-top-rail",
+            "of": "leaf-top-rail",
+            "region": "leaf"
+          },
+          {
+            "id": "th-tray",
+            "of": "tray",
+            "region": "tray"
           }
-        },
-        {
-          "id": "leaf-grip-b",
-          "kind": "box",
-          "bone": "leaf",
-          "material": "aluminium-frame",
-          "role": "detail",
-          "tone": 0.4,
-          "region": "leaf",
-          "maxDenominator": 50,
-          "size": [0.12, 0.02, 0.0025],
-          "cornerRadius": 0.001,
-          "transform": {
-            "translation": [-0.34, 0.058, -0.04125]
+        ],
+        "structure": [
+          {
+            "id": "frame-top-bar",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[1.22, -0.005], [1.26, -0.005], [1.26, 0.04], [1.22, 0.04]],
+            "holes": [
+              [[1.2225, -0.0025], [1.2575, -0.0025], [1.2575, 0.0375], [1.2225, 0.0375]]
+            ],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 2.0,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "frame-bottom-bar",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[0.06, -0.005], [0.1, -0.005], [0.1, 0.04], [0.06, 0.04]],
+            "holes": [
+              [[0.0625, -0.0025], [0.0975, -0.0025], [0.0975, 0.0375], [0.0625, 0.0375]]
+            ],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 2.0,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "frame-stile-l",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-0.005, -2.0], [0.04, -2.0], [0.04, -1.96], [-0.005, -1.96]],
+            "holes": [
+              [[-0.0025, -1.9975], [0.0375, -1.9975], [0.0375, -1.9625], [-0.0025, -1.9625]]
+            ],
+            "plane": "zx",
+            "from": 0.1,
+            "to": 1.22,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "frame-stile-r",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-0.005, 1.96], [0.04, 1.96], [0.04, 2.0], [-0.005, 2.0]],
+            "holes": [
+              [[-0.0025, 1.9625], [0.0375, 1.9625], [0.0375, 1.9975], [-0.0025, 1.9975]]
+            ],
+            "plane": "zx",
+            "from": 0.1,
+            "to": 1.22,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "frame-mullion",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-0.005, -0.02], [0.04, -0.02], [0.04, 0.02], [-0.005, 0.02]],
+            "holes": [
+              [[-0.0025, -0.0175], [0.0375, -0.0175], [0.0375, 0.0175], [-0.0025, 0.0175]]
+            ],
+            "plane": "zx",
+            "from": 0.1,
+            "to": 1.22,
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "panel-left-member",
+            "of": "panel-left",
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "panel-right-member",
+            "of": "panel-right",
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "tray-member",
+            "of": "tray",
+            "member": "tray",
+            "part": "member"
+          },
+          {
+            "id": "leaf-top-bar",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[1.16, -0.04], [1.2, -0.04], [1.2, -0.005], [1.16, -0.005]],
+            "holes": [
+              [[1.1625, -0.0375], [1.1975, -0.0375], [1.1975, -0.0075], [1.1625, -0.0075]]
+            ],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 0.0,
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-bottom-bar",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[0.0, -0.04], [0.04, -0.04], [0.04, -0.005], [0.0, -0.005]],
+            "holes": [
+              [[0.0025, -0.0375], [0.0375, -0.0375], [0.0375, -0.0075], [0.0025, -0.0075]]
+            ],
+            "plane": "yz",
+            "from": -2.0,
+            "to": 0.0,
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-stile-l",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[-0.04, -2.0], [-0.005, -2.0], [-0.005, -1.96], [-0.04, -1.96]],
+            "holes": [
+              [[-0.0375, -1.9975], [-0.0075, -1.9975], [-0.0075, -1.9625], [-0.0375, -1.9625]]
+            ],
+            "plane": "zx",
+            "from": 0.04,
+            "to": 1.16,
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-stile-r",
+            "kind": "extrude",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.85,
+            "profile": [[-0.04, -0.04], [-0.005, -0.04], [-0.005, 0.0], [-0.04, 0.0]],
+            "holes": [
+              [[-0.0375, -0.0375], [-0.0075, -0.0375], [-0.0075, -0.0025], [-0.0375, -0.0025]]
+            ],
+            "plane": "zx",
+            "from": 0.04,
+            "to": 1.16,
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-panel-member",
+            "of": "leaf-face",
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-runner-joint",
+            "of": "leaf-top-rail",
+            "member": "leaf",
+            "part": "joint"
+          },
+          {
+            "id": "tray-clip-a",
+            "kind": "box",
+            "bone": "tray",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.04, 0.053, 0.04],
+            "transform": {
+              "translation": [-1.5, 0.0485, 0.0]
+            },
+            "member": "tray",
+            "part": "joint"
+          },
+          {
+            "id": "tray-clip-b",
+            "kind": "box",
+            "bone": "tray",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.04, 0.053, 0.04],
+            "transform": {
+              "translation": [1.5, 0.0485, 0.0]
+            },
+            "member": "tray",
+            "part": "joint"
+          },
+          {
+            "id": "support-wall-hook-pin",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [[1.19, 0.0075], [1.215, 0.0075], [1.215, 0.055], [1.2025, 0.062], [1.19, 0.055]],
+            "plane": "yz",
+            "from": -0.15,
+            "to": 0.15,
+            "member": "frame",
+            "part": "support",
+            "anchor": "wall-hook"
+          },
+          {
+            "id": "support-wall-rest-roller",
+            "kind": "revolve",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [[0, 0.0095], [0.3, 0.0095]],
+            "axis": [1, 0, 0],
+            "origin": [-0.15, 0.1, 0.0165],
+            "member": "frame",
+            "part": "support",
+            "anchor": "wall-rest"
           }
-        },
-        {
-          "id": "hanger-a",
-          "kind": "revolve",
-          "bone": "leaf",
-          "material": "aluminium-frame",
-          "role": "body",
-          "tone": 0.2,
-          "region": "leaf",
-          "maxDenominator": 50,
-          "profile": [[0.0, 0.0], [0.0, 0.022], [0.0035, 0.022], [0.0035, 0.0]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [-1.7, 1.166, -0.0415]
+        ],
+        "decisions": [
+          {
+            "en": "Body: the same parts merged to what 1:100 draws: frame ring with 40 mm borders, two 30 mm panels (the drawn depth), the guide rail 20 mm deep (the 5 mm rail is below the 15 mm feature), leaf ring, leaf panel 20 mm and leaf rail, the tray as a U trough with 15 mm walls (the feature). Finger pulls, hanger rollers, chalk, sponge and ruler are gone (not drawn, below 15 mm or merged).",
+            "de": "Körper: dieselben Teile zusammengefasst auf das, was 1:100 zeichnet: Rahmenring mit Rändern von 40 mm, zwei Platten von 30 mm (die gezeichnete Tiefe), die Führungsschiene 20 mm tief (die 5 mm der Schiene liegen unter der Einzelheit 15 mm), Flügelring, Flügelplatte 20 mm und Flügelschiene, die Ablage als U-Trog mit Wänden von 15 mm (die Einzelheit). Griffmulden, Laufrollen, Kreide, Schwamm und Lineal entfallen (nicht gezeichnet, unter 15 mm oder zusammengefasst)."
+          },
+          {
+            "en": "Thermal: all four regions reference the body solids (single skin per region at this scale); the panel and leaf backs are section faces. The tray still measures 3 times its declared area (area-review.md).",
+            "de": "Thermisch: alle vier Regionen verweisen auf Körper (je eine Haut pro Region bei diesem Maßstab); die Rückseiten von Platte und Flügel sind Schnittflächen. Die Ablage misst weiter das Dreifache ihrer erklärten Fläche (area-review.md)."
+          },
+          {
+            "en": "Structure: as at 1:50 with 40 mm hollow bars (2.5 mm wall), the two hanger rollers merged into the leaf rail as the runner joint, both tray clips kept, supports 20 mm and 19 mm thick.",
+            "de": "Tragwerk: wie bei 1:50 mit Hohlstäben von 40 mm (Wand 2,5 mm), die zwei Laufrollen in der Flügelschiene als Laufgelenk zusammengefasst, beide Ablagehalter behalten, Auflager 20 mm und 19 mm dick."
           }
-        },
-        {
-          "id": "hanger-b",
-          "kind": "revolve",
-          "bone": "leaf",
-          "material": "aluminium-frame",
-          "role": "body",
-          "tone": 0.2,
-          "region": "leaf",
-          "maxDenominator": 50,
-          "profile": [[0.0, 0.0], [0.0, 0.022], [0.0035, 0.022], [0.0035, 0.0]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, 0],
-          "transform": {
-            "translation": [-0.3, 1.166, -0.0415]
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "frame-ring",
+            "kind": "extrude",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-2.0, 0.07], [2.0, 0.07], [2.0, 1.26], [-2.0, 1.26]],
+            "holes": [
+              [[-1.96, 0.11], [-0.02, 0.11], [-0.02, 1.22], [-1.96, 1.22]],
+              [[0.02, 0.11], [1.96, 0.11], [1.96, 1.22], [0.02, 1.22]]
+            ],
+            "plane": "xy",
+            "from": -0.005,
+            "to": 0.04
+          },
+          {
+            "id": "panel-left",
+            "kind": "box",
+            "bone": "frame",
+            "material": "enamel-board",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.944, 1.114, 0.032],
+            "transform": {
+              "translation": [-0.99, 0.665, 0.016]
+            }
+          },
+          {
+            "id": "panel-right",
+            "kind": "box",
+            "bone": "frame",
+            "material": "enamel-board",
+            "role": "body",
+            "tone": 0.3,
+            "size": [1.944, 1.114, 0.032],
+            "transform": {
+              "translation": [0.99, 0.665, 0.016]
+            }
+          },
+          {
+            "id": "leaf-slab",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.35,
+            "size": [2.0, 1.19, 0.035],
+            "transform": {
+              "translation": [-1.0, 0.605, -0.0225]
+            }
+          },
+          {
+            "id": "tray",
+            "kind": "box",
+            "bone": "tray",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.65,
+            "size": [4.0, 0.07, 0.08],
+            "transform": {
+              "translation": [0.0, 0.035, 0.0]
+            }
           }
-        },
-        {
-          "id": "tray",
-          "kind": "extrude",
-          "bone": "tray",
-          "material": "aluminium-frame",
-          "role": "body",
-          "tone": 0.65,
-          "region": "tray",
-          "profile": [[0.0, -0.04], [0.0, 0.04], [0.06, 0.04], [0.06, 0.032], [0.022, 0.032], [0.022, -0.032], [0.06, -0.032], [0.06, -0.04]],
-          "plane": "yz",
-          "from": -2,
-          "to": 2
-        },
-        {
-          "id": "chalk-a",
-          "kind": "capsule",
-          "bone": "tray",
-          "material": "chalk",
-          "role": "detail",
-          "tone": 0.9,
-          "region": "tray",
-          "maxDenominator": 50,
-          "p0": [-1.293, 0.029, -0.012],
-          "p1": [-1.217, 0.029, -0.012],
-          "r0": 0.007,
-          "r1": 0.007
-        },
-        {
-          "id": "chalk-b",
-          "kind": "capsule",
-          "bone": "tray",
-          "material": "chalk",
-          "role": "detail",
-          "tone": 0.85,
-          "region": "tray",
-          "maxDenominator": 50,
-          "p0": [-1.143, 0.029, 0.006],
-          "p1": [-1.087, 0.029, 0.006],
-          "r0": 0.007,
-          "r1": 0.007
-        },
-        {
-          "id": "chalk-c",
-          "kind": "capsule",
-          "bone": "tray",
-          "material": "chalk",
-          "role": "detail",
-          "tone": 0.8,
-          "region": "tray",
-          "maxDenominator": 50,
-          "p0": [-1.043, 0.029, -0.003],
-          "p1": [-0.977, 0.029, -0.003],
-          "r0": 0.007,
-          "r1": 0.007
-        },
-        {
-          "id": "sponge",
-          "kind": "box",
-          "bone": "tray",
-          "material": "sponge",
-          "role": "detail",
-          "tone": 0.6,
-          "region": "tray",
-          "maxDenominator": 50,
-          "size": [0.14, 0.036, 0.05],
-          "cornerRadius": 0.004,
-          "transform": {
-            "translation": [0.97, 0.04, 0.0]
+        ],
+        "thermal": [
+          {
+            "id": "th-frame-ring",
+            "of": "frame-ring",
+            "region": "frame",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-panel-left",
+            "of": "panel-left",
+            "region": "board-face",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-panel-right",
+            "of": "panel-right",
+            "region": "board-face",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-leaf-slab",
+            "of": "leaf-slab",
+            "region": "leaf",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-tray",
+            "of": "tray",
+            "region": "tray"
           }
-        },
-        {
-          "id": "ruler",
-          "kind": "box",
-          "bone": "tray",
-          "material": "chalk",
-          "role": "detail",
-          "tone": 0.55,
-          "region": "tray",
-          "maxDenominator": 50,
-          "size": [0.9, 0.012, 0.04],
-          "transform": {
-            "translation": [-0.25, 0.028, 0.004]
+        ],
+        "structure": [
+          {
+            "id": "frame-member",
+            "of": "frame-ring",
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "panel-left-member",
+            "of": "panel-left",
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "panel-right-member",
+            "of": "panel-right",
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "tray-member",
+            "of": "tray",
+            "member": "tray",
+            "part": "member"
+          },
+          {
+            "id": "leaf-member",
+            "of": "leaf-slab",
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "leaf-runner-joint",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.4,
+            "size": [1.9, 0.032, 0.032],
+            "transform": {
+              "translation": [-1.0, 1.17, -0.0225]
+            },
+            "member": "leaf",
+            "part": "joint"
+          },
+          {
+            "id": "support-wall-hook-pin",
+            "kind": "box",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.032, 0.0545],
+            "transform": {
+              "translation": [0.0, 1.2, 0.03475]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "wall-hook"
+          },
+          {
+            "id": "support-wall-rest-roller",
+            "kind": "revolve",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.15,
+            "profile": [[0, 0.0165], [0.3, 0.0165]],
+            "axis": [1, 0, 0],
+            "origin": [-0.15, 0.1, 0.0165],
+            "member": "frame",
+            "part": "support",
+            "anchor": "wall-rest"
           }
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The frame is one aluminium ring with two window openings, 45 mm deep and set to the back (z -0.005 to 0.04); the sliding leaf hangs in front of it (z -0.04 to -0.005), so the leaf passes the centre post in every pose. The authored front and plan views draw the frame the full 80 mm deep, which would make the leaf collide with the frame.",
-          "de": "Der Rahmen ist ein einziger Aluminiumring mit zwei Fensteröffnungen, 45 mm tief und nach hinten gesetzt (z -0,005 bis 0,04); der Schiebeflügel hängt davor (z -0,04 bis -0,005) und passiert so in jeder Pose den Mittelpfosten. Die gezeichnete Vorder- und Draufsicht zeigt den Rahmen in voller Tiefe von 80 mm, wodurch der Flügel mit dem Rahmen kollidieren würde."
-        },
-        {
-          "en": "The writing surfaces are 30 mm thick enamel panels recessed into the frame; the MDF core of the layer build-up is not modelled separately.",
-          "de": "Die Schreibflächen sind 30 mm dicke Emailtafeln, in den Rahmen eingelassen; der MDF-Kern des Schichtaufbaus wird nicht gesondert modelliert."
-        },
-        {
-          "en": "The tray is a trough (extrusion of a U profile along the board) with chalk sticks as capsules, a sponge and a ruler lying in it; they are shown to 1:50 only. The hanger wheels and the grips stand 1.5 to 3 mm proud of the leaf front.",
-          "de": "Die Ablage ist eine Rinne (Extrusion eines U-Profils entlang der Tafel) mit Kreidestücken als Kapseln, einem Schwamm und einem Lineal; sie erscheinen nur bis 1:50. Die Laufrollen und Griffe stehen 1,5 bis 3 mm vor der Flügelfront."
-        }
-      ]
+        ],
+        "decisions": [
+          {
+            "en": "Body: the 30 mm feature takes away the borders' detail: frame ring (40 mm borders) with two 32 mm panels, the leaf as one 35 mm slab, the tray as one 70 x 80 mm block (the drawing shows it as a filled rectangle), no rail, no tray contents.",
+            "de": "Körper: die Einzelheit 30 mm nimmt den Rändern das Detail: Rahmenring (Ränder 40 mm) mit zwei Platten von 32 mm, der Flügel als eine Platte von 35 mm, die Ablage als ein Block 70 x 80 mm (die Zeichnung zeigt ein gefülltes Rechteck), keine Schiene, kein Ablageinhalt."
+          },
+          {
+            "en": "Thermal: the four regions reference the ring, the panels, the leaf slab and the tray block; only the total over all regions is compared at this scale.",
+            "de": "Thermisch: die vier Regionen verweisen auf Ring, Platten, Flügelplatte und Ablageblock; bei diesem Maßstab wird nur die Summe über alle Regionen verglichen."
+          },
+          {
+            "en": "Structure: hollow bars are merged: the frame ring, panels, leaf slab and tray block are the members (referenced), one 32 mm runner joint along the leaf top, supports 32 mm and 33 mm.",
+            "de": "Tragwerk: die Hohlstäbe sind zusammengefasst: Rahmenring, Platten, Flügelplatte und Ablageblock sind die Stäbe (referenziert), ein Laufgelenk von 32 mm am Flügelkopf, Auflager 32 mm und 33 mm."
+          }
+        ]
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "body": [
+          {
+            "id": "frame",
+            "kind": "box",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.5,
+            "size": [4.0, 1.19, 0.08],
+            "transform": {
+              "translation": [0.0, 0.665, 0.0]
+            }
+          },
+          {
+            "id": "leaf",
+            "kind": "box",
+            "bone": "leaf",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.35,
+            "size": [2.0, 1.19, 0.04],
+            "transform": {
+              "translation": [-1.0, 0.605, -0.02]
+            }
+          },
+          {
+            "id": "tray",
+            "kind": "box",
+            "bone": "tray",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.65,
+            "size": [4.0, 0.075, 0.08],
+            "transform": {
+              "translation": [0.0, 0.0375, 0.0]
+            }
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-frame-rim",
+            "of": "frame",
+            "region": "frame",
+            "sectionFaces": ["+w", "-w"]
+          },
+          {
+            "id": "th-panel-face",
+            "of": "frame",
+            "region": "board-face",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-leaf",
+            "of": "leaf",
+            "region": "leaf",
+            "sectionFaces": ["+w"]
+          },
+          {
+            "id": "th-tray",
+            "of": "tray",
+            "region": "tray"
+          }
+        ],
+        "structure": [
+          {
+            "id": "frame-member",
+            "of": "frame",
+            "member": "frame",
+            "part": "member"
+          },
+          {
+            "id": "tray-member",
+            "of": "tray",
+            "member": "tray",
+            "part": "member"
+          },
+          {
+            "id": "leaf-member",
+            "of": "leaf",
+            "member": "leaf",
+            "part": "member"
+          },
+          {
+            "id": "support-wall-hook-pin",
+            "kind": "box",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.076, 0.076],
+            "transform": {
+              "translation": [0.0, 1.2, 0.0455]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "wall-hook"
+          },
+          {
+            "id": "support-wall-rest-roller",
+            "kind": "box",
+            "bone": "frame",
+            "material": "aluminium-frame",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.3, 0.076, 0.076],
+            "transform": {
+              "translation": [0.0, 0.1, 0.0455]
+            },
+            "member": "frame",
+            "part": "support",
+            "anchor": "wall-rest"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: three masses, the 80 mm deep frame block 4.0 x 1.19 m, the 40 mm leaf block in front of it (the drawing gives the leaf 40 mm, below the 75 mm feature; its thinnest drawn extent is its limit, C13) and the tray as one 75 mm block (the 1:500 drawing is a line at the tray height; the block fills the front view and the pen band of that line; 75 mm is the feature).",
+            "de": "Körper: drei Massen, der 80 mm tiefe Rahmenblock 4,0 x 1,19 m, der 40 mm tiefe Flügelblock davor (die Zeichnung gibt dem Flügel 40 mm, unter der Einzelheit 75 mm; seine dünnste gezeichnete Ausdehnung ist seine Grenze, C13) und die Ablage als ein Block von 75 mm (die Zeichnung 1:500 ist eine Linie in Ablagehöhe; der Block füllt die Ansicht und das Stiftband dieser Linie; 75 mm ist die Einzelheit)."
+          },
+          {
+            "en": "Thermal: board-face references the frame block (front face only), frame the same block's rim (front and back are section faces, so the 4 edges count), leaf and tray reference the leaf block and the tray block; only the total area is compared.",
+            "de": "Thermisch: board-face verweist auf den Rahmenblock (nur die Vorderseite), frame auf dessen Rand (Vorder- und Rückseite sind Schnittflächen, es zählen die vier Kanten), leaf und tray auf Flügelblock und Ablageblock; verglichen wird nur die Gesamtfläche."
+          },
+          {
+            "en": "Structure: the three bodies are the members (referenced), supports are two 76 mm blocks at the anchors.",
+            "de": "Tragwerk: die drei Körper sind die Stäbe (referenziert), Auflager sind zwei Blöcke von 76 mm an den Ankern."
+          }
+        ]
+      }
     },
     "presentation": {
       "defaultPose": "leaf-left",

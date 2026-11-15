@@ -54,9 +54,12 @@ function requireBuildArgumentsV1(options:Record<string,unknown>,identity?:string
 export function buildGraphPathV1(root:string):string { const publication=graphDeclarationV1("../🧬️schema/📣️publication.json").properties;return join(repositoryCachePartitionRootV1(root,publication.partition.const),publication.graph.const); }
 
 
+/** 🗑️ Where the reset inventory schema lies, relative to this file: a quoted path the source closure of every command kernel follows, so a kernel that runs `repo reset` carries the schema it reads. */
+export const BUILD_GRAPH_RESET_SCHEMA_PATH_V1="../../🧬️schema/🗑️reset.json";
+
 /** 🗑️ Selects only owned current publications and their bounded staging files. */
 export function planBuildGraphInvalidationV1(inventory:BuildGraphInvalidationInventoryV1):string[] {
-  const schema=graphDeclarationV1("../🧬️schema/🗑️reset.json");if(validateJsonSchemaSubset(schema,inventory).length)throw Error("Build graph reset inventory required");
+  const schema=graphDeclarationV1(BUILD_GRAPH_RESET_SCHEMA_PATH_V1.slice("../".length));if(validateJsonSchemaSubset(schema,inventory).length)throw Error("Build graph reset inventory required");
   const owned=new RegExp(schema.$defs.OwnedName.pattern,"u"),selected=inventory.entries.filter(entry=>owned.test(entry.name));
   for(const entry of selected)if(validateJsonSchemaSubset(schema.$defs.OwnedEntry,entry,schema).length||entry.device!==inventory.device)throw Error("Owned regular bounded graph publication required");
   return selected.map(entry=>entry.name).sort();

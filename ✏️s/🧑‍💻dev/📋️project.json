@@ -8,7 +8,7 @@
   ],
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/✏️s/**/*",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🧑‍💻dev/🤖️generated\"" }, "{workspaceRoot}/✏️s/**/*",
       "{workspaceRoot}/✏️s/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/tsconfig.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.{ts,tsx,json,semio,wit,sql}",

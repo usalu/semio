@@ -1,0 +1,9 @@
+try 1: start 2026-11-14T20:22:57Z end 2026-11-14T20:32:53Z native_rc=75 fleet_lines=2 code_change_lines=0 ended at 2026-11-14T20:32:59Z wait_rc=0 peak_rss_kib=1793884 hard_stop=none
+try 2: start 2026-11-14T20:34:59Z end 2026-11-14T20:44:09Z native_rc=75 fleet_lines=2 code_change_lines=0 ended at 2026-11-14T20:44:30Z wait_rc=0 peak_rss_kib=1805744 hard_stop=none
+try 3: start 2026-11-14T20:46:30Z end 2026-11-14T20:55:12Z native_rc=75 fleet_lines=2 code_change_lines=0 ended at 2026-11-14T20:55:31Z wait_rc=0 peak_rss_kib=1481856 hard_stop=none
+try 4: start 2026-11-14T20:57:31Z end 2026-11-14T21:07:49Z native_rc=75 fleet_lines=2 code_change_lines=0 ended at 2026-11-14T21:08:02Z wait_rc=0 peak_rss_kib=1906360 hard_stop=none
+try 5: start 2026-11-14T21:10:02Z end 2026-11-14T21:18:42Z native_rc=75 fleet_lines=2 code_change_lines=0 ended at 2026-11-14T21:19:03Z wait_rc=0 peak_rss_kib=1560416 hard_stop=none
+try 6: start 2026-11-14T21:21:03Z end 2026-11-14T21:29:46Z native_rc=75 fleet_lines=2 code_change_lines=0 ended at 2026-11-14T21:30:04Z wait_rc=0 peak_rss_kib=1274480 hard_stop=none
+try 7: start 2026-11-14T21:32:04Z end 2026-11-14T21:36:53Z native_rc=75 fleet_lines=2 code_change_lines=0 ended at 2026-11-14T21:37:05Z wait_rc=0 peak_rss_kib=1650604 hard_stop=none
+try 8: start 2026-11-14T21:39:05Z end 2026-11-14T21:47:44Z native_rc=75 fleet_lines=2 code_change_lines=0 ended at 2026-11-14T21:48:06Z wait_rc=0 peak_rss_kib=1475428 hard_stop=none
+round 7 finished at 2026-11-14T21:48:06Z

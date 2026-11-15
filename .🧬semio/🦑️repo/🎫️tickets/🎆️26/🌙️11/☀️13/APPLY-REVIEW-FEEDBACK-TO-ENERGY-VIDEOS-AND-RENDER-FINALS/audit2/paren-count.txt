@@ -1,0 +1,91 @@
+('❄️cooling', 'on-screen literal (Text)') 2
+('❄️cooling', 'on-screen literal (tr)') 2
+('❄️cooling', 'plain literal, unresolved (tuple/dict/assignment)') 3
+('🌬️ventilation', 'on-screen literal (legend)') 4
+('🌬️ventilation', 'on-screen literal (tr)') 10
+('🌬️ventilation', 'plain literal, unresolved (tuple/dict/assignment)') 1
+('🏗️authoring', 'on-screen literal (fstring)') 12
+('📊️demand', 'on-screen literal (tr)') 22
+('📊️demand', 'plain literal, unresolved (tuple/dict/assignment)') 8
+('🔥️heating', 'on-screen literal (fstring)') 2
+('🔥️heating', 'on-screen literal (tr)') 24
+('🔥️heating', 'plain literal, unresolved (tuple/dict/assignment)') 9
+('🧲️physics', 'on-screen literal (tr)') 12
+('🧲️physics', 'plain literal, unresolved (tuple/dict/assignment)') 3
+excluded: math/LaTeX strings 194
+excluded: narration/speech/roadmap 9
+excluded: tests 13
+EXAMPLES
+('❄️cooling', 'plain literal, unresolved (tuple/dict/assignment)')
+    ❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:165 "Nur der Rest geht an Zu-/Abluft mit WRG (Kapitel 5): ein offenes
+Fenst"
+    ❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:487 "Wenn ja: natürlich lüften (Lüftung Kapitel 4) — Öffnung einstellen,
+Qu"
+    ❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:493 "Nur was diese Schritte nicht schaffen, geht an die Zu-/Abluftanlage
+mi"
+('❄️cooling', 'on-screen literal (tr)')
+    ❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:305 "Sorption-assisted cooling (DEC)"
+    ❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:305 "Sorptionsgestützte Kühlung (DEC)"
+('❄️cooling', 'on-screen literal (Text)')
+    ❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:491 " ("
+    ❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:491 ")"
+('🌬️ventilation', 'on-screen literal (legend)')
+    🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:801 "(0 °C)"
+    🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:802 "(20 °C)"
+    🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:835 "("
+    🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:835 ")"
+('🌬️ventilation', 'on-screen literal (tr)')
+    🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:821 "supply air (16 °C)"
+    🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:821 "Zuluft (16 °C)"
+    🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:834 "(storing)"
+    🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:834 "(Speichern)"
+    🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:414 "Same physics, two unit sets (rounding: 0.335 ≈ 0.34). Unit usage varie"
+('🌬️ventilation', 'plain literal, unresolved (tuple/dict/assignment)')
+    🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:996 "Treppenhaus oder Schacht (Kamin) führt die warme Luft zur hohen Abluft"
+('🏗️authoring', 'on-screen literal (fstring)')
+    🏗️authoring/🎨️visuals/🐍️.py:2382 "@("
+    🏗️authoring/🎨️visuals/🐍️.py:2382 ")"
+    🏗️authoring/🎨️visuals/🐍️.py:334 " ("
+    🏗️authoring/🎨️visuals/🐍️.py:334 ")"
+    🏗️authoring/🎨️visuals/🐍️.py:2459 "@("
+('📊️demand', 'plain literal, unresolved (tuple/dict/assignment)')
+    📊️demand/🎬️clip/♨️system-losses/🐍️.py:761 "Die Jahresarbeitszahl (JAZ) ist die im Jahr abgegebene Wärme geteilt d"
+    📊️demand/🎬️clip/🏷️certificate/🐍️.py:330 "New buildings always need the calculated certificate (§ 80)."
+    📊️demand/🎬️clip/🏷️certificate/🐍️.py:331 "Für Neubauten ist der berechnete Ausweis Pflicht (§ 80)."
+    📊️demand/🎬️clip/🏷️certificate/🐍️.py:510 "But for residential buildings the class follows final energy only (§ 8"
+    📊️demand/🎬️clip/🏷️certificate/🐍️.py:511 "Die Effizienzklasse richtet sich bei Wohngebäuden aber nur nach der En"
+('📊️demand', 'on-screen literal (tr)')
+    📊️demand/🎬️clip/♨️system-losses/🐍️.py:929 "JAZ = seasonal performance factor (VDI 4650 Blatt 1) · dimensionless"
+    📊️demand/🎬️clip/♨️system-losses/🐍️.py:929 "JAZ = Jahresarbeitszahl (VDI 4650 Blatt 1) · dimensionslos"
+    📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:426 "GEG since 29 July 2026: Gebäudemodernisierungsgesetz (GModG)"
+    📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:426 "GEG seit 29.07.2026: Gebäudemodernisierungsgesetz (GModG)"
+    📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:627 "GEG (now GModG) § 22 (1), Annex 4 no. 2, 8, 9, 12"
+('🔥️heating', 'on-screen literal (tr)')
+    🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:744 "Specific load density (DIN V 18599-10)"
+    🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:744 "Spezifische Lastdichte (DIN V 18599-10)"
+    🔥️heating/🎬️clip/🧮️calculation/🐍️.py:397 "Total heat loss rate (DIN V 4108-6)"
+    🔥️heating/🎬️clip/🧮️calculation/🐍️.py:397 "Gesamtverlustleistung (DIN V 4108-6)"
+    🔥️heating/🎬️clip/🧮️calculation/🐍️.py:680 "Free heat gains (DIN V 4108-6)"
+('🔥️heating', 'on-screen literal (fstring)')
+    🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1403 " - 1) \approx "
+    🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1526 "\right)\,"
+('🔥️heating', 'plain literal, unresolved (tuple/dict/assignment)')
+    🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126 "Ungedämmt (Ziegel 1960)"
+    🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126 "Gedämmt (12 cm)"
+    🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126 "Hochgedämmt (30 cm)"
+    🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126 "Uninsulated (1960 brick)"
+    🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126 "Insulated (12 cm)"
+('🧲️physics', 'plain literal, unresolved (tuple/dict/assignment)')
+    🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3185 "Willems WM, Schild K, Stricker D (2024)"
+    🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3188 "Bohne D, Bohne M (2026)"
+    🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3191 "VDI 4650 Blatt 1 (2024-02) · DIN EN 14825 · DIN EN 410"
+('🧲️physics', 'on-screen literal (tr)')
+    🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1968 "Air HP
+(SPF)"
+    🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1968 "Luft-WP
+(JAZ)"
+    🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1968 "Ground HP
+(SPF)"
+    🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1968 "Erd-WP
+(JAZ)"
+    🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:735 "Shower (instantaneous heater)"

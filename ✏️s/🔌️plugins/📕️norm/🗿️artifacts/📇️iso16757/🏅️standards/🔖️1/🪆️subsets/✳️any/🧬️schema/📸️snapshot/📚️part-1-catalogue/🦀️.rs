@@ -1,7 +1,6 @@
 //! 📚️ Part 1 of the ISO 16757 snapshot: the product catalogue with manufacturers, groups, classes, series, properties, variants, products, relationships, selection and BIM embedding. See [`super`].
 
-use super::catalogue_core::{Cardinality, CatalogueId, CatalogueUnit, CatalogueValue, DictionaryRef, ExtensionBag, Lifecycle, Names};
-use std::collections::BTreeMap;
+use super::catalogue_core::{Cardinality, CatalogueId, CatalogueUnit, CatalogueValue, DictionaryRef, ExtensionBag, IdMap, Lifecycle, Names};
 
 /// 🏭️ Manufacturer metadata.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -50,7 +49,7 @@ pub struct ProductSeries {
     pub id: String,
     pub class_id: String,
     pub names: Names,
-    pub shared_property_values: BTreeMap<String, CatalogueValue>,
+    pub shared_property_values: IdMap<CatalogueValue>,
     pub geometry_id: Option<String>,
 }
 
@@ -113,7 +112,7 @@ pub struct PropertyValue {
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct ProductVariant {
     pub id: String,
-    pub parameter_values: BTreeMap<String, CatalogueValue>,
+    pub parameter_values: IdMap<CatalogueValue>,
     pub property_values: Vec<PropertyValue>,
     pub article_number: Option<String>,
     pub geometry_id: Option<String>,
@@ -214,8 +213,8 @@ pub struct Catalogue {
     pub product_indexes: Vec<ProductIndex>,
     #[dsl(table)]
     pub property_definitions: Vec<PropertyDefinition>,
-    pub accessories: BTreeMap<String, Vec<AccessoryRelationship>>,
-    pub compositions: BTreeMap<String, Vec<CompositionRelationship>>,
+    pub accessories: IdMap<Vec<AccessoryRelationship>>,
+    pub compositions: IdMap<Vec<CompositionRelationship>>,
     #[dsl(table)]
     pub descriptive_objects: Vec<DescriptiveObject>,
     pub extensions: ExtensionBag,

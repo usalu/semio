@@ -3,6 +3,7 @@ import {mkdirSync,readFileSync,statSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
 import {isAbsolute,join,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
+import {machineNeutralRemapV1} from "../🧭️remap/🟦️.ts";
 
 /** 📐️ The authored unit-cache policy.
  * @see ../🧬️schema/🔣️.json */
@@ -79,7 +80,7 @@ export function laneRestoreV1(text:string,laneRoot:string|undefined):string{
  return text.split(policy.key.laneToken).join(laneRoot);
 }
 
-/** ✂️ Rewrites a command line without the parts that differ between lanes: the output directory, the incremental directory, `-L dependency` search paths and extern paths. */
+/** ✂️ Rewrites a command line without the parts that differ between lanes or between terminals: the output directory, the incremental directory, `-L dependency` search paths, extern paths and `--diagnostic-width` (Cargo passes it only to a terminal, so every window size would otherwise be a unit of its own; it wraps the compiler's rendered messages and nothing else). */
 export function normalizeRustcArgumentsV1(args:readonly string[],externDigests:ReadonlyMap<string,string>,laneRoot:string|undefined):string[]{
  const result:string[]=[];
  for(let index=0;index<args.length;index++){
@@ -89,9 +90,11 @@ export function normalizeRustcArgumentsV1(args:readonly string[],externDigests:R
   if(argument==="-C"&&(args[index+1]??"").startsWith("incremental=")){index++;continue;}
   if(argument.startsWith("-Cincremental="))continue;
   if(argument==="-L"&&(args[index+1]??"").startsWith("dependency=")){index++;continue;}
+  if(argument==="--diagnostic-width"){index++;continue;}
+  if(argument.startsWith("--diagnostic-width="))continue;
   if(argument.startsWith("-Ldependency="))continue;
   if(argument==="--extern"||argument.startsWith("--extern=")){const value=take("--extern")!,equals=value.indexOf("="),spec=equals<0?value:value.slice(0,equals),path=equals<0?"":value.slice(equals+1);result.push("--extern",path===""?spec:spec+"=#"+(externDigests.get(path)??"missing"));continue;}
-  result.push(laneNeutralV1(argument,laneRoot));
+  result.push(machineNeutralRemapV1(laneNeutralV1(argument,laneRoot)));
  }
  return result;
 }
@@ -173,4 +176,51 @@ export function parseBuildDirectivesV1(stdout:string):{files:string[];variables:
   (match[1]==="rerun-if-changed"?files:variables).push(match[2]!);
  }
  return{files,variables};
+}
+
+const argumentClassOf=(flag:string,value:string):string=>{
+ if(flag==="--edition")return"edition";
+ if(flag==="--crate-name"||flag==="--crate-type"||flag==="--emit")return"kind";
+ if(flag==="--target")return"target";
+ if(flag==="-C"||flag==="--codegen")return/^(?:metadata|extra-filename)=/u.test(value)?"metadata":"codegen";
+ if(flag==="--cfg")return value.startsWith("feature=")?"features":"cfg";
+ if(flag==="--check-cfg")return"cfg";
+ if(["-A","-W","-D","-F","--cap-lints","--force-warn","--allow","--warn","--deny","--forbid"].includes(flag))return"lints";
+ if(flag==="--remap-path-prefix"||flag==="--remap-path-scope")return"remap";
+ if(["--error-format","--json","--color","--diagnostic-width"].includes(flag))return"diagnostics";
+ if(flag==="-L"||flag==="-l")return"link";
+ if(flag==="-Z")return"unstable";
+ return"other";
+};
+
+/** 🧱️ Splits a normalized command line into its argument classes (`edition`, `kind`, `target`, `codegen`, `metadata`, `features`, `cfg`, `lints`, `remap`, `diagnostics`, `link`, `unstable`, `source`, `other`), each in command-line order. `--extern` is left out: every dependency is a component of its own. */
+export function argumentClassesV1(normalized:readonly string[]):ReadonlyMap<string,readonly string[]>{
+ const rows=new Map<string,string[]>(),add=(name:string,text:string)=>{const list=rows.get(name);if(list)list.push(text);else rows.set(name,[text]);};
+ const parsed=options(normalized);
+ for(const row of parsed.options){if(row.flag==="--extern")continue;add(argumentClassOf(row.flag,row.value),row.flag+(row.value===""?"":"="+row.value));}
+ for(const text of parsed.positional)add("source",text);
+ return rows;
+}
+
+/** 🧾️ The key of a lookup as named components, each an individual digest, so two keys of one crate can be diffed: `toolchain`, `source`, `platform`, `roots`, one `extern:<name>` per dependency artifact, one `env:<NAME>` per observed variable and one `args.<class>` per argument class (see {@link argumentClassesV1}). `values` carries the text of the small, path-free classes (diagnostics, codegen, features, cfg, lints, unstable, kind, edition, target, remap) cut to a bounded length.
+ * @see ./🧪️tests/🧬️components/🟦️.ts */
+export function unitKeyComponentsV1(input:Parameters<typeof unitKeyV1>[0],extra:Readonly<{platform?:string;roots?:string}>={}):Readonly<{components:Record<string,string>;values:Record<string,string>}>{
+ const width=policy.lookups.digestCharacters,part=(value:unknown)=>sha256V1(JSON.stringify(value)).slice(0,width),components:Record<string,string>={},values:Record<string,string>={};
+ components.toolchain=part(input.toolchain);components.source=input.sourceSha256.slice(0,width);
+ if(extra.platform!==undefined)components.platform=part(extra.platform);
+ if(extra.roots!==undefined)components.roots=part(extra.roots);
+ for(const row of input.externs)components["extern:"+row.name]=/^[0-9a-f]{16,}$/u.test(row.sha256)?row.sha256.slice(0,width):part(row.sha256);
+ for(const [name,value] of input.environment)components["env:"+name]=part(value);
+ const shown=new Set(["diagnostics","codegen","features","cfg","lints","unstable","kind","edition","target","remap"]);
+ for(const [name,list] of argumentClassesV1(input.normalized)){
+  components["args."+name]=part(list);
+  if(shown.has(name)&&Object.keys(values).length<policy.lookups.maximumValues)values["args."+name]=list.join(" ").slice(0,policy.lookups.valueCharacters);
+ }
+ return{components,values};
+}
+
+/** 🔀️ The components that are not equal in all of `rows` (absent in one counts as different), sorted. */
+export function differingComponentsV1(rows:readonly Readonly<Record<string,string>>[]):string[]{
+ const names=new Set(rows.flatMap(row=>Object.keys(row)));
+ return[...names].filter(name=>new Set(rows.map(row=>row[name])).size>1).sort();
 }

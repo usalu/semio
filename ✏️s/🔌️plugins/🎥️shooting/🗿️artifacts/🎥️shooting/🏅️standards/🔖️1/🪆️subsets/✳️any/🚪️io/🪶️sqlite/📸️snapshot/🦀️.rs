@@ -34,14 +34,18 @@ impl ArtifactSqliteSnapshotHost for ShootingSnapshot{
  
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {if let Err(error)=(||->Result<(),semio_framework_value::ValueError>{
   self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;Ok(())})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(), &mut |native|self.__dsl_to_record_controlled(native),control,native_owner,output)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
-  control.check_rows(2)?;let maximum=control.limits().max_rows;
-  let value=work.take(store::decode_sqlite_snapshot_record_native(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,snapshot_output,native| { let constructed: Result<_, ValueError> = (|| {
-   let mut count=2usize;for index in[1,2,4]{let n=match record.get(index){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),None|Some(semio_framework_dsl_record::FieldValue::Absent)=>0,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,("Shooting collections require literal lists").to_string()))};count=count.checked_add(n).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,("Shooting row count overflow").to_string()))?;}
-   if !matches!(record.get(7),None|Some(semio_framework_dsl_record::FieldValue::Absent)){count=count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,("Shooting row count overflow").to_string()))?}
-   if count>maximum{return Err(ValueError::new(ValueRefusalKind::InvalidValue,("Shooting native snapshot exceeds row limit").to_string()))}Self::__dsl_from_record_controlled(record,native)
-  })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control))?;value.admit_sqlite_values(control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
- })}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+  if let Err(error)=control.check_rows(2){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+  let maximum=control.limits().max_rows;
+  store::decode_sqlite_snapshot_record_receiving(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),&mut |record,snapshot_output,owner,sql|store::native_snapshot_turn(|work|{
+   let value=work.measured(owner.native(),|native|{
+    let mut count=2usize;for index in[1,2,4]{let n=match record.get(index){Some(semio_framework_dsl_record::FieldValue::List(values))=>values.len(),None|Some(semio_framework_dsl_record::FieldValue::Absent)=>0,_=>return Err(invalid("Shooting collections require literal lists"))};count=count.checked_add(n).ok_or_else(||invalid("Shooting row count overflow"))?}
+    if !matches!(record.get(7),None|Some(semio_framework_dsl_record::FieldValue::Absent)){count=count.checked_add(1).ok_or_else(||invalid("Shooting row count overflow"))?}
+    if count>maximum{return Err(invalid("Shooting native snapshot exceeds row limit"))}Self::__dsl_from_record_controlled(record,native)
+   })?;
+   value.admit_sqlite_values(sql,SqliteSnapshotPhase::DecodeNative)?;*snapshot_output=Some(value);Ok(())
+  }),control,native_control,output)
+ }
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   control.check_rows(workload(self)?)?;let mut bound=NativeEncodingBound::new(control)?;bound.add(8192)?;for text in[&self.schema,&self.active_shot_id,&self.active_asset_id,&self.scene.background,&self.scene.sun.color,&self.scene.ambient.color,&self.scene.material.color,&self.scene.material.emissive,&self.scene.material.stroke]{bound.repeated(text.len(),24)?}
   for asset in &self.assets{bound.add(2048)?;for text in[&asset.id,&asset.name,&asset.url,&asset.format]{bound.repeated(text.len(),24)?}}

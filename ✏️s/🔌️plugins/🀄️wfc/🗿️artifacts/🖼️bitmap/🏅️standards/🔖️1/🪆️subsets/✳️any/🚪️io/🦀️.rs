@@ -51,7 +51,7 @@ pub fn io() -> semio_plugin::app::declarations::IoDeclaration {
 //#endregion 🔖️IoDeclaration
 
 pub mod binary {
-    pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::standards::v1::subsets::any::io::binary::*;
     pub use semio_s_artifact_wfc_bitmap_snapshot::standards::v1::subsets::any::io::binary::diff;
 }
 

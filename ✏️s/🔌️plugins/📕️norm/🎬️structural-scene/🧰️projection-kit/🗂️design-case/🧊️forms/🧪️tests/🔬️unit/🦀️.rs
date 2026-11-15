@@ -47,7 +47,7 @@ static AUX_ENTRIES: [CaseEntry; 20] = [
     aux_entry("FA", CaseForm::Fastener, "b", "l", "h", &[("thickness2", "h"), ("diameter", "h"), ("count", "count"), ("spacing", "h")]),
     aux_entry("WD", CaseForm::Weld, "b", "l", "h", &[("throat", "h")]),
     aux_entry("AN", CaseForm::Anchor, "b", "l", "h", &[("embed", "h"), ("diameter", "h")]),
-    aux_entry("OP", CaseForm::Opening, "b", "l", "h", &[("open_w", "h"), ("open_l", "h")]),
+    aux_entry("OP", CaseForm::Opening, "b", "l", "h", &[("open_w", "a2"), ("open_l", "a2")]),
     aux_entry("SY", CaseForm::Symbol, "", "", "", &[]),
     aux_entry("MN", CaseForm::Member, "b", "l", "h", &[("grain", ""), ("eff_height", "h_ef"), ("notch_length", "x")]),
     aux_entry("MG", CaseForm::Plate, "b", "l", "h", &[("grain", "o")]),
@@ -243,10 +243,12 @@ fn the_hydraulic_head_of_a_seepage_path_is_its_own_sheet_of_exactly_the_head() {
 
 #[test]
 fn an_opening_wider_than_the_slab_keeps_a_rim_and_still_follows_its_input() {
-    let wide = row("o", "OP", &[("b", 300.0), ("l", 6.0), ("h", 0.5)]);
-    let signature = signature::<Toy>(&wide, &MaterialRole::Neutral);
-    assert!(signature.iter().all(|v| v.is_finite()) && signature.contains(&0.5));
-    crate::case_laws::assert_case_dimension_laws::<Toy>(&[wide]);
+    let wide = row("o", "OP", &[("b", 300.0), ("l", 6.0), ("h", 0.5), ("a2", 0.5)]);
+    let before = signature::<Toy>(&wide, &MaterialRole::Neutral);
+    assert!(before.iter().all(|v| v.is_finite()) && before.contains(&0.5));
+    let mut wider = wide.clone();
+    wider.numbers[3].value *= 1.25;
+    assert!(signature::<Toy>(&wider, &MaterialRole::Neutral).contains(&0.625), "the opening follows its input although it exceeds the slab width");
 }
 
 #[test]

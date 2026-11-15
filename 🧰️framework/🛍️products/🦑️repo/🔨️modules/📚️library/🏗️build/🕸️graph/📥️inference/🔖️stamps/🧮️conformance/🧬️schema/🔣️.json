@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/build/inference-conformance/v1",
+  "title": "Graph inference conformance stamps",
+  "description": "The stamp of a derived inferrer is the digest of what its code answers on a fixed corpus, never the bytes of that code. `providers` names, per inferrer, the entry files of its code (their direct imports are part of the stamp), the declared schemas (their canonical content is part of the stamp), the fixture files the corpus is made of and the runner that evaluates them. A stored record is keyed by the content digest of the transitive closure of the entries, the schemas, the fixtures and the corpus code, so the corpus is evaluated again only when some file of that closure changed. A record that is missing, damaged or disagrees with its key is never trusted: the inferrer then falls back to the content facts of its files.",
+  "definitions": {
+    "Hex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "Path": { "type": "string", "minLength": 2, "maxLength": 200 },
+    "Provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entries", "schemas", "fixtures", "runner"],
+      "properties": {
+        "entries": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/Path" } },
+        "schemas": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/definitions/Path" } },
+        "fixtures": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/definitions/Path" } },
+        "runner": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "providers"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "version": { "const": 1 },
+        "providers": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/definitions/Provider" } }
+      }
+    },
+    "Record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "id", "key", "stamp", "parts", "covered", "milliseconds"],
+      "properties": {
+        "version": { "const": 1 },
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+        "key": { "$ref": "#/definitions/Hex" },
+        "stamp": { "type": "string", "pattern": "^semio\\.graph-inferrer\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*/[1-9][0-9]*\\+[0-9a-f]{32}$" },
+        "parts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cases", "schema", "imports"],
+          "properties": {
+            "cases": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/definitions/Hex" } },
+            "schema": { "$ref": "#/definitions/Hex" },
+            "imports": { "$ref": "#/definitions/Hex" }
+          }
+        },
+        "covered": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+        "milliseconds": { "type": "number", "minimum": 0 }
+      }
+    },
+    "AuditReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "checked", "same", "differing", "failed"],
+      "properties": {
+        "version": { "const": 1 },
+        "checked": { "type": "integer", "minimum": 0 },
+        "same": { "type": "integer", "minimum": 0 },
+        "differing": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["project", "fresh", "stored"], "properties": { "project": { "type": "string" }, "fresh": { "$ref": "#/definitions/Hex" }, "stored": { "$ref": "#/definitions/Hex" } } } },
+        "failed": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["project", "message"], "properties": { "project": { "type": "string" }, "message": { "type": "string" } } } }
+      }
+    },
+    "TextCatalogue": {
+      "const": {
+        "languages": ["en", "de"],
+        "texts": {
+          "stamp.stored": { "en": "{id}: conformance stamp taken from the local record ({cases} corpus cases)", "de": "{id}: Konformitätsstempel aus dem lokalen Eintrag übernommen ({cases} Korpusfälle)" },
+          "stamp.fleet": { "en": "{id}: conformance stamp taken from the fleet ({cases} corpus cases)", "de": "{id}: Konformitätsstempel aus der Flotte übernommen ({cases} Korpusfälle)" },
+          "stamp.computed": { "en": "{id}: conformance corpus evaluated in {milliseconds} ms ({cases} cases)", "de": "{id}: Konformitätskorpus in {milliseconds} ms ausgewertet ({cases} Fälle)" },
+          "stamp.unavailable": { "en": "{id}: no conformance stamp ({reason}); the files of the inferrer count as content again", "de": "{id}: kein Konformitätsstempel ({reason}); die Dateien des Inferrers zählen wieder als Inhalt" },
+          "audit.clean": { "en": "audit: {checked} projects inferred again, all equal to their stored records", "de": "Prüfung: {checked} Projekte neu abgeleitet, alle gleich ihren gespeicherten Einträgen" },
+          "audit.differs": { "en": "audit: {differing} of {checked} projects differ from their stored records ({failed} failed): the corpus missed a behaviour change", "de": "Prüfung: {differing} von {checked} Projekten weichen von ihren gespeicherten Einträgen ab ({failed} fehlgeschlagen): der Korpus hat eine Verhaltensänderung nicht erfasst" }
+        }
+      }
+    }
+  }
+}

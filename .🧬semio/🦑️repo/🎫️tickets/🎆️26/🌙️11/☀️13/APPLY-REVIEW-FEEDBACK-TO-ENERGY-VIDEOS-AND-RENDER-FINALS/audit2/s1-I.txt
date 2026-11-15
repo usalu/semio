@@ -1,0 +1,115 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md:42: The first segment of `Cooling_01_HeatingVsCooling` is `🗺️roadmap` `Beat1_Fahrplan`, the Fahrplan of the whole video: six cards in chapter order (Heizen und Kühlen `Q̇_H, Q̇_C` → interne Lasten `Q̇_I` → Transmission `Q̇_T, Q̇_V`, with `Q̇_V` taken over from the ventilation video → solare Last `Q̇_S, 
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md:46: The cooling load is the sum $\dot{Q}_\mathrm{C} = \dot{Q}_\mathrm{T} + \dot{Q}_\mathrm{V} + \dot{Q}_\mathrm{S} + \dot{Q}_\mathrm{I}$ in W (transmission, ventilation, solar, internal), the same $\dot{Q}$ notation as in the heating video; index `V` always means ventilation, with the latent part `V,lat
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:405: r"The cooling load is the sum of transmission, ventilation, solar and internal loads: $\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{I}}$.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:406: r"Die Kühllast ist die Summe aus Transmissions-, Lüftungs-, solarer und interner Last: $\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{I}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:462: qk_symbol = math_label(r"\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{I}}",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:267: r"The heat flow $\Phi$ of the people, as a load on the room, is $\dot{Q}_{\mathrm{I,p}}=n\cdot\dot{q}_{\mathrm{p}}$: the number of people times the specific emission per person, in $\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:268: r"Der Wärmestrom $\Phi$ der Personen, als Last am Raum, ist $\dot{Q}_{\mathrm{I,p}}=n\cdot\dot{q}_{\mathrm{p}}$: Personenzahl mal spezifische Abgabe je Person, in $\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:439: ("qp_tot", r"\dot{Q}_{\mathrm{I,p}}", P_ORANGE), (None, "=", P_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:557: r"Plug loads follow $\dot{Q}_{\mathrm{I,e}}=\sum P_{\mathrm{el}}\cdot f_{\mathrm{N}}$: the electrical power times the usage factor, summed over all devices, in $\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:558: r"Steckerlasten: $\dot{Q}_{\mathrm{I,e}}=\sum P_{\mathrm{el}}\cdot f_{\mathrm{N}}$, elektrische Leistung mal Nutzungsfaktor, summiert über alle Geräte, in $\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:569: r"Ceiling lighting adds $\dot{Q}_{\mathrm{I,l}}=\sum P_{\mathrm{light}}\cdot f_{\mathrm{g}}$: installed power times the coincidence factor, in $\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:570: r"Deckenlicht: $\dot{Q}_{\mathrm{I,l}}=\sum P_{\mathrm{Licht}}\cdot f_{\mathrm{g}}$, installierte Leistung mal Gleichzeitigkeitsfaktor, in $\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:631: ("qg", r"\dot{Q}_{\mathrm{I,e}}", P_CYAN), (None, "=", P_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:725: ("ql", r"\dot{Q}_{\mathrm{I,l}}", P_YELLOW), (None, "=", P_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:773: r"In building physics we sum every internal source into one internal load $\dot{Q}_{\mathrm{I}}$.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:774: r"In der Bauphysik summieren wir alle internen Quellen zur internen Last $\dot{Q}_{\mathrm{I}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:779: r"$\dot{Q}_{\mathrm{I}}=\dot{Q}_{\mathrm{I,p}}+\dot{Q}_{\mathrm{I,e}}+\dot{Q}_{\mathrm{I,l}}$, all in $\mathrm{W}$: $1200\,\mathrm{W}+420\,\mathrm{W}+400\,\mathrm{W}=2020\,\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:780: r"$\dot{Q}_{\mathrm{I}}=\dot{Q}_{\mathrm{I,p}}+\dot{Q}_{\mathrm{I,e}}+\dot{Q}_{\mathrm{I,l}}$, alles in $\mathrm{W}$: $1200\,\mathrm{W}+420\,\mathrm{W}+400\,\mathrm{W}=2020\,\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:782: r"$\dot{Q}_{\mathrm{I}}$ is the total internal load the cooling technology must remove.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:783: r"$\dot{Q}_{\mathrm{I}}$ ist die gesamte interne Last, die die Kühltechnik abführen muss."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:785: r"On a hot summer day this is one summand of the cooling load $\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{I}}$ — it stays even with blinds drawn.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:786: r"An einem heißen Sommertag ist das ein Summand der Kühllast $\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{I}}$ — er bleibt selbst bei geschlossenen Jalousien."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:851: ("qi", r"\dot{Q}_{\mathrm{I}}", P_CYAN), (None, "=", P_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:852: ("pers", r"\dot{Q}_{\mathrm{I,p}}", P_ORANGE), (None, "+", P_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:853: ("ger", r"\dot{Q}_{\mathrm{I,e}}", P_CYAN), (None, "+", P_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:854: ("licht", r"\dot{Q}_{\mathrm{I,l}}", P_YELLOW), (None, r"\quad\dot{Q}\;\text{in}\;\mathrm{W}", P_PRIMARY),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:859: total = math_label(r"\dot{Q}_{\mathrm{C}} = \dot{Q}_{\mathrm{T}} + \dot{Q}_{\mathrm{V}} + \dot{Q}_{\mathrm{S}} + \dot{Q}_{\mathrm{I}}",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:903: r"Less internal heat gain means a smaller internal load $\dot{Q}_{\mathrm{I}}$ and so a smaller cooling load $\dot{Q}_{\mathrm{C}}$.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:904: r"Weniger interne Wärmegewinne bedeuten eine kleinere interne Last $\dot{Q}_{\mathrm{I}}$ und damit eine kleinere Kühllast $\dot{Q}_{\mathrm{C}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:99: THETA_ROOM, THETA_SUPPLY = _example.THETA_I_SUMMER_C, 18.0
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🗺️roadmap/🐍️.py:40: r"Then the internal loads $\dot{Q}_{\mathrm{I}}$ of people, devices and lighting.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🗺️roadmap/🐍️.py:41: r"Dann die internen Lasten $\dot{Q}_{\mathrm{I}}$ von Personen, Geräten und Beleuchtung."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🗺️roadmap/🐍️.py:59: {"key": "intern", "name": ("Internal loads", "Interne Lasten"), "symbols": r"\dot{Q}_{\mathrm{I}}", "pictogram": "seated-worker"},
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:108: THETA_I_WINTER, THETA_E_WINTER = 20.0, 0.0
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:109: THETA_I_SUMMER, THETA_E_SUMMER = 26.0, 32.0
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:469: return THETA_I_WINTER + (THETA_I_SUMMER - THETA_I_WINTER) * season.get_value()
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:112: THETA_I_W, THETA_E_W = 20.0, 0.0
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:113: THETA_I_S, THETA_E_S = 26.0, 32.0
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:118: Q_SENS_W = V_DOT * C_LUFT * (THETA_I_W - THETA_E_W)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:119: Q_SENS_S = V_DOT * C_LUFT * (THETA_E_S - THETA_I_S)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:529: self.play(_ramp(th_i, THETA_I_W), *air(1.6), run_time=1.6)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:581: self.play(stage.transition("ventilation.heat-flow.sensible.season-chip-summer", source=chip_w, target=chip_s), stage.transition("ventilation.heat-flow.sensible.label-gain", source=q_name[1], target=gain), stage.transition("ventilation.heat-flow.sensible.guides-summer", source=guides, target=_guides(
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:668: head(cx_i, tr("Room air", "Raumluft"), tr(rf"{THETA_I_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{RH}}", rf"{THETA_I_S:.0f}\,°\mathrm{{C}}\;\cdot\;50\,\%\;\mathrm{{r.F.}}")))
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:828: rf"\Delta\theta = {label_number(THETA_I_W - THETA_E_W)}\,\mathrm{{K}}", SENS)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:848: tr(rf"\Delta\theta = {label_number(THETA_E_S - THETA_I_S)}\,\mathrm{{K}}\;\text{{(gain)}}", rf"\Delta\theta = {label_number(THETA_E_S - THETA_I_S)}\,\mathrm{{K}}\;\text{{(Gewinn)}}"), SENS)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:25: THETA_I_WINTER_C = float(_DATA["winter"]["indoorC"])
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:27: D_THETA_WINTER_K = THETA_I_WINTER_C - THETA_E_WINTER_C
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:28: THETA_I_SUMMER_C = float(_DATA["summer"]["indoorC"])
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:30: D_THETA_SUMMER_K = THETA_E_SUMMER_C - THETA_I_SUMMER_C
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:45: THETA_E_SEASON_MEAN_C = THETA_I_WINTER_C - GT_K_D_PER_A / SEASON_DAYS
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:84: return float((THETA_I_WINTER_C - theta)[heating(theta)].sum())
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🧪️tests/🐍️.py:28: self.assertAlmostEqual(float((E.THETA_I_WINTER_C - theta)[heating].sum()), E.GT_K_D_PER_A, places=3)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🧪️tests/🐍️.py:29: self.assertLess(float(theta.max()), E.THETA_I_WINTER_C + 5.0)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:225: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:226: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:385: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:386: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:405: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:406: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:425: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:426: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:445: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:446: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:1008: "en": "About 182 kWh/(m²·a): 135 heating (IWU type EFH_I) ÷ 0.85 + 12.5 hot water ÷ 0.65 + 4 auxiliary energy.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:1009: "de": "Rund 182 kWh/(m²·a): 135 Heizwärme (IWU-Typ EFH_I) ÷ 0,85 + 12,5 Warmwasser ÷ 0,65 + 4 Hilfsenergie."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:105: THETA_I = 20.0
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:111: LOSS_SHAPE = tuple((THETA_I - t) / (THETA_I - THETA_E[0]) for t in THETA_E)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:148: deficit = np.array([THETA_I - t if (t := _catmull(THETA_E, x) + shift) < THETA_HG else 0.0 for x in xs])
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:503: lvl["loss"].set_value(float(np.clip(lvl["k"].get_value() * (THETA_I - theta) / (THETA_I - THETA_E[0]), 0, 1)))
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:942: hi_pt = chart["pt"](x, _theta_norm(THETA_I))
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1001: indoor = DashedLine(chart["pt"](0.0, _theta_norm(THETA_I)), chart["pt"](1.0, _theta_norm(THETA_I)),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1158: indoor_f = _theta_norm(THETA_I)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1272: indoor_f = _theta_norm(THETA_I)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:86: THETA_I = _example.THETA_I_WINTER_C
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:88: DESIGN_DT = THETA_I - THETA_E
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:666: d_theta = lambda: THETA_I - theta_e.get_value()
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:673: level=_lvl(THETA_I))
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:680: guide_i = always_redraw(lambda: DashedLine(np.array([hs["bottom_right"][0] - 0.28, top(THETA_I), 0.0]),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:681: np.array([arrow_x, top(THETA_I), 0.0]), color=P_YELLOW,
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:687: np.array([arrow_x, top(THETA_I), 0.0]), color=DELTA_T))
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:688: row_i = math_readout(lambda: rf"\theta_{{i}} = {label_number(THETA_I)}\;\mathrm{{°C}}",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:1140: soll_lbl = math_label(rf"{label_number(THETA_I)}\;\mathrm{{°C}}", np.array([bulb[0] + 0.22, soll_y - 0.07, 0.0]),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:143: Q_I_SPEC, A_NET = 5.0, 60.0
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:144: Q_INTERN = Q_I_SPEC * A_NET * T_MONTH / 1000.0
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:1130: self.play(FadeIn(i_card["frame"]), Create(ring_q), *_terms(row_i, 2, 3), q_t.animate.set_value(Q_I_SPEC),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1629: "en": "About 73 W/m² and 135 kWh/(m²·a): IWU type EFH_I with 1.78 W/(m²·K) transmission per m² of living area; a detached house has much envelope per m² of floor.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1630: "de": "Rund 73 W/m² und 135 kWh/(m²·a): IWU-Typ EFH_I mit 1,78 W/(m²·K) Transmission je m² Wohnfläche; ein freistehendes Haus hat viel Hülle je m² Wohnfläche."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/README.md:47: The first segment of `Heating_01_Introduction` is `🗺️roadmap` `Beat1_Fahrplan`, the Fahrplan of the whole video: six cards in chapter order (Grundlagen `Φ, Δθ` → Wärmeleitung `U, λ, ψ` → Lüftung `Q̇_V`, taken over from the ventilation video → interne Gewinne `Q̇_I` → solare Gewinne `Q̇_S, g⊥, F_C` →
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🗺️roadmap/🐍️.py:46: r"Then the internal gains $\dot{Q}_{\mathrm{I}}$ from people, devices and lighting.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🗺️roadmap/🐍️.py:47: r"Es folgen die internen Gewinne $\dot{Q}_{\mathrm{I}}$ durch Personen, Geräte und Beleuchtung."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🗺️roadmap/🐍️.py:62: {"key": "intern", "name": ("Internal gains", "Interne Gewinne"), "symbols": r"\dot{Q}_{\mathrm{I}}", "pictogram": "office-worker"},
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:91: _THETA_I = _example.THETA_I_WINTER_C
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:108: return (_H_T + _H_V) / 1000.0 * (_example.THETA_I_WINTER_C - (_example.THETA_E_SEASON_MEAN_C + 4.0 * np.cos(2.0 * np.pi * (t - 15.0) / 24.0)))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:547: i_line = Line(cp(0, _THETA_I), cp(365, _THETA_I), color=WARM, stroke_width=3)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:549: i_name = math_label(rf"\theta_{{\mathrm{{i}}}} = {label_number(_THETA_I)}\,\mathrm{{°C}}",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:550: np.array([2.2, cp(0, _THETA_I)[1], 0.0]), size=22, color=WARM, edge="left")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:558: Rectangle(width=XL / 365 * 1.2, height=(_THETA_I - theta_e[d]) / (T_HI - T_LO) * YL, stroke_width=0,
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:559: fill_color=PURPLE, fill_opacity=0.0).move_to((cp(d + 0.5, _THETA_I) + cp(d + 0.5, theta_e[d])) / 2)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:566: return float(sum(_THETA_I - theta_e[d] for d in heating_days if d + 1 <= day.get_value()))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:578: gap = DoubleArrow(cp(d0 + 0.5, _THETA_I), cp(d0 + 0.5, theta_e[d0]), buff=0, stroke_width=2.2, tip_length=0.12, color=PASTEL_WHITE)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:579: gap_name = math_label(r"\theta_{\mathrm{i}} - \theta_{\mathrm{e}}", cp(d0 + 0.5, (_THETA_I + theta_e[d0]) / 2) + RIGHT * 0.9,
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:87: THETA_I, THETA_E = 20, 0
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:172: ti = Text(tr(f"inside {THETA_I} °C", f"innen {THETA_I} °C"), font_size=BODY_FONT_SIZE, color=PASTEL_ORANGE)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:176: dth = place_math(_dtheta_label(THETA_I - THETA_E), np.array([0.0, ti.get_bottom()[1], 0.0]), "center")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:521: self.play(dt.animate.set_value(THETA_I - THETA_E), *_warmth(stage, 0.8), run_time=0.8)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1003: return -0.95 + theta / THETA_I * 2.55
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1063: q = PROFILE_U * (THETA_I - THETA_E)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1064: theta_si = THETA_I - q * PROFILE_RSI
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1066: prof_pts = [(-6.0, THETA_I), (-1.25, THETA_I), (WALL_X0, theta_si), (WALL_X1, theta_se),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1072: Text(f"{THETA_I} °C", font_size=LABEL_FONT_SIZE, color=PASTEL_ORANGE).move_to(p(-3.5, _profile_y(THETA_I) - 0.28)),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1086: math_label(r"R_{\mathrm{si}}", p(-0.62, _profile_y(THETA_I - 0.6 * (THETA_I - theta_si)) + 0.34), size=LABEL_FONT_SIZE, color=PASTEL_GREEN),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1768: self.play(dt_t.animate.set_value(THETA_I - THETA_E), run_time=0.9)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1789: dt_t.animate.set_value(2 * (THETA_I - THETA_E)),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1795: dt_t.animate.set_value(THETA_I - THETA_E),
+TOTAL 114

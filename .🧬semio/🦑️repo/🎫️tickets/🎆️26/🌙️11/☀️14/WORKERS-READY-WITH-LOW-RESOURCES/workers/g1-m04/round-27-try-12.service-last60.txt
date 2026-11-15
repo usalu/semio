@@ -1,0 +1,60 @@
+graph: 0 of 703 projects arrived from the fleet, 2 inferred here, 701 left; the server last progressed 1038 s ago, estimated time left: about 12 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:2:681","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 2 of 681 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:5:681","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 5 of 681 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:681:3:0:semio-os-infinite|language%3Acargo|0|0,semio-framework-value-testing-effect-bank|language%3Acargo|0|0,semio-framework-value-source-turn|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 681 projects · 3 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows), semio-framework-value-testing-effect-bank (language:cargo, 0 s, 0 rows), semio-framework-value-source-turn (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:681:3:0:semio-os-infinite|language%3Acargo|0|0,semio-framework-value-source-turn|language%3Acargo|0|0,semio-framework-value-source-hold|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 681 projects · 3 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows), semio-framework-value-source-turn (language:cargo, 0 s, 0 rows), semio-framework-value-source-hold (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:7:681:2:0:semio-os-infinite|language%3Acargo|0|0,semio-framework-value-source-hold|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 7 of 681 projects · 2 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows), semio-framework-value-source-hold (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:9:681:3:0:semio-os-infinite|language%3Acargo|0|0,semio-framework-value-retirement-contract|language%3Acargo|0|0,semio-framework-value-receiving|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 9 of 681 projects · 3 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows), semio-framework-value-retirement-contract (language:cargo, 0 s, 0 rows), semio-framework-value-receiving (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 9 inferred here, 694 left; the server last progressed 1040 s ago, estimated time left: about 12 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:9:681:4:0:semio-os-infinite|language%3Acargo|0|0,semio-framework-value-retirement-contract|language%3Acargo|0|0,semio-framework-value-receiving|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 9 of 681 projects · 4 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows), semio-framework-value-retirement-contract (language:cargo, 0 s, 0 rows), semio-framework-value-receiving (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[capacity] admitted exec: 1 job(s), 1536 MB reserved (9206 MB available, 1981 MB floor)
+graph: inferring projects with 1 worker processes (1536 MB each)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:9:681:3:0:semio-os-infinite|language%3Acargo|0|0,semio-framework-value-receiving|language%3Acargo|0|0,semio-framework-value-paged-clone|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 9 of 681 projects · 3 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows), semio-framework-value-receiving (language:cargo, 0 s, 0 rows), semio-framework-value-paged-clone (language:cargo, 0 s, 0 rows)
+graph: waiting for memory headroom (915 of 1098 MB reserved, 3 projects running): semio-framework-value-original-vector needs 305 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:10:681:2:0:semio-os-infinite|language%3Acargo|0|0,semio-framework-value-paged-clone|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 10 of 681 projects · 2 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows), semio-framework-value-paged-clone (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:12:681:3:0:semio-os-infinite|language%3Acargo|0|0,semio-framework-value-original-vector|language%3Acargo|0|0,semio-framework-value-native-tree-engine|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 12 of 681 projects · 3 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows), semio-framework-value-original-vector (language:cargo, 0 s, 0 rows), semio-framework-value-native-tree-engine (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:15:681:1:0:semio-os-infinite|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 15 of 681 projects · 1 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows)
+graph: 0 of 703 projects arrived from the fleet, 16 inferred here, 687 left; the server last progressed 1046 s ago, estimated time left: about 12 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[repository:command] still running after 1200 s
+[repository:command] still running after 1210 s
+graph: plan stage inference settled from 7075 to 7467 MB
+Graph: Plan-Stufe inference beruhigt von 7075 auf 7467 MB
+[repo] still working after 1220 s; last phase started: source.served
+[repository:command] still running after 1220 s
+[repository:command] still running after 1230 s
+[repository:command] still running after 1240 s
+[repo] still working after 1250 s; last phase started: source.served
+[repository:command] still running after 1250 s

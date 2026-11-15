@@ -1,0 +1,555 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:101: "en": "New home to GEG 2024 with external blinds (DIN 4108-2:2013-02, Abschn. 8)",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:102: "de": "Neues Wohngebäude nach GEG 2024 mit Außenjalousien (DIN 4108-2:2013-02, Abschn. 8)"
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:117: "en": "About 15 W/m² and 5 kWh/(m²·a): the summer heat protection of DIN 4108-2:2013-02 (section 8), which GEG §14 (German Buildings Energy Act) requires, limits solar gains, so cooling is needed only on a few hot days (≈ 350 full-load hours).",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:118: "de": "Rund 15 W/m² und 5 kWh/(m²·a): der sommerliche Wärmeschutz nach DIN 4108-2:2013-02 (Abschn. 8, GEG §14) begrenzt die Solargewinne, gekühlt wird nur an wenigen heißen Tagen (≈ 350 Volllaststunden)."
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:124: "en": "New school building (GEG), cooled",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:125: "de": "Neues Schulgebäude (GEG), gekühlt"
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:167: "en": "New office building (GEG) with external sun shading",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:168: "de": "Neues Bürogebäude (GEG) mit außenliegendem Sonnenschutz"
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:183: "en": "About 40 W/m² and 20 kWh/(m²·a): people, computers and lighting add about 25 W/m² to the shaded solar gains; offices see about 500 full-load hours of cooling (VDI 2078:2015-06 practice).",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:184: "de": "Rund 40 W/m² und 20 kWh/(m²·a): Menschen, Computer und Licht bringen rund 25 W/m² zu den verschatteten Solargewinnen; Büros kommen auf etwa 500 Kühl-Volllaststunden (Praxis nach VDI 2078:2015-06)."
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:207: "en": "About 50 W/m² and 25 kWh/(m²·a): the sun heats the roof surface to 60–70 °C (sol-air temperature, VDI 2078:2015-06), and the heat passes the uninsulated roof almost unhindered.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:208: "de": "Rund 50 W/m² und 25 kWh/(m²·a): die Sonne heizt die Dachhaut auf 60–70 °C auf (Sonnenlufttemperatur, VDI 2078:2015-06), und die Wärme gelangt fast ungehindert durch das ungedämmte Dach."
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:230: "en": "About 70 W/m² and 90 kWh/(m²·a): medical equipment, strict room conditions (DIN 1946-4:2018-09) and 24-hour operation add up to about 1,300 full-load hours.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:231: "de": "Rund 70 W/m² und 90 kWh/(m²·a): Medizintechnik, strenge Raumbedingungen (DIN 1946-4:2018-09) und Betrieb rund um die Uhr ergeben etwa 1.300 Volllaststunden."
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:27: "en": "Assign each building its specific cooling load in W/m² (the heat to remove on a hot design day, VDI 2078:2015-06) and its annual cooling demand in kWh/(m²·a) (the useful cooling per year to keep about 26 °C), both per m² of floor area. Allow about five minutes: compare every item, check units
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:28: "de": "Ordne jedem Gebäude seine spezifische Kühllast in W/m² (die an einem heißen Auslegungstag abzuführende Wärme, VDI 2078:2015-06) und seinen Jahres-Kühlbedarf in kWh/(m²·a) (die Nutzkälte pro Jahr, um etwa 26 °C zu halten) zu, beide je m² Fläche. Plane etwa fünf Minuten ein: Vergleiche alle Bei
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md:3: Presents the **Cooling load series** (Kühllast, VDI2078 design power rather than annual cooling energy) inside the shared virtual semio UI. Its lesson window zooms in from the five-window canvas and returns to the identical overview; navbar and footer remain visible.
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md:46: The cooling load is the sum $\dot{Q}_\mathrm{C} = \dot{Q}_\mathrm{T} + \dot{Q}_\mathrm{V} + \dot{Q}_\mathrm{S} + \dot{Q}_\mathrm{I}$ in W (transmission, ventilation, solar, internal), the same $\dot{Q}$ notation as in the heating video; index `V` always means ventilation, with the latent part `V,lat
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md:48: References on screen: VDI 2078:2015-06 (cooling load, keyword locators; a revision is announced for 2027), DIN 4108-2:2013-02 (section 8 summer heat protection, table 7 for `F_C`), DIN V 18599-2:2016-10 (internal heat sources; successor DIN/TS 18599-2:2025-10), DIN EN 16798-1:2022-03 (annex B.2, tab
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py:100: """🪟 Apply the earlier heating window (or ``area`` of glazing) to the summer design irradiance and the external blind ``F_C`` of DIN 4108-2."""
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py:203: din = _din_ref("VDI 2078:2015-06 · Kühllast (Solarstrahlung)")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py:434: din = _din_ref("DIN 4108-2:2013-02 · Abschn. 8, Tab. 7 (FC)")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py:79: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py:80: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:196: """🌀 Lüftungsgerät hanging high on a wall beside the house (top at ``MOUNT_TOP_FRACTION`` of a storey) — fan, cooling coil and the four air paths of DIN EN 16798-3.
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:267: "Together they cover part of the winter heating demand in DIN V 18599. A design heating load after DIN EN 12831 usually ignores them.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:268: "Zusammen decken sie einen Teil des Heizwärmebedarfs nach DIN V 18599. Eine Auslegungsheizlast nach DIN EN 12831 lässt sie meist weg."),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:275: din = _din_ref("DIN V 18599-2:2016-10 · Interne Wärmequellen")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:343: din = _din_ref("DIN 4108-2:2013-02 · Abschn. 8 Sommerlicher Wärmeschutz")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:413: din = _din_ref("VDI 2078:2015-06 · Kühllast")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:87: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py:88: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:173: din = _din_ref("DIN 4108-2:2013-02 · Abschn. 8 Sommerlicher Wärmeschutz")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:306: din = _din_ref("VDI 6022 Blatt 1 · Hygiene (RLT-Anlagen)")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:503: din = _din_ref("DIN EN 16798-1:2022-03 · Anh. B.2, Tab. B.2")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:85: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:86: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:203: din = _din_ref("VDI 2078:2015-06 · innere Wärmequellen")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:285: din = _din_ref("VDI 2078:2015-06 · innere Wärmequellen (Personen)")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:586: din = _din_ref("VDI 2078:2015-06 · innere Wärmequellen (Geräte, Beleuchtung)")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:78: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:793: din = _din_ref("VDI 2078:2015-06 · innere Wärmequellen")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:79: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:911: din = _din_ref("VDI 2078:2015-06 · innere Wärmequellen")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:234: din = _din_ref("VDI 2078:2015-06 · Kühllast opake Bauteile")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:385: din = _din_ref("VDI 2078:2015-06 · Kühllast Außenluft")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:78: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:79: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:231: din = _din_ref("VDI 2078:2015-06 · Kühllast (Zuluftstrom)")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:404: din = _din_ref("VDI 2078:2015-06 · Kühllast (Zuluftstrom)")
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:73: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:74: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🗺️roadmap/🐍️.py:56: HEADING = ("The roadmap of this video", "Der Fahrplan des Videos")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:1003: "en": "About 150 1/h (90–180 1/h, IEST-RP-CC012): ten times fewer particles than ISO 7 need about two and a half times the air.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:1004: "de": "Rund 150 1/h (90–180 1/h, IEST-RP-CC012): zehnmal weniger Partikel als ISO 7 brauchen etwa zweieinhalbmal so viel Luft."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:1023: "en": "About 540 1/h: the whole ceiling blows filtered air downwards at about 0.45 m/s (ISO 14644-4: 0.2–0.5 m/s); 0.45 m/s × 3,600 s ÷ 3 m = 540.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:1024: "de": "Rund 540 1/h: die ganze Decke bläst gefilterte Luft mit etwa 0,45 m/s nach unten (ISO 14644-4: 0,2–0,5 m/s); 0,45 m/s × 3.600 s ÷ 3 m = 540."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:726: "de": "Sortiere die Raumnutzungen von der kleinsten zur größten typischen Auslegungs-Luftwechselzahl in 1/h: stündlicher Luftvolumenstrom geteilt durch Raumvolumen. Normale Räume beziehen sich auf Außen- oder Zuluft; Reinräume enthalten gefilterte Umluft. Die Werte sind typische Lehrbeispiele, keine
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:795: "en": "About 0.5 1/h: DIN 1946-6 requires −0.001·A² + 1.15·A + 20 = 125 m³/h for a 100 m² apartment with 250 m³ of air.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:796: "de": "Rund 0,5 1/h: DIN 1946-6 verlangt −0,001·A² + 1,15·A + 20 = 125 m³/h für eine 100-m²-Wohnung mit 250 m³ Luft."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:816: "en": "About 0.8 1/h: 60 m³/h per athlete (DIN 18032-1) × 30 = 1,800 m³/h in 2,230 m³ – a large volume for few people.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:817: "de": "Rund 0,8 1/h: 60 m³/h je sporttreibender Person (DIN 18032-1) × 30 = 1.800 m³/h in 2.230 m³ – viel Volumen für wenige Menschen."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:931: "en": "About 8.3 1/h: DIN 1946-7 requires at least 25 m³/h of outdoor air per m² of floor; at 3 m height that is 8.3 air changes.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:932: "de": "Rund 8,3 1/h: DIN 1946-7 fordert mindestens 25 m³/h Außenluft je m² Grundfläche; bei 3 m Höhe sind das 8,3 Luftwechsel."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:951: "en": "About 20 1/h: DIN 1946-4 requires 60 m³/(h·m²) of filtered supply air, 20 air changes at 3 m height (and at least 1,200 m³/h of outdoor air).",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:952: "de": "Rund 20 1/h: DIN 1946-4 verlangt 60 m³/(h·m²) gefilterte Zuluft, also 20 Luftwechsel bei 3 m Höhe (und mindestens 1.200 m³/h Außenluft)."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:967: "en": "About 25 1/h: the exhaust air is sized to the heat and vapour of the cooking appliances (VDI 2052), typically 12–30 air changes per hour.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:968: "de": "Rund 25 1/h: die Abluft wird nach Wärme und Dampf der Kochgeräte bemessen (VDI 2052), typisch 12–30 Luftwechsel pro Stunde."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:987: "en": "About 60 1/h: HEPA-filtered air dilutes the particles; guideline value of IEST-RP-CC012 for ISO class 7.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:988: "de": "Rund 60 1/h: HEPA-gefilterte Luft verdünnt die Partikel; Richtwert der IEST-RP-CC012 für ISO-Klasse 7."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:111: | 4 | `Beat2_StossOderKipp` | 340 Wh gegen ≈ 830 Wh; „8 %“ = 5 min / 60 min bei `n ≈ 1 h⁻¹` (Maas 1995, Kap. 8: 0,56 … 1,38 h⁻¹) |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:67: Standards cited per beat via the `_din_ref()` chip: DIN EN 12831-1, DIN V 18599,
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:68: DIN 1946-4, DIN 1946-6, DIN EN 16798-1, DIN 4108-2, VDI 2078. The "Grenzwert nach
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:69: Pettenkofer" (1000 ppm CO₂) cites Pettenkofer 1858 (*Ueber den Luftwechsel in
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:70: Wohngebäuden*) and Bundesgesundheitsblatt 51 (2008) 1358-1369 (Ad-hoc-AG
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:113: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:114: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:282: din = _din_ref("DIN EN 16798-3")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:456: din = _din_ref("DIN EN 308")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:738: din = _din_ref("DIN 1946-6")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:945: din = _din_ref("VDI 2087")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:102: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:103: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:107: DIN EN 16798-1 (indoor air quality, CO₂ categories) and DIN 1946-6 (ventilation of dwellings).
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:210: Pettenkofer limit: M. v. Pettenkofer, Ueber den Luftwechsel in Wohngebäuden, München 1858; Ad-hoc-Arbeitsgruppe
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:211: Innenraumrichtwerte, Gesundheitliche Bewertung von Kohlendioxid in der Innenraumluft, Bundesgesundheitsblatt 51 (2008) 1358-1369
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:223: r"At about $1000\,\mathrm{ppm}$ the air counts as used up: the Pettenkofer limit.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:224: r"Bei rund $1000\,\mathrm{ppm}$ gilt die Luft als verbraucht: der Grenzwert nach Pettenkofer."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:248: din = _din_ref("Pettenkofer 1858 · Bundesgesundheitsbl. 51 (2008) 1358 · DIN 1946-6")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:285: tag_pk = tag(tr("Pettenkofer limit", "Grenzwert nach Pettenkofer"), r"1000\,\mathrm{ppm}", tick_pk.get_y())
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:439: din = _din_ref("DIN EN 12831-1")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:287: r"Die Norm rechnet mit dem festen Wert $0{,}34\,\mathrm{Wh/(m^3K)}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:292: "Unit usage varies, not only in the DIN. Both lines give the same result, apart from rounding.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:293: "Der Einheitengebrauch variiert, nicht nur in der DIN. Beide Zeilen liefern dasselbe Ergebnis, bis auf Rundung."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:305: din = _din_ref("DIN EN 12831-1")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:414: note = body_text(tr("Same physics, two unit sets (rounding: 0.335 ≈ 0.34). Unit usage varies, not only in the DIN.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:415: "Dieselbe Physik, zwei Einheitensätze (Rundung: 0,335 ≈ 0,34). Einheiten variieren, nicht nur in der DIN."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:480: din = _din_ref("DIN EN 12831-1 · VDI 2078")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:624: din = _din_ref("VDI 2078")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:787: din = _din_ref("DIN EN 12831-1 · VDI 2078")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:90: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:91: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:104: DIN EN 12831-1 (Q̇_V = V̇ · c_Luft · Δθ); the systems beat cites DIN 1946-6.
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:196: https://de.wikipedia.org/wiki/DIN_V_18599
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:474: r"So $V$ is about $0.76$ times $V_{\mathrm{e}}$ — the flat rate of DIN V 18599-1 and the GEG.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:475: r"$V$ ist also rund $0{,}76$ mal $V_{\mathrm{e}}$ — so setzen es DIN V 18599-1 und GEG pauschal an."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:488: din = _din_ref("DIN V 18599-1 · DIN EN 12831-1")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:714: r"Our $0.5\,\mathrm{h^{-1}}$ is the minimum air change for dwellings in DIN EN 12831.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:715: r"Unsere $0{,}5\,\mathrm{h^{-1}}$ sind der Mindestluftwechsel für Wohnungen nach DIN EN 12831."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:723: r"A commercial kitchen about $15\,\mathrm{h^{-1}}$, an operating room about $20\,\mathrm{h^{-1}}$ per DIN 1946-4 — its air is renewed every $3\,\mathrm{min}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:724: r"Eine Gewerbeküche etwa $15\,\mathrm{h^{-1}}$, ein Operationssaal nach DIN 1946-4 etwa $20\,\mathrm{h^{-1}}$ — dort ist die Luft alle $3\,\mathrm{min}$ neu."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:734: din = _din_ref("DIN EN 12831-1 · DIN 1946-4")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:929: din = _din_ref("DIN EN 12831-1 · DIN EN 16798-1")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:98: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🗺️roadmap/🐍️.py:56: HEADING = ("The roadmap of this video", "Der Fahrplan des Videos")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:105: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:106: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:280: din = _din_ref("DIN EN 12831-1 · VDI 2078")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:456: din = _din_ref("DIN EN 12831-1 · VDI 2078")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🔣️.numbers.json:3: "tilt": {"minutes": 5.0, "airChangePerHour": 1.0, "share": 0.0833, "measuredRangePerHour": [0.56, 1.38], "source": "Maas 1995, Dissertation Universität Gesamthochschule Kassel, chapter 8"},
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1046: din = _din_ref("DIN EN 16798-7")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1335: din = _din_ref("DIN 4108-2")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1572: din = _din_ref("DIN EN 16798-7")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:354: din = _din_ref("DIN 1946-6")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:599: din = _din_ref("DIN 1946-6")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:600: source = _din_ref(tr("Maas 1995, Diss. Univ. Kassel, ch. 8: tilted window n = 0.56 … 1.38 1/h",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:601: "Maas 1995, Diss. Univ. Kassel, Kap. 8: Kippfenster n = 0,56 … 1,38 1/h")).next_to(din, DOWN, buff=0.08, aligned_edge=RIGHT)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:829: din = _din_ref("DIN EN 16798-7")
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:96: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:97: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json:551: "scene": "Beat1_GEGundNormen"
+🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json:577: "scene": "Beat2_Normheizlast"
+🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json:974: "scene": "Beat4_NormalizedIndex"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:2036: SUBTITLE_READING_WPS: float = 1.6
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:2126: return round(max(words / SUBTITLE_READING_WPS, SUBTITLE_MIN_SECONDS), 2)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:376: _SCOPE.append(resolved)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:380: _SCOPE.pop()
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:385: if _SCOPE:
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:386: return _SCOPE[-1]
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:75: _SCOPE: list["ResolvedLod"] = []
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:824: _RECORDING = [True]
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:830: _RECORDING.append(False)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:834: _RECORDING.pop()
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:858: if _RECORDING[-1]:
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:34: S._SCOPE.append(LOD)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:38: S._SCOPE.remove(LOD)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:873: S._SCOPE.append(S.lod_level("full", 15))
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️lod.py:130: S._SCOPE.clear()
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️lod.py:140: S._SCOPE.append(SUITE.LOD)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️lod.py:146: S._SCOPE.clear()
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️lod.py:151: S._SCOPE.append(SUITE.LOD)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️lod.py:28: S._SCOPE.append(SUITE.LOD)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️lod.py:32: S._SCOPE.remove(SUITE.LOD)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🌍️captions/🐍️.py:23: scope = {"_narration": NARRATION, "tr": lambda en, de: en if language == "en" else de, "SUBTITLE_READING_WPS": CASES["readingWordsPerSecond"], "SUBTITLE_MIN_SECONDS": CASES["minimumSeconds"]}
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:268: "en": "DIN 1946-6: recovery cuts winter ventilation heat loss by up to 90%. In summer the same unit recovers cold.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:269: "de": "DIN 1946-6: WRG senkt den Winter-Lüftungswärmeverlust um bis zu 90 %. Im Sommer gewinnt dieselbe Technik Kälte zurück.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:271: "en": "DIN 1946-6: mechanical recovery can cut the ventilation heat loss by up to ninety percent in winter, and in summer the same technology recovers cold.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:272: "de": "DIN 1946-6: mechanische WRG senkt den Lüftungswärmeverlust im Winter\num bis zu 90 % — im Sommer gewinnt sie dieselbe Kälte zurück."
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/⚙️runtime/🐍️.py:205: environment = {**os.environ, **(env or {}), "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8", "PYTHONDONTWRITEBYTECODE": "1"}
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🐍️.py:776: environment = {**os.environ, "PYTHONIOENCODING": case["encoding"], "PYTHONUTF8": "0", "PYTHONDONTWRITEBYTECODE": "1"}
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🐍️.py:172: "stroke": _paint(chrome["borderNormal"]),
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🔣️.json:103: "stroke": "borderNormal",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🧬️schema.json:164: "stroke": "borderNormal",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🖌️render/🐍️.py:24: """📷 Normalize the actual cursor against the shared canvas bounds."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🧩️chapters/🔣️.cases.json:558: "scene": "Beat1_GEGundNormen"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🧩️chapters/🔣️.cases.json:583: "scene": "Beat2_Normheizlast"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🧩️chapters/🔣️.cases.json:956: "scene": "Beat4_NormalizedIndex"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts:175: const env = { ...process.env, ...native?.environment, PYTHONUTF8: "1", PYTHONIOENCODING: "utf-8", PYTHONDONTWRITEBYTECODE: "1", SEMIO_TEST_MANIM: command === "test" ? "1" : process.env.SEMIO_TEST_MANIM, SEMIO_TEACHING_LANGUAGE: command === "test" ? process.env.SEMIO_TEACHING_LANGUAGE ?? "en" : proce
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py:395: """🔊 Normalize a scene and optional narration without truncating either stream."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🗣️lexicon/🔣️.json:149: "JAZ": {"de": "J A Z", "en": "J A Z"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🗣️lexicon/🔣️.json:150: "SCOP": {"de": "S C O P", "en": "S C O P"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🗣️lexicon/🔣️.json:158: "GEG": {"de": "G E G", "en": "G E G"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🗣️lexicon/🔣️.json:160: "DIN": {"de": "DIN", "en": "DIN"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🗣️lexicon/🔣️.json:161: "VDI": {"de": "V D I", "en": "V D I"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🗣️lexicon/🧬️schema.json:61: "description": "Upright abbreviations such as JAZ in mathrm, read as written here instead of as units.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:35: {"tex": "e_{g} = 1/\\mathrm{JAZ} \\approx 0{,}26", "de": "e g gleich 1 durch J A Z ungefähr 0,26", "en": "e g equals 1 divided by J A Z approximately 0.26"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/📑️heading/🔣️.json:29: "Die Hauptgleichung des Heizwärmebedarfs (DIN V 18599)"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🗺️roadmap/🐍️.py:266: """🗺️ Scene of one video's roadmap: subclass it and declare ``NARRATION``, ``HEADING``, ``STEPS`` and optionally ``BRACKET`` and ``HANDOVERS``."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🗺️roadmap/🐍️.py:269: HEADING = ("The roadmap of this video", "Der Fahrplan des Videos")
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🗺️roadmap/🐍️.py:276: build_roadmap(self, self.NARRATION, self.STEPS, heading=self.HEADING, bracket=self.BRACKET, handovers=self.HANDOVERS)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🗺️roadmap/🐍️.py:3: Every video opens with one roadmap scene that only declares data: ``NARRATION`` (``intro`` plus one clause per step), ``HEADING``,
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:1008: "en": "About 182 kWh/(m²·a): 135 heating (IWU type EFH_I) ÷ 0.85 + 12.5 hot water ÷ 0.65 + 4 auxiliary energy.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:1009: "de": "Rund 182 kWh/(m²·a): 135 Heizwärme (IWU-Typ EFH_I) ÷ 0,85 + 12,5 Warmwasser ÷ 0,65 + 4 Hilfsenergie."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:1031: "en": "About 274 kWh/(m²·a): 197 heating (IWU type MFH_B) ÷ 0.8 + 12.5 hot water ÷ 0.5 (storage and circulation losses) + 3 auxiliary energy.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:1032: "de": "Rund 274 kWh/(m²·a): 197 Heizwärme (IWU-Typ MFH_B) ÷ 0,8 + 12,5 Warmwasser ÷ 0,5 (Speicher- und Zirkulationsverluste) + 3 Hilfsenergie."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:1054: "en": "About 409 kWh/(m²·a): 303 heating (IWU type EFH_E) ÷ 0.8 + 12.5 hot water ÷ 0.5 + 5 auxiliary energy, far beyond the 250 kWh/(m²·a) that marks efficiency class H in the energy certificate (German Buildings Energy Act, GEG, Annex 10).",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:1055: "de": "Rund 409 kWh/(m²·a): 303 Heizwärme (IWU-Typ EFH_E) ÷ 0,8 + 12,5 Warmwasser ÷ 0,5 + 5 Hilfsenergie, weit jenseits der 250 kWh/(m²·a), ab denen der Energieausweis Effizienzklasse H zeigt (GEG Anlage 10)."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:205: "en": "Profile B: about 300 kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:206: "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:225: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:226: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:257: "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a).",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:258: "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a)."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:305: "en": "Profile B: about 300 kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh. New examples rep
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:306: "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Ver
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:325: "en": "Profile B: about 300 kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh. New examples rep
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:326: "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Ver
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:345: "en": "Profile B: about 300 kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh. New examples rep
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:346: "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Ver
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:365: "en": "Profile B: about 300 kWh/(m²·a) heating (type EFH_E of the IWU, the Institute for Housing and Environment), a leaky envelope (n50 ≈ 8 1/h) losing about 60 kWh/(m²·a) through air exchange, an uninsulated roof that heats up in summer, and about 50 €/(m²·a) for gas at 12 ct/kWh. New examples rep
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:366: "de": "Profil B: rund 300 kWh/(m²·a) Heizwärme (IWU-Typ EFH_E), eine undichte Hülle (n50 ≈ 8 1/h) mit rund 60 kWh/(m²·a) Lüftungswärmeverlust, ein ungedämmtes Dach, das sich im Sommer aufheizt, und rund 50 €/(m²·a) für Gas zu 12 ct/kWh. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Ver
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:385: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:386: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:405: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:406: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:425: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:426: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:445: "en": "Profile D: about 135 kWh/(m²·a) heating (IWU type EFH_I), n50 ≈ 4 1/h with about 43 kWh/(m²·a) ventilation loss, and about 23 €/(m²·a) with a low-temperature gas boiler. New examples represent the same teaching envelope and supply profile, not a certification claim.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:446: "de": "Profil D: rund 135 kWh/(m²·a) Heizwärme (IWU-Typ EFH_I), n50 ≈ 4 1/h mit rund 43 kWh/(m²·a) Lüftungswärmeverlust und rund 23 €/(m²·a) mit einem Niedertemperatur-Gaskessel. Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für eine Zertifizierung."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:545: "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teachin
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:546: "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für 
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:565: "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teachin
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:566: "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für 
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:585: "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teachin
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:586: "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für 
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:605: "en": "Profile A, a funding standard of KfW (German state development bank): about 26 kWh/(m²·a) heating (IWU 2015, Table 26), heat-recovery ventilation cuts the ventilation loss to about 9 kWh/(m²·a), and a heat pump brings the costs down to about 4 €/(m²·a). New examples represent the same teachin
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:606: "de": "Profil A: rund 26 kWh/(m²·a) Heizwärme (IWU 2015, Tabelle 26), die Lüftung mit Wärmerückgewinnung senkt den Lüftungswärmeverlust auf rund 9 kWh/(m²·a), und eine Wärmepumpe drückt die Kosten auf rund 4 €/(m²·a). Neue Beispiele stehen für dasselbe Lehrprofil von Hülle und Versorgung, nicht für 
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:876: "en": "About 14 kWh/(m²·a): (26 heating + 12.5 hot water) ÷ seasonal performance factor (JAZ) 3.5 + 3 for fans and pumps; the heat pump takes more than two thirds of the heat from the environment.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:877: "de": "Rund 14 kWh/(m²·a): (26 Heizwärme + 12,5 Warmwasser) ÷ Jahresarbeitszahl (JAZ) 3,5 + 3 für Ventilatoren und Pumpen; die Wärmepumpe holt mehr als zwei Drittel der Wärme aus der Umwelt."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:898: "en": "About 23 kWh/(m²·a): the heating demand falls from 303 to 54 kWh/(m²·a) (IWU package 2, type EFH_E); (54 + 12.5) ÷ seasonal performance factor (JAZ) 3.3 + 3.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:899: "de": "Rund 23 kWh/(m²·a): der Heizwärmebedarf sinkt von 303 auf 54 kWh/(m²·a) (IWU-Paket 2, Typ EFH_E); (54 + 12,5) ÷ Jahresarbeitszahl (JAZ) 3,3 + 3."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:964: "en": "About 80 kWh/(m²·a): 55 heating ÷ 0.9 + 12.5 hot water (flat rate for residential buildings, DIN V 4108-6:2003-06, Annex D) ÷ 0.8 + 3 auxiliary energy.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:965: "de": "Rund 80 kWh/(m²·a): 55 Heizwärme ÷ 0,9 + 12,5 Warmwasser (der Pauschalwert für Wohngebäude nach DIN V 4108-6:2003-06, Anhang D) ÷ 0,8 + 3 Hilfsenergie."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:986: "en": "About 122 kWh/(m²·a): (303 + 12.5) ÷ seasonal performance factor (JAZ) 2.7 + 5; even without insulation, a heat pump cuts the purchased energy to less than a third (field tests in existing buildings measured about 3, Fraunhofer ISE).",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/❓️quiz/🔣️.json:987: "de": "Rund 122 kWh/(m²·a): (303 + 12,5) ÷ Jahresarbeitszahl (JAZ) 2,7 + 5; selbst ohne Dämmung senkt eine Wärmepumpe die bezogene Energie auf weniger als ein Drittel (Feldtests im Bestand maßen etwa 3, Fraunhofer ISE)."
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:103: | 3 | `Beat2_Normheizlast` | `Q̇_H` (Norm: `Φ_HL`) aus `(H_T + H_V) · Δθ`, Gewinne bewusst ignoriert |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:27: | Bilanz | `Q_h = Q_l − η · Q_g` (`Q_l = Q_T + Q_V`, `Q_g = Q_S + Q_i`, DIN V 4108-6) | Kapitel 1, from the Heating/Cooling flows |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:29: | Leistung ≠ Energie | `Q̇_H in kW` (Norm: `Φ_HL`) vs. `Q_h in kWh/a` | Kapitel 3 |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:51: | `e_ce`, `e_d`, `e_s`, `e_g` (DIN V 4701-10: Übergabe, Verteilung, Speicherung, Erzeugung) and `Q_E` | `♨️system-losses/🐍️.py` (`E_*`, `E_E_*`, `Q_E_GAS`, `Q_E_WP`) | `🏭️primary-energy/🐍️.py` (`E_E_*`) |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:52: | `f_P` (GEG Anlage 4), `Q_P`, example GEG limit | `🏭️primary-energy/🐍️.py` | `🧪️practice/🐍️.py` (`CHAIN_*`) |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:55: Kapitel 5 Beat 4 compares these against a GEG limit of 66 kWh/(m²·a) — 55 % of
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:56: a **schematic** reference-building value of 120 (GEG § 15 Abs. 1, Anlage 1). The real reference
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:59: Standards cited per beat via the `_din_ref()` chip, always with edition and locator (verified 2026-11-13):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:60: GEG, since 29 July 2026 Gebäudemodernisierungsgesetz (GModG): § 15 Abs. 1 and Anlage 1 (reference building), § 20 Abs. 1 (DIN V 18599:2018-09), § 22 Abs. 1 and Anlage 4 (primary energy factors), §§ 79–87 and Anlage 10 (Energieausweis); the 65-%-rule of §§ 71–73 is repealed.
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:61: DIN V 4108-6:2003-06: 3.2 symbols, 5.5 balance methods, 6.1 transmission, 6.2 ventilation, 6.3 internal, 6.4 solar, 6.5 utilisation, Anhang A meteorological data, D.2 Heizperiodenbilanz (`Q_l = 0,024 · (H_T + H_V) · G_t`), D.5 Referenzklima.
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:62: DIN V 18599:2018-09 (Teile 1/2/5/6/10; 2.: 5.5.3 Ausnutzungsgrad) with its successor DIN/TS 18599:2025-10; DIN V 4701-10:2003-08 (symbols `Q_h`, `Q_E`, `Q_P`, `e_P`); DIN EN 12831-1:2017-09 Abschn. 6 with DIN/TS 12831-1:2020-04; VDI 2078:2015-06; DIN 4108-2:2026-05 (replaces 2013-02); VDI 4645:2023-
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:98: | 2 | `Beat1_GEGundNormen` | GEG → DIN V 18599 → Nachbarnormen |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:9: 5. Kapitel 5 — Primärenergie & das GEG
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:1004: din = _din_ref("DIN V 4701-10:2003-08, 4.2.6 Anlagen-Aufwandszahl · DIN V 18599-1:2018-09, 5.5 Endenergie")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:1073: schematic_note = note_line(tr("Schematic · all figures dimensionless · details: DIN V 18599-5", "Schematisch · alle Zahlen dimensionslos · Details: DIN V 18599-5"),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:123: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:124: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:587: din = _din_ref("DIN V 18599-5:2018-09, 6.2 Übergabe · 6.3 Verteilung · 6.4 Speicher")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:760: "Its seasonal performance factor, the JAZ, is the heat delivered over the year divided by the electricity it consumed.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:761: "Die Jahresarbeitszahl (JAZ) ist die im Jahr abgegebene Wärme geteilt durch den dafür eingesetzten Strom."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:766: r"The expenditure figure of the generator is its inverse: $e_{g} = 1/\mathrm{JAZ} \approx 0.26$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:767: r"Die Aufwandszahl der Erzeugung ist ihr Kehrwert: $e_{g} = 1/\mathrm{JAZ} \approx 0{,}26$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:775: din = _din_ref("DIN V 18599-5:2018-09, 6.5.3 Wärmepumpen · 6.5.4 Heizkessel · VDI 4650 Blatt 1:2024-02")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:923: ("jaz", r"\mathrm{JAZ}", AMBIENT_GREEN), (None, "=", P_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:927: ("eg", r"\;\Rightarrow\;e_{g}=\frac{1}{\mathrm{JAZ}}", AMBIENT_GREEN),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:929: jaz_note = note_line(tr("JAZ = seasonal performance factor (VDI 4650 Blatt 1) · dimensionless", "JAZ = Jahresarbeitszahl (VDI 4650 Blatt 1) · dimensionslos"), color=AMBIENT_GREEN)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🏗️composition/🐍️.py:17: (BASE_DIR / "🐍️.py", "Beat1_GEGundNormen", SPEECH_DIR / "beat_1_audio.mp3"),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1062: ref_note = note_line(tr("GEG proof: standardised reference climate", "GEG-Nachweis: standardisiertes Referenzklima"), color=P_CYAN)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1142: din = _din_ref("DIN V 4108-6:2003-06, Anh. D.2 Heizperiodenbilanz · D.5")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:116: """🔋 Monthly utilisation factor η = (1 − γᵃ) / (1 − γᵃ⁺¹) with γ = Q_g / Q_l (DIN V 4108-6, 6.5)."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:153: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:154: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:527: class Beat1_GEGundNormen(Scene):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:533: r"The Gebäudeenergiegesetz — continued since July 2026 as the Gebäudemodernisierungsgesetz — sets the target.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:534: r"Das Gebäudeenergiegesetz — seit Juli 2026 als Gebäudemodernisierungsgesetz fortgeführt — setzt das Ziel."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:542: r"For that it points to DIN V 18599:2018-09.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:543: r"Dafür verweist es auf DIN V 18599:2018-09."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:549: r"Daneben stehen die Normen der früheren Videos."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:551: r"The heating load $\dot{Q}_H$ is calculated to DIN EN 12831-1 — which calls it $\Phi_{HL}$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:552: r"Die Heizlast $\dot{Q}_H$ wird nach DIN EN 12831-1 berechnet — dort heißt sie $\Phi_{HL}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:554: r"The cooling load $\dot{Q}_C$ is calculated to VDI 2078.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:555: r"Die Kühllast $\dot{Q}_C$ wird nach VDI 2078 berechnet."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:557: r"And summer overheating protection is verified to DIN 4108-2.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:558: r"Und der sommerliche Wärmeschutz wird nach DIN 4108-2 nachgewiesen."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:563: """🪧 Standard card — topic on one or two lines, the DIN number below, in the shared card frame."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:571: return card_grid([(tr("Law", "Gesetz"), tr("GEG, since 07/2026 GModG — Building Energy Act", "GEG, seit 07/2026 GModG — Gebäudeenergiegesetz"), P_PRIMARY)], rows=1, value_size=LABEL_FONT_SIZE + 2)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:575: return card_grid([(tr("Calculation method", "Rechenverfahren"), tr("DIN V 18599:2018-09 — Energy performance assessment", "DIN V 18599:2018-09 — Energetische Bewertung"), P_CYAN)], rows=1,
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:588: din = _din_ref("GEG, seit 7/2026 GModG: § 15 Abs. 1, § 20 Abs. 1")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:631: revision = note_line(tr("The standard series was revised in 10/2025 as DIN/TS 18599.", "Die Normenreihe wurde 10/2025 als DIN/TS 18599 überarbeitet."), color=P_PRIMARY)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:646: self._norm_card([self._topic(tr("Heating load", "Heizlast"), r"\dot{Q}_{H}")], "DIN EN 12831-1:2017-09", LOSS_BLUE, size),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:647: self._norm_card([self._topic(tr("Cooling load", "Kühllast"), r"\dot{Q}_{C}")], "VDI 2078:2015-06", P_RED, size),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:648: self._norm_card([tr("Summer", "Sommerlicher"), tr("thermal protection", "Wärmeschutz")], "DIN 4108-2:2026-05", SOLAR_YELLOW, size),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:673: r"Die Norm bilanziert Monat für Monat."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:721: din = _din_ref("DIN V 4108-6:2003-06, 5.2 · 6.5 · DIN V 18599-2:2018-09, 5.5.3")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:955: din = _din_ref("DIN V 4108-6:2003-06, Anh. A · D.5 · DWD TRY 2017")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🔊️speech/🐍️.py:26: Beat1_GEGundNormen = _scene.Beat1_GEGundNormen
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🔊️speech/🐍️.py:44: Beat1_GEGundNormen,
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🏗️composition/🐍️.py:18: (BASE_DIR / "🐍️.py", "Beat2_Normheizlast", SPEECH_DIR / "beat_2_audio.mp3"),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:1070: r"Die Norm-Heizlast $\dot{Q}_H$ liefert den zentralen Auslegungspunkt."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:1089: din = _din_ref("DIN EN 12831-1:2017-09, Abschn. 6 · VDI 4645:2023-04")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:436: din = _din_ref("DIN V 4108-6:2003-06, 3.2 Symbole, Einheiten")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:566: #region Beat 2 – Die Normheizlast nach DIN EN 12831-1
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:583: class Beat2_Normheizlast(Scene):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:587: r"Die Spitze dieser Kurve hat einen eigenen Namen: die Norm-Heizlast $\dot{Q}_H$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:590: r"Dazu gehören eine eigene Norm und eigene Regeln — die Norm schreibt dafür $\Phi_{\mathrm{HL}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:596: r"Es gilt die Norm-Außentemperatur $\theta_e = -12\;^{\circ}\mathrm{C}$ des Standorts — sie legt die Auslegungsdifferenz $\Delta\theta$ fest."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:602: r"Entscheidend: Nur die Verluste unter diesen Normbedingungen zählen."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:617: r"Beide zusammen mal $\Delta\theta = 32\;\mathrm{K}$ ergeben die Norm-Heizlast $\dot{Q}_H = 6{,}08\;\mathrm{kW}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:631: subtitle = section_heading(tr("The standard heating load per DIN EN 12831-1", "Die Norm-Heizlast nach DIN EN 12831-1"))
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:632: din = _din_ref("DIN EN 12831-1:2017-09, Abschn. 6 · DIN/TS 12831-1:2020-04")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:648: body_text(tr("Standard heating load", "Norm-Heizlast"), font_size=LABEL_FONT_SIZE, color=POWER)).arrange(RIGHT, buff=0.18)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:651: _fact(tr("Standard:", "Norm:"), body_text("DIN EN 12831-1", font_size=LABEL_FONT_SIZE, color=P_WHITE)),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:652: _fact(tr("Symbol:", "Formelzeichen:"), math_label(tr(r"\dot{Q}_{H}\;\text{— in the standard}\;\Phi_{\mathrm{HL}}", r"\dot{Q}_{H}\;\text{— in der Norm}\;\Phi_{\mathrm{HL}}"), size=LABEL_FONT_SIZE, color=POWER)),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:653: _fact(tr("Rules:", "Regeln:"), body_text(tr("Standard conditions", "Normbedingungen"), font_size=LABEL_FONT_SIZE, color=P_WHITE)),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:785: note = math_label(tr(r"\text{simplified schematic — the standard contains further terms}", r"\text{schematisch vereinfacht — die Norm enthält weitere Terme}"),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:866: r"Ihre Anfangshöhe ist die Norm-Heizlast $\dot{Q}_H$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:893: din = _din_ref("DIN EN 12831-1:2017-09, Abschn. 6 · DIN V 4108-6:2003-06, D.2")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:95: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:96: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🔊️speech/🐍️.py:27: Beat2_Normheizlast = _scene.Beat2_Normheizlast
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🔊️speech/🐍️.py:45: Beat2_Normheizlast,
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:110: # example. The 55 % share is the GEG § 15 requirement for new residential builds.
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1188: din = _din_ref("GEG (seit 7/2026 GModG) § 15 Abs. 1, § 16, Anlage 1 · § 71 entfallen")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:122: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:123: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:417: din = _din_ref("DIN V 18599-1:2018-09, 3.1 Begriffe · 5.5 Endenergie · 5.6 Primärenergie")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:422: tr("Since 10/2025 DIN/TS 18599-1:2025-10 · GEG § 20 still cites 2018-09", "Seit 10/2025 DIN/TS 18599-1:2025-10 · GEG § 20 nennt noch 2018-09"),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:426: tr("GEG since 29 July 2026: Gebäudemodernisierungsgesetz (GModG)", "GEG seit 29.07.2026: Gebäudemodernisierungsgesetz (GModG)"),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:548: ("fp", r"f_{P}", P_YELLOW), ("cap", tr(r"\;\text{← limited by the GEG}", r"\;\text{← vom GEG begrenzt}"), P_PRIMARY),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:627: din = _din_ref(tr("GEG (now GModG) § 22 (1), Annex 4 no. 2, 8, 9, 12", "GEG (seit 7/2026 GModG) § 22 Abs. 1, Anlage 4 Nr. 2, 8, 9, 12"))
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:79: TITLE_DE = "Primärenergie & das GEG"
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:944: r"Primärenergie durch Nutzenergie ist die Anlagenaufwandszahl der Norm, $e_{P} = Q_{P}/Q_{h}$: $1{,}54$ gegen $0{,}56$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:955: din = _din_ref("GEG (seit 7/2026 GModG) § 20 Abs. 1, § 22 Abs. 1, Anlage 4 · DIN V 18599-1:2018-09, 5.6")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:959: schematic_note = note_line(tr("Simplified worked example — not a full DIN V 18599 / GEG calculation", "Vereinfachtes Rechenbeispiel — keine vollständige Berechnung nach DIN V 18599 / GEG"), color=P_PRIMARY)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:97: F_P_GAS, F_P_STROM = 1.1, 1.8          # GEG Anlage 4, nicht erneuerbarer Anteil
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🔊️speech/🐍️.py:1: """🔊 Subtitle voiceover for EnergyBalance Chapter 5 (Primärenergie & das GEG) — synth, align, verify.
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:166: Each class is "up to and including" its bound (GEG Anlage 10) — a value
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:313: r"Eine feste Raumtemperatur von $20\,\mathrm{°C}$ und eine Norm-Nutzung — unabhängig vom Verhalten der echten Bewohner."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:342: din = _din_ref("GModG 2026 (vormals GEG) · §§ 79–82")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:377: norm_label = body_text(tr("Standard boundary conditions", "Norm-Randbedingungen"), font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:435: ("geb", tr(r"\text{Building}\;|_{\,\text{standard}}", r"\text{Gebäude}\;|_{\,\text{Norm}}"), P_PRIMARY),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:545: din = _din_ref("GModG 2026 (vormals GEG) · § 86 Abs. 2 · Anlage 10")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:786: din = _din_ref("GModG 2026 (vormals GEG) · § 84 · § 87 Abs. 1")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:93: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:94: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:113: """🔋 Utilisation factor of the gains η = (1 − γᵃ) / (1 − γᵃ⁺¹) with γ = Q_g / Q_l (DIN V 4108-6, 6.5)."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:1275: din = _din_ref("DIN V 4108-6:2003-06, 6.5 · DIN V 18599-2:2018-09, 5.5.3")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:164: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:165: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:470: din = _din_ref("DIN V 4108-6:2003-06, 3.2 · 5.5")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:644: r"Sie gehört zu $\rho \approx 1{,}2\;\mathrm{kg/m^3}$ bei $20\;^{\circ}\mathrm{C}$; kältere Luft ist dichter, $1{,}27\;\mathrm{kg/m^3}$ bei $5\;^{\circ}\mathrm{C}$, die Norm rechnet aber mit dem festen Wert."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:661: din = _din_ref("DIN V 4108-6:2003-06, 6.1 · 6.2")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:958: r"DIN V 4108-6 assumes $q_i = 5\;\mathrm{W/m^2}$ for residential use.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:959: r"DIN V 4108-6 setzt für Wohnnutzung $q_i = 5\;\mathrm{W/m^2}$ an."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:991: din = _din_ref("DIN V 4108-6:2003-06, 6.3 · 6.4 · 6.5")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🧪️tests/🧮️balance/🔣️.json:4: "contract": "Monthly balance Q_h = Q_l - eta * Q_g and Q_c = Q_g - eta_c * Q_l of the running example (DIN V 4108-6, 6.5)",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🗺️roadmap/🐍️.py:59: HEADING = ("The roadmap of this video", "Der Fahrplan des Videos")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:1070: din = _din_ref("DIN V 18599-1:2018-09, Abschn. 5.6 · GModG 2026 Anlage 4, 10")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:121: """🔤 Efficiency class (letter, colour) an end-energy value earns — GEG Anlage 10, as Chapter 6 looks it up."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:133: #region DIN citation
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:134: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:258: "Das liegt daran, dass die Berechnung bewusst Normbedingungen nutzt."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:294: "Dort heizt man sparsamer, als die Norm annimmt."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:314: din = _din_ref("DIN V 18599-10:2018-09 · Abschn. 5, Tab. 4")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:440: norm_note = note_line(tr("The calculation uses standard conditions", "Die Berechnung rechnet mit Normbedingungen"), color=CALC_CYAN)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:571: din_pre = _din_ref("Sunikka-Blank & Galvin 2012, Build. Res. Inf. 40(3)")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:697: "That is a key condition for a good seasonal performance factor, the German JAZ: delivered heat per electricity.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:698: "Das ist eine wichtige Voraussetzung für eine gute Jahresarbeitszahl (JAZ): abgegebene Wärme je Strom."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:708: din = _din_ref("GModG 2026 (vormals GEG) § 60c Abs. 1 · VOB/C DIN 18380:2019-09, Abschn. 3.5")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:885: jaz_meter = meter("JAZ", length=1.8, thickness=0.40, color=GOOD_GREEN)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:891: ("jaz", tr(r"\text{SPF}\uparrow", r"\text{JAZ}\uparrow"), GOOD_GREEN),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:894: jaz_def = note_line(tr("SPF (JAZ, VDI 4650-1:2024-02) = delivered heat / electricity used", "JAZ (VDI 4650-1:2024-02) = abgegebene Wärme / eingesetzter Strom"), color=GOOD_GREEN)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️tests/🔗️chain/🐍️.py:1: """🔗 Energy-chain contract of the certificate and practice chapters: shared numbers, GEG Anlage 10 classes, notation, narration values."""
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:134: | Luft-Wärmepumpe (JAZ) | ≈ 3 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:135: | Erd-Wärmepumpe (JAZ) | ≈ 4 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:163: | 1 · Warum lüften? | Fahrplan (erste Szene des Videos) · Lüftungsbedarf · Lüftungsweg | CO₂ (≈ 420 ppm außen, 1 000 ppm Pettenkoferwert), Feuchte, Schadstoffe · 4 Personen · 30 m³/h = 120 m³/h · Richtung der Luft kehrt mit der Jahreszeit um |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:175: | **Luftwechselrate n** | wie oft das Luftvolumen pro Stunde ausgetauscht wird [h⁻¹] | 0,5 h⁻¹ (Wohnung, DIN EN 12831) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:243: - DIN EN ISO 6946 fasst Leitung, Konvektion und Strahlung zu **einem U-Wert** pro Bauteil zusammen.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:24: HF["Heizung Final<br/>Heizwärmebedarf DIN V 18599"]
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:278: | **H_T = Σ U_i·A_i + ΔU_WB · A** | mit Wärmebrücken (pauschal, ΔU_WB = 0,10 bzw. 0,05 nach DIN 4108 Beiblatt 2) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:333: | **Q̇_i** | Summe der internen Wärmelasten in W; über die Heizperiode der interne Gewinn Q_i in kWh/a (DIN V 4108-6, 6.3) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:368: | **F_C** | Abminderungsfaktor für Sonnenschutzvorrichtungen (DIN V 4108-6, Anhang B.4; DIN 4108-2); 1 = ohne, 0 = voll geschützt |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:375: | **Q̇_S = I_s · A · g⊥ · F_F · F_W · F_S · F_C** | Solare Wärmelast, [Q̇_S] = W (über die Heizperiode: Q_S, DIN V 4108-6, 6.4) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:37: | # | Video | Ordner | Normen (Auswahl) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:39: | 0 | Physikalische Grundlagen | `1_physical_fundamentals/` | DIN EN 12831, DIN V 18599, DIN EN 14511, VDI 4650, DIN EN 410, DIN 4108-2/-3, DIN EN ISO 13786, DIN 1946-6 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:400: | **G_t20/15 = Σ (θ_i − θ_e)** | Gradtagzahl in Kd/a: nur Tage mit θ_e < 15 °C (Heizgrenze), Raumtemperatur θ_i = 20 °C (VDI 3807 Blatt 1) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:401: | **F_Gt = 24 h/d · G_t** | Gradtagzahlfaktor in kKh/a (DIN V 4108-6, Heizperiodenverfahren) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:403: | **Q_h = Q_l − η · Q_g, Q_g = Q_S + Q_i** | **Heizwärmebedarf** (DIN V 4108-6) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:404: | **Q_E = Q_h + Q_h,ce + Q_h,d + Q_h,s + Q_h,g** | Endenergie mit Übergabe-, Verteilungs-, Speicher- und Erzeugungsverlusten (DIN V 18599-5) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:40: | L1–L6 | Lüftung (6 Kapitel) | `2_ventilation/` | DIN EN 12831-1, DIN V 18599, DIN 1946-4, DIN 1946-6, DIN EN 16798-1, DIN 4108-2 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:416: - **Heizlast (kW)** = Dimensionierung für den kältesten Moment (DIN EN 12831, Hannover −12 °C).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:417: - **Heizwärmebedarf (kWh/m²a)** = Jahresenergiebilanz (DIN V 18599).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:41: | H1–H5 | Heizwärmebedarf (5 Module) | `3_heating/` | DIN EN ISO 6946, DIN EN 12831, DIN V 18599 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:42: | HF | Heizwärmebedarf — Bilanz | `3_heating/6_final_calculation/` | DIN V 18599 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:43: | C1–C6 | Kühllast (6 Teile) | `4_cooling/` | DIN V 18599, VDI 2078 (implizit) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:573: Strategie: Last senken → frei lüften, solange die Außenluft kühler ist → Maschinen als Reserve. Das ist sommerlicher Wärmeschutz (DIN 4108-2). Fenster-, Quer-, Auftriebs- und Nachtlüftung sowie die mechanischen Systeme und die Wärmerückgewinnung stehen im Lüftungsvideo (Kapitel 4 und 5).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:63: | 4 | Wärmepumpe — Energie auf höheres Temperaturniveau übertragen | Kältekreis animiert · 1 + 3 = 4 · Endenergie Q_E + Umweltwärme Q_U = Nutzwärme Q_N · COP = Q_N/Q_E aus Balken · COP(Außentemperatur) · Jahresarbeitszahl JAZ (VDI 4650 Blatt 1; SCOP: DIN EN 14825) · Nutzwärme je 1 kWh Endenergie: Ho
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:78: | **Heizlast** | Spitzenleistung der kältesten Stunde | EFH ≈ 8 kW, DIN EN 12831 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:79: | **Heizwärmebedarf** | Fläche unter der Leistungskurve übers Jahr | EFH ≈ 15 000 kWh/a, DIN V 18599 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:80: | **COP** | Heizwärme / Strom in einem Betriebspunkt | 1 kWh Strom + 3 kWh Umweltwärme = 4 kWh, DIN EN 14511 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:81: | **JAZ** | Jahresarbeitszahl, COP übers Jahr | Luft-WP ≈ 3, Erd-WP ≈ 4, VDI 4650 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:82: | **g-Wert** | Anteil der Solarstrahlung, der durchs Glas kommt | Dreifachverglasung ≈ 0,5, DIN EN 410 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:85: | **Phasenverschiebung φ** | Zeitversatz der Temperaturspitze durch Speichermasse | massive Decke ≈ 6 h (schematisch), DIN EN ISO 13786 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:88: | **Taupunkt** | Temperatur, bei der φ = 100 % erreicht wird | 20 °C / 50 % → ≈ 9,3 °C, DIN 4108-3 |
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1490: "en": "About 16 W/m² and 20 kWh/(m²·a): IWU (Institute for Housing and Environment) modernisation package 2 for type MFH_B (0.39 W/(m²·K) transmission per m² plus heat-recovery ventilation). A compact old building can reach new-build level. Source: IWU German residential building typology 2015.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1491: "de": "Rund 16 W/m² und 20 kWh/(m²·a): IWU-Modernisierungspaket 2 für den Typ MFH_B (0,39 W/(m²·K) Transmission je m² plus Lüftung mit Wärmerückgewinnung). Ein kompakter Altbau erreicht Neubauniveau. Quelle: IWU Deutsche Wohngebäudetypologie 2015."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1513: "en": "About 20 W/m² and 26 kWh/(m²·a) for this funding standard of KfW (German state development bank): envelope loss H′T at most 55% of the GEG reference building plus heat-recovery ventilation; IWU calculates 21.7 kWh/(m²·a) per usable floor area A_N, about 26 per m² of living area (German reside
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1514: "de": "Rund 20 W/m² und 26 kWh/(m²·a): Hüllflächenverlust H′T höchstens 55 % des GEG-Referenzgebäudes plus Lüftung mit Wärmerückgewinnung; das IWU berechnet 21,7 kWh/(m²·a) je Gebäudenutzfläche A_N, rund 26 je m² Wohnfläche (Deutsche Wohngebäudetypologie 2015, Tabelle 26)."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1536: "en": "About 25 W/m² and 35 kWh/(m²·a): envelope loss H′T at most 70% of the GEG reference building; IWU calculates 29.9 kWh/(m²·a) per usable floor area A_N, about 35 per m² of living area (German residential building typology 2015, Table 26).",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1537: "de": "Rund 25 W/m² und 35 kWh/(m²·a): Hüllflächenverlust H′T höchstens 70 % des GEG-Referenzgebäudes; das IWU berechnet 29,9 kWh/(m²·a) je Gebäudenutzfläche A_N, rund 35 je m² Wohnfläche (Deutsche Wohngebäudetypologie 2015, Tabelle 26)."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1543: "en": "New single-family house to GEG 2024 with the minimum envelope and a heat pump",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1544: "de": "Neues Einfamilienhaus nach GEG 2024 mit Mindest-Gebäudehülle und Wärmepumpe"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1547: "en": "New house to GEG 2024",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1548: "de": "Neubau nach GEG 2024"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1559: "en": "About 40 W/m² (design practice for new builds since 2016: 30–50 W/m²) and 50 kWh/(m²·a): § 16 GEG still allows an envelope loss H′T up to that of the reference building (Annex 1: wall 0.28, window 1.3 W/(m²·K)); the 55% primary-energy limit of § 15 is met by the heat pump, not by insulation. 
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1560: "de": "Rund 40 W/m² (Auslegungspraxis für Neubauten seit 2016: 30–50 W/m²) und 50 kWh/(m²·a): § 16 GEG erlaubt weiterhin einen Hüllflächenverlust H′T bis zu dem des Referenzgebäudes (Anlage 1: Wand 0,28, Fenster 1,3 W/(m²·K)); die 55-%-Primärenergiegrenze des § 15 erfüllt die Wärmepumpe, nicht die D
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1582: "en": "About 50 W/m² and 89 kWh/(m²·a) under the Energy Saving Ordinance (EnEV): IWU type EFH_J with 1.14 W/(m²·K) transmission per m² of living area; load = (transmission + ventilation at 0.5 1/h, the airtight envelope required since EnEV 2002) × 32 K (20 °C inside, −12 °C outside).",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1583: "de": "Rund 50 W/m² und 89 kWh/(m²·a): IWU-Typ EFH_J mit 1,14 W/(m²·K) Transmission je m² Wohnfläche; Last = (Transmission + Lüftung mit 0,5 1/h, der seit der EnEV 2002 geforderten luftdichten Hülle) × 32 K (20 °C innen, −12 °C außen)."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1606: "en": "About 60 W/m² and 122 kWh/(m²·a): thin concrete sandwich panels, but a very compact block with little envelope per m² of floor. Source: IWU German residential building typology 2015, type NBL_GMH_F.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1607: "de": "Rund 60 W/m² und 122 kWh/(m²·a): dünne Beton-Sandwichplatten, aber ein sehr kompakter Block mit wenig Hüllfläche je m² Wohnfläche. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ NBL_GMH_F."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1629: "en": "About 73 W/m² and 135 kWh/(m²·a): IWU type EFH_I with 1.78 W/(m²·K) transmission per m² of living area; a detached house has much envelope per m² of floor.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1630: "de": "Rund 73 W/m² und 135 kWh/(m²·a): IWU-Typ EFH_I mit 1,78 W/(m²·K) Transmission je m² Wohnfläche; ein freistehendes Haus hat viel Hülle je m² Wohnfläche."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1653: "en": "About 95 W/m² and 197 kWh/(m²·a): thick brick walls and shared party walls keep it well below a detached house of similar age. Source: IWU German residential building typology 2015, type MFH_B.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1654: "de": "Rund 95 W/m² und 197 kWh/(m²·a): dicke Ziegelwände und gemeinsame Brandwände halten es deutlich unter einem freistehenden Haus ähnlichen Alters. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ MFH_B."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:165: "en": "Front door of the GEG reference building",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:166: "de": "Haustür des GEG-Referenzgebäudes"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1676: "en": "About 115 W/m² and 224 kWh/(m²·a): built just before the first Thermal Insulation Ordinance of 1977. Source: IWU German residential building typology 2015, type EFH_F.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1677: "de": "Rund 115 W/m² und 224 kWh/(m²·a): gebaut kurz vor der ersten Wärmeschutzverordnung von 1977. Quelle: IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_F."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:169: "en": "GEG reference front door",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1700: "en": "About 160 W/m² and 303 kWh/(m²·a): 4.5 W/(m²·K) transmission per m² of living area (IWU type EFH_E). Measured consumption is typically about 40% lower than this calculated demand (prebound effect).",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1701: "de": "Rund 160 W/m² und 303 kWh/(m²·a): 4,5 W/(m²·K) Transmission je m² Wohnfläche (IWU-Typ EFH_E). Der gemessene Verbrauch liegt meist rund 40 % unter diesem berechneten Bedarf (Prebound-Effekt)."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:170: "de": "Referenzhaustür nach GEG"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:181: "en": "1.8 W/(m²·K): reference value for external doors. Source: German Buildings Energy Act (Gebäudeenergiegesetz, GEG) 2024, Annex 1.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:182: "de": "1,8 W/(m²·K): Referenzwert für Außentüren. Quelle: Gebäudeenergiegesetz (GEG) 2024, Anlage 1."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:210: "en": "Window of the GEG reference building",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:211: "de": "Fenster des GEG-Referenzgebäudes"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:214: "en": "GEG reference window",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:215: "de": "Referenzfenster nach GEG"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:225: "en": "1.3 W/(m²·K) (Uw): double low-e glazing with argon in an insulated frame. Source: Gebäudeenergiegesetz (GEG) 2024, Annex 1.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:226: "de": "1,3 W/(m²·K) (Uw): Zweifach-Wärmeschutzverglasung mit Argon im gedämmten Rahmen. Quelle: Gebäudeenergiegesetz (GEG) 2024, Anlage 1."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:320: "en": "Floor slab or basement ceiling of the GEG reference building",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:321: "de": "Bodenplatte oder Kellerdecke des GEG-Referenzgebäudes"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:324: "en": "GEG reference floor slab",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:325: "de": "Referenz-Bodenplatte nach GEG"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:335: "en": "0.35 W/(m²·K): reference value for components against the ground or unheated rooms; the ground is warmer than winter air, so less insulation pays off. Source: GEG 2024, Annex 1.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:336: "de": "0,35 W/(m²·K): Referenzwert für Bauteile gegen Erdreich oder unbeheizte Räume; das Erdreich ist wärmer als die Winterluft, daher lohnt weniger Dämmung. Quelle: GEG 2024, Anlage 1."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:342: "en": "External wall of the GEG reference building",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:343: "de": "Außenwand des GEG-Referenzgebäudes"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:346: "en": "GEG reference external wall",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:347: "de": "Referenz-Außenwand nach GEG"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:357: "en": "0.28 W/(m²·K): e.g. masonry with about 12 cm of insulation (λ = 0.035 W/(m·K)). Source: GEG 2024, Annex 1.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:358: "de": "0,28 W/(m²·K): z. B. Mauerwerk mit rund 12 cm Dämmung (λ = 0,035 W/(m·K)). Quelle: GEG 2024, Anlage 1."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:364: "en": "Roof of the GEG reference building",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:365: "de": "Dach des GEG-Referenzgebäudes"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:368: "en": "GEG reference roof",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:369: "de": "Referenzdach nach GEG"
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:379: "en": "0.20 W/(m²·K): reference value for roofs and top-floor ceilings, roughly 17 cm of insulation (λ = 0.035 W/(m·K)). Source: GEG 2024, Annex 1.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:380: "de": "0,20 W/(m²·K): Referenzwert für Dächer und oberste Geschossdecken, rund 17 cm Dämmung (λ = 0,035 W/(m·K)). Quelle: GEG 2024, Anlage 1."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:1094: """🧮 Master equation Q̇_S = I_s · A · g_⊥ · F_F · F_W · F_S · F_C (DIN V 4108-6), counted through with this module's window."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:1123: din = _din_ref("DIN V 4108-6, 6.4")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:117: # blind lowered and F_W = 0,90 for non-perpendicular incidence (DIN V 4108-6).
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:142: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:147: is the DIN V 4108-6 method (6.4 Solare Wärmegewinne, Anhang B.4 for F_C); the g-value beat
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:148: cites DIN EN 410 next to it. Added in absolute frame coordinates.
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:394: din = _din_ref("DIN V 4108-6, 6.4")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:4: (DIN V 4108-6, 6.4): every factor is read from the drawing (dimension arrows, frame
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:518: din = _din_ref("DIN V 4108-6, 6.4")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:644: din = _din_ref("DIN V 4108-6, 6.4 · DIN EN 410")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:758: din = _din_ref("DIN V 4108-6, Anh. A")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:893: din = _din_ref("DIN V 4108-6, Anh. B.4")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:173: din = _din_ref("DIN EN 12831-1:2017-09")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:77: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:82: chain of DIN EN 12831-1 (Q̇_V = V · n · c_Luft · Δθ).
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:199: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:203: modules. Internal gains are tabulated in DIN V 18599-10, so every beat that
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:221: B1_DIN_AT = np.array([4.6, -2.1, 0.0])
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:292: r"Those internal gains $Q_{\mathrm{i}}$ cut the annual heating demand $Q_{\mathrm{h}}$ in DIN V 4108-6. A design heating load after DIN EN 12831 usually ignores them.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:293: r"Diese internen Gewinne $Q_{\mathrm{i}}$ senken den Jahres-Heizwärmebedarf $Q_{\mathrm{h}}$ nach DIN V 4108-6. Eine Auslegungsheizlast nach DIN EN 12831 lässt sie meist weg."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:337: din_tag = Text("DIN V 4108-6", font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to(B1_DIN_AT)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:368: din = _din_ref("DIN V 4108-6, 6.3 · DIN V 18599-10")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:439: din = _din_ref("DIN V 4108-6, 6.3 · DIN V 18599-10")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:543: din = _din_ref("DIN V 4108-6, 6.3 · DIN V 18599-10")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:645: r"That specific load $q_{\mathrm{i}}$ is tabulated in DIN V 18599-10; over the heating season it becomes the internal gain $Q_{\mathrm{i}}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:646: r"Diese spezifische Last $q_{\mathrm{i}}$ steht tabellarisch in DIN V 18599-10; über die Heizperiode wird daraus der interne Gewinn $Q_{\mathrm{i}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:744: density_sub = section_heading(tr("Specific load density (DIN V 18599-10)", "Spezifische Lastdichte (DIN V 18599-10)"))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:87: # Example office occupancy (DIN V 18599-10 style point loads) — one source per beat.
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🗺️roadmap/🐍️.py:56: HEADING = ("The roadmap of this video", "Der Fahrplan des Videos")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1045: _label(tr("Utilisation factor of heat gains (DIN V 4108-6, 6.5)", "Ausnutzungsgrad der Wärmegewinne (DIN V 4108-6, 6.5)"), size=22, color=GREEN),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1081: title = section_heading(tr("The main equation of the heating demand (DIN V 4108-6)", "Die Hauptgleichung des Heizwärmebedarfs (DIN V 4108-6)"))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1316: r"Final energy $Q_{\mathrm{E}}$ is $Q_{\mathrm{h}}$ plus all system losses: about $14\,000\,\mathrm{kWh/a}$, after DIN V 18599-5.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1317: r"Die Endenergie $Q_{\mathrm{E}}$ ist $Q_{\mathrm{h}}$ plus alle Anlagenverluste: rund $14\,000\,\mathrm{kWh/a}$, nach DIN V 18599-5."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:160: #region System losses (DIN V 18599-5)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:198: """🌡️ Daily mean outdoor temperature θ_e of the example year in °C — its heating days (θ_e below the heating limit) add up to exactly G_t20/15 (VDI 3807 Blatt 1)."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:334: r"Both add up to about $3\,800\,\mathrm{W}$, the total heat-loss power $\dot{Q}_{\mathrm{l}}$ — after DIN V 4108-6.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:335: r"Beide zusammen ergeben die Gesamtverlustleistung $\dot{Q}_{\mathrm{l}}$ von rund $3\,800\,\mathrm{W}$ — nach DIN V 4108-6."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:397: loss_desc = _label(tr("Total heat loss rate (DIN V 4108-6)", "Gesamtverlustleistung (DIN V 4108-6)"))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:432: r"$Q_{\mathrm{l}} = (H_{\mathrm{T}} + H_{\mathrm{V}}) \cdot F_{\mathrm{Gt}}$ with $F_{\mathrm{Gt}} = 24\,\mathrm{h/d} \cdot G_{\mathrm{t}}$ — about $16\,000\,\mathrm{kWh/a}$, after DIN V 4108-6.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:433: r"$Q_{\mathrm{l}} = (H_{\mathrm{T}} + H_{\mathrm{V}}) \cdot F_{\mathrm{Gt}}$ mit $F_{\mathrm{Gt}} = 24\,\mathrm{h/d} \cdot G_{\mathrm{t}}$ — rund $16\,000\,\mathrm{kWh/a}$, nach DIN V 4108-6."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:641: f_src = _label(tr("Heating-period method of DIN V 4108-6 (Annex D.2) · degree days Gt20/15 per VDI 3807 Blatt 1",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:642: "Heizperiodenverfahren nach DIN V 4108-6 (Anhang D.2) · Gradtagzahl Gt20/15 nach VDI 3807 Blatt 1"),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:680: subtitle = _label(tr("Free heat gains (DIN V 4108-6)", "Freie Wärmegewinne (DIN V 4108-6)"), size=18, color=SUBTEXT_GREY)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:697: solar_label = _label(tr("Solar heat gain (DIN V 4108-6, 6.4)", "Solarer Wärmegewinn (DIN V 4108-6, 6.4)"), size=15, color=SOLAR_YELLOW)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:724: int_label = _label(tr("Internal heat gain (DIN V 4108-6, 6.3)", "Interner Wärmegewinn (DIN V 4108-6, 6.3)"), size=15, color=INT_ORANGE)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1045: din = _din_ref("DIN EN ISO 13789:2017-10")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:112: """➕ R_T = R_si + Σ d/λ + R_se (DIN EN ISO 6946)."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1228: r"As a flat rate, $\Delta U_{\mathrm{WB}}$ is added on the whole envelope: $0.10\,\mathrm{W/(m^{2}K)}$ without proof, $0.05\,\mathrm{W/(m^{2}K)}$ with details per DIN 4108 supplement 2.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1229: r"Pauschal kommt $\Delta U_{\mathrm{WB}}$ auf die ganze Hülle: $0{,}10\,\mathrm{W/(m^{2}K)}$ ohne Nachweis, $0{,}05\,\mathrm{W/(m^{2}K)}$ mit Details nach DIN 4108 Beiblatt 2."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1241: din = _din_ref("DIN 4108 Bbl. 2:2019-06 · DIN V 18599-2")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1451: notes_b = ["", tr("detailed", "detailliert"), tr("flat rate, no proof", "pauschal, ohne Nachweis"), tr("flat rate, Suppl. 2", "pauschal, nach Bbl. 2")]
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:150: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:155: colour, opacity, corner): DIN EN ISO 6946 for the R- and U-value of a
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:156: building component, DIN EN ISO 13789 for the envelope-wide transmission
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:157: coefficient, DIN 4108-2 for the envelope insulation requirement the
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:379: "Small trapped air pockets slow conduction. Large cavities can convect; DIN 4108 still requires a minimum envelope resistance.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:380: "Kleine Luftporen bremsen die Leitung, große Hohlräume können konvektieren — DIN 4108 verlangt trotzdem einen Mindestwärmeschutz."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:388: din = _din_ref("DIN 4108-2:2013-02")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:520: ins_text = Text(tr("Insulation layer (DIN 4108)", "Dämmschicht (DIN 4108)"), font_size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:567: r"$\lambda$ is the thermal conductivity, from DIN 4108: $0.035\,\mathrm{W/(mK)}$ for this insulation.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:568: r"$\lambda$ ist die Wärmeleitfähigkeit, nach DIN 4108: $0{,}035\,\mathrm{W/(mK)}$ für diese Dämmung."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:580: din = _din_ref("DIN EN ISO 6946:2018-03")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:698: din = _din_ref("DIN EN ISO 6946:2018-03")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:883: din = _din_ref("DIN EN ISO 6946:2018-03")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1079: iso = _din_ref("DIN EN ISO 6946:2018-03, Tab. 7")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1159: din = _din_ref("DIN EN ISO 6946:2018-03")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1274: din = _din_ref("DIN EN ISO 6946:2018-03")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1453: """🧮 Resistances in heat-flow order, R_si, every d/λ, R_se — rounded to the shown two decimals (DIN EN ISO 6946)."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1503: din = _din_ref("DIN EN ISO 6946:2018-03")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1664: din = _din_ref("DIN EN 12831-1:2017-09")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:439: def _din_ref(text: str):
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:443: DIN EN ISO 6946 for building-component heat transfer; DIN EN 12831-1 where
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:482: din = _din_ref(tr("2nd law of thermodynamics", "2. Hauptsatz der Thermodynamik"))
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:635: din = _din_ref("DIN EN ISO 6946:2018-03")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:745: din = _din_ref("DIN EN ISO 6946:2018-03")
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:922: din = _din_ref("DIN EN ISO 6946:2018-03")
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:115: "en": "About 100 W: 1 met = 58 W per m² of skin × 1.8 m² (ISO 7730, ISO 8996). The matching energy is the daily food intake of about 2,300 kcal ≈ 2.7 kWh.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:116: "de": "Rund 100 W: 1 met = 58 W pro m² Haut × 1,8 m² (ISO 7730, ISO 8996). Die dazugehörige Energie ist die tägliche Nahrung von etwa 2.300 kcal ≈ 2,7 kWh."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:147: "en": "About 18 kW for an unrenovated 1960s single-family house (110 m² × 160 W/m²): the heat flow needed on the coldest design day (DIN EN 12831).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1483: "en": "About 100 W: 1 met = 58 W/m² × 1.8 m² of skin (ISO 7730). A lecture hall with 100 students is a 10 kW heater.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1484: "de": "Rund 100 W: 1 met = 58 W/m² × 1,8 m² Haut (ISO 7730). Ein Hörsaal mit 100 Studierenden ist eine 10-kW-Heizung."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:148: "de": "Rund 18 kW für ein unsaniertes Einfamilienhaus der 1960er-Jahre (110 m² × 160 W/m²): der Wärmestrom, der am kältesten Auslegungstag nötig ist (DIN EN 12831)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1557: "en": "About 18 kW: 110 m² × 160 W/m² (envelope of IWU type EFH_E, −12 °C design temperature, DIN EN 12831) – the power of nine kettles.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1558: "de": "Rund 18 kW: 110 m² × 160 W/m² (Hülle des IWU-Typs EFH_E, −12 °C Auslegungstemperatur, DIN EN 12831) – die Leistung von neun Wasserkochern."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:263: "en": "About 10 kWh: net calorific value of heating oil EL ≈ 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:264: "de": "Rund 10 kWh: Heizwert von Heizöl EL ≈ 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2723: "en": "About 10 kWh: net calorific value 42.6 MJ/kg × 0.845 kg/l (DIN 51603-1).",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2724: "de": "Rund 10 kWh: Heizwert 42,6 MJ/kg × 0,845 kg/l (DIN 51603-1)."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2805: "en": "About 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU German residential building typology 2015, type EFH_E), thirteen times the household electricity.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2806: "de": "Rund 33 MWh: 110 m² × 303 kWh/(m²·a) (IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E), dreizehnmal der Haushaltsstrom."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:283: "en": "About 33,000 kWh per year for a 1960s house (110 m² × 303 kWh/(m²·a); IWU, the Institute for Housing and Environment, German residential building typology 2015, type EFH_E): an annual amount, i.e. an energy demand.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:284: "de": "Rund 33.000 kWh pro Jahr für ein Haus der 1960er-Jahre (110 m² × 303 kWh/(m²·a); IWU Deutsche Wohngebäudetypologie 2015, Typ EFH_E): eine Jahresmenge, also Arbeit über ein Jahr."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:359: "en": "Given in kWh per m² and year (German Buildings Energy Act, GEG, § 85): an energy demand related to floor area and one year, not a power.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:360: "de": "Angegeben in kWh pro m² und Jahr (GEG § 85): Arbeit bezogen auf Fläche und Jahr, keine Leistung."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🗺️roadmap/🐍️.py:56: HEADING = ("The roadmap of this video", "Der Fahrplan des Videos")
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1711: "Averaged over a year this is the seasonal performance factor, in German the Jahresarbeitszahl JAZ — for air-source units often around three.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1712: "Übers Jahr gemittelt ergibt sich die Jahresarbeitszahl, kurz JAZ — bei Luft-Wärmepumpen oft rund 3."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1714: "You find it as seasonal performance factor in the guideline VDI 4650 part 1; the European label calls it SCOP, DIN EN 14825.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1715: "Du findest sie als Jahresarbeitszahl in der Richtlinie VDI 4650 Blatt 1; das europäische Label nennt sie SCOP, DIN EN 14825."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1915: jaz = _m(tr(r"\text{Seasonal performance factor (JAZ)}\; \mathrm{SPF} \approx 3", r"\text{Jahresarbeitszahl (JAZ)}\; \mathrm{JAZ} \approx 3"), np.array([6.6, 2.6, 0.0]),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1921: jaz_ref = _m(tr(r"\text{VDI 4650 part 1 · DIN EN 14825 (SCOP)}", r"\text{VDI 4650 Blatt 1 · DIN EN 14825 (SCOP)}"), np.array([6.6, 2.2, 0.0]),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1968: (tr("Air HP\n(SPF)", "Luft-WP\n(JAZ)"), 3.0, "hp"), (tr("Ground HP\n(SPF)", "Erd-WP\n(JAZ)"), 4.0, "hp"),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2138: norm_tag = _m(tr(r"\text{DIN EN 410 · } g_{\perp}", r"\text{DIN EN 410 · } g_{\perp}"), np.array([6.6, 1.45, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2267: norm2 = _m(tr(r"\text{DIN 4108-2: sun protection, reduction factor } F_{\mathrm{C}}", r"\text{DIN 4108-2: Sonnenschutz, Abminderungsfaktor } F_{\mathrm{C}}"), np.array([6.6, 2.75, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2601: norm = _m(tr(r"\text{DIN EN ISO 13786 · heat storage}", r"\text{DIN EN ISO 13786 · Wärmespeicherung}"),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3139: "Zum Nachlesen: Zwei Lehrbücher und die Normen erklären diese Themen — Auflage und Kennung siehst du hier."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3185: ("Willems WM, Schild K, Stricker D (2024)", "Formeln und Tabellen Bauphysik",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3186: "Wärmeschutz – Feuchteschutz – Klima – Akustik – Brandschutz", tr("8th edition, Springer Vieweg, Wiesbaden · ISBN 978-3-658-44973-5", "8. Auflage, Springer Vieweg, Wiesbaden · ISBN 978-3-658-44973-5"),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3188: ("Bohne D, Bohne M (2026)", "Gebäudetechnik – Technischer Ausbau und nachhaltige Gebäudesysteme",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3189: "", tr("13th edition, Springer Vieweg, Heidelberg · ISBN 978-3-658-51570-6", "13. Auflage, Springer Vieweg, Heidelberg · ISBN 978-3-658-51570-6"),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3191: (tr("Standards", "Normen und Richtlinien"), "VDI 4650 Blatt 1 (2024-02) · DIN EN 14825 · DIN EN 410",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3192: "DIN 4108-2 · DIN EN ISO 13786", tr("Seasonal performance · g-value · Sun protection · Heat storage", "Jahresarbeitszahl · g-Wert · Sonnenschutz · Wärmespeicherung"),

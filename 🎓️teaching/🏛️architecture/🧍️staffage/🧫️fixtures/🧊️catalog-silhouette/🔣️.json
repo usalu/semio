@@ -1,6 +1,6 @@
 {
   "description": "Language-agnostic vectors of the catalog silhouette guard. `gate` is the authoring gate (bounding box at most 8 % per axis, IoU at least 0.80 per view at 1:50 in presentation.defaultPose, tolerance of the independent raster 0.06 (cells a few millimetres wide: hairline members are one pixel wide and the two scanline rules round them differently)). `exemptions` lists the assets excused from a check with the physical reason: none. `cuts` are solids of the neutral kernel cut by a plane: the net area of the section is hand-computed (box 1 x 1 x 1 cut at its middle 1 m2; a 1 x 1 plate with a 0.4 x 0.4 hole 1 - 0.16 = 0.84 m2; a cylinder of radius 0.2 and length 1 along y cut through its axis 0.4 m2, polygonal to 3 %; a sphere of radius 1 cut at 0.5 a circle of radius sqrt(0.75), 0.75 pi = 2.356 m2, polygonal to 4 %). `members` are the widths of drawn strokes against a body mask (cell 1 mm): a stroke on a 30 mm bar is that bar, on the boundary of a plate it is two cells wide and shifted into the plate, where there is no body it keeps its pen width, beside a filled shape of the drawing it is two cells wide, on a body wider than the cap it is the cap.",
-  "gate": { "bbox": 0.08, "iou": 0.8, "scale": 50, "oracle": 0.06 },
+  "gate": { "bbox": 0.08, "iou": 0.92, "scale": 50, "oracle": 0.06 },
   "exemptions": {},
   "exact": ["cooking-pot", "hedgehog", "retractable-bollard", "panel-radiator", "sliding-door"],
   "cuts": [

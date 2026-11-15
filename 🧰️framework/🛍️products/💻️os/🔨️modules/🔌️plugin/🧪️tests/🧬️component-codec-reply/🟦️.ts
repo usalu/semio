@@ -76,7 +76,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
           mkdirSync(caseDirectory, { recursive: true });
           writeFileSync(join(caseDirectory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
           writeFileSync(join(caseDirectory, "🟨️.js"), hostShimSource());
-          writeFileSync(join(caseDirectory, "fixture_component.js"), `export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION} }; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n`);
+          writeFileSync(join(caseDirectory, "fixture_component.js"), `export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION}, admitActorInput: async (_wire, budget) => ({ input: budget.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n, ready: true, disposition: "admitted" }) }; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n`);
           const bridge = await import(pathToFileURL(join(caseDirectory, "🌉️bridge.js")).href);
           const original = stock.admit();
           let api: { readonly originalSource: Pick<InstanceType<typeof OriginalOperationSource>, "close" | "issue">; readonly codec: (request: Record<string, unknown>) => Promise<unknown> } | undefined;

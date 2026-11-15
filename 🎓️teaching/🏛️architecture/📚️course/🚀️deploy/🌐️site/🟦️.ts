@@ -105,8 +105,12 @@ export function siteArtifactProblems(dist: string, proctorOrigin: string): strin
   const elsewhere = code.map((source) => [proctorOrigin, proctorOrigin.replace(/^http/u, "ws")].reduce((rest, origin) => rest.split(origin).join(""), source));
   for (const loopback of ["localhost", "127.0.0.1", "[::1]"]) if (elsewhere.some((source) => source.includes(loopback))) problems.push(`the site names ${loopback} outside the baked proctor origin`);
   for (const leftover of ["sourceMappingURL=", "/@vite/client", "react-refresh", "[DEBUG]"]) if (code.some((source) => source.includes(leftover))) problems.push(`the site carries the development leftover ${leftover}`);
-  const total = files.reduce((sum, path) => sum + statSync(join(dist, path)).size, 0);
+  const weigh = (paths: readonly string[]): number => paths.reduce((sum, path) => sum + statSync(join(dist, path)).size, 0);
+  const documents = files.filter((path) => path.startsWith("assignments/"));
+  const total = weigh(files.filter((path) => !documents.includes(path)));
   if (total > COURSE_SITE_BUDGET.totalBytes) problems.push(`the artifact weighs ${total} bytes, over the budget of ${COURSE_SITE_BUDGET.totalBytes}`);
+  const published = weigh(documents);
+  if (published > COURSE_SITE_BUDGET.assignmentBytes) problems.push(`the assignment documents weigh ${published} bytes, over the budget of ${COURSE_SITE_BUDGET.assignmentBytes}`);
   return problems;
 }
 

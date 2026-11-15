@@ -1,0 +1,8 @@
+try 1 started pid=38491 2026-11-14T20:56:37Z log=/Users/ueli/native-bootstrap-round-8.log
+try 1 ended 2026-11-14T21:01:37Z native_rc=4 stopped=0 fleet_refusal=0 retry_wording=0 failed=[]
+try 1 consent (native_rc=4): waiting for the owner's click, repo preflight every 60 s, at most 30 minutes; started 2026-11-14T21:01:37Z
+try 1 consent wait ended 2026-11-14T21:33:39Z after 30 checks, access ok=0
+try 2 started pid=52522 2026-11-14T21:33:39Z log=/Users/ueli/native-bootstrap-round-8-try-2.log
+try 2 ended 2026-11-14T21:34:40Z native_rc=4 stopped=0 fleet_refusal=0 retry_wording=0 failed=[]
+try 2 consent (native_rc=4): waiting for the owner's click, repo preflight every 60 s, at most 30 minutes; started 2026-11-14T21:34:40Z
+round 9 posted: runner stopped during the second consent wait (no bootstrap was running, no SIGINT needed) 2026-11-14T22:05:35Z

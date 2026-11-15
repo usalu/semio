@@ -1,0 +1,91 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/replica/adopt/v1",
+ "title": "Adoption of an existing repository into the shared worktree fleet: the report of a finished adoption and the marker of its last finished step",
+ "definitions": {
+  "Count": {"type": "integer", "minimum": 0},
+  "Counts": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["same", "materialise", "publish", "edit", "stale", "conflict", "nested"],
+   "properties": {
+    "same": {"$ref": "#/definitions/Count"},
+    "materialise": {"$ref": "#/definitions/Count"},
+    "publish": {"$ref": "#/definitions/Count"},
+    "edit": {"$ref": "#/definitions/Count"},
+    "stale": {"$ref": "#/definitions/Count"},
+    "conflict": {"$ref": "#/definitions/Count"},
+    "nested": {"$ref": "#/definitions/Count"}
+   }
+  },
+  "Reason": {
+   "description": "Why a path was decided as it was: `journal`, `git` and `base` for a stale file (the fleet had this content before, or it is unchanged since the repository's base), `fleet-unchanged` for an edit, `both-changed`, `deleted-by-fleet` and `no-base` for a conflict.",
+   "enum": ["journal", "git", "base", "fleet-unchanged", "both-changed", "deleted-by-fleet", "no-base"]
+  },
+  "Stale": {
+   "description": "A local file that is an older version of what the fleet holds, or that the fleet deleted since: the fleet won, nothing was published, the local bytes are kept below `.cache/f/`.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["path", "lost", "reason"],
+   "properties": {
+    "path": {"type": "string", "minLength": 1},
+    "lost": {"type": "string", "pattern": "^lost/"},
+    "reason": {"$ref": "#/definitions/Reason"}
+   }
+  },
+  "Conflict": {
+   "description": "A local file changed here and in the fleet since the repository's base: the fleet's version stays at the path, the local version is kept below `.cache/f/` at `lost`. `local` and `fleet` are the sha256 identities (`link:<target>` for a link), `fleet` is null when the fleet deleted the path; equal identities mean equal bytes whose executable bit differs.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["path", "lost", "reason", "local", "fleet"],
+   "properties": {
+    "path": {"type": "string", "minLength": 1},
+    "lost": {"type": "string", "pattern": "^lost/"},
+    "reason": {"$ref": "#/definitions/Reason"},
+    "local": {"type": "string", "minLength": 1},
+    "fleet": {"type": ["string", "null"]}
+   }
+  },
+  "Linearised": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["path", "winner", "loser", "result"],
+   "properties": {
+    "path": {"type": "string", "minLength": 1},
+    "winner": {"type": "string"},
+    "loser": {"type": "string"},
+    "result": {"type": "string"}
+   }
+  },
+  "Report": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "stamp", "originId", "renamed", "counts", "published", "edited", "stale", "conflicts", "linearised", "stage", "pending", "nested", "issues"],
+   "properties": {
+    "version": {"type": "integer", "const": 1},
+    "stamp": {"type": "string", "pattern": "^[0-9T-]+Z$"},
+    "originId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"},
+    "renamed": {"description": "The shared paths whose names were not NFC (macOS tar extracts decomposed names) and were renamed to NFC before anything was compared, as new paths, sorted.", "type": "array", "items": {"type": "string", "minLength": 1}},
+    "counts": {"$ref": "#/definitions/Counts"},
+    "published": {"type": "array", "items": {"type": "string"}},
+    "edited": {"type": "array", "items": {"type": "string"}},
+    "stale": {"type": "array", "items": {"$ref": "#/definitions/Stale"}},
+    "conflicts": {"type": "array", "items": {"$ref": "#/definitions/Conflict"}},
+    "linearised": {"type": "array", "items": {"$ref": "#/definitions/Linearised"}},
+    "stage": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": ["lost", "changed", "paths"],
+     "properties": {
+      "lost": {"type": ["string", "null"]},
+      "changed": {"$ref": "#/definitions/Count"},
+      "paths": {"type": "array", "items": {"type": "string"}}
+     }
+    },
+    "pending": {"type": "array", "items": {"type": "string"}},
+    "nested": {"type": "array", "items": {"type": "string"}},
+    "issues": {"type": "array", "items": {"type": "string"}}
+   }
+  }
+ }
+}

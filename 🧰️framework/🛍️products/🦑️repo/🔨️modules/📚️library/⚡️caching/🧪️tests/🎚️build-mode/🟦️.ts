@@ -3,7 +3,7 @@ import fixture from "../🧫️fixtures/nx-contract/🔣️.json";
 import {testOwnedFixtureWireBindingsV1,testNxCustodyInputsModelV1} from "./📥️contracts/🟦️.ts";
 import {scriptInvocationEnvironment,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {type ResourceLeaseControl} from "@semio-tech/process/leases";
-import {captureOwnedCommandResultV1} from "@semio-tech/process/execution";
+import {captureOwnedCommandResultV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {isTestRecordV1,testRecordV1,testStringsV1,testMethodV1,testInputsV1} from "../📋️values/🟦️.ts";
 import { testNxSourceCacheCustody } from "./🔐️custody/🟦️.ts";
 import assert from "node:assert/strict";
@@ -27,7 +27,7 @@ import { targetBuildModes } from "../../../🏗️build/🎚️mode/🟨️.mjs"
 import { internals as testOwnerInternals } from "../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs";
 import { compactTaskPlans } from "../../🕸️graph/📤️export/🟨️.mjs";
 import {nxCacheBudgetV1} from "../../🚀️bootstrap/💾️budget/🟦️.ts";
-import {toolPatchReceipt} from "@semio-tech/nx-bootstrap-tools/patch";
+import {toolPatchReceipt} from "../../🚀️bootstrap/🛠️tools/🩹️patch/🟦️.ts";
 
 /** 🔒️ The actual lock fields compared against independent tooling manifests. */
 type ObservedBunLock={workspaces:Record<string,{name?:string;dependencies?:Record<string,string>}>;patchedDependencies?:Record<string,string>};

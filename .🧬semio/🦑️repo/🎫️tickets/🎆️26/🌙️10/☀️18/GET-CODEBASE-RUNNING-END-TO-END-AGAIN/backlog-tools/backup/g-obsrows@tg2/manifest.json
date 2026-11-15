@@ -1,0 +1,62 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": {
+  "file": "f000",
+  "before": "381c532fa1ddff38689c3a5ff04d7be380193e09f7efcfd374b6bf54d65b1795"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📥️reuse/🟦️.ts": {
+  "file": "f001",
+  "before": "8b8bd16c867616b58d6c968d102f1055f3c2dfa1d5140583c22ee804f15d492a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts": {
+  "file": "f002",
+  "before": "1b906df96fb6502fd30275e2c7bcc977f8540a82d5d4fe701381a07126489f9c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f003",
+  "before": "f0840131435c2e3802d4991bd1bfc49fb3ee0a9100156614bd59577f423b5e80"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts": {
+  "file": "f004",
+  "before": "382886a303ca6eecd1644013f2292670433dc66b044e07266b4c7a52cc3c057a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts": {
+  "file": "f005",
+  "before": "fb844143c0b5098f5def6f90b769e8bc9431cc3901f294615f03e9a792e7a350"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts": {
+  "file": "f006",
+  "before": "74e7d9cfd072618e15be881435ea44691f15adb3e0278b2e97772548d62ea76c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts": {
+  "file": "f007",
+  "before": "3309379227e87753ff1a512a3d2b36044780fe24f755853ba87a6909d70556cf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json": {
+  "file": "f008",
+  "before": "72eac6c808e20b38d6ca3fac2849e8d27b5c0271a41494fc8a29c94609b72f14"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🔣️.json": {
+  "file": "f009",
+  "before": "0203745bf2fecbde6494760e63ce35719409b3441c0e7d0c2085e6cc526e934b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🟦️.ts": {
+  "file": "f010",
+  "before": "1feb0644d86b520fd68e43f0119c749ec2e48a3100733c693b01a3bb04deeb04"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🟦️.ts": {
+  "file": "f011",
+  "before": "6c205aad8112aab5e4aa2faf4319c0bf33d5b6523c478932c5832206a5711b9e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f012",
+  "before": "0f915c362a2dbf9736267a8ca32d147ce1f00401dc46c5f91adfe5535ba3fa69"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🧫️probe/🟦️.ts": {
+  "file": "f013",
+  "before": "71a5aec56eee2fd37e90ec0718309012b66e68b7a8c15ad0ebf43156408e3af8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧬️schema/🔣️.json": {
+  "file": "f014",
+  "before": "447d8c99ffd8dbc132fd7f1f8a68845c12ff30fd2d83a4454cc16c49c5a8dfd1"
+ }
+}

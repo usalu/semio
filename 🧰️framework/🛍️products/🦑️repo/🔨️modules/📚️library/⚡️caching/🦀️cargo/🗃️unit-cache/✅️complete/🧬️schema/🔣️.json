@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/repo/unit-cache/complete.json",
+  "title": "Unit outputs a dependant can name",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "templates": {
+          "dep-info": "{crate}{extra}.d",
+          "metadata": "lib{crate}{extra}.rmeta",
+          "rlib": "lib{crate}{extra}.rlib",
+          "proc-macro": "{prefix}{crate}{extra}.{dynamic}",
+          "bin": "{crate}{extra}{executable}"
+        },
+        "dynamicExtensions": {"darwin": "dylib", "win32": "dll", "default": "so"},
+        "dynamicPrefixes": {"win32": "", "default": "lib"},
+        "executableExtensions": {"win32": ".exe", "default": ""},
+        "rlibTypes": ["lib", "rlib"]
+      }
+    },
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "platform", "arguments", "expected"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "platform": {"enum": ["darwin", "linux", "win32"]},
+        "arguments": {"type": "array", "items": {"type": "string"}},
+        "expected": {"type": "array", "items": {"type": "string"}},
+        "runnable": {"type": "boolean"}
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vectors", "announcements"],
+      "properties": {
+        "vectors": {"type": "array", "items": {"$ref": "#/definitions/Vector"}},
+        "announcements": {"type": "array", "items": {"$ref": "#/definitions/Announcement"}}
+      }
+    },
+    "Announcement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "text", "paths"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "text": {"type": "string"},
+        "paths": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

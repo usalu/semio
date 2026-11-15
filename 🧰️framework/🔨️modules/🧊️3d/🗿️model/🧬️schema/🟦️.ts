@@ -37,13 +37,13 @@ export type BoxSolid = SolidBase & { readonly kind: "box"; readonly size: Vec3; 
 export type EllipsoidSolid = SolidBase & { readonly kind: "ellipsoid"; readonly radii: Vec3 };
 /** 💊️ The hull of two spheres. */
 export type CapsuleSolid = SolidBase & { readonly kind: "capsule"; readonly p0: Vec3; readonly p1: Vec3; readonly r0: number; readonly r1: number; readonly lateralScale?: number };
-/** 🌀️ A profile [axial, radial] revolved about an axis through origin. */
+/** 🌀️ A profile [axial, radial] revolved about an axis through origin. A first point equal to the last closes a loop (shell, wall, bead, ring: the enclosed body); an open profile is always closed through the axis (a filled body, never a shell), see `revolveClosure`. */
 export type RevolveSolid = SolidBase & { readonly kind: "revolve"; readonly profile: readonly Vec2[]; readonly axis: Vec3; readonly origin: Vec3; readonly sweepRad?: number; readonly lateralScale?: number };
-/** 🏗️ A polygon with holes extruded between two plane coordinates, optionally tapered. */
+/** 🏗️ A polygon with holes extruded between two plane coordinates, optionally tapered: `taperTo` = [scale at `from`, scale at `to`] about the area centroid of the outer ring, never a scale along u and v; [1, 0] is a pyramid with its apex at `to`, equal factors are no taper. */
 export type ExtrudeSolid = SolidBase & { readonly kind: "extrude"; readonly profile: readonly Vec2[]; readonly holes?: readonly (readonly Vec2[])[]; readonly plane: "xy" | "yz" | "zx"; readonly from: number; readonly to: number; readonly taperTo?: Vec2 };
 /** 🧅️ One superelliptic loft section: with `rotation` it lies in the x, y plane of that rotation (absolute), without it perpendicular to the loft path tangent (x = node X projected perpendicular, fallback Z; y = tangent x x). */
 export type LoftSection = { readonly at: Vec3; readonly rx: number; readonly ry: number; readonly exponent?: number; readonly rotation?: Vec4 };
-/** 🧵️ Superelliptic sections lofted in order. */
+/** 🧵️ Superelliptic sections lofted in order of travel; the skin is always oriented outward whatever the order, the bends and the handedness of a section rotation. */
 export type LoftSolid = SolidBase & { readonly kind: "loft"; readonly sections: readonly LoftSection[]; readonly capStart: boolean; readonly capEnd: boolean };
 /** 🧊️ Procedural declarative geometry in the node-local frame. */
 export type Solid = BoxSolid | EllipsoidSolid | CapsuleSolid | RevolveSolid | ExtrudeSolid | LoftSolid;
@@ -59,6 +59,8 @@ export type Skin = { readonly id: Slug; readonly joints: readonly Slug[]; readon
 export type Material = { readonly id: Slug; readonly title: Text; readonly baseColor: Vec4; readonly metallic: number; readonly roughness: number; readonly emissive: Vec3; readonly alphaMode: "opaque" | "blend"; readonly doubleSided: boolean; readonly unlit: boolean };
 /** 🎭️ A named look of one geometry: material id to material id. */
 export type Variant = { readonly id: Slug; readonly title: Text; readonly bindings: { readonly [materialId: Slug]: Slug } };
+/** 🎞️ A named set of mesh-carrying nodes over the one shared skeleton; a node listed in several scenes shares its solids and meshes, a bone with different solids per scene has one identity child node per scene. Without scenes the document is one implicit scene of every node that carries a solid or a mesh. */
+export type Scene = { readonly id: Slug; readonly title: Text; readonly nodes: readonly Slug[]; readonly tags?: readonly Slug[] };
 /** 🧍️ Node transform overrides. */
 export type Pose = { readonly id: Slug; readonly title: Text; readonly nodes: { readonly [nodeId: Slug]: TransformPatch } };
 /** 🎞️ One animated property. */
@@ -78,6 +80,7 @@ export type ModelDocument = {
   readonly title: Text;
   readonly provenance?: { readonly generator?: string; readonly source?: string; readonly notes?: readonly Text[] };
   readonly nodes: readonly Node[];
+  readonly scenes?: readonly Scene[];
   readonly solids: readonly Solid[];
   readonly meshes: readonly Mesh[];
   readonly skins: readonly Skin[];

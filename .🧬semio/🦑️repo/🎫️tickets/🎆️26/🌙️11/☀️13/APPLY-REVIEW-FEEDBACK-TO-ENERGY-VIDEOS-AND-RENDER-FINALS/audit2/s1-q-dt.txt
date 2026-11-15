@@ -1,0 +1,25 @@
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:83: DT_WINTER, DT_SUMMER = _example.D_THETA_WINTER_K, _example.D_THETA_SUMMER_K
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:27: D_THETA_WINTER_K = THETA_I_WINTER_C - THETA_E_WINTER_C
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:30: D_THETA_SUMMER_K = THETA_E_SUMMER_C - THETA_I_SUMMER_C
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:50: PHI_V_W = round(V_DOT_M3_H * C_LUFT_WH_M3_K * D_THETA_WINTER_K, -2)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:52: H_T_W_K = PHI_T_W / D_THETA_WINTER_K
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:53: H_V_W_K = PHI_V_W / D_THETA_WINTER_K
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:57: Q_SENS_WINTER_W = V_DOT_M3_H * C_LUFT_WH_M3_K * D_THETA_WINTER_K
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:58: Q_SENS_SUMMER_W = V_DOT_M3_H * C_LUFT_WH_M3_K * D_THETA_SUMMER_K
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:88: DESIGN_DT = THETA_I - THETA_E
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:89: PEAK_KW = (H_T_VAL + H_V_VAL) * DESIGN_DT / 1000.0
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:667: phi_kw = lambda: d_theta() / DESIGN_DT * PEAK_KW
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:668: level = lambda: d_theta() / DESIGN_DT
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:806: row_d = math_label(rf"\Delta\theta = {label_number(DESIGN_DT)}\;\mathrm{{K}}", np.array([row_x, -0.97, 0.0]),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:818: ("d", rf"{label_number(DESIGN_DT)}\;\mathrm{{K}}", DELTA_T), (None, "=", P_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:122: D_THETA_MONTH, D_THETA_JAN, D_THETA_JUL = 10.0, _example.D_THETA_WINTER_K, 6.0
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:156: Q_L_JAN, Q_G_JAN = _loss_kwh(D_THETA_JAN), _solar_kwh(I_S_JAN) + Q_INTERN
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:159: Q_L_JUL, Q_G_JUL = _loss_kwh(D_THETA_JUL), _solar_kwh(I_S_JUL) + Q_INTERN
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:1353: (lambda: rf"\Delta\theta = {label_number(mix(D_THETA_JAN, D_THETA_JUL, climate))}\;\mathrm{{K}}", P_BLUE),
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:416: - **Heizlast (kW)** = Dimensionierung für den kältesten Moment (DIN EN 12831, Hannover −12 °C).
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1582: "en": "About 50 W/m² and 89 kWh/(m²·a) under the Energy Saving Ordinance (EnEV): IWU type EFH_J with 1.14 W/(m²·K) transmission per m² of living area; load = (transmission + ventilation at 0.5 1/h, the airtight envelope required since EnEV 2002) × 32 K (20 °C inside, −12 °C outside).",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:1583: "de": "Rund 50 W/m² und 89 kWh/(m²·a): IWU-Typ EFH_J mit 1,14 W/(m²·K) Transmission je m² Wohnfläche; Last = (Transmission + Lüftung mit 0,5 1/h, der seit der EnEV 2002 geforderten luftdichten Hülle) × 32 K (20 °C innen, −12 °C außen)."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:103: V_NET, N_RATE, D_THETA = _example.V_NET_M3, _example.N_AIR_PER_H, _example.D_THETA_WINTER_K
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1557: "en": "About 18 kW: 110 m² × 160 W/m² (envelope of IWU type EFH_E, −12 °C design temperature, DIN EN 12831) – the power of nine kettles.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1558: "de": "Rund 18 kW: 110 m² × 160 W/m² (Hülle des IWU-Typs EFH_E, −12 °C Auslegungstemperatur, DIN EN 12831) – die Leistung von neun Wasserkochern."
+TOTAL 24

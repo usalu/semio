@@ -62,7 +62,7 @@ pub fn print_insert_placement(p: &InsertPlacement) -> String {
 /// 📖 Parses the arguments of `insert-placement`.
 pub fn parse_insert_placement(args: &Args) -> Result<InsertPlacement, String> {
     let arg = |k: &str| required(args, "insert-placement", k);
-    Ok(InsertPlacement { index: opt_index(args)?, item: dec_json(&arg("item")?)? })
+    Ok(InsertPlacement { index: dec_json(&arg("index")?)?, item: dec_json(&arg("item")?)? })
 }
 
 /// ✍️ Prints `remove-placement` as an op-text line.

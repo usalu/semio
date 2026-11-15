@@ -7,13 +7,16 @@ import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {compileIgnoreV1,foldNameV1,hashFileV1,linkRefusalV1,refusePathV1,scanSharedV1,sharedV1,type FleetPathRefusalV1} from "../🟦️.ts";
+import foldTable from "../🔤️fold/🔣️.json" with {type:"json"};
+import {absoluteUnitsV1,caseDependentIgnoresV1,compileIgnoreV1,foldNameV1,pathBudgetV1,PATH_LIMIT_UNITS_V1,gitPrivateV1,gitSharedV1,hashFileV1,linkRefusalV1,refusePathV1,scanSharedV1,sharedV1,type FleetPathRefusalV1} from "../🟦️.ts";
 
 type Group={name:string;lines?:string[];source?:"repository";cases:{path:string;directory:boolean;ignored:boolean}[]};
 type PathCase={path:string;times?:number;suffix?:string;refusal:FleetPathRefusalV1|null};
 type LinkCase={path:string;target:string;refusal:FleetPathRefusalV1|null};
+type GitCase={path:string;shared:boolean};
+type FoldCase={a:string;b:string;same:boolean;note:string};
 
-const groups=fixture.ignore as unknown as Group[],paths=fixture.paths as unknown as PathCase[],links=fixture.links as unknown as LinkCase[];
+const groups=fixture.ignore as unknown as Group[],paths=fixture.paths as unknown as PathCase[],links=fixture.links as unknown as LinkCase[],gitCases=fixture.git as unknown as GitCase[],folds=fixture.folds as unknown as FoldCase[];
 const posix=process.platform!=="win32";
 const repositoryText=():string=>{
  let directory=import.meta.dir;
@@ -36,6 +39,48 @@ describe("gitignore vectors",()=>{
   const ignore=compileIgnoreV1(textOf(group));
   for(const row of group.cases)expect(ignore.ignores(row.path,row.directory),`${row.path} directory=${row.directory}`).toBe(row.ignored);
  });
+});
+
+test("the fold table satisfies the closed schema, is sorted, is idempotent and never lists ASCII",()=>{
+ const ajv=new Ajv({strict:false,allowUnionTypes:true}),check=ajv.compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/FoldTable"});
+ expect(check(foldTable),JSON.stringify(check.errors?.[0])).toBe(true);
+ const points=foldTable.map.map(entry=>entry[0] as number);
+ expect([...points].sort((left,right)=>left-right)).toEqual(points);
+ for(const [point,folded] of foldTable.map as [number,string][]){
+  expect(foldNameV1(String.fromCodePoint(point)),point.toString(16)).toBe(folded);
+  expect(foldNameV1(folded),point.toString(16)).toBe(folded);
+ }
+});
+
+describe("fold vectors",()=>{
+ for(const row of folds)test(`${JSON.stringify(row.a)} and ${JSON.stringify(row.b)} are ${row.same?"one name":"two names"}: ${row.note}`,()=>{expect(foldNameV1(row.a)===foldNameV1(row.b)).toBe(row.same);});
+ test("every pair that this file system stores as one name folds to one name (APFS and NTFS merge more than ext4; the fleet refuses the union)",async()=>{
+  const root=await mkdtemp(join(tmpdir(),"boundary-fold-"));
+  try{
+   let merged=0;
+   for(const row of folds){
+    const directory=await mkdtemp(join(root,"p-"));
+    await writeFile(join(directory,row.a),"1");await writeFile(join(directory,row.b),"2");
+    if((await readdir(directory)).length===1){merged++;expect(foldNameV1(row.a),`${JSON.stringify(row.a)} ${JSON.stringify(row.b)}`).toBe(foldNameV1(row.b));}
+   }
+   expect(merged>0||process.platform==="linux").toBe(true);
+  }finally{await rm(root,{recursive:true,force:true});}
+ });
+});
+
+test("the path budget measures the real absolute path in the unit of each operating system",()=>{
+ const windows=pathBudgetV1("win32"),mac=pathBudgetV1("darwin"),linux=pathBudgetV1("linux"),long=pathBudgetV1("win32",true);
+ expect([windows.unit,windows.limit,long.limit,mac.unit,mac.limit,linux.limit]).toEqual(["utf16",259,32766,"utf8",1023,4095]);
+ expect(PATH_LIMIT_UNITS_V1).toBe(256);
+ expect(absoluteUnitsV1(windows,"C:\\semio","a/b")).toBe("C:\\semio\\a\\b".length);
+ expect(absoluteUnitsV1(windows,"C:\\semio\\","\u{1F600}")).toBe(9+2);
+ expect(absoluteUnitsV1(mac,"/Users/Shared/semio","\u{1F600}")).toBe(Buffer.byteLength("/Users/Shared/semio/")+4);
+});
+
+test("a rule that depends on case is reported at the level where git with core.ignorecase=true would hide a shared path",async()=>{
+ const text="Backup/\n*.LOG\n/Out\n";
+ expect(await caseDependentIgnoresV1(text,["backup/x.txt","Backup/y.txt","src/a.log","src/a.txt","out","Out","deep/out"])).toEqual(["backup","out","src/a.log"]);
+ expect(await caseDependentIgnoresV1(text,["src/a.txt","a.TXT"])).toEqual([]);
 });
 
 test("the digest is the sha256 of the text and the verdicts do not depend on the call order",()=>{
@@ -66,11 +111,24 @@ describe("path policy vectors",()=>{
  test("linkRefusalV1",()=>{for(const row of links)expect(linkRefusalV1(row.path,row.target)??null,`${row.path} -> ${row.target}`).toBe(row.refusal);});
 });
 
+test("the root .git is shared by allow-list only",()=>{
+ const ignore=compileIgnoreV1("");
+ for(const row of gitCases){
+  expect(gitSharedV1(row.path),row.path).toBe(row.shared);
+  expect(sharedV1(row.path,false,ignore),row.path).toBe(row.shared&&!row.path.includes("/.git/"));
+  expect(gitPrivateV1(row.path)).toBe(!row.shared&&(row.path===".git"||row.path.startsWith(".git/")));
+ }
+});
+
 test("sharedV1 combines ignore, .git and the path policy",()=>{
  const ignore=compileIgnoreV1("*.log\n");
  expect(sharedV1("src/a.ts",false,ignore)).toBe(true);
  expect(sharedV1("src/a.log",false,ignore)).toBe(false);
  expect(sharedV1(".git/config",false,ignore)).toBe(false);
+ expect(sharedV1(".git/index",false,ignore)).toBe(false);
+ expect(sharedV1(".git/refs/heads/main",false,ignore)).toBe(true);
+ expect(sharedV1(".git/index.lock",false,ignore)).toBe(false);
+ expect(sharedV1(".git/info/exclude",false,ignore)).toBe(false);
  expect(sharedV1("sub/.git/config",false,ignore)).toBe(false);
  expect(sharedV1("src/con.ts",false,ignore)).toBe(false);
  expect(sharedV1(".gitignore",false,ignore)).toBe(true);
@@ -100,16 +158,16 @@ describe("scanner",()=>{
   if(mode!==undefined)await chmod(join(root,relative),mode);
  };
 
- test("lists shared files sorted with forward slashes and skips ignored trees and .git",async()=>{
+ test("lists shared files sorted with forward slashes and skips ignored trees and a nested .git",async()=>{
   const ignore=compileIgnoreV1("node_modules\n*.log\n/out/\n");
   await withTree(async root=>{
    await put(root,"b.txt");await put(root,"a.txt","abc");await put(root,"src/z.ts");await put(root,"src/deep/y.ts");
    await put(root,"keep.log");await put(root,"out/o.txt");await put(root,"sub/out/o.txt");
-   await put(root,"node_modules/x/index.js");await put(root,".git/config");await put(root,"sub/.git/config");
+   await put(root,"node_modules/x/index.js");await put(root,".git/HEAD");await put(root,".git/config");await put(root,".git/index");await put(root,".git/logs/HEAD");await put(root,"sub/.git/config");
    await put(root,"run.sh","#!/bin/sh\n",0o755);
   },async root=>{
    const scan=await scanSharedV1(root,ignore);
-   expect(scan.entries.map(entry=>entry.path)).toEqual(["a.txt","b.txt","run.sh","src/deep/y.ts","src/z.ts","sub/out/o.txt"]);
+   expect(scan.entries.map(entry=>entry.path)).toEqual([".git/HEAD","a.txt","b.txt","run.sh","src/deep/y.ts","src/z.ts","sub/out/o.txt"]);
    expect(scan.refused).toEqual([]);
    const a=scan.entries.find(entry=>entry.path==="a.txt")!;
    expect(a.kind).toBe("file");expect(a.bytes).toBe(3);expect(a.mtimeMs).toBeGreaterThan(0);
@@ -133,12 +191,12 @@ describe("scanner",()=>{
   });
  });
 
- test.skipIf(!posix||process.getuid?.()===0)("never descends into an ignored directory or .git",async()=>{
+ test.skipIf(!posix||process.getuid?.()===0)("never descends into an ignored directory or a nested .git",async()=>{
   const ignore=compileIgnoreV1("node_modules\n");
   await withTree(async root=>{
-   await put(root,"a.txt");await put(root,"node_modules/x.js");await put(root,".git/config");
-   await chmod(join(root,"node_modules"),0o000);await chmod(join(root,".git"),0o000);
-  },async root=>{expect((await scanSharedV1(root,ignore)).entries.map(entry=>entry.path)).toEqual(["a.txt"]);});
+   await put(root,"a.txt");await put(root,"node_modules/x.js");await put(root,".git/HEAD");await put(root,".git/config");await put(root,"sub/.git/config");
+   await chmod(join(root,"node_modules"),0o000);
+  },async root=>{expect((await scanSharedV1(root,ignore)).entries.map(entry=>entry.path)).toEqual([".git/HEAD","a.txt"]);});
  });
 
  test.skipIf(!posix)("reports safe links, refuses unsafe ones and never follows a link to a directory",async()=>{

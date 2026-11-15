@@ -1,0 +1,58 @@
+{
+ "version": 1,
+ "folds": [
+  {
+   "name": "newer entries overlay the base, older ones are void, a file becomes a directory and a mode changes",
+   "files": [
+    {"name": "alpha", "content": "alpha\n"},
+    {"name": "bravo", "content": "bravo\n"},
+    {"name": "charlie", "content": "charlie\n"},
+    {"name": "delta", "content": "delta\n"},
+    {"name": "script", "content": "#!/bin/sh\n"},
+    {"name": "xray", "content": "x-ray\n"}
+   ],
+   "base": [
+    {"path": "a.txt", "mode": "100644", "file": "alpha"},
+    {"path": "b.txt", "mode": "100644", "file": "bravo"},
+    {"path": "c.txt", "mode": "100644", "file": "charlie"},
+    {"path": "dir/d.txt", "mode": "100644", "file": "delta"},
+    {"path": "run.sh", "mode": "100755", "file": "script"}
+   ],
+   "baseHlc": "1700000000500-000000-g1-server",
+   "registers": [
+    {"hlc": "1700000001000-000000-g1-m01", "path": "x.txt", "mode": "100644", "file": "xray"},
+    {"hlc": "1700000001001-000000-g1-m01", "path": "a.txt", "remove": true},
+    {"hlc": "1700000000400-000000-g1-m02", "path": "b.txt", "remove": true},
+    {"hlc": "1700000001002-000000-g1-m02", "path": "dir/d.txt", "mode": "100755", "file": "xray"},
+    {"hlc": "1700000001003-000000-g1-m01", "path": "c.txt", "remove": true},
+    {"hlc": "1700000001004-000000-g1-m01", "path": "c.txt/z", "mode": "100644", "file": "alpha"}
+   ],
+   "expect": [
+    {"path": "b.txt", "mode": "100644", "file": "bravo"},
+    {"path": "c.txt/z", "mode": "100644", "file": "alpha"},
+    {"path": "dir/d.txt", "mode": "100755", "file": "xray"},
+    {"path": "run.sh", "mode": "100755", "file": "script"},
+    {"path": "x.txt", "mode": "100644", "file": "xray"}
+   ]
+  },
+  {
+   "name": "an entry with the base's own hlc is void and an empty register list returns the base",
+   "files": [
+    {"name": "alpha", "content": "alpha\n"},
+    {"name": "bravo", "content": "bravo\n"}
+   ],
+   "base": [
+    {"path": "a.txt", "mode": "100644", "file": "alpha"}
+   ],
+   "baseHlc": "1700000000500-000000-g1-server",
+   "registers": [
+    {"hlc": "1700000000500-000000-g1-server", "path": "a.txt", "remove": true},
+    {"hlc": "1700000000501-000000-g1-m01", "path": "sub dir/ü ñ.txt", "mode": "100644", "file": "bravo"}
+   ],
+   "expect": [
+    {"path": "a.txt", "mode": "100644", "file": "alpha"},
+    {"path": "sub dir/ü ñ.txt", "mode": "100644", "file": "bravo"}
+   ]
+  }
+ ]
+}

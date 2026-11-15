@@ -1,7 +1,7 @@
 use crate::part_libraries::*;
 use crate::part_libraries::part_5::ScriptRuntime;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
-use std::collections::BTreeMap;
+use semio_s_artifact_norm_iso16757_model::IdMap;
 
 #[semio_framework_async_macros::async_test]
 async fn reference_fixture_selects_one_product() {
@@ -31,7 +31,7 @@ async fn dictionary_controlled_values_filter_by_subject() {
 async fn part_number_script_is_deterministic() {
     let runtime = part_5::DefaultScriptRuntime;
     let rule = semio_s_artifact_norm_iso16757_model::part_5::PartNumberRule::Script { function_id: "partno".into(), source: "dn * 10 + 50".into() };
-    let inputs = BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
+    let inputs = IdMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
     let part_no = part_5::calculate_part_number(&rule, &inputs, &runtime).expect("part number");
     assert_eq!(part_no, "550");
 }
@@ -48,8 +48,8 @@ async fn ifc_step_export_contains_data_section() {
 #[semio_framework_async_macros::async_test]
 async fn composition_cycle_detected() {
     let mut doc = Iso16757Snapshot::default();
-    doc.catalogue.compositions.insert("product-a".into(), vec![semio_s_artifact_norm_iso16757_model::part_1::CompositionRelationship { component_product_id: "product-b".into(), quantity: 1 }]);
-    doc.catalogue.compositions.insert("product-b".into(), vec![semio_s_artifact_norm_iso16757_model::part_1::CompositionRelationship { component_product_id: "product-a".into(), quantity: 1 }]);
+    doc.catalogue.compositions.cold_insert("product-a".into(), vec![semio_s_artifact_norm_iso16757_model::part_1::CompositionRelationship { component_product_id: "product-b".into(), quantity: 1 }]);
+    doc.catalogue.compositions.cold_insert("product-b".into(), vec![semio_s_artifact_norm_iso16757_model::part_1::CompositionRelationship { component_product_id: "product-a".into(), quantity: 1 }]);
     assert!(part_1::detect_composition_cycle(&doc.catalogue, "product-a"));
 }
 
@@ -84,7 +84,7 @@ async fn evaluate_constraint_type_mismatch_returns_false() {
 #[semio_framework_async_macros::async_test]
 async fn select_products_filters_by_series_id() {
     let mut doc = Iso16757Snapshot::default();
-    let other_series = semio_s_artifact_norm_iso16757_model::part_1::ProductSeries { id: "series-other".into(), class_id: "class-valve".into(), names: doc.catalogue.product_series[0].names.clone(), shared_property_values: BTreeMap::new(), geometry_id: None };
+    let other_series = semio_s_artifact_norm_iso16757_model::part_1::ProductSeries { id: "series-other".into(), class_id: "class-valve".into(), names: doc.catalogue.product_series[0].names.clone(), shared_property_values: IdMap::new(), geometry_id: None };
     let other_product = semio_s_artifact_norm_iso16757_model::part_1::Product {
         id: "product-other".into(),
         series_id: "series-other".into(),
@@ -92,7 +92,7 @@ async fn select_products_filters_by_series_id() {
         parameter_domains: Vec::new(),
         variants: vec![semio_s_artifact_norm_iso16757_model::part_1::ProductVariant {
             id: "variant-other".into(),
-            parameter_values: BTreeMap::new(),
+            parameter_values: IdMap::new(),
             property_values: vec![semio_s_artifact_norm_iso16757_model::part_1::PropertyValue { definition_id: "prop-dn".into(), value: CatalogueValue::Decimal { value: 50.0 }, function_id: None }],
             article_number: None,
             geometry_id: None,
@@ -176,14 +176,14 @@ async fn validate_catalogue_structure_flags_issues() {
     assert!(issues.iter().any(|i| i.contains("empty property definition id")));
 
     let mut doc = Iso16757Snapshot::default();
-    doc.catalogue.compositions.insert("product-cv".into(), vec![semio_s_artifact_norm_iso16757_model::part_1::CompositionRelationship { component_product_id: "product-cv".into(), quantity: 1 }]);
+    doc.catalogue.compositions.cold_insert("product-cv".into(), vec![semio_s_artifact_norm_iso16757_model::part_1::CompositionRelationship { component_product_id: "product-cv".into(), quantity: 1 }]);
     let issues = part_1::validate_catalogue_structure(&doc.catalogue);
     assert!(issues.iter().any(|i| i.contains("composition cycle")));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn substitute_parameters_recurses_through_node_kinds() {
-    let primitive = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0)]) };
+    let primitive = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: IdMap::from([("width".into(), 1.0)]) };
     let transform = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Transform { translation: [1.0, 0.0, 0.0], rotation_deg: [0.0, 0.0, 0.0], child: Box::new(primitive.clone()) };
     let boolean = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Boolean { operator: semio_s_artifact_norm_iso16757_model::part_2::BooleanOperator::Union, children: vec![primitive.clone(), transform.clone()] };
     let reference = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Reference { geometry_id: "geom-x".into() };
@@ -213,10 +213,10 @@ async fn substitute_parameters_recurses_through_node_kinds() {
 #[semio_framework_async_macros::async_test]
 async fn evaluate_bounding_box_error_paths() {
     let catalogue = semio_s_artifact_norm_iso16757_model::part_2::GeometryCatalogue::default();
-    let missing_width = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::new() };
+    let missing_width = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: IdMap::new() };
     assert!(matches!(part_2::evaluate_bounding_box(&missing_width, &catalogue), Err(NormError::IncompleteInput { field }) if field == "width"));
 
-    let unknown_kind = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "cone".into(), parameters: BTreeMap::new() };
+    let unknown_kind = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "cone".into(), parameters: IdMap::new() };
     assert!(matches!(part_2::evaluate_bounding_box(&unknown_kind, &catalogue), Err(NormError::OutOfScope { .. })));
 
     let empty_boolean = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Boolean { operator: semio_s_artifact_norm_iso16757_model::part_2::BooleanOperator::Union, children: Vec::new() };
@@ -229,36 +229,36 @@ async fn evaluate_bounding_box_error_paths() {
 #[semio_framework_async_macros::async_test]
 async fn evaluate_bounding_box_cylinder_sphere_boolean_transform() {
     let catalogue = semio_s_artifact_norm_iso16757_model::part_2::GeometryCatalogue::default();
-    let cylinder = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "cylinder".into(), parameters: BTreeMap::from([("radius".into(), 1.0), ("height".into(), 2.0)]) };
+    let cylinder = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "cylinder".into(), parameters: IdMap::from([("radius".into(), 1.0), ("height".into(), 2.0)]) };
     let bbox = part_2::evaluate_bounding_box(&cylinder, &catalogue).expect("cylinder bbox");
     assert_eq!(bbox.max, [2.0, 2.0, 2.0]);
 
-    let sphere = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "sphere".into(), parameters: BTreeMap::from([("radius".into(), 1.5)]) };
+    let sphere = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "sphere".into(), parameters: IdMap::from([("radius".into(), 1.5)]) };
     let bbox = part_2::evaluate_bounding_box(&sphere, &catalogue).expect("sphere bbox");
     assert_eq!(bbox.max, [3.0, 3.0, 3.0]);
 
-    let a = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) };
+    let a = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: IdMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) };
     let b = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Transform {
         translation: [5.0, 5.0, 5.0],
         rotation_deg: [0.0, 0.0, 0.0],
-        child: Box::new(semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) }),
+        child: Box::new(semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: IdMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) }),
     };
     let boolean = semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Boolean { operator: semio_s_artifact_norm_iso16757_model::part_2::BooleanOperator::Union, children: vec![a, b] };
     let bbox = part_2::evaluate_bounding_box(&boolean, &catalogue).expect("boolean bbox");
     assert_eq!(bbox.min, [0.0, 0.0, 0.0]);
     assert_eq!(bbox.max, [6.0, 6.0, 6.0]);
 
-    let mut objects = BTreeMap::new();
-    objects.insert(
+    let mut objects = IdMap::new();
+    objects.cold_insert(
         "geom-ref".to_string(),
         semio_s_artifact_norm_iso16757_model::part_2::GeometryObject {
             id: "geom-ref".into(),
-            shape: Some(semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) }),
+            shape: Some(semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: IdMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) }),
             symbolic: None,
             spaces: Vec::new(),
             surfaces: Vec::new(),
             ports: Vec::new(),
-            parameter_bindings: BTreeMap::new(),
+            parameter_bindings: IdMap::new(),
         },
     );
     let ref_catalogue = semio_s_artifact_norm_iso16757_model::part_2::GeometryCatalogue { objects, primitive_registry: Vec::new() };
@@ -269,7 +269,7 @@ async fn evaluate_bounding_box_cylinder_sphere_boolean_transform() {
 
 #[semio_framework_async_macros::async_test]
 async fn validate_geometry_graph_self_reference_and_cycle() {
-    let mut objects = BTreeMap::new();
+    let mut objects = IdMap::new();
     let self_ref = semio_s_artifact_norm_iso16757_model::part_2::GeometryObject {
         id: "geom-self".into(),
         shape: Some(semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Reference { geometry_id: "geom-self".into() }),
@@ -277,16 +277,16 @@ async fn validate_geometry_graph_self_reference_and_cycle() {
         spaces: Vec::new(),
         surfaces: Vec::new(),
         ports: Vec::new(),
-        parameter_bindings: BTreeMap::new(),
+        parameter_bindings: IdMap::new(),
     };
-    objects.insert("geom-self".to_string(), self_ref.clone());
+    objects.cold_insert("geom-self".to_string(), self_ref.clone());
     let catalogue = semio_s_artifact_norm_iso16757_model::part_2::GeometryCatalogue { objects, primitive_registry: Vec::new() };
     let mut visited = HashSet::new();
     let issues = part_2::validate_geometry_graph(&self_ref, &catalogue, &mut visited);
     assert!(issues.iter().any(|i| i.contains("self-reference")));
     assert!(visited.is_empty());
 
-    let mut objects = BTreeMap::new();
+    let mut objects = IdMap::new();
     let a = semio_s_artifact_norm_iso16757_model::part_2::GeometryObject {
         id: "geom-a".into(),
         shape: Some(semio_s_artifact_norm_iso16757_model::part_2::GeometryNode::Reference { geometry_id: "geom-b".into() }),
@@ -294,7 +294,7 @@ async fn validate_geometry_graph_self_reference_and_cycle() {
         spaces: Vec::new(),
         surfaces: Vec::new(),
         ports: Vec::new(),
-        parameter_bindings: BTreeMap::new(),
+        parameter_bindings: IdMap::new(),
     };
     let b = semio_s_artifact_norm_iso16757_model::part_2::GeometryObject {
         id: "geom-b".into(),
@@ -303,10 +303,10 @@ async fn validate_geometry_graph_self_reference_and_cycle() {
         spaces: Vec::new(),
         surfaces: Vec::new(),
         ports: Vec::new(),
-        parameter_bindings: BTreeMap::new(),
+        parameter_bindings: IdMap::new(),
     };
-    objects.insert("geom-a".to_string(), a.clone());
-    objects.insert("geom-b".to_string(), b);
+    objects.cold_insert("geom-a".to_string(), a.clone());
+    objects.cold_insert("geom-b".to_string(), b);
     let catalogue = semio_s_artifact_norm_iso16757_model::part_2::GeometryCatalogue { objects, primitive_registry: Vec::new() };
     let mut visited = HashSet::new();
     let issues = part_2::validate_geometry_graph(&a, &catalogue, &mut visited);
@@ -315,7 +315,7 @@ async fn validate_geometry_graph_self_reference_and_cycle() {
 
 #[semio_framework_async_macros::async_test]
 async fn validate_geometry_graph_empty_parameter_binding() {
-    let object = semio_s_artifact_norm_iso16757_model::part_2::GeometryObject { id: "geom-bind".into(), shape: None, symbolic: None, spaces: Vec::new(), surfaces: Vec::new(), ports: Vec::new(), parameter_bindings: BTreeMap::from([("width".into(), String::new())]) };
+    let object = semio_s_artifact_norm_iso16757_model::part_2::GeometryObject { id: "geom-bind".into(), shape: None, symbolic: None, spaces: Vec::new(), surfaces: Vec::new(), ports: Vec::new(), parameter_bindings: IdMap::from([("width".into(), String::new())]) };
     let catalogue = semio_s_artifact_norm_iso16757_model::part_2::GeometryCatalogue::default();
     let mut visited = HashSet::new();
     let issues = part_2::validate_geometry_graph(&object, &catalogue, &mut visited);
@@ -415,16 +415,16 @@ async fn to_iso12006_mappings_basic() {
 #[semio_framework_async_macros::async_test]
 async fn calculate_part_number_table_rule_paths() {
     let runtime = part_5::DefaultScriptRuntime;
-    let rows = vec![BTreeMap::from([("dn".to_string(), "50".to_string()), ("code".to_string(), "CV50".to_string())])];
+    let rows = vec![IdMap::from([("dn".to_string(), "50".to_string()), ("code".to_string(), "CV50".to_string())])];
     let rule = semio_s_artifact_norm_iso16757_model::part_5::PartNumberRule::Table { rows, output_column: "code".into() };
-    let inputs = BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
+    let inputs = IdMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
     assert_eq!(part_5::calculate_part_number(&rule, &inputs, &runtime).expect("match"), "CV50");
 
-    let no_match_inputs = BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 999.0 })]);
+    let no_match_inputs = IdMap::from([("dn".into(), CatalogueValue::Decimal { value: 999.0 })]);
     let err = part_5::calculate_part_number(&rule, &no_match_inputs, &runtime).unwrap_err();
     assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "part_number_table"));
 
-    let missing_output_rule = semio_s_artifact_norm_iso16757_model::part_5::PartNumberRule::Table { rows: vec![BTreeMap::from([("dn".to_string(), "50".to_string())])], output_column: "code".into() };
+    let missing_output_rule = semio_s_artifact_norm_iso16757_model::part_5::PartNumberRule::Table { rows: vec![IdMap::from([("dn".to_string(), "50".to_string())])], output_column: "code".into() };
     let err = part_5::calculate_part_number(&missing_output_rule, &inputs, &runtime).unwrap_err();
     assert!(matches!(err, NormError::IncompleteInput { field } if field == "code"));
 
@@ -465,7 +465,7 @@ async fn script_runtime_arithmetic_operators() {
 
 mod cross_check_vectors {
     use semio_s_artifact_norm_iso16757_model::part_2::{BooleanOperator, GeometryCatalogue, GeometryNode};
-    use std::collections::BTreeMap;
+    use semio_s_artifact_norm_iso16757_model::IdMap;
     include!("../../../🧪️tests/🧫️fixtures/🔮️cross-checks/🦀️.rs");
 
     #[semio_framework_async_macros::async_test]

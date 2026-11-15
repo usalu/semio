@@ -1,0 +1,51 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:389: r"Part 4: $30\,\mathrm{m^2}\cdot 0.70\cdot 0.15\cdot 0.60\cdot 800\,\mathrm{W/m^2}\approx 1510\,\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:390: r"Aus Teil 4 kennen wir die Last: $30\,\mathrm{m^2}\cdot 0{,}70\cdot 0{,}15\cdot 0{,}60\cdot 800\,\mathrm{W/m^2}$ ergeben rund $1510\,\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:803: "en": "Single sports hall (15 × 27 m, 5.5 m high) with 30 athletes",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:804: "de": "Einfeldsporthalle (15 × 27 m, 5,5 m hoch) mit 30 Sporttreibenden"
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:898: "en": "About 4.8 1/h: EN 16798-1 category II gives 28 × 25 m³/h + 60 m² × 2.5 m³/(h·m²) ≈ 860 m³/h for 180 m³, which is why window ventilation alone struggles.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:899: "de": "Rund 4,8 1/h: EN 16798-1 Kategorie II ergibt 28 × 25 m³/h + 60 m² × 2,5 m³/(h·m²) ≈ 860 m³/h für 180 m³, deshalb kommt Fensterlüftung allein kaum hinterher."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:461: r"The volume flow is $V \cdot n$: $440\,\mathrm{m^3} \cdot 0.5\,\mathrm{h^{-1}} = 220\,\mathrm{m^3/h}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:462: r"Der Volumenstrom ist $V \cdot n$: $440\,\mathrm{m^3} \cdot 0{,}5\,\mathrm{h^{-1}} = 220\,\mathrm{m^3/h}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:605: r"Per cubic metre that is $1.2\,\mathrm{kg/m^3} \cdot 4.5\,\mathrm{g/kg} = 5.4\,\mathrm{g/m^3}$ of water that must be condensed.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:606: r"Je Kubikmeter sind das $1{,}2\,\mathrm{kg/m^3} \cdot 4{,}5\,\mathrm{g/kg} = 5{,}4\,\mathrm{g/m^3}$ Wasser, die kondensiert werden müssen."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:565: r"Purge ventilation only reheats the air: $0.34\,\mathrm{Wh/(m^3K)} \cdot 50\,\mathrm{m^3} \cdot 20\,\mathrm{K} = 340\,\mathrm{Wh}$. The walls stay warm.",
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:566: r"Beim Stoßlüften wird nur die Luft nachgeheizt: $0{,}34\,\mathrm{Wh/(m^3K)} \cdot 50\,\mathrm{m^3} \cdot 20\,\mathrm{K} = 340\,\mathrm{Wh}$. Die Wände bleiben warm."),
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:401: "en": "Part 4: 30 m² of glazing × 0.49 × 0.15 × 0.60 × 800 W/m² ≈ 1060 W.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:43: · e_E = 1,04 · 1,08 · 1,06 · 1,18 ≈ 1,40 (Gaskessel)  → Q_E = 140 (Endenergie) → · f_P = 1,1 → Q_P = 154 (Primärenergie) → Klasse E
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:44: · e_E = 1,04 · 1,08 · 1,06 · 0,26 ≈ 0,31 (Wärmepumpe) → Q_E =  31 (Endenergie) → · f_P = 1,8 → Q_P ≈  56 (Primärenergie) → Klasse A
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:721: din = _din_ref("DIN V 4108-6:2003-06, 5.2 · 6.5 · DIN V 18599-2:2018-09, 5.5.3")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:118: """🟰 '=' only when the shown product is exact — 140 · 1,1 = 154 but 31 · 1,8 ≈ 56."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:470: din = _din_ref("DIN V 4108-6:2003-06, 3.2 · 5.5")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:610: r"The exterior wall: $209\;\mathrm{m^2}\cdot 0.24\;\mathrm{W/(m^2K)}\cdot 10\;\mathrm{K}$ is about $500\;\mathrm{W}$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:611: r"Die Außenwand: $209\;\mathrm{m^2}\cdot 0{,}24\;\mathrm{W/(m^2K)}\cdot 10\;\mathrm{K}$ ergeben rund $500\;\mathrm{W}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:661: din = _din_ref("DIN V 4108-6:2003-06, 6.1 · 6.2")
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:991: din = _din_ref("DIN V 4108-6:2003-06, 6.3 · 6.4 · 6.5")
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:97: | **1 W = 1 J/s**, **1 kWh = 3,6 · 10⁶ J** | Grundeinheit und Umrechnung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:101: | **Q̇_S = g · A · I** | 0,5 · 2,0 m² · 500 W/m² = 500 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:114: | ≈ 2,4 · 10¹² kWh | Deutschland pro Jahr, Endenergie |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:115: | ≈ 1,7 · 10¹⁴ kWh | Welt pro Jahr, Primärenergie |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:187: | **c_Luft = ρ · c_p / 3 600** | 1,2 · 1 005 / 3 600 ≈ 0,34 Wh/(m³·K) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:188: | **Q̇_V,sens = V̇ · c_Luft · Δθ** | sensible Lüftungsleistung; Winter 440 · 0,5 · 0,34 · 20 ≈ 1 500 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:189: | **Q̇_V,lat = ρ · r · Δx · q_v,R** | latente Last; 1,2 · 2 450 kJ/kg · 4,5 g/kg · 0,061 m³/s ≈ 810 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:308: | **Φ_V = V · n · c_Luft · Δθ** | Lüftungswärmeverlust ohne WRG; 440 · 0,5 · 0,34 · 20 ≈ 1 500 W |
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1537: "en": "11 kW = 3 × 230 V × 16 A, the most common home charging power in Germany.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1538: "de": "11 kW = 3 × 230 V × 16 A, die häufigste Ladeleistung zu Hause in Deutschland."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1714: "en": "382.8 YW (3.828 × 10²⁶ W, IAU 2015 nominal solar luminosity); the Earth catches less than a billionth of it.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:1715: "de": "382,8 YW (3,828 × 10²⁶ W, nominale Sonnenleuchtkraft der IAU 2015); die Erde fängt davon weniger als ein Milliardstel auf."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2270: "en": "About 46 GW: electricity accounts for approximately 27% of France’s 1,496 TWh of final energy in 2023 (SDES). 1,496 × 0.27 / 8,760 gives the average in TW.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2271: "de": "Rund 46 GW: Strom macht näherungsweise 27 % von Frankreichs 1.496 TWh Endenergie 2023 aus (SDES). 1.496 × 0,27 / 8.760 ergibt den Mittelwert in TW."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2450: "en": "765.6 YW. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2451: "de": "765,6 YW. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2470: "en": "1.148E27 W. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2471: "de": "1,148E27 W. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2490: "en": "1.531E27 W. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2491: "de": "1,531E27 W. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2510: "en": "1.914E27 W. Nominal solar luminosity is 3.828 × 10²⁶ W (IAU 2015); multiple ideal Sun-like stars add their radiant outputs.",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:2511: "de": "1,914E27 W. Die nominale Sonnenleuchtkraft beträgt 3,828 × 10²⁶ W (IAU 2015); mehrere ideale sonnenähnliche Sterne addieren ihre Strahlungsleistungen."
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:789: j_lbl = _m(tr(r"3.6 \cdot 10^{6}\,\mathrm{J}", r"3{,}6 \cdot 10^{6}\,\mathrm{J}"), pt(0.5, 0.45), color=P_YELLOW)
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:793: (None, tr(r"3.6 \cdot 10^{6}\,\mathrm{J}", r"3{,}6 \cdot 10^{6}\,\mathrm{J}"), P_YELLOW),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:836: span_lbl = _m(r"\times\,3 \cdot 10^{11}", color=P_YELLOW).next_to(span, UP, buff=0.1)
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1186: (2.4e12, tr(r"\text{Germany per year, final energy} \approx 2.4 \cdot 10^{12}\,\mathrm{kWh}", r"\text{Deutschland pro Jahr, Endenergie} \approx 2{,}4 \cdot 10^{12}\,\mathrm{kWh}"), P_GREEN),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1187: (1.7e14, tr(r"\text{World per year, primary energy} \approx 1.7 \cdot 10^{14}\,\mathrm{kWh}", r"\text{Welt pro Jahr, Primärenergie} \approx 1{,}7 \cdot 10^{14}\,\mathrm{kWh}"), P_PRIMARY),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2396: m_line = _m(tr(r"m = \rho \cdot V = 2\,400\,\frac{\mathrm{kg}}{\mathrm{m^{3}}} \cdot 0.1\,\mathrm{m^{3}} = 240\,\mathrm{kg}", r"m = \rho \cdot V = 2\,400\,\frac{\mathrm{kg}}{\mathrm{m^{3}}} \cdot 0{,}1\,\mathrm{m^{3}} = 240\,\mathrm{kg}"),
+TOTAL 50

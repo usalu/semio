@@ -1,4 +1,4 @@
-//! 📍️ `change-isolation-system-stiffness` diff: patches `stiffness_n_per_m` of the addressed isolation_system row.
+//! 📍️ `change-isolation-system-stiffness-n-per-m` diff: patches `stiffness_n_per_m` of the addressed isolation_system row.
 
 use crate::change_isolation_system_stiffness::ChangeIsolationSystemStiffnessNPerM;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998IsolationSystemDelta, En1998IsolationSystemPatch};

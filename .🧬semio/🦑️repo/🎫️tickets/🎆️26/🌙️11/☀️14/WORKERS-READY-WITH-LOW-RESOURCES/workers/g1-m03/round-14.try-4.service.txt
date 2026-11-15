@@ -1,0 +1,40 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-79a74804a430.log (lines after 1423)
+2026-11-15T02:56:13.900Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+graph: 657 stale projects, 0 taken from the fleet, 226 too heavy for this machine (@semio-tech/framework-os-dev (about 39020 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-process (about 9854 MB), @semio-tech/framework-plugin (about 7894 MB), @semio-tech/framework-renderer-wgpu (about 7348 MB), and 220 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 657
+graph: waiting for the fleet: 0 of 657 projects arrived
+graph: waiting for the fleet: 48 of 657 projects arrived
+graph: waiting for the fleet: 96 of 657 projects arrived
+graph: waiting for the fleet: 144 of 657 projects arrived
+graph: nothing to wait for any longer: the fleet was asked for 657 stale projects and delivered 144 within 1495 s; 513 remain, among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/s-dev-composition (about 3702 MB), @semio-tech/cargo-workspaces (about 2950 MB), @semio-tech/framework-compiler-rs (about 2884 MB), @semio-tech/framework-mesh-engine-rs (about 2662 MB), and 94 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-15T03:21:52.942Z graph-wanted-expired {"wanted":"657","arrived":"144","seconds":"1495","missing":"513","local":"0","heavy":", among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/s-dev-composition (about 3702 MB), @semio-tech/cargo-workspaces (about 2950 MB), @semio-tech/framework-compiler-rs (about 2884 MB), @semio-tech/framework-mesh-engine-rs (about 2662 MB), and 94 more (this machine can give about 0 MB per project)"}
+-- last 30 lines when the try ended
+[repository:command] still running after 1440 s
+graph: waiting for the fleet: 144 of 657 projects arrived
+[repository:command] still running after 1450 s
+[repo] still working after 1460 s; last phase started: source.served
+graph: waiting for the fleet: 144 of 657 projects arrived
+[repository:command] still running after 1460 s
+graph: waiting for the fleet: 144 of 657 projects arrived
+[repository:command] still running after 1470 s
+graph: waiting for the fleet: 144 of 657 projects arrived
+[repository:command] still running after 1480 s
+[repo] still working after 1490 s; last phase started: source.served
+[repository:command] still running after 1490 s
+graph: waiting for the fleet: 144 of 657 projects arrived
+[repository:command] still running after 1500 s
+graph: waiting for the fleet: 144 of 657 projects arrived
+[repository:command] still running after 1510 s
+graph: waiting for the fleet: 144 of 657 projects arrived
+[repo] still working after 1520 s; last phase started: source.served
+[repository:command] still running after 1520 s
+graph: waiting for the fleet: 144 of 657 projects arrived
+[repository:command] still running after 1530 s
+graph: waiting for the fleet: 144 of 657 projects arrived
+graph: this machine is darwin-arm64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: the fleet was asked for 657 stale projects and delivered 144 within 1495 s; 513 remain, among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/s-dev-composition (about 3702 MB), @semio-tech/cargo-workspaces (about 2950 MB), @semio-tech/framework-compiler-rs (about 2884 MB), @semio-tech/framework-mesh-engine-rs (about 2662 MB), and 94 more, which this machine must never infer itself (
+2026-11-15T03:21:52.942Z graph-wanted-expired {"wanted":"657","arrived":"144","seconds":"1495","missing":"513","local":"0","heavy":", among them the too heavy project(s) @semio-tech/framework-process (about 9854 MB), @semio-tech/ui-rs (about 5398 MB), @semio-tech/s-dev-composition (about 3702 MB), @semio-tech/cargo-workspaces (about 2950 MB), @semio-tech/framework-compiler-rs (about 2884 MB), @semio-tech/framework-mesh-engine-rs (about 2662 MB), and 94 more (this machine can give about 0 MB per 
+graph: plan answered, managed 107 MB, resident 496 MB (released 0 MB)
+[repository:command] still running after 1540 s
+[repo] still working after 1550 s; last phase started: source.served
+[repository:command] still running after 1550 s
+[repository:command] still running after 1560 s

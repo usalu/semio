@@ -1,0 +1,23 @@
+{
+  "title": "Perfect Handcrafted 3D Models per Scale and Mode for Every Staffage",
+  "emoji": "🗿",
+  "status": "open",
+  "description": "Completely have perfect handcrafted 3D models for every staffage, different and consistent for each scale and each mode (dark/light line and solid, thermodynamic, forces, moments), end to end: schema, kernel, authoring of all 152 assets, exports, viewer, tests with third-party oracles.",
+  "goal": "animate",
+  "sessions": [
+    "811f4228-4005-4343-93ee-0589db33a675"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-14 19:39:48",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Completely have perfect handcrafted 3D models for every staffage, different and consistent for each scale and each mode (dark/light line and solid, thermodynamic, forces, moments), end to end: schema, kernel, authoring of all 152 assets, exports, viewer, tests with third-party oracles.",
+      "llm": "fable-5-2",
+      "effort": "medium"
+    }
+  ]
+}

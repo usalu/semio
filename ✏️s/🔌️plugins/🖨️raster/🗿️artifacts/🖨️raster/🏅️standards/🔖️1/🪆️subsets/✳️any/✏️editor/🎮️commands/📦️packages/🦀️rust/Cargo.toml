@@ -39,7 +39,7 @@ semio-s-artifact-raster-raster-io = { workspace = true }
 semio-s-artifact-raster-raster-model = { workspace = true }
 semio-s-artifact-raster-raster-host = { workspace = true }
 semio-s-artifact-raster-raster-mutations = { workspace = true }
-semio-s-artifact-raster-raster-mutations-layer-properties = { workspace = true }
+semio-s-artifact-raster-raster-mutations-layer-props = { workspace = true }
 semio-s-artifact-raster-raster-mutations-layers = { workspace = true }
 semio-s-artifact-raster-raster-mutations-pixels = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }

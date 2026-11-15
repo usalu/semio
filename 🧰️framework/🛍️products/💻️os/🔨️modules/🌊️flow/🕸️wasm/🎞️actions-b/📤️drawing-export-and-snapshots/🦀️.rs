@@ -210,7 +210,7 @@ impl FlowActionState for FlowAction2605{
  #[cfg(test)]fn operation(&self)->u16{2605}
  fn advance(&mut self,_:&mut FlowDomainAdapter,_:&FlowArguments,budget:AbiWorkBudget)->FlowFeatureStep{if budget.cancelled||budget.interrupted||budget.deadline_ms.is_some_and(|deadline|budget.now_ms>=deadline)||budget.byte_credit==0{return FlowFeatureStep::Failed(original_trace::abi_refusal(if budget.cancelled{AbiErrorCode::Cancelled}else if budget.interrupted{AbiErrorCode::Interrupted}else if budget.deadline_ms.is_some_and(|deadline|budget.now_ms>=deadline){AbiErrorCode::DeadlineExceeded}else{AbiErrorCode::NoCredit}));}FlowFeatureStep::Failed(FlowFailure::from_value(AbiErrorCode::NoCredit,semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Flow trace requires its original native caller context")))}
  fn advance_on_original_caller(&mut self,_:&mut FlowDomainAdapter,args:&FlowArguments,cx:&mut semio_framework_job::StepContext<'_>)->FlowFeatureStep{match self.trace.advance_original(args,cx){Ok(step)=>step,Err(error)=>FlowFeatureStep::Failed(error)}}
- fn close_step(&mut self,_:&mut FlowArguments,budget:AbiWorkBudget)->Result<bool,FlowFailure>{self.trace.close_step(budget.retained).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))}
+ fn close_step(&mut self,_:&mut FlowArguments,budget:AbiWorkBudget)->Result<bool,FlowFailure>{let Some(done)=semio_os_flow_host_core::cold_effect(budget.retained,|effect|self.trace.close_step(effect)).map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))? else{return Ok(false)};done.map_err(|error|FlowFailure::from_value(AbiErrorCode::NoCredit,error))}
 }
 
 pub struct FlowAction2606 {

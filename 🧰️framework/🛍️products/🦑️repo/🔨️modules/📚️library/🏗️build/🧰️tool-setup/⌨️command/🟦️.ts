@@ -8,19 +8,19 @@ import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️
 import {createIssuedResourceControlV1, scriptResourceProcessEnvironmentV1, type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {NATIVE_TOOLCHAINS_V1, pythonInterpreterDirectoryV1, toolchainHostV1, type ToolchainHostV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
+import {toolchainHostV1, type ToolchainHostV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import bootstrapPins from "../../../../🔩️native/🥾️bootstrap/🧬️schema/🔣️.json" with {type: "json"};
 import {repoPlaywrightBrowsersPath} from "../../../🏃️process/🌿️environment/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {withRepositoryToolingStoreV1, type RepositoryToolingStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {runTool} from "../../../⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts";
-import {preparedNativeToolV1, provisionNativeToolsV1, withPinnedNativePathV1, type NativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts";
+import {preparedNativeToolV1, provisionInterpretersV1, provisionNativeToolsV1, withPinnedNativePathV1, type NativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts";
 import {ownedNativeToolPortV1, systemNativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🟦️.ts";
 import {bunDistribution, prepareBun} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts";
 import {binaryenDirectory, prepareBinaryen} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts";
 import {bazelDistribution} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts";
-import {locateToolV1, renderToolReportV1, resolveSiblingPackageV1, setupToolsV1, runtimeWarningV1, runningRuntimeLineV1, toolRowV1, toolRowsV1, toolSetupMessageV1, toolStepsV1, verifyToolsV1, warmToolStepsV1, type ToolContextV1, type ToolProvisionerV1, type ToolReportV1, type ToolRowV1, type ToolStepRunnerV1} from "../🟦️.ts";
+import {renderToolReportV1, resolveSiblingPackageV1, setupToolsV1, runtimeWarningV1, runningRuntimeLineV1, toolRowsV1, toolSetupMessageV1, toolStepsV1, verifyToolsV1, warmToolStepsV1, type ToolContextV1, type ToolProvisionerV1, type ToolReportV1, type ToolRowV1, type ToolStepRunnerV1} from "../🟦️.ts";
 import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 const executableSuffix = (platform: NodeJS.Platform): string => platform === "win32" ? ".exe" : "";
@@ -162,10 +162,8 @@ export async function runToolchainsSetupV1(root: string, invocation: ScriptInvoc
     else if (setup.kind === "bun") await inStore((store, actual) => prepareBun(root, pin, store, actual, "published"));
     else if (setup.kind === "binaryen") await inStore(store => prepareBinaryen(root, store));
     else if (setup.kind === "script") await execute(process.execPath, [join(root, ...setup.script.split("/")), ...setup.prepare], pinned(), signal);
-    else if (setup.kind === "python") {
-      const uv = locateToolV1(toolRowV1("uv"), NATIVE_TOOLCHAINS_V1.python.uv, context)!, python = NATIVE_TOOLCHAINS_V1.python;
-      await execute(uv, ["python", "install", pin], pinned({...python.variables, UV_PYTHON_INSTALL_DIR: pythonInterpreterDirectoryV1(context.toolsRoot), UV_CACHE_DIR: join(repositoryCachePartitionRootV1(root, "dependencies"), ...python.layout.cache.split("/"))}), signal);
-    } else if (setup.kind === "dotnet") {
+    else if (setup.kind === "python") await inStore((store, actual) => provisionInterpretersV1([pin], store.root, ownedNativeToolPortV1(store.environment, actual), actual.signal));
+    else if (setup.kind === "dotnet") {
       const installer = dotnetInstallerRowV1(process.platform, process.arch);
       if (installer === undefined) throw new Error(toolSetupMessageV1("installer", {tool: "dotnet", host}, context.environment));
       await installDotnetSdkV1(pin, dotnetSdkDirectoryV1(context.toolsRoot, pin, host, installer.sha256), installer.sha256, installer, host, context.environment, port, signal, (command, args, env) => execute(command, args, env, signal));

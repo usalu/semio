@@ -271,7 +271,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         const moduleOf = (pluginId: string) => contracts.find((project) => project.name === componentLaunchers.find((entry) => entry.pluginId === pluginId)?.project);
         const bootComponents = preparation.dependsOn.filter((id: string) => id.endsWith(":component"));
         assert.ok(bootComponents.includes(`${moduleOf(playground.pluginId)!.name}:component`), `${targetName}: boot prepare must wait for the host component`);
-        const fullSession = buildPlaygroundSession(playground.variant, (await import("@semio-tech/plugin-registry/catalog-view")).readGeneratedCatalogProjection(join(root,(await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].publication.outputRoot))).plugins;
+        const fullSession = buildPlaygroundSession(playground.variant, (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts")).readGeneratedCatalogProjection(join(root,(await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].publication.outputRoot))).plugins;
         assert.ok(bootComponents.length <= fullSession.length, `${targetName}: boot prepare must not exceed the full session closure`);
         if (fullSession.length > bootComponents.length + 5) assert.ok(bootComponents.length < fullSession.length / 2, `${targetName}: host boot prepare must skip the catalog fanout`);
         for (const prerequisite of vectors.closurePreparation.prerequisites) assert.ok(!preparation.dependsOn.includes(prerequisite), `${targetName}: ${prerequisite} belongs to the component targets`);

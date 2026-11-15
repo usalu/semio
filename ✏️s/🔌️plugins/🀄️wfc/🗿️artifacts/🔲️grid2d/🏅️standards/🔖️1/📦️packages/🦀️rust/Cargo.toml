@@ -53,7 +53,7 @@ semio-s-artifact-wfc-grid2d-diff = { path = "../../🪆️subsets/✳️any/🧬
 semio-s-artifact-wfc-grid2d-inferences = { path = "../../🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-grid2d-schema = { path = "../../🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-grid2d-snapshot = { path = "../../🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
-semio-s-artifact-wfc-grid2d-tests-cuts-the-pinned-corner-out-of-the-problem = { path = "../../🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️mask-cell/🧪️tests/🕳️cuts/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-grid2d-tests-cuts-pinned-corner = { path = "../../🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️mask-cell/🧪️tests/🕳️cuts/📦️packages/🦀️rust" }
 semio-s-plugin-wfc-engine = { workspace = true }
 semio-s-wfc-sqlite-bitmap = { workspace = true }
 serde = { workspace = true }

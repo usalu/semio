@@ -205,7 +205,7 @@ pub(super) fn push_test_series(report: &mut CheckReport, document: &En1990Snapsh
                         q_dim(design),
                         copy(format!("Rely on at most X_d = {design:.4} (lowers the value the structure relies on)."), format!("Höchstens X_d = {design:.4} ansetzen (senkt den Wert, auf den sich das Tragwerk stützt).")),
                     ))
-                    .remedy(Remedy::advisory(subject, copy("Or test more specimens and enter the new results (n, m, s) of the series.", "Oder mehr Proben prüfen und die neuen Ergebnisse (n, m, s) der Reihe eintragen.")));
+                    .remedy(Remedy::advisory(subject.clone(), copy("Or test more specimens and enter the new results (n, m, s) of the series.", "Oder mehr Proben prüfen und die neuen Ergebnisse (n, m, s) der Reihe eintragen.")));
             }
             report.push(builder.build());
             if let Some(kd) = k_d_n(f64::from(series.sample_size), series.variation_known > 0.0) {

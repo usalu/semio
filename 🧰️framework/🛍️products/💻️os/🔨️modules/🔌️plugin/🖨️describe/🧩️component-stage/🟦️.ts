@@ -93,7 +93,7 @@ export async function describeComponentStageV1(repoRoot: string, target: Compone
       const emission = await emitSemanticDescriptorV1(repoRoot, { component: deliverable.wasm, artifactRoot: dirname(deliverable.directory) }, {...control,emitter});
       writeFileSync(join(directory, DESCRIPTOR_PACK_FILENAME), emission.packBytes);
       writeFileSync(join(directory, DESCRIPTOR_JSON_FILENAME), emission.jsonBytes);
-    }, control.compiler.signal);
+    }, control.compiler.signal, target.packageName);
     const packBytes = await readArtifactBytesV1(join(output, DESCRIPTOR_PACK_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,control.compiler.signal), jsonBytes = await readArtifactBytesV1(join(output, DESCRIPTOR_JSON_FILENAME),CATALOG_DESCRIPTOR_MAX_BYTES,control.compiler.signal), pair = verifySemanticDescriptorPairBytesV1(jsonBytes, packBytes);
     if (pair.pluginId !== target.pluginId || pair.packageId !== target.packageId || pair.role !== target.role) throw new Error(`${target.pluginId}: the component describes ${pair.pluginId} (${pair.packageId}, ${pair.role})`);
     return Object.freeze({ pluginId: pair.pluginId, packageId: pair.packageId, role: pair.role, version: pair.version, componentSha256: component, jsonBytes, packBytes, semanticSha256: pair.semanticSha256 });

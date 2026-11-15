@@ -1,4 +1,4 @@
-//! 📍️ `change-pier-base-soil-unit-weight-n-m3` mutation leaf.
+//! 📍️ `change-pier-base-soil-unit-weight-nm3` mutation leaf.
 
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
@@ -17,7 +17,7 @@ impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangePierBaseSoilUnitWe
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "change",
         entity: "pier-base-soil-unit-weight-n-m3",
-        kind: "change-pier-base-soil-unit-weight-n-m3",
+        kind: "change-pier-base-soil-unit-weight-nm3",
         record: "ChangePierBaseSoilUnitWeightNM3",
     };
 

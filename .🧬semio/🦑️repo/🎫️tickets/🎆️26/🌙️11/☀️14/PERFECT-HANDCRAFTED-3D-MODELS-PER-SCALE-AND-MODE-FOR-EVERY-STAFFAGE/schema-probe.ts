@@ -1,0 +1,12 @@
+import { readFileSync } from "node:fs";
+import { checkVolumes, measureVolumes } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🟦️.ts";
+import { validateAsset } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🟦️.ts";
+const file = process.argv[2]!;
+const doc = JSON.parse(readFileSync(file, "utf8"));
+const asset = doc.asset ?? doc;
+const t0 = Date.now();
+const findings = checkVolumes(asset, process.argv[3] ? { rules: [process.argv[3] as never] } : {});
+console.log(`${findings.length} findings in ${Date.now() - t0} ms`);
+for (const f of findings) console.log(f.rule, f.code, f.path, f.message.en, JSON.stringify(f.measurements.map((m) => [m.name, +m.value.toFixed(4), m.limit])));
+console.log("validateAsset:", validateAsset(asset).length);
+for (const i of validateAsset(asset)) console.log("  issue", i.code, i.path, i.message.en);

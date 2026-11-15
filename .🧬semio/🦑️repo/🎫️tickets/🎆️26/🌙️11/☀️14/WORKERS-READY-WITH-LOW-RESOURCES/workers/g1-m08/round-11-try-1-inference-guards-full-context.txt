@@ -1,0 +1,95 @@
+Observed during this try at 2026-11-15T00:15:33Z
+[script] build:projects · Inferring projects: 27 of 48 projects · 4 running, longest 0 s: @semio-tech/framework-job-rs (language:cargo, 0 s, 0 rows), @semio-tech/framework-job-fault-publication-rs (language:rust, 0 s, 0 rows), @semio-tech/framework-job-publication-rs (language:rust, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:29:614:4:0:%40semio-tech%2Fframework-job-rs|language%3Acargo|0|0,%40semio-tech%2Fframework-job-fault-publication-rs|language%3Arust|0|0,%40semio-tech%2Fframework-job-publication-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:28:48:3:0:%40semio-tech%2Fframework-job-rs|language%3Acargo|0|0,%40semio-tech%2Fframework-job-publication-rs|language%3Arust|0|0,%40semio-tech%2Fframework-job-replacement-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 28 of 48 projects · 3 running, longest 0 s: @semio-tech/framework-job-rs (language:cargo, 0 s, 0 rows), @semio-tech/framework-job-publication-rs (language:rust, 0 s, 0 rows), @semio-tech/framework-job-replacement-rs (language:rust, 0 s, 0 rows)
+graph: waiting for memory headroom (1266 of 448 MB reserved, 3 projects running)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:31:614:2:0:%40semio-tech%2Fframework-job-rs|language%3Acargo|0|0,%40semio-tech%2Fframework-job-publication-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:30:48:1:0:%40semio-tech%2Fframework-job-rs|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 30 of 48 projects · 1 running, longest 0 s: @semio-tech/framework-job-rs (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: project @semio-tech/framework-job-rs (language:cargo) grew by 2513 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[capacity] waiting 33s for exec: not enough free memory (need 1536 MB; -499 MB spare above the 2048 MB floor, load 4.33; 3 running, 0 ahead); behind graph-farm (running, 1 job(s), 1536 MB), graph-plan (running, 1 job(s), 578 MB), workspace:setup (quiet, 1 job(s), 39 MB)
+
+Observed during this try at 2026-11-15T00:26:51Z
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+graph: waiting for memory headroom (1614 of 1623 MB reserved, 1 projects running)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: project @semio-tech/framework-os-kernel (language:cargo) grew by 2816 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:34:48:1:20:%40semio-tech%2Fframework-os-kernel|language%3Acargo|20|0:stopped|2816|1756|language%3Acargo","mode":"shared","elapsedMs":0}}
+
+Observed during this try at 2026-11-15T00:38:20Z
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[capacity] waiting 267s for exec: not enough free memory (need 1536 MB; -203 MB spare above the 2048 MB floor, load 6.01; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 5301 MB), workspace:setup (quiet, 1 job(s), 47 MB), graph-farm (running, 1 job(s), 0 MB)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (1508 of 481 MB reserved, 1 projects running)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:8:48:2:45:%40semio-tech%2Fframework-rs|language%3Acargo|45|0,%40semio-tech%2Fframework-process|project|0|0:waiting|1508|481|","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 8 of 48 projects · 2 running, longest 45 s: @semio-tech/framework-rs (language:cargo, 45 s, 0 rows), @semio-tech/framework-process (project, 0 s, 0 rows) · waiting for memory headroom (1508 of 481 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:56:614:2:45:%40semio-tech%2Fframework-rs|language%3Acargo|45|0,%40semio-tech%2Fframework-process|project|0|0:waiting|1508|481|","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: project @semio-tech/framework-process (project) grew by 2148 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+
+Observed during this try at 2026-11-15T00:38:20Z
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[capacity] waiting 267s for exec: not enough free memory (need 1536 MB; -203 MB spare above the 2048 MB floor, load 6.01; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 5301 MB), workspace:setup (quiet, 1 job(s), 47 MB), graph-farm (running, 1 job(s), 0 MB)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (1508 of 481 MB reserved, 1 projects running)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:8:48:2:45:%40semio-tech%2Fframework-rs|language%3Acargo|45|0,%40semio-tech%2Fframework-process|project|0|0:waiting|1508|481|","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 8 of 48 projects · 2 running, longest 45 s: @semio-tech/framework-rs (language:cargo, 45 s, 0 rows), @semio-tech/framework-process (project, 0 s, 0 rows) · waiting for memory headroom (1508 of 481 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:56:614:2:45:%40semio-tech%2Fframework-rs|language%3Acargo|45|0,%40semio-tech%2Fframework-process|project|0|0:waiting|1508|481|","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: project @semio-tech/framework-process (project) grew by 2148 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: project @semio-tech/framework-rs (language:cargo) grew by 1855 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:8:48:1:5:%40semio-tech%2Fframework-process|project|5|0","mode":"shared","elapsedMs":0}}
+
+Observed during this try at 2026-11-15T00:38:36Z
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (4198 of -4066 MB reserved, 1 projects running)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:9:48:2:10:%40semio-tech%2Fframework-process|project|10|0,%40semio-tech%2Fframework-replication-rs|language%3Acargo|0|0:waiting|4198|0|","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 9 of 48 projects · 2 running, longest 10 s: @semio-tech/framework-process (project, 10 s, 0 rows), @semio-tech/framework-replication-rs (language:cargo, 0 s, 0 rows) · waiting for memory headroom (4198 of 0 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:56:614:2:10:%40semio-tech%2Fframework-process|project|10|0,%40semio-tech%2Fframework-replication-rs|language%3Acargo|0|0:waiting|4198|0|","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[capacity] waiting 279s for exec: not enough free memory (need 1536 MB; -4110 MB spare above the 2048 MB floor, load 5.79; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 18399 MB), workspace:setup (quiet, 1 job(s), 47 MB), graph-farm (running, 1 job(s), 0 MB)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: project @semio-tech/framework-replication-rs (language:cargo) grew by 4198 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[capacity] waiting 284s for exec: not enough free memory (need 1536 MB; -4111 MB spare above the 2048 MB floor, load 6.04; 4 running, 0 ahead); behind graph-plan (running, 1 job(s), 18399 MB), workspace:setup (quiet, 1 job(s), 48 MB), graph-farm (running, 1 job(s), 0 MB)
+

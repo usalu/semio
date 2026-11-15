@@ -227,10 +227,10 @@ export type EllipseShape = { readonly kind: "ellipse"; readonly cx: number; read
 /** ⬛️ A rectangle with optional corner radius, lower-left at (`x`, `y`). In front geometry `followTip` stretches it vertically between the origin and the tip of its bone (a vertex at the bone origin height follows the y travel of the origin, one at the tip height the y travel of the tip, linearly between). */
 export type RectShape = { readonly kind: "rect"; readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly r?: number; readonly followTip?: boolean };
 
-/** 🔷️ A polygon or polyline through local points. In front geometry `followTip` stretches it vertically between the origin and the tip of its bone, as for {@link RectShape}. */
+/** 🔷️ A polygon or polyline through local points; a closed polygon is filled even-odd, so where it crosses itself the region wound an even number of times is a hole. In front geometry `followTip` stretches it vertically between the origin and the tip of its bone, as for {@link RectShape}. */
 export type PolyShape = { readonly kind: "poly"; readonly points: readonly (readonly [number, number])[]; readonly closed: boolean; readonly followTip?: boolean };
 
-/** 〰️ An SVG-style path (`M L H V C Q A Z`, absolute or relative) in local metres, y up. */
+/** 〰️ An SVG-style path (`M L H V C Q A Z`, absolute or relative) in local metres, y up. Every subpath is a ring of the shape and a filled path is painted even-odd: a subpath inside another is a hole, and subpaths that overlap each other leave the overlap unpainted, so separate parts are separate shapes. */
 export type PathShape = { readonly kind: "path"; readonly d: string };
 
 /** 🦿️ An end point of a {@link MemberShape}: metres from the origin of `bone` (default the shape's own bone; the shape's own bone or one of its ancestors) at rest, `x` along the bone (u), `y` along its normal (v), `z` lateral (w, left is +); `z` is required and never defaulted. */
@@ -252,7 +252,8 @@ export type Solid = { readonly kind: "revolved"; readonly axisBone: Slug; readon
 
 /** ✏️ An authored shape of one representation, bound to a bone. `region` binds it to one thermal region; a shape that merges several
  * surfaces at a small scale lists them in `regions` instead and is painted with their area-weighted value (labelled as merged). `hatch`
- * names a hatch of the representation drawn inside the shape. `pen` overrides the representation's pen of the role (paper mm). */
+ * names a hatch of the representation drawn inside the shape. `pen` overrides the representation's pen of the role (paper mm).
+ * Fill rule, one for every filled shape and every renderer and check: even-odd. A ring inside another is a hole, and the overlap of two rings of one shape is a hole too, so parts that overlap are separate shapes (or one union outline), never overlapping subpaths. */
 export type Shape = ShapeGeometry & {
   readonly id: Slug;
   readonly bone: Slug;
@@ -300,23 +301,30 @@ export type VolumeTransform = { readonly translation?: Vector3; readonly rotatio
 /** 🕰️ `count` copies of a solid: copy k = 0 .. count-1 is the solid after `transform`, moved by the step applied k times (a rotation of `rotationRad` about `rotationAxis` through `origin`, default the origin of the frame, then `translation`). */
 export type VolumeRepeat = { readonly count: number; readonly translation?: Vector3; readonly rotationAxis?: Vector3; readonly rotationRad?: number; readonly origin?: Vector3 };
 
-/** 🕸️ The fields every {@link VolumeSolid} carries: `bone` frames its coordinates and carries it (or, with `weights`, blends it over up to four bones that sum to 1), `material` an entry of the asset's materials, `role` the line-hierarchy role, `tone` the grey 0..1 of the solid views, `region`/`regions` its thermal regions, `maxDenominator` the largest preset denominator that still shows it. */
+/** ✂️ The faces of a solid that can be declared section cuts: the outward normal lies within 45 degrees of this bone axis (`-u`, `+u`, `-v`, `+v`, `-w`, `+w`). */
+export const SECTION_FACES = ["-u", "+u", "-v", "+v", "-w", "+w"] as const;
+
+/** 🧭️ One of {@link SECTION_FACES}. */
+export type SectionFace = (typeof SECTION_FACES)[number];
+
+/** 🕸️ The fields every {@link VolumeSolid} carries: `bone` frames its coordinates and carries it (or, with `weights`, blends it over up to four bones that sum to 1), `material` an entry of the asset's materials, `role` the line-hierarchy role, `tone` the grey 0..1 of the solid views, `slender` a cord, wire or rod at least 20 times as long as thick, `envelope` the envelope prism that replaces a finer lattice, `texture` a sheet-like texture part excluded from the silhouette comparisons, `sectionFaces` the faces that are section cuts and count for no thermal area. */
 export type VolumeSolidBase = {
   readonly id: Slug;
   readonly bone: Slug;
   readonly material: Slug;
   readonly role: ShapeRole;
   readonly tone: number;
-  readonly region?: Slug;
-  readonly regions?: readonly Slug[];
-  readonly maxDenominator?: ScaleDenominator;
+  readonly slender?: boolean;
+  readonly envelope?: boolean;
+  readonly texture?: boolean;
+  readonly sectionFaces?: readonly SectionFace[];
   readonly weights?: readonly { readonly bone: Slug; readonly weight: number }[];
   readonly transform?: VolumeTransform;
   readonly repeat?: VolumeRepeat;
   readonly tags?: readonly Slug[];
 };
 
-/** 💡️ One declarative solid of a {@link Volume} in the bone-local rest frame of its bone, in metres: `box` (centred, edges along u, v, w, optionally rounded), `ellipsoid` (centred, semi-axes along u, v, w), `capsule` (hull of two spheres, optionally elliptic through `lateralScale`), `revolve` (a [axial, radial] profile about the axis through `origin`), `extrude` (a polygon with holes on `plane` pushed from `from` to `to`, optionally tapered) and `loft` (superelliptic sections joined in order). */
+/** 💡️ One declarative solid of a {@link AuthoredVolume} list in the bone-local rest frame of its bone, in metres: `box` (centred, edges along u, v, w, optionally rounded), `ellipsoid` (centred, semi-axes along u, v, w), `capsule` (hull of two spheres, optionally elliptic through `lateralScale`), `revolve` (a [axial, radial] profile about the axis through `origin`), `extrude` (a polygon with holes on `plane` pushed from `from` to `to`, optionally tapered: `taperTo` = [scale at `from`, scale at `to`] about the centroid of the outer ring, never a scale along u and v) and `loft` (superelliptic sections joined in order of travel, the skin always outward). A `revolve` profile whose first point equals its last is a closed loop (shell, wall, bead, torus); any other profile is closed through the axis and gives a filled body. */
 export type VolumeSolid = VolumeSolidBase &
   (
     | { readonly kind: "box"; readonly size: Vector3; readonly cornerRadius?: number }
@@ -327,8 +335,48 @@ export type VolumeSolid = VolumeSolidBase &
     | { readonly kind: "loft"; readonly sections: readonly { readonly at: Vector3; readonly rx: number; readonly ry: number; readonly exponent?: number; readonly rotation?: Quaternion }[]; readonly capStart: boolean; readonly capEnd: boolean }
   );
 
-/** 🔧️ The declarative 3D volume of an asset: its solids bound to the bones of the rig in the bone-local rest frame, the source of the engine-neutral model, the GLB and FBX files and the axonometric view. `decisions` states what the solids stand for and which simplifications were made. */
-export type Volume = { readonly status: "authored"; readonly solids: readonly VolumeSolid[]; readonly decisions: readonly Text[] };
+/** 🔥️ The lists of an {@link AuthoredVolume}: `body` (the tone views), `thermal` (the thermal model made spatial) and `structure` (the structural idealisation made spatial). */
+export const VOLUME_LISTS = ["body", "thermal", "structure"] as const;
+
+/** 🗒️ One of {@link VOLUME_LISTS}. */
+export type VolumeList = (typeof VOLUME_LISTS)[number];
+
+/** 🧱️ What a {@link StructuralSolid} is: the load-bearing cross-section of a bone (`member`), a rig `joint`, a `support` at an anchor of `structure.supports` or a compact concentrated `mass` at its centre of mass. */
+export const STRUCTURAL_PARTS = ["member", "joint", "support", "mass"] as const;
+
+/** 🧩️ One of {@link STRUCTURAL_PARTS}. */
+export type StructuralPart = (typeof STRUCTURAL_PARTS)[number];
+
+/** 🔗️ A solid of `thermal` or `structure` that reuses the geometry of the body solid `of` of the same scale where its surface is that body surface: shape, bone, material and placement are shared by construction. */
+export type SolidReference = { readonly id: Slug; readonly of: Slug };
+
+/** 🌡️ A solid of the `thermal` list: its own {@link VolumeSolid} or a {@link SolidReference}, bound to the thermal region `region` and, for one layer of a multi-layer region (nested shells, innermost first), to `layer`. */
+export type ThermalSolid = (VolumeSolid | (SolidReference & { readonly sectionFaces?: readonly SectionFace[] })) & { readonly region: Slug; readonly layer?: Slug };
+
+/** 🏗️ A solid of the `structure` list: its own {@link VolumeSolid} or a {@link SolidReference}, naming the bone `member` it idealises and what it is (`part`); a `support` carries the `anchor` of `structure.supports` it supports. */
+export type StructuralSolid = (VolumeSolid | (SolidReference & { readonly sectionFaces?: readonly SectionFace[] })) & StructuralLabel;
+
+/** 🏷️ What every {@link StructuralSolid} says about itself: a support names its anchor, the other parts have none. */
+export type StructuralLabel = { readonly member: Slug } & ({ readonly part: "support"; readonly anchor: Slug } | { readonly part: Exclude<StructuralPart, "support">; readonly anchor?: undefined });
+
+/** 🔧️ The handcrafted 3D model of an asset at one authored scale, individually authored against that scale's own 2D shapes: `body` carries the tone views, `thermal` and `structure` the two physical models made spatial, `decisions` what was merged or simplified against the finer scale and why. */
+export type AuthoredVolume = {
+  readonly status: "authored";
+  readonly denominator: ScaleDenominator;
+  readonly body: readonly VolumeSolid[];
+  readonly thermal: readonly ThermalSolid[];
+  readonly structure: readonly StructuralSolid[];
+  readonly decisions: readonly Text[];
+};
+
+/** 🚫️ The volume of a scale whose representation is unavailable; the reason lives in `representations[denominator]`. */
+export type UnavailableVolume = { readonly status: "unavailable"; readonly denominator: ScaleDenominator };
+
+/** ⚖️ The volume decision for one preset scale, mirroring the representation of that scale. */
+export type ScaleVolume = AuthoredVolume | UnavailableVolume;
+
+/** 🗃️ The volumes of an asset, one per preset scale, keyed like `representations`. */
+export type Volumes = Readonly<Record<RepresentationKey, ScaleVolume>>;
 //#endregion 🧊️Volume
 
 //#region 🖨️Representations
@@ -372,8 +420,8 @@ export type AuthoredRepresentation = {
   readonly decisions: RepresentationDecisions;
 };
 
-/** ✂️ A viewpoint drawn as a section: the cut plane lies at `plane` metres along the view axis (elevation: the lateral position z of a vertical plane along the forward axis, seen from the right, the part at smaller z removed; front: the forward position x of a plane across the forward axis, seen from ahead, the part at larger x removed; plan: the height y of a horizontal plane, seen from above, the part above removed) and is named by `label` (such as A-A). The side elevation shows the cut-line marker of a front or plan section, the plan the cut-line marker of an elevation section; sheets and the viewer caption the cut "Section A-A" / "Schnitt A-A" (elevation and front) and "Plan section B-B" / "Grundriss-Schnitt B-B" (plan). */
-export type ViewSection = { readonly plane: number; readonly label: Text };
+/** ✂️ A viewpoint drawn as a section: the cut plane lies at `plane` metres along the view axis (elevation: the lateral position z of a vertical plane along the forward axis, seen from the right, the part at smaller z removed; front: the forward position x of a plane across the forward axis, seen from ahead, the part at larger x removed; plan: the height y of a horizontal plane, seen from above, the part above removed) and is named by `label` (such as A-A). `retained` (`far` by default) names the half the view shows: `far` the half behind the plane seen from the viewpoint (the conventional section), `near` the half in front of it. The side elevation shows the cut-line marker of a front or plan section, the plan the cut-line marker of an elevation section; sheets and the viewer caption the cut "Section A-A" / "Schnitt A-A" (elevation and front) and "Plan section B-B" / "Grundriss-Schnitt B-B" (plan). */
+export type ViewSection = { readonly plane: number; readonly label: Text; readonly retained?: "far" | "near" };
 
 /** ↪️ What to offer instead of an unavailable representation: another scale of the asset, a symbol of the asset, or another asset. */
 export type Alternative = { readonly kind: "scale"; readonly denominator: ScaleDenominator } | { readonly kind: "symbol"; readonly symbol: Slug } | { readonly kind: "asset"; readonly asset: Slug };
@@ -609,6 +657,7 @@ export type ThermalRegion = {
   readonly model: ThermalModelKind;
   readonly material: Slug;
   readonly areaM2: number;
+  readonly areaBasis?: "exchange";
   readonly characteristicLengthM: number;
   readonly geometry: "cylinder" | "sphere" | "vertical-plate" | "horizontal-plate-up" | "horizontal-plate-down";
   readonly skyViewFactor: number;
@@ -752,7 +801,7 @@ export type Asset = {
   readonly dimensions: Dimensions;
   readonly materials: readonly Material[];
   readonly rig: Rig;
-  readonly volume: Volume;
+  readonly volumes: Volumes;
   readonly anchors: readonly Anchor[];
   readonly representations: Readonly<Record<RepresentationKey, Representation>>;
   readonly symbols: readonly SymbolRepresentation[];

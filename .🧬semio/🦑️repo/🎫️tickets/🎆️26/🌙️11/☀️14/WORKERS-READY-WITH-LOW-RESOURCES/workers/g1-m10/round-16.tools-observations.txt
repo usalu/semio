@@ -1,0 +1,19 @@
+2026-11-15T03:14:53.148170+00:00
+  PID  PPID  %CPU    RSS     ELAPSED COMM
+99818 99816   9.0 1563440       21:21 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+ 7590  7574  88.7 1535008       06:56 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+ 1812  1768  15.8 501920 01-00:48:14 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/157.0.8103.78/Helpers/Codex (Aperitif Renderer).app/Contents/MacOS/Codex (Aperitif Renderer)
+ 7574  7563   0.9 479648       06:59 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+ 1768     1   0.9 274176 01-00:48:18 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT
+2026-11-15T03:40:38.742387+00:00
+  PID  PPID  %CPU    RSS     ELAPSED COMM
+ 7590  7574  96.9 2295552       32:41 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+99818 99816 104.7 1575536       47:06 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+ 1812  1768   2.4 523056 01-01:13:59 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/157.0.8103.78/Helpers/Codex (Aperitif Renderer).app/Contents/MacOS/Codex (Aperitif Renderer)
+ 7574  7563   0.3 484112       32:44 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+pressure=1
+2026-11-15T03:49:37.353337+00:00
+  PID  PPID  %CPU    RSS     ELAPSED COMM
+ 7590  7574  29.7 2296384       41:40 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+99818 99816  16.2 1577680       56:05 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun
+27757 27720   0.0 638464       05:42 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer)

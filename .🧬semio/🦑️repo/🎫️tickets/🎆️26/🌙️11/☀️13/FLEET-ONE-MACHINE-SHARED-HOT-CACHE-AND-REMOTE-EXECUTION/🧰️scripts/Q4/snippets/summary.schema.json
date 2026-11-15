@@ -1,0 +1,29 @@
+{
+  "description": "Authored numbers and texts of the summary that an Nx run leaves when it ends in failure. `reasonPattern`: the first line of a failed task's output that matches it is its reason, otherwise its last line. `maximumTasks`: tasks named in full. The verdict says whether another rerun of the whole run is likely to help: `inputs` (the task read files a peer was editing), `implementation` (the build implementation is outdated, so the command starts again with the current one), `no` (the task itself failed).",
+  "const": {
+    "version": 1,
+    "maximumTasks": 16,
+    "maximumReasonCharacters": 160,
+    "reasonPattern": "(Error|error|failed|refused|stale|unserved|cannot|not found|differs)",
+    "texts": {
+      "en": {
+        "header": "Nx run failed: {failed} task(s) did not succeed after {reruns} rerun(s) of the whole run.",
+        "task": "- {task}: {reason} ({verdict})",
+        "more": "- and {more} more failed task(s)",
+        "notRun": "Not run because a task they depend on failed ({count}): {tasks}",
+        "inputs": "another rerun is likely to help: a peer edited files the task reads",
+        "implementation": "another rerun is likely to help: the command starts again with the current build implementation",
+        "no": "another rerun is unlikely to help: the task itself failed"
+      },
+      "de": {
+        "header": "Nx-Lauf fehlgeschlagen: {failed} Aufgabe(n) gelang(en) nach {reruns} Wiederholung(en) des ganzen Laufs nicht.",
+        "task": "- {task}: {reason} ({verdict})",
+        "more": "- und {more} weitere fehlgeschlagene Aufgabe(n)",
+        "notRun": "Nicht ausgeführt, weil eine Aufgabe, von der sie abhängen, fehlschlug ({count}): {tasks}",
+        "inputs": "eine weitere Wiederholung hilft wahrscheinlich: ein anderer Prozess bearbeitete Dateien, die die Aufgabe liest",
+        "implementation": "eine weitere Wiederholung hilft wahrscheinlich: der Befehl startet mit der aktuellen Build-Implementierung neu",
+        "no": "eine weitere Wiederholung hilft wahrscheinlich nicht: die Aufgabe selbst ist fehlgeschlagen"
+      }
+    }
+  }
+}

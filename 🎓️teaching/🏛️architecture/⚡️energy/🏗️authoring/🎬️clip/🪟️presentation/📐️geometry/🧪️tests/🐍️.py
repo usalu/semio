@@ -123,7 +123,7 @@ class ExactUIParityTests(unittest.TestCase):
         hierarchy = importlib.import_module(PRESENTATION + ".🥞️hierarchy.🐍️")
         geometry = importlib.import_module(PRESENTATION + ".📐️geometry.🐍️")
         typography = importlib.import_module(PRESENTATION + ".🔤️typography.🐍️")
-        contract = hierarchy.hierarchy_contract()
+        contract = importlib.import_module(PRESENTATION + ".🖼️posters.🧪️tests.🧰️synthetic.🐍️").catalog()
         video = hierarchy.ordered_chapters()[0]
         expected = geometry.window_geometry(contract["focus"]["rect"], typography.text_metrics(video["title"]["de"], CASES["shell"]["fontSize"])["advance"] + CASES["shell"]["controlSize"] + CASES["shell"]["gap"])
         with tempfile.TemporaryDirectory(dir=os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]) as directory:

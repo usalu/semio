@@ -128,7 +128,9 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
  for(const row of fixture.elasticRustCapacity){expect(validate(row),row.id).toBe(true);expect(elasticCapacityV1(rule,row.minimumBytes,row.hostFreeBytes),row.id).toBe(row.capacityBytes);expect(independent[row.id],row.id).toBe(row.capacityBytes);expect(row.capacityBytes%1048576).toBe(0);expect(row.capacityBytes).toBeGreaterThanOrEqual(row.minimumBytes);expect(row.capacityBytes).toBeLessThanOrEqual(rule.maximumBytes);}
  const grown=structuredClone(policy);grown.partitions.rust.capacityBytes=60*2**30;grown.partitions.rust.maximumLogicalBytes=60*2**30-1048576;grown.maximumBytes+=60*2**30-declared;
  const budget=readRepositoryCacheBudgetV1(grown);expect(budget.partitions.rust.filesystemBytes).toBe(60*2**30-1048576);expect(budget.headroomBytes).toBe(readRepositoryCacheBudgetV1(policy).headroomBytes);
- const strict=repositoryStrictStorageV1(repository.root);expect(strict.capacityBytes).toBeGreaterThanOrEqual(declared);expect(strict.filesystemBytes).toBe(strict.capacityBytes-1048576);
+ expect(rule.minimumBytes).toBeLessThan(declared);expect(rule.minimumBytes).toBeLessThanOrEqual(rule.maximumBytes);
+ for(const free of Array.from({length:600},(_,i)=>(i+34)*2**30)){const capacity=elasticCapacityV1(rule,rule.minimumBytes,free);expect(capacity,String(free)).toBeLessThanOrEqual(free-64*2**20);expect(capacity).toBeGreaterThanOrEqual(rule.minimumBytes);}
+ const strict=repositoryStrictStorageV1(repository.root);expect(strict.capacityBytes).toBeGreaterThanOrEqual(rule.minimumBytes);expect(strict.capacityBytes).toBeLessThanOrEqual(rule.maximumBytes);expect(strict.filesystemBytes).toBe(strict.capacityBytes-1048576);
 });
 
 test("the elastic graph capacity follows need and host free space, never below the declared capacity, and agrees with an independent Python model",()=>{
@@ -213,5 +215,53 @@ test("a tiny foreign receipt of one partition is ignored for that partition and 
   const declared=policy.partitions.dependencies,directory=join(root,declared.directory);mkdirSync(directory,{recursive:true});writeFileSync(join(directory,"image.json"),JSON.stringify({maximumPhysicalBytes:33554432}));
   expect(pinnedCapacityV1(directory,declared.capacityBytes)).toBe(33554432);
   const budget=repositoryCacheBudgetV1(root);expect(budget.partitions.dependencies.maximumLogicalBytes).toBeGreaterThan(0);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a raw fixed image keeps freed blocks, the bloat rule recognises it, and the elastic partitions carry the rule; agrees with an independent Python model",()=>{
+ const {elasticBloatedV1}=require("../📐️elastic/🟦️.ts"),GiB=2**30,rows:[number,number,number][]=[];
+ for(const allocated of[0,GiB,3*GiB,10*GiB,24*GiB,45*GiB])for(const used of[0,GiB/2,GiB,3*GiB,12*GiB])for(const free of[2*GiB,20*GiB,47*GiB,49*GiB,300*GiB])rows.push([allocated,used,free]);
+ for(const name of["graph","products","rust"] as const){
+  const rule=policy.elastic[name];expect(new Ajv({strict:true}).compile(schema.$defs.elasticPartition)(rule)).toBe(true);
+  const model=`import json,sys
+rule,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+out=[]
+for a,u,f in rows:
+    floor=rule["reclaimFloorBytes"]//8 if f<rule["reclaimTightHostFreeBytes"] else rule["reclaimFloorBytes"]
+    out.append(a-u>=floor and a*100>=u*rule["reclaimRatioPercent"])
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(rows)]);
+  expect(run.exitCode,run.stderr.toString()).toBe(0);
+  const independent=JSON.parse(run.stdout.toString()) as boolean[];
+  rows.forEach(([a,u,f],i)=>expect(elasticBloatedV1(rule,a,u,f),name+" "+[a,u,f]).toBe(independent[i]));
+  expect(elasticBloatedV1(rule,24*GiB,2.7*GiB,20*GiB)).toBe(true);
+  expect(elasticBloatedV1(rule,rule.reclaimFloorBytes/2,0,300*GiB)).toBe(false);
+ }
+});
+
+test("a pressed elastic image grows by half within the host and the maximum, the grown size outlives the reset and the next image is born with it; agrees with an independent Python model",()=>{
+ const {elasticGrowthV1,effectiveCapacityV1,writeElasticGrowthV1}=require("../📐️elastic/🟦️.ts"),GiB=2**30,rows:[number,number,number][]=[];
+ for(const capacity of[6*GiB,12*GiB,24*GiB,32*GiB])for(const free of[2*GiB,10*GiB,30*GiB,92*GiB,500*GiB])for(const allocated of[0,6*GiB])rows.push([capacity,free,allocated]);
+ for(const name of["graph","products","rust"] as const){
+  const rule=policy.elastic[name],model=`import json,sys,math
+rule,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+out=[]
+for c,f,a in rows:
+    ceiling=min(rule["maximumBytes"],(f+a)*(100-rule["hostFreeReservePercent"])//100)
+    wanted=-(-(c*3//2)//rule["alignBytes"])*rule["alignBytes"]
+    target=min(wanted,ceiling)//rule["alignBytes"]*rule["alignBytes"]
+    out.append(max(c,target))
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rule),JSON.stringify(rows)]);
+  expect(run.exitCode,run.stderr.toString()).toBe(0);
+  const independent=JSON.parse(run.stdout.toString()) as number[];
+  rows.forEach(([c,f,a],i)=>expect(elasticGrowthV1(rule,c,f,a),name+" "+[c,f,a]).toBe(independent[i]));
+ }
+ const graph=policy.elastic.graph;expect(elasticGrowthV1(graph,12*GiB,92*GiB)).toBe(18*GiB);expect(elasticGrowthV1(graph,24*GiB,500*GiB)).toBe(24*GiB);
+ const root=mkdtempSync(join(tmpdir(),"elastic-growth-"));
+ try{
+  const directory=join(root,"g");mkdirSync(directory);mkdirSync(join(root,"c"));
+  const born=effectiveCapacityV1(directory,graph.minimumBytes,graph);
+  writeElasticGrowthV1(directory,born+6*GiB);
+  const hostFree=require("node:fs").statfsSync(root),allowed=Math.floor(hostFree.bavail*hostFree.bsize*(100-graph.hostFreeReservePercent)/100/graph.alignBytes)*graph.alignBytes;expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBe(Math.max(born,Math.min(born+6*GiB,graph.maximumBytes,allowed)));
+  expect(effectiveCapacityV1(directory,graph.minimumBytes,graph)).toBeLessThanOrEqual(graph.maximumBytes);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

@@ -1,0 +1,6 @@
+import{readdirSync,readFileSync,statSync}from"node:fs";import{brotliDecompressSync}from"node:zlib";import{createHash}from"node:crypto";
+const dir=process.argv[2],names=readdirSync(dir).filter(n=>n.endsWith(".json.br")).map(n=>[n,statSync(dir+"/"+n).size] as const).filter(x=>x[1]>20000&&x[1]<60000).slice(0,30);
+const t:Record<string,number>={read:0,unpack:0,parse:0,sha:0,sidecar:0};let text0=0,mem=0,facts=0;const sha=(x:string)=>createHash("sha256").update(x).digest("hex");const q=new Map<string,string>();
+const mark=()=>performance.now();
+for(const[n]of names){let a=mark();const bytes=readFileSync(dir+"/"+n);t.read+=mark()-a;a=mark();const text=brotliDecompressSync(bytes).toString("utf8");t.unpack+=mark()-a;text0+=text.length;a=mark();const r=JSON.parse(text);t.parse+=mark()-a;a=mark();sha(JSON.stringify(r.rows)+r.layers.join(",")+r.valueDigest);t.sha+=mark()-a;a=mark();if(r.sidecar?.members)for(const w of r.sidecar.members)if(w)for(const s of w){if(!q.has(s))q.set(s,s);mem++;}if(r.sidecar?.facts)facts+=r.sidecar.facts.length;t.sidecar+=mark()-a;}
+console.log("entries",names.length,"avg text",Math.round(text0/names.length),"members/entry",Math.round(mem/names.length),"per-entry ms",JSON.stringify(Object.fromEntries(Object.entries(t).map(([k,v])=>[k,+(v/names.length).toFixed(1)]))));

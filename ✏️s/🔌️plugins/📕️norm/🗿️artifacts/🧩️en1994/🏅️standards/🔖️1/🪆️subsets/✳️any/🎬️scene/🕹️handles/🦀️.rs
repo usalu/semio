@@ -4,9 +4,8 @@
 //!
 //! 📏️ Beams: span, slab thickness, effective width, the position, diameter and height of every stud, sheeting height and orientation, section choice. Columns: length (the buckling length), outer size, wall thickness, bar area (steel ratio), bar axis distance and the encased I-section. Slabs: span, thickness, sheeting height and orientation.
 
-use super::beams::MAX_STUDS_DRAWN;
 use super::facts::{BeamFacts, ColumnFacts, SlabFacts};
-use super::kit::{base_id, entity_ref, loc};
+use super::kit::{base_id, entity_ref, loc, MAX_STUDS_DRAWN};
 use super::layout::{Layout, Placement, Pose, STRIP_WIDTH};
 use super::model::{En1994Snapshot, SteelSection};
 use super::scene::*;

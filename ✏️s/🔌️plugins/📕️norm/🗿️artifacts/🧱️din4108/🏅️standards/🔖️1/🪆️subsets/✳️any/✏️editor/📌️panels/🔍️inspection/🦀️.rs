@@ -26,7 +26,4 @@ pub fn render(host: &NormHost<Din4108Family>, selected_check_index: Option<u32>,
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

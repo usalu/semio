@@ -1,0 +1,10 @@
+pre-run facts, taken 2026-11-14T16:00:09Z
+replica code digest (.cache/f/health.json): "code":"39e3688eb315d48831772ca305d78bcb6f35975794444da47750bc5fa7459759"
+repo service host process (ps -eo pid,etime,rss,args | grep "service host"): none, so nothing was stopped
+last 5 lines of .cache/f/sidecars/build-agent.log:
+2026-11-14T14:02:49.892Z graph-server: the graph read ended with status 1 after 2702 s: Internal error: Original Script process interrupted
+2026-11-14T14:12:51.973Z graph-server: refreshing the fleet generation in the background (5 s quiet, 602 s since the last)
+2026-11-14T14:57:52.730Z graph-server: the graph read ended with status 1 after 2701 s: Internal error: Original Script process interrupted
+2026-11-14T15:07:55.019Z graph-server: refreshing the fleet generation in the background (1 s quiet, 602 s since the last)
+2026-11-14T15:52:55.620Z graph-server: the graph read ended with status 1 after 2701 s: Internal error: Original Script process interrupted
+memory: Mem:           15848        5718        2463         318        8322       10130

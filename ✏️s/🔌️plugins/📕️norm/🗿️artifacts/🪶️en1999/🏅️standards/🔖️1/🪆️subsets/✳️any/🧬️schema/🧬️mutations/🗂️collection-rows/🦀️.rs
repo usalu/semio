@@ -19,4 +19,4 @@ pub mod insert_section;
 pub mod remove_section;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_en1999_mut_collection_rows_connection_shell::{insert_connection, remove_connection, insert_shell, remove_shell};
+pub use semio_s_artifact_norm_en1999_mut_rows_connection_shell::{insert_connection, remove_connection, insert_shell, remove_shell};

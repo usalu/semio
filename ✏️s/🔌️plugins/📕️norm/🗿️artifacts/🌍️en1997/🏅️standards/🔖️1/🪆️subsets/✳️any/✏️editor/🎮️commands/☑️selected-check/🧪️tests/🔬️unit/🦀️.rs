@@ -1,5 +1,9 @@
 use crate::commands::selected_check::*;
 use semio_plugin::HistoryView;
+use semio_plugin::NoConfig;
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 
 #[semio_framework_async_macros::async_test]
 async fn handle_emits_only_a_config_operation() {

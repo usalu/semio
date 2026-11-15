@@ -8,6 +8,7 @@ use super::record_families::{BuildingSystemNumber, RecordFamilyId};
 use super::sheet_attributes::{GenericAttribute, GenericAttributes, HeatGeneratorAttributes, NativeRecord, PumpHeatingAttributes, RadiatorAttributes, SheetAttributes, ValveHeatingAttributes};
 use super::sheet_registry::{EditionId, SheetId};
 use super::Vdi3805Snapshot;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::BTreeMap;
 
 pub fn reference_fixture() -> Vdi3805Snapshot {
@@ -131,7 +132,7 @@ pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
     product.components = vec![CompositionLink { component_id: "ACT-01".into(), quantity: 1 }];
     let mut catalog = ManufacturerCatalog { file: file.clone(), products: vec![product, accessory], extensions: ExtensionBag::default() };
 
-    let geometry = BTreeMap::from([(
+    let geometry = RetainedOrderedMap::from([(
         "geom-valve-50".into(),
         ParametricGeometry {
             id: "geom-valve-50".into(),
@@ -143,10 +144,10 @@ pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
                 direction: [-1.0, 0.0, 0.0],
                 diameter_mm: Some(50.0),
             }],
-            parameters: BTreeMap::from([("scale".into(), 1.0), ("clearance".into(), 0.01)]),
+            parameters: RetainedOrderedMap::from([("scale".into(), 1.0), ("clearance".into(), 0.01)]),
         },
     )]);
-    let curves = BTreeMap::from([(
+    let curves = RetainedOrderedMap::from([(
         "curve-kvs".into(),
         CharacteristicCurve {
             id: "curve-kvs".into(),
@@ -159,7 +160,7 @@ pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
     let index = CatalogIndex::from_catalog(&catalog);
     Vdi3805Snapshot {
         catalog,
-        edition_profile: BTreeMap::new(),
+        edition_profile: RetainedOrderedMap::new(),
         correction_as_of: EditionId::new(2024, 1),
         strict_mode: false,
         index,
@@ -284,12 +285,12 @@ fn snapshot_with_products(products: Vec<CatalogueProduct>) -> Vdi3805Snapshot {
     let index = CatalogIndex::from_catalog(&catalog);
     Vdi3805Snapshot {
         catalog,
-        edition_profile: BTreeMap::new(),
+        edition_profile: RetainedOrderedMap::new(),
         correction_as_of: EditionId::new(2024, 1),
         strict_mode: false,
         index,
-        geometry: BTreeMap::new(),
-        curves: BTreeMap::new(),
+        geometry: RetainedOrderedMap::new(),
+        curves: RetainedOrderedMap::new(),
         limits: SecurityLimits::default(),
     }
 }
@@ -318,8 +319,8 @@ pub fn conforming_blatt_3_dataset() -> Vdi3805Snapshot {
     sync_titles_into_records(&mut doc.catalog.products[0]);
     doc.catalog.products[0].configuration.geometry_ref = None;
     doc.catalog.products[0].configuration.function_refs.clear();
-    doc.geometry.clear();
-    doc.curves.clear();
+    doc.geometry.cold_clear();
+    doc.curves.cold_clear();
     doc.catalog.file.record_count = doc.catalog.products.iter().map(|p| p.records.len() as u32).sum();
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc
@@ -355,13 +356,13 @@ pub fn conforming_blatt_5_dataset() -> Vdi3805Snapshot {
         qh_curve_ref: Some("curve-qh".into()),
     });
     doc.catalog.products[0].configuration.function_refs = vec!["curve-qh".into()];
-    if let Some(old) = doc.curves.remove("curve-kvs") {
+    if let Some(old) = doc.curves.cold_remove("curve-kvs") {
         let mut qh = old;
         qh.id = "curve-qh".into();
         qh.x_unit = VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01);
         qh.y_unit = VdiUnit::absolute("m", VdiQuantityKind::Length, 1.0);
         qh.points = vec![CurvePoint { x: 0.0, y: 8.0 }, CurvePoint { x: 50.0, y: 6.0 }, CurvePoint { x: 100.0, y: 2.0 }];
-        doc.curves.insert("curve-qh".into(), qh);
+        doc.curves.cold_insert("curve-qh".into(), qh);
     }
     sync_identity_into_records(&mut doc.catalog.products[0]);
     sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
@@ -401,8 +402,8 @@ pub fn conforming_blatt_6_dataset() -> Vdi3805Snapshot {
     sync_titles_into_records(&mut doc.catalog.products[0]);
     doc.catalog.products[0].configuration.geometry_ref = None;
     doc.catalog.products[0].configuration.function_refs.clear();
-    doc.geometry.clear();
-    doc.curves.clear();
+    doc.geometry.cold_clear();
+    doc.curves.cold_clear();
     doc.catalog.file.record_count = doc.catalog.products.iter().map(|p| p.records.len() as u32).sum();
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc

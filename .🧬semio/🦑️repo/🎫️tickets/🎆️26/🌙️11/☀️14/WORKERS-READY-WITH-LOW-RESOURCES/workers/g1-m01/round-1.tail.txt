@@ -1,0 +1,200 @@
+Reading the project graph slice (785 s): owners 144 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 5, 0), @semio-tech/framework-renderer-react (project, 5, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 4, 0).
+Reading the project graph slice (787 s): owners 144 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 5, 0), @semio-tech/framework-renderer-react (project, 5, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 4, 0).
+Reading the project graph slice (789 s): owners 144 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 5, 0), @semio-tech/framework-renderer-react (project, 5, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 4, 0).
+Reading the project graph slice (791 s): owners 144 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 10, 0), @semio-tech/framework-renderer-react (project, 10, 0), @semio-tech/framework-renderer-wgpu (language:cargo, 10, 0).
+Reading the project graph slice (793 s): owners 146 of 703.
+[repo] still working after 3260 s; last phase started: source.served
+Reading the project graph slice (795 s): owners 149 of 703.
+Reading the project graph slice (797 s): owners 149 of 703.
+Reading the project graph slice (799 s): owners 149 of 703.
+[repo] still working after 830 s; last phase started: door.script
+Reading the project graph slice (801 s): owners 150 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 21, 0), @semio-tech/framework-renderer-react (project, 20, 111), @semio-tech/framework-renderer-wgpu (language:cargo, 20, 0).
+Reading the project graph slice (803 s): owners 150 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 21, 0), @semio-tech/framework-renderer-react (project, 20, 111), @semio-tech/framework-renderer-wgpu (language:cargo, 20, 0).
+Reading the project graph slice (805 s): owners 151 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 26, 166), @semio-tech/framework-renderer-wgpu (language:cargo, 25, 0).
+Reading the project graph slice (807 s): owners 151 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 26, 166), @semio-tech/framework-renderer-wgpu (language:cargo, 25, 0).
+Reading the project graph slice (809 s): owners 151 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 26, 166), @semio-tech/framework-renderer-wgpu (language:cargo, 25, 0).
+Reading the project graph slice (811 s): owners 151 of 703; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 31, 166), @semio-tech/framework-renderer-wgpu (language:cargo, 30, 0).
+Reading the project graph slice (813 s): owners 152 of 703.
+Reading the project graph slice (815 s): owners 152 of 703; running (name, kind, seconds, rows): @semio-tech/framework-renderer-wgpu (language:cargo, 35, 1784).
+Reading the project graph slice (817 s): owners 152 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (819 s): owners 153 of 703.
+Reading the project graph slice (821 s): owners 153 of 703.
+Reading the project graph slice (823 s): owners 153 of 703.
+[repo] still working after 3290 s; last phase started: source.served
+Reading the project graph slice (825 s): owners 153 of 703.
+Reading the project graph slice (827 s): owners 153 of 703.
+Reading the project graph slice (829 s): owners 153 of 703.
+[repo] still working after 860 s; last phase started: door.script
+Reading the project graph slice (831 s): owners 153 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 0, 0).
+Reading the project graph slice (833 s): owners 153 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 2, 19), @semio-tech/framework-replication (project, 2, 0), @semio-tech/framework-replication-rs (language:cargo, 2, 0).
+Reading the project graph slice (835 s): owners 153 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 2, 19), @semio-tech/framework-replication (project, 2, 0), @semio-tech/framework-replication-rs (language:cargo, 2, 0).
+Reading the project graph slice (837 s): owners 153 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 5, 19), @semio-tech/framework-replication (project, 5, 0), @semio-tech/framework-replication-rs (language:cargo, 5, 0).
+Reading the project graph slice (839 s): owners 153 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 5, 19), @semio-tech/framework-replication (project, 5, 0), @semio-tech/framework-replication-rs (language:cargo, 5, 0).
+Reading the project graph slice (841 s): owners 154 of 703.
+Reading the project graph slice (843 s): owners 154 of 703.
+Reading the project graph slice (845 s): owners 156 of 703.
+Reading the project graph slice (847 s): owners 156 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 16, 84), @semio-tech/framework-replication-rs (language:cargo, 15, 0), @semio-tech/framework-surface-rs (language:cargo, 14, 0).
+Reading the project graph slice (849 s): owners 156 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 16, 84), @semio-tech/framework-replication-rs (language:cargo, 15, 0), @semio-tech/framework-surface-rs (language:cargo, 14, 0).
+Reading the project graph slice (851 s): owners 157 of 703.
+Reading the project graph slice (853 s): owners 159 of 703.
+[repo] still working after 3320 s; last phase started: source.served
+Reading the project graph slice (855 s): owners 159 of 703.
+Reading the project graph slice (857 s): owners 159 of 703.
+Reading the project graph slice (859 s): owners 159 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 28, 84), @semio-tech/framework-replication-rs (language:cargo, 28, 0), @semio-tech/framework-sqlite-snapshot-rs (language:cargo, 26, 0).
+[repo] still working after 890 s; last phase started: door.script
+Reading the project graph slice (861 s): owners 160 of 703.
+Reading the project graph slice (863 s): owners 160 of 703.
+Reading the project graph slice (865 s): owners 160 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 33, 34168), @semio-tech/framework-replication-rs (language:cargo, 33, 0).
+Reading the project graph slice (867 s): owners 160 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 33, 34168), @semio-tech/framework-replication-rs (language:cargo, 33, 0).
+Reading the project graph slice (869 s): owners 160 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 39, 36979), @semio-tech/framework-replication-rs (language:cargo, 38, 0).
+Reading the project graph slice (871 s): owners 160 of 703; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 39, 36979), @semio-tech/framework-replication-rs (language:cargo, 38, 0).
+Reading the project graph slice (873 s): owners 161 of 703; running (name, kind, seconds, rows): .
+Reading the project graph slice (875 s): owners 162 of 703.
+Reading the project graph slice (877 s): owners 162 of 703.
+Reading the project graph slice (879 s): owners 162 of 703.
+Reading the project graph slice (881 s): owners 162 of 703.
+Reading the project graph slice (883 s): owners 162 of 703.
+[repo] still working after 3350 s; last phase started: source.served
+Reading the project graph slice (885 s): owners 162 of 703.
+Reading the project graph slice (887 s): owners 162 of 703.
+Reading the project graph slice (889 s): owners 162 of 703.
+[repo] still working after 920 s; last phase started: door.script
+Reading the project graph slice (891 s): owners 162 of 703.
+Reading the project graph slice (893 s): owners 162 of 703.
+Reading the project graph slice (895 s): owners 162 of 703.
+Reading the project graph slice (897 s): owners 162 of 703.
+Reading the project graph slice (899 s): owners 162 of 703; running (name, kind, seconds, rows): @semio-tech/framework-time-travel-rs (language:cargo, 1, 0), @semio-tech/framework-tool-run-tick-wire-rs (language:rust, 0, 0), @semio-tech/framework-tool-run-rs (language:cargo, 0, 0).
+Reading the project graph slice (901 s): owners 162 of 703; running (name, kind, seconds, rows): @semio-tech/framework-time-travel-rs (language:cargo, 1, 0), @semio-tech/framework-tool-run-tick-wire-rs (language:rust, 0, 0), @semio-tech/framework-tool-run-rs (language:cargo, 0, 0).
+Reading the project graph slice (903 s): owners 162 of 703; running (name, kind, seconds, rows): @semio-tech/framework-time-travel-rs (language:cargo, 5, 0), @semio-tech/framework-tool-run-tick-wire-rs (language:rust, 5, 0), @semio-tech/framework-tool-run-rs (language:cargo, 4, 0).
+Reading the project graph slice (905 s): owners 162 of 703; running (name, kind, seconds, rows): @semio-tech/framework-time-travel-rs (language:cargo, 5, 0), @semio-tech/framework-tool-run-tick-wire-rs (language:rust, 5, 0), @semio-tech/framework-tool-run-rs (language:cargo, 4, 0).
+Reading the project graph slice (907 s): owners 163 of 703.
+Reading the project graph slice (909 s): owners 168 of 703.
+Reading the project graph slice (911 s): owners 168 of 703.
+Reading the project graph slice (913 s): owners 170 of 703; running (name, kind, seconds, rows): .
+[repo] still working after 3380 s; last phase started: source.served
+Reading the project graph slice (915 s): owners 171 of 703.
+Reading the project graph slice (917 s): owners 171 of 703.
+Reading the project graph slice (919 s): owners 171 of 703.
+[repo] still working after 950 s; last phase started: door.script
+Reading the project graph slice (921 s): owners 171 of 703.
+Reading the project graph slice (923 s): owners 171 of 703.
+Reading the project graph slice (925 s): owners 171 of 703; running (name, kind, seconds, rows): @semio-tech/framework-trace-rs (language:cargo, 0, 0).
+Reading the project graph slice (927 s): owners 171 of 703; running (name, kind, seconds, rows): @semio-tech/framework-trace-rs (language:cargo, 1, 0), @semio-tech/framework-value (project, 0, 0), @semio-tech/geometry-primitives-rs (language:rust, 0, 0).
+Reading the project graph slice (929 s): owners 171 of 703; running (name, kind, seconds, rows): @semio-tech/framework-trace-rs (language:cargo, 1, 0), @semio-tech/framework-value (project, 0, 0), @semio-tech/geometry-primitives-rs (language:rust, 0, 0).
+Reading the project graph slice (931 s): owners 172 of 703.
+Reading the project graph slice (933 s): owners 178 of 703.
+Reading the project graph slice (935 s): owners 180 of 703.
+Reading the project graph slice (937 s): owners 180 of 703.
+Reading the project graph slice (939 s): owners 180 of 703.
+Reading the project graph slice (941 s): owners 180 of 703.
+Reading the project graph slice (943 s): owners 180 of 703.
+[repo] still working after 3410 s; last phase started: source.served
+Reading the project graph slice (945 s): owners 180 of 703.
+Reading the project graph slice (947 s): owners 180 of 703.
+Reading the project graph slice (949 s): owners 180 of 703; running (name, kind, seconds, rows): @semio-tech/infinite-world-r3f (project, 0, 0).
+[repo] still working after 980 s; last phase started: door.script
+Reading the project graph slice (951 s): owners 180 of 703; running (name, kind, seconds, rows): @semio-tech/infinite-world-r3f (project, 1, 0), @semio-tech/interaction-rs (language:rust, 1, 0), @semio-tech/icon-contract-rs (language:cargo, 0, 0).
+Reading the project graph slice (953 s): owners 180 of 703; running (name, kind, seconds, rows): @semio-tech/infinite-world-r3f (project, 1, 0), @semio-tech/interaction-rs (language:rust, 1, 0), @semio-tech/icon-contract-rs (language:cargo, 0, 0).
+Reading the project graph slice (955 s): owners 180 of 703; running (name, kind, seconds, rows): @semio-tech/infinite-world-r3f (project, 5, 0), @semio-tech/interaction-rs (language:rust, 5, 0), @semio-tech/icon-contract-rs (language:cargo, 4, 0).
+Reading the project graph slice (957 s): owners 188 of 703.
+Reading the project graph slice (959 s): owners 189 of 703.
+Reading the project graph slice (961 s): owners 189 of 703.
+Reading the project graph slice (963 s): owners 189 of 703.
+Reading the project graph slice (965 s): owners 189 of 703.
+Reading the project graph slice (967 s): owners 189 of 703.
+Reading the project graph slice (969 s): owners 189 of 703.
+Reading the project graph slice (971 s): owners 189 of 703; running (name, kind, seconds, rows): @semio-tech/kernel-media-jobs-rs (language:rust, 0, 0).
+Reading the project graph slice (973 s): owners 189 of 703; running (name, kind, seconds, rows): @semio-tech/kernel-media-jobs-rs (language:rust, 1, 0), @semio-tech/kernel-history-rs (language:rust, 1, 0), @semio-tech/kernel-identity-rs (language:rust, 0, 0).
+[repo] still working after 3440 s; last phase started: source.served
+Reading the project graph slice (975 s): owners 189 of 703; running (name, kind, seconds, rows): @semio-tech/kernel-media-jobs-rs (language:rust, 1, 0), @semio-tech/kernel-history-rs (language:rust, 1, 0), @semio-tech/kernel-identity-rs (language:rust, 0, 0).
+Reading the project graph slice (977 s): owners 190 of 703.
+Reading the project graph slice (979 s): owners 190 of 703.
+[repo] still working after 1010 s; last phase started: door.script
+Reading the project graph slice (981 s): owners 198 of 703.
+Reading the project graph slice (983 s): owners 198 of 703.
+Reading the project graph slice (985 s): owners 198 of 703.
+Reading the project graph slice (987 s): owners 198 of 703.
+Reading the project graph slice (989 s): owners 198 of 703.
+Reading the project graph slice (991 s): owners 198 of 703.
+Reading the project graph slice (993 s): owners 198 of 703; running (name, kind, seconds, rows): @semio-tech/kernel-rs (language:rust, 0, 0).
+Reading the project graph slice (995 s): owners 198 of 703; running (name, kind, seconds, rows): @semio-tech/kernel-rs (language:rust, 0, 0).
+Reading the project graph slice (997 s): owners 198 of 703; running (name, kind, seconds, rows): @semio-tech/kernel-rs (language:rust, 0, 0).
+Reading the project graph slice (999 s): owners 198 of 703; running (name, kind, seconds, rows): @semio-tech/kernel-rs (language:rust, 6, 0), @semio-tech/kernel-ui-rs (language:rust, 1, 0), @semio-tech/machine-derive-rs (language:cargo, 1, 0).
+Reading the project graph slice (1001 s): owners 200 of 703.
+Reading the project graph slice (1003 s): owners 207 of 703.
+[repo] still working after 3470 s; last phase started: source.served
+Reading the project graph slice (1005 s): owners 207 of 703.
+Reading the project graph slice (1007 s): owners 207 of 703.
+Reading the project graph slice (1009 s): owners 207 of 703.
+[repo] still working after 1040 s; last phase started: door.script
+Reading the project graph slice (1011 s): owners 207 of 703.
+Reading the project graph slice (1013 s): owners 207 of 703.
+Reading the project graph slice (1015 s): owners 207 of 703.
+Reading the project graph slice (1017 s): owners 207 of 703; running (name, kind, seconds, rows): @semio-tech/onboarding-rs (language:rust, 1, 0), @semio-tech/native-build-compiler-resources-rs (language:rust, 1, 0), @semio-tech/mesh-component-references-rs (language:rust, 0, 0).
+Reading the project graph slice (1019 s): owners 207 of 703; running (name, kind, seconds, rows): @semio-tech/onboarding-rs (language:rust, 1, 0), @semio-tech/native-build-compiler-resources-rs (language:rust, 1, 0), @semio-tech/mesh-component-references-rs (language:rust, 0, 0).
+Reading the project graph slice (1021 s): owners 207 of 703; running (name, kind, seconds, rows): @semio-tech/onboarding-rs (language:rust, 6, 0), @semio-tech/native-build-compiler-resources-rs (language:rust, 6, 0), @semio-tech/mesh-component-references-rs (language:rust, 5, 0).
+Reading the project graph slice (1023 s): owners 207 of 703; running (name, kind, seconds, rows): @semio-tech/onboarding-rs (language:rust, 6, 0), @semio-tech/native-build-compiler-resources-rs (language:rust, 6, 0), @semio-tech/mesh-component-references-rs (language:rust, 5, 0).
+Reading the project graph slice (1025 s): owners 207 of 703; running (name, kind, seconds, rows): @semio-tech/onboarding-rs (language:rust, 6, 0), @semio-tech/native-build-compiler-resources-rs (language:rust, 6, 0), @semio-tech/mesh-component-references-rs (language:rust, 5, 0).
+Reading the project graph slice (1027 s): owners 215 of 703.
+Reading the project graph slice (1029 s): owners 216 of 703.
+Reading the project graph slice (1031 s): owners 216 of 703.
+Reading the project graph slice (1033 s): owners 216 of 703.
+[repo] still working after 3500 s; last phase started: source.served
+Reading the project graph slice (1035 s): owners 216 of 703.
+Reading the project graph slice (1037 s): owners 216 of 703.
+Reading the project graph slice (1039 s): owners 216 of 703.
+[repo] still working after 1070 s; last phase started: door.script
+Reading the project graph slice (1041 s): owners 216 of 703.
+Reading the project graph slice (1043 s): owners 216 of 703; running (name, kind, seconds, rows): @semio-tech/os-directory-rs (language:cargo, 1, 0), @semio-tech/os-directory-client-rs (language:cargo, 1, 0), @semio-tech/os-directory-binary-rs (language:cargo, 0, 0).
+Reading the project graph slice (1045 s): owners 216 of 703; running (name, kind, seconds, rows): @semio-tech/os-directory-rs (language:cargo, 1, 0), @semio-tech/os-directory-client-rs (language:cargo, 1, 0), @semio-tech/os-directory-binary-rs (language:cargo, 0, 0).
+Reading the project graph slice (1047 s): owners 216 of 703; running (name, kind, seconds, rows): @semio-tech/os-directory-rs (language:cargo, 5, 0), @semio-tech/os-directory-client-rs (language:cargo, 5, 0), @semio-tech/os-directory-binary-rs (language:cargo, 5, 0).
+Reading the project graph slice (1049 s): owners 217 of 703.
+Reading the project graph slice (1051 s): owners 225 of 703.
+Reading the project graph slice (1053 s): owners 225 of 703.
+Reading the project graph slice (1055 s): owners 225 of 703.
+Reading the project graph slice (1057 s): owners 225 of 703.
+Reading the project graph slice (1059 s): owners 225 of 703.
+Reading the project graph slice (1061 s): owners 225 of 703.
+Reading the project graph slice (1063 s): owners 225 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-board-dag-graph-rs (language:rust, 1, 0), @semio-tech/os-inference-rs (language:cargo, 1, 0), @semio-tech/os-history-codec-rs (language:cargo, 1, 0).
+[repo] still working after 3530 s; last phase started: source.served
+Reading the project graph slice (1065 s): owners 225 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-board-dag-graph-rs (language:rust, 1, 0), @semio-tech/os-inference-rs (language:cargo, 1, 0), @semio-tech/os-history-codec-rs (language:cargo, 1, 0).
+Reading the project graph slice (1067 s): owners 225 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-board-dag-graph-rs (language:rust, 5, 0), @semio-tech/os-inference-rs (language:cargo, 5, 0), @semio-tech/os-history-codec-rs (language:cargo, 5, 0).
+Reading the project graph slice (1069 s): owners 226 of 703.
+[repo] still working after 1100 s; last phase started: door.script
+Reading the project graph slice (1071 s): owners 226 of 703.
+Reading the project graph slice (1073 s): owners 234 of 703.
+Reading the project graph slice (1075 s): owners 234 of 703.
+Reading the project graph slice (1077 s): owners 234 of 703.
+Reading the project graph slice (1079 s): owners 234 of 703.
+Reading the project graph slice (1081 s): owners 234 of 703.
+Reading the project graph slice (1083 s): owners 234 of 703.
+Reading the project graph slice (1085 s): owners 234 of 703.
+Reading the project graph slice (1087 s): owners 234 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-board-engine-rs (language:rust, 1, 0), @semio-tech/os-infinite-board-normal-focus-rs (language:rust, 1, 0), @semio-tech/os-infinite-board-normal-gestures-rs (language:rust, 0, 0).
+Reading the project graph slice (1089 s): owners 234 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-board-engine-rs (language:rust, 1, 0), @semio-tech/os-infinite-board-normal-focus-rs (language:rust, 1, 0), @semio-tech/os-infinite-board-normal-gestures-rs (language:rust, 0, 0).
+Reading the project graph slice (1091 s): owners 234 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-board-engine-rs (language:rust, 5, 0), @semio-tech/os-infinite-board-normal-focus-rs (language:rust, 5, 0), @semio-tech/os-infinite-board-normal-gestures-rs (language:rust, 4, 0).
+Reading the project graph slice (1093 s): owners 242 of 703; running (name, kind, seconds, rows): .
+[repo] still working after 3560 s; last phase started: source.served
+Reading the project graph slice (1095 s): owners 243 of 703.
+Reading the project graph slice (1097 s): owners 243 of 703.
+Reading the project graph slice (1099 s): owners 243 of 703.
+[repo] still working after 1130 s; last phase started: door.script
+Reading the project graph slice (1101 s): owners 243 of 703.
+Reading the project graph slice (1103 s): owners 243 of 703.
+Reading the project graph slice (1105 s): owners 243 of 703.
+Reading the project graph slice (1107 s): owners 243 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-world-bridge-rs (language:rust, 0, 0).
+Reading the project graph slice (1109 s): owners 243 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-world-bridge-rs (language:rust, 2, 0), @semio-tech/os-infinite-world-host-rs (language:rust, 1, 0), @semio-tech/os-infinite-world-model-rs (language:rust, 1, 0).
+Reading the project graph slice (1111 s): owners 243 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-world-bridge-rs (language:rust, 2, 0), @semio-tech/os-infinite-world-host-rs (language:rust, 1, 0), @semio-tech/os-infinite-world-model-rs (language:rust, 1, 0).
+Reading the project graph slice (1113 s): owners 243 of 703; running (name, kind, seconds, rows): @semio-tech/os-infinite-world-bridge-rs (language:rust, 5, 0), @semio-tech/os-infinite-world-host-rs (language:rust, 4, 0), @semio-tech/os-infinite-world-model-rs (language:rust, 4, 0).
+Reading the project graph slice (1115 s): owners 244 of 703.
+Reading the project graph slice (1117 s): owners 252 of 703.
+Reading the project graph slice (1119 s): owners 252 of 703.
+Reading the project graph slice (1121 s): owners 252 of 703.
+Reading the project graph slice (1123 s): owners 252 of 703.
+[repo] still working after 3590 s; last phase started: source.served
+Reading the project graph slice (1125 s): owners 252 of 703.
+Reading the project graph slice (1127 s): owners 252 of 703.
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+Cancelled (SIGINT); leases released.
+Internal error: Original Script process interrupted
+end 2026-11-14T11:50:47Z
+native_rc=1

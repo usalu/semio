@@ -328,6 +328,76 @@
       ],
       "homepage": "https://fast-check.dev",
       "rationale": "Progress and cancellation are first-party. fast-check chooses, independently of the authors, the poll at which each long-running function is cancelled; every choice must stop the function exactly there with a CancelledError and no result."
+    },
+    {
+      "id": "trimesh-mesh-integrity",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "trimesh",
+      "version": "5.2.0",
+      "source": {
+        "repository": "https://trimesh.org",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "trimesh",
+        "implementation": "trimesh (watertight, winding, volume and containment of triangle meshes)",
+        "version": "5.2.0"
+      },
+      "capabilities": [
+        "model.solids.integrity"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://trimesh.org",
+      "rationale": "meshIntegrity, outwardNormals, the loft orientation and the revolve closing rule are first-party. trimesh (run from the hash-locked `geometry` group of the staffage oracle project, uv.lock) independently reports is_watertight, is_winding_consistent, is_volume, signed volume and area of the very triangles, decides by ray-parity `contains` that a probe moved out along every claimed outward normal leaves the body and one moved in enters it, and gives the volume of the revolved profile through Pappus' theorem."
+    },
+    {
+      "id": "shapely-profile-areas",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "shapely",
+      "version": "2.2.0",
+      "source": {
+        "repository": "https://shapely.readthedocs.io",
+        "license": "BSD-3-Clause"
+      },
+      "engine": {
+        "family": "shapely",
+        "implementation": "shapely (GEOS polygon area and centroid)",
+        "version": "2.2.0"
+      },
+      "capabilities": [
+        "model.solids.profile-area"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://shapely.readthedocs.io",
+      "rationale": "The areas of the revolve profile closed through the axis and closed by the chord (filledAreaM2, loopAreaM2 of revolveClosure) are re-derived by shapely Polygon areas and centroids."
     }
   ],
   "noOracleDecisions": [],

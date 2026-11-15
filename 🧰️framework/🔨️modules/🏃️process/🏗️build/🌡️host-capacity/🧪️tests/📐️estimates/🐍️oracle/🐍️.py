@@ -11,6 +11,19 @@ def weights(policy, samples, now):
     half = policy["estimates"]["halfLifeMilliseconds"]
     return [_round(1e6 * 2.0 ** (-(max(0, now - s["atMs"])) / half)) for s in samples]
 
+OUTLIER_BASIS_POINTS = 40000
+
+def robust(policy, samples, now):
+    weight = weights(policy, samples, now)
+    live = [i for i, w in enumerate(weight) if w > 0]
+    if len(live) < 2:
+        return samples, weight
+    ranked = sorted(live, key=lambda i: (-samples[i]["ratioBasisPoints"], -samples[i]["atMs"]))
+    top, nxt = ranked[0], ranked[1]
+    if samples[top]["ratioBasisPoints"] * 10000 <= samples[nxt]["ratioBasisPoints"] * OUTLIER_BASIS_POINTS:
+        return samples, weight
+    return [s for i, s in enumerate(samples) if i != top], [w for i, w in enumerate(weight) if i != top]
+
 def value_of(sample, key):
     return sample.get("peakAtMilliseconds", sample["activeMilliseconds"]) if key == "peakAtMilliseconds" else sample[key]
 
@@ -37,8 +50,7 @@ def estimate(policy, store, lineage, now):
     e = policy["estimates"]
     ratio, ramp, learned, quick = 10000, e["defaultRampMilliseconds"], 0, False
     for key in lineage:
-        samples = store["classes"].get(key, {"samples": []})["samples"]
-        weight = weights(policy, samples, now)
+        samples, weight = robust(policy, store["classes"].get(key, {"samples": []})["samples"], now)
         total = sum(weight)
         if not samples or total == 0:
             ratio = min(10000, ratio)
@@ -149,7 +161,11 @@ def generate():
     for index in range(300):
         store = record(policy, store, ["op", f"op:k{index}"], {"operation": "op", "jobs": 1, "peakMegabytes": 100 + index, "defaultMegabytes": 1000, "activeMilliseconds": 10, "peakAtMilliseconds": 5, "endedAtMs": index})
     bounded = {"classes": len(store["classes"]), "oldestKept": min(max(s["atMs"] for s in v["samples"]) for v in store["classes"].values()), "rootSamples": len(store["classes"]["op"]["samples"])}
-    return {"policy": POLICY, "cases": cases, "scales": scales, "ramps": ramps, "learns": learns, "priorities": priorities, "bounded": bounded}
+    outliers = []
+    for name, ratios in (("one spike among two", [250518, 11563]), ("one spike among five", [250518, 9000, 11563, 8000, 12000]), ("two high runs are a heavy tail", [250518, 240000, 11563, 9000]), ("exactly at the factor", [40000, 10000, 9000]), ("just over the factor", [40001, 10000, 9000]), ("a lone sample", [250518]), ("equal ratios", [30000, 30000, 30000])):
+        store = {"version": 1, "classes": {"run": {"samples": [{"atMs": 1_000_000 - index * 1000, "ratioBasisPoints": ratio, "activeMilliseconds": 60000, "peakAtMilliseconds": 30000} for index, ratio in enumerate(ratios)]}}}
+        outliers.append({"name": name, "lineage": ["run"], "nowMs": 1_000_000, "store": store, "expect": estimate(policy, store, ["run"], 1_000_000)})
+    return {"policy": POLICY, "outliers": outliers, "cases": cases, "scales": scales, "ramps": ramps, "learns": learns, "priorities": priorities, "bounded": bounded}
 
 if __name__ == "__main__":
     target = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "🧫️fixtures", "🔣️.json")

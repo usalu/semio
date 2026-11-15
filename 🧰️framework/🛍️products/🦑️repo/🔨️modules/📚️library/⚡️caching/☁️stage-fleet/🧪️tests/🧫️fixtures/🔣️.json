@@ -1,0 +1,44 @@
+{
+  "vectors": [
+    {
+      "name": "transpile on macOS arm64",
+      "platform": "darwin-arm64",
+      "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "remoteKey": "92146d90c476607c87dedf8f0f1f946a012201f576a46c2d4abef9223becc100",
+      "stage": "transpile",
+      "schemaVersion": 1,
+      "slot": "semio_s_artifact_procedural_generation2d",
+      "slotId": "fb2fcb3dadd3d73eec7fa4914c46d100ad7ad55499729214acf19e430e5675c9"
+    },
+    {
+      "name": "optimize of one core",
+      "platform": "darwin-arm64",
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "remoteKey": "cd291912644e6d954946b47bf39b21e24fc000fac3801c71de26bc76c05e4a46",
+      "stage": "optimize",
+      "schemaVersion": 1,
+      "slot": "semio_s_artifact_procedural_generation2d/semio_s_artifact_procedural_generation2d.core2.wasm",
+      "slotId": "8c12da56227d612c9e6174cd29409427296e7f242d176f2968fae723c895b914"
+    },
+    {
+      "name": "probe on Linux x64",
+      "platform": "linux-x64",
+      "digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "remoteKey": "fb79342d20137a098db60d4b477d3cda27d7a2ef750b5dc59a3dbb5b8619f12d",
+      "stage": "probe",
+      "schemaVersion": 2,
+      "slot": "plugin ünïcode",
+      "slotId": "a96c11f1322058bd1fc50c12255bd99c77695d4e4d0e5b1d9e824bb3e794d148"
+    },
+    {
+      "name": "describe on Windows",
+      "platform": "win32-x64",
+      "digest": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "remoteKey": "100849a8229c6a4de0153ac4ef9c33b7c223f136569bdfca5d896b77f4884b10",
+      "stage": "describe",
+      "schemaVersion": 1,
+      "slot": "pkg",
+      "slotId": "172c2220797560720fb9312e083b0d6dcf87fd8b0355d584d08df69462cee264"
+    }
+  ]
+}

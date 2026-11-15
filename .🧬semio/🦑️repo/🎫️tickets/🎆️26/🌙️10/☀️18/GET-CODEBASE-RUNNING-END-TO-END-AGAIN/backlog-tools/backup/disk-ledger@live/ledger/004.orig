@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumBytes",
+    "maximumControlBytes",
+    "partitions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 274877906944
+    },
+    "maximumControlBytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 1048576
+    },
+    "partitions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rust",
+        "tools",
+        "graph",
+        "dependencies",
+        "products",
+        "diagnostics",
+        "nx",
+        "leases"
+      ],
+      "properties": {
+        "rust": {
+          "$ref": "#/$defs/partition"
+        },
+        "tools": {
+          "$ref": "#/$defs/partition"
+        },
+        "graph": {
+          "$ref": "#/$defs/partition"
+        },
+        "dependencies": {
+          "$ref": "#/$defs/partition"
+        },
+        "products": {
+          "$ref": "#/$defs/partition"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/partition"
+        },
+        "nx": {
+          "$ref": "#/$defs/partition"
+        },
+        "leases": {
+          "$ref": "#/$defs/partition"
+        }
+      }
+    },
+    "elastic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "graph",
+        "products",
+        "rust"
+      ],
+      "properties": {
+        "graph": {
+          "$ref": "#/$defs/elasticPartition"
+        },
+        "products": {
+          "$ref": "#/$defs/elasticPartition"
+        },
+        "rust": {
+          "$ref": "#/$defs/elasticPartition"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "filesystemOverhead": {
+      "const": {
+        "tinyCapacityBytes": 268435456
+      }
+    },
+    "ordinaryMaintenance": {
+      "const": {
+        "version": 1,
+        "mode": "queued",
+        "maximumWaitMilliseconds": 1800000
+      }
+    },
+    "partition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "capacityBytes",
+        "maximumLogicalBytes"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 68719476736
+        },
+        "maximumArtifactBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 68719476736
+        },
+        "maximumLogicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 68719476736
+        }
+      }
+    },
+    "logicalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "maximumLogicalBytes",
+        "missing",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumLogicalBytes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "missing": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "elasticCapacityCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "minimumBytes",
+        "hostFreeBytes",
+        "capacityBytes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimumBytes": {
+          "type": "integer",
+          "minimum": 33554432
+        },
+        "hostFreeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 33554432
+        }
+      }
+    },
+    "elasticPartition": {
+      "description": "Sizes an image when it is created: the working set it must hold times the headroom factor, never more than the cap and half of what the host volume has free, never below the declared partition capacity; the created image's own receipt then pins the size.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "needBytes",
+        "headroomPercent",
+        "hostFreeReservePercent",
+        "alignBytes",
+        "maximumBytes",
+        "automatic",
+        "pressureFreeBytes"
+      ],
+      "properties": {
+        "needBytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 68719476736
+        },
+        "headroomPercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "hostFreeReservePercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 99
+        },
+        "alignBytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 68719476736
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 68719476736
+        },
+        "automatic": {
+          "description": "Whether a command that finds the image quiescent (nobody holds it, a non-waiting exclusive try succeeds) and still below its pressure floor recreates it at the elastic size; the graph, compiler and products images qualify (all hold only derived data; `repo run repo:cache-reset-<graph|rust|products>` is the on-demand step).",
+          "type": "boolean"
+        },
+        "pressureFreeBytes": {
+          "description": "Free bytes of the mounted image below which a quiescent image counts as exhausted.",
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 68719476736
+        }
+      }
+    }
+  }
+}

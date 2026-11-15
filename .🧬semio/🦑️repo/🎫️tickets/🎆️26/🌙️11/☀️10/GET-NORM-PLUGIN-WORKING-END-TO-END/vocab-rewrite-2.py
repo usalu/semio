@@ -1,6 +1,10 @@
 import sys,re
+import subprocess
+from pathlib import Path
+T = Path(__file__).resolve().parent
+R = Path(subprocess.check_output(['git', '-C', str(T), 'rev-parse', '--show-toplevel'], text=True).strip())
 S="/tmp/claude-1000/-home-deck-semio/0ec9c8a1-06e8-45c6-b0fa-6d0c7cb86d6b/scratchpad/vocab-r1.txt"
-R=[
+RP=[
 ("(tag 0, formerly `NoMutation`, is retired rather than reassigned)","(tag 0 is retired rather than reassigned)"),
 ("(tag 0, formerly `NoMutation`) is retired rather than reused","(tag 0) is retired rather than reused"),
 ("(0 was\n/// `NoMutation`'s, dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration; the remaining\n/// tags are left as they were rather than renumbered down, since nothing needs them contiguous).","(tag 0 is retired; the\n/// remaining tags are not renumbered down, since nothing needs them contiguous)."),
@@ -39,8 +43,8 @@ R=[
 ("//#region 🔖️SetSnapshot","//#region 🔖️WholeSnapshot"),("//#endregion 🔖️SetSnapshot","//#endregion 🔖️WholeSnapshot"),
 ]
 for l in open(S,encoding="utf-8"):
-    f="/home/deck/semio/"+l.split("\t")[1]
+    f=str(R)+"/"+l.split("\t")[1]
     if "vcs" in f and "no-operation" in f or "set-snapshot" in f: continue
     t=open(f,encoding="utf-8").read();o=t
-    for a,b in R:t=t.replace(a,b)
+    for a,b in RP:t=t.replace(a,b)
     if t!=o:open(f,"w",encoding="utf-8").write(t)

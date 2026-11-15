@@ -29,7 +29,7 @@ const done = (result: ExportResult): Extract<ExportResult, { status: "done" }> =
 describe("🧊️ GLB per pose", () => {
   it("is a valid glTF with the seven views as material variants, named like the drawings", async () => {
     const result = done(await exportFigure(sampleFigure, stand, request, "glb"));
-    expect(result.filename).toBe("sample-figure_stand_model_all_1-100.glb");
+    expect(result.filename).toBe("sample-figure.stand.glb");
     expect(result.mime).toBe("model/gltf-binary");
     expect(String.fromCharCode(...result.bytes.subarray(0, 4))).toBe("glTF");
     const report = await validateGlb(result.bytes);
@@ -44,7 +44,7 @@ describe("🧊️ GLB per pose", () => {
   it("is the same bytes for the same request and takes the pose the request names, not the current one", async () => {
     const a = done(await exportFigure(sampleFigure, stand, { ...request, pose: "carry-bag" }, "glb"));
     const b = done(await exportFigure(sampleFigure, walk, { ...request, pose: "carry-bag" }, "glb"));
-    expect(a.filename).toBe("sample-figure_carry-bag_model_all_1-100.glb");
+    expect(a.filename).toBe("sample-figure.carry-bag.glb");
     expect(Buffer.from(a.bytes).equals(Buffer.from(b.bytes))).toBe(true);
   });
 });
@@ -52,7 +52,7 @@ describe("🧊️ GLB per pose", () => {
 describe("🎬️ FBX per clip", () => {
   it("loads in three's FBXLoader with the clip's animation, in the representation of the request, named with it", async () => {
     const result = done(await exportFigure(sampleFigure, walk, { ...request, view: "thermal" }, "fbx"));
-    expect(result.filename).toBe("sample-figure_walk_model_thermal_1-100.fbx");
+    expect(result.filename).toBe("sample-figure.walk.s100.thermal.fbx");
     expect(String.fromCharCode(...result.bytes.subarray(0, 18))).toBe("Kaydara FBX Binary");
     const loaded = loadFbx(result.bytes);
     expect(loaded.animations.length).toBeGreaterThanOrEqual(1);
@@ -62,13 +62,13 @@ describe("🎬️ FBX per clip", () => {
 
   it("makes the default clip when the current state is a pose", async () => {
     const result = done(await exportFigure(sampleFigure, stand, request, "fbx"));
-    expect(result.filename).toBe(`sample-figure_${sampleFigure.presentation.defaultClip}_model_light-solid_1-100.fbx`);
+    expect(result.filename).toBe(`sample-figure.${sampleFigure.presentation.defaultClip}.s100.light-solid.fbx`);
   });
 });
 
 describe("🗿️ model JSON and the ZIP bundle", () => {
   it("is a valid semio.model/v1 document of the pose or the clip", async () => {
-    for (const [options, name] of [[{ pose: "stand" }, "sample-figure_stand_model_all_1-100.json"], [{ clip: "walk" }, "sample-figure_walk_model_all_1-100.json"]] as const) {
+    for (const [options, name] of [[{ pose: "stand" }, "sample-figure.stand.pose.json"], [{ clip: "walk" }, "sample-figure.walk.clip.json"]] as const) {
       const result = done(await exportFigure(sampleFigure, stand, { ...request, ...options }, "model"));
       expect(result.filename).toBe(name);
       const document = JSON.parse(new TextDecoder().decode(result.bytes));
@@ -80,7 +80,7 @@ describe("🗿️ model JSON and the ZIP bundle", () => {
 
   it("holds every pose as GLB and JSON and every clip as FBX and JSON, read back by an independent unzip", async () => {
     const result = done(await exportFigure(sampleFigure, stand, request, "model-zip"));
-    expect(result.filename).toBe("sample-figure_bundle_model_all_1-100.zip");
+    expect(result.filename).toBe("sample-figure.zip");
     const names = Object.keys(unzipSync(result.bytes)).sort();
     const poses = sampleFigure.poses.filter((pose) => pose.key !== true).length;
     expect(names.filter((name) => name.startsWith("glb/"))).toHaveLength(poses);
@@ -89,8 +89,8 @@ describe("🗿️ model JSON and the ZIP bundle", () => {
   });
 
   it("names the filename of a 3D format in exportFilename like the downloads do", () => {
-    expect(exportFilename(sampleFigure, stand, request, "glb")).toBe("sample-figure_stand_model_all_1-100.glb");
-    expect(exportFilename(sampleFigure, walk, { ...request, view: "forces" }, "fbx")).toBe("sample-figure_walk_model_forces_1-100.fbx");
+    expect(exportFilename(sampleFigure, stand, request, "glb")).toBe("sample-figure.stand.glb");
+    expect(exportFilename(sampleFigure, walk, { ...request, view: "forces" }, "fbx")).toBe("sample-figure.walk.s100.forces.fbx");
   });
 });
 
@@ -113,7 +113,7 @@ describe("📶️ progress and cancellation", () => {
   });
 
   it("says in both languages why an asset without volume has no 3D download", async () => {
-    const outcome = await exportFigure({ ...sampleFigure, volume: undefined } as unknown as Asset, stand, request, "glb");
+    const outcome = await exportFigure({ ...sampleFigure, volumes: Object.fromEntries([50, 100, 200, 500].map((s) => [`${s}`, { status: "unavailable", denominator: s }])) } as unknown as Asset, stand, request, "glb");
     expect(outcome.status).toBe("unavailable");
     if (outcome.status === "unavailable") {
       expect(outcome.reason.en).toMatch(/no authored volume/u);
@@ -150,7 +150,7 @@ describe("📤️ export panel", () => {
   });
 
   it("marks a 3D format whose asset has no volume as unsupported with the reason, and lets the pose, the clip or either be chosen", () => {
-    const noVolume = { ...sampleFigure, volume: undefined } as unknown as Asset;
+    const noVolume = { ...sampleFigure, volumes: Object.fromEntries([50, 100, 200, 500].map((s) => [`${s}`, { status: "unavailable", denominator: s }])) } as unknown as Asset;
     render(wrap(<ExportPanel asset={noVolume} query={stand} request={request} language="de" capabilities={capabilities} />, "de"));
     const card = document.querySelector("[data-format='glb']") as HTMLElement;
     expect(card.getAttribute("data-state")).toBe("unsupported");

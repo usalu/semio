@@ -10,7 +10,12 @@
     { "slug": "export-safe-typography", "family": "figure", "source": "semio-viz-showcase.sty", "definition": "semio_viz_scf_typography" },
     { "slug": "text-mark", "family": "mark-point", "source": "semio-viz-mark.sty", "definition": "semio_viz_fam_points_render" },
     { "slug": "sequence-logo", "family": "sci-seqlogo", "source": "semio-viz-scientific-biology.sty", "definition": "semio_viz_bio_logo_letter" },
-    { "slug": "motif-logo", "family": "sci-seqlogo", "source": "semio-viz-scientific-biology.sty", "definition": "semio_viz_bio_logo_letter" }
+    { "slug": "motif-logo", "family": "sci-seqlogo", "source": "semio-viz-scientific-biology.sty", "definition": "semio_viz_bio_logo_letter" },
+    { "slug": "big-number-display", "family": "kpi", "source": "semio-viz-charts-dashboard.sty", "definition": "semio_viz_kpi_number" },
+    { "slug": "text", "family": "grammar", "source": "semio-viz-showcase.sty", "definition": "semio_viz_scg_texts" },
+    { "slug": "font-size", "family": "encoding", "source": "semio-viz-showcase.sty", "definition": "semio_viz_sce_font_size" },
+    { "slug": "font-weight", "family": "encoding", "source": "semio-viz-showcase.sty", "definition": "semio_viz_sce_font_weight" },
+    { "slug": "text-rotation", "family": "encoding", "source": "semio-viz-showcase.sty", "definition": "semio_viz_sce_text_rotation" }
   ],
   "cases": [
     { "id": "nested-transformed-graphic", "class": "graphic", "body": "\\begin{scope}[shift={(3,4)},scale=2]\\special{pdf:literal direct /NeutralInner BMC}\\fill (0,0) rectangle (10,5);\\special{pdf:literal direct EMC}\\end{scope}", "valid": true, "expectedBoundsMm": [3,23,4,14] },

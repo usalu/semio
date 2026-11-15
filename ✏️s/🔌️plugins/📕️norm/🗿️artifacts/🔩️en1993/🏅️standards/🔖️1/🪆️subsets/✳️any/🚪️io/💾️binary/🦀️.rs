@@ -5,8 +5,7 @@ pub mod snapshot;
 
 pub use semio_s_artifact_norm_en1993_mutations::binary as mutations;
 
-#[path = "🔺️diff/🦀️.rs"]
-pub mod diff;
+pub use semio_s_artifact_norm_en1993_diff::binary as diff;
 
 #[path = "💡️inferences/🦀️.rs"]
 pub mod inferences;

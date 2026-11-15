@@ -1,0 +1,40 @@
+Replica g1-m08 of group g1, store /Volumes/semio-store: reachable
+Synchronization: on
+Daemon: running (pid 28801)
+284132 files tracked; queued: 10 incoming, ? outgoing; 27 overwritten files kept in .cache/f/lost
+Daemon: busy, the event loop has not answered for 85 s
+Recurring failures of kind refused: 1 times, last 185 s ago.
+Recurring failures of kind loop-blocked-restart: 9 times, last 221 s ago.
+Recurring failures of kind loop-blocked: 1 times, last 29 s ago.
+Sidecar build-agent: running (process 29038, 0 restart(s), 180 s in this state, last exit -).
+Sidecar build-scheduler: off on this machine (process -, 0 restart(s), 210 s in this state, last exit -).
+Sidecar build-cache: off on this machine (process -, 0 restart(s), 210 s in this state, last exit -).
+Journal: 12.56 MiB in 14 segments of 10 origins.
+Newest snapshot by g1-m08: 409s old, 90.49 MiB.
+Reclaimable now: 4 journal segments (4.89 MiB).
+Last compaction 62569s ago: 861 blobs (27.00 GiB) removed; 88 blobs (129.23 MiB) were still too young.
+Git state: shared (stage and commits replicate); stage tree 5c75c44d73137807925a4f37dfbb0a95529a546e.
+Background tiers, last pass (cost, duty cycle of one core): hot 5 ms 1.5%, directory sweep 446 ms 10%, file sweep 2503 ms 2.8%, tree walk -, git view 40944 ms 5%.
+Latency over the last 4 publishes and 100 applies: publish p50 5041 ms, p95 63996 ms; apply p50 378 ms, p95 1634 ms.
+g1-m01: 0 events (0 B) behind, last event 96s ago
+g1-m02: 0 events (0 B) behind, last event 100s ago
+g1-m03: 0 events (0 B) behind, last event 93s ago
+g1-m04: 0 events (0 B) behind, last event 102s ago
+g1-m05: 0 events (0 B) behind, last event 3416s ago
+g1-m06: 0 events (0 B) behind, last event 7609s ago
+g1-m07: 0 events (0 B) behind, last event 97s ago
+g1-m08: 0 events (0 B) behind, last event 181s ago
+g1-m10: 0 events (0 B) behind, last event 1150s ago
+g1-server: 0 events (0 B) behind, last event 261s ago
+Fleet: origin platform age lag (origins behind/queued) basis (cp:s = compared at its checkpoint taken s seconds ago, now = compared as it is now) sync code view (modified/deleted/untracked) latency (publish p50/p95 ms | apply p50/p95 ms) verdict
+  g1-m01 macos 99s 1/0 cp:99s on d399114215f5 163/12/1338 286/5549|217/4031 stale (attestation too old)
+  g1-m02 macos 99s 1/0 cp:99s on d399114215f5 163/12/1337 174/1601|213/5542 stale (attestation too old)
+  g1-m03 macos 96s 0/0 cp:96s on d399114215f5 163/12/1338 193/12544|267/3801 stale (attestation too old)
+  g1-m04 linux 105s 4/0 cp:105s on d399114215f5 163/11/1336 166/6160|274/2024 stale (attestation too old)
+  g1-m05 windows 115s 5/0 cp:115s on d399114215f5 - -/-|14171/88269 stale (attestation too old)
+  g1-m06 macos 87s 0/0 cp:87s on d399114215f5 163/12/1336 -/-|146/547 stale (attestation too old)
+  g1-m07 macos 96s 0/0 cp:96s on d399114215f5 163/12/1338 209/4259|250/4658 stale (attestation too old)
+  g1-m08 macos 90s 0/0 cp:90s on d399114215f5 163/12/1337 5041/63996|378/1634 stale (attestation too old)
+  g1-m10 macos 124s 5/0 cp:124s on d399114215f5 163/12/1423 -/-|388/1575 stale (attestation too old)
+  g1-server macos 0s 0/0 cp:0s on d399114215f5 163/12/1336 83181/151831|154/438 ok
+The fleet is not in agreement (10 origins; fresh and checkpoint age mean within 60 s; lagging is not wrong, only not yet comparable).

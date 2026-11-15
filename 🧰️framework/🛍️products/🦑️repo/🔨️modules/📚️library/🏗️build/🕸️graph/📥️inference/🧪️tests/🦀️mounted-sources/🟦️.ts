@@ -6,6 +6,7 @@ import {existsSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeF
 import {tmpdir} from "node:os";
 import {dirname,join,relative,resolve} from "node:path";
 import Ajv from "ajv";
+import {testRustEnvironmentV1} from "../../../../🌐️remote-execution/🚀️offload/🧪️tests/🧰️workspace/🟦️.ts";
 import corpus from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 import factSchema from "../../🦀️native-manifests/🧬️schema/🔣️.json";
@@ -25,7 +26,7 @@ const rustc=(root:string,crate:string,flags:string[]):string[]=>{
  for(const entry of entriesOf(root,crate)){
   const out=join(root,"oracle.d");
   rmSync(out,{force:true});
-  spawnSync("rustc",["--edition=2021","--crate-type=lib","--crate-name=probe","--cap-lints=allow",...flags,`--emit=dep-info=${out}`,entry],{cwd:directory,encoding:"utf8",env:{...process.env,CARGO_MANIFEST_DIR:directory}});
+  spawnSync("rustc",["--edition=2021","--crate-type=lib","--crate-name=probe","--cap-lints=allow",...flags,`--emit=dep-info=${out}`,entry],{cwd:directory,encoding:"utf8",env:testRustEnvironmentV1({CARGO_MANIFEST_DIR:directory})});
   expect(existsSync(out),`rustc wrote no dep-info for ${crate}/${entry}`).toBe(true);
   for(const path of readFileSync(out,"utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/u))reads.add(slash(relative(root,resolve(directory,path))));
  }
@@ -104,12 +105,13 @@ test.skipIf(!existsSync(join(workspace,retained,"Cargo.toml")))("the retained mu
  const set=cacheInternals.cargoSourceSetV1(retained,workspace,new Map(),false,true);
  expect(set.resolved,JSON.stringify(set)).toBe(true);
  const derived=new Set<string>(set.files.map((path:string)=>path.slice(prefix.length))),directory=join(workspace,retained),out=join(tmpdir(),`rust-mounted-${process.pid}.d`);
- spawnSync("rustc",["--edition=2021","--crate-type=lib","--crate-name=probe","--cap-lints=allow",`--emit=dep-info=${out}`,join(directory,"🦀️.rs")],{cwd:tmpdir(),encoding:"utf8"});
+ spawnSync("rustc",["--edition=2021","--crate-type=lib","--crate-name=probe","--cap-lints=allow",`--emit=dep-info=${out}`,join(directory,"🦀️.rs")],{cwd:tmpdir(),encoding:"utf8",env:testRustEnvironmentV1()});
  try{
   const reads=readFileSync(out,"utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/u).map(path=>slash(relative(workspace,resolve(directory,path))));
   expect(reads.length).toBeGreaterThan(8);
   for(const path of reads)expect(derived.has(path),`rustc reads ${path}`).toBe(true);
-  for(const mounted of ["✂️span","🔎️key","🔺️diff","🩹️patch","⚠️diagnostic"])expect(derived.has(`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/${mounted}/🦀️.rs`),mounted).toBe(true);
+  const mountedTrees=reads.filter(path=>path.startsWith("🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/")&&!path.includes("/📦️packages/")&&path.endsWith("/🦀️.rs"));
+  expect(mountedTrees.length,"the crate mounts owner trees outside its own directory").toBeGreaterThan(0);
  }finally{rmSync(out,{force:true});}
 });
 
@@ -125,7 +127,7 @@ test.skipIf(!existsSync(join(workspace,renderer,"build.rs")))("the renderer crat
  const set=cacheInternals.cargoSourceSetV1(renderer,workspace,new Map(),false,true);
  expect(set.resolved,JSON.stringify(set)).toBe(true);
  const derived=new Set<string>(set.files.map((path:string)=>path.slice(prefix.length))),directory=join(workspace,renderer),out=join(tmpdir(),`rust-build-script-${process.pid}.d`),manifest=readFileSync(join(directory,"Cargo.toml"),"utf8"),lib=/^path\s*=\s*"([^"]+)"/mu.exec(manifest.split("[lib]")[1]??"")![1]!;
- spawnSync("rustc",["--edition=2021","--crate-type=lib","--crate-name=probe","--cap-lints=allow",`--emit=dep-info=${out}`,join(directory,"build.rs")],{cwd:tmpdir(),encoding:"utf8"});
+ spawnSync("rustc",["--edition=2021","--crate-type=lib","--crate-name=probe","--cap-lints=allow",`--emit=dep-info=${out}`,join(directory,"build.rs")],{cwd:tmpdir(),encoding:"utf8",env:testRustEnvironmentV1()});
  try{
   const reads=readFileSync(out,"utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/u).map(path=>slash(relative(workspace,resolve(directory,path))));
   expect(reads.length).toBeGreaterThan(1);

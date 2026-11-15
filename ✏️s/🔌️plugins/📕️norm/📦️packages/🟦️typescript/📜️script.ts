@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { orchestratorBudgetOpts, runCmd } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runNormBrowserAcceptanceV1 } from "../../🧪️tests/🌐️browser/🟦️.ts";
 import { runTestScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 //#endregion 🔖️Types
 
@@ -23,5 +24,19 @@ class WireTwinsScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("wire-twins", WireTwinsScript);
+/** 📕️ Browser journey of the EN 1993 editor and the read-only viewer through the shared two-human harness. */
+class BrowserAcceptanceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    await runNormBrowserAcceptanceV1(this.invocation, this.repoRoot, segments);
+  }
+}
+
+/** 🧪️ Language-agnostic witness of the browser journey fixture, schema, names and arguments. */
+class BrowserJourneyScript extends BundleScript {
+  run(): void {
+    runCmd(process.execPath, ["test", join(this.root, "../../🧪️tests/🌐️browser/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("wire-twins", WireTwinsScript).register("browser-journey", BrowserJourneyScript).register("browser-acceptance", BrowserAcceptanceScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

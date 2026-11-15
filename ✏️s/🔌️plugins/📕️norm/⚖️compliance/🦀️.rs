@@ -22,11 +22,7 @@ pub use norm_error_and_family::*;
 #[path = "⚡️incremental-evaluation/🦀️.rs"]
 pub mod incremental_evaluation;
 
-#[path = "🧰️design-case/🦀️.rs"]
-pub mod design_case;
-
-#[path = "🧭️spec-trace/🦀️.rs"]
-pub mod spec_trace;
+pub use semio_s_plugin_norm_design_case::{design_case, spec_trace};
 
 #[path = "🗣️reasons/🦀️.rs"]
 pub mod reasons;
@@ -118,10 +114,6 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 //#endregion 🔖️SnapshotDslPackCodec
 
 // #endregion 🔖️OpText
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 #[cfg(test)]
 #[path = "🧪️tests/🧭️ownership/🦀️.rs"]

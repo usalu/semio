@@ -43,4 +43,3 @@ pub fn decode_din16798_pack(bytes: &[u8]) -> Result<Din16798Snapshot, String> {
 }
 pub use crate::binary::snapshot::native_snapshot_codec::*;
 
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@binary Din16798Snapshot, extension="din16798", envelope_id="norm.din16798", sqlite=crate::sqlite::snapshot::sqlite_codec);

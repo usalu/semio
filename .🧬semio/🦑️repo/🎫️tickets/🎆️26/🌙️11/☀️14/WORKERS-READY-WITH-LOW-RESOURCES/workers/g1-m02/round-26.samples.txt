@@ -1,0 +1,425 @@
+2026-11-15T08:31:21Z LAUNCHER BEFORE TRY 1
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T08:31:21Z TRY 1 START group 92796 log /Users/ueli/native-bootstrap-round-26.log
+2026-11-15T08:31:21Z pressure_level=1 run_group_max_rss_kib=2352
+1229648 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+500000 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+340240 43431 43430 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.321/ddbdf2b334e1/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-fable-5-2 --permission-prompt-tool=stdio --resume=4fc6af00-df13-45c6-8db
+2026-11-15T08:31:51Z pressure_level=1 run_group_max_rss_kib=141888
+1231648 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+794096 93308 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+500144 93208     1 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T08:32:22Z pressure_level=1 run_group_max_rss_kib=142880
+2405520 93308 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1231680 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+500592 93208     1 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T08:32:52Z pressure_level=1 run_group_max_rss_kib=143440
+2977056 93308 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1232112 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+500560 93208     1 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T08:33:22Z pressure_level=1 run_group_max_rss_kib=144048
+3861248 93308 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1232528 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+500688 93208     1 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T08:33:52Z ACCESS LINES TRY 1: 0
+
+2026-11-15T08:33:57Z KEY LINES TRY 1: 19
+2026-11-15T08:31:49.447Z access-proof version=3 root=/Users/ueli/Documents/semio protected=Documents sample=ok reproof=on route=launchd pid=93218 ppid=93208 responsible=93208
+graph: 49 stale projects, 0 taken from the fleet, 12 too heavy for this machine (@semio-tech/repo-test-domain (about 11068 MB), @semio-tech/repo-test-runner-go (about 10094 MB), @semio-tech/repo-providers-go (about 8402 MB), @semio-tech/repo-cli-go (about 8356 MB), @semio-tech/repo-graphql-go (about 4906 MB), @semio-tech/repo-statutes-go (about 4780 MB), and 6 more; it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 49
+graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left
+graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left; the server last progressed 0 s ago, estimated time left: about 1 min
+graph: plan stage inference starts (managed 1622 MB, resident 3455 MB)
+graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left; the server last progressed 11 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4196 of 1044 MB reserved, 1 projects running): repo-policy needs 4196 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 15 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (2463 of 1375 MB reserved, 1 projects running): @semio-tech/browser-actor-import-test needs 2463 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project repo-policy (project) grew by 1985 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (2463 of 0 MB reserved, 1 projects running): @semio-tech/repo-metrics-go needs 2463 MB and has waited 3 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/browser-actor-import-test (project) grew by 3150 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 30 s ago, estimated time left: about 1 min
+graph: plan stage inference (during inference) grew the plan by 5028 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: waiting for memory headroom (2463 of 0 MB reserved, 1 projects running): @semio-tech/framework-process needs 2463 MB and has waited 2 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/repo-metrics-go (project) grew by 2508 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: plan stage inference settled from 7936 to 7561 MB
+Graph: Plan-Stufe inference beruhigt von 7936 auf 7561 MB
+2026-11-15T08:33:46.751Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10058,"limit":6553,"available":5699,"reserve":2048,"reason":"ceiling","worker":{"heapMb":1044.5,"extraMb":695.6,"objectCount":5367819,"objectTypes":[{"type":"string","count":2468345},{"type":"Array","count":794356},{"type":"Object","count":695790},{"type":"Set","count":165491},{"type":"WeakRef","count":151759},{"type":"Uint8Array","count":66182},{"type":"Cell Butterfly","count":41476},{"type":"Structure","count":37110}],"at":1794731601596}}
+2026-11-15T08:33:57Z PLAN TOO HEAVY TRY 1, 20 lines before and the line
+graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 30 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:36","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 36 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[repository:command] still running after 110 s
+graph: plan stage inference (during inference) grew the plan by 5028 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: plan stop detail {"stage":"inference","operation":"inference","memory":{"rss":6013,"heapTotal":1176,"heapUsed":3858,"external":2792,"arrayBuffers":94},"heap":{"heapMb":3857.9,"extraMb":2792.3,"objectCount":24673919,"objectTypes":[{"type":"string","count":12640959},{"type":"Object","count":8110913},{"type":"Array","count":1632388},{"type":"Set","count":168017},{"type":"WeakRef","count":159144},{"type":"Cell Butterfly","count":71808},{"type":"Structure","count":37189},{"type":"Uint32Array","count":33279}]},"resources":{},"recent":[{"atMs":91011,"heapUsed":1053,"external":727,"arrayBuffers":180,"rss":3770,"operation":"inference/inference"},{"atMs":91271,"heapUsed":962,"external":627,"arrayBuffers":105,"rss":3770,"operation":"inference/inference"},{"atMs":91725,"heapUsed":962,"external":658,"arrayBuffers":136,"rss":3770,"operation":"inference/inference"},{"atMs":92098,"heapUsed":1020,"external":696,"arrayBuffers":173,"rss":3770,"operation":"inference/inference"},{"atMs":92374,"heapUsed":953,"external":623,"arrayBuffers":112,"rss":3770,"operation":"inference/inference"},{"atMs":92642,"heapUsed":953,"external":699,"arrayBuffers":188,"rss":3771,"operation":"inference/inference"},{"atMs":92917,"heapUsed":1064,"external":752,"arrayBuffers":233,"rss":3771,"operation":"inference/inference"},{"atMs":93310,"heapUsed":1039,"external":711,"arrayBuffers":140,"rss":3771,"operation":"inference/inference"},{"atMs":93709,"heapUsed":1157,"external":810,"arrayBuffers":184,"rss":3771,"operat
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:36:1:0:%40semio-tech%2Frepo-metrics-go|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 36 projects · 1 running, longest 0 s: @semio-tech/repo-metrics-go (project, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (2463 of 0 MB reserved, 1 projects running): @semio-tech/framework-process needs 2463 MB and has waited 2 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: project @semio-tech/repo-metrics-go (project) grew by 2508 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:36:2:5:%40semio-tech%2Frepo-metrics-go|project|5|0,%40semio-tech%2Fframework-process|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 36 projects · 2 running, longest 5 s: @semio-tech/repo-metrics-go (project, 5 s, 0 rows), @semio-tech/framework-process (project, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+graph: plan stage inference settled from 7936 to 7561 MB
+Graph: Plan-Stufe inference beruhigt von 7936 auf 7561 MB
+[repository:command] still running after 120 s
+2026-11-15T08:33:46.751Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10058,"limit":6553,"available":5699,"reserve":2048,"reason":"ceiling","worker":{"heapMb":1044.5,"extraMb":695.6,"objectCount":5367819,"objectTypes":[{"type":"string","count":2468345},{"type":"Array","count":794356},{"type":"Object","count":695790},{"type":"Set","count":165491},{"type":"WeakRef","count":151759},{"type":"Uint8Array","count":66182},{"type":"Cell Butterfly","count":41476},{"type":"Structure","count":37110}],"at":1794731601596}}
+2026-11-15T08:33:57Z P12 PEAK TRY 1: 2026-11-15T08:33:41Z pid=93308 rss=6291MB footprint=[bun [93308]: 64-bit    Footprint: 6402 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 144 MB (released 0 MB)]
+2026-11-15T08:33:58Z LAUNCHER AFTER TRY 1
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T08:33:58Z LAUNCHER during try 1: unchanged
+2026-11-15T08:33:58Z TRY 1 END native_rc=75 peak_rss_kib=3861248 run_peak_rss_kib=144048 stop=None fleet_refusal=True closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T08:33:58Z refusal, hard stop, stall, missing closure or moving sources: next try in 3 minutes
+2026-11-15T08:36:58Z LAUNCHER BEFORE TRY 2
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T08:36:58Z LAUNCHER since the end of the previous try: unchanged
+2026-11-15T08:36:58Z TRY 2 START group 95249 log /Users/ueli/native-bootstrap-round-26-try-2.log
+2026-11-15T08:36:58Z pressure_level=1 run_group_max_rss_kib=2352
+1383712 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+263120 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+195952 43836 43835 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.325/485fdac4332e/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-fable-5-2 --permission-prompt-tool=stdio --resume=9d0eceba-b1b8-4814-b9c
+2026-11-15T08:37:28Z pressure_level=1 run_group_max_rss_kib=130384
+1988656 95650 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1418864 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+267632 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:37:58Z pressure_level=1 run_group_max_rss_kib=130912
+3324352 95650 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1419168 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+271376 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:38:28Z pressure_level=1 run_group_max_rss_kib=131392
+7331248 95650 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1423632 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+275536 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:38:58Z pressure_level=1 run_group_max_rss_kib=130256
+8592208 95650 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1262304 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+479408 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:39:28Z ACCESS LINES TRY 2: 0
+
+2026-11-15T08:39:35Z KEY LINES TRY 2: 21
+graph: 49 stale projects, 0 taken from the fleet, 14 too heavy for this machine (@semio-tech/repo-test-domain (about 11060 MB), @semio-tech/repo-test-runner-go (about 10086 MB), @semio-tech/repo-providers-go (about 8396 MB), @semio-tech/repo-cli-go (about 8350 MB), @semio-tech/browser-actor-import-test (about 6296 MB), repo-policy (about 4934 MB), and 8 more; it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 49
+graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left
+graph: plan stage inference starts (managed 1853 MB, resident 3247 MB)
+graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left; the server last progressed 141 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (2463 of 437 MB reserved, 1 projects running): @semio-tech/repo-metrics-go needs 2463 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 153 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (2463 of 1628 MB reserved, 1 projects running): @semio-tech/framework-process needs 2463 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/repo-metrics-go (project) grew by 3207 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (3207 of 1628 MB reserved, 1 projects running): @semio-tech/framework-process needs 2463 MB and has waited 12 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 164 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (2997 of 1810 MB reserved, 1 projects running): @semio-tech/framework-renderer-wgpu needs 1526 MB and has waited 13 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 49 projects arrived from the fleet, 2 inferred here, 47 left; the server last progressed 171 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (2997 of 3121 MB reserved, 1 projects running): @semio-tech/framework-renderer-wgpu needs 1526 MB and has waited 19 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (3219 of 821 MB reserved, 1 projects running): @semio-tech/framework-renderer-wgpu needs 1526 MB and has waited 24 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 49 projects arrived from the fleet, 2 inferred here, 47 left; the server last progressed 191 s ago, estimated time left: about 1 min
+graph: 0 of 49 projects arrived from the fleet, 3 inferred here, 46 left; the server last progressed 194 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (1780 of 0 MB reserved, 1 projects running): @semio-tech/repo-test needs 4763 MB and has waited 2 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/framework-renderer-wgpu (language:cargo) grew by 1987 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: plan stage inference settled from 7013 to 9316 MB
+Graph: Plan-Stufe inference beruhigt von 7013 auf 9316 MB
+2026-11-15T08:39:10.274Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10125,"limit":6553,"available":4236,"reserve":2048,"reason":"ceiling","worker":{"heapMb":2338.8,"extraMb":1956.1,"objectCount":8440174,"objectTypes":[{"type":"string","count":5632835},{"type":"Object","count":916576},{"type":"Array","count":705283},{"type":"Set","count":156330},{"type":"WeakRef","count":98372},{"type":"Structure","count":36804},{"type":"Function","count":23594},{"type":"UnlinkedFunctionExecutable","count":20845}],"at":1794731916681}}
+2026-11-15T08:39:35Z PLAN TOO HEAVY TRY 2, 20 lines before and the line
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:34","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 34 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+graph: 0 of 49 projects arrived from the fleet, 3 inferred here, 46 left; the server last progressed 194 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:2:34:1:0:%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 2 of 34 projects · 1 running, longest 0 s: @semio-tech/framework-renderer-wgpu (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (1780 of 0 MB reserved, 1 projects running): @semio-tech/repo-test needs 4763 MB and has waited 2 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/framework-renderer-wgpu (language:cargo) grew by 1987 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[repository:command] still running after 430 s
+[repo] still working after 440 s; last phase started: source.served
+[repository:command] still running after 440 s
+graph: plan stage inference settled from 7013 to 9316 MB
+Graph: Plan-Stufe inference beruhigt von 7013 auf 9316 MB
+2026-11-15T08:39:10.274Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10125,"limit":6553,"available":4236,"reserve":2048,"reason":"ceiling","worker":{"heapMb":2338.8,"extraMb":1956.1,"objectCount":8440174,"objectTypes":[{"type":"string","count":5632835},{"type":"Object","count":916576},{"type":"Array","count":705283},{"type":"Set","count":156330},{"type":"WeakRef","count":98372},{"type":"Structure","count":36804},{"type":"Function","count":23594},{"type":"UnlinkedFunctionExecutable","count":20845}],"at":1794731916681}}
+2026-11-15T08:39:35Z P12 PEAK TRY 2: 2026-11-15T08:39:02Z pid=95650 rss=8636MB footprint=[bun [95650]: 64-bit    Footprint: 5716 MB (16384 bytes per page)] last=[graph: project @semio-tech/framework-renderer-wgpu (language:cargo) grew by 1987 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is ]
+2026-11-15T08:39:35Z LAUNCHER AFTER TRY 2
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T08:39:35Z LAUNCHER during try 2: unchanged
+2026-11-15T08:39:35Z TRY 2 END native_rc=75 peak_rss_kib=8592208 run_peak_rss_kib=131392 stop=None fleet_refusal=True closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T08:39:35Z refusal, hard stop, stall, missing closure or moving sources: next try in 3 minutes
+2026-11-15T08:42:35Z LAUNCHER BEFORE TRY 3
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T08:42:35Z LAUNCHER since the end of the previous try: unchanged
+2026-11-15T08:42:35Z TRY 3 START group 97648 log /Users/ueli/native-bootstrap-round-26-try-3.log
+2026-11-15T08:42:35Z pressure_level=1 run_group_max_rss_kib=2352
+1242976 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+275232 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+195280 43836 43835 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.325/485fdac4332e/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-fable-5-2 --permission-prompt-tool=stdio --resume=9d0eceba-b1b8-4814-b9c
+2026-11-15T08:43:05Z pressure_level=1 run_group_max_rss_kib=135968
+1422880 98054 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1256128 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+280208 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:43:35Z pressure_level=1 run_group_max_rss_kib=136224
+2738080 98054 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1256592 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+283040 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:44:05Z pressure_level=1 run_group_max_rss_kib=136640
+5828224 98054 93218 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1256736 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+286768 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:44:35Z ACCESS LINES TRY 3: 0
+
+2026-11-15T08:44:43Z KEY LINES TRY 3: 19
+graph: 49 stale projects, 0 taken from the fleet, 16 too heavy for this machine (@semio-tech/repo-test-domain (about 11050 MB), @semio-tech/repo-test-runner-go (about 10078 MB), @semio-tech/framework-process (about 9520 MB), @semio-tech/repo-providers-go (about 8388 MB), @semio-tech/repo-cli-go (about 8342 MB), @semio-tech/repo-metrics-go (about 6912 MB), and 10 more; it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 49
+graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left
+graph: plan stage inference starts (managed 1449 MB, resident 2671 MB)
+graph: 0 of 49 projects arrived from the fleet, 0 inferred here, 49 left; the server last progressed 473 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 398 MB reserved, 1 projects running): @semio-tech/framework-renderer-wgpu needs 1526 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 479 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (1526 of 562 MB reserved, 1 projects running): @semio-tech/repo-test needs 4763 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1526 of 1019 MB reserved, 1 projects running): @semio-tech/repo-test needs 4763 MB and has waited 10 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 496 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (2451 of 1095 MB reserved, 1 projects running): @semio-tech/repo-test needs 4763 MB and has waited 15 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/framework-renderer-wgpu (language:cargo) grew by 3003 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: project @semio-tech/repo-test (project) grew by 1840 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): @semio-tech/repo-contributors-go needs 4763 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 49 projects arrived from the fleet, 1 inferred here, 48 left; the server last progressed 506 s ago, estimated time left: about 1 min
+graph: plan stage inference (during inference) grew the plan by 5169 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): @semio-tech/print needs 4763 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: project @semio-tech/repo-contributors-go (project) grew by 3045 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): @semio-tech/repo-test-dotnet needs 1038 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+2026-11-15T08:44:17.853Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10200,"limit":6553,"available":5611,"reserve":2048,"reason":"ceiling","worker":{"heapMb":1538.6,"extraMb":1125.9,"objectCount":8904614,"objectTypes":[{"type":"string","count":6188002},{"type":"Object","count":1234172},{"type":"Array","count":888169},{"type":"JSLexicalEnvironment","count":179650},{"type":"Set","count":157087},{"type":"Function","count":143283},{"type":"Promise","count":109427},{"type":"WeakRef","count":101542}],"at":1794732228064}}
+2026-11-15T08:44:43Z PLAN TOO HEAVY TRY 3, 20 lines before and the line
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+graph: project @semio-tech/repo-contributors-go (project) grew by 3045 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:32","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 32 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:32:1:0:%40semio-tech%2Fprint|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 32 projects · 1 running, longest 0 s: @semio-tech/print (project, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): @semio-tech/repo-test-dotnet needs 1038 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:32:1:0:%40semio-tech%2Fprint|project|0|0:waiting|4763|0|language%3Adotnet","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 32 projects · 1 running, longest 0 s: @semio-tech/print (project, 0 s, 0 rows) · waiting for memory headroom (4763 of 0 MB reserved)
+[repository:command] still running after 750 s
+2026-11-15T08:44:17.853Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10200,"limit":6553,"available":5611,"reserve":2048,"reason":"ceiling","worker":{"heapMb":1538.6,"extraMb":1125.9,"objectCount":8904614,"objectTypes":[{"type":"string","count":6188002},{"type":"Object","count":1234172},{"type":"Array","count":888169},{"type":"JSLexicalEnvironment","count":179650},{"type":"Set","count":157087},{"type":"Function","count":143283},{"type":"Promise","count":109427},{"type":"WeakRef","count":101542}],"at":1794732228064}}
+2026-11-15T08:44:43Z P12 PEAK TRY 3: 2026-11-15T08:44:09Z pid=98054 rss=7327MB footprint=[bun [98054]: 64-bit    Footprint: 1889 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): @semio-tech/print needs 4763 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the ru]
+2026-11-15T08:44:43Z LAUNCHER AFTER TRY 3
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T08:44:43Z LAUNCHER during try 3: unchanged
+2026-11-15T08:44:43Z TRY 3 END native_rc=75 peak_rss_kib=5828224 run_peak_rss_kib=136640 stop=None fleet_refusal=True closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T08:44:43Z refusal, hard stop, stall, missing closure or moving sources: next try in 3 minutes
+2026-11-15T08:47:43Z LAUNCHER BEFORE TRY 4
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T08:47:43Z LAUNCHER since the end of the previous try: unchanged
+2026-11-15T08:47:43Z TRY 4 START group 99589 log /Users/ueli/native-bootstrap-round-26-try-4.log
+2026-11-15T08:47:43Z pressure_level=1 run_group_max_rss_kib=2352
+1080464 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+482928 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+195296 43836 43835 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.325/485fdac4332e/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-fable-5-2 --permission-prompt-tool=stdio --resume=9d0eceba-b1b8-4814-b9c
+2026-11-15T08:48:13Z pressure_level=1 run_group_max_rss_kib=139552
+1478224   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1080768 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+494176 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:48:43Z pressure_level=1 run_group_max_rss_kib=140048
+2628240   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1081360 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495168 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:49:13Z pressure_level=1 run_group_max_rss_kib=140480
+3180304   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1082528 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495232 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:49:43Z pressure_level=1 run_group_max_rss_kib=141056
+3898384   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1375520 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+495328 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T08:50:13Z pressure_level=1 run_group_max_rss_kib=138112
+6769456   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1292384 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+989008  1318   268 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs
+2026-11-15T08:50:43Z pressure_level=1 run_group_max_rss_kib=138016
+7039600   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1129568 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+987664  1318   268 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs
+2026-11-15T08:51:13Z pressure_level=1 run_group_max_rss_kib=137872
+6853856   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1063088 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+874496  1318   268 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs
+2026-11-15T08:51:43Z pressure_level=1 run_group_max_rss_kib=138000
+7162864   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1066640 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+874304  1318   268 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs
+2026-11-15T08:52:13Z pressure_level=1 run_group_max_rss_kib=138288
+7150208   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1059760 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+874304  1318   268 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs
+2026-11-15T08:52:44Z pressure_level=1 run_group_max_rss_kib=56400
+8199840   268   168 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+465952 49011 49010 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+359872  1318   268 /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs
+2026-11-15T08:53:14Z ACCESS LINES TRY 4: 0
+
+2026-11-15T08:53:19Z KEY LINES TRY 4: 46
+2026-11-15T08:48:06.531Z access-proof version=3 root=/Users/ueli/Documents/semio protected=Documents sample=ok reproof=on route=launchd pid=168 ppid=133 responsible=133
+graph: 52 stale projects, 0 taken from the fleet, 5 too heavy for this machine (@semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 52
+graph: 0 of 52 projects arrived from the fleet, 0 inferred here, 52 left
+graph: plan stage inference starts (managed 1285 MB, resident 3452 MB)
+graph: 0 of 52 projects arrived from the fleet, 0 inferred here, 52 left; the server last progressed 831 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (1526 of 118 MB reserved, 1 projects running): repo-schema-commands needs 4763 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 0 inferred here, 52 left; the server last progressed 844 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 700 MB reserved, 1 projects running): repo-policy needs 4763 MB and has waited 3 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 984 MB reserved, 1 projects running): repo-policy needs 4763 MB and has waited 8 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 0 inferred here, 52 left; the server last progressed 854 s ago, estimated time left: about 1 min
+graph: project semio-os-infinite (language:cargo) grew by 2848 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (2848 of 753 MB reserved, 1 projects running): repo-policy needs 4763 MB and has waited 19 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 1 inferred here, 51 left; the server last progressed 864 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 1296 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 10 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 1 inferred here, 51 left; the server last progressed 885 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 1046 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 15 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 667 MB reserved, 1 projects running): repo needs 4763 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: plan stage inference (during inference) grew the plan by 5581 MB, more than the 4915 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: project repo-mcp (project) grew by 5057 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (5057 of 668 MB reserved, 1 projects running): repo needs 4763 MB and has waited 32 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 2 inferred here, 50 left; the server last progressed 927 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 0 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 2 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 1104 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 7 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 2 inferred here, 50 left; the server last progressed 941 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 1106 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 12 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 795 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 18 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 642 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 23 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 2 inferred here, 50 left; the server last progressed 952 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 610 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 28 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 807 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 34 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 2 inferred here, 50 left; the server last progressed 969 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 747 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 39 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 1147 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 44 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 2 inferred here, 50 left; the server last progressed 980 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 1132 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 49 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 1000 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 55 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (4763 of 1194 MB reserved, 1 projects running): repo-mcp needs 4763 MB and has waited 60 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 2 inferred here, 50 left; the server last progressed 993 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (5057 of 5162 MB reserved, 1 projects running): @semio-tech/value-rs needs 1526 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 3 inferred here, 49 left; the server last progressed 1002 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (1526 of 268 MB reserved, 1 projects running): @semio-tech/repo-workspace-go needs 4763 MB and has waited 3 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: waiting for memory headroom (1526 of 584 MB reserved, 1 projects running): @semio-tech/repo-workspace-go needs 4763 MB and has waited 9 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 3 inferred here, 49 left; the server last progressed 1014 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (1526 of 717 MB reserved, 1 projects running): @semio-tech/repo-workspace-go needs 4763 MB and has waited 14 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+2026-11-15T08:52:50.110Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10093,"limit":6553,"available":5338,"reserve":2048,"reason":"ceiling","worker":{"heapMb":2767.8,"extraMb":1683.6,"objectCount":14215159,"objectTypes":[{"type":"string","count":6533264},{"type":"Object","count":3472221},{"type":"Array","count":1760257},{"type":"Cell Butterfly","count":329875},{"type":"WeakRef","count":176851},{"type":"Set","count":172503},{"type":"Structure","count":41151},{"type":"Uint32Array","count":34077}],"at":1794732727671}}
+2026-11-15T08:53:19Z PLAN TOO HEAVY TRY 4, 20 lines before and the line
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 52 projects arrived from the fleet, 3 inferred here, 49 left; the server last progressed 1014 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (1526 of 717 MB reserved, 1 projects running): @semio-tech/repo-workspace-go needs 4763 MB and has waited 14 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:3:43:1:10:%40semio-tech%2Fvalue-rs|language%3Acargo|10|0:waiting|1526|717|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 3 of 43 projects · 1 running, longest 10 s: @semio-tech/value-rs (language:cargo, 10 s, 0 rows) · waiting for memory headroom (1526 of 717 MB reserved)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 270 s
+[repository:command] still running after 280 s
+2026-11-15T08:52:50.110Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10093,"limit":6553,"available":5338,"reserve":2048,"reason":"ceiling","worker":{"heapMb":2767.8,"extraMb":1683.6,"objectCount":14215159,"objectTypes":[{"type":"string","count":6533264},{"type":"Object","count":3472221},{"type":"Array","count":1760257},{"type":"Cell Butterfly","count":329875},{"type":"WeakRef","count":176851},{"type":"Set","count":172503},{"type":"Structure","count":41151},{"type":"Uint32Array","count":34077}],"at":1794732727671}}
+2026-11-15T08:53:19Z P12 PEAK TRY 4: 2026-11-15T08:50:49Z pid=268 rss=7143MB footprint=[bun [268]: 64-bit    Footprint: 1235 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 133 MB (released 0 MB)]
+2026-11-15T08:53:19Z LAUNCHER AFTER TRY 4
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T08:53:19Z LAUNCHER during try 4: unchanged
+2026-11-15T08:53:19Z TRY 4 END native_rc=75 peak_rss_kib=8199840 run_peak_rss_kib=141056 stop=None fleet_refusal=True closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T08:53:19Z NEWER ROUND 27 after try 4: runner ends
+2026-11-15T08:53:19Z ROUND RUNNER END

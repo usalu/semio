@@ -5266,6 +5266,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-raster-raster-mutations-layer-props"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-pixels",
+ "semio-framework-schema",
+ "semio-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-raster-raster-diff",
+ "semio-s-artifact-raster-raster-model",
+]
+
+[[package]]
 name = "semio-ui-contract"
 version = "0.1.0"
 dependencies = [
@@ -6001,38 +6018,21 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
  "semio-framework-pack-json",
  "semio-framework-schema",
  "semio-framework-schema-state",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
  "semio-s-artifact-raster-raster-diff",
  "semio-s-artifact-raster-raster-model",
- "semio-s-artifact-raster-raster-mutations-layer-properties",
+ "semio-s-artifact-raster-raster-mutations-layer-props",
  "semio-s-artifact-raster-raster-mutations-layers",
  "semio-s-artifact-raster-raster-mutations-pixels",
  "semio-s-artifact-stdio-semio-image",
-]
-
-[[package]]
-name = "semio-s-artifact-raster-raster-mutations-layer-properties"
-version = "0.1.0"
-dependencies = [
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-os-kernel",
- "semio-framework-pack-json",
- "semio-framework-pixels",
- "semio-framework-schema",
  "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-raster-raster-diff",
- "semio-s-artifact-raster-raster-model",
 ]
 
 [[package]]

@@ -1,0 +1,11 @@
+Pre-run facts, 2026-11-15T02:23:10Z
+- replica code digest (.cache/f/health.json): d399114215f574cd93e191090e959fc4f901cfe0f2cd44963ab8d2b8d4046284, store ok, pending None , trust verified 1794709274650 , daemon pid 14720
+- agreement before the first try: `repo … fleet --wait 60` did not return within 200 s on this machine (stopped; the same happened on 14 November), so it was read from the attestations in the store: g1-m01, g1-m02, g1-m03, g1-m06, g1-m07 and g1-server all attest code d399114215f5, each 1 s old, sync on; this replica has no pending code and its trust is verified.
+- replica agent: state = running
+state = active
+state = active
+- graph service job: - 0 tech.semio.repo.service.19c193692817;81843 0 tech.semio.repo.service.f3ab084f85e8;
+- repo service host processes:
+    pid 81843 ppid 1 age 41:17 rss 54736
+    pid 81873 ppid 81843 age 41:14 rss 314272
+- memory pressure level 1, swap total = 3072.00M  used = 2515.50M  free = 556.50M  (encrypted), free disk 81Gi

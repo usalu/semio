@@ -1,0 +1,61 @@
+P6 checks on g1-m03, 2026-11-14T20:10:19Z, after the first repo run of round 7 (try 1)
+
+## 1. How the service is started
+$ launchctl list | grep tech.semio.repo.service
+18635	0	tech.semio.repo.service.a909995b451a
+8911	0	tech.semio.repo.service.d8505b2379b9
+$ launchctl print gui/501/tech.semio.repo.service.a909995b451a | grep -E "program|arguments|working directory|state|runs|pended nondemand spawn|last exit"
+	state = running
+	program = /Users/ueli/.local/share/semio/launcher/bin/repo
+	working directory = /Users/ueli/Documents/semio
+	runs = 1
+	last exit code = (never exited)
+		state = active
+		state = active
+	arguments = {
+		/Users/ueli/.local/share/semio/launcher/bin/repo
+		/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts
+		repo
+		service
+		host
+		run
+	}
+$ launchctl print gui/501/tech.semio.repo.service.d8505b2379b9 | grep -E "program|arguments|working directory|state|runs|pended nondemand spawn|last exit"
+	state = running
+	program = /Users/ueli/.local/share/semio/launcher/bin/repo
+	working directory = /Users/ueli/Documents/semio
+	runs = 1
+	last exit code = (never exited)
+		state = active
+		state = active
+	arguments = {
+		/Users/ueli/.local/share/semio/launcher/bin/repo
+		/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts
+		repo
+		service
+		host
+		run
+	}
+$ ps -o pid,ppid,command -p 18635
+  PID  PPID COMMAND
+18635     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/
+$ ps -o pid,ppid,command -p 8911
+  PID  PPID COMMAND
+ 8911     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/
+$ ls -l /usr/local/bin/repo
+lrwxr-xr-x@ 1 root  wheel  27 Nov 13 22:02 /usr/local/bin/repo -> /Users/ueli/.local/bin/repo
+
+## 2. Identity of the replica daemon
+"bootVersion":6
+18571     1 /bin/sh /Users/ueli/Library/Application Support/semio/fleet/entry/boot.sh run
+18579 18571 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs run
+18580 18579 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M-$M^]M-oM-8M^Oshared-w
+shim.txt: ls: /Users/ueli/Library/Application Support/semio/fleet/entry/shim.txt: No such file or directory
+
+## 4. Receipts
+-- /Users/ueli/Library/Application Support/semio/access/3f08bbea4d32/client.json
+{"version":1,"role":"client","pid":18618,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794687003860}
+-- /Users/ueli/Library/Application Support/semio/access/3f08bbea4d32/launcher.json
+{"version":1,"role":"launcher","pid":18618,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794687004102}
+-- /Users/ueli/Library/Application Support/semio/access/3f08bbea4d32/service.json
+{"version":1,"role":"service","pid":18649,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794687015340}

@@ -12,6 +12,9 @@
     "deriveConcurrency": 2,
     "collectEveryClosures": 256,
     "settleChunkClosures": 256,
+    "manifestSaveMilliseconds": 15000,
+    "manifestSaveSpendRatio": 10,
+    "vouchConcurrency": 64,
     "maximumSuspects": 65536
    }
   },

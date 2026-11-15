@@ -5,6 +5,7 @@ import {join} from "node:path";
 import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readExactSourceInventoryV1,withManagedGraphSourceReadBatchV1} from "../../../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
+import {closureMissingErrorV1} from "../../../🕸️graph/🩹️closure-repair/🟨️.mjs";
 import {withRepositoryCacheStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
@@ -93,7 +94,7 @@ export function filesystemBazelClosureFetchV1(directory:string):BazelClosureFetc
 export function managedBazelClosureFetchV1(root:string,control:ResourceLeaseControl,invocation:ScriptInvocation):BazelClosureFetchV1{
  return (kind,keys)=>withRepositoryCacheStoreV1(root,"graph",invocation,control,(_store,reader)=>withManagedGraphSourceReadBatchV1(root,reader,async batch=>{
   const rows=new Map<string,unknown>();
-  for(const key of keys){const file=await readExactSourceInventoryV1(batch,policy.namespaces[kind] as Parameters<typeof readExactSourceInventoryV1>[1],key);if(!file||file.sha256!==key)throw new Error("Exact Source inventory identity changed");rows.set(key,file.value);}
+  for(const key of keys){const file=await readExactSourceInventoryV1(batch,policy.namespaces[kind] as Parameters<typeof readExactSourceInventoryV1>[1],key);if(!file)throw closureMissingErrorV1({namespace:policy.namespaces[kind] as "build-input-closures",key});if(file.sha256!==key)throw new Error("Exact Source inventory identity changed");rows.set(key,file.value);}
   return rows;
  }));
 }

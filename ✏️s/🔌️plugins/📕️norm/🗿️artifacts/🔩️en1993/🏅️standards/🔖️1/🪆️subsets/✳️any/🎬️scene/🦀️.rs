@@ -14,7 +14,6 @@ pub use scene_members::kit::{EntityKindSpec, ENTITY_KINDS, entities_of, entity_d
 pub use scene_members::layout;
 pub use scene_members::layout::{Layout, Placement};
 pub use scene_members::handles;
-pub use scene_members::handles::handles;
 pub use scene_members::SceneInput;
 pub use projection::fragment;
 

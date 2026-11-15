@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""🐍️ Independent oracle of the bootstrap archive of the shared worktree fleet: it reads `<store>/v1/bootstrap/worktree.tar` with Python's standard `tarfile` and `manifest.json` with `json`, and shares no code with `../🟦️.ts`.
+"""🐍️ Independent oracle of the bootstrap archive of the shared worktree fleet: it reads the tar that `<store>/v1/bootstrap/manifest.json` names with Python's standard `tarfile` and `manifest.json` with `json`, and shares no code with `../🟦️.ts`.
 
 usage: python3 -I oracle.py check STORE [EXPECTED.json]
        checks that manifest.json has exactly version, hlc, files, bytes and sha256, that the sha256 is the hash of the tar, that the tar is a multiple of 512 bytes
@@ -57,7 +57,7 @@ def check(store, expected_path):
     base = os.path.join(store, "v1", "bootstrap")
     with open(os.path.join(base, "manifest.json"), encoding="utf-8") as handle:
         manifest = json.load(handle)
-    if sorted(manifest) != ["bytes", "files", "hlc", "sha256", "version"]:
+    if sorted(manifest) != ["archive", "bytes", "files", "hlc", "sha256", "version"]:
         problems.append("manifest keys: " + ",".join(sorted(manifest)))
         return problems
     if manifest["version"] != 1:
@@ -66,7 +66,9 @@ def check(store, expected_path):
         problems.append("manifest hlc")
     if not re.fullmatch(r"[0-9a-f]{64}", manifest["sha256"]):
         problems.append("manifest sha256 shape")
-    tar_path = os.path.join(base, "worktree.tar")
+    if manifest["archive"] != "worktree-" + manifest["sha256"][:16] + ".tar":
+        problems.append("the archive name does not tell the content")
+    tar_path = os.path.join(base, manifest["archive"])
     if digest_file(tar_path) != manifest["sha256"]:
         problems.append("the sha256 of the tar differs from manifest.json")
     size = os.path.getsize(tar_path)

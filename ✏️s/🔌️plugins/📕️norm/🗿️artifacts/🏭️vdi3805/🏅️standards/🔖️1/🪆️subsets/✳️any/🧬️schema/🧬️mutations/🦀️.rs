@@ -154,3 +154,9 @@ pub mod mutation_bridge {
     }
 }
 pub use crate::mutation_bridge::*;
+
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;

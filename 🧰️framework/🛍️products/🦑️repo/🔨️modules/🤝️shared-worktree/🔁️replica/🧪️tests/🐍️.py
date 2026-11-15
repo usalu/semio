@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """🐍️ Independent oracle of the shared worktree replica: a second implementation, in Python's standard library only, of the journal fold and of the worktree comparison. It shares no code with `../🟦️.ts`; the TypeScript tests run both on the same scenarios and require that they agree.
 
-usage: python3 -I oracle.py fold FIXTURE                  replays the fold vectors of FIXTURE; exit 1 on the first disagreement
+usage: python3 -I oracle.py sync FILE                   prints true when FILE is missing or enabled, false when the switch is off
+       python3 -I oracle.py fold FIXTURE                  replays the fold vectors of FIXTURE; exit 1 on the first disagreement
        python3 -I oracle.py conflicts FIXTURE                    replays the conflict vectors: an unpublished local edit beats a remote event only when its modification
                                                           time is later than the wall time inside the remote hlc; a local delete (no time) always loses
        python3 -I oracle.py compare STORE WORKTREE [PATTERN ...]
@@ -96,10 +97,27 @@ def fold_store(store):
     return manifest
 
 
+def git_private(path):
+    parts = path.split("/")
+    if not parts or parts[0] != ".git":
+        return False
+    rest = parts[1:]
+    if not rest:
+        return False
+    name = rest[-1]
+    if name.endswith(".lock") or name.startswith("tmp_"):
+        return True
+    if rest[0] in ("worktrees", "sequencer", "rebase-merge", "rebase-apply"):
+        return True
+    return "/".join(rest) in ("info/exclude", "COMMIT_EDITMSG", "MERGE_MSG", "SQUASH_MSG", "FETCH_HEAD", "ORIG_HEAD", "MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "REBASE_HEAD", "BISECT_LOG", "AUTO_MERGE")
+
+
 def ignored(path, patterns):
     parts = path.split("/")
-    if parts[0] == ".git" or parts[:2] == [".cache", "f"]:
+    if parts[:2] == [".cache", "f"] or ".git" in parts[1:]:
         return True
+    if parts and parts[0] == ".git":
+        return git_private(path)
     return any(fnmatch.fnmatchcase(part, pattern) for part in parts for pattern in patterns)
 
 
@@ -140,7 +158,19 @@ def compare(store, worktree, patterns):
     return {"ok": not drift, "entries": len(shared), "drift": drift}
 
 
+def sync_enabled(path):
+    if not os.path.isfile(path):
+        return True
+    value = json.load(open(path, encoding="utf8"))
+    if not isinstance(value, dict) or set(value) != {"version", "enabled"} or value.get("version") != 1 or not isinstance(value.get("enabled"), bool):
+        raise ValueError("closed sync switch")
+    return value["enabled"]
+
+
 def main(argv):
+    if len(argv) >= 3 and argv[1] == "sync":
+        print("true" if sync_enabled(argv[2]) else "false")
+        return 0
     if len(argv) >= 3 and argv[1] == "fold":
         for vector in read_json(argv[2])["folds"]:
             manifest = fold({}, vector["events"])

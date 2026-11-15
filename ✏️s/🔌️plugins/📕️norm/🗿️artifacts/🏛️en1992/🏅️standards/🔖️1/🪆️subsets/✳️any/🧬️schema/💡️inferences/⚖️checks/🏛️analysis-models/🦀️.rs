@@ -212,7 +212,7 @@ pub fn a13(c: &Case) -> R {
             m_int(nn, k).map(|mi| mi >= nn * (e0 + k * l0 * l0 / (PI * PI))).unwrap_or(false)
         })
     };
-    let (mut lo_g, mut hi_g) = (0.0, 8.0);
+    let (mut lo_g, mut hi_g) = (0.0_f64, 8.0_f64);
     if !stable(1e-6) { return Err("section cannot carry any load".into()); }
     for _ in 0..c.o("bisect", 14.0) as usize {
         let m = 0.5 * (lo_g + hi_g);

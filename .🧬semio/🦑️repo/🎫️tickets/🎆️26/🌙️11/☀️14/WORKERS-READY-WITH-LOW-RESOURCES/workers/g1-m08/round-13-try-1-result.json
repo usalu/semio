@@ -1,0 +1,32 @@
+{
+  "round": 13,
+  "attempt": 1,
+  "start": "2026-11-15T01:42:22Z",
+  "end": "2026-11-15T01:46:52Z",
+  "wall_s": 270.0,
+  "log": "/Users/ueli/native-bootstrap-round-13.log",
+  "native_rc": 75,
+  "wrapper_rc": null,
+  "peak_owned_rss_kib": null,
+  "sample_count": 0,
+  "marker_exists": false,
+  "graph_hosts": {
+    "host-007c265f8fa9.json": {
+      "pid": 96929,
+      "startedAt": 1794706981721,
+      "implementation": "6823037f1f402651795108ccf844e761cd7dbca24c82615d24e028429885bb0c"
+    }
+  },
+  "service_full_logs": {
+    "host-007c265f8fa9.log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-13-try-1-host-007c265f8fa9.log"
+  },
+  "p12_samples": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-13-try-1-p12-samples.txt",
+  "other_error": false,
+  "retry_wording": true,
+  "closure_missing": false,
+  "consent": false,
+  "underlying_error_signature": "graph-plan-too-heavy environment 7995/6553",
+  "retry_wait_s": 180.009,
+  "counted_tries": 1,
+  "observer_failure": "PermissionError EPERM from one os.killpg SIGINT attempt. Delivery unknown; service log includes SIGINT received. In-memory 30s ps/pressure arrays were lost before persistence; values not reconstructed. Printed observer heartbeat up to 01:46:07 had pressure 1 and peak 3086624 KiB. Full native and independent P12 sampler preserved. Native ended naturally with typed refusal 75; no extra native launched."
+}

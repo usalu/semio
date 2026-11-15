@@ -8,7 +8,7 @@ export function sectionalDigestV1(text:string,ignore:readonly string[]):string;
 /** 🌍️ The value one manifest contributes to the environment, or null when the manifest does not exist. */
 export function extractEnvironmentFieldV1(extractor:EnvironmentExtractorV1,text:string|undefined):unknown;
 export function environmentRowHoldsV1(row:GenerationRowV1,readers:EnvironmentReadersV1):Promise<boolean>;
-export function deriveEnvironmentV1(input:EnvironmentReadersV1&{projects:readonly EnvironmentProjectV1[];workspaceManifests:readonly string[];lock?:string;taxonomy?:string}):Promise<{digest:string;rows:GenerationRowV1[];parts:EnvironmentPartsV1}>;
+export function deriveEnvironmentV1(input:EnvironmentReadersV1&{projects:readonly EnvironmentProjectV1[];workspaceManifests:readonly string[];lock?:string;taxonomy?:string;operation?:(name:"fields"|"manifests"|"lock"|"taxonomy")=>void|Promise<void>}):Promise<{digest:string;rows:GenerationRowV1[];parts:EnvironmentPartsV1}>;
 /** 🌍️ The environment in its parts, each list in the canonical order of the digest. */
 export function environmentPartsV1(input:{owners:readonly (readonly [string,string,string|null])[];packages:readonly (readonly [string,string])[];modules:readonly (readonly [string,string])[];workspaces:readonly (readonly [string,string])[];lock?:string|null;taxonomy?:string|null}):EnvironmentPartsV1;
 /** 🔏️ The digest of an environment from its parts. */

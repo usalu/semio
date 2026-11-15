@@ -1,0 +1,8 @@
+🔌️appliances/room-thermostat
+🔌️appliances/server-rack
+🔌️appliances/shower-head
+🔌️appliances/split-ac-indoor-unit
+🔌️appliances/thermostatic-radiator-valve
+🔌️appliances/toaster
+🔌️appliances/tower-server
+🔌️appliances/vacuum-cleaner

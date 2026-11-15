@@ -156,7 +156,7 @@ fn leak(text: &str) -> &'static str {
 }
 
 fn fixture() -> serde_json::Value {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧰️design-case/🧪️tests/🧫️fixtures/🔣️.json");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧪️tests/🧫️fixtures/🔣️.json");
     serde_json::from_slice(&std::fs::read(path).expect("fixture")).expect("fixture json")
 }
 
@@ -182,7 +182,7 @@ fn fixture_searches_and_levers_equal_the_oracle_expectations() {
 
 #[test]
 fn independent_python_oracle_accepts_the_fixture() {
-    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧰️design-case/🔮️oracles/🐍️.py");
+    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🔮️oracles/🐍️.py");
     let output = crate::python_oracle::run_ok(&script, &[], None);
     let answer: serde_json::Value = serde_json::from_slice(&output.stdout).expect("oracle json");
     assert_eq!(answer["searches"].as_u64(), Some(12));

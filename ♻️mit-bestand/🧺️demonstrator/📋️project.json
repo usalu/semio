@@ -13,7 +13,6 @@
     ],
     "activationSources": [
       "production",
-      "^production",
       "!{projectRoot}/dist/**",
       "!{projectRoot}/test-results/**"
     ]
@@ -25,6 +24,7 @@
       "outputs": [],
       "inputs": [
         "activationSources",
+        "^production",
         {
           "dependentTasksOutputFiles": "**/*",
           "transitive": true
@@ -70,6 +70,7 @@
       "outputs": [],
       "inputs": [
         "activationSources",
+        "^production",
         {
           "dependentTasksOutputFiles": "**/*",
           "transitive": true
@@ -265,6 +266,7 @@
       ],
       "inputs": [
         "activationSources",
+        "^production",
         {
           "dependentTasksOutputFiles": "**/*",
           "transitive": true

@@ -155,6 +155,17 @@ def qty(obj, *keys):
     return None
 
 
+def f_rsi_minimum(t_int, rh_int):
+    """DIN 4108-2 6.2: theta_si,min is where the room air reaches 80 % at the surface (bisection on the Magnus curve), rounded to 0.1 K; f = (theta_si,min - theta_e)/(theta_i - theta_e) rounded to 0.01."""
+    target = rh_int * saturation_pa(t_int) / 0.8
+    lo, hi = 0.0, t_int
+    for _ in range(200):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if saturation_pa(mid) < target else (lo, mid)
+    theta = math.floor((lo + hi) / 2 * 10 + 0.5) / 10
+    return math.floor((theta + 5.0) / (t_int + 5.0) * 100 + 0.5) / 100
+
+
 def within(a, b, tol=0.005):
     if a is None or b is None:
         return False
@@ -194,6 +205,12 @@ def compare_report(snap, report):
                 checked += 1
                 if not within(computed, f_rsi, tol):
                     mismatches.append(f"{frsi_id} f_Rsi rust={computed} oracle={f_rsi}")
+            limit = qty(checks[frsi_id], "limit")
+            f_min = f_rsi_minimum(float(snap.get("tIntC", 20.0)), float(snap.get("rhInt", 0.5)))
+            if limit is not None:
+                checked += 1
+                if not within(limit, f_min, 1e-9):
+                    mismatches.append(f"{frsi_id} f_Rsi limit rust={limit} oracle={f_min}")
         gl_id = f"din4108-3.glaser.{eid}"
         dry_id = f"din4108-3.drying.{eid}"
         if gl_id in checks and checks[gl_id].get("status") != "notApplicable":

@@ -158,7 +158,7 @@ pub fn document_cases(annex: AnnexChoice, masonry_class: MasonryClass, default_s
                 .with_n("v_ed_n", wall.in_plane_shear_n),
         ));
     }
-    if wall.reinforced && wall.as_vertical_m2 > 0.0 && wall.f_yd_pa > 0.0 && wall.effective_depth_m > 0.0 {
+    if wall.reinforced && wall.as_vertical_m2 > 0.0 && wall.f_yd_pa > 0.0 && wall.thickness_m - wall.cover_m > 0.0 {
         let l_ef = effective_length_m(wall);
         let m_ed = wall
             .load_cases
@@ -172,7 +172,7 @@ pub fn document_cases(annex: AnnexChoice, masonry_class: MasonryClass, default_s
             "M-40",
             bound("")
                 .with_n("b_m", 1.0)
-                .with_n("d_m", wall.effective_depth_m)
+                .with_n("d_m", wall.thickness_m - wall.cover_m)
                 .with_n("as_m2", wall.as_vertical_m2 / l_ef)
                 .with_n("fyd_pa", wall.f_yd_pa)
                 .with_n("fd_pa", f_k / gamma_m)

@@ -14,6 +14,7 @@ import texts from "../../📖️texts/🔣️.json";
 import {readRemoteExecutionPolicyV1,requireRemoteExecutionShapeV1} from "../../🟦️.ts";
 import {eventuallyV1,startClusterV1} from "../../🧪️tests/🧰️cluster/🟦️.ts";
 import {parseRemoteExecutionArgumentsV1,REMOTE_EXECUTION_OPTIONS_V1,remoteExecutionStatusV1,remoteExecutionTextV1,runRemoteExecutionCommandV1,type RemoteExecutionCommandContextV1} from "../🟦️.ts";
+process.env.SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS="any";process.env.SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY="I-ACCEPT-THE-RISK";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 
 const definitions=schema.definitions as Record<string,unknown>,here=import.meta.dir,ajv=new Ajv({strict:true,allErrors:true,validateFormats:false});
@@ -31,7 +32,7 @@ test("the schema, the authored policy and the message catalogue agree between th
  ];
  for(const [index,drift] of drifts.entries()){const value=clone();drift(value);expect(independent("Policy",value),`drift ${index}`).toBe(false);expect(repository("Policy",value),`drift ${index}`).toBe(false);}
  const catalogue=JSON.parse(JSON.stringify(texts)) as any;catalogue.messages["error.syntax"].de="";expect(independent("TextCatalogue",catalogue)).toBe(false);expect(repository("TextCatalogue",catalogue)).toBe(false);
- const registration={version:1,name:"w",host:"h",platform:"darwin-arm64",properties:[{name:"OSFamily",value:"macos"}],concurrency:2,sandbox:"isolated-root",runtime:"bun 1"};
+ const registration={version:1,name:"w",host:"h",platform:"darwin-arm64",properties:[{name:"OSFamily",value:"macos"}],concurrency:2,sandbox:"isolated-root",runtime:"bun 1",origin:"g1-m03",capacity:{cores:8,memoryMegabytes:16384},confinement:"none",network:"unenforced"};
  for(const [name,value] of [["WorkerRegistration",registration],["Heartbeat",{version:1,running:["a.1"]}],["TaskResult",{version:1,outcome:"completed",status:{code:0,message:""},actionResult:"AAEC"}]] as const){expect(independent(name,value),name).toBe(true);expect(repository(name,value),name).toBe(true);}
  for(const [name,value] of [["WorkerRegistration",{...registration,sandbox:"chroot"}],["WorkerRegistration",{...registration,extra:1}],["Heartbeat",{version:1}],["TaskResult",{version:1,outcome:"done",status:{code:0,message:""},actionResult:null}],["TaskResult",{version:1,outcome:"completed",status:{code:0,message:""},actionResult:"!!"}]] as const){expect(independent(name,value),name).toBe(false);expect(repository(name,value),name).toBe(false);}
 });
@@ -54,7 +55,7 @@ test("every message the command can print exists in English and German with the 
  const source=readFileSync(join(here,"..","🟦️.ts"),"utf8"),keys=new Set<string>();
  for(const match of source.matchAll(/(?:say|both)\("([a-z.-]+)"/gu))keys.add(match[1]!);
  for(const match of source.matchAll(/"@([a-z.-]+)"/gu))keys.add(match[1]!);
- for(const stage of["sandbox","registered","started","finished","cancelled","reconnecting","stopped"])keys.add(`workers.${stage}`);
+ for(const stage of["sandbox","registered","started","finished","cancelled","reconnecting","stopped","refused"])keys.add(`workers.${stage}`);
  const catalogue=texts.messages as Record<string,{en:string;de:string}>;
  for(const key of keys)expect(catalogue[key],key).toBeDefined();
  for(const [key,row] of Object.entries(catalogue)){
@@ -73,7 +74,7 @@ test("arguments are parsed strictly and every refusal is spelled in both languag
  expect(remoteExecutionTextV1("de","serve.stopped")).toBe("Remote-Execution-Dienst beendet.");expect(()=>remoteExecutionTextV1("en","nope")).toThrow();expect(()=>remoteExecutionTextV1("en","serve.open")).toThrow(/variable missing/u);
 });
 
-const context=(root:string,overrides:Partial<RemoteExecutionCommandContextV1>&{lines?:string[]}={}):RemoteExecutionCommandContextV1=>({root,environment:{PATH:process.env.PATH},signal:new AbortController().signal,progress:async()=>{},write:line=>{overrides.lines?.push(line);},spawnWorker:()=>{throw Error("no worker");},...overrides});
+const context=(root:string,overrides:Partial<RemoteExecutionCommandContextV1>&{lines?:string[]}={}):RemoteExecutionCommandContextV1=>({root,environment:{PATH:process.env.PATH,SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS:"any",SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY:"I-ACCEPT-THE-RISK"},signal:new AbortController().signal,progress:async()=>{},write:line=>{overrides.lines?.push(line);},spawnWorker:()=>{throw Error("no worker");},...overrides});
 
 test("status describes the contract, probes the endpoint with the protocol's capabilities call and reads the scheduler; nothing configured means local execution",async()=>{
  const root=mkdtempSync(join(testScratchRootV1("rexec-inhouse"),"cmd-"));
@@ -86,7 +87,7 @@ test("status describes the contract, probes the endpoint with the protocol's cap
    await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,15000,"worker");
    const status=await remoteExecutionStatusV1([],context(root,{environment})) as any;
    expect(independent("Status",status)).toBe(true);expect(repository("Status",status)).toBe(true);
-   expect(status).toMatchObject({configured:true,contract:{endpoint:cluster.server.grpcUrl,instance:"main",properties:[{name:"pool",value:"gpu"}],jobs:128},grpc:{capabilities:true,execution:true,apiVersions:["2.0","2.3"],digestFunctions:["SHA256"],probe:{reachable:true}},server:{service:"semio-remote-execution",workers:[{name:"worker-1"}]},token:{present:true}});
+   expect(status).toMatchObject({configured:true,contract:{endpoint:cluster.server.grpcUrl,instance:"main",properties:[{name:"pool",value:"gpu"}],jobs:128},grpc:{capabilities:true,execution:true,apiVersions:["2.1","2.3"],digestFunctions:["SHA256"],probe:{reachable:true}},server:{service:"semio-remote-execution",workers:[{name:"worker-1"}]},token:{present:true}});
    expect(JSON.stringify(status),"secrets never appear").not.toMatch(/secret/u);
    const dead=await remoteExecutionStatusV1([],context(root,{environment:{...environment,SEMIO_REMOTE_EXECUTION_ENDPOINT:"grpc://127.0.0.1:9",SEMIO_REMOTE_EXECUTION_SCHEDULER:"http://127.0.0.1:9"}})) as any;
    expect(dead).toMatchObject({grpc:{capabilities:false,probe:{reachable:false}},server:null});expect(independent("Status",dead)).toBe(true);
@@ -99,7 +100,7 @@ test("serve starts the store, the service and a worker process, prints what a cl
  try{
   const running=runRemoteExecutionCommandV1(["serve","--grpc-port","0","--worker-port","0","--local-workers","1","--sandbox","isolated-root","--concurrency","2","--lang","de"],{
    root,environment:{PATH:process.env.PATH},signal:controller.signal,progress:async stage=>{stages.push(stage);},write:line=>{lines.push(line);},
-   spawnWorker:(args,environment)=>{const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,...args],{cwd:root,env:{...process.env,...environment},stdout:"pipe",stderr:"pipe"});children.push(child);return {exited:child.exited,stop:async()=>{child.kill("SIGTERM");await child.exited;}};},
+   spawnWorker:(args,environment)=>{const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,...args],{cwd:root,env:{...process.env,...environment,SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS:"any",SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY:"I-ACCEPT-THE-RISK"},stdout:"pipe",stderr:"pipe"});children.push(child);return {exited:child.exited,stop:async()=>{child.kill("SIGTERM");await child.exited;}};},
   });
   await eventuallyV1(()=>lines.some(line=>line.includes("Beitritt")||line.includes("tritt")||line.includes("repo remote-execution workers --join")),30000,"serve must print how to join");
   const endpoint=/^\[remote-execution\] listening (grpc:\/\/\S+)$/mu.exec(lines.join("\n"))?.[1],join=/--join (http:\/\/\S+)$/mu.exec(lines.join("\n"))?.[1];

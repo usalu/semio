@@ -1,0 +1,30 @@
+{
+  "at": "2026-11-15T03:07:25.105601+00:00",
+  "interpretation": "This worker replica reports ok at a fresh common checkpoint; global disagreements on other workers remain.",
+  "own_ok_checks": [
+    {
+      "at": "2026-11-15T03:00:24.546493+00:00",
+      "check": 27,
+      "status_rc": 0,
+      "timeout_120s": false,
+      "agreement": false,
+      "own_row": "g1-m08 macos 0s 5/0 cp:0s on 97445096cc0a 175/10/1407 585/2653|468/4111 ok",
+      "summary": "The fleet is not in agreement (10 origins; fresh and checkpoint age mean within 60 s; lagging is not wrong, only not yet comparable).",
+      "log": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f11/\u2600\ufe0f14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-15-agreement-check-27.txt",
+      "elapsed_s": 6.973
+    },
+    {
+      "at": "2026-11-15T03:05:24.587448+00:00",
+      "check": 32,
+      "status_rc": 0,
+      "timeout_120s": false,
+      "agreement": false,
+      "own_row": "g1-m08 macos 0s 1/0 cp:0s on 97445096cc0a 174/12/1418 451/2652|441/1345 ok",
+      "summary": "The fleet is not in agreement (10 origins; fresh and checkpoint age mean within 60 s; lagging is not wrong, only not yet comparable).",
+      "log": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f11/\u2600\ufe0f14/WORKERS-READY-WITH-LOW-RESOURCES/workers/g1-m08/round-15-agreement-check-32.txt",
+      "elapsed_s": 7.785
+    }
+  ],
+  "global_agreement": false,
+  "poller_exit": "Exited naturally on round16 before attempted cleanup; no poller signal was sent."
+}

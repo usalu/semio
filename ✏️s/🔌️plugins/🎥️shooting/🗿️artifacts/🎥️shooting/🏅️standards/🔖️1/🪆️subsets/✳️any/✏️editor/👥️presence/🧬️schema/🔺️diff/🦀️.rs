@@ -5,12 +5,16 @@ use crate::ShootingCamera;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff};
 
 /// 🔺️ Sparse field delta for the shooting presence; an absent field is untouched.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct ShootingPresenceDiff {
     pub selected_shot_ids: Option<Vec<String>>,
     pub camera: Option<ShootingCamera>,
 }
+
+protocol::retained_empty_option_patch!(ShootingPresenceDiff { selected_shot_ids, camera });
+protocol::retained_row_patch!(pub retained_fields for ShootingPresenceDiff => ShootingPresence { selected_shot_ids: Vec<String>, camera: ShootingCamera });
+protocol::retained_patch_diff!(ShootingPresenceDiff => ShootingPresence);
 
 impl MutationDiff<ShootingPresence> for ShootingPresenceDiff {}
 

@@ -1,0 +1,4 @@
+Aufwandszahl
+expenditure (figure|factor|number)
+e_\{?(P|p|ges|tot|a|A|E)
+e_p

@@ -13,6 +13,9 @@ export const COURSE_ASSIGNMENT_SOURCES: Readonly<Record<string, AssignmentSource
     sourceRoot: "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment", sources: ["geometry.tex", "icons.json"],
     resources: plan.resources.map(row => ({ source: row.source, name: row.output, format: "svg-png", width: row.width, sha256: row.sha256 })),
   },
+  "heating-cooling": {
+    sourceRoot: "🎓️teaching/🏛️architecture/⚡️energy/📝️assignment", sources: ["model.tex"], resources: [],
+  },
   typology: {
     sourceRoot: "🎓️teaching/🏛️architecture/🏙️typology/📝️assignment", sources: ["cover.jpg", "logo-luh.png", "logo-luh-dark.png", "schema-m-b-1-q.png", "schema-m-w-2-h.png", "schema-e-b-2-qh.png"], resources: [],
   },

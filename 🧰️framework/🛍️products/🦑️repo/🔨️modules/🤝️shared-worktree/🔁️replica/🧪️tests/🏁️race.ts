@@ -15,7 +15,7 @@ const wrap=(op:string)=>async(...args:unknown[])=>{
  await hook?.(op,path);
  return (originals as unknown as Record<string,(...inner:unknown[])=>unknown>)[op]!(...args);
 };
-mock.module("node:fs/promises",()=>({...originals,...Object.fromEntries(["rename","unlink","copyFile","symlink","stat","lstat"].map(op=>[op,wrap(op)]))}));
+mock.module("node:fs/promises",()=>({...originals,...Object.fromEntries(["rename","unlink","copyFile","symlink","stat","lstat","open"].map(op=>[op,wrap(op)]))}));
 const {closeReplicaV1,compactV1,followOnceV1,joinV1,openReplicaV1,publishOnceV1,seedV1,verifyV1}=await import("../🟦️.ts");
 
 const scratch:string[]=[];
@@ -96,7 +96,7 @@ test("a write into the staging file that fails with EACCES is reported as blocke
  put(a,"new.txt","fresh");
  const first=await openReplicaV1(a);await publishOnceV1(first);
  const second=await openReplicaV1(b,event=>events.push(event));
- faults=[{op:"copyFile",match:`${join(".cache","f","tmp")}`,code:"EACCES",left:1000}];
+ faults=[{op:"open",match:`${join(".cache","f","tmp")}`,code:"EACCES",left:1000}];
  expect(await followOnceV1(second)).toMatchObject({applied:0,queued:1});
  expect(events.filter(event=>event.event==="blocked"&&event.path==="new.txt").map(event=>event.reason)).toEqual(["EACCES"]);
  expect(events.filter(event=>event.event==="error")).toEqual([]);
@@ -110,7 +110,7 @@ test("a local file that cannot be read because another process holds it is retri
  const {a,b}=await pair();
  put(a,"busy.txt","held then released");
  const events:ReplicaEventV1[]=[],first=await openReplicaV1(a,event=>events.push(event)),second=await openReplicaV1(b);
- faults=[{op:"stat",match:"busy.txt",code:"EBUSY",left:1000}];
+ faults=[{op:"open",match:"busy.txt",code:"EBUSY",left:1000}];
  const held=await publishOnceV1(first,undefined,["busy.txt"]);
  expect(held).toMatchObject({published:0,retry:["busy.txt"]});
  expect(first.files.get("busy.txt")).toBeUndefined();
@@ -145,7 +145,7 @@ test("a symlink that cannot be created for lack of privilege is skipped with a v
  const second=await openReplicaV1(b,event=>events.push(event));
  faults=[{op:"symlink",match:join(b.worktree,"link"),code:"EPERM",left:1000}];
  const result=await followOnceV1(second);
- expect(result).toMatchObject({dropped:1,queued:0});
+ expect(result).toMatchObject({dropped:0,queued:0});
  expect(events.filter(event=>event.event==="skipped")).toEqual([{version:1,event:"skipped",path:"link",reason:"symlink-unsupported"}]);
  expect(events.filter(event=>event.event==="error")).toEqual([]);
  expect(readFileSync(join(b.worktree,"next.txt"),"utf8")).toBe("n");

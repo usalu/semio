@@ -1,0 +1,289 @@
+{
+  "vectors": [
+    {
+      "name": "pipelined library",
+      "platform": "darwin",
+      "arguments": [
+        "--crate-name",
+        "equivalent",
+        "--crate-type",
+        "lib",
+        "--emit=dep-info,metadata,link",
+        "-C",
+        "extra-filename=-0bf2463dafad4359",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "equivalent-0bf2463dafad4359.d",
+        "libequivalent-0bf2463dafad4359.rmeta",
+        "libequivalent-0bf2463dafad4359.rlib"
+      ],
+      "runnable": true
+    },
+    {
+      "name": "library without extra filename and joined emit",
+      "platform": "linux",
+      "arguments": [
+        "--crate-name=plain",
+        "--crate-type=rlib",
+        "--emit=dep-info,link",
+        "--out-dir=/o"
+      ],
+      "expected": [
+        "plain.d",
+        "libplain.rlib"
+      ],
+      "runnable": true
+    },
+    {
+      "name": "metadata only",
+      "platform": "darwin",
+      "arguments": [
+        "--crate-name",
+        "meta",
+        "--crate-type",
+        "lib",
+        "--emit=dep-info,metadata",
+        "-Cextra-filename=-aa",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "meta-aa.d",
+        "libmeta-aa.rmeta"
+      ],
+      "runnable": true
+    },
+    {
+      "name": "proc macro on macOS",
+      "platform": "darwin",
+      "arguments": [
+        "--crate-name",
+        "mac",
+        "--crate-type",
+        "proc-macro",
+        "--emit=dep-info,link",
+        "-C",
+        "extra-filename=-bb",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "mac-bb.d",
+        "libmac-bb.dylib"
+      ],
+      "runnable": true
+    },
+    {
+      "name": "proc macro on Linux",
+      "platform": "linux",
+      "arguments": [
+        "--crate-name",
+        "mac",
+        "--crate-type",
+        "proc-macro",
+        "--emit=dep-info,link",
+        "-C",
+        "extra-filename=-bb",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "mac-bb.d",
+        "libmac-bb.so"
+      ]
+    },
+    {
+      "name": "proc macro on Windows",
+      "platform": "win32",
+      "arguments": [
+        "--crate-name",
+        "mac",
+        "--crate-type",
+        "proc-macro",
+        "--emit=dep-info,link",
+        "-C",
+        "extra-filename=-bb",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "mac-bb.d",
+        "mac-bb.dll"
+      ]
+    },
+    {
+      "name": "binary on macOS",
+      "platform": "darwin",
+      "arguments": [
+        "--crate-name",
+        "tool",
+        "--crate-type",
+        "bin",
+        "--emit=dep-info,link",
+        "-C",
+        "extra-filename=-cc",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "tool-cc.d",
+        "tool-cc"
+      ],
+      "runnable": true
+    },
+    {
+      "name": "binary on Windows",
+      "platform": "win32",
+      "arguments": [
+        "--crate-name",
+        "tool",
+        "--crate-type",
+        "bin",
+        "--emit=dep-info,link",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "tool.d",
+        "tool.exe"
+      ]
+    },
+    {
+      "name": "build script",
+      "platform": "darwin",
+      "arguments": [
+        "--crate-name",
+        "build_script_build",
+        "--crate-type",
+        "bin",
+        "--emit=dep-info,link",
+        "-C",
+        "extra-filename=-dd",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "build_script_build-dd.d",
+        "build_script_build-dd"
+      ],
+      "runnable": true
+    },
+    {
+      "name": "test harness binary",
+      "platform": "darwin",
+      "arguments": [
+        "--crate-name",
+        "tt",
+        "--test",
+        "--emit=dep-info,link",
+        "-C",
+        "extra-filename=-ee",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "tt-ee.d",
+        "tt-ee"
+      ],
+      "runnable": true
+    },
+    {
+      "name": "cross compiled library",
+      "platform": "darwin",
+      "arguments": [
+        "--crate-name",
+        "wasm",
+        "--crate-type",
+        "lib",
+        "--target",
+        "wasm32-wasip2",
+        "--emit=dep-info,metadata,link",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "wasm.d",
+        "libwasm.rmeta",
+        "libwasm.rlib"
+      ],
+      "runnable": true
+    },
+    {
+      "name": "cross compiled binary names only what is announced",
+      "platform": "darwin",
+      "arguments": [
+        "--crate-name",
+        "wasm",
+        "--crate-type",
+        "bin",
+        "--target",
+        "wasm32-wasip2",
+        "--emit=dep-info,link",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "wasm.d"
+      ]
+    },
+    {
+      "name": "single output file",
+      "platform": "darwin",
+      "arguments": [
+        "--crate-name",
+        "one",
+        "--crate-type",
+        "lib",
+        "--emit=link",
+        "-o",
+        "/o/x.rlib",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": []
+    },
+    {
+      "name": "static library is left to the announcements",
+      "platform": "linux",
+      "arguments": [
+        "--crate-name",
+        "stat",
+        "--crate-type",
+        "staticlib",
+        "--emit=dep-info,link",
+        "--out-dir",
+        "/o"
+      ],
+      "expected": [
+        "stat.d"
+      ]
+    }
+  ],
+  "announcements": [
+    {
+      "name": "three artifacts",
+      "text": "{\"$message_type\":\"artifact\",\"artifact\":\"/o/libx-1.rmeta\",\"emit\":\"metadata\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"/o/libx-1.rlib\",\"emit\":\"link\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"/o/x-1.d\",\"emit\":\"dep-info\"}\n",
+      "paths": [
+        "/o/libx-1.rmeta",
+        "/o/libx-1.rlib",
+        "/o/x-1.d"
+      ]
+    },
+    {
+      "name": "diagnostics and other emits are ignored",
+      "text": "{\"$message_type\":\"diagnostic\",\"message\":\"artifact\"}\n{\"$message_type\":\"artifact\",\"artifact\":\"/o/y.ll\",\"emit\":\"llvm-ir\"}\nwarning: plain text\n{\"artifact\":\"/o/y.d\",\"emit\":\"dep-info\"}\n",
+      "paths": [
+        "/o/y.d"
+      ]
+    },
+    {
+      "name": "repeated artifacts count once",
+      "text": "{\"artifact\":\"/o/z.d\",\"emit\":\"dep-info\"}\n{\"artifact\":\"/o/z.d\",\"emit\":\"dep-info\"}\nnot json {\n",
+      "paths": [
+        "/o/z.d"
+      ]
+    }
+  ]
+}

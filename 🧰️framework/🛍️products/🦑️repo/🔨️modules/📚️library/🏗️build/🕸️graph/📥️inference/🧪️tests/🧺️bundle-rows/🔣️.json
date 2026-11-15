@@ -1,0 +1,10 @@
+{
+ "version": 1,
+ "layerCount": 3,
+ "rowsPerLayer": 50,
+ "entries": [
+  {"id": "a", "layers": [0, 1]},
+  {"id": "b", "layers": [1, 2]},
+  {"id": "c", "layers": [0, 2]}
+ ]
+}

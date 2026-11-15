@@ -1,12 +1,12 @@
-import {compilerAdmissionBudgetV1} from "@semio-tech/process/compiler-capacity";
+import {compilerAdmissionBudgetV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {join,isAbsolute,resolve,relative} from "node:path";
 import ts from "typescript";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import {requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "@semio-tech/process/routing";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import schema from "./🧬️schema.json" with {type:"json"};
 import corpus from "./🔣️.json" with {type:"json"};
 /** 🧪️ Runs the actual runner with genuine phase issuance and explicitly modeled pin/process ports. */

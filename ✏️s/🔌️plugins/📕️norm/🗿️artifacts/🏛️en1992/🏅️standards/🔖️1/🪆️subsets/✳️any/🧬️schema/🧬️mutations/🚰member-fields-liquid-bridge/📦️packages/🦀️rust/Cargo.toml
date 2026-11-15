@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-s-artifact-norm-en1992-mut-member-fields-liquid-bridge"
+name = "semio-s-artifact-norm-en1992-mut-fields-liquid-bridge"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

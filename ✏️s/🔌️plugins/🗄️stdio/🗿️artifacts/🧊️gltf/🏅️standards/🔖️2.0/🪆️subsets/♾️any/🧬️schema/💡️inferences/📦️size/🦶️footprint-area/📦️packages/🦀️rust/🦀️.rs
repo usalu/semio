@@ -35,7 +35,7 @@ pub mod standards {
                         pub mod adjacency {
                             #[path = "."]
                             pub mod number_of_contacts {
-                                pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::adjacency::number_of_contacts::*;
+                                pub use semio_s_artifact_stdio_gltf_inferences_connected::standards::v2_0::subsets::any::schema::inferences::adjacency::number_of_contacts::*;
                                 #[cfg(test)]
                                 #[path = "../../../../🤝️adjacency/🔢️number-of-contacts/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;
@@ -45,7 +45,7 @@ pub mod standards {
                         pub mod area_volume {
                             #[path = "."]
                             pub mod contact_area {
-                                pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::area_volume::contact_area::*;
+                                pub use semio_s_artifact_stdio_gltf_inferences_connected::standards::v2_0::subsets::any::schema::inferences::area_volume::contact_area::*;
                                 #[cfg(test)]
                                 #[path = "../../../../🧱️area-volume/🤝️contact-area/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;

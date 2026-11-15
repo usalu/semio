@@ -1,0 +1,127 @@
+{
+ "bunfig.toml": {
+  "file": "f000",
+  "before": "283282f5df1ca7d528cf48ff662c1a5329c7cebe3cfc57e887d9709b75408461",
+  "after": "483c11662b3d7de187e0f55735aba41a0ca1d7ad68cff4be8d277fe21bb4cb2b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🏖️sandbox/🛡️guard/🍞️bun/🔌️preload/🟦️.ts": {
+  "file": "f001",
+  "before": "336ab3c2873b802de23053761b59887d984d51dc0b36552f4b7ca6caa89f1a46",
+  "after": "f6f0a9074293f93e7900b7a07b4c6a9c6124eb08bc25710523c813acbf841fa0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🚧️operands/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "55c3333f34b24a02db7ab1ccb0af34ae6bc1bfa692f5651cc998bc2c55932d79"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🚧️operands/🧪️tests/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "2d6d03774b4b28c1fceb72e49d5f96ae5a69f335fac3ecbd3fc3ab041dc59a56"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🚧️operands/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "b8c9747db53c11f1e788e6b439c63536d5768b2dc78a0d6a1dc11ba9bc568587"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🚧️operands/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "f23c378359b7278d096a3e92bf3186158cc402cac584a28ff39794cbd6d9c4e7"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts": {
+  "file": "f006",
+  "before": "ec417cdc156e950937bd12d691c51f62bbc6ff1e5644a69bc76098b92c76343f",
+  "after": "3bf31a8998fa3b00a670397dc87dfd125c3aa5eca6e13be3e690e74c98aaebb6"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🧯️ceiling/🧪️tests/🟦️.ts": {
+  "file": "f007",
+  "before": "363bc0bbe28fa67732d6aacdc7649de5113094677b07cdd3dfbf46f0984c5e5c",
+  "after": "8cf9cf2d33ddbf363eff4807703917d4919c4bafdec409caafc6066065db40cd"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/👶️child/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "98463aacd98a19760bda0cfe5a28963f4591c2fdc0f3c89857bd2aa0f8995731"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/👷️parent/📜️script.ts": {
+  "file": null,
+  "before": null,
+  "after": "7927ddde693a1e0a9484f931bac3a84b9878cc3235df410af1fe7ce81802021e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/👷️parent/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "12ba7b5c387e670a347c5809a7ade74b1fc7527a7d511544d8ef452e128c2f78"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/📜️script.ts": {
+  "file": null,
+  "before": null,
+  "after": "02aaad658ee1366b72ccb8ece8b60c6fdb5d4feca2cea0ff01e4f592e6548be8"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "1bcfea7b5483dc55a053ac453bae586237cbe6b5172b6b79ba450eda952ed793"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/🐍️oracle/🐍️.py": {
+  "file": null,
+  "before": null,
+  "after": "e00d0adc3c588b6e4d35f9f9ce7a349d963a82fb8299dac9b7a21aecc93a879d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📜️blocked.ts": {
+  "file": null,
+  "before": null,
+  "after": "f54ac53bf9a1d57a3c75fac95686ec70fad7f7c7b6b563fda019cfe608bf864f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📜️holder.ts": {
+  "file": null,
+  "before": null,
+  "after": "4b40015c6a1cea62faf5212308dfa9c6a48398f8ebbe78b7dee3b143158cca64"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📜️leaver.ts": {
+  "file": null,
+  "before": null,
+  "after": "a7f39210afe6c424871af3d0c1678159b7f00021664e5bbfd05b373940421bb5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📜️limit.ts": {
+  "file": null,
+  "before": null,
+  "after": "bb244f3854eb5d219d91af933dcc865047220d4d46df65fce3fb39f2c4837c15"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/👶️fixture/📜️runner.ts": {
+  "file": null,
+  "before": null,
+  "after": "251fd0d3c1fe044681da9915f3c7ad5924f26f5bcd52ebbc119a3ed83ec3fe22"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "bbdcc18806270f0a1cdd67b57d42ef53ab47cd15ba533b193f3f199658c581cb"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "f36e63f5128f511fbbc2386059fb6872302ee62a5732d1084d8e05468f30979b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "f16cd0a1637662ab55676048e81b9dfd343fc82df1a3973968949368aa3155d8"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts": {
+  "file": "f022",
+  "before": "9b5965ddb64c5c396c3df6306bddb8635d0ccb0c01d688eb029e76166019ea94",
+  "after": "894382e97ecef85e1d7260a55420cc0f7590bce849df922c20b099b7a6e8460a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "f023",
+  "before": "8f52cce10a308e25ffa07dbafbea2aefe24f973e6d3f88d77f59ee9ed1a099ad",
+  "after": "ce4e8635c94f25a2e46fd8a26a9dc3f6cb2125e16b4b3345d2357df97e682870"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/🧪️tests/📌️runtime-pin-contract/🟦️.ts": {
+  "file": "f024",
+  "before": "ca7621b4e7d09cc79d7ce97b1c7ef93f267d41820af1e43deddc8fb539662f28",
+  "after": "a14125b3520f2403903ac9be1e4580e18f920f5ecc1244a4acad3d1bba3dd449"
+ }
+}

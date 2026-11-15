@@ -1,7 +1,7 @@
 import{FACT_CODEC_POLICY_V1,collectFactStringsV1,compareCodePointsV1,createFactSinkV1,openFactIndexV1,encodeFactIndexV1,writeFactListV1,writeFactValueV1}from"../🧮️fact-codec/🟨️.mjs";
 import{classesOfChunksV1,streamUpsertClassesV1}from"../🧱️chunk-classes/🟨️.mjs";
 import{INDEX_CHUNK_POLICY_V1}from"../🧱️chunk-classes/🟨️.mjs";
-import{rowKeyV1}from"../🧮️fact-rows/🟨️.mjs";
+import{rowKeyV1,sameFactV1}from"../🧮️fact-rows/🟨️.mjs";
 import{P,createYielderV1}from"../🧱️guards/🟨️.mjs";
 import{createHash}from"node:crypto";
 import{runtimeCollectGarbageV1}from"../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
@@ -96,14 +96,16 @@ export async function patchFactIndexBytesV1(view,{drop=[],upserts=new Map(),appe
   const list=new Uint32Array(oldRows),fill=first.slice(0,D.stringCount);for(let id=0;id<oldRows;id++)list[fill[D.rowPath[id]]++]=id;
   return paths={first,list};
  };
- const rankOf=text=>{let low=0,high=D.stringCount-1;while(low<=high){const mid=(low+high)>>>1,order=compareCodePointsV1(D.textAt(mid,false),text);if(order===0)return mid;if(order<0)low=mid+1;else high=mid-1;}return-1;};
+ const decoded=new Map(),textOf=rank=>{let text=decoded.get(rank);if(text===undefined){text=D.textAt(rank,false);if(decoded.size<65536)decoded.set(rank,text);}return text;};
+ const rankOf=text=>{let low=0,high=D.stringCount-1;while(low<=high){const mid=(low+high)>>>1,order=compareCodePointsV1(textOf(mid),text);if(order===0)return mid;if(order<0)low=mid+1;else high=mid-1;}return-1;};
  const fresh=[],added=new Map(),byObject=new Map();
  const idOfRow=row=>{
   let id=byObject.get(row);if(id!==undefined)return id;
-  const key=rowKeyV1(row);id=added.get(key);
+  const rank=oldRows?rankOf(row.path):-1;
+  if(rank>=0){const{first,list}=pathsOf();for(let slot=first[rank];slot<first[rank+1];slot++){const candidate=list[slot];if(D.kinds[D.rowKind[candidate]]===row.kind&&sameFactV1(view.rows[candidate].fact,row.fact)){id=candidate;break;}}}
   if(id===undefined){
-   const rank=oldRows?rankOf(row.path):-1;
-   if(rank>=0){const{first,list}=pathsOf();for(let slot=first[rank];slot<first[rank+1];slot++){const candidate=list[slot];if(D.kinds[D.rowKind[candidate]]===row.kind&&rowKeyV1(view.rows[candidate])===key){id=candidate;break;}}}
+   const key=rowKeyV1(row);id=added.get(key);
+   if(id===undefined&&rank>=0){const{first,list}=pathsOf();for(let slot=first[rank];slot<first[rank+1];slot++){const candidate=list[slot];if(D.kinds[D.rowKind[candidate]]===row.kind&&rowKeyV1(view.rows[candidate])===key){id=candidate;break;}}}
    if(id===undefined){id=oldRows+fresh.length;fresh.push(row);added.set(key,id);}
   }
   byObject.set(row,id);return id;

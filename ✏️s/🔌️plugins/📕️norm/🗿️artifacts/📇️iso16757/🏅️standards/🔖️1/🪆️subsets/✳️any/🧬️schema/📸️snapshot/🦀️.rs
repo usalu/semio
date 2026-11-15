@@ -7,10 +7,10 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
+extern crate self as semio_s_artifact_norm_iso16757_model;
 
 use framework_schema::ArtifactSchema;
 use semio_s_plugin_norm_compliance::LocalizedText;
-use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 
@@ -32,7 +32,7 @@ pub struct Iso16757Snapshot {
     #[state(artifact)]
     pub part_number_rule: crate::part_5::PartNumberRule,
     #[state(artifact)]
-    pub part_number_inputs: BTreeMap<String, CatalogueValue>,
+    pub part_number_inputs: IdMap<CatalogueValue>,
     #[state(artifact)]
     pub script_limits: crate::part_5::ScriptLimits,
     #[state(artifact)]
@@ -83,17 +83,17 @@ impl Iso16757Snapshot {
             meta_subjects: Vec::new(),
         };
         let geometry_id: String = "geom-valve-50".into();
-        let mut geometry_objects = BTreeMap::new();
-        geometry_objects.insert(
+        let mut geometry_objects = IdMap::new();
+        geometry_objects.cold_insert(
             geometry_id.clone(),
             crate::part_2::GeometryObject {
                 id: geometry_id.clone(),
-                shape: Some(crate::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 0.15), ("height".into(), 0.20), ("depth".into(), 0.10)]) }),
+                shape: Some(crate::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: IdMap::from([("width".into(), 0.15), ("height".into(), 0.20), ("depth".into(), 0.10)]) }),
                 symbolic: None,
                 spaces: vec![crate::part_2::SpaceEnvelope { id: "installation".into(), kind: crate::part_2::SpaceKind::Installation, bounds: crate::part_2::BoundingBox { min: [-0.05, -0.05, -0.05], max: [0.20, 0.25, 0.15] } }],
                 surfaces: Vec::new(),
                 ports: vec![crate::part_2::PortDefinition { id: "port-in".into(), medium: "water".into(), position: [0.0, 0.1, 0.05], direction: [1.0, 0.0, 0.0], port_type: "inlet".into() }],
-                parameter_bindings: BTreeMap::from([("width".into(), "prop-dn".into())]),
+                parameter_bindings: IdMap::from([("width".into(), "prop-dn".into())]),
             },
         );
         let catalogue = crate::part_1::Catalogue {
@@ -125,7 +125,7 @@ impl Iso16757Snapshot {
                 id: "series-cv".into(),
                 class_id: "class-valve".into(),
                 names: Names { preferred: LocalizedText { locale: "en".into(), text: "CV series".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "CV-Serie".into() }] },
-                shared_property_values: BTreeMap::new(),
+                shared_property_values: IdMap::new(),
                 geometry_id: Some(geometry_id.clone()),
             }],
             products: vec![crate::part_1::Product {
@@ -135,7 +135,7 @@ impl Iso16757Snapshot {
                 parameter_domains: vec![crate::part_1::ParameterDomain { parameter_id: "dn".into(), allowed_values: vec![CatalogueValue::Decimal { value: 50.0 }], default_value: Some(CatalogueValue::Decimal { value: 50.0 }) }],
                 variants: vec![crate::part_1::ProductVariant {
                     id: "variant-50".into(),
-                    parameter_values: BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
+                    parameter_values: IdMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
                     property_values: vec![crate::part_1::PropertyValue { definition_id: "prop-dn".into(), value: CatalogueValue::Decimal { value: 50.0 }, function_id: None }],
                     article_number: Some("CV-50".into()),
                     geometry_id: Some(geometry_id),
@@ -152,8 +152,8 @@ impl Iso16757Snapshot {
                 kind: crate::part_1::PropertyKind::Static,
                 dictionary_property_id: Some("prop-dn".into()),
             }],
-            accessories: BTreeMap::new(),
-            compositions: BTreeMap::new(),
+            accessories: IdMap::new(),
+            compositions: IdMap::new(),
             descriptive_objects: Vec::new(),
             extensions: ExtensionBag::default(),
         };
@@ -167,7 +167,7 @@ impl Iso16757Snapshot {
                 series_id: Some("series-cv".into()),
             },
             part_number_rule: crate::part_5::PartNumberRule::Script { function_id: "partno".into(), source: "dn * 10 + 50".into() },
-            part_number_inputs: BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
+            part_number_inputs: IdMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
             script_limits: crate::part_5::ScriptLimits::default(),
             exchange_process: crate::part_5::ExchangeProcess::DetermineProduct,
         }
@@ -183,7 +183,7 @@ impl Iso16757Snapshot {
             product.names.alternatives.push(LocalizedText { locale: "fr".into(), text: "CV-50".into() });
             if let Some(variant) = product.variants.get_mut(0) {
                 variant.geometry_id = Some("geom.missing".into());
-                variant.parameter_values.insert("dn".into(), CatalogueValue::Decimal { value: 999.0 });
+                variant.parameter_values.cold_insert("dn".into(), CatalogueValue::Decimal { value: 999.0 });
             }
         }
         if let Some(constraint) = doc.selection.constraints.get_mut(0) {
@@ -195,7 +195,7 @@ impl Iso16757Snapshot {
             variant_id: Some("variant-50".into()),
             search_tags: vec!["dup".into()],
         });
-        doc.catalogue.compositions.insert(
+        doc.catalogue.compositions.cold_insert(
             "product-cv".into(),
             vec![crate::part_1::CompositionRelationship { component_product_id: "product-cv".into(), quantity: 1 }],
         );
@@ -204,7 +204,7 @@ impl Iso16757Snapshot {
                 bounds: crate::part_2::BoundingBox::from_size(0.01, 0.01, 0.01),
             }];
         }
-        doc.part_number_inputs.insert("dn".into(), CatalogueValue::Decimal { value: 40.0 });
+        doc.part_number_inputs.cold_insert("dn".into(), CatalogueValue::Decimal { value: 40.0 });
         doc.script_limits = crate::part_5::ScriptLimits { max_steps: 0, max_recursion: 0, timeout_ms: 0 };
         doc.exchange_process = crate::part_5::ExchangeProcess::IntegrateIntoSystem;
         doc.dictionary.relationships.push(crate::part_4::Relationship {
@@ -227,12 +227,21 @@ pub(crate) fn retire_decoded_catalogue_geometry(node:part_2::GeometryNode){use c
 
 //#region 🍃️FacetLeaves
 /// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
-pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: concat!(include_str!("🦀️.rs"), include_str!("🧱️catalogue-core/🦀️.rs"), include_str!("📚️part-1-catalogue/🦀️.rs"), include_str!("📐️part-2-geometry/🦀️.rs"), include_str!("📖️part-4-dictionary/🦀️.rs"), include_str!("🔄️part-5-exchange/🦀️.rs"), include_str!("🧾️artifact-definition/🦀️.rs")), typescript: semio_s_artifact_norm_iso16757_model_typescript::LEAF, graphql: semio_s_artifact_norm_iso16757_model_graphql::LEAF, json_schema: semio_s_artifact_norm_iso16757_model_json_schema::LEAF, proto: semio_s_artifact_norm_iso16757_model_proto::LEAF };
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: concat!(include_str!("🦀️.rs"), include_str!("🧱️catalogue-core/🦀️.rs"), include_str!("📚️part-1-catalogue/🦀️.rs"), include_str!("📐️part-2-geometry/🦀️.rs"), include_str!("📖️part-4-dictionary/🦀️.rs"), include_str!("🔄️part-5-exchange/🦀️.rs"), include_str!("🛬️native-syntax/🦀️.rs"), include_str!("🧾️artifact-definition/🦀️.rs")), typescript: semio_s_artifact_norm_iso16757_model_typescript::LEAF, graphql: semio_s_artifact_norm_iso16757_model_graphql::LEAF, json_schema: semio_s_artifact_norm_iso16757_model_json_schema::LEAF, proto: semio_s_artifact_norm_iso16757_model_proto::LEAF };
 //#endregion 🍃️FacetLeaves
 
 #[path = "🧱️catalogue-core/🦀️.rs"]
 mod catalogue_core;
-pub use catalogue_core::{Cardinality, CatalogueId, CatalogueUnit, CatalogueValue, DictionaryRef, DimensionSignature, ExtensionBag, Lifecycle, Names, NullState};
+pub use catalogue_core::{Cardinality, CatalogueId, CatalogueUnit, CatalogueValue, DictionaryRef, DimensionSignature, ExtensionBag, IdMap, Lifecycle, Names, NullState};
+
+#[path = "🛬️native-syntax/🦀️.rs"]
+mod native_syntax;
+
+#[path = "../../🚪️io/🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[path = "../../🚪️io/🪞️records/🦀️.rs"]
+mod records;
 
 #[path = "📚️part-1-catalogue/🦀️.rs"]
 pub mod part_1;

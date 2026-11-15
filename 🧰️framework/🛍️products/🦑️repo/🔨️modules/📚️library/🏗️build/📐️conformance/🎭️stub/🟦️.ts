@@ -68,4 +68,4 @@ export async function runStubV1(specPath:string,id:string,outputRoot?:string,sta
  return 0;
 }
 
-if(process.argv[1]!==undefined&&process.argv[1]===fileURLToPath(import.meta.url))process.exitCode=await runStubV1(process.argv[2]!,process.argv[3]!,process.argv[4]||undefined,process.argv[5]||undefined);
+if(import.meta.main??(process.argv[1]!==undefined&&process.argv[1]===fileURLToPath(import.meta.url)))process.exitCode=await runStubV1(process.argv[2]!,process.argv[3]!,process.argv[4]||undefined,process.argv[5]||undefined);

@@ -1,0 +1,54 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "id": "setup-with-moved-closure",
+   "reruns": 2,
+   "tail": "> nx run @semio-tech/repo-lib:cpp-setup:prototype\n\n[script] cache:entry · Preparing build tools\n15 | const descriptorLimit=schema.properties.maximumDescriptors.const;\nerror: Single-link regular artifact source required\n      at regular (/x/script.ts:20:3)\n\n> nx run workspace:deps-cargo:prototype\n\n[script] build:implementation-source · Reading the sources of the build implementation\n59 | `&&t[d]!==\"\\r\")t[d]=\" \"},o=0\nRepoError: stale build.closure.source-differs {\"path\":\"🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts\",\"expectedSha256\":\"ffd49c0985745451d3594878764ffa7530288ec347b5c34a1ac6b6ab07602835\",\"observedSha256\":\"88cc24fb11604397e4f9d6a041c1373c949f388f80b6e3cbe833c71917648742\"}\n    key: \"build.closure.source-differs\",\n\n> nx run workspace:deps-trunk:prototype\n\nRepoError: stale build.closure.source-differs {\"path\":\"🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts\",\"expectedSha256\":\"ffd49c0985745451d3594878764ffa7530288ec347b5c34a1ac6b6ab07602835\",\"observedSha256\":\"88cc24fb11604397e4f9d6a041c1373c949f388f80b6e3cbe833c71917648742\"}\n\n> nx run workspace:deps-build-tools:prototype\n\n[script] cache:entry · Verifying build tools\nInternal error: Genuine dependency funding parent is busy\n\n@semio-tech/framework-os-mcp-rs:build:prototype: Compiling heck v0.5.0\n@semio-tech/framework-os-mcp-rs:build:prototype: error: extern location for equivalent does not exist: /x/libequivalent.rmeta\n\n> nx run workspace:deps-tools:prototype\n\nRepoError: unserved build.closure.moving {\"count\":2,\"files\":\"a.ts, b.ts\",\"origin\":\"g1-m02\",\"attempts\":6}\n\n NX   Running target setup for project workspace and 29 tasks it depends on failed\n\nTasks not run because their dependencies failed or --nx-bail=true:\n\n- workspace:setup:prototype\n- workspace:deps-cpp:prototype\n\nFailed tasks:\n\n- @semio-tech/repo-lib:cpp-setup:prototype\n- workspace:deps-build-tools:prototype\n- @semio-tech/framework-os-mcp-rs:build:prototype\n- workspace:deps-cargo:prototype\n- workspace:deps-trunk:prototype\n- workspace:deps-tools:prototype\n\nHint: run the command with --verbose for more details.\n",
+   "expect": {
+    "failed": [
+     {
+      "task": "@semio-tech/repo-lib:cpp-setup:prototype",
+      "reason": "error: Single-link regular artifact source required",
+      "rerun": "no"
+     },
+     {
+      "task": "workspace:deps-build-tools:prototype",
+      "reason": "Internal error: Genuine dependency funding parent is busy",
+      "rerun": "no"
+     },
+     {
+      "task": "@semio-tech/framework-os-mcp-rs:build:prototype",
+      "reason": "error: extern location for equivalent does not exist: /x/libequivalent.rmeta",
+      "rerun": "no"
+     },
+     {
+      "task": "workspace:deps-cargo:prototype",
+      "reason": "RepoError: stale build.closure.source-differs {\"path\":\"🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts\",\"expectedSha256\":\"ffd49c0985745451d3594",
+      "rerun": "implementation"
+     },
+     {
+      "task": "workspace:deps-trunk:prototype",
+      "reason": "RepoError: stale build.closure.source-differs {\"path\":\"🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts\",\"expectedSha256\":\"ffd49c0985745451d3594",
+      "rerun": "implementation"
+     },
+     {
+      "task": "workspace:deps-tools:prototype",
+      "reason": "RepoError: unserved build.closure.moving {\"count\":2,\"files\":\"a.ts, b.ts\",\"origin\":\"g1-m02\",\"attempts\":6}",
+      "rerun": "inputs"
+     }
+    ],
+    "notRun": [
+     "workspace:setup:prototype",
+     "workspace:deps-cpp:prototype"
+    ]
+   }
+  },
+  {
+   "id": "no-footer",
+   "reruns": 0,
+   "tail": "> nx run a:b\nsomething\n",
+   "expect": null
+  }
+ ]
+}

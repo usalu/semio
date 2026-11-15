@@ -19,14 +19,14 @@ describe("🧊️ the extent of the 3D model", () => {
   const asset = sampleFigure();
 
   it("has at rest the extent of the physical dimensions: ahead the width, up the height, lateral the depth", async () => {
-    const e = await restExtent(asset, await modelOf(asset, { scale: SCALE, views: ["light-solid"], poses: [], clips: [] }));
+    const e = await restExtent(asset, await modelOf(asset, { scale: SCALE, view: "light-solid", poses: [], clips: [] }));
     within(e.max[0] - e.min[0], asset.dimensions.widthM, "widthM");
     within(e.max[1] - e.min[1], asset.dimensions.heightM, "heightM");
     within(e.max[2] - e.min[2], asset.dimensions.depthM, "depthM");
   });
 
   it.each(asset.poses.filter((p) => p.key !== true).map((p) => p.id))("has in pose %s the extent of the 2D elevation, front and plan shapes of the same state", async (pose) => {
-    const { scene } = await loadGlb(await writeGlb(asset, { pose, scale: SCALE }));
+    const { scene } = await loadGlb(await writeGlb(asset, { pose }));
     const e = sceneExtent(scene);
     const state = evaluate(asset, { kind: "pose", pose }, { kind: "scale", scale: { denominator: SCALE } });
     const elevation = shapeExtent(state, "elevation");
@@ -43,7 +43,7 @@ describe("🧊️ the extent of the 3D model", () => {
   });
 
   it("keeps the hands and feet of a pose on the ground and the solids above it: the lowest point of a standing pose is the ground", async () => {
-    const { scene } = await loadGlb(await writeGlb(asset, { pose: "stand", scale: SCALE }));
+    const { scene } = await loadGlb(await writeGlb(asset, { pose: "stand" }));
     const e = sceneExtent(scene);
     expect(Math.abs(e.min[1])).toBeLessThanOrEqual(0.015);
   });

@@ -1,0 +1,132 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/📋️contract/🟦️.ts": {
+  "file": "f000",
+  "before": "8c5f1927956af315992b722e88e41f03f367e0d491227847b1988fa7230d64f7",
+  "after": "90ac2355a2e5c8e96d3fd0a7683ee4f8a19e31a04516bf9e9bd8a8d939a90e44"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": {
+  "file": "f001",
+  "before": "7a057687559388279b086b93ae39ee2846ddff8ed0add6cbbe8880d99084aa30",
+  "after": "c4631f2fa9311d7c382eb3481235399042905c2d0c9b102d66b6e18ac5436bb5"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🤝️handover/🟦️.ts": {
+  "file": "f002",
+  "before": "c814c74b87dbd8c19d7056df4689508637bcfaf2f35ff3e63928d327a6785ae1",
+  "after": "4722f147f7bbf9e55b67f62fdbf69330cf9421f050f6102d93baa904ada97c26"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "f003",
+  "before": "b8cecc1b024b4d3aa03c1f90c4088496ebc4f178a14411765a5445e633e25918",
+  "after": "0f1f67cddfa98072f75847d7f6b139ae40a5499b263dda525d21c77db1594475"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/⚓️boot-anchor/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "891fc690d413c4d59b084c765508469cd33014840cc736828be3b9f5faf83ef1"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🧭️liveness/🟦️.ts": {
+  "file": "f005",
+  "before": "77e28f15b1a508850072d1f975ed7733741ac97197fb48475e59807604a75053",
+  "after": "39be2143a77efe29f1a291ea6e3d076959a37b8289b9dec433e7d2041f575124"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": {
+  "file": "f006",
+  "before": "3d4aae5f245867e834540b823534bbd4f98553640a312b253a6b0f0a707b8bc0",
+  "after": "8b2446ecf0a5bdf26deb387783349f943d7481c19b048eb2b80c0c23cef14c19"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts": {
+  "file": "f007",
+  "before": "65bce4c2278f693b9fe8ce784999975acd04998786d36103b3e1154845b30200",
+  "after": "c7239160db95d39a04d408684e5b0281b77b7fa611b156f2df60d2586fcbcb6d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/🔁️lock-attempts/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "7a8b819c7bdec087e0ddb31e08d26d8ba3da422d1c16a17eed7a370a150a161a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧪️tests/🪟️windows/🟦️.ts": {
+  "file": "f009",
+  "before": "f70cc58f2ae7e900384b108a0848210a928d087ab25e7cc0b8be85cd3dc694e4",
+  "after": "02b1b85c4cf6d5de3a039841f572c17494cce871ae6030cbf6d18f7db323b92d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🧬️schema/🔣️.json": {
+  "file": "f010",
+  "before": "29fcff4c91aa1330af7e1cdde67457eeffb2ee2b98e18032a4c12296274d247c",
+  "after": "fe264962188635b9042d33898c06796a6d9424808a89975e8610a032f67a72d4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧬️schema/🔣️.json": {
+  "file": "f011",
+  "before": "8297edddd7ba4b0b4ef5de4ec07eff158fbc512d49fb101d470df66b6c4be4dc",
+  "after": "57d0250da808354587784725066a314c660d8fa45a51cf16a6007edb5658ecc6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts": {
+  "file": "f012",
+  "before": "195b94cffdac100db04266c83a9a0ff290d21636f5ce64eef2c0ce932bde51f7",
+  "after": "cb9b3abae97742927259b099254b2fdcf2d7871f393a9cfe87b32fb2e0daea60"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts": {
+  "file": "f013",
+  "before": "221d2eb169673dfa8b9e9c1dacf3ca259f88b608527dfcdb35cb47f6c646e7a4",
+  "after": "3dbf06ef3a887f591982910adfc20b6fdd6a06990c372e0dbe2b31d48b7456ee"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪢️link-less/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "8c7488eb063b2b356779c4697f701213bd29c8c59c1fb6de6c62a946312c1813"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪦️dead-holder/📥️worker/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "1344c00025e81ac8fa2dcc14d7e72071344689567f97d56416b7e6a8df1860a7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🧪️tests/🪦️dead-holder/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "4c3df203da63756859ea159634165e111118cd464d98f144e2bd1f180b4749bc"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts": {
+  "file": "f017",
+  "before": "7e44be7f13bae7f26fe302412106615f7e7823452248c76661c27510b21acbf0",
+  "after": "b49277438e8cfa09aef83af1a7bf5c65970c65dd702dd925e255ef9ef24ece51"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🟨️.mjs": {
+  "file": "f018",
+  "before": "ea7e7906169fa088b06d86cb81d12a828f2b544f42b15d577bf7254da55455a9",
+  "after": "78f8ebcf732315132c72209a797e4e8fc8c71e0e472b0832e5657f46211afa3c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🔒️farm-close/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "f69b169369084cbc7f1aa13d2e8fd7aa08dd1e95902ca6b9bc13a637626dc367"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.d.mts": {
+  "file": "f020",
+  "before": "1ae64399a799c93d2cbc87710a011269d84bbe4f9a28aafc4be1dc0308d51a51",
+  "after": "7267bf7f62f72b7835802365559fb2f5b35a5dd7513f1bfd8cdd36af4b3cba6f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🟨️.mjs": {
+  "file": "f021",
+  "before": "5fbe6926cc1a45c16bfbad9cbe27474bc7549638cd015df1e2cabeb0c7c0b727",
+  "after": "ea28d4b85ffcb750da6a8fb87278c64b6f9b1077f712321578771dc7c503a260"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🌊️patch-drift/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "02b2641c38d0e6f9992fb80e32dfd59265223c5315ec89f072182b6cc2262340"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧬️schema/🔣️.json": {
+  "file": "f023",
+  "before": "6dbbf0b917f501432e35a00857df4646d569e11dd8ce6fc8d2127c9d1fbd6804",
+  "after": "5c99323f782dbc01ac9838c353c29bdcd6cf37681d1988d9d85ca0802d630304"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": {
+  "file": "f024",
+  "before": "cfa13d1dc133f41a4ccc94263669acdbe152c058120b2a25d33f2ed4a6eb8ff9",
+  "after": "87d670b56966de75ed8fe0da525e814ebb31a2ca98aad09d2971ebf0ce74de44"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🎟️prefetch-booking/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "01887a6124965672b6eb1ca077623a385602c3de99d5c7156e3e237680f64156"
+ }
+}

@@ -43,7 +43,7 @@ pub(super) fn proof_strength_and_resistance(d: &En1999Snapshot, fire: &FireScena
     let retained: Vec<f64> = us.iter().map(|u| if *u > 0.0 { (u0 / u).min(1.0) } else { 1.0 }).collect();
     let failure = times.iter().zip(&us).find(|(_, u)| **u > 1.0).map(|(t, _)| *t);
     let u_cap = us.iter().cloned().fold(1.2, f64::max).min(3.0);
-    let required_tone = if super::scene::norm::within_limit(u_req) { Tone::Info } else { Tone::Error };
+    let required_tone = if crate::scene::norm::within_limit(u_req) { Tone::Info } else { Tone::Error };
     let mut binding = FieldBinding::new(format!("fireScenarios[id={}].durationS", fire.id), Affine { base: 0.0, k: 60.0 }, "s");
     binding.quantise = Some(Quantise::Round { step: 60.0 });
     let required_min = (fire.duration_s / 60.0).clamp(0.0, end_min);

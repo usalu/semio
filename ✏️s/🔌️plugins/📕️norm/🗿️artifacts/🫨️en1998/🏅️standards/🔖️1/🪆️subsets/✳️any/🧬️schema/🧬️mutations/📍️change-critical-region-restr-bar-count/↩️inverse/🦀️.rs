@@ -1,4 +1,4 @@
-//! ↩️ `change-critical-region-restr-bar-count` inverse: restores the previous `restrained_bar_count`.
+//! ↩️ `change-critical-region-restrained-bar-count` inverse: restores the previous `restrained_bar_count`.
 
 use crate::change_critical_region_restr_bar_count::ChangeCriticalRegionRestrainedBarCount;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

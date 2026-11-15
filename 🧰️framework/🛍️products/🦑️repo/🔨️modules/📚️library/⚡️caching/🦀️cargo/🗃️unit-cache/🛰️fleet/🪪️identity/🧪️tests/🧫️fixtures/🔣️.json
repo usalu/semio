@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "slots": [
+    {
+      "name": "registry library, dev profile",
+      "cwd": "/home/a/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "environment": {
+        "CARGO_MANIFEST_DIR": "/home/a/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+        "CARGO_PKG_NAME": "serde",
+        "CARGO_PKG_VERSION": "1.0.229"
+      },
+      "arguments": [
+        "--crate-name",
+        "serde",
+        "src/lib.rs",
+        "--crate-type",
+        "lib",
+        "--cfg",
+        "feature=\"alloc\"",
+        "--cfg",
+        "feature=\"derive\"",
+        "--cfg",
+        "feature=\"std\"",
+        "--cfg",
+        "no_core_cstr",
+        "--edition=2021",
+        "--error-format=json",
+        "--json=diagnostic-rendered-ansi,artifacts,future-incompat",
+        "--emit=dep-info,metadata,link",
+        "-C",
+        "embed-bitcode=no",
+        "-C",
+        "debuginfo=2",
+        "-C",
+        "incremental=/x/incr"
+      ],
+      "rustc": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "host": "aarch64-apple-darwin",
+      "parts": [
+        "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+        "aarch64-apple-darwin",
+        "opt=;debug=2;da=;oc=;lto=;panic=;cgu=;inc=1",
+        "serde@1.0.229",
+        "serde",
+        "lib/dep-info,link,metadata",
+        "alloc,derive,std",
+        "no_core_cstr"
+      ],
+      "slot": "23693e8308704ac0600eb4f6ee98c5a6635aea4427b19d4ca1c715f6250f6acd"
+    },
+    {
+      "name": "workspace member, optimised, rebuilt with another feature order",
+      "cwd": "/w/ws",
+      "environment": {
+        "CARGO_MANIFEST_DIR": "/w/ws/crates/core",
+        "CARGO_PKG_NAME": "core",
+        "CARGO_PKG_VERSION": "0.1.0"
+      },
+      "arguments": [
+        "--crate-name",
+        "core",
+        "crates/core/src/lib.rs",
+        "--crate-type",
+        "lib",
+        "--cfg",
+        "feature=\"b\"",
+        "--cfg",
+        "feature=\"a\"",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "overflow-checks=off",
+        "-C",
+        "panic=abort",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "lto=thin",
+        "--emit=dep-info,metadata,link"
+      ],
+      "rustc": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "host": "aarch64-apple-darwin",
+      "parts": [
+        "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+        "aarch64-apple-darwin",
+        "opt=3;debug=;da=;oc=off;lto=thin;panic=abort;cgu=1;inc=0",
+        "core@0.1.0#crates/core",
+        "core",
+        "lib/dep-info,link,metadata",
+        "a,b",
+        ""
+      ],
+      "slot": "56b70b3c0ff80e7eaf358bdc8d23143705a030aae260faf8d74b79307ed96aa9"
+    },
+    {
+      "name": "proc macro for the host",
+      "cwd": "/home/a/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+      "environment": {
+        "CARGO_MANIFEST_DIR": "/home/a/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229",
+        "CARGO_PKG_NAME": "serde_derive",
+        "CARGO_PKG_VERSION": "1.0.229"
+      },
+      "arguments": [
+        "--crate-name",
+        "serde_derive",
+        "src/lib.rs",
+        "--crate-type",
+        "proc-macro",
+        "--emit=dep-info,link",
+        "-Copt-level=0",
+        "-Cdebug-assertions=on"
+      ],
+      "rustc": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "host": "aarch64-apple-darwin",
+      "parts": [
+        "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+        "aarch64-apple-darwin",
+        "opt=0;debug=;da=on;oc=;lto=;panic=;cgu=;inc=0",
+        "serde_derive@1.0.229",
+        "serde_derive",
+        "proc-macro/dep-info,link",
+        "",
+        ""
+      ],
+      "slot": "db502b83959099445266733eb313d0f1b31f44c186a4e9d08caf84a5f34a366b"
+    },
+    {
+      "name": "wasm component binary with test cfg",
+      "cwd": "/w/ws",
+      "environment": {
+        "CARGO_MANIFEST_DIR": "/elsewhere/pkg",
+        "CARGO_PKG_NAME": "plug",
+        "CARGO_PKG_VERSION": "0.2.0"
+      },
+      "arguments": [
+        "--crate-name",
+        "plug",
+        "p/src/main.rs",
+        "--crate-type",
+        "bin",
+        "--target",
+        "wasm32-wasip2",
+        "--cfg",
+        "test",
+        "--emit=link",
+        "-C",
+        "opt-level=s"
+      ],
+      "rustc": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "host": "aarch64-apple-darwin",
+      "parts": [
+        "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+        "wasm32-wasip2",
+        "opt=s;debug=;da=;oc=;lto=;panic=;cgu=;inc=0",
+        "plug@0.2.0",
+        "plug",
+        "bin/link",
+        "",
+        "test"
+      ],
+      "slot": "3adc6e7585b015f632aa92d1690d6b8ba70b1a5b998640141a90e4d10fb13e71"
+    }
+  ]
+}

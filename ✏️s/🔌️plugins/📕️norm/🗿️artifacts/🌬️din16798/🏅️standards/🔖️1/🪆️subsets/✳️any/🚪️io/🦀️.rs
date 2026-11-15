@@ -78,8 +78,7 @@ pub mod binary;
 
 pub use semio_s_artifact_norm_din16798_io_text as text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_norm_din16798_model::sqlite;
 
 pub mod derived_construction {
     use semio_s_artifact_norm_din16798_diff::Din16798Diff;
@@ -191,4 +190,4 @@ semio_plugin::derive_artifact_facets!(
     composer: Din16798Composer,
 );
 
-pub use mutation_bridge::*;
+pub use semio_s_artifact_norm_din16798_mutations::mutation_bridge::*;

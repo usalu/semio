@@ -1,10 +1,10 @@
 import type {ClaimFilePortV1,ClaimLeasePortV1} from "../🧩️claims/🟨️.mjs";
 /** 🔐️ The declared constants of the slice custody. */
-export interface CustodyPolicyV1{readonly version:1;readonly directory:string;readonly pollMilliseconds:number;readonly noticeMilliseconds:number;readonly maximumClaims:number;readonly maximumOwners:number;readonly sampleOwners:number;readonly widenRounds:number}
+export interface CustodyPolicyV1{readonly version:1;readonly directory:string;readonly pollMilliseconds:number;readonly noticeMilliseconds:number;readonly maximumClaims:number;readonly maximumOwners:number;readonly sampleOwners:number;readonly widenRounds:number;readonly attachPollMilliseconds:number;readonly attachRecheckMilliseconds:number}
 /** 📐️ The declared constants of the slice custody. */
 export const CUSTODY_POLICY_V1:CustodyPolicyV1;
 /** 🔑️ The keys of the bilingual custody texts. */
-export type CustodyMessageKeyV1="blocked"|"blockedAll";
+export type CustodyMessageKeyV1="blocked"|"blockedAll"|"attached"|"attachedWave"|"attachedServed";
 /** 🗨️ The bilingual texts of the slice custody. */
 export const CUSTODY_MESSAGES_V1:Readonly<Record<"en"|"de",Readonly<Record<CustodyMessageKeyV1,string>>>>;
 /** 🖨️ Renders one custody message in the language the caller resolved. */
@@ -23,5 +23,9 @@ export interface CustodyRequestV1{readonly dirty:readonly string[];readonly stru
 export interface SliceClaimV1{readonly token:string;readonly owners:readonly string[];readonly structural:boolean;extend(options:{owners?:readonly string[];structural?:boolean;signal?:AbortSignal}):Promise<{held:boolean;request:CustodyRequestV1}>;alone(options?:{signal?:AbortSignal}):Promise<boolean>;release():Promise<void>}
 /** 🏛️ The slice custody of one generation store. */
 export interface SliceCustodyV1{hold(options:{owners?:readonly string[];structural?:boolean;signal?:AbortSignal;say?:(key:CustodyMessageKeyV1,fields:Record<string,string|number>)=>void}):Promise<SliceClaimV1>;idle(options:{owners?:readonly string[];structural?:boolean;signal?:AbortSignal}):Promise<boolean>;list(signal?:AbortSignal):Promise<CustodyClaimV1[]>;readonly resource:{claim(token:string):string;admission:string}}
+/** 🧲️ What an attached reader sees of the custody: whether a live claim holds it against the reader and the newest generation. */
+export interface CustodyLookV1{readonly held:boolean;readonly generation:number|undefined}
+/** 🧲️ Attaches a reader to the live builder of its stale projects instead of preparing them beside it; answers what `recheck` served, or undefined when nothing holds the custody against the reader (any more). */
+export function attachToBuilderV1<T>(options:{look:()=>Promise<CustodyLookV1>;recheck:()=>Promise<T|undefined>;say?:(key:CustodyMessageKeyV1,fields:Record<string,string|number>)=>void;signal?:AbortSignal;now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;policy?:Pick<CustodyPolicyV1,"attachPollMilliseconds"|"attachRecheckMilliseconds"|"noticeMilliseconds">}):Promise<T|undefined>;
 /** 🏗️ Creates the slice custody of the generation documents under `root`. */
 export function createSliceCustodyV1(options:{root:string;fs:Omit<ClaimFilePortV1,never>;lease:ClaimLeasePortV1;now?:()=>number;token?:()=>string}):SliceCustodyV1;

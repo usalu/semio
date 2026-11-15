@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import {describeHostReasonV1,formatHostCapacityErrorV1,hostCapacityErrorV1,evaluateHostCapacityV1,formatHostCapacityV1,hostFloorMegabytesV1,isHostCapacityV1,orderHostWaitersV1,planHostCapacityV1,readHostCapacityPolicyV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,type HostDefinitionV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../🟦️.ts";
+import {describeHostReasonV1,formatHostCapacityErrorV1,hostCapacityErrorV1,hostRequestPriorityV1,evaluateHostCapacityV1,formatHostCapacityV1,hostFloorMegabytesV1,isHostCapacityV1,orderHostWaitersV1,planHostCapacityV1,readHostCapacityPolicyV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,sizeHostRequestV1,type HostDefinitionV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {randomHostCaseV1,randomRampCaseV1,seededRandomV1,sqliteHostOracleV1,type HostCaseV1} from "./🔮️sqlite/🟦️.ts";
@@ -166,7 +166,7 @@ test("Every refusal has an English and a German message with the same placeholde
  const english=schema.definitions.Messages.const.en.errors,german=schema.definitions.Messages.const.de.errors,names=Object.keys(english) as (keyof typeof english)[];
  expect(Object.keys(german).sort()).toEqual([...names].sort());
  const placeholders=(text:string)=>[...text.matchAll(/\{([a-z]+)\}/gu)].map(match=>match[1]).sort();
- const values={definition:"Grant",detail:"missing id",platform:"plan9"};
+ const values={definition:"Grant",detail:"missing id",platform:"plan9",operation:"graph-plan",minimum:2048,total:16384,floor:2048,capacity:14336,needed:4096,spare:952,seconds:120};
  for(const name of names){
   expect(placeholders(german[name]),name).toEqual(placeholders(english[name]));
   for(const language of ["en","de"] as const)expect(formatHostCapacityErrorV1(language,name,values),`${language} ${name}`).not.toMatch(/\{[a-z]+\}/u);
@@ -177,7 +177,7 @@ test("Every refusal has an English and a German message with the same placeholde
 });
 
 const fair=(availableMegabytes:number,load:number|null=0):HostSampleV1=>({version:1,atMs:0,platform:"darwin",cores:8,totalMegabytes:32768,availableMegabytes,pressure:"normal",swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load,openFiles:null,openFilesMaximum:null,attachedImages:null});
-const asker=(id:string,megabytes:number,arrivedAtMs:number,priority:"batch"|"interactive"="batch"):HostWaiterV1=>({arrivedAtMs,pid:100,request:{id:id.padEnd(8,"x"),operation:"command",priority,minimumJobs:1,preferredJobs:1,fixedMegabytes:megabytes,perJobMegabytes:0,cpuPerJob:1}});
+const asker=(id:string,megabytes:number,arrivedAtMs:number,priority:HostWaiterV1["request"]["priority"]="batch"):HostWaiterV1=>({arrivedAtMs,pid:100,request:{id:id.padEnd(8,"x"),operation:"command",priority,minimumJobs:1,preferredJobs:1,fixedMegabytes:megabytes,perJobMegabytes:0,cpuPerJob:1}});
 const holder=(id:string,observed:number,admittedAtMs:number):HostGrantV1=>({id:id.padEnd(8,"g"),operation:"command",jobs:1,cpu:1,reservedMegabytes:observed,admittedAtMs,observedMegabytes:observed,pid:200,bootAtMs:0});
 const verdictOf=(evaluation:ReturnType<typeof evaluateHostCapacityV1>,id:string)=>evaluation.decisions.find(row=>row.id===id.padEnd(8,"x"))!;
 const wait=policy.wait;
@@ -248,4 +248,55 @@ test("The status line of a lent grant says so in English and German and fills ev
   expect(text).not.toContain("{");expect(text).toContain("3584");expect(text).toContain("270");expect(text).toContain("gggggggg1");
  }
  expect(formatHostCapacityV1("de","grantLent",{id:"a",operation:"run",cpu:1,reserved:1,observed:1,pid:1,seconds:1})).toContain("verliehen");
+});
+
+test("A graph read is not a compile: it starts while running jobs book every core, as long as the host itself is not loaded, and a compile of the same size still waits",()=>{
+ const sample=fair(20000,3),cargo=Array.from({length:3},(_,index)=>({...holder("c"+index,300,0),operation:"cargo",jobs:8,cpu:8,session:"a"}) as HostGrantV1);
+ const graph={...asker("graph",5700,10),request:{...asker("graph",5700,10).request,operation:"graph"}},compile={...asker("build",5700,10),request:{...asker("build",5700,10).request,operation:"cargo"}};
+ expect(verdictOf(evaluateHostCapacityV1(policy,sample,cargo,[compile],1000),"build")).toMatchObject({verdict:"wait",reason:"load"});
+ expect(verdictOf(evaluateHostCapacityV1(policy,sample,cargo,[graph],1000),"graph")).toMatchObject({verdict:"admit"});
+ const busy=fair(20000,64);
+ expect(verdictOf(evaluateHostCapacityV1(policy,busy,cargo,[graph],1000),"graph")).toMatchObject({verdict:"wait"});
+});
+
+test("The lent class is never admitted while a request of this machine waits, although a plain batch request of the same size overtakes a head held back by foreign pressure",()=>{
+ const sample=fair(10000),big=asker("big",5200,0);
+ const control=evaluateHostCapacityV1(policy,sample,[],[big,asker("small",500,1000)],2000);
+ expect(verdictOf(control,"big")).toMatchObject({verdict:"wait",reason:"memory"});
+ expect(verdictOf(control,"small")).toMatchObject({verdict:"admit"});
+ const lent=evaluateHostCapacityV1(policy,sample,[],[big,asker("small",500,1000,"lent")],2000);
+ expect(verdictOf(lent,"big")).toMatchObject({verdict:"wait",reason:"memory"});
+ expect(verdictOf(lent,"small")).toMatchObject({verdict:"wait",reason:"queue-order"});
+ expect(verdictOf(evaluateHostCapacityV1(policy,sample,[],[asker("small",500,1000,"lent")],2000),"small")).toMatchObject({verdict:"admit"});
+ expect(verdictOf(evaluateHostCapacityV1(policy,sample,[],[big,asker("small",500,0,"lent")],policy.wait.agingMilliseconds*10),"small")).toMatchObject({verdict:"wait",reason:"queue-order"});
+});
+
+test("A lent request is served after every other request, takes what they leave, and a request of this machine that is admitted does not hold it back",()=>{
+ const sample=fair(10000),name=(row:HostWaiterV1)=>row.request.id.replace(/[xg]+$/u,"");
+ expect(orderHostWaitersV1([asker("lent",100,0,"lent"),asker("batch",100,5),asker("inter",100,9,"interactive")],[]).map(name)).toEqual(["inter","batch","lent"]);
+ const both=evaluateHostCapacityV1(policy,sample,[],[asker("local",800,5),asker("lent",800,0,"lent")],10);
+ expect(verdictOf(both,"local")).toMatchObject({verdict:"admit"});expect(verdictOf(both,"lent")).toMatchObject({verdict:"admit"});
+ const tight=evaluateHostCapacityV1(policy,fair(8000),[],[asker("local",800,5),asker("lent",800,0,"lent")],10);
+ expect(verdictOf(tight,"local")).toMatchObject({verdict:"admit"});expect(verdictOf(tight,"lent")).toMatchObject({verdict:"wait"});
+});
+
+test("Property over 600 random queues: a lent request changes no other decision, is admitted only when no other request waits, and the same request as batch is admitted often while others wait",()=>{
+ const random=seededRandomV1(20261115);let overtook=0,lentAdmitted=0;
+ for(let index=0;index<600;index++){
+  const base=randomHostCaseV1(random,index),own=(id:string)=>({request:{id,operation:"exec",priority:"lent" as const,minimumJobs:1,preferredJobs:1,fixedMegabytes:512+Math.floor(random()*4)*512,perJobMegabytes:0,cpuPerJob:1},arrivedAtMs:0,pid:1});
+  const lent=own(`lent${index}xxxxxx`),batch={...lent,request:{...lent.request,priority:"batch" as const}};
+  const without=evaluateHostCapacityV1(policy,base.host,base.ledger,base.queue,base.nowMs),withLent=evaluateHostCapacityV1(policy,base.host,base.ledger,[...base.queue,lent],base.nowMs);
+  expect(withLent.decisions.filter(row=>row.id!==lent.request.id),String(index)).toEqual(without.decisions);
+  const verdict=withLent.decisions.find(row=>row.id===lent.request.id)!,othersWait=without.decisions.some(row=>row.verdict==="wait");
+  if(verdict.verdict==="admit"){lentAdmitted++;expect(othersWait,String(index)).toBe(false);}
+  if(othersWait){expect(verdict.verdict,String(index)).toBe("wait");const control=evaluateHostCapacityV1(policy,base.host,base.ledger,[...base.queue,batch],base.nowMs).decisions.find(row=>row.id===lent.request.id)!;if(control.verdict==="admit")overtook++;}
+ }
+ expect(overtook,"the control: as batch the request would have overtaken a waiting one").toBeGreaterThan(10);expect(lentAdmitted).toBeGreaterThan(10);
+});
+
+test("The request schema names the lent class, Ajv agrees, and the class of a lent request never changes",()=>{
+ const ajv=new Ajv({strict:true,allowUnionTypes:true}),check=ajv.compile({definitions:schema.definitions,$ref:"#/definitions/Request"}),request=fixture.cases[0]!.queue[0]!.request;
+ for(const priority of ["batch","interactive","lent"]){expect(check({...request,priority}),priority).toBe(true);expect(isHostCapacityV1("Request",{...request,priority}),priority).toBe(true);}
+ expect(check({...request,priority:"urgent"})).toBe(false);
+ expect(hostRequestPriorityV1("lent","interactive",{quick:true} as never)).toBe("lent");
 });

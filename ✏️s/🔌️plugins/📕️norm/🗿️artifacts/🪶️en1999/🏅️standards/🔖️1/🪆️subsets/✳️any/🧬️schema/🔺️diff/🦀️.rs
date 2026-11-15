@@ -1583,7 +1583,7 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::SheetPro
     }
 
     fn is_empty(&self) -> bool {
-        self.sheet_id.is_none() && self.pitch.is_none() && self.top_flange.is_none() && self.bottom_flange.is_none() && self.web_height.is_none() && self.internal.is_none()
+        self.sheet_id.is_none() && self.pitch.is_none() && self.top_flange.is_none() && self.bottom_flange.is_none() && self.web_height.is_none()
     }
 }
 
@@ -1647,7 +1647,7 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1999_model::FireInsu
     }
 
     fn is_empty(&self) -> bool {
-        self.fire_id.is_none() && self.thickness.is_none() && self.conductivity.is_none() && self.specific_heat.is_none() && self.density.is_none() && self.internal.is_none()
+        self.fire_id.is_none() && self.thickness.is_none() && self.conductivity.is_none() && self.specific_heat.is_none() && self.density.is_none()
     }
 }
 
@@ -1990,3 +1990,9 @@ impl protocol::ColdDiffAlgebra<En1999Snapshot> for En1999Diff {
 /// 🍃️ The five handcrafted leaves of the `diff` schema facet.
 pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: semio_s_artifact_norm_en1999_diff_typescript::LEAF, graphql: semio_s_artifact_norm_en1999_diff_graphql::LEAF, json_schema: semio_s_artifact_norm_en1999_diff_json_schema::LEAF, proto: semio_s_artifact_norm_en1999_diff_proto::LEAF };
 //#endregion 🍃️FacetLeaves
+
+#[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+pub mod binary;

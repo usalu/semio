@@ -1,0 +1,12 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts": {
+  "file": "f000",
+  "before": "171629e482b2ebc74a48d418ad4e25639df9b4418bdb8dd4910728caa07847dc",
+  "after": "8ef2b325d466b83d7904f300411d057224df9840969fcef7608c12fde3fd6d9c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🚪️gate/🟦️.ts": {
+  "file": "f001",
+  "before": "5b8165ede7b513264f0e98e57bfddbce01ce3a94f64ef10083bd077717537b02",
+  "after": "344da42626228b0b2ea6cd34920ec1c4f30f61d9852cf67b13ff842352ebbfe2"
+ }
+}

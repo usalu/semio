@@ -32,6 +32,14 @@ def capture_catalog(model: dict | None = None):
         _CAPTURE.reset(token)
 
 
+def capture_posters(posters: dict) -> None:
+    """🖼️ Add the finished posters of this render to its owned navigation model, so every card draws a real frame."""
+    captured = _CAPTURE.get()
+    if captured is None:
+        raise RuntimeError("Posters belong to a captured navigation model")
+    captured["posters"] = copy.deepcopy(posters)
+
+
 def topic(topic_id: str) -> dict:
     """🗂️ Resolve a real first-level topic by its stable course identity."""
     found = next((entry for entry in hierarchy_contract()["topics"] if entry["id"] == topic_id), None)

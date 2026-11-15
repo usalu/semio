@@ -1,0 +1,16 @@
+const [moduleRoot,worktree]=process.argv.slice(2) as [string,string];
+const git=await import(`${moduleRoot}/🌿️git/🟦️.ts`);
+const mb=(n:number)=>(n/1048576).toFixed(0);
+const show=(l:string)=>{(globalThis as any).Bun.gc(true);const m=process.memoryUsage();console.log(l.padEnd(24),"rss",mb(m.rss),"heapUsed",mb(m.heapUsed),"maxRSS",mb(process.resourceUsage().maxRSS*1024));};
+show("start");
+let t=performance.now();
+const volume=await git.volumeV1(worktree);console.log("volume",JSON.stringify(volume));
+t=performance.now();
+const tracked=await git.trackedEntriesV1(worktree);
+console.log("tracked",tracked?.length,"ms",(performance.now()-t).toFixed(0));show("tracked");
+t=performance.now();
+const spelling=await git.spellingV1(worktree,tracked!.map(e=>e.path));
+console.log("spelling absent",spelling.absent.length,"ms",(performance.now()-t).toFixed(0));show("spelling");
+t=performance.now();
+const view=await git.gitViewV1(worktree);
+console.log("view",view?.staged,view?.modified,view?.deleted,view?.untracked,view?.digest.slice(0,12),"ms",(performance.now()-t).toFixed(0));show("view");

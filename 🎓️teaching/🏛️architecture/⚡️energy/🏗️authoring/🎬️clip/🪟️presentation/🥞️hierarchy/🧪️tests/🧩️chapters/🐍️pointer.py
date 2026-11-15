@@ -22,7 +22,7 @@ class ChapterPointerContract(unittest.TestCase):
         scene, branch = case["right"], hierarchy.path(case["right"])
         work = Path(tempfile.mkdtemp(prefix="chapter-pointer-", dir=os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]))
         packet = {"schema": "semio-presentation-browser/v1", "viewport": {"width": 1600, "height": 900},
-                  "catalog": hierarchy.hierarchy_contract(), "language": "de", "work_directory": str(work)}
+                  "catalog": importlib.import_module(PACKAGE + ".🖼️posters.🧪️tests.🧰️synthetic.🐍️").catalog(), "language": "de", "work_directory": str(work)}
         probe = {"output": str(work / "controls.png"), "media": [], "hierarchy": {
             **renderer.initial_hierarchy(), "opened_path": branch[:-1]}, "cursor": {"point": None}, "transition_elapsed": 2000}
         measured = browser.render_batch({**packet, "frames": [probe]})["metadata"][0]

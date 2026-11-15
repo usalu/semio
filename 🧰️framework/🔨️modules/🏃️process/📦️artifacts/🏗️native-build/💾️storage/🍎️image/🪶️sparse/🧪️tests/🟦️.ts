@@ -13,6 +13,9 @@ import{createNativeImageVolumeSilenceSeedV1,nativeImageSeededCreateArgumentsV1}f
 import{nativeImageAttachArgumentsV1}from"../../👤️owners/🟦️.ts";
 import{nativeImageHdiutilProgramV1}from"../../🛠️hdiutil/🟦️.ts";
 import{nativeImageBackingAllocatedBytesV1}from"../../../🪶️extent/🟦️.ts";
+import catalog from"../../../../../../📖️texts/🔣️.json"with{type:"json"};
+import{refuseProcessV1}from"../../../../../../📖️texts/🟦️.ts";
+const initialLimit=134217728;
 import{nativeImageSparseAdmissionBytesV1,nativeImageSparseGrowArgumentsV1,nativeImageSparseInitialBytesV1}from"../🟦️.ts";
 const protocol=schema.definitions.Protocol.const,unit=imageSchema.definitions.ImageProtocol.const.unitBytes,MiB=1048576,GiB=1073741824;
 const env={PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"};
@@ -28,7 +31,7 @@ test("the creation size and the grow arguments are closed and unit-aligned",()=>
  expect(nativeImageSparseInitialBytesV1(25*GiB)).toBe(protocol.initialBytes);
  expect(nativeImageSparseGrowArgumentsV1(25*GiB,"/x/fixed.dmg")).toEqual(["resize","-size","25600m","/x/fixed.dmg"]);
  for(const bytes of[25*GiB+1,MiB]){let failure:unknown;try{nativeImageSparseInitialBytesV1(bytes);}catch(error){failure=error;}expect(failure).toMatchObject({code:"invalid",key:"process.nativeBuild.image-size-invalid",values:{bytes,minimum:imageSchema.definitions.ImageProtocol.const.minimumFilesystemBytes,unit}});}
- expect(nativeImageSparseAdmissionBytesV1(25*GiB)).toBe(protocol.admissionFreeBytes+64*MiB);expect(nativeImageSparseAdmissionBytesV1(8*MiB)).toBe(72*MiB);
+ expect(nativeImageSparseAdmissionBytesV1(25*GiB)).toBe(25*GiB+protocol.initialBytes);expect(nativeImageSparseAdmissionBytesV1(8*MiB)).toBe(72*MiB);
  expect(nativeImageBackingAllocatedBytesV1({size:7})).toBe(7);expect(nativeImageBackingAllocatedBytesV1({size:7n})).toBe(7n);
  expect(unit).toBe(MiB);
 });
@@ -52,3 +55,40 @@ test.skipIf(process.platform!=="darwin")("a real sparse image costs its content,
   }
  }finally{seed.dispose();spawnSync(nativeImageHdiutilProgramV1,["detach",root],{env});rmSync(directory,{recursive:true,force:true});}
 },120000);
+test.skipIf(process.platform!=="darwin")("the admission bound equals the free-space limit of the system `hdiutil resize` on a real seeded image",()=>{
+ const directory=realpathSync(mkdtempSync(join(testScratchRootV1("sparse"),"limit-"))),seed=createNativeImageVolumeSilenceSeedV1(),image=join(directory,"fixed.dmg");
+ try{
+  run(nativeImageHdiutilProgramV1,nativeImageSeededCreateArgumentsV1(protocol.initialBytes,image,seed.directory));
+  const limits=run(nativeImageHdiutilProgramV1,["resize","-limits",image]).trim().split(/\s+/u).map(Number),maximumBytes=limits[2]*512,free=statfsSync(directory).bavail*statfsSync(directory).bsize;
+  expect(Math.abs(maximumBytes-free-protocol.initialBytes)).toBeLessThan(GiB);
+  const fits=Math.floor((free-GiB)/MiB)*MiB,exceeds=Math.ceil((free+GiB)/MiB)*MiB;
+  expect(free).toBeGreaterThanOrEqual(nativeImageSparseAdmissionBytesV1(fits));expect(free).toBeLessThan(nativeImageSparseAdmissionBytesV1(exceeds));
+  const attempt=(bytes:number)=>spawnSync(nativeImageHdiutilProgramV1,[...nativeImageSparseGrowArgumentsV1(bytes,join(directory,"probe"+bytes+".dmg"))!],{env});
+  for(const bytes of[exceeds,fits]){run("/bin/cp",["-c",image,join(directory,"probe"+bytes+".dmg")]);const row=attempt(bytes);expect(row.status===0,String(bytes)+" "+row.stderr).toBe(bytes===fits);if(bytes===exceeds)expect(row.stderr.toString()).toContain("Invalid argument (22)");}
+ }finally{seed.dispose();rmSync(directory,{recursive:true,force:true});}
+},120000);
+test("a host with too little free space is refused in English and German with the missing bytes, not with status 22",()=>{
+ const entry=(catalog.messages as Record<string,{en:string;de:string}>)["nativeBuild.image-host-free-insufficient"]!;
+ for(const text of[entry.en,entry.de])for(const name of["directory","availableGiB","requiredGiB","missingGiB"])expect(text).toContain("{"+name+"}");
+ expect(entry.en).toContain("GiB free");expect(entry.de).toContain("GiB frei");
+ const values={directory:"/x/.cache/b/r",availableGiB:"91.2",requiredGiB:"96.1",missingGiB:"4.9"};
+ expect(refuseProcessV1("refused","nativeBuild.image-host-free-insufficient",values)).toMatchObject({code:"refused",key:"process.nativeBuild.image-host-free-insufficient",values});
+});
+test.skipIf(process.platform!=="darwin")("blocks freed inside a raw fixed image stay allocated on the host, and recreating the image returns them",()=>{
+ const directory=realpathSync(mkdtempSync(join(testScratchRootV1("sparse"),"bloat-"))),seed=createNativeImageVolumeSilenceSeedV1(),mount=join(directory,"m");
+ const make=(name:string)=>{const image=join(directory,name);run(nativeImageHdiutilProgramV1,nativeImageSeededCreateArgumentsV1(2*GiB,image,seed.directory));run(nativeImageHdiutilProgramV1,nativeImageSparseGrowArgumentsV1(2*GiB,image)!);return image;};
+ const allocated=(image:string)=>lstatSync(image).blocks*512;
+ try{
+  const first=make("first.dmg");mkdirSync(mount);run(nativeImageHdiutilProgramV1,nativeImageAttachArgumentsV1(mount,first));
+  try{
+   run("/bin/dd",["if=/dev/urandom","of="+join(mount,"big"),"bs=1m","count=400"]);run("/bin/sync",[]);
+   const written=allocated(first);expect(written).toBeGreaterThan(350*MiB);
+   rmSync(join(mount,"big"));run("/bin/sync",[]);
+   const fs=statfsSync(mount),used=(fs.blocks-fs.bfree)*fs.bsize,kept=allocated(first);
+   expect(kept).toBeGreaterThan(350*MiB);expect(used).toBeLessThan(100*MiB);
+   expect(kept-used).toBeGreaterThan(250*MiB);
+  }finally{run(nativeImageHdiutilProgramV1,["detach",mount]);}
+  rmSync(first);const second=make("second.dmg");
+  expect(allocated(second)).toBeLessThan(initialLimit);
+ }finally{seed.dispose();spawnSync(nativeImageHdiutilProgramV1,["detach",mount],{env});rmSync(directory,{recursive:true,force:true});}
+},180000);

@@ -9,11 +9,13 @@ import {captureSourceInputInventoryV1,captureCargoLockInventoryV1} from "../../�
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withRepositoryBuildGraphConsumerV1} from "../../📥️inputs/💾️storage/🟨️.mjs";
 import {readdir,lstat} from "node:fs/promises";
+import {existsSync} from "node:fs";
 import {join} from "node:path";
 import {createHash} from "node:crypto";
 import {checkScriptInvocation,advanceScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {graphStringInternerV1} from "../../🧠️memory/🟨️.mjs";
 import {GRAPH_LIMITS_V1,graphDeclarationV1,exactSourceReadPolicyV1} from "../🔐️authority/🟦️.ts";
+import {readClosureLeafV1} from "../🩹️closure-repair/🟨️.mjs";
 import {inventoryDirectoriesV1,expandedClosuresV1,rememberExpandedClosureV1} from "../🕊️release/🟦️.ts";
 
 
@@ -49,7 +51,7 @@ export function buildWalkDescendsV1():(name:string,path:string,parent:string)=>b
 }
 
 
-/** 📥️ Expands private input compaction into portable source declarations. */
+/** 📥️ Expands private input compaction into portable source declarations; a closure leaf that no longer exists drops its memo and fails with the typed `closure-missing` error (never ENOENT; the key and the projects that name it), which the generation load answers by obtaining the leaf or re-deriving those projects; the closures it names are pinned in the host store while this process lives, so a collection keeps them. */
 export function portableInputs(root:string,value:unknown,invocation:ScriptInvocation,control:ResourceLeaseControl):unknown|Promise<unknown> {
   const token=(item:unknown)=>{
     if(!item||typeof item!=="object"||Array.isArray(item))return undefined;
@@ -67,6 +69,8 @@ export function portableInputs(root:string,value:unknown,invocation:ScriptInvoca
   if(!tokens.size)return value;
   const expand=async()=>{
     const entries=[...tokens.values()],expanded=new Map<string,string[]>();
+    const pinned=entries.filter(entry=>entry.directory==="build-input-closures").map(entry=>entry.digest);
+    if(pinned.length)await import("../../🗄️cas/📂️areas/🟦️.ts").then(module=>module.casPinClosuresV1(pinned)).catch(()=>undefined);
     await withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{
       const clock=createGraphPhaseClockV1({publish:resource=>actual.publish({resource,mode:"shared",elapsedMs:0}),write:writeGraphPhaseRowV1});
       let bytes=0,readRecords=0;const cadence=exactSourceReadPolicyV1.maximumInventoryRecordsPerYield;
@@ -75,10 +79,13 @@ export function portableInputs(root:string,value:unknown,invocation:ScriptInvoca
       await clock.begin("expansion",entries.length);
       for(const compact of entries){
         checkScriptInvocation(invocation);checkResourceLeaseControl(actual);
-        const known=expandedClosuresV1.get(root+"\0"+compact.key);
+        const directory=join(store.root,compact.directory);let known=expandedClosuresV1.get(root+"\0"+compact.key);
+        if(known&&!existsSync(join(directory,compact.digest+".json"))){expandedClosuresV1.delete(root+"\0"+compact.key);known=undefined;}
         if(known)expanded.set(compact.key,known);
         else{
-          const directory=join(store.root,compact.directory),file=readInventoryRecordLeanV1(directory,compact.digest,exactSourceReadPolicyV1.maximumClosureBytes);
+          let file:ReturnType<typeof readInventoryRecordLeanV1>;
+          const named=()=>Object.entries(value&&typeof value==="object"?value as Record<string,unknown>:{}).filter(([,node])=>JSON.stringify(node).includes(compact.digest)).map(([name])=>name).slice(0,256);
+          file=await readClosureLeafV1({namespace:compact.directory,key:compact.digest,read:()=>readInventoryRecordLeanV1(directory,compact.digest,exactSourceReadPolicyV1.maximumClosureBytes),projects:named});
           if(file.sha256!==compact.digest)throw Error(`Build input closure content differs: ${compact.key}`);
           bytes+=file.byteLength;if(bytes>exactSourceReadPolicyV1.maximumSourceBytes)throw Error("Build input closure bytes exceeded");
           const list=compact.directory==="build-input-closures"?captureSourceInputInventoryV1(file.value,root).value.files.map(file=>graphStringInternerV1.share("{workspaceRoot}/"+file)):["{workspaceRoot}/Cargo.lock","{workspaceRoot}/"+captureCargoLockInventoryV1(file.value,root).value.manifest];

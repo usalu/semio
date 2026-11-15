@@ -9,7 +9,9 @@ import policy from "../../🔣️policy.json" with {type:"json"};
 import catalog from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
 import conformance from "../../📐️conformance/📋️scenarios/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {buildBackendPlansScopedV1,buildBackendDefaultIdV1,backendMissingOperationsV1,buildBackendAlternationV1,buildBackendBootstrapV1,buildBackendNativeNamespacesV1,buildBackendIdsV1,buildBackendRowV1,buildBackendRowsV1,buildNativeSnapshotProtocolV1,loadBuildBackendV1,requireBuildBackendIdV1} from "../🟦️.ts";
+import {buildBackendPlansScopedV1,buildBackendDefaultIdV1,backendMissingOperationsV1,buildBackendAlternationV1,buildBackendNativeNamespacesV1,buildBackendIdsV1,buildBackendRowV1,buildBackendRowsV1,buildNativeSnapshotProtocolV1,requireBuildBackendIdV1} from "../🟦️.ts";
+import {loadBuildBackendV1} from "../🚚️loading/🟦️.ts";
+import {buildBackendBootstrapV1} from "../🚀️launch/🟦️.ts";
 import {readBackendRegistryV1} from "../📜️registry/🟦️.ts";
 import {renderBuildHelpV1,type BuildHelpCatalogV1} from "../../⚙️operations/📖️help/🟦️.ts";
 
@@ -87,7 +89,7 @@ test("nested native launches and cache proofs are declared per backend, never by
 });
 
 test("every module and driver a row names exists, and the in-house backend loads with its own id",async()=>{
- for(const row of buildBackendRowsV1())for(const path of [row.module,row.driver])expect(existsSync(join(build,"🔌️backends",path)),`${row.id} ${path}`).toBe(true);
+ for(const row of buildBackendRowsV1())for(const path of [row.module,row.driver,...row.launch?[row.launch]:[]])expect(existsSync(join(build,"🔌️backends",path)),`${row.id} ${path}`).toBe(true);
  const semio=await loadBuildBackendV1("semio");
  expect(semio.id).toBe("semio");
  for(const method of ["setup","reset","prepareStorage","cache","remoteCache","execute"] as const)expect(typeof semio[method],method).toBe("function");
@@ -156,11 +158,11 @@ test("backend process defaults reach startup and preserve explicit environment",
 test("the lazily validated registry loads through the plan capture: the backend door is imported and validated inside a captured plan",async()=>{
  const {mkdtempSync,rmSync}=await import("node:fs"),{tmpdir}=await import("node:os"),{join}=await import("node:path"),{fileURLToPath}=await import("node:url");
  const {withCapturedPlanV1}=await import("../../🧊️revision/🗂️fs/🟦️.ts"),{importObservedModuleV1}=await import("../../👁️observation/🟨️.mjs"),{createCasStoreV1}=await import("../../🗄️cas/🗃️store/🟦️.ts");
- const area=mkdtempSync(join(tmpdir(),"backends-capture-")),door=fileURLToPath(new URL("../🟦️.ts",import.meta.url)),workspace=fileURLToPath(new URL("../../../",import.meta.url));
+ const area=mkdtempSync(join(tmpdir(),"backends-capture-")),door=fileURLToPath(new URL("../🟦️.ts",import.meta.url)),loader=fileURLToPath(new URL("../🚚️loading/🟦️.ts",import.meta.url)),workspace=fileURLToPath(new URL("../../../",import.meta.url));
  try{
   const outcome=await withCapturedPlanV1({cas:createCasStoreV1({root:area}),root:workspace,workspace:"w",holder:"p",journalCursor:"c"},async()=>{
-   const captured=await importObservedModuleV1(door) as {loadBuildBackendV1:(id:string)=>Promise<{id:string}>;buildBackendIdsV1:()=>readonly string[]};
-   return{ids:captured.buildBackendIdsV1(),backend:(await captured.loadBuildBackendV1("semio")).id};
+   const captured=await importObservedModuleV1(door) as {buildBackendIdsV1:()=>readonly string[]},loading=await importObservedModuleV1(loader) as {loadBuildBackendV1:(id:string)=>Promise<{id:string}>};
+   return{ids:captured.buildBackendIdsV1(),backend:(await loading.loadBuildBackendV1("semio")).id};
   });
   expect(outcome.result).toEqual({ids:["nx","bazel","semio"],backend:"semio"});
  }finally{rmSync(area,{recursive:true,force:true});}

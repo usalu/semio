@@ -8,7 +8,7 @@ export type CasPartitionPolicyV1=Readonly<{highUsedFraction:number;lowUsedFracti
 export type CasPolicyV1=Readonly<{version:1;capBytes:number;highWatermark:number;lowWatermark:number;partition:CasPartitionPolicyV1;minAgeMs:number;leaseMaxMs:number;touchGranularityMs:number;temporaryMaxAgeMs:number;ledgerQuietMs:number;lockStaleMs:number;progressMs:number;checkEvery:number;fanOutHexLength:number;areas:readonly CasAreaPolicyV1[]}>;
 /** 🗣️ The EN+DE texts of the store; the schema document is their single source. */
 export const CAS_MESSAGES_V1=Object.freeze(schema.definitions.Messages.const);
-/** 🗄️ The default policy: 120 GiB of the 200 GiB disk budget. */
+/** 🗄️ The default policy: a 32 GiB object cap, 90 % high and 75 % low watermark. */
 export const CAS_POLICY_V1:CasPolicyV1=Object.freeze(JSON.parse(JSON.stringify(schema.definitions.Policy.const)) as CasPolicyV1);
 
 /** 🧮️ Fills a message template of the schema with values. */

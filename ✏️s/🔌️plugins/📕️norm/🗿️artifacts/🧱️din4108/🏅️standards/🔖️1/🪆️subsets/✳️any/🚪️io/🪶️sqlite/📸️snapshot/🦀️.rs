@@ -1,7 +1,7 @@
 //! 🧱️ Handwritten complete envelope, window, layer, material-segment and bridge entities.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
-use semio_s_artifact_norm_din4108_model::{EnvelopeElement, LayerDocument, LayerSegment, ThermalBridge, ThermalZone, ZoneWindow};
+use crate::Din4108Snapshot;
+use crate::{EnvelopeElement, LayerDocument, LayerSegment, ThermalBridge, ThermalZone, ZoneWindow};
 use semio_s_plugin_norm_compliance::ClimateZoneDe;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SnapshotEncoding,SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,NativeEncodingBound,RowWriter,reconstruct_text}}};

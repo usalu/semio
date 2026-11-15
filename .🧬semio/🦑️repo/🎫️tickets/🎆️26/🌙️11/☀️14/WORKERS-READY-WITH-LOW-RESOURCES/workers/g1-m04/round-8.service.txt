@@ -1,0 +1,34 @@
+## /run/user/1000/semio-repo/1000/host-81f15d8fbbe2.log
+graph: 516 stale projects, 0 taken from the fleet, 516 too heavy for this machine (@semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB), and 510 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 516
+graph: waiting for the fleet: 0 of 516 projects arrived
+## last 30 lines
+[repository:command] still running after 1260 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 1270 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 1280 s; last phase started: source.served
+[repository:command] still running after 1280 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 1290 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 1300 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 1310 s; last phase started: source.served
+[repository:command] still running after 1310 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 1320 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 1330 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repo] still working after 1340 s; last phase started: source.served
+[repository:command] still running after 1340 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 1350 s
+graph: waiting for the fleet: 0 of 516 projects arrived
+[repository:command] still running after 1360 s
+graph: nothing to wait for any longer: the fleet was asked for 516 stale projects and delivered 0 within 300 s; 516 remain, among them the too heavy project(s) @semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB), and 510 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machi
+2026-11-14T21:58:07.043Z graph-wanted-expired {"wanted":"516","arrived":"0","seconds":"300","missing":"516","local":"0","heavy":", among them the too heavy project(s) @semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB), and 510 more (this machine can give about 0 MB per project)"}
+[repo] still working after 1370 s; last phase started: source.served
+[repository:command] still running after 1370 s
+[repository:command] still running after 1380 s
+[repository:command] still running after 1390 s

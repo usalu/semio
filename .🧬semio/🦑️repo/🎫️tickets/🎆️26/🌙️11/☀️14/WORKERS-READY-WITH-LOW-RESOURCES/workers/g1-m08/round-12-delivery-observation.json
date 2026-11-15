@@ -1,0 +1,23 @@
+{
+  "at": "2026-11-15T01:36:26.246372+00:00",
+  "files": {
+    "round-12.md": {
+      "local_sha256": "83a0ea59a4b1642f5e632a62af6c79ca0ff5c1f42ccf9493913619d4f42fd18c",
+      "journal_sha256": "83a0ea59a4b1642f5e632a62af6c79ca0ff5c1f42ccf9493913619d4f42fd18c",
+      "hlc": "1794706404732-000003-g1-m08",
+      "matches": true
+    },
+    "round-11.md": {
+      "local_sha256": "294a9fe44afe319ec82361e3983b64ffa6802b4be42db35451e2205856e5efdb",
+      "journal_sha256": "294a9fe44afe319ec82361e3983b64ffa6802b4be42db35451e2205856e5efdb",
+      "hlc": "1794705078090-000000-g1-m08",
+      "matches": true
+    },
+    "state.json": {
+      "local_sha256": "e49c3a5fbf0ee1d6bb3361441b68d24a3f01238077011513d21371f352c9a348",
+      "journal_sha256": "e49c3a5fbf0ee1d6bb3361441b68d24a3f01238077011513d21371f352c9a348",
+      "hlc": "1794706404732-000004-g1-m08",
+      "matches": true
+    }
+  }
+}

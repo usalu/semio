@@ -2,9 +2,77 @@
   "version": 1,
   "languages": ["en", "de"],
   "messages": {
+    "selfcheck.ok": {
+      "en": "Self-check passed: {modules} modules load, {schemas} schemas compile, {texts} text catalogues are complete in all languages.",
+      "de": "Selbstprüfung bestanden: {modules} Module laden, {schemas} Schemas übersetzen sich, {texts} Textkataloge sind in allen Sprachen vollständig."
+    },
+    "selfcheck.failed": {
+      "en": "Self-check failed: {error}",
+      "de": "Selbstprüfung fehlgeschlagen: {error}"
+    },
+    "event.restart-refused": {
+      "en": "The new code {digest} does not start ({reason}); the daemon keeps running the old code until the code on disk changes again.",
+      "de": "Der neue Code {digest} startet nicht ({reason}); der Daemon läuft mit dem alten Code weiter, bis sich der Code auf der Platte erneut ändert."
+    },
+    "event.code-reverted": {
+      "en": "The code {digest} on disk ran here before and was superseded ({reason}); it is not adopted automatically and the daemon keeps running its current code.",
+      "de": "Der Code {digest} auf der Platte lief hier schon früher und wurde abgelöst ({reason}); er wird nicht automatisch übernommen, der Daemon läuft mit seinem jetzigen Code weiter."
+    },
+    "status.health.store": {
+      "en": "The store has not answered since {seconds} s ({state}); local work continues and the daemon resumes by itself when the store answers again.",
+      "de": "Der Speicher antwortet seit {seconds} s nicht ({state}); lokale Arbeit läuft weiter und der Daemon macht von selbst weiter, sobald der Speicher wieder antwortet."
+    },
+    "status.health.pending": {
+      "en": "New code {digest} was refused: {reason}",
+      "de": "Neuer Code {digest} wurde abgelehnt: {reason}"
+    },
+    "status.health.sidecar": {
+      "en": "Sidecar {name}: {state} (process {pid}, {restarts} restart(s), {seconds} s in this state, last exit {exit}).",
+      "de": "Sidecar {name}: {state} (Prozess {pid}, {restarts} Neustart(s), seit {seconds} s in diesem Zustand, letztes Ende {exit})."
+    },
+    "status.sidecar.off": {
+      "en": "off on this machine",
+      "de": "auf dieser Maschine aus"
+    },
+    "status.sidecar.waiting": {
+      "en": "waiting for a healthy daemon",
+      "de": "wartet auf einen gesunden Daemon"
+    },
+    "status.sidecar.running": {
+      "en": "running",
+      "de": "läuft"
+    },
+    "status.sidecar.backoff": {
+      "en": "failed, restarts with back-off",
+      "de": "ausgefallen, startet mit Wartezeit neu"
+    },
+    "status.sidecar.stopped": {
+      "en": "stopped with the daemon",
+      "de": "mit dem Daemon beendet"
+    },
+    "status.health.trust.pending": {
+      "en": "The manifest is not verified against the tree yet; build tools check every file themselves until a sweep has completed.",
+      "de": "Das Manifest ist noch nicht gegen den Baum verifiziert; Build-Werkzeuge prüfen jede Datei selbst, bis ein Durchlauf abgeschlossen ist."
+    },
+    "status.health.trust.lost": {
+      "en": "The manifest lost trust {seconds} s ago ({kind}); build tools check every file themselves until the next sweeps have verified it.",
+      "de": "Das Manifest verlor das Vertrauen vor {seconds} s ({kind}); Build-Werkzeuge prüfen jede Datei selbst, bis die nächsten Durchläufe es verifiziert haben."
+    },
+    "status.health.failure": {
+      "en": "Recurring failures of kind {kind}: {count} times, last {seconds} s ago.",
+      "de": "Wiederkehrende Fehler der Art {kind}: {count} Mal, zuletzt vor {seconds} s."
+    },
+    "error.origin.taken": {
+      "en": "The origin {origin} already belongs to another machine (its home.json carries another key). Use an unused origin id, or retire the origin and join with a new one.",
+      "de": "Der Ursprung {origin} gehört bereits einer anderen Maschine (seine home.json trägt einen anderen Schlüssel). Verwende eine unbenutzte Ursprungs-Kennung oder lege den Ursprung still und tritt mit einer neuen bei."
+    },
+    "error.retire.unreadable": {
+      "en": "The attestation of origin {origin} exists but cannot be read, so its state is unknown. Pass --force to retire it anyway.",
+      "de": "Die Bescheinigung des Ursprungs {origin} existiert, ist aber nicht lesbar, sein Zustand ist daher unbekannt. Gib --force an, um ihn trotzdem stillzulegen."
+    },
     "error.syntax": {
-      "en": "Expected seed|join|run|status|snapshot|relay|compact|verify|bootstrap-archive|bootstrap-settle.",
-      "de": "Erwartet wird seed|join|run|status|snapshot|relay|compact|verify|bootstrap-archive|bootstrap-settle."
+      "en": "Expected seed|join|run|status|snapshot|relay|compact|compaction|verify|bootstrap-archive|bootstrap-settle|sync|fleet|rebase|repair|retire|touch|self-check.",
+      "de": "Erwartet wird seed|join|run|status|snapshot|relay|compact|compaction|verify|bootstrap-archive|bootstrap-settle|sync|fleet|rebase|repair|retire|touch|self-check."
     },
     "error.bootstrap.identity": {
       "en": "bootstrap-archive needs the identity of the group server in .cache/f/machine.json: join the server first.",
@@ -18,9 +86,21 @@
       "en": "This worktree is already joined ({file} exists). bootstrap-settle only prepares a worktree that was extracted from the bootstrap archive and has not joined yet.",
       "de": "Dieses Arbeitsverzeichnis ist bereits beigetreten ({file} existiert). bootstrap-settle bereitet nur ein aus dem Bootstrap-Archiv entpacktes Arbeitsverzeichnis vor, das noch nicht beigetreten ist."
     },
+    "error.bootstrap.blob": {
+      "en": "The store blob of {path} does not hash to its name; settle stopped and left the file where it is. Another machine puts the blob back (see the wants of the fleet); run bootstrap-settle again later.",
+      "de": "Der Store-Blob von {path} stimmt nicht mit seinem Namen überein; settle hat angehalten und die Datei an ihrem Platz gelassen. Eine andere Maschine stellt den Blob wieder her (siehe die Wünsche des Fleets); führe bootstrap-settle später erneut aus."
+    },
     "error.bootstrap.store": {
       "en": "Replica store not found: {store}",
       "de": "Replica-Speicher nicht gefunden: {store}"
+    },
+    "error.bootstrap.space": {
+      "en": "Not enough free disk space for the bootstrap archive: it needs about {need} GiB, {free} GiB are free and {reserve} GiB must stay free. Nothing was written; free space or wait for the next round.",
+      "de": "Nicht genug freier Speicherplatz für das Bootstrap-Archiv: es braucht etwa {need} GiB, {free} GiB sind frei und {reserve} GiB müssen frei bleiben. Es wurde nichts geschrieben; schaffe Platz oder warte auf die nächste Runde."
+    },
+    "bootstrap.archive.unchanged": {
+      "en": "Bootstrap archive left as it is: little changed since it was written ({files} files, {bytes}, sha256 {sha256}). Use --force to rebuild.",
+      "de": "Bootstrap-Archiv unverändert gelassen: seit dem Schreiben hat sich wenig geändert ({files} Dateien, {bytes}, sha256 {sha256}). Mit --force wird neu gebaut."
     },
     "bootstrap.archive.start": {
       "en": "Writing the bootstrap archive of {worktree} into the store {store}",
@@ -98,6 +178,174 @@
       "en": "Replicating {worktree} through {store} as origin {origin} of group {group}; stop with Ctrl+C.",
       "de": "Repliziere {worktree} über {store} als Ursprung {origin} der Gruppe {group}; beenden mit Strg+C."
     },
+    "repair.requested": {
+      "en": "The replica of {worktree} re-creates every shared file that is missing on this machine on its next pass. A local deletion that was not published yet is undone.",
+      "de": "Das Replikat von {worktree} stellt beim nächsten Durchlauf jede geteilte Datei wieder her, die auf dieser Maschine fehlt. Eine lokale, noch nicht veröffentlichte Löschung wird rückgängig gemacht."
+    },
+    "run.restarting": {
+      "en": "The code on disk changed; state saved, the service manager starts the new code.",
+      "de": "Der Code auf der Platte hat sich geändert; Zustand gespeichert, der Dienstmanager startet den neuen Code."
+    },
+    "fleet.header": {
+      "en": "Fleet: origin platform age lag (origins behind/queued) basis (cp:s = compared at its checkpoint taken s seconds ago, now = compared as it is now) sync code view (modified/deleted/untracked) latency (publish p50/p95 ms | apply p50/p95 ms) verdict",
+      "de": "Flotte: Ursprung Plattform Alter Rückstand (Ursprünge zurück/eingereiht) Grundlage (cp:s = verglichen an seinem Prüfpunkt von vor s Sekunden, now = verglichen wie er jetzt ist) Sync Code Ansicht (geändert/gelöscht/unversioniert) Latenz (Veröffentlichen p50/p95 ms | Anwenden p50/p95 ms) Urteil"
+    },
+    "status.fleet.header": {
+      "en": "Fleet: origin platform age lag (origins behind/queued) basis (cp:s = compared at its checkpoint taken s seconds ago, now = compared as it is now) sync code view (modified/deleted/untracked) latency (publish p50/p95 ms | apply p50/p95 ms) verdict",
+      "de": "Flotte: Ursprung Plattform Alter Rückstand (Ursprünge zurück/eingereiht) Grundlage (cp:s = verglichen an seinem Prüfpunkt von vor s Sekunden, now = verglichen wie er jetzt ist) Sync Code Ansicht (geändert/gelöscht/unversioniert) Latenz (Veröffentlichen p50/p95 ms | Anwenden p50/p95 ms) Urteil"
+    },
+    "fleet.row": {
+      "en": "  {origin} {platform} {age} {lag} {basis} {sync} {code} {view} {latency} {verdict}",
+      "de": "  {origin} {platform} {age} {lag} {basis} {sync} {code} {view} {latency} {verdict}"
+    },
+    "fleet.on": {
+      "en": "on",
+      "de": "an"
+    },
+    "fleet.off": {
+      "en": "off",
+      "de": "aus"
+    },
+    "fleet.verdict.ok": {
+      "en": "ok",
+      "de": "ok"
+    },
+    "fleet.verdict.off": {
+      "en": "off (sync is off, not compared)",
+      "de": "aus (Sync ist aus, nicht verglichen)"
+    },
+    "fleet.verdict.missing": {
+      "en": "missing (no attestation)",
+      "de": "fehlt (keine Bescheinigung)"
+    },
+    "fleet.verdict.stale": {
+      "en": "stale (attestation too old)",
+      "de": "veraltet (Bescheinigung zu alt)"
+    },
+    "fleet.verdict.lagging": {
+      "en": "lagging (not settled: no common checkpoint within 60 s yet, still moving)",
+      "de": "im Rückstand (nicht abgeglichen: noch kein gemeinsamer Prüfpunkt innerhalb von 60 s, noch in Bewegung)"
+    },
+    "fleet.verdict.diverged": {
+      "en": "diverged",
+      "de": "abweichend"
+    },
+    "fleet.differs": {
+      "en": "  {origin} differs in {field}: {value} instead of {expected}",
+      "de": "  {origin} weicht in {field} ab: {value} statt {expected}"
+    },
+    "fleet.differs.checkpoint": {
+      "en": "  {origin} differs in {field} at a common checkpoint: {value} instead of {expected} (#n = bucket n of 256 of the paths, value = its digest)",
+      "de": "  {origin} weicht in {field} an einem gemeinsamen Prüfpunkt ab: {value} statt {expected} (#n = Fach n von 256 der Pfade, Wert = dessen Digest)"
+    },
+    "fleet.warning.git-version": {
+      "en": "  warning: {origin} runs git {detail}, other machines run another version",
+      "de": "  Warnung: {origin} verwendet git {detail}, andere Maschinen eine andere Version"
+    },
+    "fleet.warning.volume": {
+      "en": "  warning: the volume of {origin} behaves differently from most ({detail}); the view is pinned, so this is a capability difference, not a divergence",
+      "de": "  Warnung: Das Volume von {origin} verhält sich anders als die meisten ({detail}); die Sicht ist gepinnt, es ist ein Unterschied der Fähigkeit, keine Abweichung"
+    },
+    "fleet.warning.over-budget": {
+      "en": "  warning: {origin} has {detail} tracked paths longer than its operating system holds below its worktree",
+      "de": "  Warnung: {origin} hat {detail} versionierte Pfade, die länger sind, als sein Betriebssystem unter dem Arbeitsverzeichnis zulässt"
+    },
+    "fleet.warning.symlinks": {
+      "en": "  warning: {origin} cannot create symbolic links but the repository tracks {detail}",
+      "de": "  Warnung: {origin} kann keine symbolischen Links anlegen, das Repository versioniert aber {detail}"
+    },
+    "fleet.warning.code-fallback": {
+      "en": "  warning: {origin} runs a fallback code ({detail}) instead of the code of its worktree",
+      "de": "  Warnung: {origin} führt einen Ersatz-Code aus ({detail}) statt des Codes seines Arbeitsverzeichnisses"
+    },
+    "fleet.warning.guards-unknown": {
+      "en": "  warning: {origin} runs older code ({detail}) that does not state its guards; it is compared on everything else",
+      "de": "  Warnung: {origin} führt älteren Code ({detail}) aus, der seine Wächter nicht angibt; es wird in allem anderen verglichen"
+    },
+    "fleet.warning.no-checkpoints": {
+      "en": "  warning: {origin} runs older code ({detail}) that attests no checkpoints; it is compared as it is now, only with other origins of that kind, and not with the others",
+      "de": "  Warnung: {origin} führt älteren Code ({detail}) aus, der keine Prüfpunkte bescheinigt; er wird so verglichen, wie er jetzt ist, nur mit anderen Ursprüngen dieser Art und nicht mit den übrigen"
+    },
+    "fleet.warning.git-broken": {
+      "en": "  warning: {origin} cannot resolve HEAD of its repository while the fleet has one ({detail}); its daemon repairs the shared git files from the store, a git client shows nothing until it has",
+      "de": "  Warnung: {origin} kann HEAD seines Repositorys nicht auflösen, obwohl die Flotte eines hat ({detail}); sein Daemon stellt die geteilten Git-Dateien aus dem Store wieder her, ein Git-Client zeigt bis dahin nichts"
+    },
+    "fleet.warning.never-attested": {
+      "en": "  warning: {origin} is registered in the store ({detail}) but has never attested: start the replica on that machine (run the provisioning script there, then `status`), or take it out of the fleet with `retire {origin}`",
+      "de": "  Warnung: {origin} ist im Store registriert ({detail}), hat aber nie bescheinigt: das Replikat auf dieser Maschine starten (dort das Provisionierungsskript ausführen, danach `status`) oder sie mit `retire {origin}` aus der Flotte nehmen"
+    },
+    "status.peer.unreachable": {
+      "en": "  warning: the store of peer group {group} at {path} is not reachable, so nothing of {group} is relayed into this group: mount it read-only at that path (`server-plan --group {own} --part relay-peers` prints the mount commands) or remove the peer from the topology",
+      "de": "  Warnung: der Store der Partnergruppe {group} unter {path} ist nicht erreichbar, daher wird nichts von {group} in diese Gruppe gespiegelt: ihn dort schreibgeschützt einhängen (`server-plan --group {own} --part relay-peers` zeigt die Mount-Befehle) oder die Partnergruppe aus der Topologie entfernen"
+    },
+    "relay.peer.unreachable": {
+      "en": "The store of peer group {group} at {path} is not reachable: mount it read-only at that path (`server-plan --group {own} --part relay-peers` prints the mount commands); the relay retries and says when it is back.",
+      "de": "Der Store der Partnergruppe {group} unter {path} ist nicht erreichbar: ihn dort schreibgeschützt einhängen (`server-plan --group {own} --part relay-peers` zeigt die Mount-Befehle); das Relay versucht es erneut und meldet, wenn er wieder da ist."
+    },
+    "relay.peer.reachable": {
+      "en": "The store of peer group {group} is reachable again; relaying resumes.",
+      "de": "Der Store der Partnergruppe {group} ist wieder erreichbar; das Spiegeln läuft weiter."
+    },
+    "fleet.warning.blobs": {
+      "en": "  warning: {origin} cannot read {detail} blob(s) of the store (missing or damaged) and has asked the fleet to put them back",
+      "de": "  Warnung: {origin} kann {detail} Blob(s) des Stores nicht lesen (fehlend oder beschädigt) und hat das Fleet gebeten, sie wiederherzustellen"
+    },
+    "fleet.ok": {
+      "en": "All {origins} origins with sync on are fresh (within {fresh} s) and identical at common points of the event history (checkpoints no older than {fresh} s), or settled and identical now.",
+      "de": "Alle {origins} Ursprünge mit Sync sind frisch (innerhalb von {fresh} s) und an gemeinsamen Punkten der Ereignishistorie identisch (Prüfpunkte nicht älter als {fresh} s), oder jetzt abgeglichen und identisch."
+    },
+    "fleet.failed": {
+      "en": "The fleet is not in agreement ({origins} origins; fresh and checkpoint age mean within {fresh} s; lagging is not wrong, only not yet comparable).",
+      "de": "Die Flotte ist nicht einig ({origins} Ursprünge; frisch und Prüfpunkt-Alter heißen innerhalb von {fresh} s; Rückstand ist nicht falsch, nur noch nicht vergleichbar)."
+    },
+    "error.fleet.diff": {
+      "en": "--diff cannot be combined with --json or --wait.",
+      "de": "--diff lässt sich nicht mit --json oder --wait kombinieren."
+    },
+    "fleet.diff.row": {
+      "en": "  {origin}: {verdict} ({fields})",
+      "de": "  {origin}: {verdict} ({fields})"
+    },
+    "fleet.diff.moving": {
+      "en": "The working-tree lines above differ because the tree keeps changing ({count} origins differ now); no origin is diverged at a common checkpoint.",
+      "de": "Die Arbeitsbaum-Zeilen oben weichen ab, weil sich der Baum weiter ändert ({count} Ursprünge weichen jetzt ab); kein Ursprung weicht an einem gemeinsamen Prüfpunkt ab."
+    },
+    "fleet.diff.nohere": {
+      "en": "{origin} attests no working-tree view (no git, or the daemon has not published view.txt yet); nothing to compare.",
+      "de": "{origin} bescheinigt keine Arbeitsbaum-Ansicht (kein Git, oder der Dienst hat view.txt noch nicht veröffentlicht); nichts zu vergleichen."
+    },
+    "fleet.diff.unavailable": {
+      "en": "  {origin} attests a view but view.txt is missing or does not match its digest.",
+      "de": "  {origin} bescheinigt eine Ansicht, aber view.txt fehlt oder passt nicht zu ihrem Digest."
+    },
+    "fleet.diff.origin": {
+      "en": "{origin} differs from this machine: {there} lines only there, {here} lines only here.",
+      "de": "{origin} weicht von dieser Maschine ab: {there} Zeilen nur dort, {here} Zeilen nur hier."
+    },
+    "fleet.diff.there": {
+      "en": "  only on {origin}: {line}",
+      "de": "  nur auf {origin}: {line}"
+    },
+    "fleet.diff.here": {
+      "en": "  only on {origin} (here): {line}",
+      "de": "  nur auf {origin} (hier): {line}"
+    },
+    "fleet.diff.more": {
+      "en": "  +{count} more",
+      "de": "  +{count} weitere"
+    },
+    "fleet.diff.same": {
+      "en": "The working-tree view of {origin} equals that of every other origin that attests one.",
+      "de": "Die Arbeitsbaum-Ansicht von {origin} gleicht der jedes anderen Ursprungs, der eine bescheinigt."
+    },
+    "fleet.diff.failed": {
+      "en": "The working-tree views differ or are unavailable for {count} origins.",
+      "de": "Die Arbeitsbaum-Ansichten weichen ab oder fehlen bei {count} Ursprüngen."
+    },
+    "fleet.waiting": {
+      "en": "Waiting for agreement: {pending} origins pending, {seconds} s left.",
+      "de": "Warte auf Einigkeit: {pending} Ursprünge offen, noch {seconds} s."
+    },
     "run.stopped": {
       "en": "Replica stopped; state saved.",
       "de": "Replica beendet; Zustand gespeichert."
@@ -118,13 +366,137 @@
       "en": "Daemon: running (pid {pid})",
       "de": "Daemon: läuft (pid {pid})"
     },
+    "status.daemon.busy": {
+      "en": "Daemon: busy, the event loop has not answered for {seconds} s",
+      "de": "Daemon: beschäftigt, die Ereignisschleife antwortet seit {seconds} s nicht"
+    },
+    "status.code.fallback": {
+      "en": "Code: fallback, running {source} ({phase}) until the code of the worktree starts again",
+      "de": "Code: Ersatz, es läuft {source} ({phase}), bis der Code des Arbeitsverzeichnisses wieder startet"
+    },
+    "status.code.snapshot": {
+      "en": "the sealed snapshot of this machine",
+      "de": "der versiegelte Snapshot dieser Maschine"
+    },
+    "status.code.store": {
+      "en": "the snapshot of the store",
+      "de": "der Snapshot des Stores"
+    },
+    "status.code.worktree": {
+      "en": "the worktree",
+      "de": "das Arbeitsverzeichnis"
+    },
+    "status.code.phase.boot": {
+      "en": "loading",
+      "de": "wird geladen"
+    },
+    "status.code.phase.open": {
+      "en": "opening its state",
+      "de": "öffnet seinen Zustand"
+    },
+    "status.code.phase.run": {
+      "en": "running",
+      "de": "läuft"
+    },
     "status.daemon.stopped": {
       "en": "Daemon: not running",
       "de": "Daemon: läuft nicht"
     },
+    "status.sync.on": {
+      "en": "Synchronization: on",
+      "de": "Synchronisierung: an"
+    },
+    "status.sync.off": {
+      "en": "Synchronization: off",
+      "de": "Synchronisierung: aus"
+    },
+    "rebase.requested": {
+      "en": "The replica of {worktree} publishes its current stage as the new base of the fleet on its next pass; every machine then takes this stage.",
+      "de": "Das Replikat von {worktree} veröffentlicht seinen aktuellen Stage beim nächsten Durchlauf als neue Basis der Flotte; jede Maschine übernimmt dann diesen Stage."
+    },
+    "sync.on": {
+      "en": "Synchronization is on for {worktree}.",
+      "de": "Synchronisierung ist an für {worktree}."
+    },
+    "sync.off": {
+      "en": "Synchronization is off for {worktree}. Shared files stay as they are on this machine until it is turned on.",
+      "de": "Synchronisierung ist aus für {worktree}. Geteilte Dateien bleiben auf dieser Maschine, bis sie wieder eingeschaltet wird."
+    },
+    "error.sync": {
+      "en": "sync needs exactly one of --on or --off.",
+      "de": "sync braucht genau eines von --on oder --off."
+    },
     "status.queue": {
       "en": "{files} files tracked; queued: {incoming} incoming, {outgoing} outgoing; {lost} overwritten files kept in .cache/f/lost",
       "de": "{files} Dateien verfolgt; wartend: {incoming} eingehend, {outgoing} ausgehend; {lost} überschriebene Dateien in .cache/f/lost aufbewahrt"
+    },
+    "event.linearised": {
+      "en": "Concurrent commits on {path}: {loser} lost against {winner}; re-created on top of it as {result}.",
+      "de": "Gleichzeitige Commits auf {path}: {loser} unterlag {winner}; darauf neu erstellt als {result}."
+    },
+    "event.linearised.conflict": {
+      "en": "Concurrent commits on {path}: {loser} lost against {winner}; re-created on top of it as {result}; {count} paths changed on both sides took the later commit.",
+      "de": "Gleichzeitige Commits auf {path}: {loser} unterlag {winner}; darauf neu erstellt als {result}; {count} auf beiden Seiten geänderte Pfade übernahmen den späteren Commit."
+    },
+    "event.linearised.duplicate": {
+      "en": "Concurrent commits on {path}: {loser} repeats {winner} and was dropped.",
+      "de": "Gleichzeitige Commits auf {path}: {loser} wiederholt {winner} und wurde verworfen."
+    },
+    "event.superseded": {
+      "en": "{path} lost the structural conflict ({reason}) against {winner}; its bytes, if it was here, are kept in .cache/f/lost.",
+      "de": "{path} unterlag dem Strukturkonflikt ({reason}) gegen {winner}; die Bytes, falls vorhanden, liegen in .cache/f/lost."
+    },
+    "event.stale-republish": {
+      "en": "{path} was republished with older content and is not applied; the newer content is published again.",
+      "de": "{path} wurde mit älterem Inhalt erneut veröffentlicht und wird nicht übernommen; der neuere Inhalt wird erneut veröffentlicht."
+    },
+    "event.drift": {
+      "en": "This machine differs from the settled fleet in {fields} (check {attempt}); it repairs its state from the store.",
+      "de": "Diese Maschine weicht vom abgeglichenen Fleet in {fields} ab (Prüfung {attempt}); sie repariert ihren Zustand aus dem Store."
+    },
+    "status.git.shared": {
+      "en": "Git state: shared (stage and commits replicate); stage tree {tree}.",
+      "de": "Git-Zustand: geteilt (Stage und Commits werden repliziert); Stage-Baum {tree}."
+    },
+    "status.git.no-git": {
+      "en": "Git state: not shared on this machine, because no git executable was found. Install git (on Windows Git for Windows) so that stage and commit state replicates.",
+      "de": "Git-Zustand: auf dieser Maschine nicht geteilt, weil keine ausführbare git-Datei gefunden wurde. Installiere git (unter Windows Git for Windows), damit Stage und Commits repliziert werden."
+    },
+    "status.git.no-repository": {
+      "en": "Git state: not shared on this machine, because the worktree has no usable root .git.",
+      "de": "Git-Zustand: auf dieser Maschine nicht geteilt, weil das Arbeitsverzeichnis kein verwendbares .git im Wurzelverzeichnis hat."
+    },
+    "status.git.waiting-for-base": {
+      "en": "Git state: waiting for the base stage of the group server; stage and commit state is not shared on this machine yet.",
+      "de": "Git-Zustand: wartet auf die Basis-Stage des Gruppenservers; Stage und Commits werden auf dieser Maschine noch nicht geteilt."
+    },
+    "status.git.objects-missing": {
+      "en": "Git state: waiting for objects of the shared stage that have not arrived; the stage on this machine is not changed meanwhile.",
+      "de": "Git-Zustand: wartet auf Objekte der geteilten Stage, die noch nicht angekommen sind; die Stage dieser Maschine bleibt solange unverändert."
+    },
+    "status.git.unmerged": {
+      "en": "Git state: not shared, because the stage has unmerged entries. Finish or abort the merge; the stage is not touched meanwhile.",
+      "de": "Git-Zustand: nicht geteilt, weil die Stage ungemergte Einträge hat. Schließe den Merge ab oder brich ihn ab; die Stage bleibt solange unberührt."
+    },
+    "status.git.write-tree-failed": {
+      "en": "Git state: degraded, because git write-tree fails on this stage; nothing is published or applied until it works.",
+      "de": "Git-Zustand: beeinträchtigt, weil git write-tree auf dieser Stage fehlschlägt; bis es funktioniert, wird nichts veröffentlicht oder angewendet."
+    },
+    "status.git.git-failed": {
+      "en": "Git state: degraded, because a git step on the stage failed; it is retried with back-off.",
+      "de": "Git-Zustand: beeinträchtigt, weil ein git-Schritt auf der Stage fehlschlug; er wird mit wachsendem Abstand wiederholt."
+    },
+    "status.git.index-busy": {
+      "en": "Git state: waiting, because .git/index.lock is held by another git process; it is retried with back-off.",
+      "de": "Git-Zustand: wartet, weil .git/index.lock von einem anderen git-Prozess gehalten wird; es wird mit wachsendem Abstand wiederholt."
+    },
+    "status.git.index-lock-stale": {
+      "en": "Git state: degraded, because .git/index.lock has been held for more than ten minutes. Close the program holding it or remove the file if no git process runs.",
+      "de": "Git-Zustand: beeinträchtigt, weil .git/index.lock seit mehr als zehn Minuten gehalten wird. Schließe das Programm, das es hält, oder entferne die Datei, wenn kein git-Prozess läuft."
+    },
+    "status.git.backup-failed": {
+      "en": "Git state: degraded, because the old stage could not be copied to .cache/f/lost before it would be replaced; it is not replaced.",
+      "de": "Git-Zustand: beeinträchtigt, weil die alte Stage nicht nach .cache/f/lost kopiert werden konnte, bevor sie ersetzt würde; sie wird nicht ersetzt."
     },
     "status.refused": {
       "en": "{refused} paths are refused by the path policy and not shared (verify lists them).",
@@ -165,6 +537,98 @@
     "relay.stopped": {
       "en": "Relay stopped.",
       "de": "Relay beendet."
+    },
+    "consolidate.nothing": {
+      "en": "One pack and nothing to retire: nothing to do.",
+      "de": "Ein Pack und nichts zu entfernen: nichts zu tun."
+    },
+    "consolidate.planned": {
+      "en": "Plan: {packs} packs, {bytes}; {retired} would be retired and about {freed} freed (run with --apply).",
+      "de": "Plan: {packs} Packs, {bytes}; {retired} würden entfernt und etwa {freed} frei (mit --apply ausführen)."
+    },
+    "consolidate.consolidated": {
+      "en": "Consolidated: {retired} packs retired, {freed} freed; every fleet machine follows through the replica.",
+      "de": "Zusammengeführt: {retired} Packs entfernt, {freed} frei; alle Maschinen des Fleets folgen über das Replikat."
+    },
+    "consolidate.locked": {
+      "en": "Another consolidation of this worktree is running; nothing was done.",
+      "de": "Eine andere Zusammenführung dieses Arbeitsverzeichnisses läuft; es wurde nichts getan."
+    },
+    "consolidate.space": {
+      "en": "Not enough free disk space for the new pack; nothing was written.",
+      "de": "Nicht genug freier Speicherplatz für das neue Pack; es wurde nichts geschrieben."
+    },
+    "consolidate.unpublished": {
+      "en": "The new pack was not published to the store in time; nothing was retired. Run again later.",
+      "de": "Das neue Pack wurde nicht rechtzeitig im Speicher veröffentlicht; nichts wurde entfernt. Später erneut ausführen."
+    },
+    "consolidate.failed": {
+      "en": "git could not write or verify the new pack; nothing was retired.",
+      "de": "git konnte das neue Pack nicht schreiben oder prüfen; nichts wurde entfernt."
+    },
+    "error.compaction": {
+      "en": "compaction needs exactly one of --plan or --apply.",
+      "de": "compaction braucht genau eines von --plan oder --apply."
+    },
+    "compaction.locked": {
+      "en": "Another machine is compacting the store right now (compaction.lock); nothing was done.",
+      "de": "Eine andere Maschine verdichtet den Speicher gerade (compaction.lock); es wurde nichts getan."
+    },
+    "compaction.refused": {
+      "en": "The store cannot be folded without a rejoin; no snapshot was written and nothing was removed.",
+      "de": "Der Speicher lässt sich nicht ohne erneuten Beitritt falten; es wurde kein Schnappschuss geschrieben und nichts entfernt."
+    },
+    "compaction.nosnapshot": {
+      "en": "No snapshot exists yet; compaction --apply writes one first. Nothing was changed.",
+      "de": "Es gibt noch keinen Schnappschuss; compaction --apply schreibt zuerst einen. Es wurde nichts geändert."
+    },
+    "compaction.empty": {
+      "en": "The store holds no events yet; nothing to compact.",
+      "de": "Der Speicher enthält noch keine Ereignisse; nichts zu verdichten."
+    },
+    "compaction.aborted": {
+      "en": "The blob reclaim stopped because another compaction moved past the snapshot; everything it had set aside was put back.",
+      "de": "Das Freigeben der Blobs wurde abgebrochen, weil eine andere Verdichtung den Schnappschuss überholt hat; alles Beiseitegelegte wurde zurückgestellt."
+    },
+    "compaction.ignored": {
+      "en": "{origin} does not hold back the retirement of segments ({why}).",
+      "de": "{origin} hält das Entfernen von Segmenten nicht auf ({why})."
+    },
+    "compaction.why.stale": {"en": "silent for too long, it resumes from the snapshot", "de": "zu lange still, es setzt beim Schnappschuss wieder auf"},
+    "compaction.why.off": {"en": "synchronisation is off", "de": "Synchronisation ist aus"},
+    "compaction.why.retired": {"en": "retired", "de": "ausgemustert"},
+    "compaction.why.unattested": {"en": "never attested", "de": "nie bestätigt"},
+    "compaction.plan": {
+      "en": "Plan on the newest snapshot ({entries} paths): {segments} journal segments ({segmentbytes}) and {blobs} blobs ({blobbytes}) could be removed; {pending} blobs ({pendingbytes}) are still too young. Nothing was changed.",
+      "de": "Plan auf dem neuesten Schnappschuss ({entries} Pfade): {segments} Journal-Segmente ({segmentbytes}) und {blobs} Blobs ({blobbytes}) ließen sich entfernen; {pending} Blobs ({pendingbytes}) sind noch zu jung. Es wurde nichts geändert."
+    },
+    "compaction.done": {
+      "en": "Compacted on a snapshot of {entries} paths: {segments} journal segments ({segmentbytes}) and {blobs} blobs ({blobbytes}) removed, {snapshots} old snapshots removed; {pending} blobs ({pendingbytes}) were too young and stay.",
+      "de": "Verdichtet auf einem Schnappschuss von {entries} Pfaden: {segments} Journal-Segmente ({segmentbytes}) und {blobs} Blobs ({blobbytes}) entfernt, {snapshots} alte Schnappschüsse entfernt; {pending} Blobs ({pendingbytes}) waren zu jung und bleiben."
+    },
+    "status.store.journal": {
+      "en": "Journal: {bytes} in {segments} segments of {origins} origins.",
+      "de": "Journal: {bytes} in {segments} Segmenten von {origins} Origins."
+    },
+    "status.store.snapshot": {
+      "en": "Newest snapshot by {origin}: {age} old, {bytes}.",
+      "de": "Neuester Schnappschuss von {origin}: {age} alt, {bytes}."
+    },
+    "status.store.nosnapshot": {
+      "en": "No snapshot yet: a new machine reads the whole journal.",
+      "de": "Noch kein Schnappschuss: eine neue Maschine liest das ganze Journal."
+    },
+    "status.store.reclaim": {
+      "en": "Reclaimable now: {segments} journal segments ({bytes}).",
+      "de": "Jetzt freigebbar: {segments} Journal-Segmente ({bytes})."
+    },
+    "status.store.blobs": {
+      "en": "Reclaimable blobs (measured by --deep): {blobs} ({bytes}); {pending} more ({pendingbytes}) are still too young.",
+      "de": "Freigebbare Blobs (mit --deep gemessen): {blobs} ({bytes}); weitere {pending} ({pendingbytes}) sind noch zu jung."
+    },
+    "status.store.last": {
+      "en": "Last compaction {age} ago: {blobs} blobs ({bytes}) removed; {pending} blobs ({pendingbytes}) were still too young.",
+      "de": "Letzte Verdichtung vor {age}: {blobs} Blobs ({bytes}) entfernt; {pending} Blobs ({pendingbytes}) waren noch zu jung."
     },
     "compact.done": {
       "en": "Compacted: {segments} segments, {blobs} blobs, {snapshots} old snapshots and {staging} stale staging files removed ({bytes}).",
@@ -213,6 +677,82 @@
     "verify.kind.state": {
       "en": "state differs",
       "de": "Zustand weicht ab"
+    },
+    "fleet.verdict.retired": {
+      "en": "retired (left the fleet, not compared)",
+      "de": "stillgelegt (hat die Flotte verlassen, nicht verglichen)"
+    },
+    "status.retired": {
+      "en": "This machine's origin was retired by {by} ({reason}): the daemon publishes and applies nothing. Run `retire {origin} --undo` on any machine to re-admit it.",
+      "de": "Der Ursprung dieser Maschine wurde von {by} stillgelegt ({reason}): der Daemon veröffentlicht und übernimmt nichts. Führe auf einer beliebigen Maschine `retire {origin} --undo` aus, um ihn wieder aufzunehmen."
+    },
+    "status.origin.retired": {
+      "en": "{origin}: retired, its journal stays history and is not counted as lag.",
+      "de": "{origin}: stillgelegt, sein Journal bleibt Verlauf und zählt nicht als Rückstand."
+    },
+    "retire.done": {
+      "en": "Origin {origin} is retired (by {by}). The fleet no longer waits for it; its journal stays readable. Undo with: retire {origin} --undo",
+      "de": "Ursprung {origin} ist stillgelegt (durch {by}). Die Flotte wartet nicht mehr auf ihn; sein Journal bleibt lesbar. Rückgängig mit: retire {origin} --undo"
+    },
+    "retire.already": {
+      "en": "Origin {origin} is already retired (by {by}).",
+      "de": "Ursprung {origin} ist bereits stillgelegt (durch {by})."
+    },
+    "retire.undone": {
+      "en": "Origin {origin} is re-admitted: it counts for the fleet again.",
+      "de": "Ursprung {origin} ist wieder aufgenommen: er zählt für die Flotte wieder mit."
+    },
+    "retire.notretired": {
+      "en": "Origin {origin} is not retired; there is nothing to undo.",
+      "de": "Ursprung {origin} ist nicht stillgelegt; es gibt nichts rückgängig zu machen."
+    },
+    "error.retire.origin": {
+      "en": "retire needs the origin to retire as its first argument, for example: retire g1-m03 --reason \"left the fleet\".",
+      "de": "retire braucht den stillzulegenden Ursprung als erstes Argument, zum Beispiel: retire g1-m03 --reason \"hat die Flotte verlassen\"."
+    },
+    "error.retire.options": {
+      "en": "--undo cannot be combined with --reason or --force.",
+      "de": "--undo lässt sich nicht mit --reason oder --force kombinieren."
+    },
+    "error.retire.own": {
+      "en": "Origin {origin} is the origin of this machine; a machine cannot retire itself. Run retire from another machine.",
+      "de": "Ursprung {origin} ist der Ursprung dieser Maschine; eine Maschine kann sich nicht selbst stilllegen. Führe retire auf einer anderen Maschine aus."
+    },
+    "error.retire.unknown": {
+      "en": "Origin {origin} is not in the store {store}.",
+      "de": "Ursprung {origin} ist nicht im Speicher {store}."
+    },
+    "error.retire.alive": {
+      "en": "Origin {origin} attested {age} s ago, so it looks alive. Stop its daemon first or pass --force.",
+      "de": "Ursprung {origin} hat vor {age} s bescheinigt, er scheint also zu leben. Halte zuerst seinen Daemon an oder gib --force an."
+    },
+    "error.retire.store": {
+      "en": "The store {store} is not reachable; nothing was written.",
+      "de": "Der Speicher {store} ist nicht erreichbar; es wurde nichts geschrieben."
+    },
+    "event.retired": {
+      "en": "The origin {origin} was retired by {by} ({reason}): nothing is published or applied until `retire {origin} --undo` re-admits it.",
+      "de": "Der Ursprung {origin} wurde von {by} stillgelegt ({reason}): nichts wird veröffentlicht oder übernommen, bis `retire {origin} --undo` ihn wieder aufnimmt."
+    },
+    "error.touch": {
+      "en": "touch needs either one or more paths or exactly one of --stdin or --hook.",
+      "de": "touch braucht entweder einen oder mehrere Pfade oder genau eines von --stdin oder --hook."
+    },
+    "touch.done": {
+      "en": "{count} paths handed to the replica of {worktree}; it publishes them within about a second.",
+      "de": "{count} Pfade an das Replikat von {worktree} übergeben; es veröffentlicht sie innerhalb von etwa einer Sekunde."
+    },
+    "touch.none": {
+      "en": "No path inside {worktree} to hand over.",
+      "de": "Kein Pfad innerhalb von {worktree} zu übergeben."
+    },
+    "status.latency": {
+      "en": "Latency over the last {publish} publishes and {apply} applies: publish p50 {publishp50} ms, p95 {publishp95} ms; apply p50 {applyp50} ms, p95 {applyp95} ms.",
+      "de": "Latenz über die letzten {publish} Veröffentlichungen und {apply} Anwendungen: Veröffentlichen p50 {publishp50} ms, p95 {publishp95} ms; Anwenden p50 {applyp50} ms, p95 {applyp95} ms."
+    },
+    "status.tiers": {
+      "en": "Background tiers, last pass (cost, duty cycle of one core): hot {hot}, directory sweep {sweep}, file sweep {file}, tree walk {walk}, git view {view}.",
+      "de": "Hintergrundstufen, letzter Durchlauf (Kosten, Auslastung eines Kerns): heiß {hot}, Verzeichnisdurchlauf {sweep}, Dateidurchlauf {file}, Baumdurchlauf {walk}, Git-Ansicht {view}."
     }
   }
 }

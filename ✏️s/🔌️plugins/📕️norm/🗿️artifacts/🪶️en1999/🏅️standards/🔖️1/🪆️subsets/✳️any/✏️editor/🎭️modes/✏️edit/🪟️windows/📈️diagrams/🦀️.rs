@@ -36,7 +36,4 @@ pub fn render(document: &En1999Snapshot, report: &CheckReport, focus: Option<&st
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

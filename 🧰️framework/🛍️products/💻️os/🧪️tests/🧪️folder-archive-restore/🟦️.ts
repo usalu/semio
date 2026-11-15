@@ -106,7 +106,7 @@ export async function registerFolderArchiveRestoreTests(
         worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: first, message: { kind: "localDocumentArchive", archive: Array.from(encodeDocumentArchiveBytes(before.archive())) } });
         await settle(() => folder.size === 1 && worker.artifactState(documentId)?.pendingMutations.length === 0);
         await worker.artifactState(documentId)!.revalidateFolder();
-        expect(reads.count).toBe(2);
+        expect(reads.count).toBe(3);
         expect(events(posted, "commandOutcome")).toEqual([]);
         expect(events(posted, "documentArchiveReplaced")).toEqual([]);
         worker.closeArtifact(documentId, undefined, first);

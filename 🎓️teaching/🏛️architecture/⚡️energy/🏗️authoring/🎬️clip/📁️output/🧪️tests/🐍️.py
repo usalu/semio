@@ -34,9 +34,10 @@ class OutputTest(unittest.TestCase):
                     audio.writeframes(b"\0" * 1600)
                 segment = {"script": "scene.py", "scene": case["scene"]}
                 self.assertEqual(runtime.source_narration(segment, language=case["language"]), [(case["key"], clause)])
-                before = runtime.segment_state(segment, {"language": case["language"]})
+                settings = {"language": case["language"], "profile": "preview"}
+                before = runtime.segment_state(segment, settings)
                 clause.write_bytes(clause.read_bytes() + b"\0\0")
-                self.assertNotEqual(before, runtime.segment_state(segment, {"language": case["language"]}))
+                self.assertNotEqual(before, runtime.segment_state(segment, settings))
 
     def test_narration_writers_and_composition_readers_share_generated_paths(self):
         output = importlib.import_module(MODULE)

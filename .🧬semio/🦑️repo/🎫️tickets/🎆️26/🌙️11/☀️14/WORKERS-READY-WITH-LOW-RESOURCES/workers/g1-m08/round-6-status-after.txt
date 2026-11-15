@@ -1,0 +1,39 @@
+Replica g1-m08 of group g1, store /Volumes/semio-store: reachable
+Synchronization: on
+Daemon: running (pid 81559)
+281432 files tracked; queued: 10 incoming, ? outgoing; 26 overwritten files kept in .cache/f/lost
+Recurring failures of kind error: 1 times, last 320 s ago.
+Sidecar build-agent: running (process 81777, 0 restart(s), 1152 s in this state, last exit -).
+Sidecar build-scheduler: off on this machine (process -, 0 restart(s), 1188 s in this state, last exit -).
+Sidecar build-cache: off on this machine (process -, 0 restart(s), 1188 s in this state, last exit -).
+Journal: 9.71 MiB in 13 segments of 9 origins.
+Newest snapshot by g1-server: 29169s old, 89.18 MiB.
+Reclaimable now: 2 journal segments (2.29 MiB).
+Last compaction 38633s ago: 861 blobs (27.00 GiB) removed; 88 blobs (129.23 MiB) were still too young.
+Git state: shared (stage and commits replicate); stage tree 5c75c44d73137807925a4f37dfbb0a95529a546e.
+Background tiers, last pass (cost, duty cycle of one core): hot 1 ms 0.2%, directory sweep 484 ms 10%, file sweep 2114 ms 2.2%, tree walk -, git view 28090 ms 5%.
+Latency over the last 20 publishes and 100 applies: publish p50 482 ms, p95 571 ms; apply p50 289 ms, p95 711 ms.
+g1-m01: 0 events (0 B) behind, last event 10s ago
+g1-m02: 0 events (0 B) behind, last event 12s ago
+g1-m03: 0 events (0 B) behind, last event 3s ago
+g1-m04: 0 events (0 B) behind, last event 51s ago
+g1-m05: 0 events (0 B) behind, last event 4757s ago
+g1-m06: 0 events (0 B) behind, last event 93s ago
+g1-m07: 0 events (0 B) behind, last event 21s ago
+g1-m08: 0 events (0 B) behind, last event 47s ago
+g1-server: 0 events (0 B) behind, last event 11s ago
+Fleet: origin platform age lag (origins behind/queued) basis (cp:s = compared at its checkpoint taken s seconds ago, now = compared as it is now) sync code view (modified/deleted/untracked) latency (publish p50/p95 ms | apply p50/p95 ms) verdict
+  g1-m01 macos 1s 0/0 cp:1s on 28b4f47dc4d6 108/12/388 194/988|282/762 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m02 macos 0s 0/0 cp:0s on 28b4f47dc4d6 108/12/395 186/594|268/787 ok
+  g1-m03 macos 1s 0/0 cp:1s on 28b4f47dc4d6 108/12/395 219/727|276/1111 ok
+  g1-m04 linux 0s 0/0 cp:0s on 28b4f47dc4d6 108/11/395 72/241|238/1178 diverged
+  g1-m05 windows 1s 0/4 cp:- on 73b7f3d88f52 112/12/395 -/-|2672/5857 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m06 macos 1s 0/0 cp:1s on 28b4f47dc4d6 108/12/388 341/363|255/845 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m07 macos 1s 0/0 cp:1s on 28b4f47dc4d6 108/12/392 180/562|320/943 lagging (not settled: no common checkpoint within 60 s yet, still moving)
+  g1-m08 macos 1s 0/0 cp:1s on 28b4f47dc4d6 108/12/395 482/571|289/711 ok
+  g1-server macos 0s 0/0 cp:0s on 28b4f47dc4d6 108/12/395 201/41303|205/690 ok
+  warning: g1-m04 runs git 2.55.0, other machines run another version
+  warning: the volume of g1-m04 behaves differently from most (case=sensitive normalisation=sensitive); the view is pinned, so this is a capability difference, not a divergence
+  warning: g1-m06 runs git 2.50.1, other machines run another version
+  g1-m04 differs in view.digest at a common checkpoint: #16=1e8a,#52=4911,#86=0997,#114=1e75,#121=b976,#147=9f30,#163=bae7,#188=c73f,#21 instead of #16=321b,#52=6226,#86=a296,#114=dbe6,#121=09af,#147=4d74,#163=6b8d,#188=4b70,#21 (#n = bucket n of 256 of the paths, value = its digest)
+The fleet is not in agreement (9 origins; fresh and checkpoint age mean within 60 s; lagging is not wrong, only not yet comparable).

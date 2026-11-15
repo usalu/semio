@@ -1,0 +1,60 @@
+graph: 0 of 703 projects arrived from the fleet, 18 inferred here, 685 left; the server last progressed 1414 s ago, estimated time left: about 16 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:18:671:1:0:repo-schema-commands|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 18 of 671 projects · 1 running, longest 0 s: repo-schema-commands (project, 0 s, 0 rows)
+graph: waiting for memory headroom (1176 of 1122 MB reserved, 1 projects running): repo-policy needs 1176 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[repo] still working after 3260 s; last phase started: source.served
+graph: waiting for memory headroom (1176 of 1128 MB reserved, 1 projects running): repo-policy needs 1176 MB and has waited 8 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:18:671:1:5:repo-schema-commands|project|5|0:waiting|1176|1128|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 18 of 671 projects · 1 running, longest 5 s: repo-schema-commands (project, 5 s, 0 rows) · waiting for memory headroom (1176 of 1128 MB reserved)
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[repository:command] still running after 3260 s
+graph: 0 of 703 projects arrived from the fleet, 18 inferred here, 685 left; the server last progressed 1425 s ago, estimated time left: about 16 min
+graph: waiting for memory headroom (1176 of 1168 MB reserved, 1 projects running): repo-policy needs 1176 MB and has waited 13 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:18:671:1:10:repo-schema-commands|project|10|0:waiting|1176|1168|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 18 of 671 projects · 1 running, longest 10 s: repo-schema-commands (project, 10 s, 0 rows) · waiting for memory headroom (1176 of 1168 MB reserved)
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] build:command-source-packages · Resolving the packages of command sources
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+graph: waiting for memory headroom (1176 of 1225 MB reserved, 1 projects running): repo-policy needs 1176 MB and has waited 18 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:18:671:1:15:repo-schema-commands|project|15|0:waiting|1176|1225|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 18 of 671 projects · 1 running, longest 15 s: repo-schema-commands (project, 15 s, 0 rows) · waiting for memory headroom (1176 of 1225 MB reserved)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 3270 s
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[repository:command] still running after 3280 s
+[repo] still working after 3290 s; last phase started: source.served
+[repository:command] still running after 3290 s
+[repository:command] still running after 3300 s
+graph: plan stage inference (during inference) grew the plan by 3273 MB, more than the 2567 MB this machine allows for it; it is stopped before the host runs short of memory
+graph: plan stop detail {"stage":"inference","operation":"inference","memory":{"rss":3125,"heapTotal":280,"heapUsed":2233,"external":1960,"arrayBuffers":1351},"heap":{"heapMb":2232.5,"extraMb":1960.3,"objectCount":5563569,"objectTypes":[{"type":"string","count":2710272},{"type":"Object","count":991252},{"type":"Array","count":686772},{"type":"Set","count":156867},{"type":"WeakRef","count":103979},{"type":"Structure","count":39994},{"type":"Cell Butterfly","count":24214},{"type":"Function","count":23757}]},"resources":{},"recent":[{"atMs":67286,"heapUsed":630,"external":448,"arrayBuffers":98,"r
+graph: project repo-schema-commands (project) grew by 3244 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (3244 of 1103 MB reserved, 1 projects running): repo-policy needs 1176 MB and has waited 53 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:18:671:1:50:repo-schema-commands|project|50|0:waiting|3244|1103|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 18 of 671 projects · 1 running, longest 50 s: repo-schema-commands (project, 50 s, 0 rows) · waiting for memory headroom (3244 of 1103 MB reserved)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 18 inferred here, 685 left; the server last progressed 1450 s ago, estimated time left: about 16 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:18:671:1:0:repo-policy|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 18 of 671 projects · 1 running, longest 0 s: repo-policy (project, 0 s, 0 rows)
+graph: waiting for memory headroom (1176 of 0 MB reserved, 1 projects running): repo-nx-output-custody needs 901 MB and has waited 5 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 3310 s
+[repo] still working after 3320 s; last phase started: source.served
+[repository:command] still running after 3320 s
+graph: plan stage inference settled from 6563 to 6999 MB
+Graph: Plan-Stufe inference beruhigt von 6563 auf 6999 MB
+[repository:command] still running after 3330 s
+[repository:command] still running after 3340 s
+[repo] still working after 3350 s; last phase started: source.served
+[repository:command] still running after 3350 s
+2026-11-15T13:14:06.689Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":9545,"limit":6339,"available":2283,"reserve":2048,"reason":"ceiling","worker":{"heapMb":2140.4,"extraMb":1908.4,"objectCount":4492706,"objectTypes":[{"type":"string","count":2294633},{"type":"Array","count":792629},{"type":"Object","count":582550},{"type":"Set","count":156855},{"type":"WeakRef","count":109035},{"type":"Structure","count":40277},{"type":"Function","count":27602},{"type":"Cell Butterfly","count":24640}],"at":1794748396283}}
+graph: plan answered, managed 103 MB, resident 175 MB (released 13 MB)

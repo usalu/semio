@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build/source/closure/dependencies/projection-admission/v1",
+  "title": "Nx projection admission",
+  "description": "Schema-first rule for the sources of the private Nx projection (the plugin root, its private leaves, the contract schemas) that the Original loaded before it planned the graph. A peer edit of these files while the Original planned (a worker plans for tens of minutes while the replica brings edits) used to end the whole command and start it again from zero. A CONTRACT file (a JSON document both the Original and the Nx process read: its suffix is in `contractSuffixes`) that moved still ends the command, naming the files. A CODE file that moved is adopted before any Nx process was handed an identity: a fresh process evaluates the current sources, the Original takes the identity and the revisions that process reports, and the Nx process, which always loads the current files, agrees with it. After the identity was handed to a process every move ends the command, as before.",
+  "$defs": {
+    "Text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 640
+    },
+    "Texts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "restart",
+        "adopted",
+        "probeFailed",
+        "more",
+        "handoff"
+      ],
+      "properties": {
+        "restart": {
+          "$ref": "#/$defs/Text"
+        },
+        "adopted": {
+          "$ref": "#/$defs/Text"
+        },
+        "probeFailed": {
+          "$ref": "#/$defs/Text"
+        },
+        "more": {
+          "$ref": "#/$defs/Text"
+        },
+        "handoff": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "contractSuffixes": [
+          ".json"
+        ],
+        "maximumListedFiles": 4,
+        "probeTimeoutMilliseconds": 120000,
+        "maximumProbeBytes": 1048576,
+        "languages": [
+          "en",
+          "de"
+        ],
+        "texts": {
+          "en": {
+            "restart": "The sources of the Nx projection changed while this command was running ({files}). A contract file moved or the change cannot be adopted, so the command starts again with the current implementation.",
+            "adopted": "The sources of the Nx projection changed while this command was planning ({files}). Only code moved, so a fresh process evaluated the current sources and this command goes on with them: no restart, nothing planned again.",
+            "probeFailed": "A fresh process could not evaluate the changed Nx projection sources ({reason}), so the command starts again with the current implementation.",
+            "more": "and {count} more",
+            "handoff": "The Nx step of this command asked for a fresh process admission (exit {code}): this process retires and the command starts again with the current implementation."
+          },
+          "de": {
+            "restart": "Die Quellen der Nx-Projektion haben sich während dieses Befehls geändert ({files}). Eine Vertragsdatei wechselte oder die Änderung lässt sich nicht übernehmen, daher startet der Befehl mit der aktuellen Implementierung neu.",
+            "adopted": "Die Quellen der Nx-Projektion haben sich während der Planung dieses Befehls geändert ({files}). Es wechselte nur Code, daher hat ein frischer Prozess die aktuellen Quellen ausgewertet und dieser Befehl macht damit weiter: kein Neustart, nichts wird neu geplant.",
+            "probeFailed": "Ein frischer Prozess konnte die geänderten Quellen der Nx-Projektion nicht auswerten ({reason}), daher startet der Befehl mit der aktuellen Implementierung neu.",
+            "more": "und {count} weitere",
+            "handoff": "Der Nx-Schritt dieses Befehls hat eine frische Prozess-Zulassung verlangt (Exit {code}): dieser Prozess endet und der Befehl startet mit der aktuellen Implementierung neu."
+          }
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "changes",
+        "action"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "action": {
+          "enum": [
+            "keep",
+            "adopt",
+            "restart"
+          ]
+        }
+      }
+    }
+  }
+}

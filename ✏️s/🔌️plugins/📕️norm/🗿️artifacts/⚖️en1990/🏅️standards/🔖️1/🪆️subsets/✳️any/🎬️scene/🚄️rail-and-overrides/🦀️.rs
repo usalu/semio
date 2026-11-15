@@ -11,7 +11,7 @@ fn rail_rows(document: &En1990Snapshot) -> Vec<(&Member, &model::BridgeSls)> {
     document.bridge_sls.iter().filter(|s| document.structure_kind == semio_s_artifact_norm_en1990_model::StructureKind::RailBridge && s.natural_frequency > 0.0).filter_map(|s| document.members.iter().find(|m| m.id == s.member_id && m.span > 0.0).map(|m| (m, s))).collect()
 }
 
-fn check_of<'a>(report: &'a CheckReport, key: &str, member: &Member, sls: &model::BridgeSls) -> Option<&'a super::super::norm::CheckResult> {
+fn check_of<'a>(report: &'a CheckReport, key: &str, member: &Member, sls: &model::BridgeSls) -> Option<&'a super::norm::CheckResult> {
     let id = format!("en1990.a2.rail-{key}.{}.{}", member.id, sls.id);
     report.checks.iter().find(|c| c.id == id)
 }

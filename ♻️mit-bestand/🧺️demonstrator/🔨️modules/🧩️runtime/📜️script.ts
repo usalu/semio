@@ -24,7 +24,9 @@ class PreparationScript extends BundleScript {
     const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout(DEMONSTRATOR_RUNTIME_TARGETS.map(row => row.pluginId));
     const support = new Set([MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY]);
     for (const name of [...pluginModuleDirNames.filter(name => !support.has(name)), ...extensionModuleDirNames]) {
-      const directory = join(moduleRoot, name), marker = JSON.parse(readFileSync(join(directory, ".semio-artifact.json"), "utf8"));
+      const directory = join(moduleRoot, name), markerFile = join(directory, ".semio-artifact.json");
+      if (!existsSync(markerFile)) throw new Error(`Missing Demonstrator runtime component: ${name}`);
+      const marker = JSON.parse(readFileSync(markerFile, "utf8"));
       if (!Array.isArray(marker.files) || !marker.files.includes("🌉️bridge.js") || !marker.files.includes("🔣️.json") || marker.files.some((file: string) => !existsSync(join(directory, file)))) throw new Error(`Incomplete Demonstrator runtime component: ${name}`);
     }
     for (const target of DEMONSTRATOR_RUNTIME_TARGETS) {

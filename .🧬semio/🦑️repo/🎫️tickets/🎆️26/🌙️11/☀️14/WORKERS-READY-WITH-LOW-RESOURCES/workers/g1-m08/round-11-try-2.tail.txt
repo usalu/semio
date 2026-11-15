@@ -1,0 +1,200 @@
+Reading the project graph slice (334 s): facts 249856 of 271278.
+Reading the project graph slice (336 s): facts 271278 of 271278.
+Reading the project graph slice (338 s): facts 271278 of 271278.
+Reading the project graph slice (340 s): facts 271278 of 271278.
+[repo] still working after 350 s; last phase started: door.script
+Reading the project graph slice (342 s): facts 271278 of 271278.
+Reading the project graph slice (344 s): facts 271278 of 271278.
+Reading the project graph slice (346 s): facts 271278 of 271278.
+Reading the project graph slice (348 s): facts 271278 of 271278.
+Reading the project graph slice (350 s): verification 1 of 3.
+Reading the project graph slice (352 s): verification 1 of 3.
+Reading the project graph slice (354 s): verification 1 of 3.
+Reading the project graph slice (356 s): verification 1 of 3.
+Reading the project graph slice (358 s): verification 2 of 3.
+Reading the project graph slice (360 s): verification 2 of 3.
+Reading the project graph slice (362 s): verification 2 of 3.
+Reading the project graph slice (364 s): verification 2 of 3.
+Reading the project graph slice (366 s): verification 2 of 3.
+Reading the project graph slice (368 s): verification 2 of 3.
+Reading the project graph slice (370 s): verification 2 of 3.
+[repo] still working after 380 s; last phase started: door.script
+Reading the project graph slice (372 s): verification 2 of 3.
+Reading the project graph slice (374 s): flush 1 of 1.
+Reading the project graph slice (376 s): flush 1 of 1.
+Reading the project graph slice (378 s): flush 1 of 1.
+Reading the project graph slice (380 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (382 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (384 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (386 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0); waiting for memory headroom (202 of 1333 MB reserved).
+Reading the project graph slice (388 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0); waiting for memory headroom (202 of 1333 MB reserved).
+Reading the project graph slice (390 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 10, 0); waiting for memory headroom (848 of 1630 MB reserved).
+Reading the project graph slice (392 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 10, 0); waiting for memory headroom (848 of 1630 MB reserved).
+Reading the project graph slice (394 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 10, 0); waiting for memory headroom (848 of 1630 MB reserved).
+Reading the project graph slice (396 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 15, 0); waiting for memory headroom (1522 of 1387 MB reserved).
+Reading the project graph slice (398 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 15, 0); waiting for memory headroom (1522 of 1387 MB reserved).
+Reading the project graph slice (400 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 15, 0); waiting for memory headroom (1522 of 1387 MB reserved).
+[repo] still working after 410 s; last phase started: door.script
+Reading the project graph slice (402 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 22, 18748); waiting for memory headroom (1895 of 2306 MB reserved).
+Reading the project graph slice (404 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 22, 18748); waiting for memory headroom (1895 of 2306 MB reserved).
+Reading the project graph slice (406 s): owners 1 of 2; running (name, kind, seconds, rows): @semio-tech/plugin-registry (project, 5, 245).
+Reading the project graph slice (408 s): owners 1 of 2; running (name, kind, seconds, rows): @semio-tech/plugin-registry (project, 5, 245).
+Reading the project graph slice (410 s): owners 1 of 2; running (name, kind, seconds, rows): @semio-tech/plugin-registry (project, 5, 245).
+Reading the project graph slice (412 s): owners 1 of 2; running (name, kind, seconds, rows): @semio-tech/plugin-registry (project, 10, 245).
+Reading the project graph slice (414 s): owners 1 of 2; running (name, kind, seconds, rows): @semio-tech/plugin-registry (project, 10, 245).
+Reading the project graph slice (416 s): owners 1 of 2; running (name, kind, seconds, rows): @semio-tech/plugin-registry (project, 10, 245).
+Reading the project graph slice (418 s): owners 1 of 2; running (name, kind, seconds, rows): @semio-tech/plugin-registry (project, 15, 245).
+Starting the repo graph service for this host.
+Waiting for the repo graph service (1 ms).
+Waiting for the repo graph service (2032 ms).
+Loading the project graph of 440cffa5563d.
+Planning 1 targets.
+Reading the project graph slice (2 s).
+Reading the project graph slice (4 s).
+Reading the project graph slice (6 s).
+[repo] still working after 440 s; last phase started: door.script
+Reading the project graph slice (8 s): files 0 of 0.
+Reading the project graph slice (10 s): doubt 451004 of 451004.
+Reading the project graph slice (12 s): facts 36864 of 271538.
+Reading the project graph slice (14 s): facts 65536 of 271538.
+Reading the project graph slice (16 s): facts 86016 of 271538.
+Reading the project graph slice (18 s): facts 102400 of 271538.
+Reading the project graph slice (20 s): facts 167936 of 271538.
+Reading the project graph slice (22 s): facts 184320 of 271538.
+Reading the project graph slice (24 s): facts 196608 of 271538.
+Reading the project graph slice (26 s): facts 241664 of 271538.
+Reading the project graph slice (28 s): facts 271538 of 271538.
+Reading the project graph slice (30 s): facts 271538 of 271538.
+Reading the project graph slice (32 s): facts 271538 of 271538.
+Reading the project graph slice (34 s): facts 271538 of 271538.
+Reading the project graph slice (36 s): verification 1 of 3.
+[repo] still working after 470 s; last phase started: door.script
+Reading the project graph slice (38 s): verification 1 of 3.
+Reading the project graph slice (40 s): verification 1 of 3.
+Reading the project graph slice (42 s): verification 1 of 3.
+Reading the project graph slice (44 s): verification 1 of 3.
+Reading the project graph slice (46 s): verification 1 of 3.
+Reading the project graph slice (48 s): verification 1 of 3.
+Reading the project graph slice (50 s): verification 1 of 3.
+Reading the project graph slice (52 s): flush 1 of 1.
+Reading the project graph slice (54 s): flush 1 of 1.
+Reading the project graph slice (56 s): flush 1 of 1.
+Reading the project graph slice (58 s): flush 1 of 1.
+Reading the project graph slice (60 s): flush 1 of 1.
+Reading the project graph slice (62 s): flush 1 of 1.
+Reading the project graph slice (64 s): flush 1 of 1.
+Reading the project graph slice (66 s): flush 1 of 1.
+[repo] still working after 500 s; last phase started: door.script
+Reading the project graph slice (68 s): flush 1 of 1.
+Reading the project graph slice (70 s): flush 1 of 1.
+Reading the project graph slice (72 s): flush 1 of 1.
+Reading the project graph slice (74 s): flush 1 of 1.
+Reading the project graph slice (76 s): flush 1 of 1.
+Reading the project graph slice (78 s): flush 1 of 1.
+Reading the project graph slice (80 s): flush 1 of 1.
+Reading the project graph slice (82 s): flush 1 of 1.
+Reading the project graph slice (84 s): flush 1 of 1.
+Reading the project graph slice (86 s): flush 1 of 1.
+Reading the project graph slice (88 s): flush 1 of 1.
+Reading the project graph slice (90 s): flush 1 of 1.
+Reading the project graph slice (92 s): flush 1 of 1.
+Reading the project graph slice (94 s): flush 1 of 1.
+Reading the project graph slice (96 s): flush 1 of 1.
+[repo] still working after 530 s; last phase started: door.script
+Reading the project graph slice (98 s): flush 1 of 1.
+Reading the project graph slice (100 s): flush 1 of 1.
+Reading the project graph slice (102 s): flush 1 of 1.
+Reading the project graph slice (104 s): flush 1 of 1.
+Reading the project graph slice (106 s): flush 1 of 1.
+Reading the project graph slice (108 s): flush 1 of 1.
+Reading the project graph slice (110 s): flush 1 of 1.
+Reading the project graph slice (112 s): flush 1 of 1.
+Reading the project graph slice (114 s): flush 1 of 1.
+Reading the project graph slice (116 s): flush 1 of 1.
+Reading the project graph slice (118 s): flush 1 of 1.
+Reading the project graph slice (120 s): flush 1 of 1.
+Reading the project graph slice (122 s): flush 1 of 1.
+Reading the project graph slice (124 s): flush 1 of 1.
+Reading the project graph slice (126 s): flush 1 of 1.
+[repo] still working after 560 s; last phase started: door.script
+Reading the project graph slice (128 s): flush 1 of 1.
+Reading the project graph slice (130 s): flush 1 of 1.
+Reading the project graph slice (132 s): flush 1 of 1.
+Reading the project graph slice (134 s): flush 1 of 1.
+Reading the project graph slice (136 s): flush 1 of 1.
+Reading the project graph slice (138 s): flush 1 of 1.
+Reading the project graph slice (140 s): flush 1 of 1.
+Reading the project graph slice (142 s): flush 1 of 1.
+Reading the project graph slice (144 s): flush 1 of 1.
+Reading the project graph slice (146 s): flush 1 of 1.
+Reading the project graph slice (148 s): flush 1 of 1.
+Reading the project graph slice (150 s): flush 1 of 1.
+Reading the project graph slice (152 s): flush 1 of 1.
+Reading the project graph slice (154 s): flush 1 of 1.
+Reading the project graph slice (156 s): flush 1 of 1.
+[repo] still working after 590 s; last phase started: door.script
+Reading the project graph slice (158 s): flush 1 of 1.
+Reading the project graph slice (160 s): flush 1 of 1.
+Reading the project graph slice (162 s): flush 1 of 1.
+Reading the project graph slice (164 s): flush 1 of 1.
+Reading the project graph slice (166 s): flush 1 of 1.
+Reading the project graph slice (168 s): flush 1 of 1.
+Reading the project graph slice (170 s): flush 1 of 1.
+Reading the project graph slice (172 s): flush 1 of 1.
+Reading the project graph slice (174 s): flush 1 of 1.
+Reading the project graph slice (176 s): flush 1 of 1.
+Reading the project graph slice (178 s): files 0 of 0.
+Reading the project graph slice (180 s): doubt 451004 of 451004.
+Reading the project graph slice (182 s): facts 45056 of 271552.
+Reading the project graph slice (184 s): facts 98304 of 271552.
+Reading the project graph slice (186 s): facts 163840 of 271552.
+[repo] still working after 620 s; last phase started: door.script
+Reading the project graph slice (188 s): facts 180224 of 271552.
+Reading the project graph slice (190 s): facts 204800 of 271552.
+Reading the project graph slice (192 s): facts 249856 of 271552.
+Reading the project graph slice (194 s): facts 271552 of 271552.
+Reading the project graph slice (196 s): facts 271552 of 271552.
+Reading the project graph slice (198 s): facts 271552 of 271552.
+Reading the project graph slice (200 s): facts 271552 of 271552.
+Reading the project graph slice (202 s): verification 1 of 3.
+Reading the project graph slice (204 s): verification 1 of 3.
+Reading the project graph slice (206 s): verification 1 of 3.
+Reading the project graph slice (208 s): verification 1 of 3.
+Reading the project graph slice (210 s): verification 1 of 3.
+Reading the project graph slice (212 s): verification 1 of 3.
+Reading the project graph slice (214 s): verification 1 of 3.
+Reading the project graph slice (216 s): parts 129 of 129.
+[repo] still working after 650 s; last phase started: door.script
+Reading the project graph slice (218 s): flush 1 of 1.
+Reading the project graph slice (220 s): flush 1 of 1.
+Reading the project graph slice (222 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (224 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (226 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 0, 0).
+Reading the project graph slice (228 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0); waiting for memory headroom (1895 of 1024 MB reserved).
+Reading the project graph slice (230 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 5, 0); waiting for memory headroom (1895 of 1024 MB reserved).
+Reading the project graph slice (232 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 10, 0); waiting for memory headroom (1895 of 1340 MB reserved).
+Reading the project graph slice (234 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 10, 0); waiting for memory headroom (1895 of 1340 MB reserved).
+Reading the project graph slice (236 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 10, 0); waiting for memory headroom (1895 of 1340 MB reserved).
+Reading the project graph slice (238 s): owners 0 of 2; running (name, kind, seconds, rows): workspace (root:language:cargo, 10, 0); waiting for memory headroom (1895 of 1340 MB reserved).
+Reading the project graph slice (240 s): owners 1 of 2.
+Reading the project graph slice (242 s): owners 1 of 2.
+Reading the project graph slice (244 s): owners 1 of 2.
+Reading the project graph slice (246 s): owners 1 of 2; running (name, kind, seconds, rows): @semio-tech/plugin-registry (project, 5, 0).
+[repo] still working after 680 s; last phase started: door.script
+Reading the project graph slice (248 s): owners 1 of 2; running (name, kind, seconds, rows): .
+Reading the project graph slice (250 s): owners 1 of 2; running (name, kind, seconds, rows): .
+Reading the project graph slice (252 s): owners 1 of 2; running (name, kind, seconds, rows): .
+Reading the project graph slice (254 s): owners 2 of 2.
+Reading the project graph slice (256 s): owners 2 of 2.
+Reading the project graph slice (258 s): owners 2 of 2.
+Reading the project graph slice (260 s): owners 2 of 2.
+Reading the project graph slice (262 s): owners 2 of 2.
+Reading the project graph slice (264 s): owners 2 of 2.
+Reading the project graph slice (266 s): owners 2 of 2.
+Reading the project graph slice (268 s): owners 2 of 2.
+Reading the project graph slice (270 s): owners 2 of 2.
+Reading the project graph slice (272 s): owners 2 of 2.
+Reading the project graph slice (274 s): assembly 0 of 703.
+The resident service met an unexpected failure (reference 742ceab8); try again, the details under that reference are in the service log /var/folders/t7/ckfnmc712gsdkt0tc8042br00000gn/T/semio-repo/501/host-ac6bfe8f337c.log.
+end 2026-11-15T00:57:02Z
+native_rc=1

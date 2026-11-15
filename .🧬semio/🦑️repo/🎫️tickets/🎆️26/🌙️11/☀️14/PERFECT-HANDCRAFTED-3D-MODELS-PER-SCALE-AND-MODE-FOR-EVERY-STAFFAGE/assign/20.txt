@@ -1,0 +1,7 @@
+🪑️objects/retractable-bollard
+🪑️objects/shopping-trolley
+🪑️objects/stepladder
+🪑️objects/storage-crate-stack
+🪑️objects/street-lamp
+🪑️objects/tealight
+🪑️objects/waste-bin

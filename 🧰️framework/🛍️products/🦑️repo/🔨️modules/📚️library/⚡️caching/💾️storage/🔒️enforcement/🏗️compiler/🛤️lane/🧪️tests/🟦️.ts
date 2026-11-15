@@ -20,7 +20,7 @@ test("a lane view names the lane's directories and the unit cache chain with the
  const cacheRoot=mkdtempSync(join(base,"lv-"));
  try{
   const environment={RUSTC:"/ingress/rustc.ts",CARGO_TARGET_DIR:"/shared/t",CARGO_BUILD_BUILD_DIR:"/shared/b",RUSTC_WRAPPER:"",PATH:"/bin"},view=compilerLaneEnvironmentV1({environment,cacheRoot,lane,toolchain:"tc-digest",crates:["b","a"],unitCache:true});
-  expect(view).toMatchObject({CARGO_TARGET_DIR:lane.target,CARGO_BUILD_BUILD_DIR:lane.build,RUSTC:"/ingress/rustc.ts",PATH:"/bin",RUSTC_WRAPPER:unitCacheShimPathV1(cacheRoot),SEMIO_UNIT_CACHE_ROOT:cacheRoot,SEMIO_UNIT_CACHE_LANE:lane.id,SEMIO_UNIT_CACHE_LANE_ROOT:lane.base,SEMIO_UNIT_CACHE_TOOLCHAIN:"tc-digest",SEMIO_UNIT_CACHE_FOCUS:"b,a",SEMIO_UNIT_CACHE_BUILD_SCRIPTS:"on"});
+  expect(view).toMatchObject({CARGO_TARGET_DIR:lane.target,CARGO_BUILD_BUILD_DIR:lane.build,RUSTC:"/ingress/rustc.ts",PATH:"/bin",SEMIO_UNIT_CACHE_ROOT:cacheRoot,SEMIO_UNIT_CACHE_LANE:lane.id,SEMIO_UNIT_CACHE_LANE_ROOT:lane.base,SEMIO_UNIT_CACHE_TOOLCHAIN:"tc-digest",SEMIO_UNIT_CACHE_FOCUS:"b,a",SEMIO_UNIT_CACHE_BUILD_SCRIPTS:"on"});
   expect(JSON.parse(view.SEMIO_UNIT_CACHE_INNER!)).toEqual(["/ingress/rustc.ts"]);
   expect(Object.isFrozen(view)).toBe(true);
   expect(environment.CARGO_TARGET_DIR).toBe("/shared/t");
@@ -37,7 +37,7 @@ test("a caller with a private target directory, or a switched-off cache, only ge
 });
 
 const exactQuota=(totalBytes:number,capacityBytes:number):number=>{
- const code=`import json,sys\nfrom fractions import Fraction\nd=json.load(sys.stdin)\nstores=d['policy']['stores']\nfloors=sum(s['floorBytes'] for s in stores)\nrust=[s for s in stores if s['id']==d['store']][0]\nweights=sum(s['weightBasisPoints'] for s in stores)\nshare=Fraction(d['total']-floors)*rust['weightBasisPoints']/weights\nquota=rust['floorBytes']+share\nprint(int(min(Fraction(d['capacity']),quota)*Fraction(d['numerator'],d['denominator'])//1))`;
+ const code=`import json,sys\nfrom fractions import Fraction\nd=json.load(sys.stdin)\nstores=d['policy']['stores']\nrest=d['total']-sum(s['floorBytes'] for s in stores)\nweights=sum(s['weightBasisPoints'] for s in stores)\nparts={s['id']:[rest*s['weightBasisPoints']//weights,rest*s['weightBasisPoints']%weights] for s in stores}\nleft=rest-sum(p[0] for p in parts.values())\nfor i in sorted(parts,key=lambda i:(-parts[i][1],i)):\n if left<=0:break\n parts[i][0]+=1;left-=1\nrust=[s for s in stores if s['id']==d['store']][0]\nquota=rust['floorBytes']+parts[rust['id']][0]\nprint(int(Fraction(min(d['capacity'],quota))*Fraction(d['numerator'],d['denominator'])//1))`;
  const run=spawnSync(python,["-I","-c",code],{input:JSON.stringify({policy:machinePolicy,store:UNIT_CACHE_POLICY_V1.pool.machineStore,total:totalBytes,capacity:capacityBytes,numerator:UNIT_CACHE_POLICY_V1.gc.laneShare*64,denominator:64}),encoding:"utf8"});
  expect(run.status,run.stderr).toBe(0);return Number(run.stdout.trim());
 };

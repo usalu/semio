@@ -106,13 +106,13 @@ export function createClaimRegistryV1({root,fs,lease,now=()=>Date.now(),token=()
  }
 
  /** 🚪️ The short critical section: reads the live claims, drops the claims of older plans and either takes a chunk (slot, lease and document) or says to wait. */
- async function admit({base,implementation,names,stamps,slots,signal}){
+ async function admit({base,implementation,names,stamps,slots,chunk,signal}){
   const admission=await lease.hold(resource.admission,{signal});
   try{
    const listed=await readClaims(signal),claims=await annotate(listed,signal);
    if(listed.truncated)return{kind:"complete",open:[],take:[],running:[],prepared:0,covered:names.length};
    for(const claim of claims)if(claim.base<base&&claim.state!=="running")await fs.remove(pathOf(claim.token));
-   const found=chunkOfV1({wanted:names,stamps,claims,base,implementation,nowMs:now()});
+   const found=chunkOfV1({wanted:names,stamps,claims,base,implementation,nowMs:now(),...chunk===undefined?{}:{chunk}});
    if(found.open.length===0)return{kind:found.running.length?"wait":"complete",...found};
    let slot;
    for(let at=0;at<slots&&!slot;at++)slot=await lease.tryHold(resource.slot(at));
@@ -132,7 +132,7 @@ export function createClaimRegistryV1({root,fs,lease,now=()=>Date.now(),token=()
 
  const waitAny=(resources,signal)=>waitAnyLeaseV1(lease,resources,{signal,timeoutMs:P.pollMilliseconds});
 
- async function prefetch({base,implementation,wanted,stamps,run,served,say=()=>{},progress,signal,slots=1}){
+ async function prefetch({base,implementation,wanted,stamps,run,served,say=()=>{},progress,signal,slots=1,chunk}){
   const names=[...new Set(wanted)].sort(compareCodePointsV1),started=now();let computed=0,noticed=-Infinity;
   if(names.length===0)return{computed,served:false};
   const notice=(key,fields)=>{if(now()-noticed>=P.noticeMilliseconds){noticed=now();say(key,fields);}};
@@ -140,7 +140,7 @@ export function createClaimRegistryV1({root,fs,lease,now=()=>Date.now(),token=()
    aborted(signal);
    const generation=served?await served():undefined;
    if(generation!==undefined){say("served",{generation});await sweep(signal).catch(()=>undefined);return{computed,served:true};}
-   const step=await admit({base,implementation,names,stamps,slots,signal}),total=names.length,fields={open:step.open.length,total,prepared:step.prepared,covered:step.covered,slots,peers:step.running.length};
+   const step=await admit({base,implementation,names,stamps,slots,chunk,signal}),total=names.length,fields={open:step.open.length,total,prepared:step.prepared,covered:step.covered,slots,peers:step.running.length};
    await progress?.({done:step.prepared,total});
    if(step.kind==="complete"){if(computed)say("prepared",{count:computed,seconds:Math.round((now()-started)/1000)});return{computed,served:false};}
    if(step.kind==="wait"){notice("joined",fields);await waitAny(step.running.map(resource.claim),signal);continue;}

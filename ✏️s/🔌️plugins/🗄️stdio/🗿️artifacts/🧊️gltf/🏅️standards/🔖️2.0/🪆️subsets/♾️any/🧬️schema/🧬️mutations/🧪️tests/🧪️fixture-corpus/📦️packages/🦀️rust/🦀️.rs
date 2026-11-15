@@ -25,7 +25,7 @@ pub mod standards {
                     pub mod modules {
                         #[path = "."]
                         pub mod mutation_support {
-                            pub use semio_s_artifact_stdio_gltf_mutations_add_required_extension::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level;
+                            pub use semio_s_artifact_stdio_gltf_mutations_add_required::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level;
                         }
                     }
                 }

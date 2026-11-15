@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-14T17:36:58.993445+00:00",
+  "digest": "39e3688eb315d48831772ca305d78bcb6f35975794444da47750bc5fa7459759",
+  "replica_pid": 75485,
+  "matching_processes": [],
+  "sidecar_candidate_pids": [],
+  "sidecar_parented_show_requires_wait": false,
+  "build_agent_last8": "2026-11-14T16:59:42.551Z worker registered: 43a99cad-5ce5-4e51-aaf3-7229d6a134f0 cache http://192.168.178.70:6094\n2026-11-14T17:23:41.256Z agent code changed, restarting\n2026-11-14T17:23:41.260Z worker stopped: ueli-workstation-mac-mini-m4-16gb-256gb-05-wlan.fritz.box-8813\n2026-11-14T17:23:42.218Z joining http://192.168.178.70:8981 offering rustc for 3 target(s)\n2026-11-14T17:23:42.260Z worker sandbox: darwin-sandbox confined network denied\n2026-11-14T17:23:42.275Z worker registered: 7d8219ae-52d0-4165-932e-b8e2f4922270 cache http://192.168.178.70:6094\n2026-11-14T17:28:41.398Z graph-server: alive, 0 machines seen, 0 requests held, read none\n2026-11-14T17:33:45.238Z graph-server: alive, 0 machines seen, 0 requests held, read none"
+}

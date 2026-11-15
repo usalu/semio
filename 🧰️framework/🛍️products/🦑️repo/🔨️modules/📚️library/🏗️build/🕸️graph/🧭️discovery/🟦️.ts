@@ -23,6 +23,8 @@ import {buildGraphMembersV1,workspaceBuildFilesV1,portableInputs} from "../📁�
 import {neutralBuildTargetV1,readBuildGraphV1} from "../📜️contract/🟦️.ts";
 import {setupShareV1,edgeConsumersOfPartV1,edgeRefreshOwnersV1} from "../🤝️prefetch/🟦️.ts";
 import {taggedOwnersRetainedV1,TEST_TAG_V1,POLICY_TAG_V1} from "../🏷️retention/🟦️.ts";
+import {createPlanStageGuardV1} from "../../🧠️memory/🪜️plan-stage/🟨️.mjs";
+import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
 
 
 
@@ -80,15 +82,21 @@ export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelec
 
 
 /** 🔗️ Infers only the projects whose roots are in `part.roots` (all of them when cold) plus the test and policy contributions, recomputes the edges of every other owner when the environment moved, and returns the pieces owner by owner. Everything an owner consumed is recorded in its own project record or in the capture around this call, so a later edit finds exactly its consumers. */
+/** 🏊️ What a part read tells the inference about its cold state: a cold part (no usable generation, the whole graph is inferred) engages the project farm at its first miss, a warm part leaves the farm to the proof that the work is cold. */
+export function partInferenceEngagementV1(part:{cold:boolean}):{coldInference?:true}{return part.cold?{coldInference:true}:{};}
+
 export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,files:readonly string[],part:{cold:boolean;roots:ReadonlySet<string>;stubs:Record<string,BuildGraphPartStubV1>;previousEnv:string|null;previousParts?:EnvironmentStoredPartsV1;previousOwners?:readonly (readonly [string,string,string|null])[];changed?:readonly string[];ownerDone?:()=>void;ownerRunning?:(running:readonly {name:string;seconds:number;kind?:string;rows?:number}[],decision?:unknown)=>unknown}):Promise<BuildGraphPartV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);registry=readBuildOwnerRegistryV1(registry);
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
   const [owner,tests,policies]=await Promise.all([import("../📥️inference/🟨️.mjs"),import("../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("../📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);
+  let inferred:number|undefined;const phases:Record<string,number>={},stages=createPlanStageGuardV1({refuse:detail=>refuseBuildV1("unserved","graph.plan-too-heavy",detail)});
   const rowLog=createRowLogV1<BuildGraphRowV1>({path:join(rowLogDirectoryV1(root),"rl-"+process.pid+"-"+Date.now().toString(36)+".rows")}),edgeReads=createEdgeReadsRecorderV1(),nodeRows:Record<string,RowLogListV1<BuildGraphRowV1>>={},derivedFacts=new Map<string,{readonly row:BuildGraphRowV1;readonly support:Iterable<BuildGraphRowV1>}>(),context={workspaceRoot:root,invocation,phaseControl,registry,setupShare:setupShareV1(invocation)},stubs=Object.entries(part.stubs),realRoots=new Set(stubs.filter(([,stub])=>!stub.tag).map(([,stub])=>stub.root));
   const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}},stat=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
-  const captured=await withClosurePassV1(()=>observationV1.captureObservedSourceInputsV1(async()=>{
-    const options={analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),snapshot:true,...(part.cold?{}:{ownerRoots:part.roots}),...(part.ownerRunning?{onOwnerRunning:part.ownerRunning}:{}),rowLog,onOwnerObservations:(name:string,rows:Iterable<BuildGraphRowV1>&{length:number},derived?:{readonly row:BuildGraphRowV1;readonly support:Iterable<BuildGraphRowV1>&{length:number}}[])=>{nodeRows[name]=Array.isArray(rows)?rowLog.append(rows):rows as RowLogListV1<BuildGraphRowV1>;part.ownerDone?.();for(const fact of derived??[])derivedFacts.set(fact.row.path+"\0"+fact.row.fact,{row:fact.row,support:Array.isArray(fact.support)?rowLog.append(fact.support):fact.support});}};
+  const captured=await stages.run(()=>withClosurePassV1(()=>observationV1.captureObservedSourceInputsV1(async()=>{
+    stages.mark("inference");
+    const options={analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),snapshot:true,onInferred:(count:number)=>{inferred=count;},onPhases:(times:Record<string,number>)=>{Object.assign(phases,times);},...(part.cold?{}:{ownerRoots:part.roots}),...partInferenceEngagementV1(part),...(part.ownerRunning?{onOwnerRunning:part.ownerRunning}:{}),rowLog,onOwnerObservations:(name:string,rows:Iterable<BuildGraphRowV1>&{length:number},derived?:{readonly row:BuildGraphRowV1;readonly support:Iterable<BuildGraphRowV1>&{length:number}}[])=>{nodeRows[name]=Array.isArray(rows)?rowLog.append(rows):rows as RowLogListV1<BuildGraphRowV1>;part.ownerDone?.();for(const fact of derived??[])derivedFacts.set(fact.row.path+"\0"+fact.row.fact,{row:fact.row,support:Array.isArray(fact.support)?rowLog.append(fact.support):fact.support});}};
     const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),options,context);
+    const tailStartedMs=performance.now();
     if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
     const projects:Record<string,any>={},externalNodes:Record<string,unknown>={},unavailable=new Map<string,BuildUnavailableProjectV1>(),tags:Record<string,string>={},configs:Record<string,string>={},primaryNames=new Set<string>(),testNames=new Set<string>();
     const merge=(list:[string,any][],primaryList:boolean)=>list.forEach(([file,contribution])=>{
@@ -104,39 +112,49 @@ export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRe
     merge(primary as [string,any][],true);
     const kept=stubs.filter(([name,stub])=>!stub.tag&&stub.kind==="project"&&!projects[name]&&!part.roots.has(stub.root));
     const listed=[...kept.map(([name,stub])=>({name,root:stub.root,nativeRoot:stub.nativeRoot,config:stub.config})),...Object.entries(projects).map(([name,project])=>({name,root:project.root,nativeRoot:project.metadata?.nativeRoot as string|undefined,config:configs[name]}))];
-    const env=await deriveEnvironmentV1({projects:listed,workspaceManifests:files.filter(file=>file==="Cargo.toml"||file.endsWith("/Cargo.toml")),lock:javascriptManagerV1.primaryLockName(),taxonomy:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",read,stat});
+    stages.mark("environment");
+    const env=await deriveEnvironmentV1({projects:listed,workspaceManifests:files.filter(file=>file==="Cargo.toml"||file.endsWith("/Cargo.toml")),lock:javascriptManagerV1.primaryLockName(),taxonomy:"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",read,stat,operation:name=>stages.operation(name)});
+    stages.mark("tests");
     const tagged=stubs.filter(([,stub])=>stub.tag),retained=taggedOwnersRetainedV1({cold:part.cold,changed:part.changed,roots:part.roots,stubs:part.stubs,environment:env.digest,previousEnvironment:part.previousEnv});
     const incremental=!retained&&!part.cold&&part.changed!==undefined&&tagged.some(([,stub])=>stub.tag===TEST_TAG_V1)&&tagged.every(([,stub])=>stub.tag===TEST_TAG_V1||stub.tag===POLICY_TAG_V1)&&env.digest===part.previousEnv;
     const tagRows:BuildGraphRowV1[]=[],testRows:BuildGraphRowV1[]=[],factsInto=(sink:BuildGraphRowV1[])=>async<T>(run:()=>Promise<T>|T):Promise<T>=>{const taken=await observationV1.captureObservedSourceInputsV1(async()=>run(),undefined,false);sink.push(...(taken.observations as BuildGraphRowV1[]));return taken.value;},discoveredForTags=factsInto(tagRows),discoveredForTests=factsInto(testRows);
     const known=new Set(tagged.filter(([,stub])=>stub.tag===TEST_TAG_V1).map(([,stub])=>stub.root)),groups=retained?new Map<string,string[]>():selectTestFeaturesV1(files.filter(file=>file.endsWith(".feature")),{all:!incremental,roots:new Set([...part.roots,...(part.changed??[]).filter(path=>path.endsWith(".feature")).map(path=>dirname(path))]),known});
     const discovery=await observationV1.withObservationRoundV1(()=>discoverTestOwnersV1<BuildGraphRowV1>({tests:tests as never,capture:run=>observationV1.captureObservedSourceInputsV1(async()=>run(),undefined,false) as unknown as Promise<{value:any;observations:readonly BuildGraphRowV1[]}>,context,groups})),testContributions=discovery.contributions as [string,any][];for(const fact of discovery.derived)derivedFacts.set(fact.row.path+"\0"+fact.row.fact,fact);
     for(const[,contribution]of testContributions)for(const name of Object.keys(contribution.projects??{}))testNames.add(name);
+    stages.mark("policies");
     const policyOwners=Object.assign({},...[...primary,...testContributions].map(([,contribution])=>contribution.projects??{}));
     const policyContributions=await discoveredForTags(()=>policies.default.createNodesV2[1](files.filter(file=>file.endsWith("📜️script.ts")&&(part.cold||part.roots.has(dirname(file))||!retained&&!realRoots.has(dirname(file)))),{}, {workspaceRoot:root,projects:policyOwners}));
     merge(testContributions as [string,any][],false);merge(policyContributions as [string,any][],false);
     for(const name of Object.keys(projects))if(!primaryNames.has(name))tags[name]=testNames.has(name)?TEST_TAG_V1:POLICY_TAG_V1;
+    stages.mark("dangling");
     if(!retained)await discoveredForTests(()=>withholdDanglingTestProjectsV1({projects,configs,unavailable,dangling:tests.danglingTestDependenciesV1({...Object.fromEntries(kept.map(([name,stub])=>[name,{root:stub.root}])),...projects}),digest:file=>observedFileDigestV1(root,file)}));
     const keptTagged=retained?tagged:incremental?tagged.filter(([,stub])=>stub.tag===TEST_TAG_V1&&!groups.has(stub.root)&&!part.roots.has(stub.root)):[],keptNames=new Set(keptTagged.map(([name])=>name));
     const consumers=part.cold||env.digest===part.previousEnv?undefined:edgeConsumersOfPartV1({previousEnvironment:part.previousEnv,previousParts:part.previousParts,previousOwners:part.previousOwners??[],parts:env.parts,stubs:part.stubs,inferred:new Set(Object.keys(projects)),roots:part.roots}),refresh=edgeRefreshOwnersV1({cold:part.cold,environment:env.digest,previousEnvironment:part.previousEnv,roots:part.roots,stubs:part.stubs,inferred:new Set(Object.keys(projects)),...(consumers?{consumers}:{})}),edgeNames=refresh.projects,processed=new Set([...Object.keys(projects),...edgeNames]);
     const contextProjects:Record<string,any>={...Object.fromEntries([...kept,...keptTagged.filter(([,stub])=>stub.kind==="project")].map(([name,stub])=>[name,{name,root:stub.root,targets:Object.fromEntries(stub.targets.map(target=>[target,{}])),...(stub.nativeRoot?{metadata:{nativeRoot:stub.nativeRoot}}:{})}])),...projects};
+    stages.mark("files");
     const ownerOf=createProjectFileIndexV1(contextProjects),withheld=[...unavailable.keys(),...stubs.filter(([name,stub])=>(!stub.tag||keptNames.has(name))&&stub.kind==="unavailable"&&!part.roots.has(stub.root)).map(([,stub])=>stub.root)],projectFileMap:Record<string,{file:string}[]>=Object.fromEntries([...processed].map(name=>[name,[]]));
     const withheldDepth=createWithheldRootIndexV1(withheld);
     for(const file of files){const found=ownerOf(file);if(found!==undefined&&projectFileMap[found]&&withheldDepth(file)<=contextProjects[found].root.length)projectFileMap[found]!.push({file});}
     const streamed=new Set<string>(edgeNames),direct=Object.fromEntries([...processed].filter(name=>!streamed.has(name)).map(name=>[name,projectFileMap[name]!]));
     const graphContext={workspaceRoot:root,projects:contextProjects,fileMap:{projectFileMap:direct},invocation,phaseControl,selection:{kind:"all"},registry,edgeReads,completeSourceImports:false,moduleGraphProjects:new Set(Object.keys(projects)),edgeChunkOwners:CLAIMS_POLICY_V1.chunkOwners};
+    stages.mark("test-edges");
     const testEdges:unknown=retained?[]:await discoveredForTests(()=>tests.discoverTestBuildDependenciesV1({},graphContext));if(!Array.isArray(testEdges))throw Error("Test dependency DATA array required");
+    stages.mark("edges");
     const implementation=streamed.size?await owner.loadCurrentImplementationV1():undefined;await implementation?.libraryBootstrap;
     const streaming=await implementation?.createStreamingEdgesV1(options,{...graphContext,fileMap:{projectFileMap}}),edges=[...(await owner.discoverBuildDependenciesV1(options,graphContext)).filter((edge:{source:string})=>!streamed.has(edge.source)),...testEdges];
+    stages.mark("metadata");
     const metadata=await owner.createMetadata({nodes:Object.fromEntries(Object.entries(contextProjects).map(([name,data])=>[name,{name,type:"lib",data}]))},options,graphContext);
     if(!metadata||typeof metadata!=="object"||Array.isArray(metadata))throw Error("Graph metadata DATA object required");
     for(const[name,value]of Object.entries(metadata)){if(!projects[name])continue;if(!value||typeof value!=="object"||!("metadata"in value)||!value.metadata||typeof value.metadata!=="object"||Array.isArray(value.metadata))throw Error("Project metadata DATA object required");projects[name].metadata={...projects[name].metadata,...value.metadata,semio:{...projects[name].metadata?.semio,...("semio"in value.metadata&&value.metadata.semio&&typeof value.metadata.semio==="object"?value.metadata.semio:{})}};}
     const neutral=Object.fromEntries(Object.entries(projects).map(([name,project])=>[name,{...project,targets:Object.fromEntries(Object.entries(project.targets??{}).map(([target,value])=>[target,neutralBuildTargetV1(value as Record<string,any>,`${name}:${target}`)]))}]));
     if(invocation)await advanceScriptInvocation(invocation,"build:graph","complete");
+    stages.mark("result");
     const rows=[...unavailable.values()],testRowLists=new Map<object,BuildGraphRowV1[]>(),testNodeRows=(name:string)=>{const own=discovery.rows.get(name)??[];let list=testRowLists.get(own);if(!list)testRowLists.set(own,list=[...own,...testRows]);return list;};
     return {
       owners:[...Object.entries(neutral).map(([name,node]:[string,any])=>({name,root:node.root as string,nativeRoot:node.metadata?.nativeRoot as string|undefined,config:configs[name],...(tags[name]?{tag:tags[name]}:{}),...(tags[name]||!edgeReads.finish(name)?{}:{reads:edgeReads.finish(name)}),node,nodeRows:tags[name]===TEST_TAG_V1?testNodeRows(name):tags[name]?tagRows:nodeRows[name]})),...rows.filter(row=>row.project!==undefined).map(row=>({name:row.project!,root:row.root,config:row.source,...(tags[row.project!]?{tag:tags[row.project!]}:{}),unavailable:row,nodeRows:tags[row.project!]===TEST_TAG_V1?testNodeRows(row.project!):tags[row.project!]?tagRows:nodeRows[row.project!]}))],
+      ...(inferred===undefined?{}:{inferred}),phases:{...phases,tail:Math.round(performance.now()-tailStartedMs)},
       edgeOnly:[...edgeNames.map(name=>streamed.has(name)?{name,streamed:true as const}:{name}),...refresh.withheld.map(name=>({name}))],reEdge:streaming&&((name:string,fragment:{node?:any})=>streaming.edgesOf(name,fragment.node)),readsOf:(name:string)=>edgeReads.finish(name),carried:refresh.carried,derived:[...derivedFacts.values()],edges:edges as BuildGraphPartV1["edges"],externalNodes,parseUnavailable:rows.filter(row=>row.project===undefined),env,replaceTags:retained?[]:incremental?["policy",POLICY_TAG_V1]:["tests","policy",TEST_TAG_V1,POLICY_TAG_V1],
     };
-  },undefined,false)).catch(error=>{rowLog.close();throw error;});
+  },undefined,false,rowLog))).catch(error=>{rowLog.close();throw error;});
   return {...captured.value,rows:[...captured.observations] as BuildGraphRowV1[],dispose:()=>rowLog.close()};
 }

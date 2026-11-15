@@ -2,15 +2,12 @@ import {join} from "node:path";
 import {profilePhaseV1} from "../../../⏱️profile/🟨️.mjs";
 import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {nxOperationArgumentsV1} from "../../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts";
-import {buildOperationHasNeutralBootstrapV1} from "../../../⚙️operations/🟦️.ts";
 import type {BackendContextV1,BackendExecutionContextV1,BuildBackendV1} from "../../../🔌️backends/🟦️.ts";
 
 /** 🔌️ nx behind the neutral interface: its setup, reset, storage, cache tools and execution, moved here from the neutral CLI so that neutral code never names it. */
 export const backend:BuildBackendV1=Object.freeze({
  id:"nx",
  async graphExternalInputs(){return(await import("../../../../🟨️.mjs")).nxBuildEngineExternalInputsV1();},
- bootstrapArguments(args:readonly string[]){const command=args[0];if(command==="tools")return ["--version"];if(command==="reset")return ["reset"];return command==="watch"||buildOperationHasNeutralBootstrapV1(command??"")?undefined:nxOperationArgumentsV1(args);},
  async setup(context:BackendContextV1){const {root,invocation,phase:phaseControl}=context;
   const adapter=await import("../../../../⚡️caching/🚀️bootstrap/📜️script.ts");await adapter.runOwnedNxInvocationV1(root,["--version"],invocation,phaseControl);
  },
@@ -34,7 +31,17 @@ export const backend:BuildBackendV1=Object.freeze({
     publishBootstrapSources(root);
     const {storeReceiptTasksV1,withStoreReceiptsV1}=await import("../../../🧾️store-receipt/🟦️.ts"),{storeRepairNxArgumentsV1}=await import("../../../🧾️store-receipt/🟨️.mjs"),boundary=resolved.args.indexOf("--"),forwarded=boundary<0?[]:resolved.args.slice(boundary+1);
     const nx=async(nxArguments:string[])=>{const prior=process.exitCode;process.exitCode=undefined;try{await runOwnedNxInvocationV1(root,nxArguments,invocation,artifactPhase);if(process.exitCode)throw new Error(`Build invocation failed (${process.exitCode})`);}finally{process.exitCode=prior;}};
-    await withStoreReceiptsV1({root,tasks:await profilePhaseV1("receipts.tasks",()=>storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE))),run:()=>profilePhaseV1("tool.nx",async()=>{await context.release();return nx(nxOperationArgumentsV1(resolved.args)!);}),repair:task=>nx(storeRepairNxArgumentsV1(task.id,task.id===resolved.args[1]?forwarded:[]))});
+    await withStoreReceiptsV1({root,tasks:await profilePhaseV1("receipts.tasks",()=>storeReceiptTasksV1(root,graph,resolved.args,invocation,readBuildMode(process.env.SEMIO_BUILD_MODE))),run:()=>profilePhaseV1("tool.nx",async()=>{await context.release();return nx(nxOperationArgumentsV1(resolved.args)!);}),repair:task=>nx(storeRepairNxArgumentsV1(task.id,task.id===resolved.args[1]?forwarded:[])),restore:task=>restoreStoreReceiptFromFleetV1(root,task)});
     return;
  }
 });
+
+/** ☁️ Brings the store content of a task's receipt back from the fleet store before the task is re-executed: the receipt came out of the Nx cache (often from another machine) and its payload lives in the fleet's content-addressed store. Silent without a remote cache; reports in both languages when it restored or could not. */
+async function restoreStoreReceiptFromFleetV1(root:string,task:{readonly id:string;readonly receipt:string}):Promise<void>{
+ const {nxRemoteCacheEnvironmentV1}=await import("../../../🌐️remote-cache/🧶️nx/🟦️.ts"),{fleetContentFromEnvironmentV1,fleetContentTextV1,restoreStoreReceiptContentV1}=await import("../../../🧾️store-receipt/☁️fleet-content/🟦️.ts"),{parseStoreReceiptV1}=await import("../../../🧾️store-receipt/🟨️.mjs"),{readFile}=await import("node:fs/promises");
+ const environment={...process.env,...await nxRemoteCacheEnvironmentV1(process.env,{warn:()=>{}})},store=fleetContentFromEnvironmentV1(environment);
+ if(store===undefined)return;
+ const result=await restoreStoreReceiptContentV1({workspaceRoot:root,receipt:parseStoreReceiptV1(await readFile(task.receipt,"utf8")),store}),texts=(key:"restored"|"unavailable")=>(["en","de"] as const).map(language=>fleetContentTextV1(language,key,{files:result.files,bytes:result.bytes,task:task.id,reason:result.reason??""})).join("\n");
+ if(result.state==="restored"||result.state==="partial")console.log("[store-receipt] "+texts("restored").split("\n").join("\n[store-receipt] "));
+ if(result.state==="partial"||result.state==="unavailable")console.log("[store-receipt] "+texts("unavailable").split("\n").join("\n[store-receipt] "));
+}

@@ -1,0 +1,2 @@
+started pid=2280881 at 2026-11-14T17:41:48Z
+ended at 2026-11-14T17:50:49Z wait_rc=0 peak_rss_kib=1600648 hard_stop=none

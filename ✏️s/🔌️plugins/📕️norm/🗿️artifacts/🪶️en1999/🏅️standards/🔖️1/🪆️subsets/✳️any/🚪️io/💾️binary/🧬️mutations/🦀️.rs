@@ -53,4 +53,6 @@ impl OpBinary for En1999Mutation {
         Ok(en1999_mutation_from_dsl(En1999MutationDsl::decode_op(bytes)?))
     }
 }
+
+semio_os_kernel::original_pack_value_operation_receiving!(En1999Mutation);
 }

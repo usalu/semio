@@ -2309,6 +2309,48 @@
    "bun": null
   },
   {
+   "name": "a member path decomposed on disk matches the precomposed lock key (NFD manifest, NFC lock)",
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"},\"pr\u00e4sentation/pkgs/a\":{\"name\":\"a\",\"version\":\"1.0.0\"}},\"packages\":{\"a\":[\"a@workspace:pr\u00e4sentation/pkgs/a\"]}}",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "r"
+     }
+    ],
+    [
+     "pra\u0308sentation/pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0"
+     }
+    ]
+   ],
+   "expected": [],
+   "bun": null
+  },
+  {
+   "name": "a member path precomposed on disk matches the decomposed lock key (NFC manifest, NFD lock)",
+   "lock": "{\"lockfileVersion\":1,\"workspaces\":{\"\":{\"name\":\"r\"},\"pra\u0308sentation/pkgs/a\":{\"name\":\"a\",\"version\":\"1.0.0\"}},\"packages\":{\"a\":[\"a@workspace:pra\u0308sentation/pkgs/a\"]}}",
+   "manifests": [
+    [
+     "package.json",
+     {
+      "name": "r"
+     }
+    ],
+    [
+     "pr\u00e4sentation/pkgs/a/package.json",
+     {
+      "name": "a",
+      "version": "1.0.0"
+     }
+    ]
+   ],
+   "expected": [],
+   "bun": null
+  },
+  {
    "name": "an unreadable lock is one frozen finding naming the lock file",
    "lock": "{ not a lock",
    "manifests": [

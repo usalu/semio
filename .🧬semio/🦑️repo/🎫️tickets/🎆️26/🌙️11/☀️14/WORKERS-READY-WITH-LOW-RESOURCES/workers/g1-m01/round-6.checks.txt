@@ -1,0 +1,85 @@
+2026-11-14T20:21:42Z checks after try 1
+
+##### 1: launchctl list | grep tech.semio.repo.service
+89646	0	tech.semio.repo.service.7a7ed4bee027
+
+##### 1: launchctl print gui/501/tech.semio.repo.service.7a7ed4bee027
+	state = running
+	program = /Users/ueli/.local/share/semio/launcher/bin/repo
+	arguments = {
+	working directory = /Users/ueli/Documents/semio
+	last exit code = (never exited)
+		state = active
+		state = active
+	properties = runatload | abandon process group | inferred program
+	arguments = {
+		/Users/ueli/.local/share/semio/launcher/bin/repo
+		/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts
+		repo
+		service
+		host
+		run
+	}
+
+##### 1: SEMIO_SERVICE_LAUNCHD
+(unset)
+
+##### 1: ps of service processes (pid, ppid, command)
+89646     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/
+89655 89646 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:mod
+
+##### 1: ls -l /usr/local/bin/repo
+lrwxr-xr-x@ 1 root  wheel  27 Nov 13 13:05 /usr/local/bin/repo -> /Users/ueli/.local/bin/repo
+
+##### 1: first lines of the newest service log
+/var/folders/gd/byw98s3s0p95zhdpzyv769740000gn/T/semio-repo/501/host-293b476f6b9d.log
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (6425 MB available, 2048 MB floor)
+[repo] still working after 5 s; last phase started: source.served
+[script] build:source-admission · Admitting the sources of the build
+graph: No verified change journal cursor is recorded for generation 61; verifying the tree once.
+[script] graph:slice-worker · Verifying workspace membership: 0 of 126999 entries
+[script] graph:slice-worker · Verifying workspace membership: 126999 of 126999 entries
+[repo] still working after 10 s; last phase started: source.served
+[script] graph:slice-worker · Classifying graph facts: 0 of 424288 facts
+[script] graph:slice-worker · Checking directory stamps: 0 of 3295 directories
+[script] graph:slice-worker · Checking directory stamps: 3295 of 3295 directories
+
+##### 2: bootVersion
+{"version":1,"bootVersion":6,"files":{"boot.sh":{"sha256":"aa85179d959e5dd61d8526bc6c96a567f7be7a300b32273cf721d8d196b82288","bytes":3251},"boot.ps1":{"sha256":"2b5f28ab27c1cd5e32b6566a08e734067f0f6da90bb42b67c3bf465ef85d6a8f","bytes":3095},"boot.mjs":{"sha256":"2084354660ff577676bbc3a5f8ba1f2b5fef2e0dfd0e9f1556667d339b4feb2e","bytes":31431}},"previous":{"sha256":"920321e19fdfd8b664f9e8cfa3c14484718b4eb948f847d77776d6e3d873b5de"},"worktree":"/Users/ueli/Documents/semio","module":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree","store":"/Volumes/semio-store","installedMs":1794686993198}
+
+##### 2: boot chain
+97867     1 /bin/sh /Users/ueli/Library/Application Support/semio/fleet/entry/boot.sh run
+97875 97867 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs run
+97876 97875 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M-$M^]M-oM-8M^Oshared-w
+
+##### 2: entry/shim.txt (last 12 lines)
+tail: /Users/ueli/Library/Application Support/semio/fleet/entry/shim.txt: No such file or directory
+
+##### 4: access receipts
+client.json
+launcher.json
+service.json
+{"version":1,"role":"service","pid":89655,"state":"ok","root":"/Users/ueli/Documents/semio","folder":"Documents","identity":"/Users/ueli/.local/share/semio/launcher/bin/repo","at":1794686086855}
+
+##### 4: repo preflight --lang en
+[capacity] admitted command: 1 job(s), 2048 MB reserved (7656 MB available, 2048 MB floor)
+[script] build:source-admission · Admitting the sources of the build
+[script] build:implementation-source · Reading the sources of the build implementation
+preflight exit 0
+
+##### codesign
+Identifier=a.out
+CandidateCDHash sha256=713fd0d142560c91e4fd5ed6c449b32909e667e7
+CandidateCDHashFull sha256=713fd0d142560c91e4fd5ed6c449b32909e667e754cba2ac1f50b10a6458608a
+CDHash=713fd0d142560c91e4fd5ed6c449b32909e667e7
+TeamIdentifier=not set
+Identifier=a.out
+CandidateCDHash sha256=71734f86275220c08e184dd6a8137df653e92f50
+CandidateCDHashFull sha256=71734f86275220c08e184dd6a8137df653e92f50c050d3df9782a84e0ed30361
+CDHash=71734f86275220c08e184dd6a8137df653e92f50
+TeamIdentifier=not set
+
+##### 3: tcc-attribution --last 30m (after try 2)
+0 rows (of 1 consulted requests in the window)

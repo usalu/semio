@@ -1,0 +1,62 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🔣️policy.json": {
+  "backup": "000.orig",
+  "base": "686bce08820d880d9d0dafde3a868c313938cf762d33dbf18972981ca7a6578d",
+  "applied": "538639aed21864848590fcb566a54fa565f2dc8aaa26438500b0b893bafc3646"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🟦️.ts": {
+  "backup": "001.orig",
+  "base": "4382f4e833a8fdf7693cd4fb55ca2568134dd379a840e1e4dc8e6f2707e6568b",
+  "applied": "2c076af073d5685cb3332dae92e31703dd387125cb0fcfa9a6d8cce999151094"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🎚️machine/🔣️policy.json": {
+  "backup": "002.orig",
+  "base": "d68d3a696a33c4cd4e04c466a2194df0083fbe6643aed96a4d4794dbeb517978",
+  "applied": "7bb39a2936a89ebe3ab1ddc2d70c5d149a14c9d4118682ddf62fea5b501254f2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json": {
+  "backup": "003.orig",
+  "base": "915d18244ef27da3f0d7f30499ebba9000d3db09175a6d1a8e937b7e476a2ac9",
+  "applied": "5993b9f8ba51ddff0598d985b3800dfd80e72065b3228f03d7893d2313b26bcf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧬️schema/🔣️.json": {
+  "backup": "004.orig",
+  "base": "9a7e5fb4c3af3e5df36749b2775258cf143de7fa171f1ab1b4c24fdfa52d5bd0",
+  "applied": "458ad8663ad173bafa377912a8147e1358e663d76f5e90c15b74bb2382edbdd1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🧫️fixtures/🔣️.json": {
+  "backup": "005.orig",
+  "base": "c985338214714be931990bbc0a80fa18d89ff9720729cc7c69e94270d0e51af3",
+  "applied": "923777637578904a2433d8fc71554b7f124d6f02baa6f166405c66fc9c04bd05"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "backup": "006.orig",
+  "base": "5ea9b7cbaf4b0f4f2ae2f6a2f07c1260002e0b9520a52737df7c8c6ef0db28c1",
+  "applied": "b7964f28e3d1921277ccb3722334fd8840f4b722c51cc81c415df6446c48d86c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/README.md": {
+  "backup": "007.orig",
+  "base": "141ee591e03026da7284e88205a69011c945d3438c82440e4e3e5abfbb5ebd27",
+  "applied": "ad9e4003603cbba6e3c7eb40af749f6e3f6283d8fe26a24dd489832cf68f06de"
+ },
+ "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📜️script.ts": {
+  "backup": "008.orig",
+  "base": "c96a310cbefdbfe0ab2727023c196282d467949bd7944fb611f88ff6e601e420",
+  "applied": "df3d71d3927a610ed3a4513505553ca8839b206c2ba2548472d67702de9243eb"
+ },
+ "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts": {
+  "backup": "009.orig",
+  "base": "b4853992823417fe87e4b1b58294fcfe5681fcd99731984616dac170eff22537",
+  "applied": "e3ed681d70113a259bb417cbda459d74b3095db9436c9617c95a69f325453a58"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/⚖️law/🌐️native/🟦️.ts": {
+  "backup": null,
+  "base": "absent",
+  "applied": "a9dea76caab327df2aa8e3a8a619d78c39756391779a099425a00c01ed91a560"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🧪️tests/📐️model/🟦️.ts": {
+  "backup": null,
+  "base": "absent",
+  "applied": "88d4bd02f3665a60ab0a183d46c50e7d3d5fd020ffa0c10c89575062e66dc38d"
+ }
+}

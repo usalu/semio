@@ -1,0 +1,9 @@
+2026-11-14T11:00:34Z
+ueli
+ProductName:		macOS
+ProductVersion:		27.2
+BuildVersion:		26B123
+17179869184
+Filesystem   1024-blocks      Used Available Capacity iused      ifree %iused  Mounted on
+/dev/disk3s5   239362496  79601016 122024956    40%  826034 1220249560    0%   /System/Volumes/Data
+1

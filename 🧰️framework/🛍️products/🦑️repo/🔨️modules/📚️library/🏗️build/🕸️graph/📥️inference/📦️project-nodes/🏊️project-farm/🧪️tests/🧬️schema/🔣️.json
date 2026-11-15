@@ -326,6 +326,10 @@
                     }
                   }
                 ]
+              },
+              "refused": {
+                "type": "boolean",
+                "description": "The host capacity plan is malformed: the closed plan reader refuses it with a typed error instead of the farm degrading silently."
               }
             }
           }

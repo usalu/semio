@@ -1,0 +1,60 @@
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:1:10:shared%20closures%2020%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 1 running, longest 10 s: shared closures 20/24
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:1:10:shared%20closures%2021%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 1 running, longest 10 s: shared closures 21/24
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:1:10:shared%20closures%2022%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 1 running, longest 10 s: shared closures 22/24
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:1:10:shared%20closures%2023%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 1 running, longest 10 s: shared closures 23/24
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:1:10:shared%20closures%2024%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 1 running, longest 10 s: shared closures 24/24
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (433 of 1004 MB reserved, 1 projects running): semio-plugin-original-job-ownership needs 1044 MB and has waited 0 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 35 s ago, estimated time left: about 28 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:2:0:%40semio-tech%2Fnative-build-compiler-resources-rs|language%3Arust|0|0,semio-plugin-original-job-ownership|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 2 running, longest 0 s: @semio-tech/native-build-compiler-resources-rs (language:rust, 0 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:2:5:%40semio-tech%2Fnative-build-compiler-resources-rs|language%3Arust|5|0,semio-plugin-original-job-ownership|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 2 running, longest 5 s: @semio-tech/native-build-compiler-resources-rs (language:rust, 5 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows)
+graph: waiting for memory headroom (1477 of 1741 MB reserved, 2 projects running): semio-os-mcp-process-arena needs 1044 MB and has waited 2 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:3:5:%40semio-tech%2Fnative-build-compiler-resources-rs|language%3Arust|5|0,semio-plugin-original-job-ownership|language%3Acargo|0|0,semio-os-mcp-process-arena|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 3 running, longest 5 s: @semio-tech/native-build-compiler-resources-rs (language:rust, 5 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 0 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 150 s
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:3:10:%40semio-tech%2Fnative-build-compiler-resources-rs|language%3Arust|10|0,semio-plugin-original-job-ownership|language%3Acargo|5|0,semio-os-mcp-process-arena|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 3 running, longest 10 s: @semio-tech/native-build-compiler-resources-rs (language:rust, 10 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 5 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows)
+graph: waiting for memory headroom (2520 of 3096 MB reserved, 3 projects running): semio-os-infinite needs 1044 MB and has waited 3 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:4:10:%40semio-tech%2Fnative-build-compiler-resources-rs|language%3Arust|10|0,semio-plugin-original-job-ownership|language%3Acargo|5|0,semio-os-mcp-process-arena|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 4 running, longest 10 s: @semio-tech/native-build-compiler-resources-rs (language:rust, 10 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 5 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left; the server last progressed 46 s ago, estimated time left: about 28 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:689:4:15:%40semio-tech%2Fnative-build-compiler-resources-rs|language%3Arust|15|0,semio-plugin-original-job-ownership|language%3Acargo|10|0,semio-os-mcp-process-arena|language%3Acargo|5|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 689 projects · 4 running, longest 15 s: @semio-tech/native-build-compiler-resources-rs (language:rust, 15 s, 0 rows), semio-plugin-original-job-ownership (language:cargo, 10 s, 0 rows), semio-os-mcp-process-arena (language:cargo, 5 s, 0 rows)
+graph: waiting for memory headroom (3564 of 4063 MB reserved, 4 projects running): semio-framework-value-testing-effect-bank needs 1044 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 160 s
+[repo] still working after 170 s; last phase started: source.served
+[repository:command] still running after 170 s
+graph: plan stage inference settled from 6541 to 7358 MB
+Graph: Plan-Stufe inference beruhigt von 6541 auf 7358 MB
+[repository:command] still running after 180 s
+[repository:command] still running after 190 s
+[repo] still working after 200 s; last phase started: source.served
+[repository:command] still running after 200 s

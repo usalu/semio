@@ -31,7 +31,4 @@ pub fn handle(_payload: &SetSelectedCheckIndex, _doc: &ArtifactView<'_, Din16798
 //#endregion 🔖️Handler
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

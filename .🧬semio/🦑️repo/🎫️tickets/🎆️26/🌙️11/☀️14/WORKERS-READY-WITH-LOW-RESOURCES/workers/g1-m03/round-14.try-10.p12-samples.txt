@@ -1,0 +1,102 @@
+service log: /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-4a3e468900f5.log
+closure entries before: 269
+2026-11-15T07:29:17Z pid=35425 rss=6503MB footprint=[bun [35425]: 64-bit    Footprint: 5239 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1687 of 439 MB reserved, 1 projects running): @semio-tech/wfc-3d-rs needs 2754 MB and has waited 2 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise ]
+2026-11-15T07:29:22Z pid=35425 rss=4746MB footprint=[bun [35425]: 64-bit    Footprint: 4329 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (6112 of 464 MB reserved, 1 projects running): @semio-tech/wfc-grid3d needs 1687 MB and has waited 14 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwis]
+2026-11-15T07:29:27Z pid=35425 rss=5573MB footprint=[bun [35425]: 64-bit    Footprint: 1480 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 1036 MB reserved, 1 projects running): @semio-tech/wfc-grid3d-rs needs 2754 MB and has waited 3 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, other]
+2026-11-15T07:29:32Z pid=35425 rss=5680MB footprint=[bun [35425]: 64-bit    Footprint: 1400 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2754 of 490 MB reserved, 1 projects running): @semio-tech/procedural-js needs 2961 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherw]
+2026-11-15T07:29:38Z pid=35425 rss=7562MB footprint=[bun [35425]: 64-bit    Footprint: 4091 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2754 of 490 MB reserved, 1 projects running): @semio-tech/procedural-js needs 2961 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherw]
+2026-11-15T07:29:43Z pid=35425 rss=6214MB footprint=[bun [35425]: 64-bit    Footprint: 1868 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (6029 of 490 MB reserved, 1 projects running): @semio-tech/procedural-js needs 2961 MB and has waited 7 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherw]
+2026-11-15T07:29:48Z pid=35425 rss=6310MB footprint=[bun [35425]: 64-bit    Footprint: 1696 MB (16384 bytes per page)] last=[graph: project @semio-tech/procedural-generation2d (language:typescript) grew by 3407 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the projec]
+2026-11-15T07:29:53Z pid=35425 rss=6519MB footprint=[bun [35425]: 64-bit    Footprint: 2565 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (3407 of 1734 MB reserved, 1 projects running): @semio-tech/procedural-generation2d-rs needs 2754 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is g]
+2026-11-15T07:29:58Z pid=35425 rss=5287MB footprint=[bun [35425]: 64-bit    Footprint: 4291 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (5961 of 2279 MB reserved, 1 projects running): @semio-tech/procedural-generation3d needs 1761 MB and has waited 8 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T07:30:03Z pid=35425 rss=6305MB footprint=[bun [35425]: 64-bit    Footprint: 4151 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 0 MB reserved, 1 projects running): @semio-tech/procedural-generation3d-rs needs 2754 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T07:30:09Z pid=35425 rss=6386MB footprint=[bun [35425]: 64-bit    Footprint: 2449 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 0 MB reserved, 1 projects running): @semio-tech/procedural-generation3d-rs needs 2754 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T07:30:14Z pid=35425 rss=5102MB footprint=[bun [35425]: 64-bit    Footprint: 6799 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 0 MB reserved, 1 projects running): @semio-tech/procedural-generation3d-rs needs 2754 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T07:30:19Z pid=35425 rss=2703MB footprint=[bun [35425]: 64-bit    Footprint: 7834 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 0 MB reserved, 1 projects running): @semio-tech/procedural-generation3d-rs needs 2754 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T07:30:24Z pid=35425 rss=5121MB footprint=[bun [35425]: 64-bit    Footprint: 4938 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (5647 of 1347 MB reserved, 1 projects running): @semio-tech/flow-js needs 2961 MB and has waited 15 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise ]
+2026-11-15T07:30:29Z pid=35425 rss=3868MB footprint=[bun [35425]: 64-bit    Footprint: 6322 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (5776 of 464 MB reserved, 1 projects running): @semio-tech/flow-js needs 2961 MB and has waited 20 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise t]
+2026-11-15T07:30:35Z pid=35425 rss=4493MB footprint=[bun [35425]: 64-bit    Footprint: 5176 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2961 of 0 MB reserved, 1 projects running): @semio-tech/flow-flow needs 1761 MB and has waited 6 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise th]
+2026-11-15T07:30:40Z pid=35425 rss=5283MB footprint=[bun [35425]: 64-bit    Footprint: 4461 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2961 of 0 MB reserved, 1 projects running): @semio-tech/flow-flow needs 1761 MB and has waited 6 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise th]
+2026-11-15T07:30:45Z pid=35425 rss=5573MB footprint=[bun [35425]: 64-bit    Footprint: 2563 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 474 MB reserved, 1 projects running): @semio-tech/flow-flow-rs needs 2754 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwi]
+2026-11-15T07:30:50Z pid=35425 rss=5273MB footprint=[bun [35425]: 64-bit    Footprint: 5124 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 474 MB reserved, 1 projects running): @semio-tech/flow-flow-rs needs 2754 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwi]
+2026-11-15T07:30:56Z pid=35425 rss=1445MB footprint=[bun [35425]: 64-bit    Footprint: 7124 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 474 MB reserved, 1 projects running): @semio-tech/flow-flow-rs needs 2754 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwi]
+2026-11-15T07:31:01Z pid=35425 rss=1352MB footprint=[bun [35425]: 64-bit    Footprint: 7796 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 474 MB reserved, 1 projects running): @semio-tech/flow-flow-rs needs 2754 MB and has waited 4 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwi]
+2026-11-15T07:31:06Z no slice worker
+2026-11-15T07:31:12Z no slice worker
+2026-11-15T07:31:17Z no slice worker
+2026-11-15T07:31:22Z no slice worker
+2026-11-15T07:31:27Z no slice worker
+2026-11-15T07:31:32Z no slice worker
+2026-11-15T07:31:37Z no slice worker
+2026-11-15T07:31:43Z no slice worker
+2026-11-15T07:31:48Z no slice worker
+2026-11-15T07:31:53Z no slice worker
+2026-11-15T07:31:58Z no slice worker
+2026-11-15T07:32:03Z no slice worker
+2026-11-15T07:32:08Z no slice worker
+2026-11-15T07:32:13Z no slice worker
+2026-11-15T07:32:19Z no slice worker
+2026-11-15T07:32:24Z no slice worker
+2026-11-15T07:32:29Z no slice worker
+2026-11-15T07:32:35Z no slice worker
+2026-11-15T07:32:40Z no slice worker
+2026-11-15T07:32:45Z no slice worker
+2026-11-15T07:32:50Z no slice worker
+2026-11-15T07:32:55Z no slice worker
+2026-11-15T07:33:01Z no slice worker
+2026-11-15T07:33:06Z no slice worker
+2026-11-15T07:33:11Z no slice worker
+2026-11-15T07:33:16Z no slice worker
+2026-11-15T07:33:22Z no slice worker
+2026-11-15T07:33:27Z no slice worker
+2026-11-15T07:33:32Z no slice worker
+2026-11-15T07:33:37Z no slice worker
+2026-11-15T07:33:42Z no slice worker
+2026-11-15T07:33:48Z no slice worker
+2026-11-15T07:33:53Z no slice worker
+2026-11-15T07:33:58Z no slice worker
+2026-11-15T07:34:03Z no slice worker
+2026-11-15T07:34:08Z no slice worker
+2026-11-15T07:34:13Z no slice worker
+2026-11-15T07:34:19Z no slice worker
+2026-11-15T07:34:24Z no slice worker
+2026-11-15T07:34:29Z pid=44707 rss=255MB footprint=[bun [44707]: 64-bit    Footprint: 83 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 168 MB (released 0 MB)]
+2026-11-15T07:34:34Z pid=44707 rss=307MB footprint=[bun [44707]: 64-bit    Footprint: 80 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 168 MB (released 0 MB)]
+2026-11-15T07:34:39Z pid=44707 rss=814MB footprint=[bun [44707]: 64-bit    Footprint: 275 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 168 MB (released 0 MB)]
+2026-11-15T07:34:45Z pid=44707 rss=817MB footprint=[bun [44707]: 64-bit    Footprint: 126 MB (16384 bytes per page)] last=[]
+2026-11-15T07:34:50Z pid=44707 rss=833MB footprint=[bun [44707]: 64-bit    Footprint: 125 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 198 MB, resident 833 MB)]
+2026-11-15T07:34:55Z pid=44707 rss=834MB footprint=[bun [44707]: 64-bit    Footprint: 125 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 198 MB, resident 833 MB)]
+2026-11-15T07:35:00Z pid=44707 rss=834MB footprint=[bun [44707]: 64-bit    Footprint: 125 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 198 MB, resident 833 MB)]
+2026-11-15T07:35:05Z pid=44707 rss=841MB footprint=[bun [44707]: 64-bit    Footprint: 129 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 198 MB, resident 833 MB)]
+2026-11-15T07:35:10Z pid=44707 rss=851MB footprint=[bun [44707]: 64-bit    Footprint: 137 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 198 MB, resident 833 MB)]
+2026-11-15T07:35:16Z pid=44707 rss=858MB footprint=[bun [44707]: 64-bit    Footprint: 136 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 198 MB, resident 833 MB)]
+2026-11-15T07:35:21Z pid=44707 rss=870MB footprint=[bun [44707]: 64-bit    Footprint: 141 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 198 MB, resident 833 MB)]
+2026-11-15T07:35:26Z pid=44707 rss=945MB footprint=[bun [44707]: 64-bit    Footprint: 158 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 198 MB, resident 833 MB)]
+2026-11-15T07:35:31Z pid=44707 rss=953MB footprint=[bun [44707]: 64-bit    Footprint: 150 MB (16384 bytes per page)] last=[]
+2026-11-15T07:35:36Z pid=44707 rss=1026MB footprint=[bun [44707]: 64-bit    Footprint: 184 MB (16384 bytes per page)] last=[]
+2026-11-15T07:35:42Z pid=44707 rss=1027MB footprint=[bun [44707]: 64-bit    Footprint: 143 MB (16384 bytes per page)] last=[]
+2026-11-15T07:35:47Z pid=44707 rss=1058MB footprint=[bun [44707]: 64-bit    Footprint: 136 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2961 of 796 MB reserved, 1 projects running): @semio-tech/writer-writer needs 1761 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherw]
+2026-11-15T07:35:52Z pid=44707 rss=1181MB footprint=[bun [44707]: 64-bit    Footprint: 158 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2961 of 796 MB reserved, 1 projects running): @semio-tech/writer-writer needs 1761 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherw]
+2026-11-15T07:35:57Z pid=44707 rss=1255MB footprint=[bun [44707]: 64-bit    Footprint: 147 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1761 of 851 MB reserved, 1 projects running): @semio-tech/wfc-grid2d needs 1761 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise]
+2026-11-15T07:36:03Z pid=44707 rss=1258MB footprint=[bun [44707]: 64-bit    Footprint: 145 MB (16384 bytes per page)] last=[graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 775 MB headroom), inferring one at a time: @semio-tech/flow-extension-bim-rust has waited 0 s for the running project, at most 60 s]
+2026-11-15T07:36:08Z pid=44707 rss=4411MB footprint=[bun [44707]: 64-bit    Footprint: 4372 MB (16384 bytes per page)] last=[graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 775 MB headroom), inferring one at a time: @semio-tech/flow-extension-bim-rust has waited 0 s for the running project, at most 60 s]
+2026-11-15T07:36:13Z pid=44707 rss=3264MB footprint=[bun [44707]: 64-bit    Footprint: 6686 MB (16384 bytes per page)] last=[graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 775 MB headroom), inferring one at a time: @semio-tech/flow-extension-bim-rust has waited 0 s for the running project, at most 60 s]
+2026-11-15T07:36:18Z pid=44707 rss=4685MB footprint=[bun [44707]: 64-bit    Footprint: 4565 MB (16384 bytes per page)] last=[Graph: Plan-Stufe inference beruhigt von 6594 auf 4577 MB]
+2026-11-15T07:36:24Z pid=44707 rss=5866MB footprint=[bun [44707]: 64-bit    Footprint: 5071 MB (16384 bytes per page)] last=[graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 0 MB headroom), inferring one at a time: @semio-tech/flow-extension-bim-rust has waited 17 s for the running project, at most 60 s]
+2026-11-15T07:36:29Z pid=44707 rss=5492MB footprint=[bun [44707]: 64-bit    Footprint: 7145 MB (16384 bytes per page)] last=[graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 0 MB headroom), inferring one at a time: @semio-tech/flow-extension-bim-rust has waited 17 s for the running project, at most 60 s]
+2026-11-15T07:36:34Z pid=44707 rss=6178MB footprint=[bun [44707]: 64-bit    Footprint: 5727 MB (16384 bytes per page)] last=[graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 0 MB headroom), inferring one at a time: @semio-tech/flow-extension-list-rust has waited 8 s for the running project, at most 60 s]
+2026-11-15T07:36:39Z pid=44707 rss=5534MB footprint=[bun [44707]: 64-bit    Footprint: 4788 MB (16384 bytes per page)] last=[graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 0 MB headroom), inferring one at a time: @semio-tech/flow-extension-list-rust has waited 15 s for the running project, at most 60 s]
+2026-11-15T07:36:45Z pid=44707 rss=5288MB footprint=[bun [44707]: 64-bit    Footprint: 4376 MB (16384 bytes per page)] last=[graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 920 MB headroom), inferring one at a time: @semio-tech/flow-extension-list-rust has waited 20 s for the running project, at most 60 s]
+2026-11-15T07:36:50Z pid=44707 rss=5290MB footprint=[bun [44707]: 64-bit    Footprint: 4596 MB (16384 bytes per page)] last=[graph: no memory peak learned for language:cargo projects yet (256 MB assumed, 920 MB headroom), inferring one at a time: @semio-tech/flow-extension-list-rust has waited 20 s for the running project, at most 60 s]
+2026-11-15T07:36:55Z pid=44707 rss=5317MB footprint=[bun [44707]: 64-bit    Footprint: 4239 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (5010 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 9 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T07:37:01Z pid=44707 rss=5637MB footprint=[bun [44707]: 64-bit    Footprint: 5108 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (5010 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 9 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T07:37:06Z pid=44707 rss=3671MB footprint=[bun [44707]: 64-bit    Footprint: 6466 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (5010 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 9 s; after 60 s it runs alone if it fits the 1756 MB one project is gran]
+2026-11-15T07:37:11Z pid=44707 rss=5604MB footprint=[bun [44707]: 64-bit    Footprint: 4050 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (5729 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 23 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T07:37:16Z pid=44707 rss=5810MB footprint=[bun [44707]: 64-bit    Footprint: 5992 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (5729 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 23 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T07:37:22Z pid=44707 rss=6137MB footprint=[bun [44707]: 64-bit    Footprint: 6749 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (5729 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 23 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T07:37:27Z pid=44707 rss=4774MB footprint=[bun [44707]: 64-bit    Footprint: 6711 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (7988 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 40 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T07:37:32Z pid=44707 rss=3250MB footprint=[bun [44707]: 64-bit    Footprint: 8325 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (7988 of 910 MB reserved, 1 projects running): @semio-tech/flow-extension-brep-rust needs 5010 MB and has waited 40 s; after 60 s it runs alone if it fits the 1756 MB one project is gra]
+2026-11-15T07:37:37Z no slice worker
+2026-11-15T07:37:43Z no slice worker
+2026-11-15T07:37:48Z no slice worker
+closure entries after: 513

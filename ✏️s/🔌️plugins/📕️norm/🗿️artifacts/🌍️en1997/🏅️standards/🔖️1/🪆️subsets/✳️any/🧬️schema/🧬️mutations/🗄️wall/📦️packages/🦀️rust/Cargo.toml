@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-s-artifact-norm-en1997-mut-wall-seismic-reinforcement = { workspace = true }
+semio-s-artifact-norm-en1997-mut-wall-reinforcement = { workspace = true }
 serde = { workspace = true, optional = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -28,7 +28,7 @@ semio-s-artifact-norm-en1997-diff = { workspace = true }
 semio-s-artifact-norm-en1997-model = { workspace = true }
 
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-en1997-diff/test-support", "semio-s-artifact-norm-en1997-model/test-support", "semio-s-artifact-norm-en1997-mut-wall-seismic-reinforcement/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1997-diff/test-support", "semio-s-artifact-norm-en1997-model/test-support", "semio-s-artifact-norm-en1997-mut-wall-reinforcement/test-support"]
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

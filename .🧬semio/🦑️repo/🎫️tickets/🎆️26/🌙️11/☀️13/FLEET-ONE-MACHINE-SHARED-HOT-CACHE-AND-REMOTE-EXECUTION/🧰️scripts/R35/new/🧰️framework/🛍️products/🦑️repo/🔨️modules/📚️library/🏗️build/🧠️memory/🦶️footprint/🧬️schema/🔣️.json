@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:memory:footprint:v1",
+  "title": "Physical footprint gate of the graph read / Fußabdruck-Schranke des Graph-Lesens",
+  "description": "EN: The memory grant of a graph read is a reservation, and what a process really holds is its PHYSICAL FOOTPRINT (macOS phys_footprint, Linux proportional plus swapped proportional set size), not the resident set (which falls to a few MB while the pages are swapped out) and not the managed heap (which misses the allocator's own pages). The gate reads the footprint of the parent (cached, one reading per ttlMilliseconds, never blocking the caller), compares it with the grant and slows the admission of new work BEFORE the grant is overrun: from softPercent of the grant the process collects and shrinks its heap, from hardPercent it also lets its holders drop what a pass can re-read (relievers) and waits in steps of waitStepMilliseconds, at most waitBoundMilliseconds per call (a wait can never deadlock a read). After every published wave the process settles and logs ONE line with the footprint before and after. DE: Die Speicherzusage eines Graph-Lesens ist eine Reservierung, und was ein Prozess wirklich hält, ist sein PHYSISCHER FUSSABDRUCK (macOS phys_footprint, Linux proportionale plus ausgelagerte proportionale Set-Größe), nicht der residente Satz (der auf wenige MB fällt, sobald die Seiten ausgelagert sind) und nicht der verwaltete Heap (der die eigenen Seiten des Allokators nicht sieht). Die Schranke liest den Fußabdruck des Elternprozesses (zwischengespeichert, eine Messung je ttlMilliseconds, blockiert den Aufrufer nie), vergleicht ihn mit der Zusage und bremst die Aufnahme neuer Arbeit, BEVOR die Zusage überschritten ist: ab softPercent der Zusage sammelt der Prozess Müll und schrumpft seinen Heap, ab hardPercent lässt er zusätzlich seine Halter fallen, was ein Durchgang neu lesen kann (Entlaster), und wartet er in Schritten von waitStepMilliseconds, höchstens waitBoundMilliseconds je Aufruf (ein Warten kann ein Lesen nie verklemmen). Nach jeder veröffentlichten Welle beruhigt sich der Prozess und protokolliert EINE Zeile mit dem Fußabdruck davor und danach.",
+  "definitions": {
+    "Policy": {
+      "description": "EN: softPercent and hardPercent of the grant; ttlMilliseconds between two readings; settleMinimumMilliseconds between two settlings; waitStepMilliseconds and waitBoundMilliseconds of one wait, waitCooldownMilliseconds during which a wait that found no relief is not repeated, watchMilliseconds between two looks of the watcher while the main thread is free, censusTypes object types named in the census line, traceBytes the most a process appends to its trace file, heartbeatMilliseconds between two heartbeat lines of the watcher; commandTimeoutMilliseconds of one reading. DE: softPercent und hardPercent der Zusage; ttlMilliseconds zwischen zwei Messungen; settleMinimumMilliseconds zwischen zwei Beruhigungen; waitStepMilliseconds und waitBoundMilliseconds eines Wartens, waitCooldownMilliseconds, in der ein Warten ohne Entlastung nicht wiederholt wird, watchMilliseconds zwischen zwei Blicken des Wächters, solange der Hauptfaden frei ist, censusTypes im Zähl-Satz genannte Objekttypen, traceBytes die meisten Bytes, die ein Prozess an seine Spurdatei anhängt, heartbeatMilliseconds zwischen zwei Herzschlagzeilen des Wächters; commandTimeoutMilliseconds einer Messung.",
+      "const": {
+        "version": 1,
+        "softPercent": 60,
+        "hardPercent": 85,
+        "ttlMilliseconds": 5000,
+        "settleMinimumMilliseconds": 30000,
+        "waitStepMilliseconds": 1000,
+        "waitBoundMilliseconds": 20000,
+        "waitCooldownMilliseconds": 120000,
+        "watchMilliseconds": 10000,
+        "censusTypes": 6,
+        "traceBytes": 2097152,
+        "heartbeatMilliseconds": 30000,
+        "commandTimeoutMilliseconds": 15000,
+        "languages": ["en", "de"]
+      }
+    },
+    "Messages": {
+      "description": "EN: The lines, one per language of the environment (English first, German second, no default language). DE: Die Zeilen, eine je Sprache der Umgebung (zuerst Englisch, dann Deutsch, keine Standardsprache).",
+      "const": {
+        "en": {
+          "waveSettled": "graph: wave {generation} settled from {before} MB to {after} MB (managed {managed} MB, grant {grant} MB)",
+          "relieved": "graph: the process held {before} MB of its grant of {grant} MB; collected and shrunk to {after} MB",
+          "census": "graph: heap census at {footprint} MB: managed {heap} MB, external {extra} MB, {objects} objects; most numerous: {types}",
+          "slowed": "graph: the process holds {footprint} MB of its grant of {grant} MB; new work waits up to {seconds} s"
+        },
+        "de": {
+          "waveSettled": "Graph: Welle {generation} beruhigt von {before} MB auf {after} MB (verwaltet {managed} MB, Zusage {grant} MB)",
+          "relieved": "Graph: der Prozess hielt {before} MB seiner Zusage von {grant} MB; gesammelt und geschrumpft auf {after} MB",
+          "census": "Graph: Heap-Zählung bei {footprint} MB: verwaltet {heap} MB, extern {extra} MB, {objects} Objekte; am zahlreichsten: {types}",
+          "slowed": "Graph: der Prozess hält {footprint} MB seiner Zusage von {grant} MB; neue Arbeit wartet bis zu {seconds} s"
+        }
+      }
+    },
+    "Decision": {
+      "description": "EN: run below softPercent of the grant (or when no grant is known), settle from softPercent, wait from hardPercent. DE: run unter softPercent der Zusage (oder ohne bekannte Zusage), settle ab softPercent, wait ab hardPercent.",
+      "enum": ["run", "settle", "wait"]
+    },
+    "Stats": {
+      "description": "EN: What a gate counted. DE: Was eine Schranke gezählt hat.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["admitted", "settled", "waits", "waitedMilliseconds", "peakBytes"],
+      "properties": {
+        "admitted": { "type": "integer", "minimum": 0 },
+        "settled": { "type": "integer", "minimum": 0 },
+        "waits": { "type": "integer", "minimum": 0 },
+        "waitedMilliseconds": { "type": "integer", "minimum": 0 },
+        "peakBytes": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

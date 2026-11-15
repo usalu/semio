@@ -84,7 +84,7 @@ pub fn bar_layout(member: &RcMember, width: f64) -> Vec<LayerBars> {
             let first = *used;
             *used += count.div_ceil(capacity);
             let sign = if top { 1.0 } else { -1.0 };
-            let points = (0..count)
+            let points: Vec<(f64, f64)> = (0..count)
                 .map(|k| {
                     let (row, col) = (k / capacity, k % capacity);
                     let in_row = (count - row * capacity).min(capacity);

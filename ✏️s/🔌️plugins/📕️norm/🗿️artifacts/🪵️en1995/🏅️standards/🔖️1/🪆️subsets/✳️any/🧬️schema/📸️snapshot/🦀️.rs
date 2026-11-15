@@ -81,6 +81,13 @@ pub struct En1995Snapshot {
 }
 //#endregion 🔖️Snapshot
 
+/// 🌱 Initial subject of a live evaluation session: the worked example.
+impl Default for En1995Snapshot {
+    fn default() -> Self {
+        Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En)
+    }
+}
+
 impl En1995Snapshot {
     /// 📸️ Reference EN 1995 subject under the explicitly chosen annex; the annex is never defaulted.
     pub fn example(annex: semio_s_plugin_norm_compliance::AnnexChoice) -> Self {

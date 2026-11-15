@@ -1,6 +1,6 @@
 //! 🧰️ Owns one genuine native preparation controller under exact birth and terminal grants.
 
-use semio_framework_value::{OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll,ValueError,ValueRefusalKind,retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll,ValueError,ValueRefusalKind,retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,OriginalEffectCallbackMode,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneRef};
 use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
 use semio_framework_value_persistent::list::{PagedList,PagedListEditCursor,PagedListEditFailure,PagedListEditOutcome,PagedListEditStep,PagedListReservationFailure,PagedListReservationOutcome};
@@ -18,31 +18,36 @@ pub fn settled_step(poll:OriginalRetirementPoll)->Result<RetainedCloneStep,Value
     match poll {RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(OriginalRetirementFailure::into_value_error)}
 }
 
-/// 🪢️ Runs one non-suspending reply-shaped callee inside the original effect and returns its recorded step.
-pub fn replied(effect:&mut RetainedAllocationEffect<'_>,action:impl for<'r> FnOnce(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>)->Result<RetainedCloneStep,ValueError> {
+/// 🔁️ Whether this turn re-enters a callee whose reply was left pending, so the callee's `recover_*` producer must run instead of its first-call producer.
+pub fn recovering(effect:&RetainedAllocationEffect<'_>)->bool {effect.invocation().is_some_and(|invocation|invocation.mode()==OriginalEffectCallbackMode::Recover)}
+
+/// 🪢️ Runs one reply-shaped callee inside the original effect and returns its recorded step; a reply left pending keeps the callee's state and retries next turn as zero progress through the `recover` flag.
+pub fn replied(effect:&mut RetainedAllocationEffect<'_>,action:impl for<'r> FnOnce(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>,bool)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>)->Result<RetainedCloneStep,ValueError> {
+    let recover=recovering(effect);
     let mut slot=None;
     let reply=OriginalEffectReply::borrow(&mut slot)?;
-    drop(action(&mut *effect,reply)?);
-    slot.take().ok_or_else(||ValueError::invariant("native preparation callee suspended without a recorded reply"))?.map_err(OriginalRetirementFailure::into_value_error)
+    drop(action(&mut *effect,reply,recover)?);
+    slot.take().map_or(Ok(RetainedCloneStep::Progress(Default::default())),|reply|reply.map_err(OriginalRetirementFailure::into_value_error))
 }
 
 /// 🪢️ Like [`replied`] for a callee whose failure is already a value refusal.
-pub fn replied_value(effect:&mut RetainedAllocationEffect<'_>,action:impl for<'r> FnOnce(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,ValueError>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>)->Result<RetainedCloneStep,ValueError> {
+pub fn replied_value(effect:&mut RetainedAllocationEffect<'_>,action:impl for<'r> FnOnce(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,ValueError>,bool)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,ValueError>,ValueError>)->Result<RetainedCloneStep,ValueError> {
+    let recover=recovering(effect);
     let mut slot=None;
     let reply=OriginalEffectReply::borrow(&mut slot)?;
-    drop(action(&mut *effect,reply)?);
-    slot.take().ok_or_else(||ValueError::invariant("native preparation callee suspended without a recorded reply"))?
+    drop(action(&mut *effect,reply,recover)?);
+    slot.take().unwrap_or(Ok(RetainedCloneStep::Progress(Default::default())))
 }
 
 /// 🧬️ Advances one native clone cursor over its borrowed original source under this effect.
 pub fn cursor_advance<T:RetainedClone,C:RetainedCloneCursor<T>>(cursor:&mut C,source:RetainedCloneRef<'_,T>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError> {
     let maximum=effect.remaining_work_units()?;
-    replied(effect,|effect,reply|cursor.advance_into(source,body,maximum,effect,reply))
+    replied(effect,|effect,reply,recover|if recover {cursor.recover_advance_into(source,body,maximum,effect,reply)} else {cursor.advance_into(source,body,maximum,effect,reply)})
 }
 
 /// 📤️ Moves the ready owner of one native clone cursor into `output`.
 pub fn cursor_take<T:RetainedClone,C:RetainedCloneCursor<T>>(cursor:&mut C,output:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError> {
-    replied_value(effect,|effect,reply|cursor.take(output,effect,reply))
+    replied_value(effect,|effect,reply,recover|if recover {cursor.recover_take(output,effect,reply)} else {cursor.take(output,effect,reply)})
 }
 
 /// 📤️ Moves the ready owner out of one native clone cursor; `None` means the take was denied and nothing moved.

@@ -390,6 +390,36 @@
        "material": "galvanised-steel"
       },
       {
+       "id": "tray-side-wall",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.79047,
+         0.18
+        ],
+        [
+         0.84783,
+         1.32715
+        ],
+        [
+         0.79047,
+         1.40907
+        ],
+        [
+         -0.84783,
+         0.26192
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "anodised-aluminium"
+      },
+      {
        "id": "tray",
        "bone": "housing",
        "role": "body",
@@ -1207,6 +1237,36 @@
        "closed": true,
        "region": "stand",
        "material": "galvanised-steel"
+      },
+      {
+       "id": "tray-side-wall",
+       "bone": "housing",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.79047,
+         0.18
+        ],
+        [
+         0.84783,
+         1.32715
+        ],
+        [
+         0.79047,
+         1.40907
+        ],
+        [
+         -0.84783,
+         0.26192
+        ]
+       ],
+       "closed": true,
+       "region": "housing",
+       "material": "anodised-aluminium"
       },
       {
        "id": "tray",
@@ -3357,7 +3417,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "anodised-aluminium",
-     "areaM2": 0.8,
+     "areaM2": 5.0,
      "characteristicLengthM": 1,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.6,
@@ -3390,7 +3450,7 @@
      "kind": "glazing",
      "model": "passive",
      "material": "solar-glass",
-     "areaM2": 1.8,
+     "areaM2": 3.74,
      "characteristicLengthM": 1.9,
      "geometry": "horizontal-plate-up",
      "skyViewFactor": 0.9,
@@ -3423,7 +3483,7 @@
      "kind": "heater",
      "model": "operating",
      "material": "selective-absorber",
-     "areaM2": 1.8,
+     "areaM2": 4.1,
      "characteristicLengthM": 1.9,
      "geometry": "horizontal-plate-up",
      "skyViewFactor": 0.9,
@@ -3460,7 +3520,7 @@
      "kind": "surface",
      "model": "operating",
      "material": "copper",
-     "areaM2": 0.066,
+     "areaM2": 0.093,
      "characteristicLengthM": 0.033,
      "geometry": "cylinder",
      "skyViewFactor": 0.5,
@@ -3497,7 +3557,7 @@
      "kind": "surface",
      "model": "operating",
      "material": "copper",
-     "areaM2": 0.066,
+     "areaM2": 0.093,
      "characteristicLengthM": 0.033,
      "geometry": "cylinder",
      "skyViewFactor": 0.5,
@@ -3534,7 +3594,7 @@
      "kind": "surface",
      "model": "passive",
      "material": "galvanised-steel",
-     "areaM2": 0.45,
+     "areaM2": 1.13,
      "characteristicLengthM": 0.6,
      "geometry": "vertical-plate",
      "skyViewFactor": 0.5,
@@ -3600,227 +3660,1557 @@
    ],
    "clinical": false
   },
-  "volume": {
-    "status": "authored",
-    "solids": [
-      {
-        "id": "base-rail",
-        "kind": "box",
-        "bone": "stand",
-        "material": "galvanised-steel",
-        "role": "body",
-        "tone": 0.5,
-        "region": "stand",
-        "size": [1.5, 0.05, 0.05],
-        "transform": {
-          "translation": [0.0, 0.025, 0.4]
+  "volumes": {
+    "50": {
+      "status": "authored",
+      "denominator": 50,
+      "body": [
+        {
+          "id": "tray-shell",
+          "kind": "extrude",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.35,
+          "profile": [[-0.84783, 0.26192], [-0.79047, 0.18], [0.84783, 1.32715], [0.79048, 1.40907], [0.77409, 1.3976], [0.82457, 1.32551], [-0.78097, 0.2013], [-0.83144, 0.27339]],
+          "plane": "xy",
+          "from": -0.5,
+          "to": 0.5
         },
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -0.8]
+        {
+          "id": "tray-side",
+          "kind": "box",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.35,
+          "size": [1.96, 0.1, 0.03],
+          "transform": {
+            "translation": [0.0, 0.79453, -0.485],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.97]
+          }
+        },
+        {
+          "id": "insulation",
+          "kind": "box",
+          "bone": "housing",
+          "material": "mineral-wool",
+          "role": "body",
+          "tone": 0.8,
+          "size": [1.96, 0.026, 0.94],
+          "transform": {
+            "translation": [0.01434, 0.77406, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "glass",
+          "kind": "box",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "glazing",
+          "tone": 0.92,
+          "size": [1.96, 0.01, 0.94],
+          "transform": {
+            "translation": [-0.02581, 0.8314, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "absorber-plate",
+          "kind": "box",
+          "bone": "absorber",
+          "material": "selective-absorber",
+          "role": "body",
+          "tone": 0.2,
+          "size": [1.88, 0.008, 0.91],
+          "transform": {
+            "translation": [-0.00229, 0.79781, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "riser",
+          "kind": "revolve",
+          "bone": "absorber",
+          "material": "copper",
+          "role": "detail",
+          "tone": 0.55,
+          "slender": true,
+          "profile": [[0.0, 0.006], [1.88, 0.006]],
+          "axis": [0.81915, 0.57358, 0.0],
+          "origin": [-0.76656, 0.25046, -0.4],
+          "repeat": {
+            "count": 9,
+            "translation": [0.0, 0.0, 0.1]
+          }
+        },
+        {
+          "id": "header-lower",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [[0.0, 0.0165], [0.88, 0.0165]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [-0.76885, 0.25373, -0.44]
+        },
+        {
+          "id": "header-upper",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [[0.0, 0.0165], [0.88, 0.0165]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.77115, 1.33206, -0.44]
+        },
+        {
+          "id": "base-rail",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.5, 0.05, 0.05],
+          "transform": {
+            "translation": [0.0, 0.025, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "front-strut",
+          "kind": "extrude",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [[-0.57, 0.05], [-0.53, 0.05], [-0.53, 0.37439], [-0.57, 0.34638]],
+          "plane": "xy",
+          "from": -0.425,
+          "to": -0.375,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "rear-strut",
+          "kind": "extrude",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [[0.53, 0.05], [0.57, 0.05], [0.57, 1.14461], [0.53, 1.11661]],
+          "plane": "xy",
+          "from": -0.425,
+          "to": -0.375,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
         }
-      },
-      {
-        "id": "front-strut",
-        "kind": "extrude",
-        "bone": "stand",
-        "material": "galvanised-steel",
-        "role": "body",
-        "tone": 0.5,
-        "region": "stand",
-        "profile": [[-0.57, 0.04], [-0.53, 0.04], [-0.53, 0.37439], [-0.57, 0.34638]],
-        "plane": "xy",
-        "from": 0.375,
-        "to": 0.425,
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -0.8]
+      ],
+      "thermal": [
+        {
+          "id": "th-tray-shell",
+          "of": "tray-shell",
+          "region": "housing"
+        },
+        {
+          "id": "th-tray-side",
+          "of": "tray-side",
+          "region": "housing"
+        },
+        {
+          "id": "th-insulation",
+          "of": "insulation",
+          "region": "housing"
+        },
+        {
+          "id": "th-glass",
+          "of": "glass",
+          "region": "glazing"
+        },
+        {
+          "id": "th-absorber-plate",
+          "of": "absorber-plate",
+          "region": "absorber"
+        },
+        {
+          "id": "th-riser",
+          "of": "riser",
+          "region": "absorber"
+        },
+        {
+          "id": "th-header-lower",
+          "of": "header-lower",
+          "region": "header-lower"
+        },
+        {
+          "id": "th-header-upper",
+          "of": "header-upper",
+          "region": "header-upper"
+        },
+        {
+          "id": "th-base-rail",
+          "of": "base-rail",
+          "region": "stand"
+        },
+        {
+          "id": "th-front-strut",
+          "of": "front-strut",
+          "region": "stand"
+        },
+        {
+          "id": "th-rear-strut",
+          "of": "rear-strut",
+          "region": "stand"
+        },
+        {
+          "id": "th-absorber-plume-outlet",
+          "kind": "revolve",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.9,
+          "region": "absorber",
+          "tags": ["absorber-plume"],
+          "sectionFaces": ["-v", "+v"],
+          "profile": [[0.0, 0.0], [0.0, 0.25], [0.00751, 0.25], [0.00751, 0.0]],
+          "axis": [-0.57358, 0.81915, 0.0],
+          "origin": [0.58569, 1.26567, 0.0]
         }
-      },
-      {
-        "id": "rear-strut",
-        "kind": "extrude",
-        "bone": "stand",
-        "material": "galvanised-steel",
-        "role": "body",
-        "tone": 0.5,
-        "region": "stand",
-        "profile": [[0.53, 0.04], [0.57, 0.04], [0.57, 1.14461], [0.53, 1.11661]],
-        "plane": "xy",
-        "from": 0.375,
-        "to": 0.425,
-        "repeat": {
-          "count": 2,
-          "translation": [0.0, 0.0, -0.8]
+      ],
+      "structure": [
+        {
+          "id": "st-base-rail",
+          "of": "base-rail",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-front-strut",
+          "of": "front-strut",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-rear-strut",
+          "of": "rear-strut",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-tray-shell",
+          "of": "tray-shell",
+          "member": "housing",
+          "part": "member"
+        },
+        {
+          "id": "st-tray-side",
+          "of": "tray-side",
+          "member": "housing",
+          "part": "member"
+        },
+        {
+          "id": "st-glass",
+          "of": "glass",
+          "member": "glass",
+          "part": "member"
+        },
+        {
+          "id": "st-absorber-plate",
+          "of": "absorber-plate",
+          "member": "absorber",
+          "part": "member"
+        },
+        {
+          "id": "st-header-lower",
+          "of": "header-lower",
+          "member": "headers",
+          "part": "member"
+        },
+        {
+          "id": "st-header-upper",
+          "of": "header-upper",
+          "member": "headers",
+          "part": "member"
+        },
+        {
+          "id": "joint-strut-front",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "joint",
+          "size": [0.12, 0.012, 0.05],
+          "transform": {
+            "translation": [-0.55636, 0.35125, -0.4],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "joint-strut-rear",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "joint",
+          "size": [0.12, 0.012, 0.05],
+          "transform": {
+            "translation": [0.5495, 1.12558, -0.4],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "mass-housing",
+          "kind": "box",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.35,
+          "member": "housing",
+          "part": "mass",
+          "size": [1.0, 0.009, 0.6],
+          "transform": {
+            "translation": [0.02524, 0.75849, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-glass",
+          "kind": "box",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.92,
+          "member": "glass",
+          "part": "mass",
+          "size": [0.8, 0.009, 0.5],
+          "transform": {
+            "translation": [-0.02581, 0.8314, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-absorber",
+          "kind": "box",
+          "bone": "absorber",
+          "material": "selective-absorber",
+          "role": "body",
+          "tone": 0.2,
+          "member": "absorber",
+          "part": "mass",
+          "size": [0.8, 0.0075, 0.5],
+          "transform": {
+            "translation": [-0.00226, 0.79777, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-headers",
+          "kind": "ellipsoid",
+          "bone": "headers",
+          "material": "copper",
+          "tone": 0.4,
+          "member": "headers",
+          "part": "mass",
+          "radii": [0.08, 0.0075, 0.04],
+          "transform": {
+            "translation": [0.00115, 0.7929, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-stand-front",
+          "kind": "ellipsoid",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "mass",
+          "radii": [0.019, 0.12, 0.024],
+          "transform": {
+            "translation": [-0.55, 0.2, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "mass-stand-rear",
+          "kind": "ellipsoid",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "mass",
+          "radii": [0.019, 0.3, 0.024],
+          "transform": {
+            "translation": [0.55, 0.62, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "base-contact-pad",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "support",
+          "anchor": "base-contact",
+          "size": [1.5, 0.0075, 0.05],
+          "transform": {
+            "translation": [0.0, 0.00375, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
         }
-      },
-      {
-        "id": "tray-floor",
-        "kind": "box",
-        "bone": "housing",
-        "material": "anodised-aluminium",
-        "role": "body",
-        "tone": 0.35,
-        "region": "housing",
-        "size": [2.0, 0.012, 1.0],
-        "transform": {
-          "translation": [0.02524, 0.75849, 0.0],
-          "rotation": [0.0, 0.0, 0.30071, 0.95372]
+      ],
+      "decisions": [
+        {
+          "en": "Detailed model in the collector frame (tilt 35 degrees, 2.0 m along the slope, 1.0 m wide, 0.1 m deep): the tray is the drawn C-profile (12 mm floor, 20 mm end walls) extruded across the width, closed by two 30 mm side walls; 26 mm mineral-wool insulation on the floor; the glass is a 10 mm plate flush with the tray top (the real 4 mm is below the 7.5 mm smallest feature), the selective absorber an 8 mm plate (real 0.5 mm) on nine slender 12 mm copper risers, with two 33 mm headers at the ends of the slope; the stand is two 1.5 m base rails and two struts per rail at 0.55 m left and right of the centre, the struts cut on the tray underside and entering the floor by 10 mm like the drawing. The elevation drawing omitted the near side wall that front and plan show: a filled side-wall shape was added to the 1:50 and 1:100 elevations.",
+          "de": "Detailliertes Modell im Kollektorrahmen (Neigung 35 Grad, 2,0 m entlang der Schräge, 1,0 m breit, 0,1 m tief): Die Wanne ist das gezeichnete C-Profil (12 mm Boden, 20 mm Stirnwände) über die Breite extrudiert und durch zwei 30-mm-Seitenwände geschlossen; 26 mm Mineralwolle auf dem Boden; das Glas ist eine 10-mm-Platte bündig mit der Wannenoberkante (die echten 4 mm liegen unter der kleinsten Einzelheit von 7,5 mm), der selektive Absorber eine 8-mm-Platte (echt 0,5 mm) auf neun schlanken 12-mm-Kupferrohren, dazu zwei 33-mm-Sammler an den Enden der Schräge; das Gestell besteht aus zwei 1,5 m langen Fußschienen mit je zwei Streben 0,55 m links und rechts der Mitte, die Streben sind an der Wannenunterseite abgeschnitten und greifen wie gezeichnet 10 mm in den Boden. Die Seitenansicht ließ die vordere Seitenwand weg, die Vorder- und Draufsicht zeigen: in die Ansichten 1:50 und 1:100 wurde eine gefüllte Seitenwandfläche eingefügt."
+        },
+        {
+          "en": "Thermal: every region is a set of references to the body solids that carry its surface (housing: tray, side walls, insulation; glazing: glass; absorber: plate and risers; two header regions; stand: rails and struts); all regions have one layer, so each is a single surface and no nested shell exists. The glass and the absorber plate are one-sided patches whose backs lie inside the sealed collector: their reference declares the lower faces as section faces, so the exposed area is the outer face. The plume emitter is a 0.5 m disc on the glass at the upper edge. Structure: the stand rails and struts, the tray and its side walls, glass, absorber plate and both headers are the members of their bones; four bracket plates at the strut tops are the joints; compact masses sit at the centres of mass of housing, glass, absorber and headers; the stand mass (centre 0.35 m, in the open space under the tray) is split into a front and a rear strut lump; two 50 mm pads under the rails carry the base-contact anchor.",
+          "de": "Thermik: Jede Region ist eine Menge von Verweisen auf die Körper, die ihre Oberfläche tragen (housing: Wanne, Seitenwände, Dämmung; glazing: Glas; absorber: Platte und Rohre; zwei Sammlerregionen; stand: Schienen und Streben); alle Regionen haben eine Schicht, also eine einfache Fläche ohne verschachtelte Schalen. Glas und Absorberplatte sind einseitige Flächen, deren Rückseite im geschlossenen Kollektor liegt: ihr Verweis erklärt die Unterseiten zu Schnittflächen, die freie Fläche ist die Außenseite. Der Fahnenemitter ist eine 0,5-m-Scheibe auf dem Glas an der Oberkante. Tragwerk: Gestellschienen und -streben, Wanne mit Seitenwänden, Glas, Absorberplatte und beide Sammler sind die Stäbe ihrer Knochen; vier Konsolplatten an den Strebenköpfen sind die Gelenke; kompakte Massen liegen in den Schwerpunkten von Wanne, Glas, Absorber und Sammlern; die Gestellmasse (Schwerpunkt 0,35 m, im freien Raum unter der Wanne) ist in einen vorderen und einen hinteren Strebenklumpen geteilt; zwei 50-mm-Platten unter den Schienen tragen den Anker base-contact."
         }
-      },
-      {
-        "id": "tray-end-low",
-        "kind": "box",
-        "bone": "housing",
-        "material": "anodised-aluminium",
-        "role": "body",
-        "tone": 0.35,
-        "region": "housing",
-        "size": [0.02, 0.088, 1.0],
-        "transform": {
-          "translation": [-0.8144, 0.23161, 0.0],
-          "rotation": [0.0, 0.0, 0.30071, 0.95372]
+      ]
+    },
+    "100": {
+      "status": "authored",
+      "denominator": 100,
+      "body": [
+        {
+          "id": "tray-shell",
+          "kind": "extrude",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.35,
+          "profile": [[-0.84783, 0.26192], [-0.79047, 0.18], [0.84783, 1.32715], [0.79048, 1.40907], [0.77, 1.39473], [0.80785, 1.34066], [-0.78949, 0.22219], [-0.82735, 0.27625]],
+          "plane": "xy",
+          "from": -0.5,
+          "to": 0.5
+        },
+        {
+          "id": "tray-side",
+          "kind": "box",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.35,
+          "size": [1.95, 0.1, 0.035],
+          "transform": {
+            "translation": [0.0, 0.79453, -0.4825],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.965]
+          }
+        },
+        {
+          "id": "glass",
+          "kind": "box",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "glazing",
+          "tone": 0.92,
+          "size": [1.95, 0.012, 0.93],
+          "transform": {
+            "translation": [-0.02523, 0.83058, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "absorber-plate",
+          "kind": "box",
+          "bone": "absorber",
+          "material": "selective-absorber",
+          "role": "body",
+          "tone": 0.2,
+          "size": [1.88, 0.015, 0.9],
+          "transform": {
+            "translation": [-0.00143, 0.79658, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "riser",
+          "kind": "revolve",
+          "bone": "absorber",
+          "material": "copper",
+          "role": "detail",
+          "tone": 0.55,
+          "slender": true,
+          "profile": [[0.0, 0.01], [1.88, 0.01]],
+          "axis": [0.81915, 0.57358, 0.0],
+          "origin": [-0.76885, 0.25373, -0.4],
+          "repeat": {
+            "count": 9,
+            "translation": [0.0, 0.0, 0.1]
+          }
+        },
+        {
+          "id": "header-lower",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [[0.0, 0.022], [0.87, 0.022]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [-0.76885, 0.25373, -0.435]
+        },
+        {
+          "id": "header-upper",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [[0.0, 0.022], [0.87, 0.022]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.77115, 1.33206, -0.435]
+        },
+        {
+          "id": "base-rail",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.5, 0.06, 0.05],
+          "transform": {
+            "translation": [0.0, 0.03, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "front-strut",
+          "kind": "extrude",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [[-0.575, 0.06], [-0.525, 0.06], [-0.525, 0.37789], [-0.575, 0.34288]],
+          "plane": "xy",
+          "from": -0.425,
+          "to": -0.375,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "rear-strut",
+          "kind": "extrude",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [[0.525, 0.06], [0.575, 0.06], [0.575, 1.14811], [0.525, 1.1131]],
+          "plane": "xy",
+          "from": -0.425,
+          "to": -0.375,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
         }
-      },
-      {
-        "id": "tray-end-high",
-        "kind": "box",
-        "bone": "housing",
-        "material": "anodised-aluminium",
-        "role": "body",
-        "tone": 0.35,
-        "region": "housing",
-        "size": [0.02, 0.088, 1.0],
-        "transform": {
-          "translation": [0.80752, 1.36729, 0.0],
-          "rotation": [0.0, 0.0, 0.30071, 0.95372]
+      ],
+      "thermal": [
+        {
+          "id": "th-tray-shell",
+          "of": "tray-shell",
+          "region": "housing"
+        },
+        {
+          "id": "th-tray-side",
+          "of": "tray-side",
+          "region": "housing"
+        },
+        {
+          "id": "th-glass",
+          "of": "glass",
+          "region": "glazing"
+        },
+        {
+          "id": "th-absorber-plate",
+          "of": "absorber-plate",
+          "region": "absorber"
+        },
+        {
+          "id": "th-riser",
+          "of": "riser",
+          "region": "absorber"
+        },
+        {
+          "id": "th-header-lower",
+          "of": "header-lower",
+          "region": "header-lower"
+        },
+        {
+          "id": "th-header-upper",
+          "of": "header-upper",
+          "region": "header-upper"
+        },
+        {
+          "id": "th-base-rail",
+          "of": "base-rail",
+          "region": "stand"
+        },
+        {
+          "id": "th-front-strut",
+          "of": "front-strut",
+          "region": "stand"
+        },
+        {
+          "id": "th-rear-strut",
+          "of": "rear-strut",
+          "region": "stand"
+        },
+        {
+          "id": "th-absorber-plume-outlet",
+          "kind": "revolve",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.9,
+          "region": "absorber",
+          "tags": ["absorber-plume"],
+          "sectionFaces": ["-v", "+v"],
+          "profile": [[0.0, 0.0], [0.0, 0.25], [0.01501, 0.25], [0.01501, 0.0]],
+          "axis": [-0.57358, 0.81915, 0.0],
+          "origin": [0.58569, 1.26567, 0.0]
         }
-      },
-      {
-        "id": "tray-side-left",
-        "kind": "box",
-        "bone": "housing",
-        "material": "anodised-aluminium",
-        "role": "body",
-        "tone": 0.35,
-        "region": "housing",
-        "size": [1.96, 0.088, 0.03],
-        "transform": {
-          "translation": [-0.00344, 0.79945, 0.485],
-          "rotation": [0.0, 0.0, 0.30071, 0.95372]
+      ],
+      "structure": [
+        {
+          "id": "st-base-rail",
+          "of": "base-rail",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-front-strut",
+          "of": "front-strut",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-rear-strut",
+          "of": "rear-strut",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-tray-shell",
+          "of": "tray-shell",
+          "member": "housing",
+          "part": "member"
+        },
+        {
+          "id": "st-tray-side",
+          "of": "tray-side",
+          "member": "housing",
+          "part": "member"
+        },
+        {
+          "id": "st-glass",
+          "of": "glass",
+          "member": "glass",
+          "part": "member"
+        },
+        {
+          "id": "st-absorber-plate",
+          "of": "absorber-plate",
+          "member": "absorber",
+          "part": "member"
+        },
+        {
+          "id": "st-header-lower",
+          "of": "header-lower",
+          "member": "headers",
+          "part": "member"
+        },
+        {
+          "id": "st-header-upper",
+          "of": "header-upper",
+          "member": "headers",
+          "part": "member"
+        },
+        {
+          "id": "joint-strut-front",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "joint",
+          "size": [0.12, 0.015, 0.05],
+          "transform": {
+            "translation": [-0.55722, 0.35248, -0.4],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "joint-strut-rear",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "joint",
+          "size": [0.12, 0.015, 0.05],
+          "transform": {
+            "translation": [0.54864, 1.12681, -0.4],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "mass-housing",
+          "kind": "box",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.35,
+          "member": "housing",
+          "part": "mass",
+          "size": [1.0, 0.033, 0.6],
+          "transform": {
+            "translation": [0.01893, 0.7675, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-glass",
+          "kind": "box",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.92,
+          "member": "glass",
+          "part": "mass",
+          "size": [0.8, 0.015, 0.5],
+          "transform": {
+            "translation": [-0.02437, 0.82935, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-absorber",
+          "kind": "box",
+          "bone": "absorber",
+          "material": "selective-absorber",
+          "role": "body",
+          "tone": 0.2,
+          "member": "absorber",
+          "part": "mass",
+          "size": [0.8, 0.015, 0.5],
+          "transform": {
+            "translation": [-0.00143, 0.79658, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-stand-front",
+          "kind": "ellipsoid",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "mass",
+          "radii": [0.019, 0.12, 0.024],
+          "transform": {
+            "translation": [-0.55, 0.2, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "mass-stand-rear",
+          "kind": "ellipsoid",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "mass",
+          "radii": [0.019, 0.3, 0.024],
+          "transform": {
+            "translation": [0.55, 0.62, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "base-contact-pad",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "support",
+          "anchor": "base-contact",
+          "size": [1.5, 0.015, 0.05],
+          "transform": {
+            "translation": [0.0, 0.0075, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
         }
-      },
-      {
-        "id": "tray-side-right",
-        "kind": "box",
-        "bone": "housing",
-        "material": "anodised-aluminium",
-        "role": "body",
-        "tone": 0.35,
-        "region": "housing",
-        "size": [1.96, 0.088, 0.03],
-        "transform": {
-          "translation": [-0.00344, 0.79945, -0.485],
-          "rotation": [0.0, 0.0, 0.30071, 0.95372]
+      ],
+      "decisions": [
+        {
+          "en": "Redrawn against the 1:100 shapes: insulation and floor merge into one 34 mm tray floor (the 1:100 drawing keeps the insulation hatch, the solid does not), end walls 25 mm, side walls 35 mm, glass 12 mm as drawn (smallest feature 15 mm but the drawing is 12 mm thin), absorber plate 15 mm on nine 20 mm risers, headers 44 mm; the stand keeps the 1:50 rails, struts 50 mm wide with the 1:100 outline. Joints and the contact pads stay, the headers' mass merges into the absorber mass.",
+          "de": "Neu gezeichnet gegen die Formen 1:100: Dämmung und Boden gehen in einem 34 mm dicken Wannenboden auf (die Zeichnung 1:100 behält die Dämmungsschraffur, der Körper nicht), Stirnwände 25 mm, Seitenwände 35 mm, Glas 12 mm wie gezeichnet (kleinste Einzelheit 15 mm, die Zeichnung ist aber nur 12 mm dünn), Absorberplatte 15 mm auf neun 20-mm-Rohren, Sammler 44 mm; das Gestell behält die Schienen von 1:50, Streben 50 mm breit mit dem Umriss von 1:100. Gelenke und Kontaktplatten bleiben, die Sammlermasse geht in der Absorbermasse auf."
+        },
+        {
+          "en": "Thermal: references per region as at 1:50 (the insulation is part of the tray solid), glass and absorber plate keep the lower faces declared as section faces, plume disc of 15 mm. Structure: the same members as references, two strut brackets (15 mm), masses of housing, glass and absorber as boxes inside their solids, two strut lumps, two 15 mm contact pads.",
+          "de": "Thermik: Verweise je Region wie bei 1:50 (die Dämmung ist Teil des Wannenkörpers), Glas und Absorberplatte behalten die als Schnittflächen erklärten Unterseiten, Fahnenscheibe von 15 mm. Tragwerk: dieselben Stäbe als Verweise, zwei Strebenkonsolen (15 mm), Massen von Wanne, Glas und Absorber als Quader in ihren Körpern, zwei Strebenklumpen, zwei 15 mm dicke Kontaktplatten."
         }
-      },
-      {
-        "id": "insulation",
-        "kind": "box",
-        "bone": "housing",
-        "material": "mineral-wool",
-        "role": "body",
-        "tone": 0.8,
-        "region": "housing",
-        "maxDenominator": 100,
-        "size": [1.96, 0.026, 0.94],
-        "transform": {
-          "translation": [0.01434, 0.77406, 0.0],
-          "rotation": [0.0, 0.0, 0.30071, 0.95372]
+      ]
+    },
+    "200": {
+      "status": "authored",
+      "denominator": 200,
+      "body": [
+        {
+          "id": "tray-shell",
+          "kind": "extrude",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.35,
+          "profile": [
+            [-0.84783, 0.26192],
+            [-0.79047, 0.18],
+            [0.84783, 1.32715],
+            [0.79048, 1.40907],
+            [0.74952, 1.38039],
+            [0.78393, 1.33124],
+            [-0.77246, 0.24144],
+            [-0.80687, 0.29059]
+          ],
+          "plane": "xy",
+          "from": -0.5,
+          "to": 0.5
+        },
+        {
+          "id": "tray-side",
+          "kind": "box",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.35,
+          "size": [1.9, 0.1, 0.05],
+          "transform": {
+            "translation": [0.0, 0.79453, -0.475],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.95]
+          }
+        },
+        {
+          "id": "glass",
+          "kind": "box",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.92,
+          "size": [1.9, 0.03, 0.9],
+          "transform": {
+            "translation": [-0.02007, 0.8232, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "absorber",
+          "kind": "box",
+          "bone": "absorber",
+          "material": "selective-absorber",
+          "role": "body",
+          "tone": 0.2,
+          "size": [1.9, 0.03, 0.87],
+          "transform": {
+            "translation": [-0.00286, 0.79863, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "header-lower",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [[0.0, 0.0225], [0.84, 0.0225]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [-0.76885, 0.25373, -0.42]
+        },
+        {
+          "id": "header-upper",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "profile": [[0.0, 0.0225], [0.84, 0.0225]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.77115, 1.33206, -0.42]
+        },
+        {
+          "id": "base-rail",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.5, 0.08, 0.05],
+          "transform": {
+            "translation": [0.0, 0.04, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "front-strut",
+          "kind": "extrude",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [[-0.59, 0.08], [-0.51, 0.08], [-0.51, 0.38839], [-0.59, 0.33237]],
+          "plane": "xy",
+          "from": -0.425,
+          "to": -0.375,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "rear-strut",
+          "kind": "extrude",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [[0.51, 0.08], [0.59, 0.08], [0.59, 1.15862], [0.51, 1.1026]],
+          "plane": "xy",
+          "from": -0.425,
+          "to": -0.375,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
         }
-      },
-      {
-        "id": "absorber-plate",
-        "kind": "box",
-        "bone": "absorber",
-        "material": "selective-absorber",
-        "role": "body",
-        "tone": 0.2,
-        "region": "absorber",
-        "size": [1.88, 0.008, 0.91],
-        "transform": {
-          "translation": [-0.00229, 0.79781, 0.0],
-          "rotation": [0.0, 0.0, 0.30071, 0.95372]
+      ],
+      "thermal": [
+        {
+          "id": "th-tray-shell",
+          "of": "tray-shell",
+          "region": "housing"
+        },
+        {
+          "id": "th-tray-side",
+          "of": "tray-side",
+          "region": "housing"
+        },
+        {
+          "id": "th-glass",
+          "of": "glass",
+          "region": "glazing"
+        },
+        {
+          "id": "th-absorber",
+          "of": "absorber",
+          "region": "absorber"
+        },
+        {
+          "id": "th-header-lower",
+          "of": "header-lower",
+          "region": "header-lower"
+        },
+        {
+          "id": "th-header-upper",
+          "of": "header-upper",
+          "region": "header-upper"
+        },
+        {
+          "id": "th-base-rail",
+          "of": "base-rail",
+          "region": "stand"
+        },
+        {
+          "id": "th-front-strut",
+          "of": "front-strut",
+          "region": "stand"
+        },
+        {
+          "id": "th-rear-strut",
+          "of": "rear-strut",
+          "region": "stand"
+        },
+        {
+          "id": "th-absorber-plume-outlet",
+          "kind": "revolve",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.9,
+          "region": "absorber",
+          "tags": ["absorber-plume"],
+          "sectionFaces": ["-v", "+v"],
+          "profile": [[0.0, 0.0], [0.0, 0.25], [0.03003, 0.25], [0.03003, 0.0]],
+          "axis": [-0.57358, 0.81915, 0.0],
+          "origin": [0.58569, 1.26567, 0.0]
         }
-      },
-      {
-        "id": "riser",
-        "kind": "revolve",
-        "bone": "absorber",
-        "material": "copper",
-        "role": "detail",
-        "tone": 0.55,
-        "region": "absorber",
-        "maxDenominator": 100,
-        "profile": [[0.0, 0.006], [1.88, 0.006]],
-        "axis": [0.81915, 0.57358, 0.0],
-        "origin": [-0.76656, 0.25046, -0.4],
-        "repeat": {
-          "count": 9,
-          "translation": [0.0, 0.0, 0.1]
+      ],
+      "structure": [
+        {
+          "id": "st-base-rail",
+          "of": "base-rail",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-front-strut",
+          "of": "front-strut",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-rear-strut",
+          "of": "rear-strut",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-tray-shell",
+          "of": "tray-shell",
+          "member": "housing",
+          "part": "member"
+        },
+        {
+          "id": "st-tray-side",
+          "of": "tray-side",
+          "member": "housing",
+          "part": "member"
+        },
+        {
+          "id": "st-glass",
+          "of": "glass",
+          "member": "glass",
+          "part": "member"
+        },
+        {
+          "id": "st-absorber",
+          "of": "absorber",
+          "member": "absorber",
+          "part": "member"
+        },
+        {
+          "id": "st-header-lower",
+          "of": "header-lower",
+          "member": "headers",
+          "part": "member"
+        },
+        {
+          "id": "st-header-upper",
+          "of": "header-upper",
+          "member": "headers",
+          "part": "member"
+        },
+        {
+          "id": "mass-housing",
+          "kind": "box",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.35,
+          "member": "housing",
+          "part": "mass",
+          "size": [1.0, 0.039, 0.6],
+          "transform": {
+            "translation": [0.01721, 0.76996, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-glass",
+          "kind": "box",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.92,
+          "member": "glass",
+          "part": "mass",
+          "size": [0.8, 0.03, 0.5],
+          "transform": {
+            "translation": [-0.02007, 0.8232, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-absorber",
+          "kind": "box",
+          "bone": "absorber",
+          "material": "selective-absorber",
+          "role": "body",
+          "tone": 0.2,
+          "member": "absorber",
+          "part": "mass",
+          "size": [0.8, 0.03, 0.5],
+          "transform": {
+            "translation": [-0.00286, 0.79863, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "mass-stand-front",
+          "kind": "ellipsoid",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "mass",
+          "radii": [0.019, 0.12, 0.024],
+          "transform": {
+            "translation": [-0.55, 0.2, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "mass-stand-rear",
+          "kind": "ellipsoid",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "mass",
+          "radii": [0.019, 0.3, 0.024],
+          "transform": {
+            "translation": [0.55, 0.62, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "base-contact-pad",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "support",
+          "anchor": "base-contact",
+          "size": [1.5, 0.03, 0.05],
+          "transform": {
+            "translation": [0.0, 0.015, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
         }
-      },
-      {
-        "id": "header-lower",
-        "kind": "revolve",
-        "bone": "headers",
-        "material": "copper",
-        "role": "body",
-        "tone": 0.4,
-        "region": "header-lower",
-        "maxDenominator": 100,
-        "profile": [[0.0, 0.0165], [0.88, 0.0165]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [-0.76885, 0.25373, -0.44]
-      },
-      {
-        "id": "header-upper",
-        "kind": "revolve",
-        "bone": "headers",
-        "material": "copper",
-        "role": "body",
-        "tone": 0.4,
-        "region": "header-upper",
-        "maxDenominator": 100,
-        "profile": [[0.0, 0.0165], [0.88, 0.0165]],
-        "axis": [0.0, 0.0, 1.0],
-        "origin": [0.77115, 1.33206, -0.44]
-      },
-      {
-        "id": "glass",
-        "kind": "box",
-        "bone": "glass",
-        "material": "solar-glass",
-        "role": "glazing",
-        "tone": 0.92,
-        "region": "glazing",
-        "size": [1.962, 0.01, 0.94],
-        "transform": {
-          "translation": [-0.02581, 0.8314, 0.0],
-          "rotation": [0.0, 0.0, 0.30071, 0.95372]
+      ],
+      "decisions": [
+        {
+          "en": "Redrawn against the 1:200 shapes: the collector is a tray with 40 mm floor and 50 mm end and side walls that holds a 30 mm absorber slab and a 30 mm glass slab (risers, insulation and the 8 mm plate vanish into slabs); headers are 45 mm pipes inside the slabs; rails 80 mm high, struts 80 mm wide at the 1:200 outline; no brackets or joints.",
+          "de": "Neu gezeichnet gegen die Formen 1:200: Der Kollektor ist eine Wanne mit 40 mm Boden und 50 mm Stirn- und Seitenwänden, die eine 30-mm-Absorberplatte und eine 30-mm-Glasplatte aufnimmt (Rohre, Dämmung und die 8-mm-Platte gehen in den Platten auf); die Sammler sind 45-mm-Rohre in den Platten; Schienen 80 mm hoch, Streben 80 mm breit im Umriss von 1:200; keine Konsolen und Gelenke."
+        },
+        {
+          "en": "Thermal: references to the body solids, the glass and absorber references declare their lower faces as section faces, the absorber and the headers lie under the glass slab (their exposed area is small by construction), plume disc of 30 mm. Structure: members as references, masses of housing, glass and absorber as slabs, two strut lumps, two 30 mm contact pads; the 1.6 kg header mass is merged into the absorber mass.",
+          "de": "Thermik: Verweise auf die Körper, Glas- und Absorberverweis erklären ihre Unterseiten zu Schnittflächen, Absorber und Sammler liegen unter der Glasplatte (ihre freie Fläche ist konstruktionsbedingt klein), Fahnenscheibe von 30 mm. Tragwerk: Stäbe als Verweise, Massen von Wanne, Glas und Absorber als Platten, zwei Strebenklumpen, zwei 30 mm dicke Kontaktplatten; die 1,6-kg-Sammlermasse geht in der Absorbermasse auf."
         }
-      }
-    ],
-    "decisions": [
-      {
-        "en": "The collector is built in its own slope frame (35 degrees, origin at the lower tray corner, s up the slope, t out of the panel): tray floor, two 20 mm end walls and two 30 mm side walls, 26 mm mineral wool, 8 mm absorber at t 0.05, nine 12 mm copper risers at 100 mm pitch under it, two 33 mm headers across the ends and a 10 mm glass pane flush with the rim. All values are read from the elevation polygons and checked against front and plan.",
-        "de": "Der Kollektor ist in seinem eigenen Neigungssystem aufgebaut (35 Grad, Ursprung an der unteren Wannenecke, s die Neigung hinauf, t aus der Flaeche heraus): Wannenboden, zwei 20-mm-Stirnwaende und zwei 30-mm-Seitenwaende, 26 mm Mineralwolle, 8 mm Absorber bei t 0,05, neun 12-mm-Kupfersteiger im Abstand 100 mm darunter, zwei 33-mm-Sammler an den Enden und eine 10-mm-Glasscheibe buendig mit dem Rand. Alle Werte stammen aus den Polygonen der Ansicht und wurden mit Vorderansicht und Grundriss geprueft."
-      },
-      {
-        "en": "Four galvanised struts (two front, two rear, 50 mm wide at z +-0.4) end exactly on the tray floor (they reach 12 mm into it) and stand on two base rails, so the frame carries the tray without a gap; the stand and housing bones are fixed, nothing moves in any pose.",
-        "de": "Vier verzinkte Stuetzen (zwei vorn, zwei hinten, 50 mm breit bei z +-0,4) enden genau am Wannenboden (12 mm ueberlappend) und stehen auf zwei Grundschienen, das Gestell traegt die Wanne luckenlos; Gestell und Gehaeuse sind feste Knochen, in keiner Pose bewegt sich etwas."
-      }
-    ]
+      ]
+    },
+    "500": {
+      "status": "authored",
+      "denominator": 500,
+      "body": [
+        {
+          "id": "collector-box",
+          "kind": "box",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.4,
+          "size": [2, 0.1, 1.0],
+          "transform": {
+            "translation": [0.0, 0.79453, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "base-rail",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "size": [1.5, 0.08, 0.075],
+          "transform": {
+            "translation": [0.0, 0.04, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "front-strut",
+          "kind": "extrude",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [[-0.59, 0.08], [-0.51, 0.08], [-0.51, 0.38839], [-0.59, 0.33237]],
+          "plane": "xy",
+          "from": -0.4375,
+          "to": -0.3625,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "rear-strut",
+          "kind": "extrude",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "profile": [[0.51, 0.08], [0.59, 0.08], [0.59, 1.15862], [0.51, 1.1026]],
+          "plane": "xy",
+          "from": -0.4375,
+          "to": -0.3625,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        }
+      ],
+      "thermal": [
+        {
+          "id": "th-collector-box",
+          "of": "collector-box",
+          "region": "housing"
+        },
+        {
+          "id": "th-base-rail",
+          "of": "base-rail",
+          "region": "stand"
+        },
+        {
+          "id": "th-front-strut",
+          "of": "front-strut",
+          "region": "stand"
+        },
+        {
+          "id": "th-rear-strut",
+          "of": "rear-strut",
+          "region": "stand"
+        },
+        {
+          "id": "th-glass",
+          "kind": "box",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.92,
+          "region": "glazing",
+          "size": [1.8, 0.075, 0.9],
+          "transform": {
+            "translation": [-0.00717, 0.80477, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "th-absorber",
+          "kind": "box",
+          "bone": "absorber",
+          "material": "selective-absorber",
+          "role": "body",
+          "tone": 0.2,
+          "region": "absorber",
+          "size": [1.8, 0.075, 0.8],
+          "transform": {
+            "translation": [0.00717, 0.78429, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "th-header-lower",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "region": "header-lower",
+          "profile": [[0.0, 0.0375], [0.8, 0.0375]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [-0.78843, 0.24247, -0.4]
+        },
+        {
+          "id": "th-header-upper",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "region": "header-upper",
+          "profile": [[0.0, 0.0375], [0.8, 0.0375]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.78844, 1.3466, -0.4]
+        },
+        {
+          "id": "th-absorber-plume-outlet",
+          "kind": "revolve",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.9,
+          "region": "absorber",
+          "tags": ["absorber-plume"],
+          "sectionFaces": ["-v", "+v"],
+          "profile": [[0.0, 0.0], [0.0, 0.25], [0.07507, 0.25], [0.07507, 0.0]],
+          "axis": [-0.57358, 0.81915, 0.0],
+          "origin": [0.58569, 1.26567, 0.0]
+        }
+      ],
+      "structure": [
+        {
+          "id": "st-base-rail",
+          "of": "base-rail",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-front-strut",
+          "of": "front-strut",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-rear-strut",
+          "of": "rear-strut",
+          "member": "stand",
+          "part": "member"
+        },
+        {
+          "id": "st-collector-box",
+          "of": "collector-box",
+          "member": "housing",
+          "part": "member"
+        },
+        {
+          "id": "mass-collector",
+          "kind": "box",
+          "bone": "housing",
+          "material": "anodised-aluminium",
+          "role": "body",
+          "tone": 0.4,
+          "member": "housing",
+          "part": "mass",
+          "size": [1.2, 0.1, 0.6],
+          "transform": {
+            "translation": [0.0, 0.79453, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "member-glass",
+          "kind": "box",
+          "bone": "glass",
+          "material": "solar-glass",
+          "role": "body",
+          "tone": 0.92,
+          "member": "glass",
+          "part": "member",
+          "size": [1.8, 0.075, 0.9],
+          "transform": {
+            "translation": [-0.00717, 0.80477, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "member-absorber",
+          "kind": "box",
+          "bone": "absorber",
+          "material": "selective-absorber",
+          "role": "body",
+          "tone": 0.2,
+          "member": "absorber",
+          "part": "member",
+          "size": [1.8, 0.075, 0.8],
+          "transform": {
+            "translation": [0.00717, 0.78429, 0.0],
+            "rotation": [0.0, 0.0, 0.30071, 0.95372]
+          }
+        },
+        {
+          "id": "member-header-lower",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "member": "headers",
+          "part": "member",
+          "profile": [[0.0, 0.0375], [0.8, 0.0375]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [-0.78843, 0.24247, -0.4]
+        },
+        {
+          "id": "member-header-upper",
+          "kind": "revolve",
+          "bone": "headers",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "member": "headers",
+          "part": "member",
+          "profile": [[0.0, 0.0375], [0.8, 0.0375]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.78844, 1.3466, -0.4]
+        },
+        {
+          "id": "mass-stand-front",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "mass",
+          "size": [0.075, 0.25, 0.075],
+          "transform": {
+            "translation": [-0.55, 0.25, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "mass-stand-rear",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "mass",
+          "size": [0.075, 0.6, 0.075],
+          "transform": {
+            "translation": [0.55, 0.62, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        },
+        {
+          "id": "base-contact-pad",
+          "kind": "box",
+          "bone": "stand",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.5,
+          "member": "stand",
+          "part": "support",
+          "anchor": "base-contact",
+          "size": [1.5, 0.075, 0.075],
+          "transform": {
+            "translation": [0.0, 0.0375, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, 0.8]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Redrawn against the 1:500 shapes: one 100 mm tilted slab for the whole collector (tray, insulation, absorber and glass), two 75 mm base rails and two 75 mm struts per rail (the drawing's foot block is generalised to the 75 mm smallest feature, not to a full-width plate).",
+          "de": "Neu gezeichnet gegen die Formen 1:500: eine einzige 100 mm dicke geneigte Platte für den ganzen Kollektor (Wanne, Dämmung, Absorber und Glas), zwei 75-mm-Fußschienen und je Schiene zwei 75-mm-Streben (der gezeichnete Fußblock ist auf die kleinste Einzelheit von 75 mm verallgemeinert, nicht zu einer Platte über die ganze Breite)."
+        },
+        {
+          "en": "Thermal: the housing is the slab; the glazing, absorber and the two headers have no body solid at this scale and are real hidden solids inside it (75 mm minimum: glass slab 75 mm, absorber slab 75 mm overlapping it, 75 mm header pipes), lower faces declared as section faces; plume disc of 75 mm. Structure: the slab, the two 75 mm struts per side and the rails carry the load; glass, absorber and headers are hidden member solids inside the slab (real solids, the body has none); one slab mass, two strut lumps, two contact pads.",
+          "de": "Thermik: Das Gehäuse ist die Platte; Verglasung, Absorber und die beiden Sammler haben in diesem Maßstab keinen Körper und sind echte verdeckte Körper darin (mindestens 75 mm: Glasplatte 75 mm, Absorberplatte 75 mm, überlappend, Sammlerrohre 75 mm), Unterseiten als Schnittflächen erklärt; Fahnenscheibe von 75 mm. Tragwerk: Platte, die zwei 75-mm-Streben je Seite und die Schienen tragen die Last; Glas, Absorber und Sammler sind verdeckte Stabkörper in der Platte (echte Körper, der Körper hat keine); eine Plattenmasse, zwei Strebenklumpen, zwei Kontaktplatten."
+        }
+      ]
+    }
   },
   "presentation": {
    "defaultPose": "operating",

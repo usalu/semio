@@ -150,10 +150,11 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
     finally { const receipt = { input: turn.input, spent: { copiedItems: 0, copiedBytes: 0, retainedCapacityBytes: 0, releasedBytes: 0 }, workUnitsSpent: 0 }; originalSource.receive(receipt); originalReturn.receipt(receipt); }
   });
   const pairWire = (pair) => ({ pack: pair.pack, spr: pair.spr });
+  const codecCall = (method, wire) => typeof codec?.[method] === "function" ? unreceipted(wire, (budget) => codec[method](budget)) : Promise.reject(new Error("actor-codec.unexported"));
   const codecExports = {
-    packSchemaHash: (artifactSchema) => unreceipted({ operation: "pack-schema-hash", artifactSchema }, (budget) => codec.packSchemaHash(budget)),
-    genesis: (artifactSchema, documentId) => unreceipted({ operation: "genesis", artifactSchema, documentId }, (budget) => codec.genesis(budget)),
-    printMirror: (artifactSchema, pair) => unreceipted({ operation: "print-mirror", artifactSchema, pair: pairWire(pair) }, (budget) => codec.printMirror(budget)),
+    packSchemaHash: (artifactSchema) => codecCall("packSchemaHash", { operation: "pack-schema-hash", artifactSchema }),
+    genesis: (artifactSchema, documentId) => codecCall("genesis", { operation: "genesis", artifactSchema, documentId }),
+    printMirror: (artifactSchema, pair) => codecCall("printMirror", { operation: "print-mirror", artifactSchema, pair: pairWire(pair) }),
   };
   async function receiveContext(method) {
     const turn = originalSource.issue();

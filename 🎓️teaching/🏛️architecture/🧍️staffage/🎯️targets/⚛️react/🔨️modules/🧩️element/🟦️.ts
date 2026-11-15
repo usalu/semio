@@ -3,7 +3,7 @@
  * Attributes: `asset` (catalog id), `view` (one of the seven representations), `viewpoint` (required: `elevation` side elevation, `front` front elevation, `plan` top view, `axonometric` the axonometric drawing, `model` the interactive 3D model, or `all` for the aligned three-view sheet; missing or unknown shows an explicit problem), `camera` (the preset of the 3D model: `elevation`, `front`, `plan`, `axonometric` or `perspective`, kept in step when the reader picks another), `no-toolbar` (hides the 3D controls), `scale` (denominator; for the 3D model the level of detail), `lang` (`en`|`de`, inherited from an ancestor when absent; nothing renders without one), `pose` | `clip` + `time`, `playing`, `rate`, `loop`,
  * `zoom`, `fit`, `theme` (`light`|`dark`, analytic views) (`paper`|`contain`), `transparent`, `no-patterns` (hatch patterns are the colour-independent reading and are on by default), `analytic` (adds the table alternative), `thermal-quantity`, `force-quantity`, `live`,
  * and `no-dimensions` / `no-scale-bar` / `no-legend` / `no-labels` / `no-ground` to switch annotations off. Every change re-renders.
- * Properties: `.state` (last evaluated frame or `null`; `null` for the 3D model), `.clock` (assign a shared `StaffageClock`; it drives a 3D clip like a drawing), `.stage` (the 3D stage of the model viewpoint or `null`). Events: `staffage-evaluated`, `staffage-inspect`, and for the 3D model `staffage-model` (the stage's phase, backend and progress) and `staffage-camera` (the preset the reader chose).
+ * Properties: `.state` (last evaluated frame or `null`; `null` for the 3D model), `.clock` (assign a shared `StaffageClock`; it drives a 3D clip like a drawing), `.stage` (the 3D stage of the model viewpoint or `null`). Events: `staffage-evaluated`, `staffage-inspect`, and for the 3D model `staffage-model` (the stage's phase, backend and progress) `staffage-camera` (the preset the reader chose), `staffage-scale` and `staffage-view` (the scale or representation the reader chose in the stage; the attributes `scale` and `view` follow, so the 2D drawings of the page share them).
  * The 3D model is a separate chunk that loads when the first model viewpoint appears; until it is loaded, and if it cannot be loaded, the element says so in the reader's language. Custom properties `--staffage-model-*` colour and size it (see {@link ../🧊️spatial/🖥️stage/🟦️.ts}), `--staffage-model-height` sets the height of the element.
  *
  * @see ../🧍️figure/🟦️.tsx — the React twin with the same semantics
@@ -270,6 +270,14 @@ export function defineStaffageElement(catalog: StaffageCatalog, name = "staffage
         onPreset: (chosen) => {
           this.setAttribute("camera", chosen);
           this.dispatchEvent(new CustomEvent("staffage-camera", { detail: { preset: chosen }, bubbles: true, composed: true }));
+        },
+        onScale: (chosen) => {
+          this.setAttribute("scale", String(chosen));
+          this.dispatchEvent(new CustomEvent("staffage-scale", { detail: { scale: chosen }, bubbles: true, composed: true }));
+        },
+        onView: (chosen) => {
+          this.setAttribute("view", chosen);
+          this.dispatchEvent(new CustomEvent("staffage-view", { detail: { view: chosen }, bubbles: true, composed: true }));
         },
         onState: (state) => this.dispatchEvent(new CustomEvent("staffage-model", { detail: state, bubbles: true, composed: true })),
       };

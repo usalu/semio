@@ -5,6 +5,7 @@
  *
  * @see ../../📤️downloads/🟦️.ts — `exportFigure`, `exportCapabilities`, `saveExport`
  */
+import { authoredScales } from "@teaching/staffage";
 import { useEffect, useRef, useState, type ReactElement } from "react";
 import { EXPORT_FORMATS, MODEL_REFUSALS, formatNumber, modelFormats } from "@teaching/staffage";
 import type { Asset, EvaluationQuery, Language, Text } from "@teaching/staffage";
@@ -110,7 +111,7 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
           {offered.map((format) => {
             const spatial = isSpatialExport(format);
             const missing = spatial && !producible.has(format === "model-zip" ? "model" : format);
-            const capability = missing ? { available: false, reason: asset.volume === undefined ? MODEL_REFUSALS["model-no-volume"] : both(format === "fbx" ? "model.exports.noClip" : "model.exports.noPose") } : probed[format];
+            const capability = missing ? { available: false, reason: authoredScales(asset.volumes).length === 0 ? MODEL_REFUSALS["model-no-authored-scale"] : both(format === "fbx" ? "model.exports.noClip" : "model.exports.noPose") } : probed[format];
             const kind = capability.available ? null : format === "dwg" ? "unavailable" : "unsupported";
             const wrongViewpoint = !spatial && !drawing;
             const blocked = capability.available && !wrongViewpoint && FRAMED.includes(format) && needsClip;

@@ -35,14 +35,14 @@ pub mod standards {
                         pub mod adjacency {
                             #[path = "."]
                             pub mod connected_components {
-                                pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::adjacency::connected_components::*;
+                                pub use semio_s_artifact_stdio_gltf_inferences_connected::standards::v2_0::subsets::any::schema::inferences::adjacency::connected_components::*;
                                 #[cfg(test)]
                                 #[path = "../../../../🤝️adjacency/🧩️connected-components/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;
                             }
                             #[path = "."]
                             pub mod contact_graph_degree {
-                                pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::adjacency::contact_graph_degree::*;
+                                pub use semio_s_artifact_stdio_gltf_inferences_connected::standards::v2_0::subsets::any::schema::inferences::adjacency::contact_graph_degree::*;
                                 #[cfg(test)]
                                 #[path = "../../../../🤝️adjacency/🌐️contact-graph-degree/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;

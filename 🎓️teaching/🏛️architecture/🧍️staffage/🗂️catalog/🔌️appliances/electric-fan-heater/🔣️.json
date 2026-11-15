@@ -905,7 +905,7 @@
             },
             {
               "id": "dial",
-              "bone": "knob",
+              "bone": "body",
               "role": "body",
               "z": 3.5,
               "filled": true,
@@ -1236,7 +1236,7 @@
             },
             {
               "id": "dial",
-              "bone": "knob",
+              "bone": "body",
               "role": "body",
               "z": 3.5,
               "filled": true,
@@ -2601,7 +2601,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "abs-cream",
-          "areaM2": 0.17,
+          "areaM2": 0.33,
           "characteristicLengthM": 0.28,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.6,
@@ -2638,7 +2638,7 @@
           "kind": "heater",
           "model": "operating",
           "material": "abs-cream",
-          "areaM2": 0.035,
+          "areaM2": 0.055,
           "characteristicLengthM": 0.17,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.9,
@@ -2675,7 +2675,7 @@
           "kind": "heater",
           "model": "operating",
           "material": "steel-mesh",
-          "areaM2": 0.03,
+          "areaM2": 0.05,
           "characteristicLengthM": 0.17,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -2712,7 +2712,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "pc-heat",
-          "areaM2": 0.03,
+          "areaM2": 0.05,
           "characteristicLengthM": 0.16,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -2745,7 +2745,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "pp-dial",
-          "areaM2": 0.004,
+          "areaM2": 0.0045,
           "characteristicLengthM": 0.04,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -2778,7 +2778,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "rubber-foot",
-          "areaM2": 0.003,
+          "areaM2": 0.0085,
           "characteristicLengthM": 0.04,
           "geometry": "horizontal-plate-down",
           "skyViewFactor": 0.1,
@@ -2863,470 +2863,1337 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "foot-back",
-          "kind": "box",
-          "bone": "body",
-          "material": "rubber-foot",
-          "role": "body",
-          "tone": 0.15,
-          "region": "feet",
-          "size": [0.035, 0.016, 0.03],
-          "cornerRadius": 0.004,
-          "transform": {
-            "translation": [-0.0575, 0.008, -0.085]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "foot-back",
+            "kind": "loft",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "sections": [
+              {
+                "at": [-0.0575, 0, -0.085],
+                "rx": 0.0135,
+                "ry": 0.0155,
+                "exponent": 4,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [-0.0575, 0.016, -0.085],
+                "rx": 0.015,
+                "ry": 0.0175,
+                "exponent": 4,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            }
           },
-          "repeat": {
-            "count": 2,
-            "translation": [0, 0, 0.17]
-          }
-        },
-        {
-          "id": "foot-front",
-          "kind": "box",
-          "bone": "body",
-          "material": "rubber-foot",
-          "role": "body",
-          "tone": 0.15,
-          "region": "feet",
-          "size": [0.035, 0.016, 0.03],
-          "cornerRadius": 0.004,
-          "transform": {
-            "translation": [0.0575, 0.008, -0.085]
+          {
+            "id": "foot-front",
+            "kind": "loft",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "sections": [
+              {
+                "at": [0.0575, 0, -0.085],
+                "rx": 0.0135,
+                "ry": 0.0155,
+                "exponent": 4,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.0575, 0.016, -0.085],
+                "rx": 0.015,
+                "ry": 0.0175,
+                "exponent": 4,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            }
           },
-          "repeat": {
-            "count": 2,
-            "translation": [0, 0, 0.17]
-          }
-        },
-        {
-          "id": "housing",
-          "kind": "box",
-          "bone": "body",
-          "material": "abs-cream",
-          "role": "body",
-          "tone": 0.78,
-          "region": "casing",
-          "size": [0.168, 0.256, 0.235],
-          "cornerRadius": 0.02,
-          "transform": {
-            "translation": [-0.006, 0.144, 0.0025]
-          }
-        },
-        {
-          "id": "housing-front",
-          "kind": "extrude",
-          "bone": "body",
-          "material": "abs-cream",
-          "role": "body",
-          "tone": 0.78,
-          "region": "casing",
-          "profile": [
-            [0.252, -0.115],
-            [0.25718, -0.11432],
-            [0.262, -0.11232],
-            [0.26614, -0.10914],
-            [0.26932, -0.105],
-            [0.27132, -0.10018],
-            [0.272, -0.095],
-            [0.272, 0.1],
-            [0.27132, 0.10518],
-            [0.26932, 0.11],
-            [0.26614, 0.11414],
-            [0.262, 0.11732],
-            [0.25718, 0.11932],
-            [0.252, 0.12],
-            [0.036, 0.12],
-            [0.03082, 0.11932],
-            [0.026, 0.11732],
-            [0.02186, 0.11414],
-            [0.01868, 0.11],
-            [0.01668, 0.10518],
-            [0.016, 0.1],
-            [0.016, -0.095],
-            [0.01668, -0.10018],
-            [0.01868, -0.105],
-            [0.02186, -0.10914],
-            [0.026, -0.11232],
-            [0.03082, -0.11432],
-            [0.036, -0.115]
-          ],
-          "plane": "yz",
-          "from": 0.078,
-          "to": 0.095,
-          "holes": [
-            [
-              [0.226, -0.105],
-              [0.22704, -0.10486],
-              [0.228, -0.10446],
-              [0.22883, -0.10383],
-              [0.22946, -0.103],
-              [0.22986, -0.10204],
-              [0.23, -0.101],
-              [0.23, 0.101],
-              [0.22986, 0.10204],
-              [0.22946, 0.103],
-              [0.22883, 0.10383],
-              [0.228, 0.10446],
-              [0.22704, 0.10486],
-              [0.226, 0.105],
-              [0.064, 0.105],
-              [0.06296, 0.10486],
-              [0.062, 0.10446],
-              [0.06117, 0.10383],
-              [0.06054, 0.103],
-              [0.06014, 0.10204],
-              [0.06, 0.101],
-              [0.06, -0.101],
-              [0.06014, -0.10204],
-              [0.06054, -0.103],
-              [0.06117, -0.10383],
-              [0.062, -0.10446],
-              [0.06296, -0.10486],
-              [0.064, -0.105]
+          {
+            "id": "housing",
+            "kind": "loft",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.78,
+            "sections": [
+              {
+                "at": [-0.006, 0.016, 0.0025],
+                "rx": 0.1175,
+                "ry": 0.084,
+                "exponent": 7,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [-0.006, 0.25, 0.0025],
+                "rx": 0.1175,
+                "ry": 0.084,
+                "exponent": 7,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "housing-front",
+            "kind": "extrude",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.78,
+            "profile": [
+              [0.23, -0.115],
+              [0.23518, -0.11432],
+              [0.24, -0.11232],
+              [0.24414, -0.10914],
+              [0.24732, -0.105],
+              [0.24932, -0.10018],
+              [0.25, -0.095],
+              [0.25, 0.1],
+              [0.24932, 0.10518],
+              [0.24732, 0.11],
+              [0.24414, 0.11414],
+              [0.24, 0.11732],
+              [0.23518, 0.11932],
+              [0.23, 0.12],
+              [0.036, 0.12],
+              [0.03082, 0.11932],
+              [0.026, 0.11732],
+              [0.02186, 0.11414],
+              [0.01868, 0.11],
+              [0.01668, 0.10518],
+              [0.016, 0.1],
+              [0.016, -0.095],
+              [0.01668, -0.10018],
+              [0.01868, -0.105],
+              [0.02186, -0.10914],
+              [0.026, -0.11232],
+              [0.03082, -0.11432],
+              [0.036, -0.115]
+            ],
+            "plane": "yz",
+            "from": 0.078,
+            "to": 0.095,
+            "holes": [
+              [
+                [0.226, -0.105],
+                [0.22704, -0.10486],
+                [0.228, -0.10446],
+                [0.22883, -0.10383],
+                [0.22946, -0.103],
+                [0.22986, -0.10204],
+                [0.23, -0.101],
+                [0.23, 0.101],
+                [0.22986, 0.10204],
+                [0.22946, 0.103],
+                [0.22883, 0.10383],
+                [0.228, 0.10446],
+                [0.22704, 0.10486],
+                [0.226, 0.105],
+                [0.064, 0.105],
+                [0.06296, 0.10486],
+                [0.062, 0.10446],
+                [0.06117, 0.10383],
+                [0.06054, 0.103],
+                [0.06014, 0.10204],
+                [0.06, 0.101],
+                [0.06, -0.101],
+                [0.06014, -0.10204],
+                [0.06054, -0.103],
+                [0.06117, -0.10383],
+                [0.062, -0.10446],
+                [0.06296, -0.10486],
+                [0.064, -0.105]
+              ]
             ]
-          ]
-        },
-        {
-          "id": "top-cover",
-          "kind": "box",
-          "bone": "body",
-          "material": "abs-cream",
-          "role": "body",
-          "tone": 0.6,
-          "region": "top-cover",
-          "size": [0.1856, 0.022, 0.2356],
-          "cornerRadius": 0.01,
-          "transform": {
-            "translation": [0.0025, 0.261, 0.0025]
-          }
-        },
-        {
-          "id": "belt",
-          "kind": "extrude",
-          "bone": "body",
-          "material": "abs-cream",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "casing",
-          "maxDenominator": 50,
-          "profile": [
-            [0.1, -0.0905],
-            [0.10531, -0.0898],
-            [0.11025, -0.08775],
-            [0.1145, -0.0845],
-            [0.11775, -0.08025],
-            [0.1198, -0.07531],
-            [0.1205, -0.07],
-            [0.1205, 0.075],
-            [0.1198, 0.08031],
-            [0.11775, 0.08525],
-            [0.1145, 0.0895],
-            [0.11025, 0.09275],
-            [0.10531, 0.0948],
-            [0.1, 0.0955],
-            [-0.095, 0.0955],
-            [-0.10031, 0.0948],
-            [-0.10525, 0.09275],
-            [-0.1095, 0.0895],
-            [-0.11275, 0.08525],
-            [-0.1148, 0.08031],
-            [-0.1155, 0.075],
-            [-0.1155, -0.07],
-            [-0.1148, -0.07531],
-            [-0.11275, -0.08025],
-            [-0.1095, -0.0845],
-            [-0.10525, -0.08775],
-            [-0.10031, -0.0898],
-            [-0.095, -0.0905]
-          ],
-          "plane": "zx",
-          "from": 0.0445,
-          "to": 0.0455,
-          "holes": [
-            [
-              [0.1, -0.09],
-              [0.10518, -0.08932],
-              [0.11, -0.08732],
-              [0.11414, -0.08414],
-              [0.11732, -0.08],
-              [0.11932, -0.07518],
-              [0.12, -0.07],
-              [0.12, 0.075],
-              [0.11932, 0.08018],
-              [0.11732, 0.085],
-              [0.11414, 0.08914],
-              [0.11, 0.09232],
-              [0.10518, 0.09432],
-              [0.1, 0.095],
-              [-0.095, 0.095],
-              [-0.10018, 0.09432],
-              [-0.105, 0.09232],
-              [-0.10914, 0.08914],
-              [-0.11232, 0.085],
-              [-0.11432, 0.08018],
-              [-0.115, 0.075],
-              [-0.115, -0.07],
-              [-0.11432, -0.07518],
-              [-0.11232, -0.08],
-              [-0.10914, -0.08414],
-              [-0.105, -0.08732],
-              [-0.10018, -0.08932],
-              [-0.095, -0.09]
+          },
+          {
+            "id": "top-cover",
+            "kind": "loft",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.6,
+            "sections": [
+              {
+                "at": [0.0025, 0.25, 0.0025],
+                "rx": 0.1178,
+                "ry": 0.0928,
+                "exponent": 7,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.0025, 0.272, 0.0025],
+                "rx": 0.1178,
+                "ry": 0.0928,
+                "exponent": 7,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "belt",
+            "kind": "extrude",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [
+              [0.1, -0.0905],
+              [0.10531, -0.0898],
+              [0.11025, -0.08775],
+              [0.1145, -0.0845],
+              [0.11775, -0.08025],
+              [0.1198, -0.07531],
+              [0.1205, -0.07],
+              [0.1205, 0.075],
+              [0.1198, 0.08031],
+              [0.11775, 0.08525],
+              [0.1145, 0.0895],
+              [0.11025, 0.09275],
+              [0.10531, 0.0948],
+              [0.1, 0.0955],
+              [-0.095, 0.0955],
+              [-0.10031, 0.0948],
+              [-0.10525, 0.09275],
+              [-0.1095, 0.0895],
+              [-0.11275, 0.08525],
+              [-0.1148, 0.08031],
+              [-0.1155, 0.075],
+              [-0.1155, -0.07],
+              [-0.1148, -0.07531],
+              [-0.11275, -0.08025],
+              [-0.1095, -0.0845],
+              [-0.10525, -0.08775],
+              [-0.10031, -0.0898],
+              [-0.095, -0.0905]
+            ],
+            "plane": "zx",
+            "from": 0.0445,
+            "to": 0.0525,
+            "holes": [
+              [
+                [0.1, -0.09],
+                [0.10518, -0.08932],
+                [0.11, -0.08732],
+                [0.11414, -0.08414],
+                [0.11732, -0.08],
+                [0.11932, -0.07518],
+                [0.12, -0.07],
+                [0.12, 0.075],
+                [0.11932, 0.08018],
+                [0.11732, 0.085],
+                [0.11414, 0.08914],
+                [0.11, 0.09232],
+                [0.10518, 0.09432],
+                [0.1, 0.095],
+                [-0.095, 0.095],
+                [-0.10018, 0.09432],
+                [-0.105, 0.09232],
+                [-0.10914, 0.08914],
+                [-0.11232, 0.085],
+                [-0.11432, 0.08018],
+                [-0.115, 0.075],
+                [-0.115, -0.07],
+                [-0.11432, -0.07518],
+                [-0.11232, -0.08],
+                [-0.10914, -0.08414],
+                [-0.105, -0.08732],
+                [-0.10018, -0.08932],
+                [-0.095, -0.09]
+              ]
             ]
-          ]
-        },
-        {
-          "id": "handle",
-          "kind": "extrude",
-          "bone": "body",
-          "material": "abs-cream",
-          "role": "body",
-          "tone": 0.75,
-          "region": "casing",
-          "profile": [
-            [-0.045, 0.268],
-            [-0.04475, 0.27899],
-            [-0.04391, 0.28806],
-            [-0.04236, 0.29535],
-            [-0.04, 0.301],
-            [-0.0367, 0.30515],
-            [-0.03234, 0.30794],
-            [-0.02682, 0.30951],
-            [-0.02, 0.31],
-            [0.03, 0.31],
-            [0.03682, 0.30951],
-            [0.04234, 0.30794],
-            [0.0467, 0.30515],
-            [0.05, 0.301],
-            [0.05236, 0.29535],
-            [0.05391, 0.28806],
-            [0.05475, 0.27899],
-            [0.055, 0.268]
-          ],
-          "plane": "xy",
-          "from": -0.065,
-          "to": 0.065,
-          "holes": [
-            [
-              [0.029, 0.278],
-              [0.03206, 0.27861],
-              [0.03466, 0.28034],
-              [0.03639, 0.28294],
-              [0.037, 0.286],
-              [0.037, 0.29],
-              [0.03639, 0.29306],
-              [0.03466, 0.29566],
-              [0.03206, 0.29739],
-              [0.029, 0.298],
-              [-0.02, 0.298],
-              [-0.02306, 0.29739],
-              [-0.02566, 0.29566],
-              [-0.02739, 0.29306],
-              [-0.028, 0.29],
-              [-0.028, 0.286],
-              [-0.02739, 0.28294],
-              [-0.02566, 0.28034],
-              [-0.02306, 0.27861],
-              [-0.02, 0.278]
+          },
+          {
+            "id": "handle",
+            "kind": "extrude",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [
+              [-0.045, 0.268],
+              [-0.04475, 0.27899],
+              [-0.04391, 0.28806],
+              [-0.04236, 0.29535],
+              [-0.04, 0.301],
+              [-0.0367, 0.30515],
+              [-0.03234, 0.30794],
+              [-0.02682, 0.30951],
+              [-0.02, 0.31],
+              [0.03, 0.31],
+              [0.03682, 0.30951],
+              [0.04234, 0.30794],
+              [0.0467, 0.30515],
+              [0.05, 0.301],
+              [0.05236, 0.29535],
+              [0.05391, 0.28806],
+              [0.05475, 0.27899],
+              [0.055, 0.268]
+            ],
+            "plane": "xy",
+            "from": -0.065,
+            "to": 0.065,
+            "holes": [
+              [
+                [0.029, 0.278],
+                [0.03206, 0.27861],
+                [0.03466, 0.28034],
+                [0.03639, 0.28294],
+                [0.037, 0.286],
+                [0.037, 0.29],
+                [0.03639, 0.29306],
+                [0.03466, 0.29566],
+                [0.03206, 0.29739],
+                [0.029, 0.298],
+                [-0.02, 0.298],
+                [-0.02306, 0.29739],
+                [-0.02566, 0.29566],
+                [-0.02739, 0.29306],
+                [-0.028, 0.29],
+                [-0.028, 0.286],
+                [-0.02739, 0.28294],
+                [-0.02566, 0.28034],
+                [-0.02306, 0.27861],
+                [-0.02, 0.278]
+              ]
             ]
-          ]
-        },
-        {
-          "id": "outlet-grille",
-          "kind": "box",
-          "bone": "body",
-          "material": "steel-mesh",
-          "role": "body",
-          "tone": 0.2,
-          "region": "grille",
-          "size": [0.0025, 0.17, 0.21],
-          "cornerRadius": 0.001,
-          "transform": {
-            "translation": [0.07925, 0.145, 0.0]
-          }
-        },
-        {
-          "id": "louvres-lower",
-          "kind": "box",
-          "bone": "body",
-          "material": "steel-mesh",
-          "role": "detail",
-          "tone": 0.9,
-          "region": "grille",
-          "maxDenominator": 100,
-          "size": [0.02102, 0.0015, 0.2],
-          "transform": {
-            "rotation": [0, 0, -0.21939, 0.97564],
-            "translation": [0.0885, 0.0705, 0.0]
           },
-          "repeat": {
-            "count": 4,
-            "translation": [0, 0.02, 0]
-          }
-        },
-        {
-          "id": "louvres-upper",
-          "kind": "box",
-          "bone": "body",
-          "material": "steel-mesh",
-          "role": "detail",
-          "tone": 0.9,
-          "region": "grille",
-          "maxDenominator": 50,
-          "size": [0.02102, 0.0015, 0.2],
-          "transform": {
-            "rotation": [0, 0, -0.21939, 0.97564],
-            "translation": [0.0885, 0.1505, 0.0]
+          {
+            "id": "outlet-mesh",
+            "kind": "box",
+            "bone": "body",
+            "material": "steel-mesh",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.0075, 0.17, 0.21],
+            "cornerRadius": 0.002,
+            "transform": {
+              "translation": [0.07425, 0.145, 0.0]
+            }
           },
-          "repeat": {
-            "count": 4,
-            "translation": [0, 0.02, 0]
-          }
-        },
-        {
-          "id": "inlet-plate",
-          "kind": "box",
-          "bone": "body",
-          "material": "pc-heat",
-          "role": "body",
-          "tone": 0.15,
-          "region": "intake",
-          "size": [0.002, 0.16, 0.21],
-          "cornerRadius": 0.001,
-          "transform": {
-            "translation": [-0.0905, 0.13, 0.0]
-          }
-        },
-        {
-          "id": "inlet-slat-bottom",
-          "kind": "box",
-          "bone": "body",
-          "material": "pc-heat",
-          "role": "body",
-          "tone": 0.3,
-          "region": "intake",
-          "size": [0.0075, 0.009, 0.21],
-          "cornerRadius": 0.003,
-          "transform": {
-            "translation": [-0.09425, 0.0545, 0.0]
-          }
-        },
-        {
-          "id": "inlet-slats",
-          "kind": "box",
-          "bone": "body",
-          "material": "pc-heat",
-          "role": "body",
-          "tone": 0.3,
-          "region": "intake",
-          "size": [0.0075, 0.01967, 0.21],
-          "cornerRadius": 0.003,
-          "transform": {
-            "translation": [-0.09425, 0.07083, 0.0]
+          {
+            "id": "louvres",
+            "kind": "box",
+            "bone": "body",
+            "material": "steel-mesh",
+            "role": "detail",
+            "tone": 0.9,
+            "size": [0.02102, 0.0075, 0.2],
+            "transform": {
+              "rotation": [0, 0, -0.21939, 0.97564],
+              "translation": [0.0885, 0.0705, 0.0]
+            },
+            "repeat": {
+              "count": 8,
+              "translation": [0, 0.02, 0]
+            }
           },
-          "repeat": {
-            "count": 6,
-            "translation": [0, 0.02167, 0]
+          {
+            "id": "inlet-plate",
+            "kind": "box",
+            "bone": "body",
+            "material": "pc-heat",
+            "role": "body",
+            "tone": 0.15,
+            "size": [0.0075, 0.16, 0.21],
+            "cornerRadius": 0.002,
+            "transform": {
+              "translation": [-0.09375, 0.13, 0.0]
+            }
+          },
+          {
+            "id": "inlet-slat-bottom",
+            "kind": "box",
+            "bone": "body",
+            "material": "pc-heat",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.0075, 0.009, 0.21],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.09425, 0.0545, 0.0]
+            }
+          },
+          {
+            "id": "inlet-slats",
+            "kind": "box",
+            "bone": "body",
+            "material": "pc-heat",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.0075, 0.01967, 0.21],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.09425, 0.07083, 0.0]
+            },
+            "repeat": {
+              "count": 6,
+              "translation": [0, 0.02167, 0]
+            }
+          },
+          {
+            "id": "inlet-slat-top",
+            "kind": "box",
+            "bone": "body",
+            "material": "pc-heat",
+            "role": "body",
+            "tone": 0.3,
+            "size": [0.0075, 0.019, 0.21],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.09425, 0.2005, 0.0]
+            }
+          },
+          {
+            "id": "dial",
+            "kind": "revolve",
+            "bone": "knob",
+            "material": "pp-dial",
+            "role": "body",
+            "tone": 0.2,
+            "profile": [[0, 0], [0, 0.017], [0.0012, 0.022], [0.003, 0.024], [0.008, 0.024], [0.008, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, -0.12]
+          },
+          {
+            "id": "mode-switch",
+            "kind": "box",
+            "bone": "body",
+            "material": "pp-dial",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.04, 0.02, 0.0085],
+            "cornerRadius": 0.0019,
+            "transform": {
+              "translation": [0.0, 0.102, -0.11475]
+            }
           }
-        },
-        {
-          "id": "inlet-slat-top",
-          "kind": "box",
-          "bone": "body",
-          "material": "pc-heat",
-          "role": "body",
-          "tone": 0.3,
-          "region": "intake",
-          "size": [0.0075, 0.019, 0.21],
-          "cornerRadius": 0.003,
-          "transform": {
-            "translation": [-0.09425, 0.2005, 0.0]
+        ],
+        "thermal": [
+          {
+            "id": "th-housing",
+            "of": "housing",
+            "region": "casing",
+            "layer": "wall"
+          },
+          {
+            "id": "th-handle",
+            "of": "handle",
+            "region": "casing",
+            "layer": "wall"
+          },
+          {
+            "id": "th-top-cover",
+            "of": "top-cover",
+            "region": "top-cover",
+            "layer": "cover"
+          },
+          {
+            "id": "th-outlet-mesh",
+            "of": "outlet-mesh",
+            "region": "grille",
+            "layer": "bars"
+          },
+          {
+            "id": "th-louvres-3",
+            "kind": "box",
+            "bone": "body",
+            "material": "steel-mesh",
+            "role": "detail",
+            "tone": 0.9,
+            "layer": "bars",
+            "size": [0.02102, 0.0075, 0.2],
+            "transform": {
+              "rotation": [0, 0, -0.21939, 0.97564],
+              "translation": [0.0885, 0.0705, 0.0]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0.06, 0]
+            },
+            "region": "grille"
+          },
+          {
+            "id": "th-warm-air",
+            "kind": "loft",
+            "bone": "body",
+            "material": "steel-mesh",
+            "role": "body",
+            "tone": 0.2,
+            "layer": "bars",
+            "sections": [
+              {
+                "at": [0.0976, 0.145, 0],
+                "rx": 0.05,
+                "ry": 0.05,
+                "exponent": 2,
+                "rotation": [0.70711, 0.0, 0.70711, 0.0]
+              },
+              {
+                "at": [0.1055, 0.145, 0],
+                "rx": 0.05,
+                "ry": 0.05,
+                "exponent": 2,
+                "rotation": [0.70711, 0.0, 0.70711, 0.0]
+              }
+            ],
+            "capStart": false,
+            "capEnd": false,
+            "region": "grille",
+            "tags": ["warm-air-1", "warm-air-2"]
+          },
+          {
+            "id": "th-inlet-plate",
+            "of": "inlet-plate",
+            "region": "intake",
+            "layer": "inlet"
+          },
+          {
+            "id": "th-inlet-slat-bottom",
+            "of": "inlet-slat-bottom",
+            "region": "intake",
+            "layer": "inlet"
+          },
+          {
+            "id": "th-inlet-slat-top",
+            "of": "inlet-slat-top",
+            "region": "intake",
+            "layer": "inlet"
+          },
+          {
+            "id": "th-dial",
+            "of": "dial",
+            "region": "control",
+            "layer": "dial"
+          },
+          {
+            "id": "th-foot-back",
+            "of": "foot-back",
+            "region": "feet",
+            "layer": "foot"
+          },
+          {
+            "id": "th-foot-front",
+            "of": "foot-front",
+            "region": "feet",
+            "layer": "foot"
           }
-        },
-        {
-          "id": "dial",
-          "kind": "revolve",
-          "bone": "knob",
-          "material": "pp-dial",
-          "role": "body",
-          "tone": 0.2,
-          "region": "control",
-          "profile": [[0, 0.024], [0.005, 0.024]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, -0.12]
-        },
-        {
-          "id": "dial-hub",
-          "kind": "revolve",
-          "bone": "knob",
-          "material": "pp-dial",
-          "role": "body",
-          "tone": 0.35,
-          "region": "control",
-          "profile": [[0, 0.012], [0.001, 0.012]],
-          "axis": [0, 0, 1],
-          "origin": [0, 0, -0.121]
-        },
-        {
-          "id": "dial-pointer",
-          "kind": "box",
-          "bone": "knob",
-          "material": "pp-dial",
-          "role": "detail",
-          "tone": 0.95,
-          "region": "control",
-          "size": [0.002, 0.016, 0.0005],
-          "transform": {
-            "translation": [0.0, 0.014, -0.12125]
+        ],
+        "structure": [
+          {
+            "id": "member-body",
+            "of": "housing",
+            "member": "body",
+            "part": "member"
+          },
+          {
+            "id": "member-knob",
+            "kind": "revolve",
+            "bone": "knob",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "knob",
+            "part": "member",
+            "profile": [[0, 0.006], [0.025, 0.006]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, -0.115]
+          },
+          {
+            "id": "joint-knob",
+            "kind": "revolve",
+            "bone": "knob",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "knob",
+            "part": "joint",
+            "profile": [[0, 0.0105], [0.0125, 0.0105]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, -0.11475]
+          },
+          {
+            "id": "mass-body",
+            "kind": "ellipsoid",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.15,
+            "member": "body",
+            "part": "mass",
+            "radii": [0.06, 0.09, 0.07],
+            "transform": {
+              "translation": [0, 0.14, 0]
+            }
+          },
+          {
+            "id": "support-foot-back",
+            "kind": "box",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "body",
+            "part": "support",
+            "size": [0.032, 0.0075, 0.026],
+            "transform": {
+              "translation": [-0.0575, 0.00375, -0.085]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            },
+            "tags": ["foot-back"],
+            "anchor": "foot-back"
+          },
+          {
+            "id": "support-foot-front",
+            "kind": "box",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "body",
+            "part": "support",
+            "size": [0.032, 0.0075, 0.026],
+            "transform": {
+              "translation": [0.0575, 0.00375, -0.085]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            },
+            "tags": ["foot-front"],
+            "anchor": "foot-front"
           }
-        },
-        {
-          "id": "mode-switch",
-          "kind": "box",
-          "bone": "body",
-          "material": "pp-dial",
-          "role": "body",
-          "tone": 0.2,
-          "region": "control",
-          "size": [0.04, 0.02, 0.004],
-          "cornerRadius": 0.0019,
-          "transform": {
-            "translation": [0.0, 0.102, -0.117]
+        ],
+        "decisions": [
+          {
+            "en": "Own 1:50 model against the 1:50 elevation, front and plan: rounded housing as a superelliptic loft (0.02 m corner radius, offset 2.5 mm to +z as drawn) with a separate front frame whose opening carries a 7.5 mm mesh plate and eight slanted louvre fins that reach the drawn +x extreme of 0.098 m; belt seam, top cover skin, handle extruded from the drawn side outline with the finger opening as a true hole, four lofted rubber feet.",
+            "de": "Eigenes 1:50-Modell nach Ansicht, Seitenansicht und Grundriss von 1:50: abgerundetes Gehäuse als superelliptischer Loft (Eckenradius 0,02 m, wie gezeichnet 2,5 mm nach +z versetzt) mit eigenem Frontrahmen, dessen Öffnung eine 7,5 mm Gitterplatte und acht schräge Lamellen trägt, die das gezeichnete Maximum +x von 0,098 m erreichen; Gürtelfuge, Deckelhaut, Griff aus der gezeichneten Seitenkontur mit Grifföffnung als echtem Loch, vier geloftete Gummifüsse."
+          },
+          {
+            "en": "Sub-feature parts are repaired for the 7.5 mm limit: the dial is a revolved knob 8 mm deep (3 mm outside the wall, the rest sunk into it, which gives the 0.24 m depth), the mode switch stands 8.5 mm with 4 mm relief, the louvre fins are 7.5 mm thick; the dial pointer, hub ring and mode mark are merged into the dial and the switch.",
+            "de": "Teile unter dem 7,5-mm-Merkmal sind repariert: die Skala ist ein gedrehter Knopf von 8 mm Tiefe (3 mm ausserhalb der Wand, der Rest in ihr versenkt, das ergibt die Tiefe von 0,24 m), der Modusschalter steht 8,5 mm mit 4 mm Relief, die Lamellen sind 7,5 mm dick; Skalenzeiger, Nabenring und Modusmarke gehen im Knopf und im Schalter auf."
+          },
+          {
+            "en": "Thermal (area = exposed surface): casing = housing and handle by reference, top cover = its own skin slab, grille = the 7.5 mm mesh plate and two representative louvre fins (the other six are passive vanes) plus the warm-air nozzle (tags warm-air-1 and warm-air-2, 0.1 m on the outlet anchor), intake = the plate and the two end slats (the six middle slats are passive vanes), control = the dial, feet = the four feet. Faces buried in other solids and the floor contact do not count, so areaM2 was corrected at the root to the modelled exposed surfaces (see report). Single-layer regions are surfaces, so no nested shells.",
+            "de": "Thermik (Fläche = freie Oberfläche): Gehäuse = Gehäuse und Griff als Verweis, Deckel = eigene Hautplatte, Gitter = die 7,5-mm-Gitterplatte und zwei stellvertretende Lamellen (die übrigen sechs sind passive Flügel) samt Warmluftdüse (Markierungen warm-air-1 und warm-air-2, 0,1 m am Auslassanker), Ansaugung = die Platte und die zwei Endlamellen (die sechs mittleren Lamellen sind passive Flügel), Bedienung = die Skala, Füsse = die vier Füsse. Verdeckte Flächen und der Bodenkontakt zählen nicht, daher wurde areaM2 an der Wurzel auf die modellierten freien Flächen korrigiert (siehe Bericht). Einlagige Regionen sind Flächen, verschachtelte Schalen entfallen."
+          },
+          {
+            "en": "Structure: the housing is the body member, the knob shaft (12 mm) with its bearing sleeve is the knob member and joint, a compact mass ellipsoid sits at the centre of mass (y 0.14 m), and contact pads under the two foot pairs are the supports.",
+            "de": "Tragwerk: das Gehäuse ist der Körperstab, die Knopfwelle (12 mm) mit Lagerhülse ist Knopfstab und Gelenk, ein kompakter Massenellipsoid liegt im Schwerpunkt (y 0,14 m), und Kontaktflächen unter den beiden Fusspaaren sind die Auflager."
           }
-        },
-        {
-          "id": "mode-mark",
-          "kind": "box",
-          "bone": "body",
-          "material": "pp-dial",
-          "role": "detail",
-          "tone": 0.95,
-          "region": "control",
-          "maxDenominator": 50,
-          "size": [0.02, 0.001, 0.0005],
-          "transform": {
-            "translation": [0.0, 0.102, -0.11925]
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "foot-back",
+            "kind": "loft",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "sections": [
+              {
+                "at": [-0.0575, 0, -0.085],
+                "rx": 0.0135,
+                "ry": 0.0155,
+                "exponent": 4,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [-0.0575, 0.02, -0.085],
+                "rx": 0.015,
+                "ry": 0.0175,
+                "exponent": 4,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            }
+          },
+          {
+            "id": "foot-front",
+            "kind": "loft",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "sections": [
+              {
+                "at": [0.0575, 0, -0.085],
+                "rx": 0.014,
+                "ry": 0.0155,
+                "exponent": 4,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.0575, 0.02, -0.085],
+                "rx": 0.015,
+                "ry": 0.0175,
+                "exponent": 4,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            }
+          },
+          {
+            "id": "housing",
+            "kind": "loft",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.78,
+            "sections": [
+              {
+                "at": [0.00275, 0.02, 0.0025],
+                "rx": 0.1175,
+                "ry": 0.09275,
+                "exponent": 6,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.00275, 0.272, 0.0025],
+                "rx": 0.1175,
+                "ry": 0.09275,
+                "exponent": 6,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "top-cover",
+            "kind": "loft",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.6,
+            "sections": [
+              {
+                "at": [0.00275, 0.257, 0.0025],
+                "rx": 0.1178,
+                "ry": 0.09305,
+                "exponent": 6,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.00275, 0.272, 0.0025],
+                "rx": 0.1178,
+                "ry": 0.09305,
+                "exponent": 6,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "handle",
+            "kind": "extrude",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [
+              [-0.045, 0.268],
+              [-0.04475, 0.27899],
+              [-0.04391, 0.28806],
+              [-0.04236, 0.29535],
+              [-0.04, 0.301],
+              [-0.0367, 0.30515],
+              [-0.03234, 0.30794],
+              [-0.02682, 0.30951],
+              [-0.02, 0.31],
+              [0.03, 0.31],
+              [0.03682, 0.30951],
+              [0.04234, 0.30794],
+              [0.0467, 0.30515],
+              [0.05, 0.301],
+              [0.05236, 0.29535],
+              [0.05391, 0.28806],
+              [0.05475, 0.27899],
+              [0.055, 0.268]
+            ],
+            "plane": "xy",
+            "from": -0.065,
+            "to": 0.065
+          },
+          {
+            "id": "outlet-grille",
+            "kind": "box",
+            "bone": "body",
+            "material": "steel-mesh",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.0185, 0.17, 0.21],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.08875, 0.145, 0.0]
+            }
+          },
+          {
+            "id": "inlet-block",
+            "kind": "box",
+            "bone": "body",
+            "material": "pc-heat",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.0155, 0.16, 0.21],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.09025, 0.13, 0.0]
+            }
+          },
+          {
+            "id": "dial",
+            "kind": "revolve",
+            "bone": "knob",
+            "material": "pp-dial",
+            "role": "body",
+            "tone": 0.2,
+            "profile": [[0, 0], [0, 0.02], [0.0012, 0.022], [0.003, 0.024], [0.015, 0.024], [0.015, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, -0.12]
           }
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The housing is a rounded box (0.02 m corner radius from plan and front) offset 2.5 mm to +z as the plan and front views draw it, with the dial on the -z side face; a separate front frame (extrude with a hole) forms the outlet opening in which a recessed mesh plate and slanted louvre fins stand, the fins ending at the drawn +x extreme of 0.098 m.",
-          "de": "Das Gehäuse ist ein abgerundeter Quader (Eckenradius 0,02 m aus Grundriss und Ansicht), wie in Grundriss und Ansicht gezeichnet 2,5 mm nach +z versetzt, mit dem Drehknopf an der Seitenfläche -z; ein separater Frontrahmen (Extrusion mit Loch) bildet die Ausblasöffnung, in der eine zurückgesetzte Gitterplatte und schräge Lamellen stehen, deren Enden das gezeichnete Maximum +x von 0,098 m erreichen."
-        },
-        {
-          "en": "The handle is the drawn side outline extruded 0.13 m along w with the drawn finger opening as a true through-hole (the 2D plan and front rounding of the handle ends is not modelled). The intake is a dark plate behind eight slats whose gaps are the drawn slot lines.",
-          "de": "Der Griff ist die gezeichnete Seitenkontur, 0,13 m entlang w extrudiert, mit der gezeichneten Grifföffnung als echtem Durchgangsloch (die Rundung der Griffenden aus Grundriss und Ansicht ist nicht modelliert). Der Ansaugbereich ist eine dunkle Platte hinter acht Lamellen, deren Spalten die gezeichneten Schlitzlinien sind."
-        },
-        {
-          "en": "The knob bone carries dial, hub and pointer (revolute 0 to 270 degrees about w); the mode switch is view-only in the 2D drawings and is given an assumed 4 mm relief. The highlight streak is a rendering aid of the drawing and has no solid; lower louvres, belt, hub, mode mark and the upper louvres carry maxDenominator 100 or 50 as in the coarser drawings.",
-          "de": "Der Knopfknochen trägt Skala, Nabe und Zeiger (Drehgelenk 0 bis 270 Grad um w); der Modusschalter kommt nur in der 2D-Ansicht vor und erhält ein angenommenes Relief von 4 mm. Der Glanzstreifen ist ein Zeichnungshilfsmittel und hat keinen Körper; untere Lamellen, Gürtel, Nabe, Modusmarke und obere Lamellen tragen maxDenominator 100 bzw. 50 wie in den gröberen Zeichnungen."
-        }
-      ]
+        ],
+        "thermal": [
+          {
+            "id": "th-housing",
+            "of": "housing",
+            "region": "casing",
+            "layer": "wall"
+          },
+          {
+            "id": "th-handle",
+            "of": "handle",
+            "region": "casing",
+            "layer": "wall"
+          },
+          {
+            "id": "th-top-cover",
+            "of": "top-cover",
+            "region": "top-cover",
+            "layer": "cover"
+          },
+          {
+            "id": "th-outlet-grille",
+            "of": "outlet-grille",
+            "region": "grille",
+            "layer": "bars"
+          },
+          {
+            "id": "th-warm-air",
+            "kind": "loft",
+            "bone": "body",
+            "material": "steel-mesh",
+            "role": "body",
+            "tone": 0.2,
+            "layer": "bars",
+            "sections": [
+              {
+                "at": [0.0955, 0.145, 0],
+                "rx": 0.05,
+                "ry": 0.05,
+                "exponent": 2,
+                "rotation": [0.70711, 0.0, 0.70711, 0.0]
+              },
+              {
+                "at": [0.1105, 0.145, 0],
+                "rx": 0.05,
+                "ry": 0.05,
+                "exponent": 2,
+                "rotation": [0.70711, 0.0, 0.70711, 0.0]
+              }
+            ],
+            "capStart": false,
+            "capEnd": false,
+            "region": "grille",
+            "tags": ["warm-air-1", "warm-air-2"]
+          },
+          {
+            "id": "th-inlet-block",
+            "of": "inlet-block",
+            "region": "intake",
+            "layer": "inlet"
+          },
+          {
+            "id": "th-dial",
+            "of": "dial",
+            "region": "control",
+            "layer": "dial"
+          },
+          {
+            "id": "th-foot-back",
+            "of": "foot-back",
+            "region": "feet",
+            "layer": "foot"
+          },
+          {
+            "id": "th-foot-front",
+            "of": "foot-front",
+            "region": "feet",
+            "layer": "foot"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-body",
+            "of": "housing",
+            "member": "body",
+            "part": "member"
+          },
+          {
+            "id": "member-knob",
+            "kind": "revolve",
+            "bone": "knob",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "knob",
+            "part": "member",
+            "profile": [[0, 0.0075], [0.025, 0.0075]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, -0.115]
+          },
+          {
+            "id": "mass-body",
+            "kind": "ellipsoid",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.15,
+            "member": "body",
+            "part": "mass",
+            "radii": [0.06, 0.09, 0.07],
+            "transform": {
+              "translation": [0, 0.14, 0]
+            }
+          },
+          {
+            "id": "support-foot-back",
+            "kind": "box",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "body",
+            "part": "support",
+            "size": [0.032, 0.015, 0.026],
+            "transform": {
+              "translation": [-0.0575, 0.0075, -0.085]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            },
+            "tags": ["foot-back"],
+            "anchor": "foot-back"
+          },
+          {
+            "id": "support-foot-front",
+            "kind": "box",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "body",
+            "part": "support",
+            "size": [0.032, 0.015, 0.026],
+            "transform": {
+              "translation": [0.0575, 0.0075, -0.085]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            },
+            "tags": ["foot-front"],
+            "anchor": "foot-front"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Own 1:100 model drawn against the 1:100 shapes: one housing loft from the 20 mm feet line up to 0.272 m, the outlet grille as a 18.5 mm block (the mesh plate, front frame and eight louvre fins are merged, the four drawn louvre lines fall below 15 mm), a 15 mm inlet block, the handle extruded from the side outline without the finger opening, a 15 mm knob.",
+            "de": "Eigenes 1:100-Modell nach den 1:100-Formen: ein Gehäuse-Loft von der 20-mm-Fusslinie bis 0,272 m, das Auslassgitter als 18,5-mm-Block (Gitterplatte, Frontrahmen und acht Lamellen sind zusammengefasst, die vier gezeichneten Lamellenlinien liegen unter 15 mm), ein 15-mm-Einlassblock, der Griff aus der Seitenkontur ohne Grifföffnung, ein 15-mm-Knopf."
+          },
+          {
+            "en": "Thermal and structure are rebuilt on these masses: housing and handle, the 15 mm top-cover slab, the grille block with the nozzle, the inlet block, the dial and the feet, all by reference to the 1:100 body; structure as at 1:50 with the 15 mm feature (housing member, knob shaft, mass ellipsoid, foot pads); the bearing sleeve is merged into the shaft.",
+            "de": "Thermik und Tragwerk sind auf diesen Massen neu aufgebaut: Gehäuse und Griff, die 15-mm-Deckelplatte, der Gitterblock mit der Düse, der Einlassblock, die Skala und die Füsse, alle als Verweis auf den 1:100-Körper; Tragwerk wie bei 1:50 mit dem 15-mm-Merkmal (Gehäusestab, Knopfwelle, Massenellipsoid, Fussauflager); die Lagerhülse geht in der Welle auf."
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "foot-back",
+            "kind": "loft",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "sections": [
+              {
+                "at": [-0.0575, 0, -0.085],
+                "rx": 0.0175,
+                "ry": 0.02,
+                "exponent": 2,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [-0.0575, 0.03, -0.085],
+                "rx": 0.0175,
+                "ry": 0.02,
+                "exponent": 2,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            }
+          },
+          {
+            "id": "foot-front",
+            "kind": "loft",
+            "bone": "body",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.15,
+            "sections": [
+              {
+                "at": [0.0575, 0, -0.085],
+                "rx": 0.0175,
+                "ry": 0.02,
+                "exponent": 2,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.0575, 0.03, -0.085],
+                "rx": 0.0175,
+                "ry": 0.02,
+                "exponent": 2,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            }
+          },
+          {
+            "id": "housing",
+            "kind": "loft",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.78,
+            "sections": [
+              {
+                "at": [0.00275, 0.015, 0.0025],
+                "rx": 0.1175,
+                "ry": 0.09275,
+                "exponent": 10,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.00275, 0.242, 0.0025],
+                "rx": 0.1175,
+                "ry": 0.09275,
+                "exponent": 10,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "top-cover",
+            "kind": "loft",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.6,
+            "sections": [
+              {
+                "at": [0.00275, 0.242, 0.0025],
+                "rx": 0.1178,
+                "ry": 0.09305,
+                "exponent": 10,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              },
+              {
+                "at": [0.00275, 0.272, 0.0025],
+                "rx": 0.1178,
+                "ry": 0.09305,
+                "exponent": 10,
+                "rotation": [0.5, 0.5, 0.5, -0.5]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true
+          },
+          {
+            "id": "inlet-block",
+            "kind": "box",
+            "bone": "body",
+            "material": "pc-heat",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.03, 0.16, 0.21],
+            "transform": {
+              "translation": [-0.083, 0.13, 0.0]
+            }
+          },
+          {
+            "id": "handle",
+            "kind": "extrude",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "body",
+            "tone": 0.75,
+            "profile": [[-0.045, 0.262], [-0.045, 0.28], [-0.04, 0.31], [0.03, 0.31], [0.055, 0.28], [0.055, 0.262]],
+            "plane": "xy",
+            "from": -0.065,
+            "to": 0.065
+          },
+          {
+            "id": "outlet-grille",
+            "kind": "box",
+            "bone": "body",
+            "material": "steel-mesh",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.0305, 0.17, 0.21],
+            "cornerRadius": 0.005,
+            "transform": {
+              "translation": [0.08275, 0.145, 0.0]
+            }
+          },
+          {
+            "id": "dial",
+            "kind": "revolve",
+            "bone": "knob",
+            "material": "pp-dial",
+            "role": "body",
+            "tone": 0.2,
+            "profile": [[0, 0], [0, 0.02], [0.0012, 0.022], [0.003, 0.024], [0.03, 0.024], [0.03, 0]],
+            "axis": [0, 0, 1],
+            "origin": [0, 0, -0.12]
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-housing",
+            "of": "housing",
+            "region": "casing",
+            "layer": "wall"
+          },
+          {
+            "id": "th-handle",
+            "of": "handle",
+            "region": "casing",
+            "layer": "wall"
+          },
+          {
+            "id": "th-top-cover",
+            "of": "top-cover",
+            "region": "top-cover",
+            "layer": "cover"
+          },
+          {
+            "id": "th-outlet-grille",
+            "of": "outlet-grille",
+            "region": "grille",
+            "layer": "bars"
+          },
+          {
+            "id": "th-warm-air",
+            "kind": "loft",
+            "bone": "body",
+            "material": "steel-mesh",
+            "role": "body",
+            "tone": 0.2,
+            "layer": "bars",
+            "sections": [
+              {
+                "at": [0.0955, 0.145, 0],
+                "rx": 0.05,
+                "ry": 0.05,
+                "exponent": 2,
+                "rotation": [0.70711, 0.0, 0.70711, 0.0]
+              },
+              {
+                "at": [0.1255, 0.145, 0],
+                "rx": 0.05,
+                "ry": 0.05,
+                "exponent": 2,
+                "rotation": [0.70711, 0.0, 0.70711, 0.0]
+              }
+            ],
+            "capStart": false,
+            "capEnd": false,
+            "region": "grille",
+            "tags": ["warm-air-1", "warm-air-2"]
+          },
+          {
+            "id": "th-inlet-block",
+            "of": "inlet-block",
+            "region": "intake",
+            "layer": "inlet"
+          },
+          {
+            "id": "th-dial",
+            "of": "dial",
+            "region": "control",
+            "layer": "dial"
+          },
+          {
+            "id": "th-foot-back",
+            "of": "foot-back",
+            "region": "feet",
+            "layer": "foot"
+          },
+          {
+            "id": "th-foot-front",
+            "of": "foot-front",
+            "region": "feet",
+            "layer": "foot"
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-body",
+            "of": "housing",
+            "member": "body",
+            "part": "member"
+          },
+          {
+            "id": "member-knob",
+            "kind": "box",
+            "bone": "knob",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "knob",
+            "part": "member",
+            "size": [0.03, 0.03, 0.04],
+            "transform": {
+              "translation": [0.0, 0.0, -0.095]
+            }
+          },
+          {
+            "id": "mass-body",
+            "kind": "ellipsoid",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.15,
+            "member": "body",
+            "part": "mass",
+            "radii": [0.06, 0.09, 0.07],
+            "transform": {
+              "translation": [0, 0.14, 0]
+            }
+          },
+          {
+            "id": "support-foot-back",
+            "kind": "box",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "body",
+            "part": "support",
+            "size": [0.0305, 0.0305, 0.031],
+            "transform": {
+              "translation": [-0.05775, 0.01525, -0.085]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            },
+            "tags": ["foot-back"],
+            "anchor": "foot-back"
+          },
+          {
+            "id": "support-foot-front",
+            "kind": "box",
+            "bone": "body",
+            "material": "abs-cream",
+            "role": "detail",
+            "tone": 0.25,
+            "member": "body",
+            "part": "support",
+            "size": [0.0305, 0.0305, 0.031],
+            "transform": {
+              "translation": [0.05775, 0.01525, -0.085]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.17]
+            },
+            "tags": ["foot-front"],
+            "anchor": "foot-front"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Own 1:200 model: four 30 mm feet (two lofts with repeat), one housing loft from 15 mm to 0.242 m, a separate 30 mm top-cover slab on it, a flat handle bridge extruded from a simplified 0.31 m outline, a 30 mm inlet block, the 30 mm outlet block and a 30 mm knob stub; the eight louvre fins, the mesh plate, the belt seam, the front frame and the mode switch vanish into these masses.",
+            "de": "Eigenes 1:200-Modell: vier 30-mm-Füsse (zwei Lofts mit repeat), ein Gehäuse-Loft von 15 mm bis 0,242 m, darauf eine eigene 30-mm-Deckelplatte, eine flache Griffbrücke aus einer vereinfachten Kontur bis 0,31 m, ein 30-mm-Einlassblock, der 30-mm-Auslassblock und ein 30-mm-Knopfstummel; die acht Lamellen, die Gitterplatte, die Gürtelfuge, der Frontrahmen und der Modusschalter gehen in diesen Massen auf."
+          },
+          {
+            "en": "Thermal and structure at 1:200 by reference to these masses: housing and handle, the top-cover slab, the outlet block with the nozzle, the inlet block, the dial and the two foot pairs; structure keeps the housing member, the knob member (the joint is merged into it), the mass and both foot supports at 30 mm.",
+            "de": "Thermik und Tragwerk bei 1:200 als Verweis auf diese Massen: Gehäuse und Griff, die Deckelplatte, der Auslassblock mit der Düse, der Einlassblock, die Skala und die zwei Fusspaare; das Tragwerk behält Gehäusestab, Knopfstab (Gelenk darin aufgegangen), Masse und beide Fussauflager in 30 mm."
+          }
+        ]
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500
+      }
     },
     "presentation": {
       "defaultPose": "heating",

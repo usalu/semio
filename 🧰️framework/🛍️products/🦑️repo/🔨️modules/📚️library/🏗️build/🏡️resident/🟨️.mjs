@@ -14,8 +14,11 @@ export{runResidentCommandV1,RESIDENT_EXCLUDES_V1,RESIDENT_FENCE_DIRECTORY_V1}fro
 export{createHostServiceV1,HostRunningErrorV1}from"./🏛️service/🌐️host/🟨️.mjs";
 export{createIndexPoolV1}from"./🏛️service/🌐️host/🧊️pool/🟨️.mjs";
 export{createGraphPlannerPortV1,graphDigestV1,UnknownTargetErrorV1}from"./🔌️ports/🧭️plan/🟨️.mjs";
-export{requestPlanV1,requestHostStatusV1,holdHostV1,connectHostV1,resolvePlanV1,HostUnavailableErrorV1,PlanRefusedErrorV1}from"./🚪️client/🛰️plan/🟨️.mjs";
+export{requestPlanV1,requestHostStatusV1,retireHostServiceV1,lastAccessDenialV1,withRestartOwnerV1,holdHostV1,connectHostV1,resolvePlanV1,HostUnavailableErrorV1,PlanRefusedErrorV1}from"./🚪️client/🛰️plan/🟨️.mjs";
 export{runHostForegroundV1,spawnHostServiceV1}from"./🏗️composition/🌐️host/🟨️.mjs";
 export{runHostCommandV1}from"./⌨️command/🌐️host/🟨️.mjs";
+export{createHostReloadV1,replaceHostServiceV1}from"./🔄️reload/🟨️.mjs";
 export{hostEndpointsV1,workspaceIdV1}from"./📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 export{HOST_POLICY_V1}from"./📨️protocol/🎚️policy/🟨️.mjs";
+export{PROTECTED_FOLDERS_V1,protectedFolderOfV1,consentIdentityV1,accessDirectoryV1,probeConsentV1,sampleAccessV1,ACCESS_PROOF_VERSION_V1,mountSignatureV1,createMountReproofV1,rememberLaunchdRefusalV1,launchdRefusalV1,forgetLaunchdRefusalV1,RESET_MARKER_V1,sampleAccessInChildV1,writeAccessReceiptV1,readAccessReceiptsV1,accessReceiptsLackingV1,consentRefusalV1,launcherDigestV1,launcherMarkerPathV1,launcherConsentedV1,launcherStateV1,invalidateLauncherMarkerV1,writeLauncherMarkerV1}from"./🔐️consent/🟨️.mjs";
+export{responsiblePidV1,createResponsibilityWatchV1}from"./🔐️consent/🧷️responsibility/🟨️.mjs";

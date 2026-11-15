@@ -45,7 +45,7 @@ fn handles_exist_for_the_selected_object_and_are_unique() {
     assert!(!shape.is_empty() && grips.len() == spaces + shape.len(), "primitive dimension grips come on top of the envelope grips");
     let width = grips.iter().find(|h| h.id == "geom-valve-50:shape-width").expect("width grip");
     assert_eq!(width.writes[0].path, "geometry.objects.geom-valve-50.shape.parameters.width");
-    let stored = match document.geometry.objects["geom-valve-50"].shape.as_ref() {
+    let stored = match document.geometry.objects.get("geom-valve-50").expect("object").shape.as_ref() {
         Some(model::part_2::GeometryNode::Primitive { parameters, .. }) => parameters["width"],
         other => panic!("expected a primitive, got {other:?}"),
     };
@@ -59,10 +59,10 @@ fn handles_exist_for_the_selected_object_and_are_unique() {
 #[test]
 fn a_thousand_objects_project_within_the_budget() {
     let mut document = Iso16757Snapshot::reference_fixture();
-    let template = document.geometry.objects["geom-valve-50"].clone();
+    let template = document.geometry.objects.get("geom-valve-50").expect("object").clone();
     for index in 0..1000 {
         let id = format!("geom-{index}");
-        document.geometry.objects.insert(id.clone(), model::part_2::GeometryObject { id, ..template.clone() });
+        document.geometry.objects.cold_insert(id.clone(), model::part_2::GeometryObject { id, ..template.clone() });
     }
     let started = std::time::Instant::now();
     let scene = project(&input(&document, &report_of(&document)));
@@ -91,13 +91,13 @@ fn the_plan_diagram_matches_the_shapely_oracle() {
         let id = case["id"].as_str().expect("id");
         let mut document = Iso16757Snapshot::reference_fixture();
         let parameters = ["width", "depth", "height"].map(|k| (k.to_string(), num(&case["body"][k])));
-        let mut object = document.geometry.objects["geom-valve-50"].clone();
+        let mut object = document.geometry.objects.get("geom-valve-50").expect("object").clone();
         object.id = id.to_string();
         object.shape = Some(model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: parameters.into_iter().collect() });
         object.ports.clear();
         object.spaces = case["spaces"].as_array().expect("spaces").iter().map(|s| model::part_2::SpaceEnvelope { id: s["id"].as_str().expect("space id").into(), kind: model::part_2::SpaceKind::Installation, bounds: model::part_2::BoundingBox { min: vec3(&s["min"]), max: vec3(&s["max"]) } }).collect();
-        document.geometry.objects.clear();
-        document.geometry.objects.insert(id.to_string(), object);
+        document.geometry.objects.cold_clear();
+        document.geometry.objects.cold_insert(id.to_string(), object);
         let plan = diagrams(&document, &report_of(&document), Some(id)).into_iter().find(|d| d.id == format!("plan:{id}")).expect("plan diagram");
         let ring = |series_id: &str| match plan.series.iter().find(|s| matches!(s, scene::Series::Polyline { id, .. } if id == series_id)) {
             Some(scene::Series::Polyline { points, .. }) => points.clone(),
@@ -114,7 +114,7 @@ fn the_plan_diagram_matches_the_shapely_oracle() {
             let overlap = (bx1.min(sx1) - bx0.max(sx0)).max(0.0) * (by1.min(sy1) - by0.max(sy0)).max(0.0);
             assert!((overlap - num(&expected["spaceOverlapAreas"][index])).abs() < 1e-12, "{id} overlap");
         }
-        let extent = crate::layout::extent(&document, &document.geometry.objects[id]);
+        let extent = crate::layout::extent(&document, &document.geometry.objects.get(id).expect("object"));
         assert!((extent.min[0] - num(&expected["extentX"][0])).abs() < 1e-12 && (extent.max[0] - num(&expected["extentX"][1])).abs() < 1e-12, "{id} extent x");
         assert!((extent.min[2] - num(&expected["extentZ"][0])).abs() < 1e-12 && (extent.max[2] - num(&expected["extentZ"][1])).abs() < 1e-12, "{id} extent z");
     }
@@ -123,14 +123,14 @@ fn the_plan_diagram_matches_the_shapely_oracle() {
 #[test]
 fn scene_bounds_equal_check_bounds_for_a_rotated_primitive() {
     let mut document = Iso16757Snapshot::reference_fixture();
-    let mut object = document.geometry.objects["geom-valve-50"].clone();
+    let mut object = document.geometry.objects.get("geom-valve-50").expect("object").clone();
     object.spaces.clear();
     object.ports.clear();
     object.surfaces.clear();
     let primitive = model::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: [("width".to_string(), 2.0), ("height".to_string(), 1.0), ("depth".to_string(), 0.5)].into_iter().collect() };
     object.shape = Some(model::part_2::GeometryNode::Transform { translation: [0.3, 0.0, 0.0], rotation_deg: [0.0, 0.0, 45.0], child: Box::new(primitive) });
-    document.geometry.objects.clear();
-    document.geometry.objects.insert(object.id.clone(), object.clone());
+    document.geometry.objects.cold_clear();
+    document.geometry.objects.cold_insert(object.id.clone(), object.clone());
     let check = model::part_2::solid::bounding_box(object.shape.as_ref().expect("shape"), &document.geometry).expect("check bounds");
     let extent = crate::layout::extent(&document, &object);
     for axis in 0..3 {

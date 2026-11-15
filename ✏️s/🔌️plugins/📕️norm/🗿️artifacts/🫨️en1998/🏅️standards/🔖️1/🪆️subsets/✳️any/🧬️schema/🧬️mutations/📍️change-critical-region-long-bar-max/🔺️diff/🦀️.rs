@@ -1,4 +1,4 @@
-//! 📍️ `change-critical-region-long-bar-max` diff: patches `longitudinal_bar_max_diameter_m` of the addressed critical_region row.
+//! 📍️ `change-critical-region-longitudinal-bar-max-diameter-m` diff: patches `longitudinal_bar_max_diameter_m` of the addressed critical_region row.
 
 use crate::change_critical_region_long_bar_max::ChangeCriticalRegionLongitudinalBarMaxDiameterM;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998CriticalRegionDelta, En1998CriticalRegionPatch};

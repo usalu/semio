@@ -1,4 +1,5 @@
 {
+  "shared": ["🗺️roadmap"],
   "forbidden": ["ReplacementTransform", "TransformFromCopy", "Transform", "FadeTransform", "FadeTransformPieces", "TransformMatchingShapes", "TransformMatchingTex", "MoveToTarget", "ClockwiseTransform", "CounterclockwiseTransform", "CyclicReplace", "Swap"],
   "become": [
     {"clip": "♨️system-losses", "function": "refresh", "reason": "live typeset readout rebuilt by its updater when the text changes"},

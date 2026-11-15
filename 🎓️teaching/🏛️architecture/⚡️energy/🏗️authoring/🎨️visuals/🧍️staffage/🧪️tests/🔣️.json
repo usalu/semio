@@ -407,6 +407,7 @@
     "strokeOpacity": 1
   },
   "mediaInputs": {
+    "🔨️modules/📤️export/🎭️cast/🟦️.ts": "import \"../../a.ts\";",
     "🔨️modules/a.ts": "export const value = 1;",
     "🧬️schema/a.ts": "export const schema = 1;",
     "🗂️catalog/humans/case-asset/🔣️.json": "{}",
@@ -420,7 +421,8 @@
     },
     {
       "path": "🔨️modules/new.ts",
-      "after": "export const added = 1;"
+      "after": "export const added = 1;",
+      "changes": false
     },
     {
       "path": "🧬️schema/a.ts",

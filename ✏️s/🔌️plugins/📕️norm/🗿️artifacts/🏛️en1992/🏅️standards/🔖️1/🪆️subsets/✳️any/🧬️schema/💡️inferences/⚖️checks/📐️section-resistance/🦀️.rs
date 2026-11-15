@@ -284,7 +284,7 @@ impl Sec {
     /// 🌐 Constant-N slice of the biaxial surface: (My, Mz, angle) per neutral axis direction, step in degrees.
     pub fn slice(&self, n_ed: f64, step_deg: f64) -> Vec<(f64, f64, f64)> {
         let mut out = Vec::new();
-        let mut a = 0.0;
+        let mut a = 0.0_f64;
         while a < 360.0 - 1e-9 {
             let r = a.to_radians();
             if let Some(x) = self.solve_x(r, n_ed) { let s = self.state(r, x); out.push((s.1, s.2, a)); }

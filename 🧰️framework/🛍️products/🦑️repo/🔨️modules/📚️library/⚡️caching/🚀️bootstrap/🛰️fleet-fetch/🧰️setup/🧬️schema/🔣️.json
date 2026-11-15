@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.bootstrap/FleetSetupV1",
+  "title": "Fleet setup outputs: what `workspace:setup` produces is restored from the fleet when a machine of the same class already produced it, keyed by the content of its real inputs",
+  "description": "A setup task writes into a host store (dependency store, cargo home, tools partition). Its output is a function of (a) the real inputs: lockfiles, pins, tool versions, toolchain channel, (b) the class of the host that built it: `neutral` (text that is byte-identical everywhere), `posix` (the class of graph-state/platform-class: darwin and linux share it; only for trees that hold no native code) and `host` (OS, architecture and libc: anything that holds a native binary). A record is stored beside the install packs of the group store (space `setup`), signed by the publishing origin, verified by digest and by the per-file fingerprint when restored, and placed into the real directory by rename, so a restore is complete or a miss.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "space": "setup",
+        "keepStates": 96,
+        "stagingDirectory": [".cache", "f", "setup-tmp"],
+        "stageRoot": "out",
+        "taskLabelMaximum": 64,
+        "claimOwnerPrefix": "setup"
+      }
+    },
+    "Kind": { "enum": ["neutral", "posix", "host"] },
+    "Sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "CargoTools": {
+      "description": "The executables `cargo install --locked <crate>` leaves in `<cargo home>/bin`, per crate. Windows adds `.exe`.",
+      "const": {
+        "wasm-pack": ["wasm-pack"],
+        "trunk": ["trunk"],
+        "wasm-bindgen-cli": ["wasm-bindgen", "wasm-bindgen-test-runner", "wasm2es6js"]
+      }
+    },
+    "Texts": {
+      "const": {
+        "restored": {
+          "en": "[setup] {task}: restored from the fleet, {files} files, {megabytes} MB, class {class}, key {key}",
+          "de": "[setup] {task}: aus der Flotte wiederhergestellt, {files} Dateien, {megabytes} MB, Klasse {class}, Schluessel {key}"
+        },
+        "built": {
+          "en": "[setup] {task}: built here ({reason}), class {class}, key {key}; published to the fleet: {published}",
+          "de": "[setup] {task}: hier gebaut ({reason}), Klasse {class}, Schluessel {key}; in die Flotte veroeffentlicht: {published}"
+        },
+        "local": {
+          "en": "[setup] {task}: built here and kept local ({reason})",
+          "de": "[setup] {task}: hier gebaut und lokal behalten ({reason})"
+        },
+        "present": {
+          "en": "[setup] {task}: already present, nothing to do",
+          "de": "[setup] {task}: bereits vorhanden, nichts zu tun"
+        },
+        "waiting": {
+          "en": "[setup] {task}: another machine builds this output, waiting for its upload",
+          "de": "[setup] {task}: eine andere Maschine baut diese Ausgabe, warte auf ihren Upload"
+        },
+        "uvRestored": {
+          "en": "[setup] uv-cache: {count} wheels restored from the fleet, uv downloads only the rest",
+          "de": "[setup] uv-cache: {count} Wheels aus der Flotte wiederhergestellt, uv laedt nur den Rest"
+        },
+        "uvMiss": {
+          "en": "[setup] uv-cache: the fleet has no seed for this lock and class {class}, uv downloads the wheels",
+          "de": "[setup] uv-cache: die Flotte hat keinen Bestand fuer dieses Lock und die Klasse {class}, uv laedt die Wheels"
+        },
+        "uvPublished": {
+          "en": "[setup] uv-cache: {count} wheels published to the fleet, class {class}",
+          "de": "[setup] uv-cache: {count} Wheels in die Flotte veroeffentlicht, Klasse {class}"
+        },
+        "goMirror": {
+          "en": "[setup] deps-go: module downloads go through the fleet mirror {base}, the upstream is the fallback",
+          "de": "[setup] deps-go: Modul-Downloads laufen ueber den Flotten-Spiegel {base}, der Upstream ist die Rueckfalloption"
+        },
+        "goUpstream": {
+          "en": "[setup] deps-go: no healthy fleet mirror, module downloads go to the upstream",
+          "de": "[setup] deps-go: kein gesunder Flotten-Spiegel, Modul-Downloads gehen an den Upstream"
+        },
+        "rejected": {
+          "en": "[setup] {task}: the restored output did not pass its check ({reason}), building it here",
+          "de": "[setup] {task}: die wiederhergestellte Ausgabe hat die Pruefung nicht bestanden ({reason}), sie wird hier gebaut"
+        }
+      }
+    },
+    "Reasons": {
+      "const": {
+        "no-store": "no fleet store on this machine",
+        "no-class": "this platform has no shareable class",
+        "miss": "the fleet has no output for these inputs",
+        "unsigned": "the record is not signed by a registered origin",
+        "check-failed": "the restored output failed its check",
+        "no-output": "the build left no output at the declared roots",
+        "not-relocatable": "the output holds a link that cannot move to another path",
+        "no-identity": "this machine cannot sign a record"
+      }
+    },
+    "Family": {
+      "description": "Every node of the closure of the root task `setup`, with the answer to the five questions: is the output cacheable, is it looked up in the fleet before it runs, is it uploaded after, what is host-bound, which class. `lookup` and `upload` name the mechanism that does it today: `install-pack` (fleet install packs), `blob` (pinned download by sha256), `mirror` (the group server's package mirror), `setup-record` (this module), `nx` (Nx remote cache of a cached task) or `none`.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["task", "output", "cacheable", "lookup", "upload", "class", "bound", "status"],
+        "properties": {
+          "task": { "type": "string", "minLength": 1 },
+          "output": { "type": "string", "minLength": 1 },
+          "cacheable": { "enum": ["yes", "partial", "no"] },
+          "lookup": { "enum": ["install-pack", "blob", "mirror", "setup-record", "nx", "none"] },
+          "upload": { "enum": ["install-pack", "blob", "mirror", "setup-record", "nx", "none"] },
+          "class": { "enum": ["neutral", "posix", "host", "none"] },
+          "bound": { "type": "string" },
+          "status": { "enum": ["shared", "wired", "local", "aggregate", "no-output"] }
+        }
+      },
+      "const": [
+        { "task": "setup", "output": "none: orders the tasks below", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "", "status": "aggregate" },
+        { "task": "deps-build-tools", "output": "dependency store image, pinned toolchains, Nx and Bazel tooling (`repo tools setup all`)", "cacheable": "partial", "lookup": "install-pack", "upload": "install-pack", "class": "host", "bound": "the store image (hdiutil/APFS) is created locally; the funding install restores each scope (about 1.5 GB installed, 500 to 700 MB packed) from the install pack of its inputs and exact host class and installs only the scopes without a pack; toolchain downloads are blobs by sha256, their extraction is local", "status": "shared" },
+        { "task": "deps-js-all", "output": "JavaScript dependency generations in the dependency store", "cacheable": "yes", "lookup": "install-pack", "upload": "install-pack", "class": "host", "bound": "native optional packages (esbuild, rollup, swc) per exact host class: OS, architecture and, on Linux, libc (`x64-gnu` is not `x64-musl`); absolute links into the store are rewritten on restore; the synchronisation and the funding producer restore per scope through the same pack", "status": "shared" },
+        { "task": "deps-python", "output": "uv wheel cache and Python environments", "cacheable": "yes", "lookup": "setup-record", "upload": "setup-record", "class": "host", "bound": "wheels carry platform tags; environments hold absolute paths and are rebuilt by `uv sync --locked` from the restored wheel cache", "status": "wired" },
+        { "task": "@semio-tech/ui-styling-py:deps", "output": "Python environment of the project", "cacheable": "no", "lookup": "none", "upload": "none", "class": "host", "bound": "runs the project's own deps script (not traced further); its environment path is a function of the host", "status": "local" },
+        { "task": "@semio-tech/energy-oracle-py:deps", "output": "Python environment of the project", "cacheable": "no", "lookup": "none", "upload": "none", "class": "host", "bound": "runs the project's own deps script (not traced further); its environment path is a function of the host", "status": "local" },
+        { "task": "deps-cargo", "output": "crates.io download cache of the cargo home", "cacheable": "yes", "lookup": "blob", "upload": "blob", "class": "neutral", "bound": "the sparse index entries stay with Cargo (small, from the network)", "status": "shared" },
+        { "task": "deps-go", "output": "Go module cache", "cacheable": "yes", "lookup": "mirror", "upload": "mirror", "class": "neutral", "bound": "the mirror lives on the group server; a machine without a healthy probe uses the upstream", "status": "wired" },
+        { "task": "deps-dotnet", "output": "none: verifies the pinned SDK version", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "writes nothing; there is nothing to share", "status": "no-output" },
+        { "task": "@semio-tech/repo-test-dotnet:deps", "output": "NuGet restore of the test project", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "restore is the project's own and runs only where .NET tests run", "status": "local" },
+        { "task": "deps-cpp", "output": "none: prints a prerequisite message", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "writes nothing; there is nothing to share", "status": "no-output" },
+        { "task": "@semio-tech/repo-lib:cpp-setup", "output": "none: pins cmake, ninja, compiler and root CMake files as artifact sources", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "pins descriptors of host files", "status": "no-output" },
+        { "task": "deps-browsers", "output": "Playwright Chromium in the browsers path", "cacheable": "partial", "lookup": "none", "upload": "none", "class": "host", "bound": "a signed application bundle of the host; the pin field `chromium.downloads` of the browser policy exists (sha256, bytes, url per OS and architecture) but no digest is recorded yet: a machine that downloads Chromium must fill it, then the download becomes a blob; until then the Playwright CDN is the only source", "status": "local" },
+        { "task": "deps-wasm", "output": "wasm-pack, wasm-bindgen-cli, rust-std of wasm32-wasip2", "cacheable": "yes", "lookup": "setup-record", "upload": "setup-record", "class": "host", "bound": "native executables compiled by `cargo install`; rust-std comes from rustup", "status": "wired" },
+        { "task": "deps-wasm-opt", "output": "binaryen release", "cacheable": "yes", "lookup": "blob", "upload": "blob", "class": "host", "bound": "extraction of the pinned archive is local", "status": "shared" },
+        { "task": "deps-trunk", "output": "trunk and wasm-bindgen-cli, rust-std of wasm32-unknown-unknown", "cacheable": "yes", "lookup": "setup-record", "upload": "setup-record", "class": "host", "bound": "native executables compiled by `cargo install`", "status": "wired" },
+        { "task": "deps-tools", "output": "cargo-nextest and cargo-llvm-cov", "cacheable": "yes", "lookup": "blob", "upload": "blob", "class": "host", "bound": "extraction of the pinned archives is local", "status": "shared" },
+        { "task": "setup-git", "output": "git configuration of the checkout", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "writes the local .git configuration", "status": "local" },
+        { "task": "prepare", "output": "none: orders the generators below", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "", "status": "aggregate" },
+        { "task": "@semio-tech/framework-schema:generate", "output": "generated schema sources", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "uncacheable on purpose (`side-effecting`, `mutates-workspace`): it writes into the tracked tree from inputs outside the project root, so a hit that restored older bytes over newer sources would be wrong; its read-only twin `preview-generated` is the cacheable computation; the generator runs from sources", "status": "local" },
+        { "task": "@semio-tech/ui-styling-tokens:generate", "output": "generated style tokens", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "uncacheable on purpose (`side-effecting`, `mutates-workspace`): it writes into the tracked tree from inputs outside the project root, so a hit that restored older bytes over newer sources would be wrong; its read-only twin `preview-generated` is the cacheable computation; the generator runs from sources", "status": "local" },
+        { "task": "@semio-tech/assets:build", "output": "icon assets and README", "cacheable": "yes", "lookup": "nx", "upload": "nx", "class": "neutral", "bound": "outputs are declared", "status": "shared" },
+        { "task": "@semio-tech/framework-graph:generate", "output": "generated graph sources", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "uncacheable on purpose (`side-effecting`, `mutates-workspace`): it writes into the tracked tree from inputs outside the project root, so a hit that restored older bytes over newer sources would be wrong; its read-only twin `preview-generated` is the cacheable computation; the generator runs from sources", "status": "local" },
+        { "task": "@semio-tech/plugin-registry:generate", "output": "plugin registry catalog (13 files, 52 KB, gitignored)", "cacheable": "no", "lookup": "none", "upload": "none", "class": "host", "bound": "the descriptor emitter is host-bound (`hostPlatformOutputsV1`); the task is classified `mutates-workspace` and declares no outputs", "status": "local" },
+        { "task": "repo-mcp:install", "output": "MCP client registration on the machine", "cacheable": "no", "lookup": "none", "upload": "none", "class": "none", "bound": "writes the user's client configuration", "status": "local" },
+        { "task": "@semio-tech/framework-os-mcp-rs:build", "output": "MCP binary built by Cargo", "cacheable": "partial", "lookup": "nx", "upload": "nx", "class": "host", "bound": "the receipt `.🧾️store/build.json` is the only declared output; the binary sits in the Cargo target and is compiled through the unit cache, which is fleet-shared per rustc unit", "status": "shared" }
+      ]
+    }
+  }
+}

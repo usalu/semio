@@ -1,0 +1,6 @@
+graph: No verified change journal cursor is recorded for generation 44; verifying the tree once.
+graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.
+graph: 703 stale projects, 0 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 703
+graph: waiting for the fleet: 0 of 703 projects arrived
+graph: nothing to wait for any longer: asked the fleet for 703 stale projects and received 0 within 901 s, 703 remain and this machine can infer only 192; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-14T16:46:05.424Z request-failed 80ba70d1 RepoError: timeout graph-wanted.expired {"wanted":703,"arrived":0,"seconds":901,"missing":703,"local":192}

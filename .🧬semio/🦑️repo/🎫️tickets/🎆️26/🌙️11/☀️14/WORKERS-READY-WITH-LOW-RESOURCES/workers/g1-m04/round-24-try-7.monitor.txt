@@ -1,0 +1,2 @@
+started pid=84912 at 2026-11-15T09:18:31Z
+ended at 2026-11-15T09:23:24Z peak_rss_kib=5947156 slice_peak_mb=6377 stop=none

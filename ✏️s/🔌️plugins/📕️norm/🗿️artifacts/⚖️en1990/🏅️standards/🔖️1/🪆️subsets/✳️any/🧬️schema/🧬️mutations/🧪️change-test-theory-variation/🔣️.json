@@ -15,7 +15,7 @@
     "no-op"
   ],
   "composition": "atomic",
-  "theoryVariationLanguageSurfaces": [
+  "requiredLanguageSurfaces": [
     "rust",
     "json-schema",
     "text",

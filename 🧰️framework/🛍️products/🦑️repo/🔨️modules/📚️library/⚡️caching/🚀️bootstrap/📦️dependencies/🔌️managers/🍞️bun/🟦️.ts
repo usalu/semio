@@ -55,7 +55,7 @@ const reachableNamesV1=(packages:unknown,manifests:ReadonlyMap<string,unknown>):
 const lockedNamesV1=(packages:unknown):ReadonlySet<string>=>new Set(Object.keys(recordV1(packages)).map(key=>{const parts=key.split("/"),last=parts.pop()!;return parts.length&&parts[parts.length-1]!.startsWith("@")?parts.pop()+"/"+last:last;}));
 /** 🩺️ Compares the workspace table and the root tables of a Bun lock with the manifests of its scope: the members the lock lists, each member's name and version, the four dependency tables and the root overrides, patches and trusted dependencies. A disagreement is `frozen` only where Bun is certain to refuse a frozen install (verified against Bun 1.4.2 by the differential vectors): a member the lock lacks or no manifest backs, a renamed member, a changed `overrides` table, a dependency no locked package carries, or a locked dependency that no manifest and no locked package uses any more (its last user was removed); version bumps, dependency edits that keep the resolved package set, a renamed scope root (its row carries no version), `resolutions`, patches and trusted dependencies are lock noise only. */
 export function checkBunLockV1(document:unknown,manifests:ReadonlyMap<string,unknown>):readonly LockDriftV1[]{
- const lock=recordV1(document),rows=recordV1(lock.workspaces),drift:LockDriftV1[]=[],seen=new Set<string>(),locked=lockedNamesV1(lock.packages),used=reachableNamesV1(lock.packages,manifests);
+ const lock=recordV1(document),rows=Object.fromEntries(Object.entries(recordV1(lock.workspaces)).map(([path,row])=>[path.normalize("NFC"),row])),drift:LockDriftV1[]=[],seen=new Set<string>(),locked=lockedNamesV1(lock.packages),used=reachableNamesV1(lock.packages,manifests);
  const push=(kind:LockDriftV1["kind"],manifest:string,frozen:boolean,fields:Omit<LockDriftV1,"kind"|"manifest"|"frozen">={})=>{drift.push(Object.freeze({kind,manifest,...Object.fromEntries(Object.entries(fields).filter(([,value])=>value!==undefined)),frozen}) as LockDriftV1);};
  const diff=(manifest:string,section:string,authored:Record<string,string>,table:Record<string,string>,certain:(dependency:string,kind:LockDriftV1["kind"])=>boolean)=>{
   for(const dependency of [...new Set([...Object.keys(authored),...Object.keys(table)])]){
@@ -66,7 +66,7 @@ export function checkBunLockV1(document:unknown,manifests:ReadonlyMap<string,unk
   }
  };
  for(const [path,value] of manifests){
-  const manifest=path.replaceAll("\\","/"),key=manifest==="package.json"?"":manifest.replace(/\/package\.json$/u,""),row=rows[key];
+  const manifest=path.replaceAll("\\","/").normalize("NFC"),key=manifest==="package.json"?"":manifest.replace(/\/package\.json$/u,""),row=rows[key];
   seen.add(key);
   if(row===undefined||row===null||typeof row!=="object"){push("workspace-missing",manifest,true);continue;}
   const authored=recordV1(value),entry=recordV1(row);

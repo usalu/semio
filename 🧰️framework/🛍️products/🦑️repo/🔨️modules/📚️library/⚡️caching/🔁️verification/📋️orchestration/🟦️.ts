@@ -28,7 +28,7 @@ export class CacheVerifyScript extends BundleScript {
   }
 
   private async probeTool(): Promise<CacheProbeToolV1> {
-    const { buildBackendDefaultIdV1, loadBuildBackendV1 } = await import("../../../🏗️build/🔌️backends/🟦️.ts"), selected = process.env.SEMIO_CACHE_PROBE_TOOL ?? process.env.SEMIO_BUILD_TOOL ?? buildBackendDefaultIdV1();
+    const { buildBackendDefaultIdV1 } = await import("../../../🏗️build/🔌️backends/🟦️.ts"), { loadBuildBackendV1 } = await import("../../../🏗️build/🔌️backends/🚚️loading/🟦️.ts"), selected = process.env.SEMIO_CACHE_PROBE_TOOL ?? process.env.SEMIO_BUILD_TOOL ?? buildBackendDefaultIdV1();
     if (validateJsonSchemaSubset(probeSchema, probeSpecification).length) throw new Error("Closed cache probe specification required");
     const backend = await loadBuildBackendV1(selected);
     if (!backend.cacheProbe) throw new Error(`No cache probe implements build tool ${selected}`);

@@ -1,7 +1,7 @@
 use semio_s_artifact_norm_vdi3805_model::GenericAttributes;
 use crate::*;
 use protocol::{ColdMutation, Mutation, SemanticMutation};
-use std::collections::BTreeMap;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 
 /// ↩️ Applies `operation` to `base`, then replays its inverse ON TOP OF the forward document —
 /// never against `base` again: an inverse `change-<field>` recomputed against `base` sees the
@@ -115,7 +115,7 @@ async fn remove_product_of_a_missing_id_has_an_empty_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn geometry_lifecycle_round_trips() {
     let base = Vdi3805Snapshot::default();
-    let geometry = semio_s_artifact_norm_vdi3805_model::ParametricGeometry { id: "geom.new".into(), bbox: semio_s_artifact_norm_vdi3805_model::BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: BTreeMap::new() };
+    let geometry = semio_s_artifact_norm_vdi3805_model::ParametricGeometry { id: "geom.new".into(), bbox: semio_s_artifact_norm_vdi3805_model::BoundingBox::from_size(1.0, 1.0, 1.0), connections: Vec::new(), parameters: RetainedOrderedMap::new() };
     let create = Vdi3805Mutation::AddGeometry(add_geometry::AddGeometry { geometry: geometry.clone() });
     let after_create = round_trip(&base, &create);
     assert!(after_create.geometry.contains_key("geom.new"));
@@ -133,8 +133,8 @@ async fn geometry_lifecycle_round_trips() {
     let after_remove = round_trip(&after_add, &remove_conn);
     assert!(after_remove.geometry.get("geom.new").unwrap().connections.is_empty());
 
-    let mut params = BTreeMap::new();
-    params.insert("scale".into(), 2.0);
+    let mut params = RetainedOrderedMap::new();
+    params.cold_insert("scale".into(), 2.0);
     let replace_params = Vdi3805Mutation::ChangeGeometryParameters(change_geometry_parameters::ChangeGeometryParameters { id: "geom.new".into(), new_parameters: params.clone() });
     let after_params = round_trip(&after_create, &replace_params);
     assert_eq!(after_params.geometry.get("geom.new").unwrap().parameters, params);

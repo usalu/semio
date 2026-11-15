@@ -1,0 +1,4710 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "wall-plaster-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.85,
+     "size": [
+      0.015,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.2625,
+       0.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-block-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.175,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.1675,
+       0.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-eps-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "eps",
+     "role": "body",
+     "tone": 0.9,
+     "size": [
+      0.07,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.045,
+       0.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-render-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.8,
+     "size": [
+      0.01,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.005,
+       0.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-plaster-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.85,
+     "size": [
+      0.015,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.2625,
+       2.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-block-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.175,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.1675,
+       2.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-eps-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "eps",
+     "role": "body",
+     "tone": 0.9,
+     "size": [
+      0.07,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.045,
+       2.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-render-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.8,
+     "size": [
+      0.01,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.005,
+       2.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "pane-out",
+     "kind": "box",
+     "bone": "facade",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      0.004,
+      1.25,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.198,
+       1.625,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "pane-in",
+     "kind": "box",
+     "bone": "facade",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      0.004,
+      1.25,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.178,
+       1.625,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "box",
+     "kind": "extrude",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.03,
+       0.0075
+      ],
+      [
+       0.12,
+       0.0075
+      ],
+      [
+       0.12,
+       0.0
+      ],
+      [
+       0.15,
+       0.0
+      ],
+      [
+       0.15,
+       0.21
+      ],
+      [
+       0.0,
+       0.21
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.0075,
+        0.01505
+       ],
+       [
+        0.1425,
+        0.01505
+       ],
+       [
+        0.1425,
+        0.20255
+       ],
+       [
+        0.0075,
+        0.20255
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.585,
+     "to": 0.585
+    },
+    {
+     "id": "box-end-cap",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.15,
+      0.21,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       0.105,
+       0.5925
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.185
+      ]
+     }
+    },
+    {
+     "id": "guide-left",
+     "kind": "extrude",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.6,
+       0.095
+      ],
+      [
+       0.57,
+       0.095
+      ],
+      [
+       0.57,
+       0.1025
+      ],
+      [
+       0.5925,
+       0.1025
+      ],
+      [
+       0.5925,
+       0.1075
+      ],
+      [
+       0.57,
+       0.1075
+      ],
+      [
+       0.57,
+       0.115
+      ],
+      [
+       0.6,
+       0.115
+      ]
+     ],
+     "plane": "zx",
+     "from": -1.29,
+     "to": 0.0
+    },
+    {
+     "id": "guide-right",
+     "kind": "extrude",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.45,
+     "profile": [
+      [
+       -0.6,
+       0.095
+      ],
+      [
+       -0.57,
+       0.095
+      ],
+      [
+       -0.57,
+       0.1025
+      ],
+      [
+       -0.5925,
+       0.1025
+      ],
+      [
+       -0.5925,
+       0.1075
+      ],
+      [
+       -0.57,
+       0.1075
+      ],
+      [
+       -0.57,
+       0.115
+      ],
+      [
+       -0.6,
+       0.115
+      ]
+     ],
+     "plane": "zx",
+     "from": -1.29,
+     "to": 0.0
+    },
+    {
+     "id": "slat-0",
+     "kind": "loft",
+     "bone": "slat-0",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-1",
+     "kind": "loft",
+     "bone": "slat-1",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-2",
+     "kind": "loft",
+     "bone": "slat-2",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-3",
+     "kind": "loft",
+     "bone": "slat-3",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-4",
+     "kind": "loft",
+     "bone": "slat-4",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-5",
+     "kind": "loft",
+     "bone": "slat-5",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-6",
+     "kind": "loft",
+     "bone": "slat-6",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-7",
+     "kind": "loft",
+     "bone": "slat-7",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-8",
+     "kind": "loft",
+     "bone": "slat-8",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-9",
+     "kind": "loft",
+     "bone": "slat-9",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-10",
+     "kind": "loft",
+     "bone": "slat-10",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-11",
+     "kind": "loft",
+     "bone": "slat-11",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-12",
+     "kind": "loft",
+     "bone": "slat-12",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-13",
+     "kind": "loft",
+     "bone": "slat-13",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-14",
+     "kind": "loft",
+     "bone": "slat-14",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-15",
+     "kind": "loft",
+     "bone": "slat-15",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-16",
+     "kind": "loft",
+     "bone": "slat-16",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "bottom-rail",
+     "kind": "box",
+     "bone": "bottom-rail",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.09,
+      0.04,
+      1.17
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-cavity",
+     "kind": "box",
+     "bone": "facade",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.95,
+     "size": [
+      0.016,
+      1.25,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.188,
+       1.625,
+       0.0
+      ]
+     },
+     "region": "glazing-behind",
+     "layer": "cavity"
+    },
+    {
+     "id": "th-pane-out",
+     "of": "pane-out",
+     "region": "glazing-behind",
+     "layer": "pane-out"
+    },
+    {
+     "id": "th-pane-in",
+     "of": "pane-in",
+     "region": "glazing-behind",
+     "layer": "pane-in",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-wall-plaster-sill",
+     "of": "wall-plaster-sill",
+     "region": "facade-wall",
+     "layer": "plaster"
+    },
+    {
+     "id": "th-wall-plaster-head",
+     "of": "wall-plaster-head",
+     "region": "facade-wall",
+     "layer": "plaster"
+    },
+    {
+     "id": "th-wall-block-sill",
+     "of": "wall-block-sill",
+     "region": "facade-wall",
+     "layer": "block"
+    },
+    {
+     "id": "th-wall-block-head",
+     "of": "wall-block-head",
+     "region": "facade-wall",
+     "layer": "block"
+    },
+    {
+     "id": "th-wall-eps-sill",
+     "of": "wall-eps-sill",
+     "region": "facade-wall",
+     "layer": "eps"
+    },
+    {
+     "id": "th-wall-eps-head",
+     "of": "wall-eps-head",
+     "region": "facade-wall",
+     "layer": "eps"
+    },
+    {
+     "id": "th-wall-render-sill",
+     "of": "wall-render-sill",
+     "region": "facade-wall",
+     "layer": "render"
+    },
+    {
+     "id": "th-wall-render-head",
+     "of": "wall-render-head",
+     "region": "facade-wall",
+     "layer": "render"
+    },
+    {
+     "id": "th-lamella-0",
+     "of": "slat-0",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-1",
+     "of": "slat-1",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-2",
+     "of": "slat-2",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-3",
+     "of": "slat-3",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-4",
+     "of": "slat-4",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-5",
+     "of": "slat-5",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-6",
+     "of": "slat-6",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-7",
+     "of": "slat-7",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-8",
+     "of": "slat-8",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-9",
+     "of": "slat-9",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-10",
+     "of": "slat-10",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-11",
+     "of": "slat-11",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-12",
+     "of": "slat-12",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-13",
+     "of": "slat-13",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-14",
+     "of": "slat-14",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-15",
+     "of": "slat-15",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-16",
+     "of": "slat-16",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-box",
+     "kind": "extrude",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.03,
+       0.0
+      ],
+      [
+       0.03,
+       0.0075
+      ],
+      [
+       0.12,
+       0.0075
+      ],
+      [
+       0.12,
+       0.0
+      ],
+      [
+       0.15,
+       0.0
+      ],
+      [
+       0.15,
+       0.21
+      ],
+      [
+       0.0,
+       0.21
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.6,
+     "to": 0.6,
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-guide-left",
+     "of": "guide-left",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-guide-right",
+     "of": "guide-right",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-bottom-rail",
+     "of": "bottom-rail",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-wall-block-sill",
+     "of": "wall-block-sill",
+     "member": "facade",
+     "part": "member"
+    },
+    {
+     "id": "member-wall-block-head",
+     "of": "wall-block-head",
+     "member": "facade",
+     "part": "member"
+    },
+    {
+     "id": "member-box",
+     "of": "box",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "member-guide-left",
+     "of": "guide-left",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "member-guide-right",
+     "of": "guide-right",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "joint-slat-0",
+     "kind": "revolve",
+     "bone": "slat-0",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-0",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-1",
+     "kind": "revolve",
+     "bone": "slat-1",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-1",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-2",
+     "kind": "revolve",
+     "bone": "slat-2",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-2",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-3",
+     "kind": "revolve",
+     "bone": "slat-3",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-3",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-4",
+     "kind": "revolve",
+     "bone": "slat-4",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-4",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-5",
+     "kind": "revolve",
+     "bone": "slat-5",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-5",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-6",
+     "kind": "revolve",
+     "bone": "slat-6",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-6",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-7",
+     "kind": "revolve",
+     "bone": "slat-7",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-7",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-8",
+     "kind": "revolve",
+     "bone": "slat-8",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-8",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-9",
+     "kind": "revolve",
+     "bone": "slat-9",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-9",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-10",
+     "kind": "revolve",
+     "bone": "slat-10",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-10",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-11",
+     "kind": "revolve",
+     "bone": "slat-11",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-11",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-12",
+     "kind": "revolve",
+     "bone": "slat-12",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-12",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-13",
+     "kind": "revolve",
+     "bone": "slat-13",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-13",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-14",
+     "kind": "revolve",
+     "bone": "slat-14",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-14",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-15",
+     "kind": "revolve",
+     "bone": "slat-15",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-15",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-16",
+     "kind": "revolve",
+     "bone": "slat-16",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.005
+      ],
+      [
+       0.03,
+       0.005
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      0.485
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-16",
+     "part": "joint"
+    },
+    {
+     "id": "support-wall-foot-block",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.27,
+      0.0075,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       0.00375,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "support",
+     "anchor": "wall-foot"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the facade strip as built (sill 1 m and head 0.5 m, each in its four layers: 15 mm plaster, 175 mm block, 70 mm EPS, 10 mm render), the IGU behind the blind as two 4 mm panes, the roller-blind box as a hollow aluminium extrusion with a bottom slot (wall thickened from 1.5 to 7.5 mm, the smallest feature) and end caps, two C-shaped guide rails 30 x 20 mm, 17 lamellae of 90 mm chord as lens-shaped 12 mm solids on their own bones (as the drawing: the real lamella is an arched 0.45 mm sheet) and the 90 x 40 mm bottom rail.",
+     "de": "K\u00f6rper: der Fassadenstreifen wie gebaut (Br\u00fcstung 1 m und Sturz 0,5 m, je in vier Schichten: 15 mm Putz, 175 mm Block, 70 mm EPS, 10 mm Putz), die Verglasung hinter dem Behang als zwei Scheiben zu 4 mm, der Behangkasten als hohle Aluminiumprofil-Extrusion mit Schlitz unten (Wand von 1,5 auf 7,5 mm verst\u00e4rkt, die kleinste Einzelheit) und Endkappen, zwei C-f\u00f6rmige F\u00fchrungsschienen 30 x 20 mm, 17 Lamellen mit 90 mm Breite als linsenf\u00f6rmige K\u00f6rper von 12 mm auf eigenen Knochen (wie die Zeichnung: die echte Lamelle ist ein gew\u00f6lbtes Blech von 0,45 mm) und die Endschiene 90 x 40 mm."
+    },
+    {
+     "en": "Thermal: lamella region as the 17 lens surfaces, the roller-box skin as one closed 150 x 210 x 1200 mm outline solid (the bore of the hollow extrusion is no surface of the region; the guides and the bottom rail come from the body), glazing as shells pane-out, 16 mm cavity, pane-in (the pane-in shell leaves out its cavity-side face, `sectionFaces`), the wall as its four layers on sill and head. `areaM2` of box-and-rails is the honest outer skin (old -> new in the report).",
+     "de": "Thermisch: die Lamellenregion als die 17 Linsenfl\u00e4chen, die Kastenhaut als ein geschlossener Umrissk\u00f6rper 150 x 210 x 1200 mm (die Bohrung des hohlen Profils ist keine Fl\u00e4che der Region; F\u00fchrungen und Endschiene kommen aus dem K\u00f6rper), die Verglasung als H\u00fcllen Au\u00dfenscheibe, Zwischenraum 16 mm, Innenscheibe (die H\u00fclle der Innenscheibe l\u00e4sst ihre Zwischenraumseite aus, `sectionFaces`), die Wand in ihren vier Schichten an Br\u00fcstung und Sturz. `areaM2` von box-and-rails ist die ehrliche Au\u00dfenhaut (alt -> neu im Bericht)."
+    },
+    {
+     "en": "Structure: the 175 mm block leaf at sill and head as the facade member, the box and both guides as the box members, a 10 mm pivot pin at each end of every slat as the revolute joint (the prismatic slide bones coincide with the slat bones and are merged), the fixed foot block at the wall foot.",
+     "de": "Tragwerk: die Blockschale 175 mm an Br\u00fcstung und Sturz als Fassadenstab, Kasten und beide F\u00fchrungen als Kastenst\u00e4be, ein Drehstift von 10 mm an jedem Lamellenende als Drehgelenk (die prismatischen Gleitknochen fallen mit den Lamellenknochen zusammen und sind zusammengefasst), der feste Fu\u00dfblock am Wandfu\u00df."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "wall-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.27,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       0.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.27,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       2.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass",
+     "kind": "box",
+     "bone": "facade",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      0.024,
+      1.25,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.188,
+       1.625,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "box",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.15,
+      0.21,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       0.105,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "guide-left",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.45,
+     "size": [
+      0.03,
+      1.29,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.105,
+       -0.645,
+       0.585
+      ]
+     },
+     "slender": true
+    },
+    {
+     "id": "guide-right",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.45,
+     "size": [
+      0.03,
+      1.29,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.105,
+       -0.645,
+       -0.585
+      ]
+     },
+     "slender": true
+    },
+    {
+     "id": "slat-0",
+     "kind": "loft",
+     "bone": "slat-0",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-1",
+     "kind": "loft",
+     "bone": "slat-1",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-2",
+     "kind": "loft",
+     "bone": "slat-2",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-3",
+     "kind": "loft",
+     "bone": "slat-3",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-4",
+     "kind": "loft",
+     "bone": "slat-4",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-5",
+     "kind": "loft",
+     "bone": "slat-5",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-6",
+     "kind": "loft",
+     "bone": "slat-6",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-7",
+     "kind": "loft",
+     "bone": "slat-7",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-8",
+     "kind": "loft",
+     "bone": "slat-8",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-9",
+     "kind": "loft",
+     "bone": "slat-9",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-10",
+     "kind": "loft",
+     "bone": "slat-10",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-11",
+     "kind": "loft",
+     "bone": "slat-11",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-12",
+     "kind": "loft",
+     "bone": "slat-12",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-13",
+     "kind": "loft",
+     "bone": "slat-13",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-14",
+     "kind": "loft",
+     "bone": "slat-14",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-15",
+     "kind": "loft",
+     "bone": "slat-15",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "slat-16",
+     "kind": "loft",
+     "bone": "slat-16",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "sections": [
+      {
+       "at": [
+        0.0,
+        0.0,
+        -0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      },
+      {
+       "at": [
+        0.0,
+        0.0,
+        0.585
+       ],
+       "rx": 0.045,
+       "ry": 0.0006
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "bottom-rail",
+     "kind": "box",
+     "bone": "bottom-rail",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.09,
+      0.04,
+      1.17
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-glass-centre",
+     "of": "glass",
+     "region": "glazing-behind",
+     "layer": "cavity",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-wall-sill",
+     "of": "wall-sill",
+     "region": "facade-wall",
+     "layer": "block",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-wall-head",
+     "of": "wall-head",
+     "region": "facade-wall",
+     "layer": "block",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-0",
+     "of": "slat-0",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-1",
+     "of": "slat-1",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-2",
+     "of": "slat-2",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-3",
+     "of": "slat-3",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-4",
+     "of": "slat-4",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-5",
+     "of": "slat-5",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-6",
+     "of": "slat-6",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-7",
+     "of": "slat-7",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-8",
+     "of": "slat-8",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-9",
+     "of": "slat-9",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-10",
+     "of": "slat-10",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-11",
+     "of": "slat-11",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-12",
+     "of": "slat-12",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-13",
+     "of": "slat-13",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-14",
+     "of": "slat-14",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-15",
+     "of": "slat-15",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-lamella-16",
+     "of": "slat-16",
+     "region": "lamellae",
+     "layer": "lam-sheet"
+    },
+    {
+     "id": "th-box",
+     "of": "box",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-guide-left",
+     "of": "guide-left",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-guide-right",
+     "of": "guide-right",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-bottom-rail",
+     "of": "bottom-rail",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-wall-block-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.19,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.175,
+       0.5,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "member"
+    },
+    {
+     "id": "member-wall-block-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.19,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.175,
+       2.5,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "member"
+    },
+    {
+     "id": "member-box",
+     "of": "box",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "member-guide-left",
+     "of": "guide-left",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "member-guide-right",
+     "of": "guide-right",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "joint-slat-0",
+     "kind": "box",
+     "bone": "slat-0",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-0",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-1",
+     "kind": "box",
+     "bone": "slat-1",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-1",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-2",
+     "kind": "box",
+     "bone": "slat-2",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-2",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-3",
+     "kind": "box",
+     "bone": "slat-3",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-3",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-4",
+     "kind": "box",
+     "bone": "slat-4",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-4",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-5",
+     "kind": "box",
+     "bone": "slat-5",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-5",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-6",
+     "kind": "box",
+     "bone": "slat-6",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-6",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-7",
+     "kind": "box",
+     "bone": "slat-7",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-7",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-8",
+     "kind": "box",
+     "bone": "slat-8",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-8",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-9",
+     "kind": "box",
+     "bone": "slat-9",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-9",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-10",
+     "kind": "box",
+     "bone": "slat-10",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-10",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-11",
+     "kind": "box",
+     "bone": "slat-11",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-11",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-12",
+     "kind": "box",
+     "bone": "slat-12",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-12",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-13",
+     "kind": "box",
+     "bone": "slat-13",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-13",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-14",
+     "kind": "box",
+     "bone": "slat-14",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-14",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-15",
+     "kind": "box",
+     "bone": "slat-15",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-15",
+     "part": "joint"
+    },
+    {
+     "id": "joint-slat-16",
+     "kind": "box",
+     "bone": "slat-16",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.015,
+      0.015,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0,
+       0.5
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.0
+      ]
+     },
+     "member": "slat-16",
+     "part": "joint"
+    },
+    {
+     "id": "support-wall-foot-block",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.27,
+      0.015,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       0.0075,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "support",
+     "anchor": "wall-foot"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: sill and head are single 270 mm masonry blocks (layers merged), the IGU one 24 mm slab, the box a solid 150 x 210 mm block, the guides slender 30 x 30 mm bars; lamellae are 1.2 mm thin sheets with the 90 mm chord (the drawing draws them as lines) on their 17 bones, the bottom rail stays 90 x 40 mm.",
+     "de": "K\u00f6rper: Br\u00fcstung und Sturz sind einzelne Mauerwerksbl\u00f6cke von 270 mm (Schichten zusammengefasst), die Verglasung eine Platte von 24 mm, der Kasten ein voller Block 150 x 210 mm, die F\u00fchrungen schlanke St\u00e4be 30 x 30 mm; die Lamellen sind Bleche von 1,2 mm mit 90 mm Breite (die Zeichnung zeichnet sie als Linien) auf ihren 17 Knochen, die Endschiene bleibt 90 x 40 mm."
+    },
+    {
+     "en": "Thermal: regions referenced from the merged body (wall on the block layer with only its blind-side face counted, the other faces are cuts through the continuing wall, `sectionFaces`; glazing on the cavity layer with one face counted). Structure: block members of the 190 mm leaf, box and guides, the pivots as 15 mm blocks at the slat ends, the foot block at 15 mm.",
+     "de": "Thermisch: Regionen aus dem zusammengefassten K\u00f6rper referenziert (Wand auf der Blockschicht, nur ihre behangseitige Fl\u00e4che z\u00e4hlt, die \u00fcbrigen Fl\u00e4chen sind Schnitte durch die weiterlaufende Wand, `sectionFaces`; Verglasung auf der Zwischenraumschicht mit einer gez\u00e4hlten Fl\u00e4che). Tragwerk: Blockst\u00e4be der Schale 190 mm, Kasten und F\u00fchrungen, die Drehpunkte als Bl\u00f6cke von 15 mm an den Lamellenenden, der Fu\u00dfblock mit 15 mm."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "wall-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.27,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       0.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.27,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       2.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass",
+     "kind": "box",
+     "bone": "facade",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      0.024,
+      1.25,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.188,
+       1.625,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "box",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.15,
+      0.21,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       0.105,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "guide-left",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.45,
+     "size": [
+      0.03,
+      1.29,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.105,
+       -0.645,
+       0.585
+      ]
+     },
+     "slender": true
+    },
+    {
+     "id": "guide-right",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.45,
+     "size": [
+      0.03,
+      1.29,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0.105,
+       -0.645,
+       -0.585
+      ]
+     },
+     "slender": true
+    },
+    {
+     "id": "slat-0",
+     "kind": "box",
+     "bone": "slat-0",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-1",
+     "kind": "box",
+     "bone": "slat-1",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-2",
+     "kind": "box",
+     "bone": "slat-2",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-3",
+     "kind": "box",
+     "bone": "slat-3",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-4",
+     "kind": "box",
+     "bone": "slat-4",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-5",
+     "kind": "box",
+     "bone": "slat-5",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-6",
+     "kind": "box",
+     "bone": "slat-6",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-7",
+     "kind": "box",
+     "bone": "slat-7",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-8",
+     "kind": "box",
+     "bone": "slat-8",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-9",
+     "kind": "box",
+     "bone": "slat-9",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-10",
+     "kind": "box",
+     "bone": "slat-10",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-11",
+     "kind": "box",
+     "bone": "slat-11",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-12",
+     "kind": "box",
+     "bone": "slat-12",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-13",
+     "kind": "box",
+     "bone": "slat-13",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-14",
+     "kind": "box",
+     "bone": "slat-14",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-15",
+     "kind": "box",
+     "bone": "slat-15",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-16",
+     "kind": "box",
+     "bone": "slat-16",
+     "material": "aluminium",
+     "role": "texture",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.02,
+      1.17
+     ]
+    },
+    {
+     "id": "bottom-rail",
+     "kind": "box",
+     "bone": "bottom-rail",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.09,
+      0.04,
+      1.17
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-glass-centre",
+     "of": "glass",
+     "region": "glazing-behind",
+     "layer": "cavity",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-wall-sill",
+     "of": "wall-sill",
+     "region": "facade-wall",
+     "layer": "block",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-wall-head",
+     "of": "wall-head",
+     "region": "facade-wall",
+     "layer": "block",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-0",
+     "of": "slat-0",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-1",
+     "of": "slat-1",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-2",
+     "of": "slat-2",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-3",
+     "of": "slat-3",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-4",
+     "of": "slat-4",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-5",
+     "of": "slat-5",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-6",
+     "of": "slat-6",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-7",
+     "of": "slat-7",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-8",
+     "of": "slat-8",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-9",
+     "of": "slat-9",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-10",
+     "of": "slat-10",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-11",
+     "of": "slat-11",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-12",
+     "of": "slat-12",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-13",
+     "of": "slat-13",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-14",
+     "of": "slat-14",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-15",
+     "of": "slat-15",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-16",
+     "of": "slat-16",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-box",
+     "of": "box",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-guide-left",
+     "of": "guide-left",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-guide-right",
+     "of": "guide-right",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-bottom-rail",
+     "of": "bottom-rail",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-wall-block-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.19,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.175,
+       0.5,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "member"
+    },
+    {
+     "id": "member-wall-block-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.19,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.175,
+       2.5,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "member"
+    },
+    {
+     "id": "member-box",
+     "of": "box",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "member-guide-left",
+     "of": "guide-left",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "member-guide-right",
+     "of": "guide-right",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "support-wall-foot-block",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.27,
+      0.03,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       0.015,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "support",
+     "anchor": "wall-foot"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: as 1:100 but the lamellae are flat plates of 20 mm (the arch is not resolvable; the 1:200 drawing draws each lamella edge-on as a 20 mm pen stroke and the plate follows that drawn thickness) and the box is the same block, the guides are slender 30 mm bars; walls, glass, guides and rail follow the 1:200 drawing, rail 40 mm above the 30 mm feature.",
+     "de": "K\u00f6rper: wie 1:100, aber die Lamellen sind ebene Platten von 20 mm (die W\u00f6lbung ist nicht aufl\u00f6sbar; die Zeichnung 1:200 zeichnet jede Lamelle von der Kante als Stiftstrich von 20 mm und die Platte folgt dieser gezeichneten Dicke), der Kasten ist derselbe Block, die F\u00fchrungen sind schlanke St\u00e4be von 30 mm; W\u00e4nde, Glas, F\u00fchrungen und Schiene folgen der Zeichnung 1:200, Schiene 40 mm \u00fcber der Einzelheit 30 mm."
+    },
+    {
+     "en": "Thermal: referenced as at 1:100, the lamella plates keep only their two broad faces (the edges are not surface of the lens lamellae). Structure: leaf, box and guide members; the slat pivots are merged into the lamellae; foot block at 30 mm.",
+     "de": "Thermisch: referenziert wie bei 1:100, die Lamellenplatten behalten nur ihre zwei breiten Fl\u00e4chen (die Kanten sind keine Fl\u00e4che der Linsenlamellen). Tragwerk: Schalen-, Kasten- und F\u00fchrungsst\u00e4be; die Lamellendrehpunkte sind in den Lamellen aufgegangen; Fu\u00dfblock mit 30 mm."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "wall-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.27,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       0.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.27,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       2.5,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass",
+     "kind": "box",
+     "bone": "facade",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      0.05,
+      1.25,
+      1.1
+     ],
+     "transform": {
+      "translation": [
+       -0.188,
+       1.625,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "box",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.15,
+      0.21,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       0.105,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "guide-left",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.45,
+     "size": [
+      0.06,
+      1.29,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.105,
+       -0.645,
+       0.57
+      ]
+     },
+     "slender": true
+    },
+    {
+     "id": "guide-right",
+     "kind": "box",
+     "bone": "box",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.45,
+     "size": [
+      0.06,
+      1.29,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.105,
+       -0.645,
+       -0.57
+      ]
+     },
+     "slender": true
+    },
+    {
+     "id": "slat-0",
+     "kind": "box",
+     "bone": "slat-0",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-4",
+     "kind": "box",
+     "bone": "slat-4",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-8",
+     "kind": "box",
+     "bone": "slat-8",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-12",
+     "kind": "box",
+     "bone": "slat-12",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ]
+    },
+    {
+     "id": "slat-16",
+     "kind": "box",
+     "bone": "slat-16",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ]
+    },
+    {
+     "id": "bottom-rail",
+     "kind": "box",
+     "bone": "bottom-rail",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-glass-centre",
+     "of": "glass",
+     "region": "glazing-behind",
+     "layer": "cavity",
+     "sectionFaces": [
+      "-u"
+     ]
+    },
+    {
+     "id": "th-wall-sill",
+     "of": "wall-sill",
+     "region": "facade-wall",
+     "layer": "block",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-wall-head",
+     "of": "wall-head",
+     "region": "facade-wall",
+     "layer": "block",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-0",
+     "of": "slat-0",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-1",
+     "kind": "box",
+     "bone": "slat-1",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-2",
+     "kind": "box",
+     "bone": "slat-2",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-3",
+     "kind": "box",
+     "bone": "slat-3",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-4",
+     "of": "slat-4",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-5",
+     "kind": "box",
+     "bone": "slat-5",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-6",
+     "kind": "box",
+     "bone": "slat-6",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-7",
+     "kind": "box",
+     "bone": "slat-7",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-8",
+     "of": "slat-8",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-9",
+     "kind": "box",
+     "bone": "slat-9",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-10",
+     "kind": "box",
+     "bone": "slat-10",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-11",
+     "kind": "box",
+     "bone": "slat-11",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-12",
+     "of": "slat-12",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-13",
+     "kind": "box",
+     "bone": "slat-13",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-14",
+     "kind": "box",
+     "bone": "slat-14",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-15",
+     "kind": "box",
+     "bone": "slat-15",
+     "material": "aluminium",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.09,
+      0.075,
+      1.17
+     ],
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-lamella-16",
+     "of": "slat-16",
+     "region": "lamellae",
+     "layer": "lam-sheet",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-box",
+     "of": "box",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-guide-left",
+     "of": "guide-left",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-guide-right",
+     "of": "guide-right",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    },
+    {
+     "id": "th-bottom-rail",
+     "of": "bottom-rail",
+     "region": "box-and-rails",
+     "layer": "box-wall"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-wall-block-sill",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.19,
+      1.0,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.175,
+       0.5,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "member"
+    },
+    {
+     "id": "member-wall-block-head",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      0.19,
+      0.5,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.175,
+       2.5,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "member"
+    },
+    {
+     "id": "member-box",
+     "of": "box",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "member-guide-left",
+     "of": "guide-left",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "member-guide-right",
+     "of": "guide-right",
+     "member": "box",
+     "part": "member"
+    },
+    {
+     "id": "support-wall-foot-block",
+     "kind": "box",
+     "bone": "facade",
+     "material": "masonry",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.27,
+      0.075,
+      1.2
+     ],
+     "transform": {
+      "translation": [
+       -0.135,
+       0.0375,
+       0.0
+      ]
+     },
+     "member": "facade",
+     "part": "support",
+     "anchor": "wall-foot"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the 1:500 drawing strokes only every fourth lamella (0, 4, 8, 12, 16) and the bottom rail, so the body is the wall sill and head, the 50 mm glass slab, the 150 x 210 mm box, the two 60 mm guide bars, five 75 mm lamella bars and the 75 mm bottom rail; the twelve lamellae in between are no longer drawn and have no body solid.",
+     "de": "K\u00f6rper: die Zeichnung 1:500 strichelt nur jede vierte Lamelle (0, 4, 8, 12, 16) und die Endschiene, daher besteht der K\u00f6rper aus Wandsockel und -sturz, der 50-mm-Glasplatte, dem Kasten 150 x 210 mm, den zwei 60-mm-F\u00fchrungsst\u00e4ben, f\u00fcnf 75-mm-Lamellenbalken und der 75-mm-Endschiene; die zw\u00f6lf Lamellen dazwischen sind nicht mehr gezeichnet und haben keinen K\u00f6rper."
+    },
+    {
+     "en": "Thermal: all seventeen lamellae keep their two broad faces in the lamellae region (5 by reference to the body bars, 12 as thermal-only plates on their own bones), because the exchange surface of the blind is its full lamella count whatever the drawing shows; the wall, glass, box and rails reference the body as before. Structure: members for the wall leaf, the box and both guides, a 75 mm foot block; the lamellae carry no load.",
+     "de": "Thermik: alle siebzehn Lamellen behalten ihre zwei breiten Fl\u00e4chen in der Region Lamellen (5 per Verweis auf die K\u00f6rperbalken, 12 als reine Thermikplatten an ihren eigenen Bones), weil die Austauschfl\u00e4che des Behangs ihre volle Lamellenzahl ist, was immer die Zeichnung zeigt; Wand, Glas, Kasten und Schienen verweisen wie bisher auf den K\u00f6rper. Tragwerk: St\u00e4be f\u00fcr Wandschale, Kasten und beide F\u00fchrungen, ein 75-mm-Fu\u00dfblock; die Lamellen tragen nichts."
+    },
+    {
+     "en": "Minimal: five lamella bars with the bottom rail are the least that still reads as a lowered blind in the 1:500 drawing; fewer would lose the rhythm of the strokes, more would merge into a block at the 75 mm feature.",
+     "de": "Minimal: f\u00fcnf Lamellenbalken mit der Endschiene sind das Wenigste, das in der Zeichnung 1:500 noch als herabgelassener Behang liest; weniger verl\u00f6re den Rhythmus der Striche, mehr w\u00fcrde bei der Einzelheit 75 mm zu einem Block verschmelzen."
+    }
+   ]
+  }
+ }
+}

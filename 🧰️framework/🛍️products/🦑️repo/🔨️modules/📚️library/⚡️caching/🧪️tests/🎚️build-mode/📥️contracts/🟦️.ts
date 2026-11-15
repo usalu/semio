@@ -1,6 +1,6 @@
 import runtimeFixture from "../../🧫️fixtures/🧊️native-runtime/🔣️.json" with {type:"json"};
 import runtimeFixtureSchema from "../../🧫️fixtures/🧊️native-runtime/🧬️schema.json" with {type:"json"};
-import {readRustSourceClosureV1} from "@semio-tech/process/artifacts/native-build/source";
+import {readRustSourceClosureV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
 import {createRequire} from "node:module";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -9,7 +9,7 @@ import ts from "typescript";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {scriptInvocationEnvironment,readIssuedScriptProcessEnvelopeV1,requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import corpus from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️schema.json" with {type:"json"};
 

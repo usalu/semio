@@ -1,0 +1,1 @@
+{"rules":[["^(body-|near-thigh|far-thigh|near-knee|far-knee)","body-plumage"],["^neck-","neck-plumage"],["^head$","head-plumage"],["^eye","head-plumage"],["^bill","bill"],["wing-|^(near|far)-(arm|hand)","wing-plumage"],["^tail","tail-plumage"],["-(shank|tarsus|leg)$","legs-skin"],["-foot","web-feet"]]}

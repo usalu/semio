@@ -29,7 +29,7 @@ test("the corpus is closed by its schema, the policy is the pinned one and the u
  const ajv=new Ajv({strict:false});
  expect(ajv.validate(corpusSchema,corpus),JSON.stringify(ajv.errors)).toBe(true);
  expect(ajv.validate(corpusSchema,{...corpus,snapshots:[{...corpus.snapshots[0],patch:{explode:1}}]})).toBe(false);
- expect(policy).toEqual({maximumSourceBytes:16777216,maximumFileBytes:4194304,maximumSnapshotBytes:24117248,maximumOutputBytes:8388608});
+ expect(policy).toEqual({maximumSourceBytes:20971520,maximumFileBytes:4194304,maximumSnapshotBytes:33554432,maximumOutputBytes:8388608});
  for(const row of own.entryRoles)expect(ajv.validate({$defs:unitSchema.$defs,$ref:"#/$defs/EntryRoleCase"},row),row.id).toBe(true);
  expect(ajv.validate({$defs:unitSchema.$defs,$ref:"#/$defs/EntryRoleCase"},{...own.entryRoles[0],importedMain:true})).toBe(false);
 });

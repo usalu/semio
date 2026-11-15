@@ -42,7 +42,7 @@ semio-s-artifact-energy-model-mut-surface = { workspace = true }
 semio-s-artifact-energy-model-mut-surface-properties = { workspace = true }
 semio-s-artifact-energy-model-mut-window-layer = { workspace = true }
 semio-s-artifact-energy-model-mut-window-layer-optics = { workspace = true }
-semio-s-artifact-energy-model-mut-window-layer-optics-visible = { workspace = true }
+semio-s-artifact-energy-model-mut-layer-optics-visible = { workspace = true }
 semio-s-artifact-energy-model-mut-zone = { workspace = true }
 semio-s-artifact-energy-model-mutations = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }

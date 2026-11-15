@@ -1,0 +1,598 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "shoe",
+     "kind": "extrude",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.15
+      ],
+      [
+       0.0,
+       -0.15
+      ],
+      [
+       0.1,
+       -0.15
+      ],
+      [
+       0.1,
+       -0.0275
+      ],
+      [
+       0.02,
+       -0.0275
+      ],
+      [
+       0.02,
+       0.0275
+      ],
+      [
+       0.1,
+       0.0275
+      ],
+      [
+       0.1,
+       0.15
+      ]
+     ],
+     "plane": "xy",
+     "from": -1.0,
+     "to": 1.0
+    },
+    {
+     "id": "gasket-a",
+     "kind": "box",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.08,
+      0.0165,
+      2.0
+     ],
+     "transform": {
+      "translation": [
+       0.06,
+       0.01912,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "gasket-b",
+     "kind": "box",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.2,
+     "size": [
+      0.08,
+      0.0165,
+      2.0
+     ],
+     "transform": {
+      "translation": [
+       0.06,
+       -0.01912,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass",
+     "kind": "box",
+     "bone": "panel",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      1.06,
+      0.0215,
+      1.96
+     ],
+     "transform": {
+      "translation": [
+       0.55,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "clamp-bolts",
+     "kind": "revolve",
+     "bone": "panel",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       0,
+       0.007
+      ],
+      [
+       0.3,
+       0.007
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.05,
+      -0.15,
+      -0.8
+     ],
+     "repeat": {
+      "count": 5,
+      "translation": [
+       0,
+       0,
+       0.4
+      ]
+     }
+    },
+    {
+     "id": "handrail",
+     "kind": "revolve",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.0212
+      ],
+      [
+       1.992,
+       0.0212
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      1.079,
+      0.0,
+      -0.996
+     ]
+    },
+    {
+     "id": "handrail-cap",
+     "kind": "ellipsoid",
+     "bone": "panel",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.0212,
+      0.0212,
+      0.004
+     ],
+     "transform": {
+      "translation": [
+       1.079,
+       0.0,
+       0.996
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -1.992
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-clamp-shoe",
+     "of": "shoe",
+     "region": "clamp-steel"
+    },
+    {
+     "id": "th-clamp-gasket-a",
+     "of": "gasket-a",
+     "region": "clamp-steel"
+    },
+    {
+     "id": "th-clamp-gasket-b",
+     "of": "gasket-b",
+     "region": "clamp-steel"
+    },
+    {
+     "id": "th-clamp-bolts",
+     "of": "clamp-bolts",
+     "region": "clamp-steel"
+    },
+    {
+     "id": "th-glass",
+     "of": "glass",
+     "region": "panel-glass"
+    },
+    {
+     "id": "th-handrail",
+     "of": "handrail",
+     "region": "handrail-steel"
+    },
+    {
+     "id": "th-handrail-cap",
+     "of": "handrail-cap",
+     "region": "handrail-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "glass-member",
+     "of": "glass",
+     "member": "panel",
+     "part": "member"
+    },
+    {
+     "id": "handrail-member",
+     "of": "handrail",
+     "member": "panel",
+     "part": "member"
+    },
+    {
+     "id": "clamp-bolts-joint",
+     "of": "clamp-bolts",
+     "member": "panel",
+     "part": "joint"
+    },
+    {
+     "id": "support-base-clamp-block",
+     "kind": "box",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.02,
+      0.3,
+      2.0
+     ],
+     "transform": {
+      "translation": [
+       0.01,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "panel",
+     "part": "support",
+     "anchor": "base-clamp"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the clamp shoe as the U-channel of the drawing extruded 2 m (base 20 mm, cheeks to 100 mm, 55 mm slot), two 16.5 mm gaskets in the slot, the 21.5 mm laminated glass 1.96 m long from the slot to 1.08 m, five 14 mm through-bolts across the cheeks (the drawing shows them as circles in elevation and squares in front; modelled across the shoe), the 42.4 mm handrail tube with domed end caps.",
+     "de": "K\u00f6rper: der Klemmschuh als U-Profil der Zeichnung 2 m lang extrudiert (Boden 20 mm, Wangen bis 100 mm, Schlitz 55 mm), zwei Dichtungen von 16,5 mm im Schlitz, das Verbundglas 21,5 mm, 1,96 m lang, vom Schlitz bis 1,08 m, f\u00fcnf Durchgangsschrauben von 14 mm quer durch die Wangen (die Zeichnung zeigt sie im Aufriss als Kreise und von vorn als Quadrate; quer durch den Schuh modelliert), das Handlaufrohr 42,4 mm mit gew\u00f6lbten Endkappen."
+    },
+    {
+     "en": "Thermal: every region is referenced from the body (clamp steel = shoe, gaskets and bolts; glass; handrail with its caps): the surfaces are exactly those body surfaces.",
+     "de": "Thermisch: jede Region wird aus dem K\u00f6rper referenziert (Klemmstahl = Schuh, Dichtungen und Schrauben; Glas; Handlauf mit Kappen): die Fl\u00e4chen sind genau diese K\u00f6rperfl\u00e4chen."
+    },
+    {
+     "en": "Structure: the laminated glass is the member (1 m strip 21.5 mm), the handrail ties the panel as a second member, the five clamp bolts are the joint between glass and shoe, the fixed support is the 20 mm base block of the shoe under the glass at the clamp anchor; no joints (the root is fixed).",
+     "de": "Tragwerk: das Verbundglas ist der Stab (Streifen 1 m, 21,5 mm), der Handlauf bindet die Scheibe als zweiter Stab, die f\u00fcnf Klemmschrauben sind das Gelenk zwischen Glas und Schuh, das feste Auflager ist der Bodenblock von 20 mm des Schuhs unter dem Glas am Klemmanker; keine Gelenke (die Wurzel ist fest)."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "shoe",
+     "kind": "box",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.1,
+      0.3,
+      2.0
+     ],
+     "transform": {
+      "translation": [
+       0.05,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass",
+     "kind": "box",
+     "bone": "panel",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      0.98,
+      0.0215,
+      1.96
+     ],
+     "transform": {
+      "translation": [
+       0.59,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "handrail",
+     "kind": "revolve",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.0212
+      ],
+      [
+       2.0,
+       0.0212
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      1.079,
+      0.0,
+      -1.0
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-clamp-shoe",
+     "of": "shoe",
+     "region": "clamp-steel"
+    },
+    {
+     "id": "th-glass",
+     "of": "glass",
+     "region": "panel-glass"
+    },
+    {
+     "id": "th-handrail",
+     "of": "handrail",
+     "region": "handrail-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "glass-member",
+     "of": "glass",
+     "member": "panel",
+     "part": "member"
+    },
+    {
+     "id": "handrail-member",
+     "of": "handrail",
+     "member": "panel",
+     "part": "member"
+    },
+    {
+     "id": "support-base-clamp-block",
+     "kind": "box",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.03,
+      0.3,
+      2.0
+     ],
+     "transform": {
+      "translation": [
+       0.015,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "panel",
+     "part": "support",
+     "anchor": "base-clamp"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: shoe, gaskets and bolts are one 100 x 300 x 2000 mm steel block (the drawing shows a plain block), the glass starts at its top, the handrail is a plain 42.4 mm tube without caps; bolts and gaskets are below the 15 mm feature.",
+     "de": "K\u00f6rper: Schuh, Dichtungen und Schrauben sind ein Stahlblock 100 x 300 x 2000 mm (die Zeichnung zeigt einen glatten Block), das Glas beginnt an seiner Oberseite, der Handlauf ist ein glattes Rohr 42,4 mm ohne Kappen; Schrauben und Dichtungen liegen unter der Einzelheit 15 mm."
+    },
+    {
+     "en": "Thermal: shoe block, glass and handrail referenced from the body. Structure: glass and handrail members as before, the bolts are merged into the shoe, the base block grows to 30 mm.",
+     "de": "Thermisch: Schuhblock, Glas und Handlauf aus dem K\u00f6rper referenziert. Tragwerk: Glas- und Handlaufstab wie zuvor, die Schrauben sind im Schuh aufgegangen, der Bodenblock w\u00e4chst auf 30 mm."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "shoe",
+     "kind": "box",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.125,
+      0.3,
+      2.0
+     ],
+     "transform": {
+      "translation": [
+       0.0625,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass",
+     "kind": "box",
+     "bone": "panel",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      0.945,
+      0.0215,
+      2.0
+     ],
+     "transform": {
+      "translation": [
+       0.5975,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "handrail",
+     "kind": "extrude",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       1.097983,
+       0.010141
+      ],
+      [
+       1.083641,
+       0.024483
+      ],
+      [
+       1.063359,
+       0.024483
+      ],
+      [
+       1.049017,
+       0.010141
+      ],
+      [
+       1.049017,
+       -0.010141
+      ],
+      [
+       1.063359,
+       -0.024483
+      ],
+      [
+       1.083641,
+       -0.024483
+      ],
+      [
+       1.097983,
+       -0.010141
+      ]
+     ],
+     "plane": "xy",
+     "from": -1.0,
+     "to": 1.0
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-clamp-shoe",
+     "of": "shoe",
+     "region": "clamp-steel"
+    },
+    {
+     "id": "th-glass",
+     "of": "glass",
+     "region": "panel-glass"
+    },
+    {
+     "id": "th-handrail",
+     "of": "handrail",
+     "region": "handrail-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "glass-member",
+     "of": "glass",
+     "member": "panel",
+     "part": "member"
+    },
+    {
+     "id": "handrail-member",
+     "of": "handrail",
+     "member": "panel",
+     "part": "member"
+    },
+    {
+     "id": "support-base-clamp-block",
+     "kind": "box",
+     "bone": "panel",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.045,
+      0.3,
+      2.0
+     ],
+     "transform": {
+      "translation": [
+       0.0225,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "panel",
+     "part": "support",
+     "anchor": "base-clamp"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the 125 mm shoe block, the glass as a 21.5 mm sheet over the full 2 m (the glass side is flush with the shoe length in this drawing), the handrail enlarged from 42.4 to 53 mm as an octagonal prism (the drawn disc; a circle is not resolved at 30 mm), as drawn at 1:200.",
+     "de": "K\u00f6rper: der Schuhblock 125 mm, das Glas als Scheibe von 21,5 mm \u00fcber die vollen 2 m (die Glaskante schlie\u00dft in dieser Zeichnung mit der Schuhl\u00e4nge ab), der Handlauf von 42,4 auf 53 mm vergr\u00f6\u00dfert als achteckiges Prisma (die gezeichnete Scheibe; ein Kreis wird bei 30 mm nicht aufgel\u00f6st), wie bei 1:200 gezeichnet."
+    },
+    {
+     "en": "Thermal: the three regions referenced. Structure: glass member and the octagonal handrail prism itself as the handrail member (a square hull member would bury the handrail's surface in the exposed-area test), the base block 45 mm (1.5 features).",
+     "de": "Thermisch: die drei Regionen referenziert. Tragwerk: Glasstab und das achteckige Handlaufprisma selbst als Handlaufstab (ein quadratischer H\u00fcllstab begr\u00fcbe die Handlauffl\u00e4che im Fl\u00e4chentest), der Bodenblock 45 mm (1,5 Einzelheiten)."
+    }
+   ]
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

@@ -1,0 +1,62 @@
+
+const MINUTE=60*SECOND;
+test("a graph server that serves is not restarted by edits every 5 minutes for 40 minutes: 0 restarts until the serve is done, then exactly 1, at once, and the deferral is told once",()=>{
+ const world=tree(),work={busy:true,restartPending:false} as {busy:boolean;restartPending:boolean;wake?:()=>void},test=rig("graph",world.watch,{},work);
+ for(let tick=0;tick<80;tick++){if(tick%10===0)appendFileSync(world.inside,`// ${tick}\n`);test.advance(30*SECOND);}
+ expect(test.at()-1_000_000).toBe(40*MINUTE);
+ expect(test.events,"no restart during the serve").toEqual([]);
+ expect(work.restartPending).toBe(true);
+ expect(test.lines.length,"one line, not one per look").toBe(1);
+ expect(test.lines[0]).toContain("graph: code changed (");expect(test.lines[0]).toContain("a.ts");expect(test.lines[0]).toContain("restarting when the serve in flight is done (at most 60 min)");expect(test.lines[0]).toContain("Serve");
+ const before=test.at();work.busy=false;work.wake?.();
+ expect(test.events,"restarts the moment the serve is done, no further wait for a tick").toEqual([`begin@${before}`,`abort@${before}`]);
+ for(let more=0;more<20;more++)test.advance(30*SECOND);
+ expect(test.events.length,"exactly one restart").toBe(2);
+ expect(test.lines.length).toBe(2);expect(test.lines[1]).toContain("graph code changed, restarting");expect(test.lines[1]).toContain("serve in flight is done");expect(test.lines[1]).toMatch(/deferred 23[0-9][0-9] s/u);
+});
+
+test("a graph server that is busy for ever restarts after the maximum deferral of the serve, counted from the first edit, and says so",()=>{
+ const world=tree(),work={busy:true,restartPending:false},test=rig("graph",world.watch,{},work);
+ for(let tick=0;tick<400&&test.events.length===0;tick++){if(tick%10===0)appendFileSync(world.inside,`// ${tick}\n`);test.advance(30*SECOND);}
+ expect(test.events.length).toBe(2);
+ const waited=Number(test.events[0]!.replace("begin@",""))-1_000_000;
+ expect(waited).toBeGreaterThanOrEqual(60*MINUTE);expect(waited).toBeLessThan(61*MINUTE);
+ expect(test.lines.at(-1)).toContain("maximum deferral of the serve reached");
+});
+
+test("the maximum deferral of the serve is a value of the policy",()=>{
+ const world=tree(),work={busy:true,restartPending:false},test=rig("graph",world.watch,{serveDeferralMilliseconds:20*MINUTE},work);
+ appendFileSync(world.inside,"// x\n");
+ for(let tick=0;tick<200&&test.events.length===0;tick++)test.advance(30*SECOND);
+ const waited=Number(test.events[0]!.replace("begin@",""))-1_000_000;
+ expect(waited).toBeGreaterThanOrEqual(20*MINUTE);expect(waited).toBeLessThan(21*MINUTE);expect(test.lines[0]).toContain("at most 20 min");
+});
+
+test("a graph server that is idle restarts by the ordinary rule, and goes on to wait when a serve starts before the quiet period is over",()=>{
+ const world=tree(),work={busy:false,restartPending:false},idle=rig("graph",world.watch,{},work);
+ appendFileSync(world.inside,"// x\n");
+ for(let tick=0;tick<8&&idle.events.length===0;tick++)idle.advance(30*SECOND);
+ expect(idle.events.map(event=>event.split("@")[0])).toEqual(["begin","abort"]);expect(idle.lines[0]).toContain("restarting after 90 s");
+ const other=tree(),busy={busy:false,restartPending:false},late=rig("graph",other.watch,{},busy);
+ appendFileSync(other.inside,"// x\n");late.advance(30*SECOND);busy.busy=true;
+ for(let tick=0;tick<20;tick++)late.advance(30*SECOND);
+ expect(late.events).toEqual([]);expect(busy.restartPending).toBe(true);expect(late.lines.at(-1)).toContain("restarting when the serve in flight is done");
+});
+
+test("an edit that is reverted while the serve runs cancels the pending restart and lifts the block on new reads",()=>{
+ const world=tree(),work={busy:true,restartPending:false},test=rig("graph",world.watch,{},work);
+ appendFileSync(world.inside,"// x\n");
+ for(let tick=0;tick<10;tick++)test.advance(30*SECOND);
+ expect(work.restartPending).toBe(true);
+ writeFileSync(world.inside,"export const a=1;\n");test.advance(30*SECOND);
+ expect(work.restartPending).toBe(false);work.busy=false;work.wake?.();test.advance(30*SECOND);
+ expect(test.events).toEqual([]);
+});
+
+test("the agent keeps the 90 s / 600 s rule whatever work is reported",()=>{
+ const world=tree(),work={busy:true,restartPending:false},test=rig("agent",world.watch,{},work);
+ appendFileSync(world.inside,"// x\n");
+ for(let tick=0;tick<8&&test.events.length===0;tick++)test.advance(30*SECOND);
+ expect(test.events.map(event=>event.split("@")[0])).toEqual(["begin","drain"]);
+ expect(work.restartPending).toBe(false);expect(test.lines[0]).toContain("restarting after 90 s");
+});

@@ -4,7 +4,7 @@ import{expect,test}from"bun:test";
 import{readFileSync}from"node:fs";
 
 const source=graphSourceV1();
-const method=source.slice(source.indexOf("async prefetch(request:GenerationPrefetchRequestV1)"),source.indexOf("\n",source.indexOf("async prefetch(request:GenerationPrefetchRequestV1)")));
+const method=source.slice(source.indexOf("async prefetch(request:GenerationPrefetchRequestV1,"),source.indexOf("\n",source.indexOf("async prefetch(request:GenerationPrefetchRequestV1,")));
 const prefetcher=source.slice(source.indexOf("async function prefetchStaleGenerationV1("),source.indexOf("export function edgeRefreshOwnersV1("));
 
 test("the prefetch of a graph asks for its capacity first and hands the booking to the claimed computation, never booking before the slots",()=>{

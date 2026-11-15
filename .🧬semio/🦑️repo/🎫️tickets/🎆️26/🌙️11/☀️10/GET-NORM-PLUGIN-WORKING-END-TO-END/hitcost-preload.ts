@@ -1,0 +1,10 @@
+import fs from "node:fs";
+import zlib from "node:zlib";
+import crypto from "node:crypto";
+const stats:Record<string,[number,number]>=(globalThis as any).__io??={};
+const wrap=(target:any,name:string,label=name)=>{const original=target[name];if(typeof original!=="function")return;target[name]=function(this:any,...args:any[]){const t=performance.now();try{return original.apply(this,args);}finally{const row=stats[label]??=[0,0];row[0]++;row[1]+=performance.now()-t;}};};
+for(const name of["readFileSync","statSync","lstatSync","readdirSync","existsSync","writeFileSync","writeSync","fsyncSync","renameSync","realpathSync","openSync","readSync","appendFileSync"])wrap(fs,name);
+wrap((fs as any).realpathSync,"native","realpathSync.native");
+for(const name of["brotliDecompressSync","brotliCompressSync","gzipSync","gunzipSync","inflateSync"])wrap(zlib,name);
+wrap(crypto,"createHash");
+(globalThis as any).__ioTop=()=>Object.entries(stats).map(([k,v])=>[k,v[0],Math.round(v[1])]).sort((a:any,b:any)=>b[2]-a[2]).slice(0,10);

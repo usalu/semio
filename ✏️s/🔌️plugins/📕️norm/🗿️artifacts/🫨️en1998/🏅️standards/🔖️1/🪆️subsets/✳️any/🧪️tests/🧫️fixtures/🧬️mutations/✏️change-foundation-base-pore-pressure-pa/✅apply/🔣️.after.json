@@ -335,7 +335,8 @@
       "pileLowerVsMS": 0.0,
       "pileMomentRdNm": 0.0,
       "baseFrictionAngleDeg": 0.0,
-      "basePorePressurePa": 1.5
+      "basePorePressurePa": 1.5,
+      "pileAxialLoadN": 0.0
     }
   ],
   "retainingWalls": [

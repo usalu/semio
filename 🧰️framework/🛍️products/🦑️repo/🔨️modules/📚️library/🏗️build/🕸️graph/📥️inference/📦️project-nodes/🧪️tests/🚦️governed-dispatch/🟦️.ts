@@ -55,6 +55,6 @@ test("the owner stage reports every running owner with kind and observed rows an
  const all=calls(),running=all.filter(call=>call.callee==="phases?.running"&&call.text.includes('"inference"'));
  expect(running.length).toBe(1);expect(running[0]!.text).toContain("list,decision");for(const word of["row.kind","observedInferenceRowsV1(row.cachePath)","options?.onOwnerRunning?.(list,decision)"])expect(source).toContain(word);
  const creation=all.find(call=>call.callee==="createGraphParentMemoryGovernorV1")!;
- expect(creation.text).toContain("decide:event=>{decision=event;}");expect(creation.text).not.toContain("report");expect(creation.text).not.toContain("stderr");
+ expect(creation.text).toContain("decide:event=>{decision=event;}");expect(running[0]!.text).not.toContain("stderr");expect(creation.text).toContain("report:line=>process.stderr.write(line+\"\\n\")");
  expect(all.some(call=>call.callee==="forgetObservedInferenceRowsV1")).toBe(true);
 });

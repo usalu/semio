@@ -1,4 +1,4 @@
-//! 📍️ `change-critical-region-restr-bar-count` diff: patches `restrained_bar_count` of the addressed critical_region row.
+//! 📍️ `change-critical-region-restrained-bar-count` diff: patches `restrained_bar_count` of the addressed critical_region row.
 
 use crate::change_critical_region_restr_bar_count::ChangeCriticalRegionRestrainedBarCount;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998CriticalRegionDelta, En1998CriticalRegionPatch};

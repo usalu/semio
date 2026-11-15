@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:shared-worktree-replica-clash:v1",
+  "title": "Shared Worktree Structural Conflict Rule",
+  "description": "⚖️ The fleet-wide rule that keeps the live path set valid on the most restrictive file system: two live entries clash when their folded paths are equal or the folded path of a file or link is a directory prefix of the other; the live entries are taken newest hlc first and an entry that clashes with a kept one is retired. The vectors map a list of live entries to the retired paths and the kept path that retired each. The stale vectors map the events of one path and the hlc of one of them to null (an edit) or to the content of its predecessor (a republish of old content that the fleet re-asserts against).",
+  "$ref": "#/definitions/Fixture",
+  "definitions": {
+    "Hlc": { "type": "string", "pattern": "^[0-9]{13}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,39}$" },
+    "Path": { "type": "string", "minLength": 1 },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "hlc"],
+      "properties": { "path": { "$ref": "#/definitions/Path" }, "hlc": { "$ref": "#/definitions/Hlc" } }
+    },
+    "Vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "entries", "retired"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "entries": { "type": "array", "items": { "$ref": "#/definitions/Entry" } },
+        "retired": { "type": "object", "additionalProperties": { "$ref": "#/definitions/Path" } }
+      }
+    },
+    "Sha": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^[0-9a-f]{8,64}$" }] },
+    "ContentEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hlc", "sha256", "base"],
+      "properties": { "hlc": { "$ref": "#/definitions/Hlc" }, "sha256": { "$ref": "#/definitions/Sha" }, "base": { "$ref": "#/definitions/Sha" } }
+    },
+    "StaleVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "events", "hlc", "stale"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "events": { "type": "array", "items": { "$ref": "#/definitions/ContentEvent" } },
+        "hlc": { "$ref": "#/definitions/Hlc" },
+        "stale": {
+          "anyOf": [
+            { "type": "null" },
+            { "type": "object", "additionalProperties": false, "required": ["winner"], "properties": { "winner": { "$ref": "#/definitions/Sha" } } }
+          ]
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "vectors", "stale"],
+      "properties": {
+        "version": { "const": 1 },
+        "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Vector" } },
+        "stale": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/StaleVector" } }
+      }
+    }
+  }
+}

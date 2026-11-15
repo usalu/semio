@@ -1423,14 +1423,14 @@
    {
     "name": "unqualified-builder-grant-of-one-job-2048-mb",
     "environment": {
-     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 1, \"cpu\": 1, \"memoryMegabytes\": 2048, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"aaaaaaaa1\", \"jobs\": 1, \"cpu\": 1, \"memoryMegabytes\": 2048, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
     },
     "expect": null
    },
    {
     "name": "unqualified-grant-of-four-jobs-still-one-own-worker-with-one-job-memory",
     "environment": {
-     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 4, \"cpu\": 4, \"memoryMegabytes\": 8192, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"aaaaaaaa1\", \"jobs\": 4, \"cpu\": 4, \"memoryMegabytes\": 8192, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
     },
     "expect": null
    },
@@ -1444,33 +1444,37 @@
     "environment": {
      "SEMIO_HOST_CAPACITY_PLAN": "{not json"
     },
-    "expect": null
+    "expect": null,
+    "refused": true
    },
    {
     "name": "plan-without-jobs",
     "environment": {
      "SEMIO_HOST_CAPACITY_PLAN": "{\"memoryMegabytes\":2048}"
     },
-    "expect": null
+    "expect": null,
+    "refused": true
    },
    {
     "name": "plan-with-zero-jobs",
     "environment": {
      "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 0, \"cpu\": 0, \"memoryMegabytes\": 2048, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
     },
-    "expect": null
+    "expect": null,
+    "refused": true
    },
    {
     "name": "plan-with-fractional-jobs",
     "environment": {
      "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\":1.5,\"memoryMegabytes\":2048}"
     },
-    "expect": null
+    "expect": null,
+    "refused": true
    },
    {
     "name": "plan-with-zero-memory",
     "environment": {
-     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 1, \"cpu\": 1, \"memoryMegabytes\": 0, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"aaaaaaaa1\", \"jobs\": 1, \"cpu\": 1, \"memoryMegabytes\": 0, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
     },
     "expect": null
    },
@@ -1479,19 +1483,21 @@
     "environment": {
      "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\":1,\"memoryMegabytes\":\"2048\"}"
     },
-    "expect": null
+    "expect": null,
+    "refused": true
    },
    {
     "name": "plan-null",
     "environment": {
      "SEMIO_HOST_CAPACITY_PLAN": "null"
     },
-    "expect": null
+    "expect": null,
+    "refused": true
    },
    {
     "name": "unqualified-odd-memory-is-floored-per-job",
     "environment": {
-     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 3, \"cpu\": 3, \"memoryMegabytes\": 7000, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
+     "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"aaaaaaaa1\", \"jobs\": 3, \"cpu\": 3, \"memoryMegabytes\": 7000, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
     },
     "expect": null
    }
@@ -1671,19 +1677,19 @@
    "baselineMegabytes": 0
   },
   {
-   "rssMegabytes": 1228,
+   "rssMegabytes": 1535,
    "jobs": 5,
    "megabytes": 2048,
    "baselineMegabytes": 0
   },
   {
-   "rssMegabytes": 1229,
+   "rssMegabytes": 1536,
    "jobs": 5,
    "megabytes": 2048,
    "baselineMegabytes": 0
   },
   {
-   "rssMegabytes": 1230,
+   "rssMegabytes": 1537,
    "jobs": 5,
    "megabytes": 2048,
    "baselineMegabytes": 0
@@ -1713,7 +1719,7 @@
    "baselineMegabytes": 0
   },
   {
-   "rssMegabytes": 1229.4,
+   "rssMegabytes": 1536.4,
    "jobs": 96,
    "megabytes": 2048,
    "baselineMegabytes": 0
@@ -1731,37 +1737,37 @@
    "baselineMegabytes": 0
   },
   {
-   "rssMegabytes": 700,
+   "rssMegabytes": 800,
    "jobs": 1,
    "megabytes": 1000,
    "baselineMegabytes": 0
   },
   {
-   "rssMegabytes": 600,
+   "rssMegabytes": 750,
    "jobs": 1,
    "megabytes": 1000,
    "baselineMegabytes": 0
   },
   {
-   "rssMegabytes": 601,
+   "rssMegabytes": 751,
    "jobs": 1,
    "megabytes": 1000,
    "baselineMegabytes": 0
   },
   {
-   "rssMegabytes": 1229,
+   "rssMegabytes": 1536,
    "jobs": 1,
-   "baselineMegabytes": 1229,
+   "baselineMegabytes": 1536,
    "megabytes": 2048
   },
   {
-   "rssMegabytes": 1600,
+   "rssMegabytes": 1700,
    "jobs": 3,
    "baselineMegabytes": 800,
    "megabytes": 2048
   },
   {
-   "rssMegabytes": 1229,
+   "rssMegabytes": 1537,
    "jobs": 3,
    "baselineMegabytes": 1100,
    "megabytes": 2048
@@ -1771,6 +1777,36 @@
    "jobs": 1,
    "baselineMegabytes": 2049,
    "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 1300,
+   "jobs": 1,
+   "megabytes": 1024,
+   "baselineMegabytes": 1100
+  },
+  {
+   "rssMegabytes": 1651,
+   "jobs": 1,
+   "megabytes": 1024,
+   "baselineMegabytes": 1100
+  },
+  {
+   "rssMegabytes": 1300,
+   "jobs": 1,
+   "megabytes": 1024,
+   "baselineMegabytes": 0
+  },
+  {
+   "rssMegabytes": 2100,
+   "jobs": 2,
+   "megabytes": 2048,
+   "baselineMegabytes": 900
+  },
+  {
+   "rssMegabytes": 1400,
+   "jobs": 2,
+   "megabytes": 1024,
+   "baselineMegabytes": 900
   }
  ]
 }

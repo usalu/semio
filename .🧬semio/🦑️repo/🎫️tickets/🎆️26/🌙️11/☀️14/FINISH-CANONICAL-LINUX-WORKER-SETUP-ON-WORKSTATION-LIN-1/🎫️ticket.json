@@ -1,0 +1,96 @@
+{
+  "title": "Finish Canonical Linux Worker Setup on Workstation Lin 1",
+  "emoji": "🐧",
+  "status": "open",
+  "description": "Finish setting up this worker (g1-m04, SteamOS, account deck) as the canonical Linux worker: one synchronized repository at ~/semio instead of several clones. Relocate the joined replica from /srv/semio into the existing repository ~/semio, verify (status, verify, fleet, preflight), fix what blocks it (stuck NFS transport, preflight symlinked mount), retry the native bootstrap and retire the old tree.",
+  "summary": "Worker g1-m04 runs from the canonical worktree /home/deck/semio as the only, synchronised repository. The native build stays pending: the failing setup tasks reduce to two open protocol decisions in the shared build code (authority for the nested tools setup, roles of the dependencies partition) that block the tools setup on every worker; no build code was changed from this machine. Details in report.md, section \"Third Pass\".",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2789"
+  },
+  "goal": "🎯runningrepo",
+  "sessions": [
+    "38c5f539-067a-4a75-8f9d-75469461d392",
+    "14839a9b-2a0d-4c24-807b-c17a386feb55",
+    "498eddd5-cfbf-4f62-87dc-8447eebe8fe9",
+    "661c7759-d39f-4517-9ddb-5e26ad2113a4"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-14 01:43:29",
+      "author": "",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Finish setting up this worker (g1-m04, SteamOS, account deck) as the canonical Linux worker: one synchronized repository at ~/semio instead of several clones. Relocate the joined replica from /srv/semio into the existing repository ~/semio, verify (status, verify, fleet, preflight), fix what blocks it (stuck NFS transport, preflight symlinked mount), retry the native bootstrap and retire the old tree.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 09:30:46",
+      "author": "ueli",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Worker g1-m04 (ueli-workstation-lin-1, SteamOS) now runs from the canonical worktree /home/deck/semio as the only, synchronised repository; the retired /srv/semio was moved to the account's Trash, not deleted. Preflight: 24 checks, none failed, one warning. Fixed the preflight store-mount check for symlinked mount points. Native bootstrap is still pending: machine-side causes (broken npm mirror on the group server, graph memory limit) were worked around, the last run fails on four workspace:setup tasks of the shared source. Details in report.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🗺️topology🗃️🧪️tests💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 09:31:09",
+      "author": "",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Complete the native bootstrap of g1-m04: find and fix the cause of the four failing workspace:setup tasks (framework-os-mcp-rs build, deps-cargo, deps-build-tools, energy-oracle-py deps) so the completion marker is written.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 11:39:20",
+      "author": "ueli",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Worker g1-m04 runs from the canonical worktree /home/deck/semio as the only, synchronised repository; the retired /srv/semio is in the Trash. Preflight: 24 checks, none failed, one warning (native build pending). The native build is pending as on every worker of the group: the four failing workspace:setup tasks are refusals and compile errors in shared build code that is being fixed from the g1-m07 ticket, and the owner's current worker prompt says not to retry in a loop. No build code was changed from this machine. Details in report.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🗺️topology🗃️🧪️tests💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 11:39:51",
+      "author": "",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Fix the four failing workspace:setup tasks in the shared build code (deps-build-tools caller refusal, energy-oracle-py uv policy, deps-cargo capability region, framework-os-mcp-rs compile) and complete the native bootstrap of g1-m04.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-14 11:41:07",
+      "author": "ueli",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Worker g1-m04 runs from the canonical worktree /home/deck/semio as the only, synchronised repository. The native build stays pending: the failing setup tasks reduce to two open protocol decisions in the shared build code (authority for the nested tools setup, roles of the dependencies partition) that block the tools setup on every worker; no build code was changed from this machine. Details in report.md, section \"Third Pass\"."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-14 11:42:09",
+      "author": "",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Implement the build-code fixes that block the native bootstrap (tools setup entry for workspace:deps-build-tools, dependency partition roles, cargo capability regions, mcp plugin runtime compile errors) and complete the native bootstrap of g1-m04.",
+      "llm": "fable-5-2"
+    }
+  ]
+}

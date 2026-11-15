@@ -1,0 +1,62 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🟦️.ts": {
+  "file": "f000",
+  "after": "81c072b3e5e7e8edb25104714573b9b7ad151d0968d73bf7bada4cb6e205cf03"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts": {
+  "file": "f001",
+  "after": "80f126f6abf031ae81351a4c3a7455213dfb65030fbb8f2a4e4adf4b37b5cfde"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts": {
+  "file": "f002",
+  "after": "1b1a0afa95a33acf9c2a906977429a1f12fa62af70db411774432e70b7b4ce39"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🏃️runner/🟦️.ts": {
+  "file": "f003",
+  "after": "e86abe0ff013ab284c6d300adbb192757f655ebcaef23aa19a7634c5005c0e2c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/⌨️command/🟦️.ts": {
+  "file": "f004",
+  "after": "f48491267b06a6d84110aa660cc5dbc11feddaaaf23e173bbcb583a519f44fd7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/🔎️probes/💾️storage/🟦️.ts": {
+  "file": "f005",
+  "after": "6bbe94739d1785a6f63f23965017b324cc6611d53bd055deb0ba30bd6f224091"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧹️cache-gc/🚀️launch/🟦️.ts": {
+  "file": "f006",
+  "after": "592d1ca2bd49d5ca06707a1943f9153bc6b71ed26788dc4a5dd0ad13c268904d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📐️elastic/🟦️.ts": {
+  "file": "f007",
+  "after": "9a45d4c63b3179e5797fb213750eaea676b0e718401cb896022f36c5c401e2de"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts": {
+  "file": "f008",
+  "after": "af6f351e583d61e139d6dd67b7b4fa93fe497e92116ae6deaed2535bd7d29a90"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🔌️port/🟦️.ts": {
+  "file": "f009",
+  "after": "ce187241e688d6066fd6cc2cfcb912f0c1fa5ed2f76f8b6807411d0c5ce33e29"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🆓️free-space/🟦️.ts": {
+  "file": null,
+  "after": "4181ad7a7cd4f4ca02bd59a25b9c4340bef89c4fc034c67348a3cb7b0c65fa99"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🆓️unknown/🟦️.ts": {
+  "file": null,
+  "after": "7adada3118e619aaa8273396e9d2b8fedae5efd62933ff64a1825911b3471093"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📐️statfs/🧪️tests/🆓️unknown/🧫️fixtures/🔣️.json": {
+  "file": null,
+  "after": "39257eaf249b93f99b4f33d9e2c8f1ff3840a6b4503725c072911fc95b10861a"
+ },
+ "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts": {
+  "file": "f013",
+  "after": "eac77226ecc41104ae0137fab99539733341bdf5f7f7d368475fdec414561a9d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🟦️.ts": {
+  "file": "f014",
+  "after": "304fff7784ddab776fce857e23897a0c800c8a51d50a177c266cfa413633a5bd"
+ }
+}

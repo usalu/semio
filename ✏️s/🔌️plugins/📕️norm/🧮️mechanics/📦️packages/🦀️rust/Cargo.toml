@@ -15,6 +15,34 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "fastening"
+path = "../../🧪️tests/🔩️fastening/🦀️.rs"
+
+[[test]]
+name = "geotechnics"
+path = "../../🧪️tests/🌍️geotechnics/🦀️.rs"
+
+[[test]]
+name = "fibre"
+path = "../../🧪️tests/🧵️fibre/🦀️.rs"
+
+[[test]]
+name = "latency"
+path = "../../🧪️tests/⏱️latency/🦀️.rs"
+
+[[test]]
+name = "moment-line"
+path = "../../🧪️tests/📈️moment-line/🦀️.rs"
+
+[[test]]
+name = "unit"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "section"
+path = "../../🧪️tests/🔲️section/🦀️.rs"
+
 [dependencies]
 semio-s-plugin-norm-mechanics-applied = { workspace = true }
 

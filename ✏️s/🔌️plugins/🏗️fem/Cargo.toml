@@ -4,8 +4,8 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
     "⚙️engine/🖥️app-surface/📦️packages/🦀️rust",
-    "🧩️sqlite/📦️packages/🦀️rust",
     "🧩️receiving/📦️packages/🦀️rust",
+    "🧩️sqlite/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",

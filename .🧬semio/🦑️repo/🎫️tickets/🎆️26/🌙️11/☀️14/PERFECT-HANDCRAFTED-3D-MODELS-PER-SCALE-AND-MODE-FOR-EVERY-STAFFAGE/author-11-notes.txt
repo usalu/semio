@@ -1,0 +1,11 @@
+spliced: ceiling-diffuser, electric-fan-heater, circulation-pump
+root fixes: fan-heater feet areaM2 0.003 -> 0.0137; pump anchors pipe-left/right z 0.04 added
+ceiling-diffuser plate areaM2 0.45 -> 0.24
+fan-heater 2D: plan/front dial shapes (1:50) bone knob -> body (a rotating disc seen edge-on must not rotate with the knob pose; fixes volumes-views-disagree)
+fan-heater areaM2 (old->new): casing 0.17->0.16, top-cover 0.035->0.055, grille 0.03->0.05, intake 0.03->0.05, control 0.004->0.0025, feet 0.003->0.0053 (all other areas untouched)
+pump areaM2 old->new: motor 0.03->0.024, casing 0.035->0.03, terminal-box 0.012->0.0128; anchors pipe-left/right z 0.04 added
+hrv areaM2 old->new: casing 0.09->0.39, core 0.9->0.075 (honeycomb wetted area not representable, flagged), blades 0.012->0.028, hub 0.006->0.0075; anchors wall-screw-top/bottom z -0.11 added
+desktop-monitor areaM2 old->new: panel-front 0.175->0.2, housing 0.22->0.124, stand 0.125->0.108; owned [o] engine 1:100 stand area differs (+45 percent, counts the base underside) while product passes
+duct-fan areaM2 old->new: casing 0.07->0.2, blades 0.015->0.0285, hub 0.009->0.0145; anchors wall-screw-top/bottom z -0.039 added
+kettle areaM2 old->new: plate 0.05->0.021, shell 0.11->0.095, water 0.012->0.0145 (free surface), lid 0.025->0.038, handle 0.012->0.021
+meter areaM2 old->new: casing 0.17->0.205, window 0.011->0.0245, disc 0.0055->0.0107, plate 0.0052->0.0135; anchors wall-screw-top/bottom z 0.05 added

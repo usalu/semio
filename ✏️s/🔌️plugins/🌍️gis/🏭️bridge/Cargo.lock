@@ -6425,6 +6425,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-gltf-inferences-connected"
+version = "0.1.0"
+dependencies = [
+ "semio-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-gltf-inferences-exposed-area",
+ "semio-s-artifact-stdio-gltf-inferences-geometry-core",
+ "semio-s-artifact-stdio-gltf-inferences-modules",
+ "semio-s-artifact-stdio-gltf-model",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-gltf-mutations-add-required"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-state",
+ "semio-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-gltf-model",
+]
+
+[[package]]
 name = "semio-ui-contract"
 version = "0.1.0"
 dependencies = [
@@ -9450,7 +9485,6 @@ version = "0.1.0"
 name = "semio-s-artifact-stdio-gltf-inferences"
 version = "0.1.0"
 dependencies = [
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema",
@@ -9458,13 +9492,14 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-value-derive",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-inferences-adjacency",
  "semio-s-artifact-stdio-gltf-inferences-aspect-ratios",
  "semio-s-artifact-stdio-gltf-inferences-centroid",
  "semio-s-artifact-stdio-gltf-inferences-clearance",
  "semio-s-artifact-stdio-gltf-inferences-compactness",
  "semio-s-artifact-stdio-gltf-inferences-concavity",
- "semio-s-artifact-stdio-gltf-inferences-connected-components",
+ "semio-s-artifact-stdio-gltf-inferences-connected",
  "semio-s-artifact-stdio-gltf-inferences-curvature",
  "semio-s-artifact-stdio-gltf-inferences-exposed-area",
  "semio-s-artifact-stdio-gltf-inferences-flatness",
@@ -9487,7 +9522,6 @@ dependencies = [
 name = "semio-s-artifact-stdio-gltf-inferences-adjacency"
 version = "0.1.0"
 dependencies = [
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema",
@@ -9496,9 +9530,10 @@ dependencies = [
  "semio-framework-schema-state",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-inferences-aspect-ratios",
  "semio-s-artifact-stdio-gltf-inferences-centroid",
- "semio-s-artifact-stdio-gltf-inferences-connected-components",
+ "semio-s-artifact-stdio-gltf-inferences-connected",
  "semio-s-artifact-stdio-gltf-inferences-exposed-area",
  "semio-s-artifact-stdio-gltf-inferences-flatness",
  "semio-s-artifact-stdio-gltf-inferences-footprint-area",
@@ -9533,7 +9568,6 @@ dependencies = [
 name = "semio-s-artifact-stdio-gltf-inferences-centroid"
 version = "0.1.0"
 dependencies = [
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema",
@@ -9541,7 +9575,8 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-value",
- "semio-s-artifact-stdio-gltf-inferences-connected-components",
+ "semio-os-kernel",
+ "semio-s-artifact-stdio-gltf-inferences-connected",
  "semio-s-artifact-stdio-gltf-inferences-exposed-area",
  "semio-s-artifact-stdio-gltf-inferences-geometry-core",
  "semio-s-artifact-stdio-gltf-inferences-modules",
@@ -9614,25 +9649,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-gltf-inferences-connected-components"
-version = "0.1.0"
-dependencies = [
- "semio-os-kernel",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-s-artifact-stdio-gltf-inferences-exposed-area",
- "semio-s-artifact-stdio-gltf-inferences-geometry-core",
- "semio-s-artifact-stdio-gltf-inferences-modules",
- "semio-s-artifact-stdio-gltf-model",
- "serde_json",
-]
-
-[[package]]
 name = "semio-s-artifact-stdio-gltf-inferences-curvature"
 version = "0.1.0"
 dependencies = [
@@ -9692,7 +9708,6 @@ dependencies = [
 name = "semio-s-artifact-stdio-gltf-inferences-footprint-area"
 version = "0.1.0"
 dependencies = [
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema",
@@ -9700,7 +9715,8 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-value",
- "semio-s-artifact-stdio-gltf-inferences-connected-components",
+ "semio-os-kernel",
+ "semio-s-artifact-stdio-gltf-inferences-connected",
  "semio-s-artifact-stdio-gltf-inferences-geometry-core",
  "semio-s-artifact-stdio-gltf-inferences-modules",
  "semio-s-artifact-stdio-gltf-model",
@@ -9727,7 +9743,6 @@ dependencies = [
 name = "semio-s-artifact-stdio-gltf-inferences-inferences"
 version = "0.1.0"
 dependencies = [
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema",
@@ -9736,12 +9751,13 @@ dependencies = [
  "semio-framework-schema-state",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-inferences-adjacency",
  "semio-s-artifact-stdio-gltf-inferences-centroid",
  "semio-s-artifact-stdio-gltf-inferences-clearance",
  "semio-s-artifact-stdio-gltf-inferences-compactness",
  "semio-s-artifact-stdio-gltf-inferences-concavity",
- "semio-s-artifact-stdio-gltf-inferences-connected-components",
+ "semio-s-artifact-stdio-gltf-inferences-connected",
  "semio-s-artifact-stdio-gltf-inferences-curvature",
  "semio-s-artifact-stdio-gltf-inferences-geometry-core",
  "semio-s-artifact-stdio-gltf-inferences-modules",
@@ -9791,7 +9807,6 @@ dependencies = [
 name = "semio-s-artifact-stdio-gltf-inferences-repetition-ratio"
 version = "0.1.0"
 dependencies = [
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema",
@@ -9799,7 +9814,8 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-value",
- "semio-s-artifact-stdio-gltf-inferences-connected-components",
+ "semio-os-kernel",
+ "semio-s-artifact-stdio-gltf-inferences-connected",
  "semio-s-artifact-stdio-gltf-inferences-geometry-core",
  "semio-s-artifact-stdio-gltf-inferences-modules",
  "semio-s-artifact-stdio-gltf-model",
@@ -10146,15 +10162,14 @@ name = "semio-s-artifact-stdio-gltf-mutations"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
- "semio-ui-locale",
  "semio-framework-value-derive",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-gltf-mutations-add-required-extension",
+ "semio-s-artifact-stdio-gltf-mutations-add-required",
  "semio-s-artifact-stdio-gltf-mutations-mut-any",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-10",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-2",
@@ -10166,22 +10181,7 @@ dependencies = [
  "semio-s-artifact-stdio-gltf-mutations-mut-any-8",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-9",
  "semio-s-artifact-stdio-gltf-mutations-mutations",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-gltf-mutations-add-required-extension"
-version = "0.1.0"
-dependencies = [
- "semio-framework-diagnostic",
- "semio-os-kernel",
- "semio-framework-pack",
- "semio-framework-pack-json",
- "semio-framework-schema-composition",
- "semio-framework-schema-state",
  "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-artifact-stdio-gltf-model",
 ]
 
 [[package]]
@@ -10189,16 +10189,16 @@ name = "semio-s-artifact-stdio-gltf-mutations-mut-any"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-gltf-mutations-add-required-extension",
+ "semio-s-artifact-stdio-gltf-mutations-add-required",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -10206,17 +10206,17 @@ name = "semio-s-artifact-stdio-gltf-mutations-mut-any-10"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
- "semio-ui-locale",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-gltf-mutations-add-required-extension",
+ "semio-s-artifact-stdio-gltf-mutations-add-required",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-3",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-4",
  "semio-s-artifact-stdio-gltf-mutations-mutations",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -10224,16 +10224,16 @@ name = "semio-s-artifact-stdio-gltf-mutations-mut-any-2"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-gltf-mutations-add-required-extension",
+ "semio-s-artifact-stdio-gltf-mutations-add-required",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -10241,17 +10241,17 @@ name = "semio-s-artifact-stdio-gltf-mutations-mut-any-3"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-gltf-mutations-add-required-extension",
+ "semio-s-artifact-stdio-gltf-mutations-add-required",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-2",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -10261,18 +10261,18 @@ dependencies = [
  "semio-framework",
  "semio-framework-async",
  "semio-framework-diagnostic",
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
  "semio-framework-test-fixtures",
- "semio-ui-locale",
  "semio-framework-value",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-gltf-mutations-add-required-extension",
+ "semio-s-artifact-stdio-gltf-mutations-add-required",
  "semio-s-artifact-stdio-gltf-mutations-mutations",
+ "semio-ui-locale",
  "serde_json",
 ]
 
@@ -10281,18 +10281,18 @@ name = "semio-s-artifact-stdio-gltf-mutations-mut-any-5"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
- "semio-ui-locale",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-gltf-mutations-add-required-extension",
+ "semio-s-artifact-stdio-gltf-mutations-add-required",
  "semio-s-artifact-stdio-gltf-mutations-mut-any",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-3",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-4",
  "semio-s-artifact-stdio-gltf-mutations-mutations",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -10353,18 +10353,18 @@ name = "semio-s-artifact-stdio-gltf-mutations-mut-any-9"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
- "semio-ui-locale",
+ "semio-os-kernel",
  "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-gltf-mutations-add-required-extension",
+ "semio-s-artifact-stdio-gltf-mutations-add-required",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-2",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-3",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-4",
  "semio-s-artifact-stdio-gltf-mutations-mutations",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -10372,21 +10372,21 @@ name = "semio-s-artifact-stdio-gltf-mutations-mutations"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-composition",
  "semio-framework-schema-state",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
  "semio-s-artifact-stdio-gltf-model",
- "semio-s-artifact-stdio-gltf-mutations-add-required-extension",
+ "semio-s-artifact-stdio-gltf-mutations-add-required",
  "semio-s-artifact-stdio-gltf-mutations-mut-any",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-2",
  "semio-s-artifact-stdio-gltf-mutations-mut-any-3",
+ "semio-ui-locale",
 ]
 
 [[package]]

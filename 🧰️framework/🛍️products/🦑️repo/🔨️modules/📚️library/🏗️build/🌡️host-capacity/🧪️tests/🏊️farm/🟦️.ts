@@ -1,6 +1,6 @@
 /** 🏊️ Contract: the graph farm asks the machine-wide gate for its workers in the fair queue beside the grant its invocation holds, is answered with the jobs and megabytes the gate admits, holds the grant until it is released (no timer gives it back) and can cancel a wait that is never answered. */
 import {afterAll,expect,test} from "bun:test";
-import {existsSync,mkdtempSync,readdirSync,realpathSync,rmSync} from "node:fs";
+import {existsSync,mkdtempSync,readdirSync,readFileSync,realpathSync,rmSync} from "node:fs";
 import {getEventListeners} from "node:events";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -18,8 +18,16 @@ const settled=async(directory:string,count:number)=>{const started=Date.now();wh
 
 test("with the gate off the farm gets every job it asks for and nothing is reserved",async()=>{
  const directory=fresh(),request=requestBuildFarmCapacityV1({preferredJobs:6,environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY:"off"},directory,policy:fast,write:()=>{}}),granted=await request.granted;
- expect(granted).toEqual({jobs:6,megabytes:fast.kinds.build.megabytes});request.release();
+ expect(granted).toEqual({jobs:6,megabytes:fast.kinds.script.megabytes});request.release();
  expect(grants(directory)).toEqual([]);
+},60000);
+
+test("the farm books no fixed block, so one worker of the per-job size is the smallest request and fits a host with little spare memory",async()=>{
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"},sample=async()=>({host:host({totalMegabytes:16384,availableMegabytes:2048+fast.kinds.script.megabytes+256}),swappedOutMegabytes:0});
+ const request=requestBuildFarmCapacityV1({preferredJobs:6,environment,directory,policy:fast,write:()=>{},sample}),granted=await request.granted;
+ expect(granted).toBeDefined();expect(granted!.jobs).toBeGreaterThanOrEqual(1);expect(granted!.megabytes).toBe(fast.kinds.script.megabytes);
+ const row=JSON.parse(readFileSync(join(directory,"grants",grants(directory)[0]!),"utf8"));expect(row.reservedMegabytes).toBe(granted!.jobs*fast.kinds.script.megabytes);
+ request.release();
 },60000);
 
 test("a fresh grant is requested beside the grant the invocation holds, answered with jobs and megabytes, held until released and then given back",async()=>{
@@ -27,7 +35,7 @@ test("a fresh grant is requested beside the grant the invocation holds, answered
  await withBuildCapacityV1(["show","projects"],environment,async outer=>{
   expect(outer.handle).toBeDefined();expect(grants(directory).length).toBe(1);
   const request=requestBuildFarmCapacityV1({preferredJobs:6,environment,directory,policy:fast,write:line=>lines.push(line),sample}),granted=await request.granted;
-  expect(granted).toBeDefined();expect(granted!.jobs).toBeGreaterThanOrEqual(1);expect(granted!.jobs).toBeLessThanOrEqual(6);expect(granted!.megabytes).toBe(fast.kinds.build.megabytes);
+  expect(granted).toBeDefined();expect(granted!.jobs).toBeGreaterThanOrEqual(1);expect(granted!.jobs).toBeLessThanOrEqual(6);expect(granted!.megabytes).toBe(fast.kinds.script.megabytes);
   expect(grants(directory).length).toBe(2);expect(environment.SEMIO_HOST_CAPACITY_GRANT).toBe(outer.handle!.id);
   await new Promise(done=>setTimeout(done,600));
   expect(grants(directory).length).toBe(2);
@@ -59,4 +67,22 @@ test("a request leaves no listener on the long-lived signal of its invocation on
   }
   expect(listeners(controller.signal)).toBe(0);
  }
+},60000);
+
+test("on a 16 GB machine the workers of the farm are admitted inside the reservation of the build that asks, charged to it, and the host books the build once",async()=>{
+ const directory=fresh(),environment:NodeJS.ProcessEnv={LANG:"en_US.UTF-8"},machine={available:12000},sample=async()=>({host:host({totalMegabytes:16384,availableMegabytes:machine.available}),swappedOutMegabytes:0}),lines:string[]=[];
+ await withBuildCapacityV1(["show","projects"],environment,async outer=>{
+  const reserved=outer.handle!.reservedMegabytes;
+  machine.available=3000;
+  const request=requestBuildFarmCapacityV1({preferredJobs:8,environment,directory,policy:fast,write:line=>lines.push(line),sample}),granted=await request.granted;
+  expect(granted,"admitted although the machine has no free memory left above the floor").toBeDefined();
+  expect(granted!.jobs).toBeGreaterThanOrEqual(1);expect(granted!.megabytes).toBe(fast.kinds.script.megabytes);
+  const rows=grants(directory).map(name=>JSON.parse(readFileSync(join(directory,"grants",name),"utf8")) as {id:string;holder?:string;reservedMegabytes:number});
+  const child=rows.find(row=>row.holder!==undefined)!;
+  expect(child.holder,"the grant of the workers names the build").toBe(outer.handle!.id);
+  expect(rows.filter(row=>row.holder===undefined).reduce((sum,row)=>sum+row.reservedMegabytes,0),"the host books the reservation of the build once").toBe(reserved);
+  expect(reserved-child.reservedMegabytes,"the parent keeps at least what the lend rule leaves it").toBeGreaterThanOrEqual(Math.floor(reserved*0.45));
+  expect(lines.some(line=>/inside the reservation of/u.test(line))).toBe(true);
+  request.release();
+ },{directory,policy:fast,strip:args=>args.filter(argument=>!argument.startsWith("--tool")),write:line=>lines.push(line),sample});
 },60000);

@@ -1,0 +1,10 @@
+try 1 started pid=40269 2026-11-14T17:56:30Z log=/Users/ueli/native-bootstrap-round-5.log
+try 1 ended 2026-11-14T17:57:30Z native_rc=1 stopped=0 fleet_refusal=0 reached_tasks=0
+try 1 ended without refusal and before the nx tasks (code change or other): waiting 120 s
+try 2 started pid=41699 2026-11-14T17:59:30Z log=/Users/ueli/native-bootstrap-round-5-try-2.log
+try 2 ended 2026-11-14T18:27:34Z native_rc=75 stopped=0 fleet_refusal=1 reached_tasks=0
+try 2 refusal: waiting 120 s
+try 3 started pid=57292 2026-11-14T18:29:34Z log=/Users/ueli/native-bootstrap-round-5-try-3.log
+try 3 ended 2026-11-14T19:37:46Z native_rc=1 stopped=0 fleet_refusal=0 reached_tasks=1
+round ended 2026-11-14T19:37:46Z
+wait for round > 5 started 2026-11-14T19:39:10Z

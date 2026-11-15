@@ -1,7 +1,7 @@
 import {playgroundActivationTargetV1} from "../🎯️target/🟦️.ts";
 import {checkScriptInvocation,findWorkspaceRoot,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {buildBudgetMs} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import {runRepositoryCommand} from "@semio-tech/process/execution";
+import {runRepositoryCommand} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 /** ♻️ Brings one playground variant's `renderer` runtime up to a publishable activation state by
  * running the build target that OWNS that closure — `activate-<variant>-<renderer>-<profile>`, whose declared

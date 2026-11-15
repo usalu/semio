@@ -1,0 +1,11 @@
+import { readFileSync } from "node:fs";
+import { meshIntegrity, tessellateSolid } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+const d = JSON.parse(readFileSync("volumes/vegetation/hosta-clump.json", "utf8"));
+const s = d.volumes["50"].body.find((x: any) => x.id === "blade-c1");
+console.log(s.profile.length, JSON.stringify({ ...s, profile: undefined, holes: s.holes?.length }));
+const g = tessellateSolid({ ...s, id: "s", node: "n", material: "m" }, { chordM: 0.001, minSegments: 16, maxSegments: 48 });
+console.log(meshIntegrity(g.positions, g.indices));
+console.log(JSON.stringify(s.profile.slice(-6)));
+import { validateModel } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
+const doc: any = { version: "semio.model/v1", id: "d", title: { en: "d", de: "d" }, nodes: [{ id: "n", parent: null, translation: [0,0,0], rotation: [0,0,0,1], scale: [1,1,1] }], solids: [{ ...s, id: "s", node: "n", material: "m" }], meshes: [], skins: [], materials: [{ id: "m", title: { en: "m", de: "m" }, baseColor: [1,1,1,1], metallic: 0, roughness: 1, emissive: [0,0,0], alphaMode: "opaque", doubleSided: false, unlit: false }], variants: [], poses: [], animations: [] };
+console.log(validateModel(doc).map((i) => i.code + " " + i.path));

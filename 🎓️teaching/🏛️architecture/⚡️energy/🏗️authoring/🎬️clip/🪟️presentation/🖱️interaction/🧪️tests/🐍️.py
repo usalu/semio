@@ -468,6 +468,7 @@ class CursorNativeFrameTest(unittest.TestCase):
     def setUpClass(cls):
         cls.presentation = importlib.import_module(MODULE.rsplit(".🖱️interaction", 1)[0] + ".🐍️")
         cls.interaction = importlib.import_module(MODULE + ".🐍️")
+        cls.enterClassContext(importlib.import_module(MODULE.rsplit(".🖱️interaction", 1)[0] + ".🖼️posters.🧪️tests.🧰️synthetic.🐍️").captured())
         cls.output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]) / "native-frames"
         cls.output.mkdir(parents=True, exist_ok=True)
         cls.settings = {"audience": "speaker", "profile": "preview", "resolution": ",".join(map(str, CASES["native"]["resolution"])),

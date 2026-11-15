@@ -1,0 +1,1307 @@
+=== /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-6c83dc348341.log from byte 199634
+[repository:command] still running after 330 s
+[repository:command] still running after 340 s
+[repo] still working after 350 s; last phase started: source.served
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (11224 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[repository:command] still running after 350 s
+graph: No verified change journal cursor is recorded for generation 245; verifying the tree once.
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:0:127342","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 0 of 127342 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:96724:127342","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 96724 of 127342 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:116415:127342","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 116415 of 127342 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:membership:127342:127342","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying workspace membership: 127342 of 127342 entries
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:0:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 0 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:2551","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 2551 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:2551:2551","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 2551 of 2551 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:3249","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 3249 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:3249:3249","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 3249 of 3249 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1045","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1045 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1045:1045","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1045 of 1045 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:918","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 918 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:918:918","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 918 of 918 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:50","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 50 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:50:50","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 50 of 50 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1604","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1604 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1604:1604","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1604 of 1604 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:151","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 151 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:151:151","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 151 of 151 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1066","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1066 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1066:1066","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1066 of 1066 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:92","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 92 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:92:92","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 92 of 92 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:873","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 873 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:873:873","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 873 of 873 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:2133","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 2133 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:2133:2133","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 2133 of 2133 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:57344:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 57344 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1108","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1108 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1108:1108","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1108 of 1108 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:290","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 290 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:290:290","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 290 of 290 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:1085","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 1085 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:1085:1085","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 1085 of 1085 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:686","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 686 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:686:686","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 686 of 686 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:2184","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 2184 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:2184:2184","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 2184 of 2184 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:24","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 24 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:24:24","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 24 of 24 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:8153","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 8153 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:8153:8153","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 8153 of 8153 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:8075","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 8075 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:8075:8075","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 8075 of 8075 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:8128","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 8128 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:8128:8128","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 8128 of 8128 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:106496:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 106496 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:8144","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 8144 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:8144:8144","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 8144 of 8144 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:8115","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 8115 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:8115:8115","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 8115 of 8115 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:7896","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 7896 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:7896:7896","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 7896 of 7896 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:7965","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 7965 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:7965:7965","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 7965 of 7965 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:139264:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 139264 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:8021","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 8021 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:8021:8021","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 8021 of 8021 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:7841","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 7841 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:7841:7841","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 7841 of 7841 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:8155","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 8155 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:8155:8155","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 8155 of 8155 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:163840:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 163840 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:8162","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 8162 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:8162:8162","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 8162 of 8162 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:8071","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 8071 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:8071:8071","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 8071 of 8071 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:5592","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 5592 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:5592:5592","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 5592 of 5592 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:97","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 97 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:97:97","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 97 of 97 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:911","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 911 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:911:911","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 911 of 911 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:283","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 283 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:283:283","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 283 of 283 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:196608:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 196608 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:5635","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 5635 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:5635:5635","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 5635 of 5635 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:18","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 18 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:18:18","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 18 of 18 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:5751","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 5751 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:5751:5751","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 5751 of 5751 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:6138","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 6138 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:6138:6138","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 6138 of 6138 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:5384","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 5384 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:5384:5384","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 5384 of 5384 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:2123","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 2123 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:2123:2123","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 2123 of 2123 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:7","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 7 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:7:7","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 7 of 7 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:237568:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 237568 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:5","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 5 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:5:5","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 5 of 5 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:65","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 65 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:65:65","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 65 of 65 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:4793","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 4793 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:4793:4793","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 4793 of 4793 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:8185","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 8185 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:8185:8185","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 8185 of 8185 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:40","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 40 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:40:40","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 40 of 40 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:2551","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 2551 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:2551:2551","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 2551 of 2551 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:203","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 203 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:203:203","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 203 of 203 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:1228","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 1228 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:1228:1228","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 1228 of 1228 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:44","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 44 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:44:44","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 44 of 44 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:1020","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 1020 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:1020:1020","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 1020 of 1020 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:178","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 178 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:178:178","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 178 of 178 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:1597","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 1597 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:1597:1597","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 1597 of 1597 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:47","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 47 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:47:47","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 47 of 47 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:903","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 903 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:903:903","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 903 of 903 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:139","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 139 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:139:139","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 139 of 139 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:1515","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 1515 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:1515:1515","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 1515 of 1515 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:490","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 490 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:490:490","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 490 of 490 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:982","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 982 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:982:982","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 982 of 982 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:335872:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 335872 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:231","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 231 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:231:231","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 231 of 231 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:146","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 146 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:146:146","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 146 of 146 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:69","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 69 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:69:69","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 69 of 69 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:95","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 95 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:95:95","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 95 of 95 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:1472","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 1472 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:1472:1472","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 1472 of 1472 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:58","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 58 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:58:58","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 58 of 58 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:207","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 207 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:207:207","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 207 of 207 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:48","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 48 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:48:48","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 48 of 48 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:1200","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 1200 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:1200:1200","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 1200 of 1200 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:0","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 0 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:2","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 2 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:2:2","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 2 of 2 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:2003","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 2003 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:2003:2003","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 2003 of 2003 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:88","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 88 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:88:88","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 88 of 88 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:2259","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 2259 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:2259:2259","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 2259 of 2259 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:442368:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 442368 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:0:61","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 0 of 61 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:directories:61:61","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking directory stamps: 61 of 61 directories
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:2382","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 2382 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:2382:2382","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 2382 of 2382 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:0:81","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 0 of 81 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:files:81:81","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Checking file stamps: 81 of 81 files
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:doubt:451407:451407","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Classifying graph facts: 451407 of 451407 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:0:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 0 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:4096:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 4096 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:16384:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 16384 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:24576:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 24576 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:69632:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 69632 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:73728:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 73728 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:86016:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 86016 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:98304:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 98304 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:106496:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 106496 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:147456:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 147456 of 203647 facts
+[repository:command] still running after 360 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:199551:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 199551 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:203647:203647","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 203647 of 203647 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:0:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 0 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:21:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 21 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:94:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 94 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:121:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 121 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:128:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 128 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:153:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 153 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:220:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 220 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:1585:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:3613:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:5564:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:6998:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:8398:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:9432:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:10896:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:12778:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:13708:13708","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:257:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 257 of 611 closures
+[repository:command] still running after 370 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:308:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 308 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:309:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 309 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:351:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 351 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:425:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 425 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:12961","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:12961:12961","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:256:256","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:513:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 513 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:611:611","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 611 of 611 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:11172","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:11172:11172","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:99","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:99:99","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+graph: memory readings: machine 16384 MB (physical 16384 MB, cgroup limit none), available 10128 MB
+graph: 52 stale projects, 0 taken from the fleet, 8 too heavy for this machine (repo-mcp (about 10110 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), repo (about 6556 MB), @semio-tech/framework-rs (about 6518 MB), and 2 more; it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 52
+graph: inferring 44 light projects here while the fleet works, continuously and lightest first (the server works heaviest first); what the fleet delivers meanwhile is taken and dropped here
+graph: 0 of 52 projects arrived from the fleet, 0 inferred here, 52 left
+[repo] still working after 380 s; last phase started: source.served
+[repository:command] still running after 380 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:prefetch:0:44","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Preparing stale projects: 0 of 44 projects
+graph: preparing 44 of the 44 open stale projects (1 compute slots), 0 of 44 already prepared
+graph: plan stage inference starts (managed 1403 MB, resident 2630 MB)
+[script] {"owner":"repository:build","command":"build:commands","stage":"running"}
+[script] build:commands · Reading the command declarations
+[script] {"owner":"repository:build","command":"build:commands","stage":"complete"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] build:playground-components · Collecting playground components
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+graph: 0 of 52 projects arrived from the fleet, 0 inferred here, 52 left; the server last progressed 1129 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-components","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] build:playground-variants · Collecting playground variants
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] build:playground-native · Collecting native playground inputs
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-native","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:playground-variants","stage":"running"}
+[script] {"owner":"repository:build","command":"build:cargo-targets","stage":"running"}
+[script] build:cargo-targets · Collecting Cargo targets
+[script] {"owner":"repository:build","command":"build:cargo-targets","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:40","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 40 projects
+graph: asking the host for up to 3 worker processes for 40 projects; the projects wait for them
+[capacity] admitted exec: 3 job(s), 4608 MB reserved (9881 MB available, 2048 MB floor)
+graph: inferring projects with 3 worker processes (1536 MB each)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 390 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:40:1:0:shared%20closures%201%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 40 projects · 1 running, longest 0 s: shared closures 1/24
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:40:1:0:shared%20closures%2021%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 40 projects · 1 running, longest 0 s: shared closures 21/24
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:40:1:0:shared%20closures%2023%2F24","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 40 projects · 1 running, longest 0 s: shared closures 23/24
+graph: headroom of 413 MB is below one project (1526 MB), inferring one project at a time
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (1526 of 413 MB reserved, 1 projects running): @semio-tech/repo-workspace-go needs 4763 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+graph: waiting for memory headroom (1526 of 913 MB reserved, 1 projects running): @semio-tech/repo-workspace-go needs 4763 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:40:1:5:%40semio-tech%2Fvalue-rs|language%3Acargo|5|0:waiting|1526|913|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 40 projects · 1 running, longest 5 s: @semio-tech/value-rs (language:cargo, 5 s, 0 rows) · waiting for memory headroom (1526 of 913 MB reserved)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 52 projects arrived from the fleet, 0 inferred here, 52 left; the server last progressed 1145 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 400 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (1526 of 1248 MB reserved, 1 projects running): @semio-tech/repo-workspace-go needs 4763 MB and has waited 10 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:40:1:10:%40semio-tech%2Fvalue-rs|language%3Acargo|10|0:waiting|1526|1248|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 40 projects · 1 running, longest 10 s: @semio-tech/value-rs (language:cargo, 10 s, 0 rows) · waiting for memory headroom (1526 of 1248 MB reserved)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:0:40","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 0 of 40 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+graph: waiting for memory headroom (4763 of 542 MB reserved, 1 projects running): @semio-tech/repo-tree-go needs 4763 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+graph: 0 of 52 projects arrived from the fleet, 1 inferred here, 51 left; the server last progressed 1155 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] build:command-source-packages · Resolving the packages of command sources
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[repo] still working after 410 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 410 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+graph: waiting for memory headroom (4763 of 1063 MB reserved, 1 projects running): @semio-tech/repo-tree-go needs 4763 MB and has waited 6 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:40:1:5:%40semio-tech%2Frepo-workspace-go|project|5|0:waiting|4763|1063|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 40 projects · 1 running, longest 5 s: @semio-tech/repo-workspace-go (project, 5 s, 0 rows) · waiting for memory headroom (4763 of 1063 MB reserved)
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+graph: 0 of 52 projects arrived from the fleet, 1 inferred here, 51 left; the server last progressed 1163 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:40:1:10:%40semio-tech%2Frepo-workspace-go|project|10|0:waiting|4763|1063|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 40 projects · 1 running, longest 10 s: @semio-tech/repo-workspace-go (project, 10 s, 0 rows) · waiting for memory headroom (4763 of 1063 MB reserved)
+graph: waiting for memory headroom (4763 of 1217 MB reserved, 1 projects running): @semio-tech/repo-tree-go needs 4763 MB and has waited 11 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 420 s
+[repository:command] still running after 430 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (4763 of 1040 MB reserved, 1 projects running): @semio-tech/repo-tree-go needs 4763 MB and has waited 24 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:40:1:20:%40semio-tech%2Frepo-workspace-go|project|20|0:waiting|4763|1040|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 40 projects · 1 running, longest 20 s: @semio-tech/repo-workspace-go (project, 20 s, 0 rows) · waiting for memory headroom (4763 of 1040 MB reserved)
+graph: 0 of 52 projects arrived from the fleet, 1 inferred here, 51 left; the server last progressed 1176 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:1:40","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 1 of 40 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:2:40","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 2 of 40 projects
+graph: 0 of 52 projects arrived from the fleet, 3 inferred here, 49 left; the server last progressed 1181 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:3:40","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 3 of 40 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] build:command-source-packages · Resolving the packages of command sources
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+graph: 0 of 52 projects arrived from the fleet, 4 inferred here, 48 left; the server last progressed 1183 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (4763 of 591 MB reserved, 1 projects running): @semio-tech/repo-test-runner-go needs 4763 MB and has waited 1 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:4:40:1:0:%40semio-tech%2Frepo-tickets-go|project|0|0:waiting|4763|591|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 4 of 40 projects · 1 running, longest 0 s: @semio-tech/repo-tickets-go (project, 0 s, 0 rows) · waiting for memory headroom (4763 of 591 MB reserved)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 52 projects arrived from the fleet, 5 inferred here, 47 left; the server last progressed 1186 s ago, estimated time left: about 1 min
+[repo] still working after 440 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 440 s
+graph: waiting for memory headroom (3633 of 940 MB reserved, 1 projects running): @semio-tech/repo-test-dotnet needs 1038 MB and has waited 6 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:5:40:1:5:%40semio-tech%2Frepo-test-runner-go|project|5|0:waiting|3633|940|language%3Adotnet","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 5 of 40 projects · 1 running, longest 5 s: @semio-tech/repo-test-runner-go (project, 5 s, 0 rows) · waiting for memory headroom (3633 of 940 MB reserved)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:5:40","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 5 of 40 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+graph: 0 of 52 projects arrived from the fleet, 6 inferred here, 46 left; the server last progressed 1191 s ago, estimated time left: about 1 min
+[repository:command] still running after 450 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (1678 of 0 MB reserved, 1 projects running): @semio-tech/repo-test-domain needs 3633 MB and has waited 13 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:40:1:10:%40semio-tech%2Frepo-test-dotnet|language%3Adotnet|10|0:waiting|1678|0|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 40 projects · 1 running, longest 10 s: @semio-tech/repo-test-dotnet (language:dotnet, 10 s, 0 rows) · waiting for memory headroom (1678 of 0 MB reserved)
+graph: 0 of 52 projects arrived from the fleet, 6 inferred here, 46 left; the server last progressed 1202 s ago, estimated time left: about 1 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] build:command-source-packages · Resolving the packages of command sources
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[repository:command] still running after 460 s
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+graph: waiting for memory headroom (1678 of 2091 MB reserved, 1 projects running): @semio-tech/repo-test-domain needs 3633 MB and has waited 19 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:40:1:15:%40semio-tech%2Frepo-test-dotnet|language%3Adotnet|15|0:waiting|1678|2091|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 40 projects · 1 running, longest 15 s: @semio-tech/repo-test-dotnet (language:dotnet, 15 s, 0 rows) · waiting for memory headroom (1678 of 2091 MB reserved)
+[script] {"owner":"repository:build","command":"build:command-source-packages","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:40","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 40 projects
+[repo] still working after 470 s; last phase started: source.served
+[repository:command] still running after 470 s
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:7:40:1:0:%40semio-tech%2Frepo-test-domain|project|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 7 of 40 projects · 1 running, longest 0 s: @semio-tech/repo-test-domain (project, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+graph: 0 of 52 projects arrived from the fleet, 7 inferred here, 45 left; the server last progressed 1222 s ago, estimated time left: about 1 min
+graph: waiting for memory headroom (3633 of 0 MB reserved, 1 projects running): @semio-tech/repo-test needs 3633 MB and has waited 0 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 480 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:7:40:1:5:%40semio-tech%2Frepo-test-domain|project|5|0:waiting|3633|0|project","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 7 of 40 projects · 1 running, longest 5 s: @semio-tech/repo-test-domain (project, 5 s, 0 rows) · waiting for memory headroom (3633 of 0 MB reserved)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (3633 of 1154 MB reserved, 1 projects running): @semio-tech/repo-test needs 3633 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 490 s
+2026-11-15T08:56:22.354Z graph-plan-too-heavy {"stage":"inference","operation":"inference","megabytes":10118,"limit":6553,"available":6725,"reserve":2048,"reason":"ceiling","worker":{"heapMb":2347.6,"extraMb":1878.7,"objectCount":8846342,"objectTypes":[{"type":"string","count":6333896},{"type":"Object","count":1685949},{"type":"Array","count":936498},{"type":"Set","count":156524},{"type":"WeakRef","count":99773},{"type":"Structure","count":37282},{"type":"Cell Butterfly","count":24487},{"type":"Function","count":24051}],"at":1794732915372}}
+graph: plan answered, managed 104 MB, resident 142 MB (released 0 MB)
+[repo] still working after 500 s; last phase started: source.served
+[repository:command] still running after 500 s
+[repository:command] still running after 510 s

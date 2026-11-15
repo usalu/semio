@@ -1,0 +1,4 @@
+try 1 ended 2026-11-15T06:58:59Z native_rc=130 hard_stop=1 moving_lines=0 closure_missing_lines=0 sig=[  --strict                                        doctor: exit with status N for warnings as well as errors. (used by: doctor)]
+try 2 ended 2026-11-15T07:26:32Z native_rc=1 hard_stop=0 moving_lines=0 closure_missing_lines=0 sig=[  --strict                                        doctor: exit with status N for warnings as well as errors. (used by: doctor)]
+try 3 ended 2026-11-15T08:03:43Z native_rc=75 hard_stop=0 moving_lines=0 closure_missing_lines=0 sig=[The project graph could not be read on this machine yet: the plan stage inference (during inference) grew to N MB, more than the N MB this machine gives a plan, and only N MB of memory were available ]
+driver stopped at 2026-11-15T08:03:44Z for step 0 rerun (round 24)

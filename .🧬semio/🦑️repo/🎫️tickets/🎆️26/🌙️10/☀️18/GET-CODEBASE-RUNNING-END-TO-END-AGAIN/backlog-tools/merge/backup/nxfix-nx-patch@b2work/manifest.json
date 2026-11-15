@@ -1,0 +1,10 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch": {
+  "file": "f000",
+  "after": "a35ed33273863bd48e4fc585a6bf2b2fbd766fb52fed964fb1ec3fac575e5d70"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧬️lifetime/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "after": "5fcf1d97d184d3de4a9ce33c5ae482f6fac727aea148cf7ecac6558db08c9398"
+ }
+}

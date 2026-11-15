@@ -30,7 +30,7 @@
    "project-assembly/runs-tests": "cd0aa4f54dec36ee96e0d25d98494412f06c51ee9fea469e4b752711e82ebd99",
    "project-assembly/target-inputs": "327f97781fb71290cd3d328742dd4482285cb0aa5ee2ba7b118d6cd77d43e5ff"
   },
-  "semio.graph-inferrer.script-inputs/3": {
+  "semio.graph-inferrer.script-inputs/4": {
    "script-inputs/lock-inputs": "b6e1492f95cc621afa833d5d937e6d7c409ff6421fd2f858510dc77672a683f7",
    "script-inputs/target-sources-owner-wrapped": "46b340c976d1fd622f6e2d2fcb9aee9c424aa282c95fe204a3f11d3a986a6fd3",
    "script-inputs/target-sources-plain": "46b340c976d1fd622f6e2d2fcb9aee9c424aa282c95fe204a3f11d3a986a6fd3",
@@ -988,7 +988,9 @@
   "coordinates": "paths, policies and loaders of the library: no pure output; every other probe reads them",
   "graph-assembly": "neutral node shaping of the host: covered by the graph and generation suites",
   "helpers": "the helper modules the bootstrap loads (runtime closure, native host, composition, deployment, identity) need a captured workspace",
+  "input-precision": "derived inferrer: its effective stamp is the digest of its own conformance corpus (🔖️stamps/🧮️conformance), which the law of that corpus checks",
   "observation": "record format and fact verification: covered by the observation suites, not by an inference output",
+  "package-managers": "derived inferrer: its effective stamp is the digest of its own conformance corpus (🔖️stamps/🧮️conformance), which the law of that corpus checks",
   "playground-targets": "targets of the playground catalog need a published catalog and the plugin registry",
   "project-nodes": "needs the captured loader and a graph writer custody; exercised by the live harness probe `graph-receipt-tools/nodes-probe.mjs`"
  },

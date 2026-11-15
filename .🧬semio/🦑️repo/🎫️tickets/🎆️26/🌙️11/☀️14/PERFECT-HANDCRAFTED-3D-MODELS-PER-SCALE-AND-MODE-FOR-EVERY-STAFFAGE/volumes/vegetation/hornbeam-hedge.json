@@ -1,0 +1,6784 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "block-1",
+     "kind": "loft",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.3034,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.15,
+        0,
+        0
+       ],
+       "rx": 0.31992,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.65,
+        0,
+        0
+       ],
+       "rx": 0.34535,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.35,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.2,
+        0,
+        0
+       ],
+       "rx": 0.32973,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.31432,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.43,
+        0,
+        0
+       ],
+       "rx": 0.28675,
+       "ry": 0.3104,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-1-1",
+     "kind": "loft",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        1.39984,
+        0.215,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.45484,
+        0.215,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.49984,
+        0.215,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-1-2",
+     "kind": "loft",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        1.42125,
+        -0.005,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.12,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.47625,
+        -0.005,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.1116,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.52125,
+        -0.005,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.072,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-1-3",
+     "kind": "loft",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        1.41438,
+        -0.225,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.46938,
+        -0.225,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.51438,
+        -0.225,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-2",
+     "kind": "loft",
+     "bone": "block-2",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.2941,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.15,
+        0,
+        0
+       ],
+       "rx": 0.31058,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3313,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.65,
+        0,
+        0
+       ],
+       "rx": 0.336,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.2,
+        0,
+        0
+       ],
+       "rx": 0.31896,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.2963,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.43,
+        0,
+        0
+       ],
+       "rx": 0.25757,
+       "ry": 0.3104,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-2-1",
+     "kind": "loft",
+     "bone": "block-2",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        1.4275,
+        0.215,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4825,
+        0.215,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5275,
+        0.215,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-2-2",
+     "kind": "loft",
+     "bone": "block-2",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        1.43078,
+        -0.005,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.12,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.48578,
+        -0.005,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.1116,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.53078,
+        -0.005,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.072,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-2-3",
+     "kind": "loft",
+     "bone": "block-2",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        1.39922,
+        -0.225,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.45422,
+        -0.225,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.49922,
+        -0.225,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-3",
+     "kind": "loft",
+     "bone": "block-3",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.3034,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.15,
+        0,
+        0
+       ],
+       "rx": 0.31992,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.65,
+        0,
+        0
+       ],
+       "rx": 0.34535,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.35,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.2,
+        0,
+        0
+       ],
+       "rx": 0.32973,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.31432,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.43,
+        0,
+        0
+       ],
+       "rx": 0.28675,
+       "ry": 0.3104,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-3-1",
+     "kind": "loft",
+     "bone": "block-3",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        1.41656,
+        0.215,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.47156,
+        0.215,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.51656,
+        0.215,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-3-2",
+     "kind": "loft",
+     "bone": "block-3",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        1.41922,
+        -0.005,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.12,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.47422,
+        -0.005,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.1116,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.51922,
+        -0.005,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.072,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-3-3",
+     "kind": "loft",
+     "bone": "block-3",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        1.41418,
+        -0.225,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.46918,
+        -0.225,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.51418,
+        -0.225,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-4",
+     "kind": "loft",
+     "bone": "block-4",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.2941,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.15,
+        0,
+        0
+       ],
+       "rx": 0.31058,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3313,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.65,
+        0,
+        0
+       ],
+       "rx": 0.336,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.2,
+        0,
+        0
+       ],
+       "rx": 0.31896,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.2963,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.43,
+        0,
+        0
+       ],
+       "rx": 0.25757,
+       "ry": 0.3104,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-4-1",
+     "kind": "loft",
+     "bone": "block-4",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        1.40438,
+        0.215,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.45938,
+        0.215,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.50438,
+        0.215,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-4-2",
+     "kind": "loft",
+     "bone": "block-4",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        1.43109,
+        -0.005,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.12,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.48609,
+        -0.005,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.1116,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.53109,
+        -0.005,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.072,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-4-3",
+     "kind": "loft",
+     "bone": "block-4",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        1.39539,
+        -0.225,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.45039,
+        -0.225,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.49539,
+        -0.225,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-5",
+     "kind": "loft",
+     "bone": "block-5",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.3034,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.15,
+        0,
+        0
+       ],
+       "rx": 0.31992,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.65,
+        0,
+        0
+       ],
+       "rx": 0.34535,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.35,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.2,
+        0,
+        0
+       ],
+       "rx": 0.32973,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.31432,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.43,
+        0,
+        0
+       ],
+       "rx": 0.28675,
+       "ry": 0.3104,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-5-1",
+     "kind": "loft",
+     "bone": "block-5",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        1.40766,
+        0.215,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.46266,
+        0.215,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.50766,
+        0.215,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-5-2",
+     "kind": "loft",
+     "bone": "block-5",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        1.42563,
+        -0.005,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.12,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.48063,
+        -0.005,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.1116,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.52563,
+        -0.005,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.072,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-5-3",
+     "kind": "loft",
+     "bone": "block-5",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        1.41719,
+        -0.225,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.47219,
+        -0.225,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.51719,
+        -0.225,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-6",
+     "kind": "loft",
+     "bone": "block-6",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.2894,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.15,
+        0,
+        0
+       ],
+       "rx": 0.30592,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3267,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.65,
+        0,
+        0
+       ],
+       "rx": 0.33135,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.336,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.2,
+        0,
+        0
+       ],
+       "rx": 0.31431,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.2917,
+       "ry": 0.32,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.43,
+        0,
+        0
+       ],
+       "rx": 0.25315,
+       "ry": 0.3104,
+       "exponent": 7,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-6-1",
+     "kind": "loft",
+     "bone": "block-6",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        1.42062,
+        0.215,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.47563,
+        0.215,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.52063,
+        0.215,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-6-2",
+     "kind": "loft",
+     "bone": "block-6",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        1.42379,
+        -0.005,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.12,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.47879,
+        -0.005,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.1116,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.52379,
+        -0.005,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.072,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-6-3",
+     "kind": "loft",
+     "bone": "block-6",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.46,
+     "sections": [
+      {
+       "at": [
+        1.38594,
+        -0.225,
+        0
+       ],
+       "rx": 0.29,
+       "ry": 0.095,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.44094,
+        -0.225,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.08835,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.48594,
+        -0.225,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.057,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "stem-1-a",
+     "kind": "capsule",
+     "bone": "stem-1",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      0.03587,
+      -0.12
+     ],
+     "p1": [
+      0.36,
+      0.06395,
+      -0.12
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-1-b",
+     "kind": "capsule",
+     "bone": "stem-1",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      -0.03587,
+      0.13
+     ],
+     "p1": [
+      0.36,
+      -0.06395,
+      0.13
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-2-a",
+     "kind": "capsule",
+     "bone": "stem-2",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      0.03587,
+      -0.11
+     ],
+     "p1": [
+      0.36,
+      0.06395,
+      -0.11
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-2-b",
+     "kind": "capsule",
+     "bone": "stem-2",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      -0.03587,
+      0.14
+     ],
+     "p1": [
+      0.36,
+      -0.06395,
+      0.14
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-3-a",
+     "kind": "capsule",
+     "bone": "stem-3",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      0.03587,
+      -0.1
+     ],
+     "p1": [
+      0.36,
+      0.06395,
+      -0.1
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-3-b",
+     "kind": "capsule",
+     "bone": "stem-3",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      -0.03587,
+      0.15
+     ],
+     "p1": [
+      0.36,
+      -0.06395,
+      0.15
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-4-a",
+     "kind": "capsule",
+     "bone": "stem-4",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      0.03587,
+      -0.09
+     ],
+     "p1": [
+      0.36,
+      0.06395,
+      -0.09
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-4-b",
+     "kind": "capsule",
+     "bone": "stem-4",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      -0.03587,
+      0.16
+     ],
+     "p1": [
+      0.36,
+      -0.06395,
+      0.16
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-5-a",
+     "kind": "capsule",
+     "bone": "stem-5",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      0.03587,
+      -0.08
+     ],
+     "p1": [
+      0.36,
+      0.06395,
+      -0.08
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-5-b",
+     "kind": "capsule",
+     "bone": "stem-5",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      -0.03587,
+      0.17
+     ],
+     "p1": [
+      0.36,
+      -0.06395,
+      0.17
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-6-a",
+     "kind": "capsule",
+     "bone": "stem-6",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      0.03587,
+      -0.07
+     ],
+     "p1": [
+      0.36,
+      0.06395,
+      -0.07
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "stem-6-b",
+     "kind": "capsule",
+     "bone": "stem-6",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      0.04,
+      -0.03587,
+      0.18
+     ],
+     "p1": [
+      0.36,
+      -0.06395,
+      0.18
+     ],
+     "r0": 0.04,
+     "r1": 0.04
+    },
+    {
+     "id": "bed-strip",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      3.1,
+      0.04,
+      0.7
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.02,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-stem-1-a",
+     "of": "stem-1-a",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-1-b",
+     "of": "stem-1-b",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-2-a",
+     "of": "stem-2-a",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-2-b",
+     "of": "stem-2-b",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-3-a",
+     "of": "stem-3-a",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-3-b",
+     "of": "stem-3-b",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-4-a",
+     "of": "stem-4-a",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-4-b",
+     "of": "stem-4-b",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-5-a",
+     "of": "stem-5-a",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-5-b",
+     "of": "stem-5-b",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-6-a",
+     "of": "stem-6-a",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-stem-6-b",
+     "of": "stem-6-b",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-block-1",
+     "of": "block-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-1-1",
+     "of": "crown-1-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-1-2",
+     "of": "crown-1-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-1-3",
+     "of": "crown-1-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-2",
+     "of": "block-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-2-1",
+     "of": "crown-2-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-2-2",
+     "of": "crown-2-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-2-3",
+     "of": "crown-2-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-3",
+     "of": "block-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-3-1",
+     "of": "crown-3-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-3-2",
+     "of": "crown-3-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-3-3",
+     "of": "crown-3-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-4",
+     "of": "block-4",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-4-1",
+     "of": "crown-4-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-4-2",
+     "of": "crown-4-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-4-3",
+     "of": "crown-4-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-5",
+     "of": "block-5",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-5-1",
+     "of": "crown-5-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-5-2",
+     "of": "crown-5-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-5-3",
+     "of": "crown-5-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-6",
+     "of": "block-6",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-6-1",
+     "of": "crown-6-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-6-2",
+     "of": "crown-6-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-6-3",
+     "of": "crown-6-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-core-1",
+     "kind": "box",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.49505,
+      1.39906,
+      0.30134
+     ],
+     "cornerRadius": 0.05,
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.7,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "th-core-2",
+     "kind": "box",
+     "bone": "block-2",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.49505,
+      1.39906,
+      0.30134
+     ],
+     "cornerRadius": 0.05,
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.7,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "th-core-3",
+     "kind": "box",
+     "bone": "block-3",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.49505,
+      1.39906,
+      0.30134
+     ],
+     "cornerRadius": 0.05,
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.7,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "th-core-4",
+     "kind": "box",
+     "bone": "block-4",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.49505,
+      1.39906,
+      0.30134
+     ],
+     "cornerRadius": 0.05,
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.7,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "th-core-5",
+     "kind": "box",
+     "bone": "block-5",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.49505,
+      1.39906,
+      0.30134
+     ],
+     "cornerRadius": 0.05,
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.7,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "th-core-6",
+     "kind": "box",
+     "bone": "block-6",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.49505,
+      1.39906,
+      0.30134
+     ],
+     "cornerRadius": 0.05,
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.7,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "th-transpiration-face",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "detail",
+     "tone": 0.45,
+     "radii": [
+      0.01,
+      0.3,
+      0.3
+     ],
+     "region": "leaf-face",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.909,
+       0,
+       0
+      ]
+     },
+     "tags": [
+      "transpiration-face"
+     ]
+    },
+    {
+     "id": "th-transpiration-core",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "detail",
+     "tone": 0.45,
+     "radii": [
+      0.01,
+      0.25,
+      0.25
+     ],
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.8,
+       0,
+       0
+      ]
+     },
+     "tags": [
+      "transpiration-core"
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "root-mat",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      3,
+      0.04,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.02,
+       0
+      ]
+     },
+     "member": "root-plate",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-1-a",
+     "of": "stem-1-a",
+     "member": "stem-1",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-1-b",
+     "of": "stem-1-b",
+     "member": "stem-1",
+     "part": "member"
+    },
+    {
+     "id": "member-block-1",
+     "kind": "capsule",
+     "bone": "block-1",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-1",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-1",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-1",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-1-a",
+     "kind": "ellipsoid",
+     "bone": "stem-1",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-1",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0.04991,
+       -0.12
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-1-b",
+     "kind": "ellipsoid",
+     "bone": "stem-1",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-1",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       -0.04991,
+       0.13
+      ]
+     }
+    },
+    {
+     "id": "member-stem-2-a",
+     "of": "stem-2-a",
+     "member": "stem-2",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-2-b",
+     "of": "stem-2-b",
+     "member": "stem-2",
+     "part": "member"
+    },
+    {
+     "id": "member-block-2",
+     "kind": "capsule",
+     "bone": "block-2",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-2",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-2",
+     "kind": "ellipsoid",
+     "bone": "block-2",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-2",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-2-a",
+     "kind": "ellipsoid",
+     "bone": "stem-2",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-2",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0.04991,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-2-b",
+     "kind": "ellipsoid",
+     "bone": "stem-2",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-2",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       -0.04991,
+       0.14
+      ]
+     }
+    },
+    {
+     "id": "member-stem-3-a",
+     "of": "stem-3-a",
+     "member": "stem-3",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-3-b",
+     "of": "stem-3-b",
+     "member": "stem-3",
+     "part": "member"
+    },
+    {
+     "id": "member-block-3",
+     "kind": "capsule",
+     "bone": "block-3",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-3",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-3",
+     "kind": "ellipsoid",
+     "bone": "block-3",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-3",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-3-a",
+     "kind": "ellipsoid",
+     "bone": "stem-3",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-3",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0.04991,
+       -0.1
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-3-b",
+     "kind": "ellipsoid",
+     "bone": "stem-3",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-3",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       -0.04991,
+       0.15
+      ]
+     }
+    },
+    {
+     "id": "member-stem-4-a",
+     "of": "stem-4-a",
+     "member": "stem-4",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-4-b",
+     "of": "stem-4-b",
+     "member": "stem-4",
+     "part": "member"
+    },
+    {
+     "id": "member-block-4",
+     "kind": "capsule",
+     "bone": "block-4",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-4",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-4",
+     "kind": "ellipsoid",
+     "bone": "block-4",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-4",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-4-a",
+     "kind": "ellipsoid",
+     "bone": "stem-4",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-4",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0.04991,
+       -0.09
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-4-b",
+     "kind": "ellipsoid",
+     "bone": "stem-4",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-4",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       -0.04991,
+       0.16
+      ]
+     }
+    },
+    {
+     "id": "member-stem-5-a",
+     "of": "stem-5-a",
+     "member": "stem-5",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-5-b",
+     "of": "stem-5-b",
+     "member": "stem-5",
+     "part": "member"
+    },
+    {
+     "id": "member-block-5",
+     "kind": "capsule",
+     "bone": "block-5",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-5",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-5",
+     "kind": "ellipsoid",
+     "bone": "block-5",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-5",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-5-a",
+     "kind": "ellipsoid",
+     "bone": "stem-5",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-5",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0.04991,
+       -0.08
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-5-b",
+     "kind": "ellipsoid",
+     "bone": "stem-5",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-5",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       -0.04991,
+       0.17
+      ]
+     }
+    },
+    {
+     "id": "member-stem-6-a",
+     "of": "stem-6-a",
+     "member": "stem-6",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-6-b",
+     "of": "stem-6-b",
+     "member": "stem-6",
+     "part": "member"
+    },
+    {
+     "id": "member-block-6",
+     "kind": "capsule",
+     "bone": "block-6",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-6",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-6",
+     "kind": "ellipsoid",
+     "bone": "block-6",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-6",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-6-a",
+     "kind": "ellipsoid",
+     "bone": "stem-6",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-6",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0.04991,
+       -0.07
+      ]
+     }
+    },
+    {
+     "id": "joint-stem-6-b",
+     "kind": "ellipsoid",
+     "bone": "stem-6",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.033,
+      0.033,
+      0.033
+     ],
+     "member": "stem-6",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       -0.04991,
+       0.18
+      ]
+     }
+    },
+    {
+     "id": "support-base-support",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      3,
+      0.06,
+      0.6
+     ],
+     "member": "root-plate",
+     "part": "support",
+     "anchor": "base-support",
+     "transform": {
+      "translation": [
+       1.5,
+       -0.03,
+       0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: six clipped hedge panels, each a vertical loft whose half widths are read slice by slice from the panel's own front outline and whose plan sections are rounded rectangles (superelliptic exponent 7, the 0.1 m corner radius of the plan drawing); three shallow lofted crowns per panel reproduce the scalloped top of the elevation, twelve slightly leaning stem capsules carry the panels, and a 4 cm bed strip stands for the root plate line.",
+     "de": "K\u00f6rper: sechs geschnittene Heckenfelder, jedes ein senkrechter Loft, dessen Halbbreiten Schnitt f\u00fcr Schnitt aus der eigenen Frontkontur gelesen werden und dessen Grundrissschnitte abgerundete Rechtecke sind (superelliptischer Exponent 7, der Eckenradius von 0,1 m der Grundrisszeichnung); drei flache Loft-Kronen je Feld bilden den gewellten Abschluss der Ansicht nach, zw\u00f6lf leicht geneigte Stammkapseln tragen die Felder, und ein 4 cm Beetstreifen steht f\u00fcr die Wurzelplattenlinie."
+    },
+    {
+     "en": "Thermal: leaf-face is a scaled-down shell of every leaf-bearing body solid (factor fitted so that the outer surface equals the authored 16 m2, the panels overlap, so their raw outer surface would be about 80 % too large); leaf-core is six inner boxes, one per panel, fitted to 14 m2; stem-bark is twelve thin capsules fitted to 0.8 m2; both transpiration emitters are flat discs of their own diameter at their anchors.",
+     "de": "Thermisch: leaf-face ist je Laubk\u00f6rper eine verkleinerte Schale (der Faktor ist so gew\u00e4hlt, dass die Au\u00dfenfl\u00e4che den angegebenen 16 m2 entspricht; die Felder \u00fcberlappen sich, ihre rohe Au\u00dfenfl\u00e4che w\u00e4re etwa 80 % zu gro\u00df); leaf-core sind sechs innere Quader, einer je Feld, auf 14 m2 abgestimmt; stem-bark sind zw\u00f6lf d\u00fcnne Kapseln auf 0,8 m2; beide Transpirationsemitter sind flache Scheiben ihres eigenen Durchmessers an ihren Ankern."
+    },
+    {
+     "en": "Structure: the load path is the stem pair under every panel (the body stems themselves, referenced), a branch-bundle capsule of 4 to 5 cm along every panel bone, joint balls at the stem feet and panel bases, the root mat as a flat slab on the root plate bone and the fixed support block of the 3 m by 0.6 m footprint under the whole row.",
+     "de": "Tragwerk: der Lastpfad ist das Stammpaar unter jedem Feld (die K\u00f6rperst\u00e4mme selbst, als Verweis), eine Astb\u00fcndelkapsel von 4 bis 5 cm entlang jedem Feldknochen, Gelenkkugeln an den Stammf\u00fc\u00dfen und Feldbasen, die Wurzelmatte als flache Platte am Wurzelplattenknochen und der feste Auflagerblock mit 3 m mal 0,6 m Grundfl\u00e4che unter der ganzen Reihe."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "block-1",
+     "kind": "loft",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.3034,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.35,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.31432,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.44,
+        0,
+        0
+       ],
+       "rx": 0.28003,
+       "ry": 0.3104,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-1",
+     "kind": "loft",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        1.4475,
+        0,
+        0
+       ],
+       "rx": 0.3,
+       "ry": 0.31,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4975,
+        0,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.279,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5275,
+        0,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.1922,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-2",
+     "kind": "loft",
+     "bone": "block-2",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.2941,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3313,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.2963,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.44,
+        0,
+        0
+       ],
+       "rx": 0.25085,
+       "ry": 0.3104,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-2",
+     "kind": "loft",
+     "bone": "block-2",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        1.4175,
+        0,
+        0
+       ],
+       "rx": 0.3,
+       "ry": 0.31,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4675,
+        0,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.279,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4975,
+        0,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.1922,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-3",
+     "kind": "loft",
+     "bone": "block-3",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.3034,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.35,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.31432,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.44,
+        0,
+        0
+       ],
+       "rx": 0.28003,
+       "ry": 0.3104,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-3",
+     "kind": "loft",
+     "bone": "block-3",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        1.4475,
+        0,
+        0
+       ],
+       "rx": 0.3,
+       "ry": 0.31,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4975,
+        0,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.279,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5275,
+        0,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.1922,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-4",
+     "kind": "loft",
+     "bone": "block-4",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.2941,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3313,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.2963,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.44,
+        0,
+        0
+       ],
+       "rx": 0.25085,
+       "ry": 0.3104,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-4",
+     "kind": "loft",
+     "bone": "block-4",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        1.4175,
+        0,
+        0
+       ],
+       "rx": 0.3,
+       "ry": 0.31,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4675,
+        0,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.279,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4975,
+        0,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.1922,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-5",
+     "kind": "loft",
+     "bone": "block-5",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.3034,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.35,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.31432,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.44,
+        0,
+        0
+       ],
+       "rx": 0.28003,
+       "ry": 0.3104,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-5",
+     "kind": "loft",
+     "bone": "block-5",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        1.4475,
+        0,
+        0
+       ],
+       "rx": 0.3,
+       "ry": 0.31,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4975,
+        0,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.279,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5275,
+        0,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.1922,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-6",
+     "kind": "loft",
+     "bone": "block-6",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.2894,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3267,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.336,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.39,
+        0,
+        0
+       ],
+       "rx": 0.2917,
+       "ry": 0.32,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.44,
+        0,
+        0
+       ],
+       "rx": 0.24643,
+       "ry": 0.3104,
+       "exponent": 6,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "crown-6",
+     "kind": "loft",
+     "bone": "block-6",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        1.4175,
+        0,
+        0
+       ],
+       "rx": 0.3,
+       "ry": 0.31,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4675,
+        0,
+        0
+       ],
+       "rx": 0.26,
+       "ry": 0.279,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.4975,
+        0,
+        0
+       ],
+       "rx": 0.22,
+       "ry": 0.1922,
+       "exponent": 3.2,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "plinth",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      3,
+      0.4,
+      0.62
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.2,
+       0
+      ]
+     }
+    },
+    {
+     "id": "stem-1",
+     "kind": "capsule",
+     "bone": "stem-1",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.34,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.03
+    },
+    {
+     "id": "stem-2",
+     "kind": "capsule",
+     "bone": "stem-2",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.34,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.03
+    },
+    {
+     "id": "stem-3",
+     "kind": "capsule",
+     "bone": "stem-3",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.34,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.03
+    },
+    {
+     "id": "stem-4",
+     "kind": "capsule",
+     "bone": "stem-4",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.34,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.03
+    },
+    {
+     "id": "stem-5",
+     "kind": "capsule",
+     "bone": "stem-5",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.34,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.03
+    },
+    {
+     "id": "stem-6",
+     "kind": "capsule",
+     "bone": "stem-6",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.3,
+     "p0": [
+      0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.34,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.03
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-plinth",
+     "of": "plinth",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-block-1",
+     "of": "block-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-1",
+     "of": "crown-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-2",
+     "of": "block-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-2",
+     "of": "crown-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-3",
+     "of": "block-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-3",
+     "of": "crown-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-4",
+     "of": "block-4",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-4",
+     "of": "crown-4",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-5",
+     "of": "block-5",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-5",
+     "of": "crown-5",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-6",
+     "of": "block-6",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-crown-6",
+     "of": "crown-6",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-core-strip",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      3,
+      1.50128,
+      0.62361
+     ],
+     "cornerRadius": 0.06929,
+     "region": "leaf-core",
+     "transform": {
+      "translation": [
+       1.5,
+       1.05,
+       0
+      ]
+     }
+    },
+    {
+     "id": "th-transpiration-face",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "detail",
+     "tone": 0.45,
+     "radii": [
+      0.01,
+      0.3,
+      0.3
+     ],
+     "region": "leaf-face",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.909,
+       0,
+       0
+      ]
+     },
+     "tags": [
+      "transpiration-face"
+     ]
+    },
+    {
+     "id": "th-transpiration-core",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "detail",
+     "tone": 0.45,
+     "radii": [
+      0.01,
+      0.25,
+      0.25
+     ],
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.8,
+       0,
+       0
+      ]
+     },
+     "tags": [
+      "transpiration-core"
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "root-mat",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      3,
+      0.04,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.02,
+       0
+      ]
+     },
+     "member": "root-plate",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-1",
+     "kind": "capsule",
+     "bone": "stem-1",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.035,
+     "r1": 0.035,
+     "member": "stem-1",
+     "part": "member"
+    },
+    {
+     "id": "member-block-1",
+     "kind": "capsule",
+     "bone": "block-1",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.025,
+     "member": "block-1",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-1",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-1",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-stem-2",
+     "kind": "capsule",
+     "bone": "stem-2",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.035,
+     "r1": 0.035,
+     "member": "stem-2",
+     "part": "member"
+    },
+    {
+     "id": "member-block-2",
+     "kind": "capsule",
+     "bone": "block-2",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.025,
+     "member": "block-2",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-2",
+     "kind": "ellipsoid",
+     "bone": "block-2",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-2",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-stem-3",
+     "kind": "capsule",
+     "bone": "stem-3",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.035,
+     "r1": 0.035,
+     "member": "stem-3",
+     "part": "member"
+    },
+    {
+     "id": "member-block-3",
+     "kind": "capsule",
+     "bone": "block-3",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.025,
+     "member": "block-3",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-3",
+     "kind": "ellipsoid",
+     "bone": "block-3",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-3",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-stem-4",
+     "kind": "capsule",
+     "bone": "stem-4",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.035,
+     "r1": 0.035,
+     "member": "stem-4",
+     "part": "member"
+    },
+    {
+     "id": "member-block-4",
+     "kind": "capsule",
+     "bone": "block-4",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.025,
+     "member": "block-4",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-4",
+     "kind": "ellipsoid",
+     "bone": "block-4",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-4",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-stem-5",
+     "kind": "capsule",
+     "bone": "stem-5",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.035,
+     "r1": 0.035,
+     "member": "stem-5",
+     "part": "member"
+    },
+    {
+     "id": "member-block-5",
+     "kind": "capsule",
+     "bone": "block-5",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.025,
+     "member": "block-5",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-5",
+     "kind": "ellipsoid",
+     "bone": "block-5",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-5",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-stem-6",
+     "kind": "capsule",
+     "bone": "stem-6",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.035,
+     "r1": 0.035,
+     "member": "stem-6",
+     "part": "member"
+    },
+    {
+     "id": "member-block-6",
+     "kind": "capsule",
+     "bone": "block-6",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.03,
+     "r1": 0.025,
+     "member": "block-6",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-block-6",
+     "kind": "ellipsoid",
+     "bone": "block-6",
+     "material": "hornbeam-bark",
+     "role": "detail",
+     "tone": 0.35,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "member": "block-6",
+     "part": "joint",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.07,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "support-base-support",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      3,
+      0.06,
+      0.6
+     ],
+     "member": "root-plate",
+     "part": "support",
+     "anchor": "base-support",
+     "transform": {
+      "translation": [
+       1.5,
+       -0.03,
+       0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body modelled anew against the 1:100 drawings: the twelve stems merge into one 0.4 m plinth box (as drawn), the panels are lofts with five sections and a single lofted crown per panel instead of three, the stem bones keep one hidden capsule inside the plinth so that every drawn bone has a solid.",
+     "de": "K\u00f6rper neu gegen die 1:100-Zeichnungen modelliert: die zw\u00f6lf St\u00e4mme sind zu einem 0,4 m hohen Sockelquader zusammengefasst (wie gezeichnet), die Felder sind Lofts mit f\u00fcnf Schnitten und einer einzigen Loft-Krone je Feld statt drei, die Stammknochen behalten je eine verdeckte Kapsel im Sockel, damit jeder gezeichnete Knochen einen K\u00f6rper hat."
+    },
+    {
+     "en": "Thermal: leaf-face scaled panel shells (fitted to 16 m2), leaf-core one continuous inner strip (the cores merge at this scale), stem-bark twelve capsules kept inside the plinth, emitters as discs; at this scale the stems are no longer visible, but their bark surface still exchanges heat.",
+     "de": "Thermisch: leaf-face verkleinerte Feldschalen (auf 16 m2 abgestimmt), leaf-core ein durchgehender innerer Streifen (die Kerne verschmelzen bei diesem Ma\u00dfstab), stem-bark zw\u00f6lf Kapseln im Sockel, Emitter als Scheiben; die St\u00e4mme sind bei diesem Ma\u00dfstab nicht mehr sichtbar, ihre Rindenfl\u00e4che tauscht aber weiter W\u00e4rme aus."
+    },
+    {
+     "en": "Structure: stem and panel members as single capsules per bone (stem pairs merged, 3.5 and 3 cm), joint balls only at the panel bases, root mat, support block; members of a coarser scale are thicker than those of 1:50 because the smallest feature doubles.",
+     "de": "Tragwerk: Stamm- und Feldst\u00e4be als eine Kapsel je Knochen (Stammpaare zusammengefasst, 3,5 und 3 cm), Gelenkkugeln nur an den Feldbasen, Wurzelmatte, Auflagerblock; die St\u00e4be eines gr\u00f6beren Ma\u00dfstabs sind dicker als bei 1:50, weil sich das kleinste Merkmal verdoppelt."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "block-1",
+     "kind": "loft",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.3034,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.35,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.38,
+        0,
+        0
+       ],
+       "rx": 0.31513,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5,
+        0,
+        0
+       ],
+       "rx": 0.23971,
+       "ry": 0.3104,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-2",
+     "kind": "loft",
+     "bone": "block-2",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.2941,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3313,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.38,
+        0,
+        0
+       ],
+       "rx": 0.3033,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5,
+        0,
+        0
+       ],
+       "rx": 0.288,
+       "ry": 0.3104,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-3",
+     "kind": "loft",
+     "bone": "block-3",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.3034,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.35,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.38,
+        0,
+        0
+       ],
+       "rx": 0.31513,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5,
+        0,
+        0
+       ],
+       "rx": 0.23971,
+       "ry": 0.3104,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-4",
+     "kind": "loft",
+     "bone": "block-4",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.2941,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3313,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.38,
+        0,
+        0
+       ],
+       "rx": 0.3033,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5,
+        0,
+        0
+       ],
+       "rx": 0.288,
+       "ry": 0.3104,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-5",
+     "kind": "loft",
+     "bone": "block-5",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.3034,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3407,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.35,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.38,
+        0,
+        0
+       ],
+       "rx": 0.31513,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5,
+        0,
+        0
+       ],
+       "rx": 0.23971,
+       "ry": 0.3104,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "block-6",
+     "kind": "loft",
+     "bone": "block-6",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.6,
+     "sections": [
+      {
+       "at": [
+        -0.01,
+        0,
+        0
+       ],
+       "rx": 0.2894,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.35,
+        0,
+        0
+       ],
+       "rx": 0.3267,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.95,
+        0,
+        0
+       ],
+       "rx": 0.336,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.38,
+        0,
+        0
+       ],
+       "rx": 0.2987,
+       "ry": 0.32,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5,
+        0,
+        0
+       ],
+       "rx": 0.288,
+       "ry": 0.3104,
+       "exponent": 3.4,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "plinth",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      3,
+      0.4,
+      0.62
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.2,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-plinth",
+     "of": "plinth",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-block-1",
+     "of": "block-1",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-2",
+     "of": "block-2",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-3",
+     "of": "block-3",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-4",
+     "of": "block-4",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-5",
+     "of": "block-5",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-block-6",
+     "of": "block-6",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-core-strip",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      3,
+      1.50128,
+      0.62361
+     ],
+     "cornerRadius": 0.06929,
+     "region": "leaf-core",
+     "transform": {
+      "translation": [
+       1.5,
+       1.05,
+       0
+      ]
+     }
+    },
+    {
+     "id": "th-transpiration-face",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "detail",
+     "tone": 0.45,
+     "radii": [
+      0.018,
+      0.3,
+      0.3
+     ],
+     "region": "leaf-face",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.909,
+       0,
+       0
+      ]
+     },
+     "tags": [
+      "transpiration-face"
+     ]
+    },
+    {
+     "id": "th-transpiration-core",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "detail",
+     "tone": 0.45,
+     "radii": [
+      0.018,
+      0.25,
+      0.25
+     ],
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.8,
+       0,
+       0
+      ]
+     },
+     "tags": [
+      "transpiration-core"
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "root-mat",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      3,
+      0.04,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.02,
+       0
+      ]
+     },
+     "member": "root-plate",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-1",
+     "kind": "capsule",
+     "bone": "stem-1",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.045,
+     "r1": 0.045,
+     "member": "stem-1",
+     "part": "member"
+    },
+    {
+     "id": "member-block-1",
+     "kind": "capsule",
+     "bone": "block-1",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-1",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-stem-2",
+     "kind": "capsule",
+     "bone": "stem-2",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.045,
+     "r1": 0.045,
+     "member": "stem-2",
+     "part": "member"
+    },
+    {
+     "id": "member-block-2",
+     "kind": "capsule",
+     "bone": "block-2",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-2",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-stem-3",
+     "kind": "capsule",
+     "bone": "stem-3",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.045,
+     "r1": 0.045,
+     "member": "stem-3",
+     "part": "member"
+    },
+    {
+     "id": "member-block-3",
+     "kind": "capsule",
+     "bone": "block-3",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-3",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-stem-4",
+     "kind": "capsule",
+     "bone": "stem-4",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.045,
+     "r1": 0.045,
+     "member": "stem-4",
+     "part": "member"
+    },
+    {
+     "id": "member-block-4",
+     "kind": "capsule",
+     "bone": "block-4",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-4",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-stem-5",
+     "kind": "capsule",
+     "bone": "stem-5",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.045,
+     "r1": 0.045,
+     "member": "stem-5",
+     "part": "member"
+    },
+    {
+     "id": "member-block-5",
+     "kind": "capsule",
+     "bone": "block-5",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-5",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-stem-6",
+     "kind": "capsule",
+     "bone": "stem-6",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.035,
+      0,
+      0
+     ],
+     "p1": [
+      0.315,
+      0,
+      0
+     ],
+     "r0": 0.045,
+     "r1": 0.045,
+     "member": "stem-6",
+     "part": "member"
+    },
+    {
+     "id": "member-block-6",
+     "kind": "capsule",
+     "bone": "block-6",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "member": "block-6",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "support-base-support",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      3,
+      0.06,
+      0.6
+     ],
+     "member": "root-plate",
+     "part": "support",
+     "anchor": "base-support",
+     "transform": {
+      "translation": [
+       1.5,
+       -0.03,
+       0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body modelled anew against the 1:200 drawings: plinth box and six panel lofts with five sections, no crowns (the scallops of the top are below the 30 mm smallest feature), flat top at the mean crest height with the chamfered front shoulders of the drawing.",
+     "de": "K\u00f6rper neu gegen die 1:200-Zeichnungen modelliert: Sockelquader und sechs Feldlofts mit f\u00fcnf Schnitten, keine Kronen (die Wellen des Abschlusses liegen unter dem kleinsten Merkmal von 30 mm), ebener Abschluss auf mittlerer Kammh\u00f6he mit den abgeschr\u00e4gten Frontschultern der Zeichnung."
+    },
+    {
+     "en": "Thermal: six single-stem capsules (stem pairs merged), scaled panel shells and one core strip, emitters as discs; areas fitted to the authored values within the 30 % tolerance of the coarse scales.",
+     "de": "Thermisch: sechs Einzelstamm-Kapseln (Stammpaare zusammengefasst), verkleinerte Feldschalen und ein Kernstreifen, Emitter als Scheiben; die Fl\u00e4chen sind auf die angegebenen Werte innerhalb der 30 %-Toleranz der groben Ma\u00dfst\u00e4be abgestimmt."
+    },
+    {
+     "en": "Structure: one capsule per member bone with sections of 4.5 and 3.5 cm, no joint balls (joints fall below the feature), root mat and support block.",
+     "de": "Tragwerk: eine Kapsel je Stabknochen mit Querschnitten von 4,5 und 3,5 cm, keine Gelenkkugeln (Gelenke liegen unter dem Merkmal), Wurzelmatte und Auflagerblock."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "hedge",
+     "kind": "loft",
+     "bone": "root-plate",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.5,
+     "sections": [
+      {
+       "at": [
+        -0.07,
+        1.1445,
+        0
+       ],
+       "rx": 0.3,
+       "ry": 0.03934,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0,
+        1.1445,
+        0
+       ],
+       "rx": 0.34,
+       "ry": 0.50263,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.15,
+        1.15639,
+        0
+       ],
+       "rx": 0.34,
+       "ry": 0.64072,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.4,
+        1.15183,
+        0
+       ],
+       "rx": 0.34,
+       "ry": 0.70817,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        0.9,
+        1.1138,
+        0
+       ],
+       "rx": 0.34,
+       "ry": 0.7462,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        1.5,
+        1.1,
+        0
+       ],
+       "rx": 0.34,
+       "ry": 0.76,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        2.1,
+        1.10631,
+        0
+       ],
+       "rx": 0.34,
+       "ry": 0.73871,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        2.6,
+        1.14079,
+        0
+       ],
+       "rx": 0.34,
+       "ry": 0.69713,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        2.85,
+        1.16966,
+        0
+       ],
+       "rx": 0.34,
+       "ry": 0.65399,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        3,
+        1.1445,
+        0
+       ],
+       "rx": 0.34,
+       "ry": 0.50263,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      },
+      {
+       "at": [
+        3.07,
+        1.1445,
+        0
+       ],
+       "rx": 0.3,
+       "ry": 0.03934,
+       "exponent": 3.8,
+       "rotation": [
+        0.70711,
+        0,
+        0.70711,
+        0
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "plinth",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-bark",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      3,
+      0.4,
+      0.62
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.2,
+       0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-plinth",
+     "of": "plinth",
+     "region": "stem-bark"
+    },
+    {
+     "id": "th-hedge",
+     "of": "hedge",
+     "region": "leaf-face"
+    },
+    {
+     "id": "th-core-strip",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-leaf",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      3,
+      1.50128,
+      0.62361
+     ],
+     "cornerRadius": 0.06929,
+     "region": "leaf-core",
+     "transform": {
+      "translation": [
+       1.5,
+       1.05,
+       0
+      ]
+     }
+    },
+    {
+     "id": "th-transpiration-face",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "detail",
+     "tone": 0.45,
+     "radii": [
+      0.045,
+      0.3,
+      0.3
+     ],
+     "region": "leaf-face",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.909,
+       0,
+       0
+      ]
+     },
+     "tags": [
+      "transpiration-face"
+     ]
+    },
+    {
+     "id": "th-transpiration-core",
+     "kind": "ellipsoid",
+     "bone": "block-1",
+     "material": "hornbeam-leaf",
+     "role": "detail",
+     "tone": 0.45,
+     "radii": [
+      0.045,
+      0.25,
+      0.25
+     ],
+     "region": "leaf-core",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.8,
+       0,
+       0
+      ]
+     },
+     "tags": [
+      "transpiration-core"
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "root-mat",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      3,
+      0.0825,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       1.5,
+       0.04125,
+       0
+      ]
+     },
+     "member": "root-plate",
+     "part": "member"
+    },
+    {
+     "id": "member-stem-1",
+     "kind": "box",
+     "bone": "stem-1",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.075,
+      0.3,
+      0.075
+     ],
+     "member": "stem-1",
+     "part": "member",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.2,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-block-1",
+     "kind": "capsule",
+     "bone": "block-1",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "member": "block-1",
+     "part": "member",
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "member-stem-2",
+     "kind": "box",
+     "bone": "stem-2",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.075,
+      0.3,
+      0.075
+     ],
+     "member": "stem-2",
+     "part": "member",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.2,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-block-2",
+     "kind": "capsule",
+     "bone": "block-2",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "member": "block-2",
+     "part": "member",
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "member-stem-3",
+     "kind": "box",
+     "bone": "stem-3",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.075,
+      0.3,
+      0.075
+     ],
+     "member": "stem-3",
+     "part": "member",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.2,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-block-3",
+     "kind": "capsule",
+     "bone": "block-3",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "member": "block-3",
+     "part": "member",
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "member-stem-4",
+     "kind": "box",
+     "bone": "stem-4",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.075,
+      0.3,
+      0.075
+     ],
+     "member": "stem-4",
+     "part": "member",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.2,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-block-4",
+     "kind": "capsule",
+     "bone": "block-4",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "member": "block-4",
+     "part": "member",
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "member-stem-5",
+     "kind": "box",
+     "bone": "stem-5",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.075,
+      0.3,
+      0.075
+     ],
+     "member": "stem-5",
+     "part": "member",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.2,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-block-5",
+     "kind": "capsule",
+     "bone": "block-5",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "member": "block-5",
+     "part": "member",
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "member-stem-6",
+     "kind": "box",
+     "bone": "stem-6",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.075,
+      0.3,
+      0.075
+     ],
+     "member": "stem-6",
+     "part": "member",
+     "transform": {
+      "rotation": [
+       0,
+       0,
+       -0.70711,
+       0.70711
+      ],
+      "translation": [
+       0.2,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "member-block-6",
+     "kind": "capsule",
+     "bone": "block-6",
+     "material": "hornbeam-wood",
+     "role": "body",
+     "tone": 0.4,
+     "member": "block-6",
+     "part": "member",
+     "p0": [
+      0.058,
+      0,
+      0
+     ],
+     "p1": [
+      1.305,
+      0,
+      0
+     ],
+     "r0": 0.025,
+     "r1": 0.02,
+     "slender": true
+    },
+    {
+     "id": "support-base-support",
+     "kind": "box",
+     "bone": "root-plate",
+     "material": "hornbeam-wood",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      3,
+      0.0825,
+      0.6
+     ],
+     "member": "root-plate",
+     "part": "support",
+     "anchor": "base-support",
+     "transform": {
+      "translation": [
+       1.5,
+       -0.04125,
+       0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body modelled anew against the 1:500 drawings: the whole row is one long loft along the hedge axis (eleven sections whose heights follow the drawn top line, front sections of 0.68 m width) standing on the plinth box; panel joints, crowns and stems are below the 75 mm feature.",
+     "de": "K\u00f6rper neu gegen die 1:500-Zeichnungen modelliert: die ganze Reihe ist ein langer Loft entlang der Heckenachse (elf Schnitte, deren H\u00f6hen der gezeichneten Oberkante folgen, Frontschnitte von 0,68 m Breite) auf dem Sockelquader; Feldfugen, Kronen und St\u00e4mme liegen unter dem Merkmal von 75 mm."
+    },
+    {
+     "en": "Thermal: one skin loft (outer surface 12.5 m2, 22 % under the authored 16 m2 because a single clipped box cannot offer more), one core box, two stem-group capsules fitted to 0.8 m2, emitters as discs.",
+     "de": "Thermisch: eine Hautloft (Au\u00dfenfl\u00e4che 12,5 m2, 22 % unter den angegebenen 16 m2, weil ein einzelner geschnittener Quader nicht mehr bietet), ein Kernquader, zwei Stammgruppenkapseln auf 0,8 m2, Emitter als Scheiben."
+    },
+    {
+     "en": "Structure: square-section bars (75 mm) instead of round members because the smallest feature exceeds the real section; this lowers the triangle count against 1:200; support block 75 mm thick.",
+     "de": "Tragwerk: St\u00e4be mit quadratischem Querschnitt (75 mm) statt runder St\u00e4be, weil das kleinste Merkmal den wirklichen Querschnitt \u00fcbersteigt; das senkt die Dreieckszahl gegen\u00fcber 1:200; Auflagerblock 75 mm dick."
+    }
+   ]
+  }
+ }
+}

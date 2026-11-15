@@ -1720,7 +1720,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "chassis-steel",
-          "areaM2": 0.04,
+          "areaM2": 0.0337,
           "characteristicLengthM": 0.16,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -1757,7 +1757,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "chassis-steel",
-          "areaM2": 0.07,
+          "areaM2": 0.0876,
           "characteristicLengthM": 0.4,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.5,
@@ -1794,7 +1794,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "rubber-foot",
-          "areaM2": 0.002,
+          "areaM2": 0.016,
           "characteristicLengthM": 0.04,
           "geometry": "horizontal-plate-down",
           "skyViewFactor": 0.1,
@@ -1876,202 +1876,1255 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "foot-l",
-          "kind": "box",
-          "bone": "case",
-          "material": "rubber-foot",
-          "role": "body",
-          "tone": 0.15,
-          "region": "feet",
-          "size": [0.04, 0.012, 0.03],
-          "cornerRadius": 0.003,
-          "transform": {
-            "translation": [-0.18, 0.006, 0.075]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "foot-fl",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.04, 0.012, 0.03],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.18, 0.006, 0.075]
+            }
           },
-          "repeat": {
-            "count": 2,
-            "translation": [0.36, 0, 0]
-          }
-        },
-        {
-          "id": "foot-r",
-          "kind": "box",
-          "bone": "case",
-          "material": "rubber-foot",
-          "role": "body",
-          "tone": 0.15,
-          "region": "feet",
-          "size": [0.04, 0.012, 0.03],
-          "cornerRadius": 0.003,
-          "transform": {
-            "translation": [-0.18, 0.006, -0.075]
+          {
+            "id": "foot-fr",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.04, 0.012, 0.03],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.18, 0.006, -0.075]
+            }
           },
-          "repeat": {
-            "count": 2,
-            "translation": [0.36, 0, 0]
+          {
+            "id": "foot-rl",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.04, 0.012, 0.03],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.18, 0.006, 0.075]
+            }
+          },
+          {
+            "id": "foot-rr",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.04, 0.012, 0.03],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.18, 0.006, -0.075]
+            }
+          },
+          {
+            "id": "case-side",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.55,
+            "size": [0.413, 0.438, 0.2],
+            "cornerRadius": 0.004,
+            "transform": {
+              "translation": [-0.0065, 0.231, 0]
+            }
+          },
+          {
+            "id": "rear-panel",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.012, 0.438, 0.2],
+            "cornerRadius": 0.004,
+            "transform": {
+              "translation": [-0.219, 0.231, 0]
+            }
+          },
+          {
+            "id": "front-bezel",
+            "kind": "box",
+            "bone": "case",
+            "material": "bezel-abs",
+            "role": "body",
+            "tone": 0.25,
+            "size": [0.025, 0.438, 0.2],
+            "cornerRadius": 0.005,
+            "transform": {
+              "translation": [0.2125, 0.231, 0]
+            }
+          },
+          {
+            "id": "psu-vent-rear",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.0265, 0.108, 0.17],
+            "cornerRadius": 0.002,
+            "transform": {
+              "translation": [-0.21275, 0.384, 0]
+            }
+          },
+          {
+            "id": "psu-vent-top",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "texture",
+            "tone": 0.4,
+            "size": [0.09, 0.0076, 0.17],
+            "transform": {
+              "translation": [-0.155, 0.4462, 0]
+            }
+          },
+          {
+            "id": "cpu-grille",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "texture",
+            "tone": 0.4,
+            "size": [0.17, 0.13, 0.008],
+            "transform": {
+              "translation": [0.015, 0.267, 0.098]
+            }
+          },
+          {
+            "id": "fan-grille",
+            "kind": "extrude",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "texture",
+            "tone": 0.3,
+            "profile": [
+              [0.25, 0.0],
+              [0.248296, 0.012941],
+              [0.243301, 0.025],
+              [0.235355, 0.035355],
+              [0.225, 0.043301],
+              [0.212941, 0.048296],
+              [0.2, 0.05],
+              [0.187059, 0.048296],
+              [0.175, 0.043301],
+              [0.164645, 0.035355],
+              [0.156699, 0.025],
+              [0.151704, 0.012941],
+              [0.15, 0.0],
+              [0.151704, -0.012941],
+              [0.156699, -0.025],
+              [0.164645, -0.035355],
+              [0.175, -0.043301],
+              [0.187059, -0.048296],
+              [0.2, -0.05],
+              [0.212941, -0.048296],
+              [0.225, -0.043301],
+              [0.235355, -0.035355],
+              [0.243301, -0.025],
+              [0.248296, -0.012941]
+            ],
+            "plane": "yz",
+            "from": -0.2258,
+            "to": -0.2205,
+            "holes": [
+              [
+                [0.236, 0.0],
+                [0.234773, 0.009317],
+                [0.231177, 0.018],
+                [0.225456, 0.025456],
+                [0.218, 0.031177],
+                [0.209317, 0.034773],
+                [0.2, 0.036],
+                [0.190683, 0.034773],
+                [0.182, 0.031177],
+                [0.174544, 0.025456],
+                [0.168823, 0.018],
+                [0.165227, 0.009317],
+                [0.164, 0.0],
+                [0.165227, -0.009317],
+                [0.168823, -0.018],
+                [0.174544, -0.025456],
+                [0.182, -0.031177],
+                [0.190683, -0.034773],
+                [0.2, -0.036],
+                [0.209317, -0.034773],
+                [0.218, -0.031177],
+                [0.225456, -0.025456],
+                [0.231177, -0.018],
+                [0.234773, -0.009317]
+              ]
+            ]
+          },
+          {
+            "id": "intake-mesh",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "texture",
+            "tone": 0.35,
+            "size": [0.0075, 0.34, 0.17],
+            "transform": {
+              "translation": [0.221, 0.22, 0]
+            }
+          },
+          {
+            "id": "drive-bay",
+            "kind": "box",
+            "bone": "case",
+            "material": "bezel-abs",
+            "role": "texture",
+            "tone": 0.1,
+            "size": [0.0075, 0.03, 0.14],
+            "transform": {
+              "translation": [0.221, 0.41, 0]
+            }
+          },
+          {
+            "id": "power-button",
+            "kind": "box",
+            "bone": "case",
+            "material": "bezel-abs",
+            "role": "texture",
+            "tone": 0.8,
+            "size": [0.0075, 0.012, 0.012],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.221, 0.036, 0.056]
+            }
           }
-        },
-        {
-          "id": "case-side",
-          "kind": "box",
-          "bone": "case",
-          "material": "chassis-steel",
-          "role": "body",
-          "tone": 0.55,
-          "region": "side-panel",
-          "size": [0.413, 0.438, 0.2],
-          "cornerRadius": 0.004,
-          "transform": {
-            "translation": [-0.0065, 0.231, 0]
+        ],
+        "thermal": [
+          {
+            "id": "th-side-panel-l",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.55,
+            "size": [0.413, 0.438, 0.0076],
+            "transform": {
+              "translation": [-0.0065, 0.231, 0.1004]
+            },
+            "region": "side-panel",
+            "layer": "sheet",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "-w"]
+          },
+          {
+            "id": "th-side-panel-r",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.55,
+            "size": [0.413, 0.438, 0.0076],
+            "transform": {
+              "translation": [-0.0065, 0.231, -0.1004]
+            },
+            "region": "side-panel",
+            "layer": "sheet",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w"]
+          },
+          {
+            "id": "th-cpu-grille",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "texture",
+            "tone": 0.4,
+            "size": [0.172, 0.132, 0.003],
+            "transform": {
+              "translation": [0.015, 0.267, 0.1059]
+            },
+            "region": "cpu-grille",
+            "layer": "grille",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "-w"]
+          },
+          {
+            "id": "th-front-bezel",
+            "kind": "box",
+            "bone": "case",
+            "material": "bezel-abs",
+            "role": "body",
+            "tone": 0.25,
+            "size": [0.0076, 0.438, 0.2],
+            "transform": {
+              "translation": [0.2286, 0.231, 0]
+            },
+            "region": "front-bezel",
+            "layer": "bezel",
+            "sectionFaces": ["-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-psu-vent-rear",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.0076, 0.108, 0.17],
+            "transform": {
+              "translation": [-0.2286, 0.384, 0]
+            },
+            "region": "psu-vent",
+            "layer": "psu-shell",
+            "sectionFaces": ["+u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-psu-vent-top",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.09, 0.0076, 0.17],
+            "transform": {
+              "translation": [-0.155, 0.4534, 0]
+            },
+            "region": "psu-vent",
+            "layer": "psu-shell",
+            "sectionFaces": ["+u", "-u", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-rear-panel",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.0076, 0.438, 0.2],
+            "transform": {
+              "translation": [-0.2286, 0.231, 0]
+            },
+            "region": "rear-panel",
+            "layer": "rear-sheet",
+            "sectionFaces": ["+u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-case-plume",
+            "kind": "revolve",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.4, 0.04], [0.43, 0.04], [0.43, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [-0.1, 0, 0]
+            },
+            "region": "rear-panel",
+            "tags": ["case-plume"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-rear-exhaust",
+            "kind": "revolve",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.2, 0.05], [-0.17, 0.05], [-0.17, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [0, 0.3, 0]
+            },
+            "region": "rear-panel",
+            "tags": ["rear-exhaust"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-foot-fl",
+            "of": "foot-fl",
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-foot-fr",
+            "of": "foot-fr",
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-foot-rl",
+            "of": "foot-rl",
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-foot-rr",
+            "of": "foot-rr",
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
           }
-        },
-        {
-          "id": "rear-panel",
-          "kind": "box",
-          "bone": "case",
-          "material": "chassis-steel",
-          "role": "body",
-          "tone": 0.5,
-          "region": "rear-panel",
-          "size": [0.012, 0.438, 0.2],
-          "cornerRadius": 0.004,
-          "transform": {
-            "translation": [-0.219, 0.231, 0]
+        ],
+        "structure": [
+          {
+            "id": "member-case-post-fl",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.02, 0.43, 0.02],
+            "transform": {
+              "translation": [0.19, 0.225, 0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-post-fr",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.02, 0.43, 0.02],
+            "transform": {
+              "translation": [0.19, 0.225, -0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-post-rl",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.02, 0.43, 0.02],
+            "transform": {
+              "translation": [-0.19, 0.225, 0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-post-rr",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.02, 0.43, 0.02],
+            "transform": {
+              "translation": [-0.19, 0.225, -0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-base",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.4, 0.02, 0.17],
+            "transform": {
+              "translation": [0, 0.022, 0]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-top",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.4, 0.02, 0.17],
+            "transform": {
+              "translation": [0, 0.44, 0]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "support-feet-contact",
+            "kind": "extrude",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "profile": [[-0.09, -0.2], [0.09, -0.2], [0.09, 0.2], [-0.09, 0.2]],
+            "plane": "zx",
+            "from": -0.008,
+            "to": 0.0,
+            "holes": [
+              [[-0.06, -0.16], [0.06, -0.16], [0.06, 0.16], [-0.06, 0.16]]
+            ],
+            "member": "case",
+            "part": "support",
+            "anchor": "feet-contact"
+          },
+          {
+            "id": "mass-case",
+            "kind": "ellipsoid",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "detail",
+            "tone": 0.15,
+            "radii": [0.15, 0.15, 0.07],
+            "transform": {
+              "translation": [-0.02, 0.2, 0]
+            },
+            "member": "case",
+            "part": "mass"
           }
-        },
-        {
-          "id": "front-bezel",
-          "kind": "box",
-          "bone": "case",
-          "material": "bezel-abs",
-          "role": "body",
-          "tone": 0.18,
-          "region": "front-bezel",
-          "size": [0.025, 0.438, 0.2],
-          "cornerRadius": 0.005,
-          "transform": {
-            "translation": [0.2125, 0.231, 0]
+        ],
+        "decisions": [
+          {
+            "en": "Body: four rubber feet, the steel side sheet, rear panel with a perforated fan ring and the PSU vent (rear plate and top grille), the ABS front bezel with intake mesh, drive bay and power button as 7.5 mm texture inlays and the processor grille on the +z side panel; depths of the front panel details are estimates.",
+            "de": "Körper: vier Gummifüße, das Stahl-Seitenblech, das Rückblech mit durchbrochenem Lüfterring und dem Netzteilgitter (Rückplatte und Deckelgitter), die ABS-Frontblende mit Ansaugnetz, Laufwerksschacht und Einschalter als 7,5-mm-Einlagen und das Prozessorgitter am Seitenblech +z; die Tiefen der Frontdetails sind Schätzungen."
+          },
+          {
+            "en": "Thermal: single-layer skins outside the body: the two side-panel skins (outer faces only), grille, bezel, PSU vent (rear and top), rear panel and feet, plus the 0.12 m rear-exhaust duct in the case; faces that continue into the construction are section faces.",
+            "de": "Thermik: einschichtige Häute außerhalb des Körpers: die zwei Seitenblechhäute (nur Außenflächen), Gitter, Blende, Netzteilgitter (hinten und oben), Rückblech und Füße sowie der 0,12-m-Abluftkanal im Gehäuse; Flächen, die in die Konstruktion weiterlaufen, sind Schnittflächen."
+          },
+          {
+            "en": "Structure: four 20 mm posts with a base and a top plate as case members, a ground contact frame under the feet as the feet-contact support and a compact mass block 0.02 m behind the centre.",
+            "de": "Tragwerk: vier 20-mm-Pfosten mit Boden- und Deckplatte als Gehäuseglieder, ein Bodenkontaktrahmen unter den Füßen als Auflager feet-contact und ein kompakter Massenblock 0,02 m hinter der Mitte."
           }
-        },
-        {
-          "id": "psu-vent-rear",
-          "kind": "box",
-          "bone": "case",
-          "material": "chassis-steel",
-          "role": "body",
-          "tone": 0.38,
-          "region": "psu-vent",
-          "maxDenominator": 100,
-          "size": [0.0265, 0.108, 0.17],
-          "cornerRadius": 0.002,
-          "transform": {
-            "translation": [-0.21275, 0.384, 0]
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "foot-fl",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.05, 0.012, 0.04],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.175, 0.006, 0.07]
+            }
+          },
+          {
+            "id": "foot-fr",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.05, 0.012, 0.04],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [0.175, 0.006, -0.07]
+            }
+          },
+          {
+            "id": "foot-rl",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.05, 0.012, 0.04],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.175, 0.006, 0.07]
+            }
+          },
+          {
+            "id": "foot-rr",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.05, 0.012, 0.04],
+            "cornerRadius": 0.003,
+            "transform": {
+              "translation": [-0.175, 0.006, -0.07]
+            }
+          },
+          {
+            "id": "case-side",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.55,
+            "size": [0.413, 0.438, 0.2],
+            "cornerRadius": 0.004,
+            "transform": {
+              "translation": [-0.0065, 0.231, 0]
+            }
+          },
+          {
+            "id": "rear-panel",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.014, 0.438, 0.2],
+            "cornerRadius": 0.004,
+            "transform": {
+              "translation": [-0.218, 0.231, 0]
+            }
+          },
+          {
+            "id": "front-bezel",
+            "kind": "box",
+            "bone": "case",
+            "material": "bezel-abs",
+            "role": "body",
+            "tone": 0.25,
+            "size": [0.03, 0.438, 0.2],
+            "cornerRadius": 0.005,
+            "transform": {
+              "translation": [0.21, 0.231, 0]
+            }
+          },
+          {
+            "id": "psu-vent-rear",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.03, 0.108, 0.17],
+            "transform": {
+              "translation": [-0.21, 0.384, 0]
+            }
+          },
+          {
+            "id": "cpu-grille",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "texture",
+            "tone": 0.4,
+            "size": [0.17, 0.13, 0.0155],
+            "transform": {
+              "translation": [0.015, 0.267, 0.0925]
+            }
+          },
+          {
+            "id": "intake-mesh",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "texture",
+            "tone": 0.35,
+            "size": [0.0155, 0.34, 0.16],
+            "transform": {
+              "translation": [0.2175, 0.22, 0]
+            }
           }
-        },
-        {
-          "id": "psu-vent-top",
-          "kind": "box",
-          "bone": "case",
-          "material": "chassis-steel",
-          "role": "body",
-          "tone": 0.38,
-          "region": "psu-vent",
-          "maxDenominator": 100,
-          "size": [0.09, 0.0016, 0.17],
-          "transform": {
-            "translation": [-0.155, 0.4492, 0]
+        ],
+        "thermal": [
+          {
+            "id": "th-side-panel",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.55,
+            "size": [0.413, 0.438, 0.202],
+            "transform": {
+              "translation": [-0.0065, 0.231, 0]
+            },
+            "region": "side-panel",
+            "layer": "sheet",
+            "sectionFaces": ["+u", "-u", "+v", "-v"]
+          },
+          {
+            "id": "th-cpu-grille",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "texture",
+            "tone": 0.4,
+            "size": [0.172, 0.132, 0.003],
+            "transform": {
+              "translation": [0.015, 0.267, 0.1059]
+            },
+            "region": "cpu-grille",
+            "layer": "grille",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "-w"]
+          },
+          {
+            "id": "th-front-bezel",
+            "kind": "box",
+            "bone": "case",
+            "material": "bezel-abs",
+            "role": "body",
+            "tone": 0.25,
+            "size": [0.0151, 0.438, 0.2],
+            "transform": {
+              "translation": [0.23235, 0.231, 0]
+            },
+            "region": "front-bezel",
+            "layer": "bezel",
+            "sectionFaces": ["-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-psu-vent-rear",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.0151, 0.108, 0.17],
+            "transform": {
+              "translation": [-0.23235, 0.384, 0]
+            },
+            "region": "psu-vent",
+            "layer": "psu-shell",
+            "sectionFaces": ["+u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-psu-vent-top",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.09, 0.0151, 0.17],
+            "transform": {
+              "translation": [-0.155, 0.45715, 0]
+            },
+            "region": "psu-vent",
+            "layer": "psu-shell",
+            "sectionFaces": ["+u", "-u", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-rear-panel",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.0151, 0.438, 0.2],
+            "transform": {
+              "translation": [-0.23235, 0.231, 0]
+            },
+            "region": "rear-panel",
+            "layer": "rear-sheet",
+            "sectionFaces": ["+u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-case-plume",
+            "kind": "revolve",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[0.4, 0.04], [0.43, 0.04], [0.43, 0]],
+            "axis": [0, 1, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [-0.1, 0, 0]
+            },
+            "region": "rear-panel",
+            "tags": ["case-plume"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-rear-exhaust",
+            "kind": "revolve",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "profile": [[-0.2, 0.05], [-0.17, 0.05], [-0.17, 0]],
+            "axis": [1, 0, 0],
+            "origin": [0, 0, 0],
+            "transform": {
+              "translation": [0, 0.3, 0]
+            },
+            "region": "rear-panel",
+            "tags": ["rear-exhaust"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-foot-fl",
+            "of": "foot-fl",
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-foot-fr",
+            "of": "foot-fr",
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-foot-rl",
+            "of": "foot-rl",
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-foot-rr",
+            "of": "foot-rr",
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
           }
-        },
-        {
-          "id": "cpu-grille",
-          "kind": "box",
-          "bone": "case",
-          "material": "chassis-steel",
-          "role": "body",
-          "tone": 0.38,
-          "region": "cpu-grille",
-          "maxDenominator": 100,
-          "size": [0.17, 0.13, 0.0016],
-          "cornerRadius": 0.0006,
-          "transform": {
-            "translation": [0.015, 0.267, 0.1008]
+        ],
+        "structure": [
+          {
+            "id": "member-case-post-fl",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.02, 0.43, 0.02],
+            "transform": {
+              "translation": [0.19, 0.225, 0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-post-fr",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.02, 0.43, 0.02],
+            "transform": {
+              "translation": [0.19, 0.225, -0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-post-rl",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.02, 0.43, 0.02],
+            "transform": {
+              "translation": [-0.19, 0.225, 0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-post-rr",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.02, 0.43, 0.02],
+            "transform": {
+              "translation": [-0.19, 0.225, -0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-base",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.4, 0.02, 0.17],
+            "transform": {
+              "translation": [0, 0.022, 0]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "support-feet-contact",
+            "kind": "extrude",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "profile": [[-0.09, -0.2], [0.09, -0.2], [0.09, 0.2], [-0.09, 0.2]],
+            "plane": "zx",
+            "from": -0.0155,
+            "to": 0.0,
+            "holes": [
+              [[-0.06, -0.16], [0.06, -0.16], [0.06, 0.16], [-0.06, 0.16]]
+            ],
+            "member": "case",
+            "part": "support",
+            "anchor": "feet-contact"
+          },
+          {
+            "id": "mass-case",
+            "kind": "ellipsoid",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "detail",
+            "tone": 0.15,
+            "radii": [0.15, 0.15, 0.07],
+            "transform": {
+              "translation": [-0.02, 0.2, 0]
+            },
+            "member": "case",
+            "part": "mass"
           }
-        },
-        {
-          "id": "fan-grille",
-          "kind": "revolve",
-          "bone": "case",
-          "material": "chassis-steel",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "rear-panel",
-          "maxDenominator": 50,
-          "profile": [[-0.2258, 0.05], [-0.2245, 0.05]],
-          "axis": [1, 0, 0],
-          "origin": [0, 0.2, 0]
-        },
-        {
-          "id": "intake-mesh",
-          "kind": "box",
-          "bone": "case",
-          "material": "bezel-abs",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "front-bezel",
-          "maxDenominator": 100,
-          "size": [0.002, 0.34, 0.17],
-          "transform": {
-            "translation": [0.226, 0.22, 0]
+        ],
+        "decisions": [
+          {
+            "en": "Body: modelled anew against the 1:100 drawings: feet 50 mm, bezel 30 mm and rear panel 14 mm with the PSU rear plate, 15.5 mm plates for processor grille and intake mesh; fan ring, drive bay, button and PSU top grille are left out.",
+            "de": "Körper: neu gegen die Zeichnungen 1:100 gebaut: Füße 50 mm, Blende 30 mm und Rückblech 14 mm mit der Netzteil-Rückplatte, 15,5-mm-Platten für Prozessorgitter und Ansaugnetz; Lüfterring, Laufwerksschacht, Taster und Netzteil-Deckelgitter entfallen."
+          },
+          {
+            "en": "Thermal: the same eight skins at 15 mm.",
+            "de": "Thermik: dieselben acht Häute mit 15 mm."
+          },
+          {
+            "en": "Structure: posts, base plate, ground frame and mass; the top plate is merged.",
+            "de": "Tragwerk: Pfosten, Bodenplatte, Bodenrahmen und Masse; die Deckplatte ist aufgenommen."
           }
-        },
-        {
-          "id": "drive-bay",
-          "kind": "box",
-          "bone": "case",
-          "material": "bezel-abs",
-          "role": "detail",
-          "tone": 0.4,
-          "region": "front-bezel",
-          "maxDenominator": 50,
-          "size": [0.002, 0.03, 0.14],
-          "transform": {
-            "translation": [0.226, 0.41, 0]
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "plinth",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.4, 0.024, 0.16],
+            "transform": {
+              "translation": [0, 0.012, 0]
+            }
+          },
+          {
+            "id": "case",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.45, 0.438, 0.2],
+            "cornerRadius": 0.006,
+            "transform": {
+              "translation": [0, 0.231, 0]
+            }
           }
-        },
-        {
-          "id": "power-button",
-          "kind": "box",
-          "bone": "case",
-          "material": "bezel-abs",
-          "role": "detail",
-          "tone": 0.7,
-          "region": "front-bezel",
-          "maxDenominator": 50,
-          "size": [0.003, 0.012, 0.012],
-          "cornerRadius": 0.0015,
-          "transform": {
-            "translation": [0.2265, 0.036, 0.056]
+        ],
+        "thermal": [
+          {
+            "id": "th-side-panel",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.55,
+            "size": [0.413, 0.438, 0.202],
+            "transform": {
+              "translation": [-0.0065, 0.231, 0]
+            },
+            "region": "side-panel",
+            "layer": "sheet",
+            "sectionFaces": ["+u", "-u", "+v", "-v"]
+          },
+          {
+            "id": "th-cpu-grille",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "texture",
+            "tone": 0.4,
+            "size": [0.172, 0.132, 0.003],
+            "transform": {
+              "translation": [0.015, 0.267, 0.1059]
+            },
+            "region": "cpu-grille",
+            "layer": "grille",
+            "sectionFaces": ["+u", "-u", "+v", "-v", "-w"]
+          },
+          {
+            "id": "th-front-bezel",
+            "kind": "box",
+            "bone": "case",
+            "material": "bezel-abs",
+            "role": "body",
+            "tone": 0.25,
+            "size": [0.0301, 0.438, 0.2],
+            "transform": {
+              "translation": [0.23985, 0.231, 0]
+            },
+            "region": "front-bezel",
+            "layer": "bezel",
+            "sectionFaces": ["-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-psu-vent-rear",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.4,
+            "size": [0.0301, 0.16, 0.2],
+            "transform": {
+              "translation": [-0.23985, 0.384, 0]
+            },
+            "region": "psu-vent",
+            "layer": "psu-shell",
+            "sectionFaces": ["+u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-rear-panel",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.0301, 0.438, 0.2],
+            "transform": {
+              "translation": [-0.23985, 0.231, 0]
+            },
+            "region": "rear-panel",
+            "layer": "rear-sheet",
+            "sectionFaces": ["+u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-case-plume",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.08, 0.06, 0.08],
+            "transform": {
+              "translation": [-0.1, 0.4, 0]
+            },
+            "region": "rear-panel",
+            "tags": ["case-plume"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-rear-exhaust",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.06, 0.1, 0.1],
+            "transform": {
+              "translation": [-0.19, 0.3, 0]
+            },
+            "region": "rear-panel",
+            "tags": ["rear-exhaust"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          },
+          {
+            "id": "th-feet-fl",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.0301, 0.0301, 0.0301],
+            "transform": {
+              "translation": [0.2, 0.01505, 0.0]
+            },
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-feet-fr",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.0301, 0.0301, 0.0301],
+            "transform": {
+              "translation": [0.2, 0.01505, -0.0]
+            },
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-feet-rl",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.0301, 0.0301, 0.0301],
+            "transform": {
+              "translation": [-0.2, 0.01505, 0.0]
+            },
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
+          },
+          {
+            "id": "th-feet-rr",
+            "kind": "box",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "body",
+            "tone": 0.2,
+            "size": [0.0301, 0.0301, 0.0301],
+            "transform": {
+              "translation": [-0.2, 0.01505, -0.0]
+            },
+            "region": "feet",
+            "layer": "foot",
+            "sectionFaces": ["-v"]
           }
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The chassis is four boxes along x (rear panel 12 mm, steel body, 25 mm ABS bezel); the vent plates, intake mesh and drive bay are thin plates 0.8 to 2 mm proud of their faces.",
-          "de": "Das Chassis besteht aus drei Quadern entlang x (Rückwand 12 mm, Stahlkörper, 25-mm-ABS-Blende); Lüftungsplatten, Ansauggitter und Laufwerksschacht sind dünne Platten, die 0,8 bis 2 mm vor ihren Flächen stehen."
-        },
-        {
-          "en": "The CPU grille sits on the left (+z) side panel, as the plan view shows its edge at z = +0.092 to +0.1; the elevation draws it although it is seen from the right, the only inconsistency of the 2D shapes. The PSU vent is a rear plate and a top plate (the elevation and the plan draw different extents of the same region).",
-          "de": "Das CPU-Gitter sitzt an der linken (+z) Seitenwand, wie der Grundriss seine Kante bei z = +0,092 bis +0,1 zeigt; die Seitenansicht zeichnet es, obwohl sie von rechts blickt, die einzige Unstimmigkeit der 2D-Formen. Der Netzteilschlitz ist eine Rück- und eine Deckelplatte (Seitenansicht und Grundriss zeichnen verschiedene Ausdehnungen derselben Region)."
-        },
-        {
-          "en": "Four rubber feet are two solids repeated along x; slit lines and the unmaterialled fan ring are reduced to a thin rear fan plate, drawn at 1:50 only.",
-          "de": "Vier Gummifüße sind zwei entlang x wiederholte Körper; Schlitzlinien und der materiallose Lüfterring sind auf eine dünne Lüfterplatte an der Rückseite reduziert, nur im Maßstab 1:50."
-        }
-      ]
+        ],
+        "structure": [
+          {
+            "id": "member-case-post-fl",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.031, 0.43, 0.031],
+            "transform": {
+              "translation": [0.19, 0.225, 0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-post-fr",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.031, 0.43, 0.031],
+            "transform": {
+              "translation": [0.19, 0.225, -0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-post-rl",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.031, 0.43, 0.031],
+            "transform": {
+              "translation": [-0.19, 0.225, 0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "member-case-post-rr",
+            "kind": "box",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.031, 0.43, 0.031],
+            "transform": {
+              "translation": [-0.19, 0.225, -0.075]
+            },
+            "member": "case",
+            "part": "member"
+          },
+          {
+            "id": "support-feet-contact",
+            "kind": "extrude",
+            "bone": "case",
+            "material": "rubber-foot",
+            "role": "ground",
+            "tone": 0.1,
+            "profile": [[-0.09, -0.2], [0.09, -0.2], [0.09, 0.2], [-0.09, 0.2]],
+            "plane": "zx",
+            "from": -0.031,
+            "to": 0.0,
+            "holes": [
+              [[-0.06, -0.16], [0.06, -0.16], [0.06, 0.16], [-0.06, 0.16]]
+            ],
+            "member": "case",
+            "part": "support",
+            "anchor": "feet-contact"
+          },
+          {
+            "id": "mass-case",
+            "kind": "ellipsoid",
+            "bone": "case",
+            "material": "chassis-steel",
+            "role": "detail",
+            "tone": 0.15,
+            "radii": [0.15, 0.15, 0.07],
+            "transform": {
+              "translation": [-0.02, 0.2, 0]
+            },
+            "member": "case",
+            "part": "mass"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: one case block and one plinth (feet merged) as drawn at 1:200; bezel, rear panel, vents and grilles merge into the case.",
+            "de": "Körper: ein Gehäuseblock und ein Sockel (Füße zusammengefasst) wie im Maßstab 1:200 gezeichnet; Blende, Rückblech, Gitter und Lüftung gehen im Gehäuse auf."
+          },
+          {
+            "en": "Thermal: the eight regions keep a skin at 30 mm.",
+            "de": "Thermik: die acht Regionen behalten eine Haut mit 30 mm."
+          },
+          {
+            "en": "Structure: 31 mm posts, base, ground frame and mass.",
+            "de": "Tragwerk: 31-mm-Pfosten, Boden, Bodenrahmen und Masse."
+          }
+        ]
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500
+      }
     },
     "presentation": {
       "defaultPose": "typical",

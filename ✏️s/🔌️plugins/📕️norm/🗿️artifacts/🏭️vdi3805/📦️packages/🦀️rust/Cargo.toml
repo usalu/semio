@@ -32,7 +32,7 @@ semio-s-artifact-norm-vdi3805-inferences = { workspace = true }
 semio-s-artifact-norm-vdi3805-io = { workspace = true }
 semio-s-artifact-norm-vdi3805-schema = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
-semio-s-artifact-norm-vdi3805-model = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-vdi3805-model = { workspace = true }
 
 [features]
 test-support = ["dep:serde", "semio-s-artifact-norm-vdi3805-inferences/test-support", "semio-s-artifact-norm-vdi3805-model/test-support", "semio-s-artifact-norm-vdi3805-schema/test-support", "semio-s-plugin-norm-compliance/test-support"]

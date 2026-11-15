@@ -231,7 +231,7 @@ protocol::row_patch! {
     #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `En1998Foundation`.
-    pub En1998FoundationPatch of semio_s_artifact_norm_en1998_model::En1998Foundation { set { supported_building_id: String, area_m2: f64, p_rd_pa: f64, passive_resistance_n: f64, k_foundation: f64, k_soil: f64, liq_n1_60: f64, liq_fines_percent: f64, liq_depth_m: f64, liq_water_depth_m: f64, liq_unit_weight_n_m3: f64, liq_magnitude: f64, liq_layer_thickness_m: f64, footing_width_m: f64, bearing_axial_n: f64, bearing_shear_n: f64, bearing_moment_nm: f64, bearing_n_max_n: f64, soil_friction_angle_deg: f64, pile_diameter_m: f64, pile_length_m: f64, pile_modulus_pa: f64, pile_subgrade_modulus_n_m3: f64, pile_head_shear_n: f64, pile_head_fixed: f64, pile_interface_depth_m: f64, pile_upper_vs_m_s: f64, pile_lower_vs_m_s: f64, pile_moment_rd_nm: f64, base_friction_angle_deg: f64, base_pore_pressure_pa: f64 } }
+    pub En1998FoundationPatch of semio_s_artifact_norm_en1998_model::En1998Foundation { set { supported_building_id: String, area_m2: f64, p_rd_pa: f64, passive_resistance_n: f64, k_foundation: f64, k_soil: f64, liq_n1_60: f64, liq_fines_percent: f64, liq_depth_m: f64, liq_water_depth_m: f64, liq_unit_weight_n_m3: f64, liq_magnitude: f64, liq_layer_thickness_m: f64, footing_width_m: f64, bearing_axial_n: f64, bearing_shear_n: f64, bearing_moment_nm: f64, bearing_n_max_n: f64, soil_friction_angle_deg: f64, pile_diameter_m: f64, pile_length_m: f64, pile_modulus_pa: f64, pile_subgrade_modulus_n_m3: f64, pile_head_shear_n: f64, pile_head_fixed: f64, pile_interface_depth_m: f64, pile_upper_vs_m_s: f64, pile_lower_vs_m_s: f64, pile_moment_rd_nm: f64, base_friction_angle_deg: f64, base_pore_pressure_pa: f64, pile_axial_load_n: f64 } }
 }
 protocol::list_delta! {
     #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
@@ -703,3 +703,9 @@ mod tests;
 /// 🍃️ The five handcrafted leaves of the `diff` schema facet.
 pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: semio_s_artifact_norm_en1998_diff_typescript::LEAF, graphql: semio_s_artifact_norm_en1998_diff_graphql::LEAF, json_schema: semio_s_artifact_norm_en1998_diff_json_schema::LEAF, proto: semio_s_artifact_norm_en1998_diff_proto::LEAF };
 //#endregion 🍃️FacetLeaves
+
+#[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+pub mod binary;

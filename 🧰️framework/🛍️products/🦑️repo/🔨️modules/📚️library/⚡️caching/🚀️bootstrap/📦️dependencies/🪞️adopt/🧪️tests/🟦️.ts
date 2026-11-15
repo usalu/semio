@@ -180,18 +180,24 @@ test("adopt flow: cancellation during the clone leaves no partial tree",async()=
  }finally{rmSync(store,{recursive:true,force:true});}
 },120000);
 
-/** ⚖️ Pins the producer wiring by source law: a donor is tried before the installer, the receipt is sealed after the installed-paths ledger and once for existing generations. */
+/** ⚖️ Pins the producer wiring by source law: a donor is tried before the installer, the receipt is sealed after the installed-paths ledger and once for existing generations, and the fleet install pack is published only after the seal. */
 test("adopt wiring laws over the storage module",async()=>{
  const ts=await import("typescript"),path=new URL("../../💾️storage/🟦️.ts",import.meta.url),source=readFileSync(path,"utf8"),tree=ts.createSourceFile(path.pathname,source,ts.ScriptTarget.Latest,true);
  const node=tree.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text==="runJavascriptDependencyStoreProducerV1");expect(node).toBeDefined();
  const producer=node!.getText(tree);
  expect(producer.indexOf("adoptJavascriptDependencyInstalledTreeV1(")).toBeGreaterThan(0);
  expect(producer.indexOf("adoptJavascriptDependencyInstalledTreeV1(")).toBeLessThan(producer.indexOf("let terminal=adoptedFrom?"));
- expect(producer.indexOf("let terminal=adoptedFrom?")).toBeLessThan(producer.indexOf("await adoptSeal(row);frame.built.set("));
+ expect(producer.indexOf("let terminal=adoptedFrom?")).toBeLessThan(producer.indexOf("await adoptSeal(row);if(fleetInstall){await fleetInstall.publish().catch(()=>false);await fleetInstall.release().catch(()=>undefined);}frame.built.set("));
  expect(producer.indexOf("requireJavascriptDependencyInstalledPathsIncrementalV1(workspace,context,control,row.plan.generation,checkpoint);await adoptSeal(row)")).toBeGreaterThan(0);
  expect(producer).toContain("hasJavascriptDependencyAdoptReceiptV1(store.root,row.plan.generation))await adoptSeal(row)");
  expect(producer).toContain("pin:donor=>pinJavascriptDependencyGenerationsV1(frame,[donor])");
  expect(producer).toContain("current-dependency-generation-adopted");
+ expect(producer.indexOf("releaseInstallerBindingsV1(row.plan.directory)")).toBeGreaterThan(0);
+ expect(producer.indexOf("releaseInstallerBindingsV1(row.plan.directory)")).toBeLessThan(producer.indexOf("captureOwnedCommandResultV1(process.execPath,args,row.plan.directory"));
+ expect(producer).toContain("onSpawn:(_pid,kill)=>{watch=watchInstallerStallV1(");
+ expect(producer).toContain('refuseProcessV1("timeout","dependencies.installer-stalled"');
+ expect(producer).toContain('refuseProcessV1("timeout","dependencies.installer-stalled-http"');
+ expect(producer).toContain("installerHttpFailureV1(terminal.stderr)");
  expect(existsSync(fileURLToPath(new URL("../🟦️.ts",import.meta.url)))).toBe(true);
  expect(lstatSync(fileURLToPath(new URL("../💾️storage/🟦️.ts",import.meta.url))).isFile()).toBe(true);
 });

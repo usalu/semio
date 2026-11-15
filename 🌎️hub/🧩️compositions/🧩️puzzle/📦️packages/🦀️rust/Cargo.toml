@@ -31,6 +31,7 @@ semio-plugin = { workspace = true }
 # ⏯️ `dyn_enum_close!` copies `PluginApp::tool_run_trace_delta`'s signature verbatim into the generated
 # impl HERE, so the domain-neutral tool-run types have to resolve in this crate too.
 semio-framework-tool-run = { workspace = true }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
@@ -40,7 +41,6 @@ semio-framework-artifact-reference = { path = "../../../../../🧰️framework/�
 original_owners = { path = "../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust", package = "semio-framework-test-original-snapshot-owners" }
 semio-framework-trace = { path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-actor = { path = "../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

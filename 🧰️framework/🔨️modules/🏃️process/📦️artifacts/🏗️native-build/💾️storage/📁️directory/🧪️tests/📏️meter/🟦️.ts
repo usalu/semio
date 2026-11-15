@@ -53,3 +53,16 @@ test("a measurement is kept between processes: a fresh cell starts from the reco
   expect(third.peek(),"a damaged record starts empty").toBeUndefined();
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
+
+test("a replaced record leaves the directory above the partition root untouched, so an exact path fence of the contents survives every measurement",async()=>{
+ const {lstatSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}=await import("node:fs"),{tmpdir}=await import("node:os"),{dirname,join}=await import("node:path"),{nativeDirectoryUsageFileV1,nativeDirectoryUsageRecordPathV1}=await import("../../📏️usage/🟦️.ts");
+ const directory=mkdtempSync(join(tmpdir(),"usage-fence-")),root=join(directory,"m"),file=nativeDirectoryUsageRecordPathV1(root);
+ try{
+  mkdirSync(root);writeFileSync(join(root,"content"),"x");
+  expect(dirname(dirname(file)),"the record directory sits beside the partition root").toBe(directory);expect(dirname(file)).not.toBe(directory);
+  const record=nativeDirectoryUsageFileV1(file),stamp=()=>{const row=lstatSync(directory,{bigint:true});return[row.mtimeNs,row.ctimeNs,row.ino].join();};
+  record.write(1,1000);const fenced=stamp();
+  for(let index=2;index<6;index++){record.write(index,index*1000);expect(stamp(),"write "+index).toBe(fenced);}
+  expect(JSON.parse(readFileSync(file,"utf8"))).toEqual({bytes:5,atMs:5000});expect(record.read()).toEqual({bytes:5,atMs:5000});
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});

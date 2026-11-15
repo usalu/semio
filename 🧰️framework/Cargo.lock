@@ -4475,6 +4475,7 @@ dependencies = [
  "semio-framework-tool-run-actions",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "semio-framework-value-testing-admission",
  "semio-framework-value-testing-allocator",
  "semio-ui-declaration",
@@ -7991,7 +7992,7 @@ name = "semio-framework-replication-retained-field"
 version = "0.1.0"
 dependencies = [
  "semio-framework-mutation-diff",
- "semio-framework-replication-retained-field-preparation",
+ "semio-framework-replication-retained-field-prep",
  "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
@@ -8003,7 +8004,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-replication-retained-field-preparation"
+name = "semio-framework-replication-retained-field-prep"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-clone-source-testing",

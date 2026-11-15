@@ -1,0 +1,28 @@
+== try 5 failure, collected 2026-11-15T04:07:14Z from /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-c5f530f58f3a.log
+-- request-failed 51f8a5ee with 12 lines after and the 10 non-JSON lines before
+[script] graph:slice-worker · Expanding input closures: 128 of 167 closures
+[script] graph:slice-worker · Expanding input closures: 167 of 167 closures
+[script] graph:slice-worker · Assembling the graph: 65 of 703 projects
+[script] graph:slice-worker · Expanding input closures: 0 of 341 closures
+[script] graph:slice-worker · Expanding input closures: 128 of 341 closures
+[script] graph:slice-worker · Expanding input closures: 256 of 341 closures
+[script] graph:slice-worker · Expanding input closures: 341 of 341 closures
+[script] graph:slice-worker · Assembling the graph: 97 of 703 projects
+[script] graph:slice-worker · Expanding input closures: 0 of 233 closures
+[graph] closure-missing build-input-closures/5d52130ef60a0c3016d05460bad79e740c2d0bca1c1a6c1f151da50830ba608a named by @semio-tech/framework-os-mcp
+2026-11-15T04:06:35.786Z request-failed 51f8a5ee Error: ENOENT: closure-missing:5d52130ef60a0c3016d05460bad79e740c2d0bca1c1a6c1f151da50830ba608a build-input-closures leaf is not on this machine
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📁️workspace/🟦️.ts:87:451)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:146:491)
+    at processTicksAndRejections (native:7:39)
+graph: plan answered, managed 106 MB, resident 165 MB (released 0 MB)
+[repository:command] still running after 820 s
+[repo] still working after 830 s; last phase started: source.served
+[repository:command] still running after 830 s
+[repository:command] still running after 840 s
+[repository:command] still running after 850 s
+-- closure-missing lines (each once)
+[graph] closure-missing build-input-closures/5d52130ef60a0c3016d05460bad79e740c2d0bca1c1a6c1f151da50830ba608a named by @semio-tech/framework-os-mcp
+2026-11-15T04:06:35.786Z request-failed 51f8a5ee Error: ENOENT: closure-missing:5d52130ef60a0c3016d05460bad79e740c2d0bca1c1a6c1f151da50830ba608a build-input-closures leaf is not on this machine
+-- first plan line(s) of the try
+-- restore line(s)
+graph: generation 221 (5100 projects) restored from the remote cache, 5104 documents (48 MB) downloaded in 10 s, from a state 10 min old with 0 projects stale

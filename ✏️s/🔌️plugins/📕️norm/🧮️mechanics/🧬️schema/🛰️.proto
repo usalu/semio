@@ -269,9 +269,14 @@ enum MechanicsErrorKind {
   NO_CONVERGENCE = 5;
 }
 
+message MechanicsText {
+  string en = 1;
+  string de = 2;
+}
+
 message MechanicsError {
   MechanicsErrorKind kind = 1;
-  string message = 2;
+  MechanicsText message = 2;
   string node = 3;
   uint64 dof = 4;
 }

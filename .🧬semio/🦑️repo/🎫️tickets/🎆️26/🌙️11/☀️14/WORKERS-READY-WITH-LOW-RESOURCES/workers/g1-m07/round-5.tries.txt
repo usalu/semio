@@ -1,0 +1,7 @@
+try 1 ended 2026-11-14T18:10:53Z native_rc=1 refusal=none
+try 2 ended 2026-11-14T18:38:55Z native_rc=75 refusal=2026-11-14T18:38:35.736Z graph-wanted-expired {"wanted":"454","arrived":"78","seconds":"1483","missing":"376","local":"192"}
+try 3 ended 2026-11-14T18:55:00Z native_rc=7 refusal=none
+try 4 ended 2026-11-14T19:06:34Z native_rc=7 refusal=none
+try 5 ended 2026-11-14T19:18:37Z native_rc=7 refusal=none
+try 6 ended 2026-11-14T19:25:38Z native_rc=1 refusal=none
+try 7 ended 2026-11-14T19:31:39Z native_rc=1 refusal=none

@@ -1,0 +1,34 @@
+{
+ "totalMegabytes": 16384,
+ "freePagesCounterBytes": null,
+ "rows": [
+  {
+   "name": "a 16 GB Mac mini under a graph run: 186 MB of free pages, 7.0 GB to give",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                   11902.\nPages active:                                301448.\nPages inactive:                              428770.\nPages speculative:                             6112.\nPages throttled:                                  0.\nPages wired down:                            152004.\nPages purgeable:                               9230.\n\"Translation faults\":                     2618968071.\nPages copy-on-write:                       107056052.\nPages zero filled:                        1153781326.\nPages reactivated:                         308843348.\nPages purged:                                1826419.\nFile-backed pages:                           395020.\nAnonymous pages:                             441455.\nPages stored in compressor:                   251062.\nPages occupied by compressor:                 90111.\nDecompressions:                            207580746.\nCompressions:                              252090125.\nPageins:                                   199689374.\nPageouts:                                       6067.\nSwapins:                                      629311.\nSwapouts:                                    1559133.\n"
+  },
+  {
+   "name": "a 16 GB Mac mini with the plan of two agents running: 1.0 GB to give",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                    4100.\nPages active:                                512300.\nPages inactive:                               61000.\nPages speculative:                              800.\nPages throttled:                                  0.\nPages wired down:                            201000.\nPages purgeable:                               1200.\n\"Translation faults\":                     2618968071.\nPages copy-on-write:                       107056052.\nPages zero filled:                        1153781326.\nPages reactivated:                         308843348.\nPages purged:                                1826419.\nFile-backed pages:                            52000.\nAnonymous pages:                             730000.\nPages stored in compressor:                   251062.\nPages occupied by compressor:                143000.\nDecompressions:                            207580746.\nCompressions:                              252090125.\nPageins:                                   199689374.\nPageouts:                                       6067.\nSwapins:                                      629311.\nSwapouts:                                    1559133.\n"
+  },
+  {
+   "name": "a 16 GB Mac mini that is really out of memory: 155 MB to give",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 16384 bytes)\nPages free:                                     800.\nPages active:                                640000.\nPages inactive:                                9000.\nPages speculative:                              100.\nPages throttled:                                  0.\nPages wired down:                            230000.\nPages purgeable:                                100.\n\"Translation faults\":                     2618968071.\nPages copy-on-write:                       107056052.\nPages zero filled:                        1153781326.\nPages reactivated:                         308843348.\nPages purged:                                1826419.\nFile-backed pages:                             6000.\nAnonymous pages:                             820000.\nPages stored in compressor:                   251062.\nPages occupied by compressor:                250000.\nDecompressions:                            207580746.\nCompressions:                              252090125.\nPageins:                                   199689374.\nPageouts:                                       6067.\nSwapins:                                      629311.\nSwapouts:                                    1559133.\n"
+  },
+  {
+   "name": "a 16 GB Intel Mac with 4 KiB pages under load",
+   "vmStat": "Mach Virtual Memory Statistics: (page size of 4096 bytes)\nPages free:                                   48211.\nPages active:                               1203344.\nPages inactive:                             1604519.\nPages speculative:                            21870.\nPages throttled:                                  0.\nPages wired down:                            610211.\nPages purgeable:                              30112.\n\"Translation faults\":                     2618968071.\nPages copy-on-write:                       107056052.\nPages zero filled:                        1153781326.\nPages reactivated:                         308843348.\nPages purged:                                1826419.\nFile-backed pages:                          1380122.\nAnonymous pages:                            1700020.\nPages stored in compressor:                   251062.\nPages occupied by compressor:                289000.\nDecompressions:                            207580746.\nCompressions:                              252090125.\nPageins:                                   199689374.\nPageouts:                                       6067.\nSwapins:                                      629311.\nSwapouts:                                    1559133.\n"
+  }
+ ],
+ "linux": [
+  {
+   "name": "a 16 GB Linux worker under a graph run",
+   "meminfo": "MemTotal:       16303596 kB\nMemFree:        231424 kB\nMemAvailable:   7122944 kB\nBuffers:        412160 kB\nCached:         6501376 kB\nSwapCached:          0 kB\nActive:         6120448 kB\nInactive:       5031936 kB\nSwapTotal:           0 kB\nSwapFree:            0 kB\n",
+   "availableBytes": 7293894656
+  },
+  {
+   "name": "a 16 GB Linux worker with a nearly full page cache",
+   "meminfo": "MemTotal:       16303596 kB\nMemFree:        158720 kB\nMemAvailable:   2097152 kB\nBuffers:        81920 kB\nCached:         1900544 kB\nSwapCached:          0 kB\nActive:         6120448 kB\nInactive:       5031936 kB\nSwapTotal:           0 kB\nSwapFree:            0 kB\n",
+   "availableBytes": 2147483648
+  }
+ ]
+}

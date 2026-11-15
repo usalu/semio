@@ -6199,6 +6199,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-energy-model-mut-layer-optics-visible"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-os-kernel",
+ "semio-framework-pack-json",
+ "semio-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-s-artifact-energy-model-diff",
+ "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
+ "semio-s-artifact-energy-model-native-mutations-lifecycle",
+ "semio-s-artifact-energy-model-snapshot",
+ "semio-s-plugin-energy-engine-model",
+]
+
+[[package]]
+name = "semio-s-artifact-energy-model-native-mutations-single"
+version = "0.1.0"
+dependencies = [
+ "semio-os-kernel",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-framework-value-snapshot-projection",
+ "semio-s-artifact-energy-model-diff",
+ "semio-s-artifact-energy-model-native-mutations",
+ "semio-s-artifact-energy-model-snapshot",
+ "semio-s-plugin-energy-engine-model",
+]
+
+[[package]]
 name = "semio-ui-contract"
 version = "0.1.0"
 dependencies = [
@@ -7513,20 +7550,20 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
- "semio-os-kernel",
  "semio-framework-pack-json",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
+ "semio-os-kernel",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
  "semio-s-artifact-energy-model-native-derive",
  "semio-s-artifact-energy-model-native-mutations",
- "semio-s-artifact-energy-model-native-mutations-singletons",
+ "semio-s-artifact-energy-model-native-mutations-single",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -7536,20 +7573,20 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
- "semio-os-kernel",
  "semio-framework-pack-json",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
+ "semio-os-kernel",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
  "semio-s-artifact-energy-model-native-derive",
  "semio-s-artifact-energy-model-native-mutations",
- "semio-s-artifact-energy-model-native-mutations-singletons",
+ "semio-s-artifact-energy-model-native-mutations-single",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -7757,18 +7794,18 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
- "semio-os-kernel",
  "semio-framework-pack-json",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
+ "semio-os-kernel",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-native-derive",
  "semio-s-artifact-energy-model-native-mutations",
- "semio-s-artifact-energy-model-native-mutations-singletons",
+ "semio-s-artifact-energy-model-native-mutations-single",
  "semio-s-artifact-energy-model-snapshot",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -7867,19 +7904,19 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
- "semio-os-kernel",
  "semio-framework-pack-json",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
+ "semio-os-kernel",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
  "semio-s-artifact-energy-model-native-derive",
  "semio-s-artifact-energy-model-native-mutations",
- "semio-s-artifact-energy-model-native-mutations-singletons",
+ "semio-s-artifact-energy-model-native-mutations-single",
  "semio-s-artifact-energy-model-snapshot",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -7888,19 +7925,19 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
- "semio-os-kernel",
  "semio-framework-pack-json",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
+ "semio-os-kernel",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
  "semio-s-artifact-energy-model-native-derive",
  "semio-s-artifact-energy-model-native-mutations",
- "semio-s-artifact-energy-model-native-mutations-singletons",
+ "semio-s-artifact-energy-model-native-mutations-single",
  "semio-s-artifact-energy-model-snapshot",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -8194,28 +8231,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-energy-model-mut-window-layer-optics-visible"
-version = "0.1.0"
-dependencies = [
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-os-kernel",
- "semio-framework-pack-json",
- "semio-ui-locale",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-framework-value-native-owned",
- "semio-framework-value-persistent",
- "semio-s-artifact-energy-model-diff",
- "semio-s-artifact-energy-model-diff-patch",
- "semio-s-artifact-energy-model-native-derive",
- "semio-s-artifact-energy-model-native-mutations",
- "semio-s-artifact-energy-model-native-mutations-lifecycle",
- "semio-s-artifact-energy-model-snapshot",
- "semio-s-plugin-energy-engine-model",
-]
-
-[[package]]
 name = "semio-s-artifact-energy-model-mut-year-schedule"
 version = "0.1.0"
 dependencies = [
@@ -8310,15 +8325,14 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
- "semio-os-command",
- "semio-os-kernel",
- "semio-os-store-one-item",
  "semio-framework-pack-json",
  "semio-framework-schema-state",
- "semio-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
+ "semio-os-command",
+ "semio-os-kernel",
+ "semio-os-store-one-item",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-mut-air-loop",
  "semio-s-artifact-energy-model-mut-air-loop-nodes",
@@ -8339,6 +8353,7 @@ dependencies = [
  "semio-s-artifact-energy-model-mut-ideal-loads",
  "semio-s-artifact-energy-model-mut-ideal-loads-limits",
  "semio-s-artifact-energy-model-mut-infiltration",
+ "semio-s-artifact-energy-model-mut-layer-optics-visible",
  "semio-s-artifact-energy-model-mut-leakage",
  "semio-s-artifact-energy-model-mut-lighting-gain",
  "semio-s-artifact-energy-model-mut-lighting-gain-emission",
@@ -8375,7 +8390,6 @@ dependencies = [
  "semio-s-artifact-energy-model-mut-week-schedule",
  "semio-s-artifact-energy-model-mut-window-layer",
  "semio-s-artifact-energy-model-mut-window-layer-optics",
- "semio-s-artifact-energy-model-mut-window-layer-optics-visible",
  "semio-s-artifact-energy-model-mut-year-schedule",
  "semio-s-artifact-energy-model-mut-year-schedule-holidays",
  "semio-s-artifact-energy-model-mut-zone",
@@ -8383,8 +8397,9 @@ dependencies = [
  "semio-s-artifact-energy-model-native-derive",
  "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-native-mutations-lifecycle",
- "semio-s-artifact-energy-model-native-mutations-singletons",
+ "semio-s-artifact-energy-model-native-mutations-single",
  "semio-s-artifact-energy-model-snapshot",
+ "semio-ui-locale",
 ]
 
 [[package]]
@@ -8424,21 +8439,6 @@ dependencies = [
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
-]
-
-[[package]]
-name = "semio-s-artifact-energy-model-native-mutations-singletons"
-version = "0.1.0"
-dependencies = [
- "semio-os-kernel",
- "semio-framework-value",
- "semio-framework-value-native-owned",
- "semio-framework-value-persistent",
- "semio-framework-value-snapshot-projection",
- "semio-s-artifact-energy-model-diff",
- "semio-s-artifact-energy-model-native-mutations",
- "semio-s-artifact-energy-model-snapshot",
- "semio-s-plugin-energy-engine-model",
 ]
 
 [[package]]

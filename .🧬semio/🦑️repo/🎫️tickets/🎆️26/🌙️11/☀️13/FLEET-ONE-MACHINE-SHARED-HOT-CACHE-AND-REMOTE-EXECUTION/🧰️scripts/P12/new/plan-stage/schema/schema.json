@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph plan stages / Stufen des Graph-Plans",
+  "description": "EN: After the projects of a wave are inferred, the plan of the graph still assembles the wave: the environment, the test and policy owners, the file ownership, the edges and the metadata. Each of these stages is named, timed and measured, and the whole plan runs as ONE owner of the memory governor: when the managed bytes it added pass what this machine gives a plan (a declared share of the physical memory, never on a serving machine), the plan is stopped at its next yield point or stage boundary with the typed refusal graph.plan-too-heavy, which names the stage and the size, long before the host runs short of memory. The slice pool of the service stops a worker whose process tree passes the same kind of limit from outside (code plan-memory), because a worker busy in synchronous work cannot stop itself. DE: Nachdem die Projekte einer Welle abgeleitet sind, setzt der Graph-Plan die Welle noch zusammen: die Umgebung, die Test- und Richtlinien-Eigner, die Dateizuordnung, die Kanten und die Metadaten. Jede dieser Stufen wird benannt, zeitlich erfasst und gemessen, und der ganze Plan läuft als EIN Eigner des Speicher-Reglers: wächst er über das, was diese Maschine einem Plan gibt (ein deklarierter Anteil des physischen Speichers, nie auf einer bedienenden Maschine), wird er an der nächsten Abgabestelle oder Stufengrenze mit der typisierten Ablehnung graph.plan-too-heavy gestoppt, die Stufe und Größe nennt, lange bevor dem Rechner der Speicher ausgeht. Der Slice-Pool des Dienstes stoppt einen Arbeiter, dessen Prozessbaum eine Grenze gleicher Art überschreitet, von außen (Code plan-memory), weil ein Arbeiter in synchroner Arbeit sich nicht selbst stoppen kann.",
+  "definitions": {
+    "Policy": {
+      "description": "EN: The limit of a plan is hostShare of the physical memory, at least minimumMegabytes and at most maximumMegabytes; a machine of serveHostMegabytes or more serves the fleet and has none; SEMIO_GRAPH_PLAN_LIMIT_MB names another number of megabytes, off disables it. DE: Die Grenze eines Plans ist hostShare des physischen Speichers, mindestens minimumMegabytes und höchstens maximumMegabytes; eine Maschine ab serveHostMegabytes bedient die Flotte und hat keine; SEMIO_GRAPH_PLAN_LIMIT_MB nennt eine andere Anzahl Megabyte, off schaltet sie ab.",
+      "const": {
+        "version": 1,
+        "hostShare": 0.3,
+        "minimumMegabytes": 2048,
+        "maximumMegabytes": 16384,
+        "serveHostMegabytes": 24000,
+        "limitEnvironment": "SEMIO_GRAPH_PLAN_LIMIT_MB",
+        "off": "off",
+        "owner": "plan",
+        "stages": ["inference", "environment", "tests", "policies", "dangling", "files", "test-edges", "edges", "metadata", "result"]
+      }
+    },
+    "Messages": {
+      "description": "EN: The lines of the plan stages, one per language of the environment (English first, German second, no default language). DE: Die Zeilen der Plan-Stufen, eine je Sprache der Umgebung (zuerst Englisch, dann Deutsch, keine Standardsprache).",
+      "const": {
+        "en": {
+          "started": "graph: plan stage {stage} starts (managed {managed} MB, resident {resident} MB)",
+          "finished": "graph: plan stage {stage} took {seconds} s (managed {managed} MB, {delta} MB more than at its start, resident {resident} MB)",
+          "stopped": "graph: plan stage {stage} grew the plan by {used} MB, more than the {budget} MB this machine gives a plan; it is stopped before the host runs short of memory"
+        },
+        "de": {
+          "started": "Graph: Plan-Stufe {stage} beginnt (verwaltet {managed} MB, resident {resident} MB)",
+          "finished": "Graph: Plan-Stufe {stage} dauerte {seconds} s (verwaltet {managed} MB, {delta} MB mehr als bei ihrem Beginn, resident {resident} MB)",
+          "stopped": "Graph: die Plan-Stufe {stage} hat den Plan um {used} MB wachsen lassen, mehr als die {budget} MB, die diese Maschine einem Plan gibt; er wird gestoppt, bevor dem Rechner der Speicher ausgeht"
+        }
+      }
+    },
+    "StageEvent": {
+      "description": "EN: The message a slice worker sends to its service when a plan stage starts, so that the service can name the stage of a worker it has to stop. DE: Die Nachricht, die ein Slice-Arbeiter an seinen Dienst sendet, wenn eine Plan-Stufe beginnt, damit der Dienst die Stufe eines Arbeiters nennen kann, den er stoppen muss.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "stage", "managedMegabytes", "residentMegabytes"],
+      "properties": {
+        "type": { "const": "stage" },
+        "stage": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "managedMegabytes": { "type": "integer", "minimum": 0 },
+        "residentMegabytes": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

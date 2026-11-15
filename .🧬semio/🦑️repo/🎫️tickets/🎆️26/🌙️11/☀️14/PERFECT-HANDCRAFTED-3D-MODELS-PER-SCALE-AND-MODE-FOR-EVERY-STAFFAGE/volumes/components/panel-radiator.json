@@ -1,0 +1,1721 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "panel-rear",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.585,
+      0.022,
+      0.94
+     ],
+     "cornerRadius": 0.008,
+     "transform": {
+      "translation": [
+       0.2925,
+       -0.011,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel-front-lower",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.195,
+      0.022,
+      0.94
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.0975,
+       -0.089,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel-front-mid",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.195,
+      0.022,
+      0.94
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.2925,
+       -0.089,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel-front-upper",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.195,
+      0.022,
+      0.94
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.4875,
+       -0.089,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "convector-rear",
+     "kind": "extrude",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "texture",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.03,
+       -0.0216
+      ],
+      [
+       0.080454,
+       -0.0496
+      ],
+      [
+       0.130909,
+       -0.0216
+      ],
+      [
+       0.181363,
+       -0.0496
+      ],
+      [
+       0.231818,
+       -0.0216
+      ],
+      [
+       0.282273,
+       -0.0496
+      ],
+      [
+       0.332727,
+       -0.0216
+      ],
+      [
+       0.383181,
+       -0.0496
+      ],
+      [
+       0.433636,
+       -0.0216
+      ],
+      [
+       0.48409,
+       -0.0496
+      ],
+      [
+       0.534545,
+       -0.0216
+      ],
+      [
+       0.585,
+       -0.0496
+      ],
+      [
+       0.585,
+       -0.0504
+      ],
+      [
+       0.534545,
+       -0.0224
+      ],
+      [
+       0.48409,
+       -0.0504
+      ],
+      [
+       0.433636,
+       -0.0224
+      ],
+      [
+       0.383181,
+       -0.0504
+      ],
+      [
+       0.332727,
+       -0.0224
+      ],
+      [
+       0.282273,
+       -0.0504
+      ],
+      [
+       0.231818,
+       -0.0224
+      ],
+      [
+       0.181363,
+       -0.0504
+      ],
+      [
+       0.130909,
+       -0.0224
+      ],
+      [
+       0.080454,
+       -0.0504
+      ],
+      [
+       0.03,
+       -0.0224
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.46,
+     "to": 0.46
+    },
+    {
+     "id": "convector-front",
+     "kind": "extrude",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "texture",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.03,
+       -0.0496
+      ],
+      [
+       0.080454,
+       -0.0776
+      ],
+      [
+       0.130909,
+       -0.0496
+      ],
+      [
+       0.181363,
+       -0.0776
+      ],
+      [
+       0.231818,
+       -0.0496
+      ],
+      [
+       0.282273,
+       -0.0776
+      ],
+      [
+       0.332727,
+       -0.0496
+      ],
+      [
+       0.383181,
+       -0.0776
+      ],
+      [
+       0.433636,
+       -0.0496
+      ],
+      [
+       0.48409,
+       -0.0776
+      ],
+      [
+       0.534545,
+       -0.0496
+      ],
+      [
+       0.585,
+       -0.0776
+      ],
+      [
+       0.585,
+       -0.0784
+      ],
+      [
+       0.534545,
+       -0.0504
+      ],
+      [
+       0.48409,
+       -0.0784
+      ],
+      [
+       0.433636,
+       -0.0504
+      ],
+      [
+       0.383181,
+       -0.0784
+      ],
+      [
+       0.332727,
+       -0.0504
+      ],
+      [
+       0.282273,
+       -0.0784
+      ],
+      [
+       0.231818,
+       -0.0504
+      ],
+      [
+       0.181363,
+       -0.0784
+      ],
+      [
+       0.130909,
+       -0.0504
+      ],
+      [
+       0.080454,
+       -0.0784
+      ],
+      [
+       0.03,
+       -0.0504
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.46,
+     "to": 0.46
+    },
+    {
+     "id": "end-cap",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.6,
+      0.1,
+      0.03
+     ],
+     "cornerRadius": 0.008,
+     "transform": {
+      "translation": [
+       0.3,
+       -0.05,
+       0.485
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.97
+      ]
+     }
+    },
+    {
+     "id": "bottom-cap",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.015,
+      0.1,
+      0.94
+     ],
+     "transform": {
+      "translation": [
+       0.0075,
+       -0.05,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-grille",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "detail",
+     "tone": 0.35,
+     "size": [
+      0.015,
+      0.1,
+      0.94
+     ],
+     "transform": {
+      "translation": [
+       0.5925,
+       -0.05,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "bracket",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.012,
+      0.035,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.056,
+       0.0175,
+       0.4
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.414,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "bracket-far",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.012,
+      0.035,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.056,
+       0.0175,
+       -0.4
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.414,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "valve-head",
+     "kind": "revolve",
+     "bone": "valve-head",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.027
+      ],
+      [
+       0.08,
+       0.027
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.45
+     ]
+    },
+    {
+     "id": "valve-body",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.06,
+      0.05,
+      0.07
+     ],
+     "transform": {
+      "translation": [
+       -0.03,
+       -0.055,
+       -0.335
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.73
+      ]
+     }
+    },
+    {
+     "id": "pipe",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.011
+      ],
+      [
+       0.06,
+       0.011
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.11,
+      -0.055,
+      -0.335
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.73
+      ]
+     }
+    },
+    {
+     "id": "lockshield-cap",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.021
+      ],
+      [
+       0.032,
+       0.021
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.033,
+      -0.055,
+      0.43
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-panel-rear",
+     "of": "panel-rear",
+     "region": "panel-rear"
+    },
+    {
+     "id": "th-panel-front-lower",
+     "of": "panel-front-lower",
+     "region": "panel-front-lower"
+    },
+    {
+     "id": "th-panel-front-mid",
+     "of": "panel-front-mid",
+     "region": "panel-front-mid"
+    },
+    {
+     "id": "th-panel-front-upper",
+     "of": "panel-front-upper",
+     "region": "panel-front-upper"
+    },
+    {
+     "id": "th-convector-rear",
+     "of": "convector-rear",
+     "region": "convector"
+    },
+    {
+     "id": "th-convector-front",
+     "of": "convector-front",
+     "region": "convector"
+    },
+    {
+     "id": "th-top-grille",
+     "of": "top-grille",
+     "region": "top-grille"
+    },
+    {
+     "id": "th-bracket",
+     "of": "bracket",
+     "region": "bracket"
+    },
+    {
+     "id": "th-bracket-far",
+     "of": "bracket-far",
+     "region": "bracket"
+    },
+    {
+     "id": "th-valve-valve-head",
+     "of": "valve-head",
+     "region": "valve"
+    },
+    {
+     "id": "th-valve-valve-body",
+     "of": "valve-body",
+     "region": "valve"
+    },
+    {
+     "id": "th-valve-pipe",
+     "of": "pipe",
+     "region": "valve"
+    },
+    {
+     "id": "th-valve-lockshield-cap",
+     "of": "lockshield-cap",
+     "region": "valve"
+    },
+    {
+     "id": "th-emitter-convection-outlet",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0,
+       0.047
+      ],
+      [
+       0.0075,
+       0.047
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.59375,
+      -0.05,
+      0.0
+     ],
+     "tags": [
+      "convection-outlet"
+     ],
+     "region": "top-grille"
+    },
+    {
+     "id": "th-emitter-front-plume",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0,
+       0.05
+      ],
+      [
+       0.0075,
+       0.05
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.3,
+      -0.1,
+      0.0
+     ],
+     "tags": [
+      "front-plume"
+     ],
+     "region": "panel-front-mid"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-panel",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.585,
+      0.1,
+      0.94
+     ],
+     "cornerRadius": 0.008,
+     "transform": {
+      "translation": [
+       0.2925,
+       -0.05,
+       0.0
+      ]
+     },
+     "member": "radiator",
+     "part": "member"
+    },
+    {
+     "id": "member-bracket",
+     "of": "bracket",
+     "member": "radiator",
+     "part": "member"
+    },
+    {
+     "id": "member-bracket-far",
+     "of": "bracket-far",
+     "member": "radiator",
+     "part": "member"
+    },
+    {
+     "id": "joint-valve-head",
+     "of": "valve-head",
+     "member": "valve-head",
+     "part": "joint"
+    },
+    {
+     "id": "support-bracket-top-block",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.02,
+      0.035,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       0.47,
+       0.0175,
+       0.0
+      ]
+     },
+     "member": "radiator",
+     "part": "support",
+     "anchor": "bracket-top",
+     "slender": true
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: rear panel and three front zones as 22 mm pressed-steel boxes (6 and 5 mm rounded edges), the two convector fins as 0.8 mm zig-zag sheets (texture role, as drawn) in the 56 mm gap, end caps, bottom cap, the 15 mm top grille, four wall brackets, the brass thermostat valve (knob on its own revolute bone, 22 mm pipes, valve bodies) and the lockshield cap.",
+     "de": "K\u00f6rper: R\u00fcckwand und drei Frontzonen als gepresste Stahlk\u00e4sten von 22 mm (Kanten 6 und 5 mm gerundet), die beiden Konvektorbleche als 0,8-mm-Zickzackbleche (Textur-Rolle, wie gezeichnet) im Spalt von 56 mm, Seitenkappen, Bodenkappe, das Obergitter von 15 mm, vier Wandkonsolen, das Thermostatventil aus Messing (Kopf auf eigenem Drehknochen, Rohre 22 mm, Ventilk\u00f6rper) und die R\u00fccklaufkappe."
+    },
+    {
+     "en": "Thermal: all regions from the body (the convector region is a fin exchange area, `areaBasis: exchange`, covered by the two zig-zag sheets); the two emitters are 7.5 mm outlet discs, the convection outlet on the grille and the front plume on the mid front zone.",
+     "de": "Thermisch: alle Regionen aus dem K\u00f6rper (die Konvektorregion ist eine Lamellen-Austauschfl\u00e4che, `areaBasis: exchange`, abgedeckt durch die zwei Zickzackbleche); die zwei Emitter sind Auslassscheiben von 7,5 mm, der Konvektionsauslass am Gitter und die Frontfahne an der mittleren Frontzone."
+    },
+    {
+     "en": "Structure: the panel block as the member, the four brackets as load path to the wall, a joint at the valve-head knob, and the fixed support block at the upper bracket anchor.",
+     "de": "Tragwerk: der Plattenblock als Stab, die vier Konsolen als Lastpfad zur Wand, ein Gelenk am Ventilknopf und der feste Auflagerblock am oberen Konsolenanker."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "panel-rear",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.57,
+      0.022,
+      1.0
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.285,
+       -0.011,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel-front-lower",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.19,
+      0.022,
+      1.0
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.095,
+       -0.089,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel-front-mid",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.19,
+      0.022,
+      1.0
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.285,
+       -0.089,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel-front-upper",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.19,
+      0.022,
+      1.0
+     ],
+     "cornerRadius": 0.004,
+     "transform": {
+      "translation": [
+       0.475,
+       -0.089,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "convector-core",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.57,
+      0.056,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.285,
+       -0.05,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-grille",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "detail",
+     "tone": 0.35,
+     "size": [
+      0.03,
+      0.1,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.585,
+       -0.05,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "bracket",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.015,
+      0.035,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.056,
+       0.0175,
+       0.4
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.42,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "bracket-far",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.015,
+      0.035,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.056,
+       0.0175,
+       -0.4
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.42,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "valve-head",
+     "kind": "revolve",
+     "bone": "valve-head",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.027
+      ],
+      [
+       0.08,
+       0.027
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.45
+     ]
+    },
+    {
+     "id": "valve-body",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.06,
+      0.05,
+      0.07
+     ],
+     "transform": {
+      "translation": [
+       -0.03,
+       -0.055,
+       -0.335
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.73
+      ]
+     }
+    },
+    {
+     "id": "pipe",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.015
+      ],
+      [
+       0.06,
+       0.015
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.11,
+      -0.055,
+      -0.335
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.73
+      ]
+     }
+    },
+    {
+     "id": "lockshield-cap",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.021
+      ],
+      [
+       0.032,
+       0.021
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.033,
+      -0.055,
+      0.43
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-panel-rear",
+     "of": "panel-rear",
+     "region": "panel-rear"
+    },
+    {
+     "id": "th-panel-front-lower",
+     "of": "panel-front-lower",
+     "region": "panel-front-lower"
+    },
+    {
+     "id": "th-panel-front-mid",
+     "of": "panel-front-mid",
+     "region": "panel-front-mid"
+    },
+    {
+     "id": "th-panel-front-upper",
+     "of": "panel-front-upper",
+     "region": "panel-front-upper"
+    },
+    {
+     "id": "th-convector",
+     "of": "convector-core",
+     "region": "convector"
+    },
+    {
+     "id": "th-top-grille",
+     "of": "top-grille",
+     "region": "top-grille"
+    },
+    {
+     "id": "th-bracket",
+     "of": "bracket",
+     "region": "bracket"
+    },
+    {
+     "id": "th-bracket-far",
+     "of": "bracket-far",
+     "region": "bracket"
+    },
+    {
+     "id": "th-valve-valve-head",
+     "of": "valve-head",
+     "region": "valve"
+    },
+    {
+     "id": "th-valve-valve-body",
+     "of": "valve-body",
+     "region": "valve"
+    },
+    {
+     "id": "th-valve-pipe",
+     "of": "pipe",
+     "region": "valve"
+    },
+    {
+     "id": "th-valve-lockshield-cap",
+     "of": "lockshield-cap",
+     "region": "valve"
+    },
+    {
+     "id": "th-emitter-convection-outlet",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0,
+       0.047
+      ],
+      [
+       0.015,
+       0.047
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.5775,
+      -0.05,
+      0.0
+     ],
+     "tags": [
+      "convection-outlet"
+     ],
+     "region": "top-grille"
+    },
+    {
+     "id": "th-emitter-front-plume",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0,
+       0.05
+      ],
+      [
+       0.015,
+       0.05
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.3,
+      -0.1,
+      0.0
+     ],
+     "tags": [
+      "front-plume"
+     ],
+     "region": "panel-front-mid"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-panel",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.02,
+      0.035,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       0.47,
+       0.0175,
+       0.0
+      ]
+     },
+     "member": "radiator",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-bracket",
+     "of": "bracket",
+     "member": "radiator",
+     "part": "member"
+    },
+    {
+     "id": "member-bracket-far",
+     "of": "bracket-far",
+     "member": "radiator",
+     "part": "member"
+    },
+    {
+     "id": "joint-valve-head",
+     "of": "valve-head",
+     "member": "valve-head",
+     "part": "joint"
+    },
+    {
+     "id": "support-bracket-top-block",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.025,
+      0.035,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       0.47,
+       0.0175,
+       0.0
+      ]
+     },
+     "member": "radiator",
+     "part": "support",
+     "anchor": "bracket-top",
+     "slender": true
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the drawing shows one 570 x 100 mm body with a split line, so the panel stack is built as five solids that fill it: the 22 mm rear panel, the 56 mm convector core between the panels (fins merged into one block, end caps merged into the full 1000 mm length), and the three 22 mm front zones with 4 mm edges; plus the 30 mm grille, brackets at 15 mm, the brass valve with two pipes and the lockshield cap.",
+     "de": "K\u00f6rper: die Zeichnung zeigt einen K\u00f6rper von 570 x 100 mm mit Teilungslinie, deshalb besteht der Plattenstapel aus f\u00fcnf K\u00f6rpern, die ihn f\u00fcllen: die R\u00fcckplatte von 22 mm, der Konvektorkern von 56 mm zwischen den Platten (Bleche zu einem Block, Seitenkappen in der vollen L\u00e4nge von 1000 mm aufgegangen) und die drei Frontzonen von 22 mm mit Kanten von 4 mm; dazu das Gitter von 30 mm, Konsolen mit 15 mm, das Messingventil mit zwei Rohren und die R\u00fccklaufkappe."
+    },
+    {
+     "en": "Thermal: every region references its own body solid (rear panel, three front zones, convector core, grille, brackets, valve parts), so the exposed areas add up like the drawn faces; the convector exchange area (fins) is not an envelope area and needs only the core as coverage. Emitters are 15 mm discs. Structure: one 570 x 100 x 1000 mm member for the panel block, brackets, valve joint and the support at 15 mm; the load path is already minimal at this scale.",
+     "de": "Thermisch: jede Region verweist auf ihren eigenen K\u00f6rper (R\u00fcckplatte, drei Frontzonen, Konvektorkern, Gitter, Konsolen, Ventilteile), die freien Fl\u00e4chen addieren sich daher wie die gezeichneten Fl\u00e4chen; die Austauschfl\u00e4che des Konvektors (Lamellen) ist keine H\u00fcllfl\u00e4che und braucht nur den Kern als Abdeckung. Emitter sind Scheiben von 15 mm. Tragwerk: ein Stab 570 x 100 x 1000 mm f\u00fcr den Plattenblock, Konsolen, Ventilgelenk und das Auflager mit 15 mm; der Lastpfad ist bei diesem Ma\u00dfstab bereits minimal."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "panel-rear",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.55,
+      0.03,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.275,
+       -0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel-front-lower",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.1833,
+      0.03,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.09165,
+       -0.085,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel-front-mid",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.1833,
+      0.03,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.27495,
+       -0.085,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "panel-front-upper",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.1833,
+      0.03,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.45835,
+       -0.085,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "convector-core",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.55,
+      0.04,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.275,
+       -0.05,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "top-grille",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "detail",
+     "tone": 0.35,
+     "size": [
+      0.05,
+      0.1,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.575,
+       -0.05,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "valve-head",
+     "kind": "revolve",
+     "bone": "valve-head",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.03
+      ],
+      [
+       0.08,
+       0.03
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.45
+     ]
+    },
+    {
+     "id": "valve-body",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.075,
+      0.06,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       -0.0375,
+       -0.055,
+       -0.38
+      ]
+     }
+    },
+    {
+     "id": "valve-body-right",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.075,
+      0.06,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       -0.0375,
+       -0.055,
+       0.43
+      ]
+     }
+    },
+    {
+     "id": "pipe",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.015
+      ],
+      [
+       0.06,
+       0.015
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.11,
+      -0.055,
+      -0.335
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.73
+      ]
+     }
+    },
+    {
+     "id": "bracket",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      0.03,
+      0.035,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.47,
+       0.0175,
+       0.4
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.8
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-panel-rear",
+     "of": "panel-rear",
+     "region": "panel-rear"
+    },
+    {
+     "id": "th-panel-front-lower",
+     "of": "panel-front-lower",
+     "region": "panel-front-lower"
+    },
+    {
+     "id": "th-panel-front-mid",
+     "of": "panel-front-mid",
+     "region": "panel-front-mid"
+    },
+    {
+     "id": "th-panel-front-upper",
+     "of": "panel-front-upper",
+     "region": "panel-front-upper"
+    },
+    {
+     "id": "th-convector",
+     "of": "convector-core",
+     "region": "convector"
+    },
+    {
+     "id": "th-top-grille",
+     "of": "top-grille",
+     "region": "top-grille"
+    },
+    {
+     "id": "th-bracket",
+     "of": "bracket",
+     "region": "bracket"
+    },
+    {
+     "id": "th-valve-valve-head",
+     "of": "valve-head",
+     "region": "valve"
+    },
+    {
+     "id": "th-valve-valve-body",
+     "of": "valve-body",
+     "region": "valve"
+    },
+    {
+     "id": "th-valve-valve-body-right",
+     "of": "valve-body-right",
+     "region": "valve"
+    },
+    {
+     "id": "th-emitter-convection-outlet",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0,
+       0.047
+      ],
+      [
+       0.03,
+       0.047
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0.57,
+      -0.05,
+      0.0
+     ],
+     "tags": [
+      "convection-outlet"
+     ],
+     "region": "top-grille"
+    },
+    {
+     "id": "th-emitter-front-plume",
+     "kind": "revolve",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0,
+       0.05
+      ],
+      [
+       0.03,
+       0.05
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0.3,
+      -0.1,
+      0.0
+     ],
+     "tags": [
+      "front-plume"
+     ],
+     "region": "panel-front-mid"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-panel",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.02,
+      0.035,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       0.47,
+       0.0175,
+       0.0
+      ]
+     },
+     "member": "radiator",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "joint-valve-head",
+     "of": "valve-head",
+     "member": "valve-head",
+     "part": "joint"
+    },
+    {
+     "id": "support-bracket-top-block",
+     "kind": "box",
+     "bone": "radiator",
+     "material": "painted-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.03,
+      0.035,
+      0.84
+     ],
+     "transform": {
+      "translation": [
+       0.47,
+       0.0175,
+       0.0
+      ]
+     },
+     "member": "radiator",
+     "part": "support",
+     "anchor": "bracket-top",
+     "slender": true
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the drawing has one 600 x 100 mm outline, so the stack is five plates at the 30 mm feature (rear 30, core 40, front 30 mm; the 22 mm pressed panels are thickened to the feature) with the three front zones, the 50 mm grille strip, the brackets as one 30 mm block pair, the valve as knob disc, two valve blocks of 120 and 100 mm width and 30 mm pipes.",
+     "de": "K\u00f6rper: die Zeichnung hat eine Kontur von 600 x 100 mm, deshalb ist der Stapel aus f\u00fcnf Platten in der Einzelheit von 30 mm gebaut (hinten 30, Kern 40, vorn 30 mm; die gepressten Platten von 22 mm sind auf die Einzelheit verdickt) mit den drei Frontzonen, dem Gitterstreifen von 50 mm, den Konsolen als Blockpaar von 30 mm, dem Ventil als Knopfscheibe, zwei Ventilbl\u00f6cken von 120 und 100 mm Breite und Rohren von 30 mm."
+    },
+    {
+     "en": "Thermal: each region keeps its own body solid so that coverage and the summed exposed area stay honest (only the total is compared at this scale); emitters are 30 mm discs. Structure: block member and valve joint, brackets merged into the block, support at 30 mm. One member solid is right at this scale: the radiator is one rigid panel block on its brackets and the brackets are merged into it because the 1:200 drawing does not draw them; the valve head is the only joint.",
+     "de": "Thermisch: jede Region beh\u00e4lt ihren eigenen K\u00f6rper, damit Abdeckung und Summe der freien Fl\u00e4chen stimmen (bei diesem Ma\u00dfstab wird nur die Summe verglichen); Emitter sind Scheiben von 30 mm. Tragwerk: Blockstab und Ventilgelenk, Konsolen im Block aufgegangen, Auflager mit 30 mm. Ein Stabk\u00f6rper ist in diesem Ma\u00dfstab richtig: der Heizk\u00f6rper ist ein starrer Plattenblock auf seinen Konsolen, und die Konsolen sind darin aufgegangen, weil die Zeichnung 1:200 sie nicht zeigt; der Ventilkopf ist das einzige Gelenk."
+    }
+   ]
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

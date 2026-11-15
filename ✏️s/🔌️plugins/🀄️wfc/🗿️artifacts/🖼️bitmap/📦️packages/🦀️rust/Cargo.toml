@@ -28,7 +28,7 @@ semio-s-artifact-wfc-bitmap-transient = { path = "../../🏅️standards/🔖️
 semio-s-artifact-wfc-bitmap-mut-family-2 = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
-semio-s-artifact-wfc-bitmap-tests-shrinks-the-output-and-cascades-a-pin = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/🧪️tests/🖼️shrinks/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-bitmap-tests-shrinks-output-pin = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/🧪️tests/🖼️shrinks/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap-bitmap = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-bitmap-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

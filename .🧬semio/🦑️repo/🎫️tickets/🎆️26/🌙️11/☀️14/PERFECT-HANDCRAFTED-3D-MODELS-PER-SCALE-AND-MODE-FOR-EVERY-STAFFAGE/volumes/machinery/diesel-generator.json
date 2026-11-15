@@ -1,0 +1,4642 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "skid-tank",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      6.06,
+      0.2,
+      1.94
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      6.06,
+      2.29,
+      2.32
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-plate",
+     "kind": "extrude",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -3.03,
+       0.2
+      ],
+      [
+       3.03,
+       0.2
+      ],
+      [
+       3.03,
+       2.49
+      ],
+      [
+       -3.03,
+       2.49
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -2.8,
+        0.55
+       ],
+       [
+        -1.5,
+        0.55
+       ],
+       [
+        -1.5,
+        2.05
+       ],
+       [
+        -2.8,
+        2.05
+       ]
+      ],
+      [
+       [
+        -0.2,
+        0.55
+       ],
+       [
+        1.1,
+        0.55
+       ],
+       [
+        1.1,
+        2.05
+       ],
+       [
+        -0.2,
+        2.05
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": 1.16,
+     "to": 1.22,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -2.38
+      ]
+     }
+    },
+    {
+     "id": "roof-band",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      6.06,
+      0.1,
+      2.44
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       2.54,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "corner-casting-a",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.25,
+      0.2,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.905,
+       0.1,
+       -1.095
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       2.19
+      ]
+     }
+    },
+    {
+     "id": "corner-casting-b",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.25,
+      0.2,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.905,
+       0.1,
+       -1.095
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       2.19
+      ]
+     }
+    },
+    {
+     "id": "fuel-fill",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.4,
+      0.1,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       -2.7,
+       0.1,
+       -1.0
+      ]
+     }
+    },
+    {
+     "id": "roof-edge",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      5.86,
+      0.015,
+      2.24
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       2.5975,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "lifting-eye",
+     "kind": "extrude",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       2.5,
+       2.59
+      ],
+      [
+       2.8,
+       2.59
+      ],
+      [
+       2.8,
+       2.66
+      ],
+      [
+       2.5,
+       2.66
+      ]
+     ],
+     "holes": [
+      [
+       [
+        2.668,
+        2.625
+       ],
+       [
+        2.66559,
+        2.634
+       ],
+       [
+        2.659,
+        2.64059
+       ],
+       [
+        2.65,
+        2.643
+       ],
+       [
+        2.641,
+        2.64059
+       ],
+       [
+        2.63441,
+        2.634
+       ],
+       [
+        2.632,
+        2.625
+       ],
+       [
+        2.63441,
+        2.616
+       ],
+       [
+        2.641,
+        2.60941
+       ],
+       [
+        2.65,
+        2.607
+       ],
+       [
+        2.659,
+        2.60941
+       ],
+       [
+        2.66559,
+        2.616
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.985,
+     "to": 1.015,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -2.0
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-1-front-slat",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "texture": true,
+     "size": [
+      1.3,
+      0.002,
+      0.035
+     ],
+     "transform": {
+      "translation": [
+       -2.15,
+       0.62,
+       -1.19
+      ],
+      "rotation": [
+       0.25882,
+       0.0,
+       0.0,
+       0.96593
+      ]
+     },
+     "repeat": {
+      "count": 15,
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-1-rear-slat",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "texture": true,
+     "size": [
+      1.3,
+      0.002,
+      0.035
+     ],
+     "transform": {
+      "translation": [
+       -2.15,
+       0.62,
+       1.19
+      ],
+      "rotation": [
+       -0.25882,
+       0.0,
+       0.0,
+       0.96593
+      ]
+     },
+     "repeat": {
+      "count": 15,
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-2-front-slat",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "texture": true,
+     "size": [
+      1.3,
+      0.002,
+      0.035
+     ],
+     "transform": {
+      "translation": [
+       0.45,
+       0.62,
+       -1.19
+      ],
+      "rotation": [
+       0.25882,
+       0.0,
+       0.0,
+       0.96593
+      ]
+     },
+     "repeat": {
+      "count": 15,
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-2-rear-slat",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "texture": true,
+     "size": [
+      1.3,
+      0.002,
+      0.035
+     ],
+     "transform": {
+      "translation": [
+       0.45,
+       0.62,
+       1.19
+      ],
+      "rotation": [
+       -0.25882,
+       0.0,
+       0.0,
+       0.96593
+      ]
+     },
+     "repeat": {
+      "count": 15,
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "door-line",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "size": [
+      0.75,
+      1.7,
+      0.015
+     ],
+     "transform": {
+      "translation": [
+       1.875,
+       1.3,
+       -1.2275
+      ]
+     }
+    },
+    {
+     "id": "door-handle",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.06,
+      0.3,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       1.58,
+       1.35,
+       -1.23
+      ]
+     }
+    },
+    {
+     "id": "end-door",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "size": [
+      0.015,
+      1.7,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       3.0375,
+       1.3,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "silencer",
+     "kind": "capsule",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      -1.725,
+      2.865,
+      -0.9
+     ],
+     "p1": [
+      -0.075,
+      2.865,
+      -0.9
+     ],
+     "r0": 0.275,
+     "r1": 0.275
+    },
+    {
+     "id": "silencer-flange",
+     "kind": "revolve",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.285
+      ],
+      [
+       0.08,
+       0.285
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.0,
+      2.865,
+      -0.9
+     ]
+    },
+    {
+     "id": "silencer-clamp-1",
+     "kind": "revolve",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.285
+      ],
+      [
+       0.12,
+       0.285
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -1.6,
+      2.865,
+      -0.9
+     ]
+    },
+    {
+     "id": "silencer-clamp-2",
+     "kind": "revolve",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.285
+      ],
+      [
+       0.12,
+       0.285
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -0.5,
+      2.865,
+      -0.9
+     ]
+    },
+    {
+     "id": "exhaust-stack",
+     "kind": "revolve",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.37,
+       0.1
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -0.04,
+      0.0,
+      -0.9
+     ]
+    },
+    {
+     "id": "stack-hinge-bracket",
+     "kind": "box",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.07,
+      0.08,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.29,
+       -0.13,
+       -0.9
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       -0.70711,
+       0.70711
+      ]
+     }
+    },
+    {
+     "id": "rain-cap",
+     "kind": "box",
+     "bone": "cap-flap",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.3,
+      0.1,
+      0.3
+     ],
+     "cornerRadius": 0.02,
+     "transform": {
+      "translation": [
+       0.15,
+       -0.05,
+       -0.9
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       1.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "rain-cap-knuckle",
+     "kind": "revolve",
+     "bone": "cap-flap",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.025
+      ],
+      [
+       0.12,
+       0.025
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.96
+     ]
+    },
+    {
+     "id": "hood-side-left",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.9,
+       2.59
+      ],
+      [
+       3.03,
+       2.59
+      ],
+      [
+       3.03,
+       3.25
+      ],
+      [
+       2.2,
+       3.25
+      ],
+      [
+       1.9,
+       2.95
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.86,
+     "to": 0.9
+    },
+    {
+     "id": "hood-side-right",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.9,
+       2.59
+      ],
+      [
+       3.03,
+       2.59
+      ],
+      [
+       3.03,
+       3.25
+      ],
+      [
+       2.2,
+       3.25
+      ],
+      [
+       1.9,
+       2.95
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.9,
+     "to": -0.86
+    },
+    {
+     "id": "hood-slope",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4243,
+      0.04,
+      1.72
+     ],
+     "transform": {
+      "translation": [
+       2.05,
+       3.1,
+       0.0
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       0.38268,
+       0.92388
+      ]
+     }
+    },
+    {
+     "id": "hood-top",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.83,
+      0.04,
+      1.72
+     ],
+     "transform": {
+      "translation": [
+       2.615,
+       3.23,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hood-back",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.04,
+      0.36,
+      1.72
+     ],
+     "transform": {
+      "translation": [
+       1.92,
+       2.77,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hood-outlet-frame",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       2.59,
+       -0.85
+      ],
+      [
+       3.25,
+       -0.85
+      ],
+      [
+       3.25,
+       0.85
+      ],
+      [
+       2.59,
+       0.85
+      ]
+     ],
+     "holes": [
+      [
+       [
+        2.65,
+        -0.8
+       ],
+       [
+        3.2,
+        -0.8
+       ],
+       [
+        3.2,
+        0.8
+       ],
+       [
+        2.65,
+        0.8
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 2.98,
+     "to": 3.03
+    },
+    {
+     "id": "outlet-flap",
+     "kind": "box",
+     "bone": "outlet-flap",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.06,
+      0.63,
+      1.7
+     ],
+     "transform": {
+      "translation": [
+       0.315,
+       -0.03,
+       0.0
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       0.70711,
+       0.70711
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-skid-tank",
+     "of": "skid-tank",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-wall",
+     "of": "wall",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-wall-plate",
+     "of": "wall-plate",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-roof-band",
+     "of": "roof-band",
+     "region": "roof"
+    },
+    {
+     "id": "th-corner-casting-a",
+     "of": "corner-casting-a",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-corner-casting-b",
+     "of": "corner-casting-b",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-fuel-fill",
+     "of": "fuel-fill",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-roof-edge",
+     "of": "roof-edge",
+     "region": "roof"
+    },
+    {
+     "id": "th-lifting-eye",
+     "of": "lifting-eye",
+     "region": "roof"
+    },
+    {
+     "id": "th-inlet-louvre-1-front-slat",
+     "of": "inlet-louvre-1-front-slat",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-inlet-louvre-1-rear-slat",
+     "of": "inlet-louvre-1-rear-slat",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-inlet-louvre-2-front-slat",
+     "of": "inlet-louvre-2-front-slat",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-inlet-louvre-2-rear-slat",
+     "of": "inlet-louvre-2-rear-slat",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-door-line",
+     "of": "door-line",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-door-handle",
+     "of": "door-handle",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-end-door",
+     "of": "end-door",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-silencer",
+     "of": "silencer",
+     "region": "silencer"
+    },
+    {
+     "id": "th-silencer-flange",
+     "of": "silencer-flange",
+     "region": "silencer"
+    },
+    {
+     "id": "th-silencer-clamp-1",
+     "of": "silencer-clamp-1",
+     "region": "silencer"
+    },
+    {
+     "id": "th-silencer-clamp-2",
+     "of": "silencer-clamp-2",
+     "region": "silencer"
+    },
+    {
+     "id": "th-exhaust-stack",
+     "of": "exhaust-stack",
+     "region": "exhaust-stack"
+    },
+    {
+     "id": "th-stack-hinge-bracket",
+     "of": "stack-hinge-bracket",
+     "region": "exhaust-stack"
+    },
+    {
+     "id": "th-rain-cap",
+     "of": "rain-cap",
+     "region": "rain-cap"
+    },
+    {
+     "id": "th-rain-cap-knuckle",
+     "of": "rain-cap-knuckle",
+     "region": "rain-cap"
+    },
+    {
+     "id": "th-hood-side-left",
+     "of": "hood-side-left",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-side-right",
+     "of": "hood-side-right",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-slope",
+     "of": "hood-slope",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-top",
+     "of": "hood-top",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-back",
+     "of": "hood-back",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-outlet-frame",
+     "of": "hood-outlet-frame",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-outlet-flap",
+     "of": "outlet-flap",
+     "region": "outlet-flap"
+    },
+    {
+     "id": "th-wall-wool",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.8,
+     "region": "enclosure-walls",
+     "layer": "wool",
+     "size": [
+      6.056,
+      2.286,
+      2.316
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "th-exhaust-stack-jet",
+     "kind": "revolve",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "region": "exhaust-stack",
+     "tags": [
+      "exhaust-stack-jet"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.00773,
+       0.1
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.32,
+      0.0,
+      -0.9
+     ]
+    },
+    {
+     "id": "th-radiator-air",
+     "kind": "revolve",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "region": "discharge-hood",
+     "tags": [
+      "radiator-air"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.6
+      ],
+      [
+       0.00773,
+       0.6
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      3.025,
+      2.9,
+      0.0
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-skid-tank",
+     "of": "skid-tank",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-wall",
+     "of": "wall",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-roof-band",
+     "of": "roof-band",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-silencer",
+     "of": "silencer",
+     "member": "silencer",
+     "part": "member"
+    },
+    {
+     "id": "member-exhaust-stack",
+     "of": "exhaust-stack",
+     "member": "stack",
+     "part": "member"
+    },
+    {
+     "id": "member-rain-cap",
+     "of": "rain-cap",
+     "member": "cap-flap",
+     "part": "member"
+    },
+    {
+     "id": "member-outlet-flap",
+     "of": "outlet-flap",
+     "member": "outlet-flap",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-side-left",
+     "of": "hood-side-left",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-side-right",
+     "of": "hood-side-right",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-slope",
+     "of": "hood-slope",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-top",
+     "of": "hood-top",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-back",
+     "of": "hood-back",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-corner-casting-a",
+     "of": "corner-casting-a",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-corner-casting-b",
+     "of": "corner-casting-b",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "joint-stack-hinge-bracket",
+     "of": "stack-hinge-bracket",
+     "member": "stack",
+     "part": "joint"
+    },
+    {
+     "id": "joint-rain-cap-knuckle",
+     "of": "rain-cap-knuckle",
+     "member": "cap-flap",
+     "part": "joint"
+    },
+    {
+     "id": "joint-flap-hinge",
+     "kind": "revolve",
+     "bone": "outlet-flap",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "outlet-flap",
+     "part": "joint",
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       1.6,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.05,
+      -0.03,
+      -0.8
+     ],
+     "slender": true
+    },
+    {
+     "id": "support-contact-a-l",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-a-l",
+     "size": [
+      0.25,
+      0.0077,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.9,
+       0.00385,
+       1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-a-r",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-a-r",
+     "size": [
+      0.25,
+      0.0077,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.9,
+       0.00385,
+       -1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-l",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-b-l",
+     "size": [
+      0.25,
+      0.0077,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.9,
+       0.00385,
+       1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-r",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-b-r",
+     "size": [
+      0.25,
+      0.0077,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.9,
+       0.00385,
+       -1.13
+      ]
+     }
+    },
+    {
+     "id": "mass-container",
+     "kind": "ellipsoid",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.2,
+     "member": "container",
+     "part": "mass",
+     "radii": [
+      1.6,
+      0.6,
+      0.7
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.1,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "mass-fuel",
+     "kind": "ellipsoid",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.2,
+     "member": "container",
+     "part": "mass",
+     "radii": [
+      1.8,
+      0.09,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "The container is a plain box on a skid tank with four corner castings (the one 2.44 m wide block the drawings agree on), louvres are 15 tilted real 2 mm aluminium slats per panel (texture sheets: the louvre is drawn as a grille, and the 2 mm sheets give the honest 5.8 m2 of the hand calculation), two panels on each long side (the elevation draws one side), door and handle are raised panels on the drawn side and the end door a raised panel on the +x end; the roof carries a 15 mm edge plate and two lifting eyes with real 36 mm holes.",
+     "de": "Der Container ist ein glatter Kasten auf einem Sockeltank mit vier Eckbeschl\u00e4gen (der eine 2,44 m breite Block, auf den die Zeichnungen sich einigen), die Lamellen sind 15 geneigte echte 2-mm-Aluminiumlamellen je Feld (Texturbleche: die Lamelle wird als Gitter gezeichnet, und die 2-mm-Bleche ergeben die ehrlichen 5,8 m2 der Handrechnung), zwei Felder auf jeder L\u00e4ngsseite (die Ansicht zeichnet eine Seite), T\u00fcr und Griff sind aufgesetzte Felder auf der gezeichneten Seite und die Stirnt\u00fcr ein aufgesetztes Feld am +x-Ende; das Dach tr\u00e4gt eine 15 mm dicke Randplatte und zwei Kran\u00f6sen mit echten 36-mm-L\u00f6chern."
+    },
+    {
+     "en": "The silencer is a capsule along x at z -0.9 (0.55 m diameter as in the front ellipse) with flange and two clamp rings, the stack stands vertical at x -1.2 with its hinge bracket, the rain cap is one rounded plate with a knuckle on its own bone; the discharge hood is a shell (two side plates of the elevation pentagon, sloped front, top and back panel and an outlet frame with the 1.6 m by 0.55 m mouth) and the outlet flap one plate on its own bone covering the mouth.",
+     "de": "Der Schalld\u00e4mpfer ist eine Kapsel entlang x bei z -0,9 (0,55 m Durchmesser wie die Ellipse der Vorderansicht) mit Flansch und zwei Klemmringen, das Abgasrohr steht senkrecht bei x -1,2 mit seinem Scharnierwinkel, die Regenhaube ist eine gerundete Platte mit Knoten auf eigenem Knochen; die Ausblashaube ist eine H\u00fclle (zwei Seitenbleche des F\u00fcnfecks der Ansicht, schr\u00e4ge Front-, Deck- und R\u00fcckplatte und ein Auslassrahmen mit der M\u00fcndung 1,6 m mal 0,55 m) und die Auslassklappe eine Platte auf eigenem Knochen vor der M\u00fcndung."
+    },
+    {
+     "en": "Thermal: the enclosure walls are two nested shells, the 2 mm skin (the body wall box with its doors and handle) over a 50 mm wool shell that is the same box shrunk by the skin; all other regions reference their body solids, the exhaust jet is a 200 mm nozzle disc on the stack mouth and the radiator air a 1.2 m disc in front of the outlet flap. The authored region areas were corrected to the exposed surfaces of these solids.",
+     "de": "Thermik: Die Geh\u00e4usew\u00e4nde sind zwei verschachtelte Schalen, die 2 mm dicke Haut (der Wandkasten mit T\u00fcren und Griff) \u00fcber einer 50-mm-Wollschale, die derselbe um die Haut verkleinerte Kasten ist; alle \u00fcbrigen Regionen verweisen auf ihre K\u00f6rper, der Abgasstrahl ist eine 200-mm-D\u00fcsenscheibe an der Rohrm\u00fcndung und die K\u00fchlerabluft eine 1,2-m-Scheibe vor der Auslassklappe. Die angegebenen Regionsfl\u00e4chen wurden auf die freien Fl\u00e4chen dieser K\u00f6rper korrigiert."
+    },
+    {
+     "en": "Structure: skid tank, corner castings, wall box and roof carry the load to four 250 mm supports at the declared corner anchors; silencer, stack, rain cap, hood panels and flap are members, bracket, knuckle and a flap hinge rod are joints, and two masses carry the machine in the container and the fuel in the skid tank.",
+     "de": "Tragwerk: Sockeltank, Eckbeschl\u00e4ge, Wandkasten und Dach tragen die Last in vier 250-mm-Auflager an den angegebenen Eckankern; Schalld\u00e4mpfer, Abgasrohr, Regenhaube, Haubenbleche und Klappe sind St\u00e4be, Winkel, Knoten und eine Klappenscharnierstange sind Gelenke, und zwei Massen tragen die Maschine im Container und den Kraftstoff im Sockeltank."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "skid-tank",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      6.06,
+      0.2,
+      1.94
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      6.06,
+      2.29,
+      2.32
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-plate",
+     "kind": "extrude",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -3.03,
+       0.2
+      ],
+      [
+       3.03,
+       0.2
+      ],
+      [
+       3.03,
+       2.49
+      ],
+      [
+       -3.03,
+       2.49
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -2.8,
+        0.55
+       ],
+       [
+        -1.5,
+        0.55
+       ],
+       [
+        -1.5,
+        2.05
+       ],
+       [
+        -2.8,
+        2.05
+       ]
+      ],
+      [
+       [
+        -0.2,
+        0.55
+       ],
+       [
+        1.1,
+        0.55
+       ],
+       [
+        1.1,
+        2.05
+       ],
+       [
+        -0.2,
+        2.05
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": 1.16,
+     "to": 1.22,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -2.38
+      ]
+     }
+    },
+    {
+     "id": "roof-band",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      6.06,
+      0.1,
+      2.44
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       2.54,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "corner-casting-a",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.25,
+      0.2,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.905,
+       0.1,
+       -1.095
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       2.19
+      ]
+     }
+    },
+    {
+     "id": "corner-casting-b",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.25,
+      0.2,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.905,
+       0.1,
+       -1.095
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       2.19
+      ]
+     }
+    },
+    {
+     "id": "roof-edge",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "size": [
+      5.86,
+      0.03,
+      2.24
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       2.6,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-1-front-slat",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      1.3,
+      0.04,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       -2.15,
+       0.62,
+       -1.19
+      ],
+      "rotation": [
+       0.25882,
+       0.0,
+       0.0,
+       0.96593
+      ]
+     },
+     "repeat": {
+      "count": 8,
+      "translation": [
+       0.0,
+       0.19,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-1-rear-slat",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      1.3,
+      0.04,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       -2.15,
+       0.62,
+       1.19
+      ],
+      "rotation": [
+       -0.25882,
+       0.0,
+       0.0,
+       0.96593
+      ]
+     },
+     "repeat": {
+      "count": 8,
+      "translation": [
+       0.0,
+       0.19,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-2-front-slat",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      1.3,
+      0.04,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.45,
+       0.62,
+       -1.19
+      ],
+      "rotation": [
+       0.25882,
+       0.0,
+       0.0,
+       0.96593
+      ]
+     },
+     "repeat": {
+      "count": 8,
+      "translation": [
+       0.0,
+       0.19,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-2-rear-slat",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      1.3,
+      0.04,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.45,
+       0.62,
+       1.19
+      ],
+      "rotation": [
+       -0.25882,
+       0.0,
+       0.0,
+       0.96593
+      ]
+     },
+     "repeat": {
+      "count": 8,
+      "translation": [
+       0.0,
+       0.19,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "door-line",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "size": [
+      0.75,
+      1.7,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       1.875,
+       1.3,
+       -1.2325
+      ]
+     }
+    },
+    {
+     "id": "end-door",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "size": [
+      0.03,
+      1.7,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       3.045,
+       1.3,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "silencer",
+     "kind": "capsule",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      -1.725,
+      2.865,
+      -0.9
+     ],
+     "p1": [
+      -0.075,
+      2.865,
+      -0.9
+     ],
+     "r0": 0.275,
+     "r1": 0.275
+    },
+    {
+     "id": "silencer-clamp-1",
+     "kind": "revolve",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.285
+      ],
+      [
+       0.12,
+       0.285
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -1.6,
+      2.865,
+      -0.9
+     ]
+    },
+    {
+     "id": "silencer-clamp-2",
+     "kind": "revolve",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.285
+      ],
+      [
+       0.12,
+       0.285
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -0.5,
+      2.865,
+      -0.9
+     ]
+    },
+    {
+     "id": "exhaust-stack",
+     "kind": "revolve",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.37,
+       0.1
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -0.04,
+      0.0,
+      -0.9
+     ]
+    },
+    {
+     "id": "stack-hinge-bracket",
+     "kind": "box",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "size": [
+      0.07,
+      0.08,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.29,
+       -0.13,
+       -0.9
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       -0.70711,
+       0.70711
+      ]
+     }
+    },
+    {
+     "id": "rain-cap",
+     "kind": "box",
+     "bone": "cap-flap",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.3,
+      0.1,
+      0.3
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       0.15,
+       -0.05,
+       -0.9
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       1.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "rain-cap-knuckle",
+     "kind": "revolve",
+     "bone": "cap-flap",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.04
+      ],
+      [
+       0.12,
+       0.04
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.0,
+      0.0,
+      -0.96
+     ]
+    },
+    {
+     "id": "hood-side-left",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.9,
+       2.59
+      ],
+      [
+       3.03,
+       2.59
+      ],
+      [
+       3.03,
+       3.25
+      ],
+      [
+       2.2,
+       3.25
+      ],
+      [
+       1.9,
+       2.95
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.86,
+     "to": 0.9
+    },
+    {
+     "id": "hood-side-right",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.9,
+       2.59
+      ],
+      [
+       3.03,
+       2.59
+      ],
+      [
+       3.03,
+       3.25
+      ],
+      [
+       2.2,
+       3.25
+      ],
+      [
+       1.9,
+       2.95
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.9,
+     "to": -0.86
+    },
+    {
+     "id": "hood-slope",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4243,
+      0.04,
+      1.72
+     ],
+     "transform": {
+      "translation": [
+       2.05,
+       3.1,
+       0.0
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       0.38268,
+       0.92388
+      ]
+     }
+    },
+    {
+     "id": "hood-top",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.83,
+      0.04,
+      1.72
+     ],
+     "transform": {
+      "translation": [
+       2.615,
+       3.23,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hood-back",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.04,
+      0.36,
+      1.72
+     ],
+     "transform": {
+      "translation": [
+       1.92,
+       2.77,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hood-outlet-frame",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.15,
+     "profile": [
+      [
+       2.59,
+       -0.85
+      ],
+      [
+       3.25,
+       -0.85
+      ],
+      [
+       3.25,
+       0.85
+      ],
+      [
+       2.59,
+       0.85
+      ]
+     ],
+     "holes": [
+      [
+       [
+        2.65,
+        -0.8
+       ],
+       [
+        3.2,
+        -0.8
+       ],
+       [
+        3.2,
+        0.8
+       ],
+       [
+        2.65,
+        0.8
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 3.0,
+     "to": 3.03
+    },
+    {
+     "id": "outlet-flap",
+     "kind": "box",
+     "bone": "outlet-flap",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.06,
+      0.63,
+      1.7
+     ],
+     "transform": {
+      "translation": [
+       0.315,
+       -0.03,
+       0.0
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       0.70711,
+       0.70711
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-skid-tank",
+     "of": "skid-tank",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-wall",
+     "of": "wall",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-wall-plate",
+     "of": "wall-plate",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-roof-band",
+     "of": "roof-band",
+     "region": "roof"
+    },
+    {
+     "id": "th-corner-casting-a",
+     "of": "corner-casting-a",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-corner-casting-b",
+     "of": "corner-casting-b",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-roof-edge",
+     "of": "roof-edge",
+     "region": "roof"
+    },
+    {
+     "id": "th-inlet-louvre-1-front-slat",
+     "of": "inlet-louvre-1-front-slat",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-inlet-louvre-1-rear-slat",
+     "of": "inlet-louvre-1-rear-slat",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-inlet-louvre-2-front-slat",
+     "of": "inlet-louvre-2-front-slat",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-inlet-louvre-2-rear-slat",
+     "of": "inlet-louvre-2-rear-slat",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-door-line",
+     "of": "door-line",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-end-door",
+     "of": "end-door",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-silencer",
+     "of": "silencer",
+     "region": "silencer"
+    },
+    {
+     "id": "th-silencer-clamp-1",
+     "of": "silencer-clamp-1",
+     "region": "silencer"
+    },
+    {
+     "id": "th-silencer-clamp-2",
+     "of": "silencer-clamp-2",
+     "region": "silencer"
+    },
+    {
+     "id": "th-exhaust-stack",
+     "of": "exhaust-stack",
+     "region": "exhaust-stack"
+    },
+    {
+     "id": "th-stack-hinge-bracket",
+     "of": "stack-hinge-bracket",
+     "region": "exhaust-stack"
+    },
+    {
+     "id": "th-rain-cap",
+     "of": "rain-cap",
+     "region": "rain-cap"
+    },
+    {
+     "id": "th-rain-cap-knuckle",
+     "of": "rain-cap-knuckle",
+     "region": "rain-cap"
+    },
+    {
+     "id": "th-hood-side-left",
+     "of": "hood-side-left",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-side-right",
+     "of": "hood-side-right",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-slope",
+     "of": "hood-slope",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-top",
+     "of": "hood-top",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-back",
+     "of": "hood-back",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-outlet-frame",
+     "of": "hood-outlet-frame",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-outlet-flap",
+     "of": "outlet-flap",
+     "region": "outlet-flap"
+    },
+    {
+     "id": "th-wall-wool",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.8,
+     "region": "enclosure-walls",
+     "layer": "wool",
+     "size": [
+      6.056,
+      2.286,
+      2.316
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "th-exhaust-stack-jet",
+     "kind": "revolve",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "region": "exhaust-stack",
+     "tags": [
+      "exhaust-stack-jet"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.01597,
+       0.1
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.32,
+      0.0,
+      -0.9
+     ]
+    },
+    {
+     "id": "th-radiator-air",
+     "kind": "revolve",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "region": "discharge-hood",
+     "tags": [
+      "radiator-air"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.6
+      ],
+      [
+       0.01597,
+       0.6
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      3.025,
+      2.9,
+      0.0
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-skid-tank",
+     "of": "skid-tank",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-wall",
+     "of": "wall",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-roof-band",
+     "of": "roof-band",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-silencer",
+     "of": "silencer",
+     "member": "silencer",
+     "part": "member"
+    },
+    {
+     "id": "member-exhaust-stack",
+     "of": "exhaust-stack",
+     "member": "stack",
+     "part": "member"
+    },
+    {
+     "id": "member-rain-cap",
+     "of": "rain-cap",
+     "member": "cap-flap",
+     "part": "member"
+    },
+    {
+     "id": "member-outlet-flap",
+     "of": "outlet-flap",
+     "member": "outlet-flap",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-side-left",
+     "of": "hood-side-left",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-side-right",
+     "of": "hood-side-right",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-slope",
+     "of": "hood-slope",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-top",
+     "of": "hood-top",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-back",
+     "of": "hood-back",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-corner-casting-a",
+     "of": "corner-casting-a",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-corner-casting-b",
+     "of": "corner-casting-b",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "joint-stack-hinge-bracket",
+     "of": "stack-hinge-bracket",
+     "member": "stack",
+     "part": "joint"
+    },
+    {
+     "id": "joint-rain-cap-knuckle",
+     "of": "rain-cap-knuckle",
+     "member": "cap-flap",
+     "part": "joint"
+    },
+    {
+     "id": "joint-flap-hinge",
+     "kind": "revolve",
+     "bone": "outlet-flap",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "outlet-flap",
+     "part": "joint",
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       1.6,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.05,
+      -0.03,
+      -0.8
+     ],
+     "slender": true
+    },
+    {
+     "id": "support-contact-a-l",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-a-l",
+     "size": [
+      0.25,
+      0.0155,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.9,
+       0.00775,
+       1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-a-r",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-a-r",
+     "size": [
+      0.25,
+      0.0155,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.9,
+       0.00775,
+       -1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-l",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-b-l",
+     "size": [
+      0.25,
+      0.0155,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.9,
+       0.00775,
+       1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-r",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-b-r",
+     "size": [
+      0.25,
+      0.0155,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.9,
+       0.00775,
+       -1.13
+      ]
+     }
+    },
+    {
+     "id": "mass-container",
+     "kind": "ellipsoid",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.2,
+     "member": "container",
+     "part": "mass",
+     "radii": [
+      1.6,
+      0.6,
+      0.7
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.1,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:100 the louvres are eight 40 mm slats per panel at 190 mm pitch, door and end door are 30 mm panels, fuel fill, handle and lifting eyes are dropped, the roof edge plate is 30 mm, the rain-cap knuckle 40 mm and the silencer flange is merged into the capsule; hood walls stay 40 mm, the outlet frame becomes a 30 mm plate.",
+     "de": "Bei 1:100 sind die Lamellen acht 40 mm dicke Lamellen je Feld im Abstand von 190 mm, T\u00fcr und Stirnt\u00fcr 30-mm-Felder, Tankstutzen, Griff und Kran\u00f6sen entfallen, die Dachrandplatte ist 30 mm dick, der Haubenknoten 40 mm, und der Schalld\u00e4mpferflansch geht in der Kapsel auf; die Haubenw\u00e4nde bleiben 40 mm, der Auslassrahmen wird zu einer 30-mm-Platte."
+    },
+    {
+     "en": "Thermal: wall skin (door panels included) and wool shell as at 1:50; all other regions reference their body solids; emitters are 15 mm discs.",
+     "de": "Thermik: Wandhaut (mit den T\u00fcrfeldern) und Wollschale wie bei 1:50; alle \u00fcbrigen Regionen verweisen auf ihre K\u00f6rper; Emitter sind 15 mm dicke Scheiben."
+    },
+    {
+     "en": "Structure: the same load path as at 1:50 with 15 mm supports and a single mass in the container (the fuel is included in it).",
+     "de": "Tragwerk: derselbe Lastpfad wie bei 1:50 mit 15-mm-Auflagern und einer einzigen Masse im Container (der Kraftstoff ist darin enthalten)."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "skid-tank",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      6.06,
+      0.2,
+      1.94
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      6.06,
+      2.29,
+      2.378
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-plate",
+     "kind": "extrude",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -3.03,
+       0.2
+      ],
+      [
+       3.03,
+       0.2
+      ],
+      [
+       3.03,
+       2.49
+      ],
+      [
+       -3.03,
+       2.49
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -2.8,
+        0.55
+       ],
+       [
+        -1.5,
+        0.55
+       ],
+       [
+        -1.5,
+        2.05
+       ],
+       [
+        -2.8,
+        2.05
+       ]
+      ],
+      [
+       [
+        -0.2,
+        0.55
+       ],
+       [
+        1.1,
+        0.55
+       ],
+       [
+        1.1,
+        2.05
+       ],
+       [
+        -0.2,
+        2.05
+       ]
+      ]
+     ],
+     "plane": "xy",
+     "from": 1.189,
+     "to": 1.22,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -2.409
+      ]
+     }
+    },
+    {
+     "id": "roof-band",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      6.06,
+      0.1,
+      2.44
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       2.54,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "corner-casting-a",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.25,
+      0.2,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.905,
+       0.1,
+       -1.095
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       2.19
+      ]
+     }
+    },
+    {
+     "id": "corner-casting-b",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "size": [
+      0.25,
+      0.2,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.905,
+       0.1,
+       -1.095
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       2.19
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-1-front-panel",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      1.3,
+      1.5,
+      0.031
+     ],
+     "transform": {
+      "translation": [
+       -2.15,
+       1.3,
+       -1.2045
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-1-rear-panel",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      1.3,
+      1.5,
+      0.031
+     ],
+     "transform": {
+      "translation": [
+       -2.15,
+       1.3,
+       1.2045
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-2-front-panel",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      1.3,
+      1.5,
+      0.031
+     ],
+     "transform": {
+      "translation": [
+       0.45,
+       1.3,
+       -1.2045
+      ]
+     }
+    },
+    {
+     "id": "inlet-louvre-2-rear-panel",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "size": [
+      1.3,
+      1.5,
+      0.031
+     ],
+     "transform": {
+      "translation": [
+       0.45,
+       1.3,
+       1.2045
+      ]
+     }
+    },
+    {
+     "id": "door-line",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.5,
+     "size": [
+      0.75,
+      1.7,
+      0.031
+     ],
+     "transform": {
+      "translation": [
+       1.875,
+       1.3,
+       -1.2355
+      ]
+     }
+    },
+    {
+     "id": "silencer",
+     "kind": "capsule",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "body",
+     "tone": 0.35,
+     "p0": [
+      -1.725,
+      2.865,
+      -0.9
+     ],
+     "p1": [
+      -0.075,
+      2.865,
+      -0.9
+     ],
+     "r0": 0.275,
+     "r1": 0.275
+    },
+    {
+     "id": "silencer-clamp-1",
+     "kind": "revolve",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.285
+      ],
+      [
+       0.12,
+       0.285
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -1.6,
+      2.865,
+      -0.9
+     ]
+    },
+    {
+     "id": "silencer-clamp-2",
+     "kind": "revolve",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.285
+      ],
+      [
+       0.12,
+       0.285
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -0.5,
+      2.865,
+      -0.9
+     ]
+    },
+    {
+     "id": "exhaust-stack",
+     "kind": "revolve",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.37,
+       0.1
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -0.04,
+      0.0,
+      -0.9
+     ]
+    },
+    {
+     "id": "rain-cap",
+     "kind": "box",
+     "bone": "cap-flap",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.3,
+      0.07,
+      0.3
+     ],
+     "cornerRadius": 0.0315,
+     "transform": {
+      "translation": [
+       0.15,
+       -0.035,
+       -0.9
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       1.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hood-side-left",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.9,
+       2.59
+      ],
+      [
+       3.03,
+       2.59
+      ],
+      [
+       3.03,
+       3.25
+      ],
+      [
+       2.2,
+       3.25
+      ],
+      [
+       1.9,
+       2.95
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.86,
+     "to": 0.9
+    },
+    {
+     "id": "hood-side-right",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.9,
+       2.59
+      ],
+      [
+       3.03,
+       2.59
+      ],
+      [
+       3.03,
+       3.25
+      ],
+      [
+       2.2,
+       3.25
+      ],
+      [
+       1.9,
+       2.95
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.9,
+     "to": -0.86
+    },
+    {
+     "id": "hood-slope",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4243,
+      0.04,
+      1.72
+     ],
+     "transform": {
+      "translation": [
+       2.05,
+       3.1,
+       0.0
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       0.38268,
+       0.92388
+      ]
+     }
+    },
+    {
+     "id": "hood-top",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.83,
+      0.04,
+      1.72
+     ],
+     "transform": {
+      "translation": [
+       2.615,
+       3.23,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hood-back",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.04,
+      0.36,
+      1.72
+     ],
+     "transform": {
+      "translation": [
+       1.92,
+       2.77,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "outlet-flap",
+     "kind": "box",
+     "bone": "outlet-flap",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.06,
+      0.63,
+      1.7
+     ],
+     "transform": {
+      "translation": [
+       0.315,
+       -0.03,
+       0.0
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       0.70711,
+       0.70711
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-skid-tank",
+     "of": "skid-tank",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-wall",
+     "of": "wall",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-wall-plate",
+     "of": "wall-plate",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-roof-band",
+     "of": "roof-band",
+     "region": "roof"
+    },
+    {
+     "id": "th-corner-casting-a",
+     "of": "corner-casting-a",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-corner-casting-b",
+     "of": "corner-casting-b",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-inlet-louvre-1-front-panel",
+     "of": "inlet-louvre-1-front-panel",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-inlet-louvre-1-rear-panel",
+     "of": "inlet-louvre-1-rear-panel",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-inlet-louvre-2-front-panel",
+     "of": "inlet-louvre-2-front-panel",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-inlet-louvre-2-rear-panel",
+     "of": "inlet-louvre-2-rear-panel",
+     "region": "inlet-louvres"
+    },
+    {
+     "id": "th-door-line",
+     "of": "door-line",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-silencer",
+     "of": "silencer",
+     "region": "silencer"
+    },
+    {
+     "id": "th-silencer-clamp-1",
+     "of": "silencer-clamp-1",
+     "region": "silencer"
+    },
+    {
+     "id": "th-silencer-clamp-2",
+     "of": "silencer-clamp-2",
+     "region": "silencer"
+    },
+    {
+     "id": "th-exhaust-stack",
+     "of": "exhaust-stack",
+     "region": "exhaust-stack"
+    },
+    {
+     "id": "th-rain-cap",
+     "of": "rain-cap",
+     "region": "rain-cap"
+    },
+    {
+     "id": "th-hood-side-left",
+     "of": "hood-side-left",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-side-right",
+     "of": "hood-side-right",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-slope",
+     "of": "hood-slope",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-top",
+     "of": "hood-top",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-back",
+     "of": "hood-back",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-outlet-flap",
+     "of": "outlet-flap",
+     "region": "outlet-flap"
+    },
+    {
+     "id": "th-wall-wool",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.8,
+     "region": "enclosure-walls",
+     "layer": "wool",
+     "size": [
+      6.056,
+      2.286,
+      2.374
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "th-exhaust-stack-jet",
+     "kind": "revolve",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "region": "exhaust-stack",
+     "tags": [
+      "exhaust-stack-jet"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.03193,
+       0.1
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.32,
+      0.0,
+      -0.9
+     ]
+    },
+    {
+     "id": "th-radiator-air",
+     "kind": "revolve",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "region": "discharge-hood",
+     "tags": [
+      "radiator-air"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.6
+      ],
+      [
+       0.03193,
+       0.6
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      3.025,
+      2.9,
+      0.0
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-skid-tank",
+     "of": "skid-tank",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-wall",
+     "of": "wall",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-roof-band",
+     "of": "roof-band",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-silencer",
+     "of": "silencer",
+     "member": "silencer",
+     "part": "member"
+    },
+    {
+     "id": "member-exhaust-stack",
+     "of": "exhaust-stack",
+     "member": "stack",
+     "part": "member"
+    },
+    {
+     "id": "member-rain-cap",
+     "of": "rain-cap",
+     "member": "cap-flap",
+     "part": "member"
+    },
+    {
+     "id": "member-outlet-flap",
+     "of": "outlet-flap",
+     "member": "outlet-flap",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-side-left",
+     "of": "hood-side-left",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-side-right",
+     "of": "hood-side-right",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-slope",
+     "of": "hood-slope",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-top",
+     "of": "hood-top",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-back",
+     "of": "hood-back",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-corner-casting-a",
+     "of": "corner-casting-a",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-corner-casting-b",
+     "of": "corner-casting-b",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "joint-stack-bracket",
+     "kind": "box",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "stack",
+     "part": "joint",
+     "size": [
+      0.07,
+      0.08,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.26,
+       0.0,
+       -0.9
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       -0.70711,
+       0.70711
+      ]
+     }
+    },
+    {
+     "id": "joint-flap-hinge",
+     "kind": "revolve",
+     "bone": "outlet-flap",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "outlet-flap",
+     "part": "joint",
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       1.6,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.05,
+      -0.03,
+      -0.8
+     ],
+     "slender": true
+    },
+    {
+     "id": "support-contact-a-l",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-a-l",
+     "size": [
+      0.25,
+      0.031,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.9,
+       0.0155,
+       1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-a-r",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-a-r",
+     "size": [
+      0.25,
+      0.031,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.9,
+       0.0155,
+       -1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-l",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-b-l",
+     "size": [
+      0.25,
+      0.031,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.9,
+       0.0155,
+       1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-r",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-b-r",
+     "size": [
+      0.25,
+      0.031,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.9,
+       0.0155,
+       -1.13
+      ]
+     }
+    },
+    {
+     "id": "mass-container",
+     "kind": "ellipsoid",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.2,
+     "member": "container",
+     "part": "mass",
+     "radii": [
+      1.6,
+      0.6,
+      0.7
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.1,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:200 the louvre slats become four flat 31 mm aluminium panels (two per long side), the end door, roof edge, castings' separate hole details, handle, fuel fill and eyes vanish, the rain cap is a 70 mm plate without knuckle, the silencer keeps its two 120 mm clamp rings, and the outlet frame disappears into the hood.",
+     "de": "Bei 1:200 werden die Lamellen vier flache 31 mm dicke Aluminiumfelder (zwei je L\u00e4ngsseite), Stirnt\u00fcr, Dachrand, Handgriff, Tankstutzen und \u00d6sen entfallen, die Regenhaube ist eine 70 mm dicke Platte ohne Knoten, der Schalld\u00e4mpfer beh\u00e4lt seine zwei 120-mm-Klemmringe, und der Auslassrahmen geht in der Haube auf."
+    },
+    {
+     "en": "Thermal: skin and wool as before, the louvre region is the four panels, emitters are 31 mm discs.",
+     "de": "Thermik: Haut und Wolle wie zuvor, die Lamellenregion sind die vier Felder, Emitter sind 31 mm dicke Scheiben."
+    },
+    {
+     "en": "Structure: as at 1:100 with 31 mm supports and joints sized to the feature, one mass; the rain-cap knuckle is not a separate joint any more.",
+     "de": "Tragwerk: wie bei 1:100 mit 31-mm-Auflagern und auf die Mindestgr\u00f6\u00dfe bemessenen Gelenken, eine Masse; der Haubenknoten ist kein eigenes Gelenk mehr."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "skid-tank",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      6.06,
+      0.2,
+      2.44
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.1,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.55,
+     "size": [
+      6.06,
+      2.3,
+      2.44
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.35,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "roof-band",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      6.06,
+      0.09,
+      2.44
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       2.545,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "silencer",
+     "kind": "revolve",
+     "bone": "silencer",
+     "material": "exhaust-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.0,
+       0.0
+      ],
+      [
+       0.0,
+       0.055
+      ],
+      [
+       0.0295,
+       0.165
+      ],
+      [
+       0.11,
+       0.2455
+      ],
+      [
+       0.22,
+       0.275
+      ],
+      [
+       1.98,
+       0.275
+      ],
+      [
+       2.09,
+       0.2455
+      ],
+      [
+       2.1705,
+       0.165
+      ],
+      [
+       2.2,
+       0.055
+      ],
+      [
+       2.2,
+       0.0
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -2.0,
+      2.855,
+      -0.9
+     ]
+    },
+    {
+     "id": "exhaust-stack",
+     "kind": "revolve",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.37,
+       0.1
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      -0.04,
+      0.0,
+      -0.9
+     ]
+    },
+    {
+     "id": "rain-cap",
+     "kind": "box",
+     "bone": "cap-flap",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.3,
+      0.1,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       -0.05,
+       -0.9
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       1.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hood-side-left",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.9,
+       2.59
+      ],
+      [
+       3.03,
+       2.59
+      ],
+      [
+       3.03,
+       3.25
+      ],
+      [
+       2.2,
+       3.25
+      ],
+      [
+       1.9,
+       2.95
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.82,
+     "to": 0.9
+    },
+    {
+     "id": "hood-side-right",
+     "kind": "extrude",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       1.9,
+       2.59
+      ],
+      [
+       3.03,
+       2.59
+      ],
+      [
+       3.03,
+       3.25
+      ],
+      [
+       2.2,
+       3.25
+      ],
+      [
+       1.9,
+       2.95
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.9,
+     "to": -0.82
+    },
+    {
+     "id": "hood-slope",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4443,
+      0.08,
+      1.64
+     ],
+     "transform": {
+      "translation": [
+       2.05,
+       3.1,
+       0.0
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       0.38268,
+       0.92388
+      ]
+     }
+    },
+    {
+     "id": "hood-top",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.83,
+      0.08,
+      1.64
+     ],
+     "transform": {
+      "translation": [
+       2.615,
+       3.21,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "hood-back",
+     "kind": "box",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.08,
+      0.36,
+      1.64
+     ],
+     "transform": {
+      "translation": [
+       1.94,
+       2.77,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "outlet-flap",
+     "kind": "box",
+     "bone": "outlet-flap",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.1,
+      0.63,
+      1.7
+     ],
+     "transform": {
+      "translation": [
+       0.315,
+       -0.05,
+       0.0
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       0.70711,
+       0.70711
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-skid-tank",
+     "of": "skid-tank",
+     "region": "skid-tank"
+    },
+    {
+     "id": "th-wall",
+     "of": "wall",
+     "region": "enclosure-walls",
+     "layer": "skin"
+    },
+    {
+     "id": "th-roof-band",
+     "of": "roof-band",
+     "region": "roof"
+    },
+    {
+     "id": "th-silencer",
+     "of": "silencer",
+     "region": "silencer"
+    },
+    {
+     "id": "th-exhaust-stack",
+     "of": "exhaust-stack",
+     "region": "exhaust-stack"
+    },
+    {
+     "id": "th-rain-cap",
+     "of": "rain-cap",
+     "region": "rain-cap"
+    },
+    {
+     "id": "th-hood-side-left",
+     "of": "hood-side-left",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-side-right",
+     "of": "hood-side-right",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-slope",
+     "of": "hood-slope",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-top",
+     "of": "hood-top",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-hood-back",
+     "of": "hood-back",
+     "region": "discharge-hood"
+    },
+    {
+     "id": "th-outlet-flap",
+     "of": "outlet-flap",
+     "region": "outlet-flap"
+    },
+    {
+     "id": "th-wall-wool",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.8,
+     "region": "enclosure-walls",
+     "layer": "wool",
+     "size": [
+      6.056,
+      2.3,
+      2.436
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.35,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "th-louvre-1-front",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "region": "inlet-louvres",
+     "size": [
+      1.3,
+      1.5,
+      0.0755
+     ],
+     "transform": {
+      "translation": [
+       -2.15,
+       1.3,
+       -1.2555
+      ]
+     }
+    },
+    {
+     "id": "th-louvre-2-front",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "region": "inlet-louvres",
+     "size": [
+      1.3,
+      1.5,
+      0.0755
+     ],
+     "transform": {
+      "translation": [
+       0.45,
+       1.3,
+       -1.2555
+      ]
+     }
+    },
+    {
+     "id": "th-louvre-1-rear",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "region": "inlet-louvres",
+     "size": [
+      1.3,
+      1.5,
+      0.0755
+     ],
+     "transform": {
+      "translation": [
+       -2.15,
+       1.3,
+       1.2555
+      ]
+     }
+    },
+    {
+     "id": "th-louvre-2-rear",
+     "kind": "box",
+     "bone": "container",
+     "material": "aluminium",
+     "role": "detail",
+     "tone": 0.25,
+     "region": "inlet-louvres",
+     "size": [
+      1.3,
+      1.5,
+      0.0755
+     ],
+     "transform": {
+      "translation": [
+       0.45,
+       1.3,
+       1.2555
+      ]
+     }
+    },
+    {
+     "id": "th-exhaust-stack-jet",
+     "kind": "revolve",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "region": "exhaust-stack",
+     "tags": [
+      "exhaust-stack-jet"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.07776,
+       0.1
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.32,
+      0.0,
+      -0.9
+     ]
+    },
+    {
+     "id": "th-radiator-air",
+     "kind": "revolve",
+     "bone": "outlet-hood",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.4,
+     "region": "discharge-hood",
+     "tags": [
+      "radiator-air"
+     ],
+     "profile": [
+      [
+       0.0,
+       0.6
+      ],
+      [
+       0.07776,
+       0.6
+      ]
+     ],
+     "axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      3.025,
+      2.9,
+      0.0
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-skid-tank",
+     "of": "skid-tank",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-wall",
+     "of": "wall",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-roof-band",
+     "of": "roof-band",
+     "member": "container",
+     "part": "member"
+    },
+    {
+     "id": "member-silencer",
+     "of": "silencer",
+     "member": "silencer",
+     "part": "member"
+    },
+    {
+     "id": "member-exhaust-stack",
+     "of": "exhaust-stack",
+     "member": "stack",
+     "part": "member"
+    },
+    {
+     "id": "member-rain-cap",
+     "of": "rain-cap",
+     "member": "cap-flap",
+     "part": "member"
+    },
+    {
+     "id": "member-outlet-flap",
+     "of": "outlet-flap",
+     "member": "outlet-flap",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-side-left",
+     "of": "hood-side-left",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-side-right",
+     "of": "hood-side-right",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-slope",
+     "of": "hood-slope",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-top",
+     "of": "hood-top",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "member-hood-back",
+     "of": "hood-back",
+     "member": "outlet-hood",
+     "part": "member"
+    },
+    {
+     "id": "joint-stack-bracket",
+     "kind": "box",
+     "bone": "stack",
+     "material": "exhaust-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "stack",
+     "part": "joint",
+     "size": [
+      0.09815,
+      0.08305,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.26,
+       0.0,
+       -0.9
+      ],
+      "rotation": [
+       0.0,
+       0.0,
+       -0.70711,
+       0.70711
+      ]
+     }
+    },
+    {
+     "id": "joint-flap-hinge",
+     "kind": "revolve",
+     "bone": "outlet-flap",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.3,
+     "member": "outlet-flap",
+     "part": "joint",
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       1.6,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      0.05,
+      -0.03,
+      -0.8
+     ],
+     "slender": true
+    },
+    {
+     "id": "support-contact-a-l",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-a-l",
+     "size": [
+      0.25,
+      0.0755,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.9,
+       0.03775,
+       1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-a-r",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-a-r",
+     "size": [
+      0.25,
+      0.0755,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       -2.9,
+       0.03775,
+       -1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-l",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-b-l",
+     "size": [
+      0.25,
+      0.0755,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.9,
+       0.03775,
+       1.13
+      ]
+     }
+    },
+    {
+     "id": "support-contact-b-r",
+     "kind": "box",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "detail",
+     "tone": 0.2,
+     "member": "container",
+     "part": "support",
+     "anchor": "contact-b-r",
+     "size": [
+      0.25,
+      0.0755,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       2.9,
+       0.03775,
+       -1.13
+      ]
+     }
+    },
+    {
+     "id": "mass-container",
+     "kind": "ellipsoid",
+     "bone": "container",
+     "material": "container-steel",
+     "role": "body",
+     "tone": 0.2,
+     "member": "container",
+     "part": "mass",
+     "radii": [
+      1.6,
+      0.6,
+      0.7
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       1.1,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "At 1:500 the container is three slabs (a full-width 200 mm skid tank as the 1:500 front draws it, wall box, 90 mm roof band) without castings, doors, louvres or edge plates, the silencer is one revolved body with the drawn rounded-corner outline (a flat 110 mm end and 220 mm corner radii, not a hemispherical capsule: the 1:500 elevation draws that outline and a capsule left 0.28 m wedges against the roof), the stack a 200 mm cylinder, the rain cap a 100 mm plate, the hood walls are 80 mm plates and the flap a 100 mm plate; clamps, flange, brackets, knuckles and the outlet frame are gone.",
+     "de": "Bei 1:500 ist der Container aus drei Platten gebaut (vollbreiter 200-mm-Sockeltank wie in der 1:500-Vorderansicht, Wandkasten, 90 mm dickes Dachband) ohne Beschl\u00e4ge, T\u00fcren, Lamellen oder Randplatten, der Schalld\u00e4mpfer ist ein Drehk\u00f6rper mit der gezeichneten Kontur mit gerundeten Ecken (110 mm flaches Ende und 220 mm Eckenradius, keine halbkugelige Kapsel: die 1:500-Ansicht zeichnet diese Kontur, und eine Kapsel lie\u00df 0,28 m gro\u00dfe Keile gegen das Dach), das Abgasrohr ein 200-mm-Zylinder, die Regenhaube eine 100 mm dicke Platte, die Haubenw\u00e4nde sind 80 mm dicke Platten und die Klappe eine 100 mm dicke Platte; Klemmen, Flansch, Winkel, Knoten und Auslassrahmen entfallen."
+    },
+    {
+     "en": "Thermal: louvres are four 75 mm panels standing 37.5 mm proud of the walls (thermal only, the 1:500 drawing merges them into the container silhouette); wall skin is the wall box and the wool shell is nested in it; emitters are 75 mm discs.",
+     "de": "Thermik: Die Lamellen sind vier 75 mm dicke Felder, 37,5 mm vor den W\u00e4nden stehend (nur Thermik, die 1:500-Zeichnung fasst sie in der Containersilhouette zusammen); die Wandhaut ist der Wandkasten, die Wollschale liegt in ihm; Emitter sind 75 mm dicke Scheiben."
+    },
+    {
+     "en": "Structure: three slabs, silencer, stack, cap, hood plates and flap as members, joints and supports sized to 75 mm, one mass.",
+     "de": "Tragwerk: drei Platten, Schalld\u00e4mpfer, Abgasrohr, Haube, Haubenplatten und Klappe als St\u00e4be, Gelenke und Auflager auf 75 mm bemessen, eine Masse."
+    }
+   ]
+  }
+ }
+}

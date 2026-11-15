@@ -55,15 +55,15 @@ pub mod editor {
         pub use semio_s_artifact_trinity_rewriting_layout::editor::rewriting::terminology;
         #[path = "."]
         pub mod commands {
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::node_graph_edit;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::node_graph_edit;
             pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::set_lhs;
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::set_rhs;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::set_rhs;
             pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::set_parameter;
             pub use semio_s_artifact_trinity_rewriting_operations::editor::rewriting::commands::add_rule_clause_command;
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::reset_rule;
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::set_active_example;
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::patch_nodes;
-            pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::commands::add_working_node_command;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::reset_rule;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::set_active_example;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::patch_nodes;
+            pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::commands::add_working_node_command;
             #[path = "."]
             pub mod set_viewport {
                 #[path = "../../🎮️commands/🖥️set-viewport/🦀️.rs"]
@@ -109,7 +109,7 @@ pub mod editor {
                         mod component;
                         pub use component::*;
                     }
-                    pub use semio_s_artifact_trinity_rewriting_tests_narrows_the_lhs_pattern_to_a_shaft_neighbour::editor::rewriting::modes::edit::windows::jack;
+                    pub use semio_s_artifact_trinity_rewriting_tests_narrows_lhs::editor::rewriting::modes::edit::windows::jack;
                     #[path = "."]
                     pub mod parameters {
                         #[path = "../../🎭️modes/✏️edit/🪟️windows/🎛️parameters/🦀️.rs"]

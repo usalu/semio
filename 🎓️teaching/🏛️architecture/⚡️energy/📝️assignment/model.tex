@@ -1,0 +1,31 @@
+\usepackage{tikz}
+\newcommand{\EnergyPlan}[3]{%
+\begin{center}
+\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[line width=.7pt] (0,0) rectangle (12,3.6);
+\draw[line width=3pt,white] (2,0)--(5.6,0) (7.5,0)--(10.5,0);
+\draw[line width=1.5pt] (2,0)--(5.6,0) (7.5,0)--(10.5,0);
+\node[align=center] at (3.8,-.65) {#1\\$2\EnergyDecimal 4\times2\EnergyDecimal 2\,\mathrm{m}$};
+\node[align=center] at (9,-.65) {#2\\$2\EnergyDecimal 0\times2\EnergyDecimal 2\,\mathrm{m}$};
+\draw[<->] (0,4.1)--node[fill=white]{$8\EnergyDecimal 0\,\mathrm{m}$}(12,4.1);
+\draw[<->] (12.5,0)--node[right]{$3\EnergyDecimal 0\,\mathrm{m}$}(12.5,3.6);
+\node at (6,1.8) {$h=2\EnergyDecimal 8\,\mathrm{m}$};
+\draw[->] (-.7,1.3)--(-.7,2.8) node[above]{N};
+\node at (6,-1.5) {#3};
+\end{tikzpicture}
+\end{center}}
+\newcommand{\EnergyInputs}{%
+\begin{center}\small
+\begin{tabular}{p{.48\linewidth}p{.40\linewidth}}
+\textbf{\EnergyQuantity} & \textbf{\EnergyValue}\\\hline
+$U_{\mathrm{wall}}$ & $0\EnergyDecimal 22\,\mathrm{W/(m^2K)}$\\
+$U_{\mathrm{roof}}$ & $0\EnergyDecimal 18\,\mathrm{W/(m^2K)}$\\
+$U_{\mathrm{floor}}$ & $0\EnergyDecimal 25\,\mathrm{W/(m^2K)}$\\
+$U_{\mathrm{glass}}$ & $1\EnergyDecimal 30\,\mathrm{W/(m^2K)}$\\
+$n$ & $0\EnergyDecimal 50\,\mathrm{h^{-1}}$\\
+$c_{\mathrm{air,vol}}$ & $0\EnergyDecimal 34\,\mathrm{Wh/(m^3K)}$\\
+$G_H$ & $72000\,\mathrm{Kh/a}$\\
+$\EnergyPerformance$ & $3\EnergyDecimal 0$\\
+$p_{\mathrm{el}}$ & $0\EnergyDecimal 37\,\mathrm{EUR/kWh}$\\\hline
+\end{tabular}\end{center}}
+\newcommand{\EnergyWriteSpace}{\par\vspace{3mm}\noindent\rule{\linewidth}{.2pt}\par\vspace{9mm}\noindent\rule{\linewidth}{.2pt}\par}

@@ -25,7 +25,7 @@ semio-s-artifact-wfc-grid2d-diff = { path = "../../🏅️standards/🔖️1/�
 semio-s-artifact-wfc-grid2d-create-tile = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-tile/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-grid2d-inferences = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-grid2d-schema = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
-semio-s-artifact-wfc-grid2d-tests-cuts-the-pinned-corner-out-of-the-problem = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️mask-cell/🧪️tests/🕳️cuts/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-grid2d-tests-cuts-pinned-corner = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️mask-cell/🧪️tests/🕳️cuts/📦️packages/🦀️rust" }
 semio-s-artifact-wfc-grid2d-v1 = { path = "../../🏅️standards/🔖️1/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

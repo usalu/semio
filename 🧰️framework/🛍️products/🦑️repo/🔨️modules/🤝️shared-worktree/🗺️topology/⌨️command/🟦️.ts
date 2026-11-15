@@ -1,24 +1,27 @@
 import {spawn} from "node:child_process";
 import {readFileSync} from "node:fs";
-import {readFile,rm,stat,statfs,writeFile} from "node:fs/promises";
+import {readFile,realpath,rm,stat,statfs,writeFile} from "node:fs/promises";
 import {lookup} from "node:dns/promises";
+import {homedir} from "node:os";
 import {connect} from "node:net";
 import {join,resolve} from "node:path";
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
 import type {StatusReportV1} from "../../🔁️replica/🟦️.ts";
-import {applyFleetAddressEnvironmentV1,factsV1,groupV1,machineEnvironmentV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
+import {crlfScriptsV1,gitGuardsV1,resolveGitV1,type GitGuardsV1} from "../../🌿️git/🟦️.ts";
+import {pathBudgetV1} from "../../🚧️boundary/🟦️.ts";
+import {accessDirectoryV1,accessReceiptsLackingV1} from "../../../📚️library/🏗️build/🏡️resident/🔐️consent/🟨️.mjs";
+import {applyFleetAddressEnvironmentV1,factsV1,groupV1,mountPartsV1,mountPlanV1,platformV1,readTopologyV1,serverPartsV1,serverPlanV1,workerPartsV1,workerServiceV1,worktreePathV1,type FleetGroupV1,type FleetPlatformV1,type FleetTopologyV1} from "../🟦️.ts";
 
-type Operation="env"|"mount-plan"|"server-plan"|"worker-service"|"facts"|"validate"|"preflight";
+type Operation="mount-plan"|"server-plan"|"worker-service"|"facts"|"validate"|"preflight";
 
 const OPTIONS:Readonly<Record<Operation,Readonly<{valued:readonly string[];plain:readonly string[]}>>>={
- env:{valued:["--group","--shell"],plain:[]},
  "mount-plan":{valued:["--group","--platform","--part"],plain:[]},
  "server-plan":{valued:["--group","--part"],plain:[]},
  "worker-service":{valued:["--group","--platform","--part","--role"],plain:[]},
- facts:{valued:["--group","--platform","--shell"],plain:[]},
+ facts:{valued:["--group","--platform","--shell","--home"],plain:[]},
  validate:{valued:["--file","--timeout"],plain:["--reachable"]},
- preflight:{valued:["--group","--worktree","--store","--timeout","--lang"],plain:[]}
+ preflight:{valued:["--group","--worktree","--store","--timeout","--lang","--home"],plain:[]}
 };
 const PLATFORMS:readonly FleetPlatformV1[]=["linux","macos","windows"],SHELLS=["sh","powershell"] as const,ROLES=["worker","server"] as const;
 
@@ -47,11 +50,6 @@ export function parseTopologyArgumentsV1(args:readonly string[]):TopologyArgumen
  return Object.freeze({operation,values:Object.freeze(values),flags});
 }
 
-/** 🌱️ Renders an environment as `export K=V` lines (`sh`) or `$env:K="V"` lines (`powershell`); the values are URL-safe by schema, so no quoting is ever needed. */
-export function renderEnvironmentV1(environment:Readonly<Record<string,string>>,shell:"sh"|"powershell"):string{
- return Object.entries(environment).map(([name,value])=>shell==="sh"?`export ${name}=${value}`:`$env:${name}="${value}"`).join("\n");
-}
-
 /** 🧾️ Renders facts as `FLEET_K='v'` lines (`sh`, safe to `eval`) or `$FLEET_K='v'` lines (`powershell`, safe to `Invoke-Expression`). */
 export function renderFactsV1(facts:Readonly<Record<string,string>>,shell:"sh"|"powershell"):string{
  return Object.entries(facts).map(([name,value])=>shell==="sh"?`FLEET_${name}='${value.replaceAll("'","'\\''")}'`:`$FLEET_${name}='${value.replaceAll("'","''")}'`).join("\n");
@@ -75,8 +73,8 @@ const part=(parts:Readonly<Record<string,string>>,name:string):string=>{
 
 const topologyOf=(value:unknown,environment:Readonly<Record<string,string|undefined>>|undefined):FleetTopologyV1=>applyFleetAddressEnvironmentV1(readTopologyV1(value),environment??process.env);
 
-/** 🚀️ Runs one operation and returns the text to print: `env`, `mount-plan`, `server-plan`, `worker-service`, `facts` (the values for the provisioning scripts) or `validate`; `--platform` and `--shell` default from `context.platform` (this process), `--part` picks one piece of a plan, `--role server` (worker-service) renders the group server's variant with `compact --collect-blobs`, `--file` validates another topology file. `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` (optional `SEMIO_FLEET_CACHE_ENDPOINT`) replace that group's address for this run; the topology file is not written. */
-export function runTopologyCommandV1(args:readonly string[],context:Readonly<{platform?:string;topology?:unknown;environment?:Readonly<Record<string,string|undefined>>}>={}):string{
+/** 🚀️ Runs one operation and returns the text to print: `mount-plan`, `server-plan`, `worker-service`, `facts` (the values for the provisioning scripts) or `validate`; `--platform` and `--shell` default from `context.platform` (this process), `--part` picks one piece of a plan, `--role server` (worker-service) renders the group server's variant with `compact --collect-blobs`, `--file` validates another topology file. `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` (optional `SEMIO_FLEET_CACHE_ENDPOINT`) replace that group's address for this run; the topology file is not written. */
+export function runTopologyCommandV1(args:readonly string[],context:Readonly<{platform?:string;topology?:unknown;environment?:Readonly<Record<string,string|undefined>>;home?:string}>={}):string{
  const {operation,values,flags}=parseTopologyArgumentsV1(args);
  if(operation==="preflight")throw Error("preflight needs the asynchronous runTopologyCommandAsyncV1");
  if(operation==="validate"){
@@ -86,8 +84,7 @@ export function runTopologyCommandV1(args:readonly string[],context:Readonly<{pl
  }
  const topology=topologyOf(context.topology,context.environment),group=need(values,"--group"),current=platformV1(context.platform),
   shell=choose(values,"--shell",SHELLS,current==="windows"?"powershell":"sh"),platform=choose(values,"--platform",PLATFORMS,current),selected=values["--part"],role=choose(values,"--role",ROLES,"worker");
- if(operation==="env")return renderEnvironmentV1(machineEnvironmentV1(topology,group),shell);
- if(operation==="facts")return renderFactsV1(factsV1(topology,group,platform),shell);
+ if(operation==="facts")return renderFactsV1(factsV1(topology,group,platform,values["--home"]??context.home??homedir()),shell);
  if(operation==="mount-plan")return selected===undefined?mountPlanV1(topology,group,platform):part(mountPartsV1(topology,group,platform),selected);
  if(operation==="server-plan")return selected===undefined?serverPlanV1(topology,group):part(serverPartsV1(topology,group),selected);
  return selected===undefined&&role==="worker"?workerServiceV1(topology,group,platform):part(workerPartsV1(topology,group,platform,role==="server"),selected??"definition");
@@ -148,7 +145,7 @@ export async function runTopologyCommandAsyncV1(args:readonly string[],context:R
  if(operation==="preflight"){
   const timeout=values["--timeout"]??"5000",timeoutMilliseconds=Number(timeout);
   if(!/^[0-9]+$/u.test(timeout)||timeoutMilliseconds<100||timeoutMilliseconds>60000)throw Error("--timeout must be a whole number of milliseconds from 100 to 60000");
-  const report=await preflightV1(topologyOf(context.topology,context.environment),{platform:platformV1(context.platform),group:values["--group"],worktree:values["--worktree"],store:values["--store"],timeoutMilliseconds,languages:preflightLanguagesV1(values["--lang"],context.environment??process.env),signal:context.signal,progress:context.progress,probes:context.probes});
+  const report=await preflightV1(topologyOf(context.topology,context.environment),{platform:platformV1(context.platform),group:values["--group"],worktree:values["--worktree"],home:values["--home"]??context.home,store:values["--store"],timeoutMilliseconds,languages:preflightLanguagesV1(values["--lang"],context.environment??process.env),signal:context.signal,progress:context.progress,probes:context.probes});
   return {text:report.text,exitCode:report.ok?0:1};
  }
  if(operation!=="validate"||(!flags.has("--reachable")&&values["--timeout"]===undefined))return {text:runTopologyCommandV1(args,{platform:context.platform,topology:context.topology,environment:context.environment}),exitCode:0};
@@ -169,26 +166,30 @@ export type PreflightCheckV1=Readonly<{id:string;status:PreflightStatusV1;key:st
 /** 🛫️ The outcome of the preflight: `ok` when no check failed and nothing was cancelled, the checks in their fixed order and the report text in every chosen language. */
 export type PreflightReportV1=Readonly<{ok:boolean;cancelled:boolean;checks:readonly PreflightCheckV1[];text:string}>;
 
-/** 🛫️ The ports of the preflight, each replaceable so that tests need no machine: read a text file (undefined when missing), run a program (code 127 when it does not exist), one HTTP GET, free bytes of a volume, existence of a path, one create-read-delete of a probe file, the clock in milliseconds and the replica `status` report. */
+/** 🛫️ The ports of the preflight, each replaceable so that tests need no machine: read a text file (undefined when missing), run a program (code 127 when it does not exist), one HTTP GET, free bytes of a volume, existence of a path, one create-read-delete of a probe file, the clock in milliseconds, the replica `status` report and the git guards of the worktree. */
 export type PreflightProbesV1=Readonly<{
  read:(path:string)=>Promise<string|undefined>;
  run:(command:string,args:readonly string[],timeoutMilliseconds:number,signal:AbortSignal)=>Promise<Readonly<{code:number;stdout:string}>>;
  http:(url:string,timeoutMilliseconds:number,signal:AbortSignal)=>Promise<Readonly<{status:number;body:string;date:string|null}>>;
  free:(path:string)=>Promise<number>;
  exists:(path:string)=>Promise<boolean>;
+ resolved:(path:string)=>Promise<string>;
  write:(directory:string,name:string)=>Promise<void>;
  now:()=>number;
  status:(worktree:string,store:string,signal:AbortSignal)=>Promise<StatusReportV1>;
+ git:()=>Promise<string|null>;
+ guards:(worktree:string,platform:NodeJS.Platform,longPaths:boolean|null,signal:AbortSignal)=>Promise<GitGuardsV1|null>;
+ scripts:(worktree:string,signal:AbortSignal)=>Promise<readonly string[]|null>;
 }>;
 
 /** 🛫️ The limits of the preflight: the clock skew from which it warns (2 s) and fails (30 s, half of the 60 s after which a receiver holds back an event, so that two machines that are each below it still differ by less than 60 s), and the free disk space below which it warns or fails for a worktree volume and for the store volume of a group server. */
-export const PREFLIGHT_LIMITS_V1=Object.freeze({skewWarnMilliseconds:2000,skewFailMilliseconds:30000,worktreeWarnBytes:30*2**30,worktreeFailBytes:10*2**30,storeWarnBytes:300*2**30,storeFailBytes:50*2**30,lagEvents:1000});
+export const PREFLIGHT_LIMITS_V1=Object.freeze({skewWarnMilliseconds:2000,skewFailMilliseconds:30000,worktreeWarnBytes:30*2**30,worktreeFailBytes:10*2**30,storeWarnBytes:300*2**30,storeFailBytes:50*2**30,lagEvents:1000,visibilityWarnMilliseconds:5000,visibilitySamples:5});
 
 type PreflightLanguageV1="en"|"de";
 type Variables=Readonly<Record<string,string|number>>;
 type Outcome=Readonly<{status:PreflightStatusV1;key:string;variables?:Variables}>;
 
-const PREFLIGHT_LANGUAGES=texts.languages as readonly PreflightLanguageV1[],
+const ACCESS_ROLES=["launcher","service","client"] as const,PREFLIGHT_LANGUAGES=texts.languages as readonly PreflightLanguageV1[],
  MARKS:Readonly<Record<PreflightStatusV1,string>>={ok:"ok  ",warn:"WARN",fail:"FAIL",skip:"skip"},
  CRITICAL=["hard","lookupcache","acregmin","acregmax","acdirmin","acdirmax","nonegnamecache"],
  SERVER_ROOT=resolve(import.meta.dirname,"../../../../../../..");
@@ -219,6 +220,9 @@ const spawnProbe=(command:string,args:readonly string[],timeoutMilliseconds:numb
 });
 
 const systemProbes:PreflightProbesV1={
+ git:()=>resolveGitV1(true),
+ guards:(worktree,platform,longPaths,signal)=>gitGuardsV1(worktree,{signal,platform,longPaths}),
+ scripts:(worktree,signal)=>crlfScriptsV1(worktree,signal),
  read:async path=>{try{return await readFile(path,"utf8");}catch(error){if((error as {code?:string}).code==="ENOENT")return undefined;throw error;}},
  run:spawnProbe,
  http:async(url,timeoutMilliseconds,signal)=>{
@@ -227,6 +231,7 @@ const systemProbes:PreflightProbesV1={
  },
  free:async path=>{const volume=await statfs(path);return volume.bavail*volume.bsize;},
  exists:async path=>{try{await stat(path);return true;}catch{return false;}},
+ resolved:async path=>{try{return await realpath(path);}catch{return path;}},
  write:async(directory,name)=>{
   const file=join(directory,name);
   await writeFile(file,"preflight\n");
@@ -234,7 +239,7 @@ const systemProbes:PreflightProbesV1={
  },
  now:()=>Date.now(),
  status:async(worktree,store,signal)=>{
-  const {runReplicaScriptV1}=await import("../../🔁️replica/📜️script.ts"),lines:string[]=[],code=await runReplicaScriptV1(["status","--json","--worktree",worktree,"--store",store,"--lang","en"],SERVER_ROOT,process.env,signal,line=>{lines.push(line);},()=>{});
+  const {runReplicaScriptV1}=await import("../../🔁️replica/🛟️supervisor/🟦️.ts"),lines:string[]=[],code=await runReplicaScriptV1(["status","--json","--worktree",worktree,"--store",store,"--lang","en"],SERVER_ROOT,process.env,signal,line=>{lines.push(line);},()=>{});
   if(code!==0)throw Error(`replica status exited with ${code}`);
   return JSON.parse(lines.join("\n")) as StatusReportV1;
  }
@@ -268,8 +273,8 @@ const mountedMacos=(text:string,flags:string,mount:string):MountedV1|undefined=>
 };
 const mountedWindows=(text:string,drive:string):MountedV1|undefined=>{
  for(const line of text.split("\n")){
-  const match=/^\S*\s+([A-Za-z]:)\s+(\\\\\S+)\s+(.*?)\s*$/u.exec(line);
-  if(match&&match[1]!.toLowerCase()===drive.toLowerCase())return {source:match[2]!,type:match[3]!,options:""};
+  const match=/^(?:\S+\s+)?([A-Za-z]:)\s+(\\\\\S+)(?:\s+(.*?))?\s*$/u.exec(line);
+  if(match&&match[1]!.toLowerCase()===drive.toLowerCase())return {source:match[2]!,type:match[3]??"",options:""};
  }
  return undefined;
 };
@@ -280,10 +285,10 @@ const seconds=(milliseconds:number):string=>`${milliseconds<0?"-":"+"}${(Math.ab
 const shorten=(value:unknown):string=>(value instanceof Error?value.message:String(value)).replace(/\s+/gu," ").slice(0,200);
 
 /** 🛫️ Checks, without changing anything that matters, that a provisioned machine can take part in the fleet: identity (`machine.json`), the store mounted at the right source with the correctness options (Linux `lookupcache=none`, macOS name and directory caches, Windows SMB and NFS client caches), the store writable (one probe file in `v1/tmp`, removed at once), the cache endpoint healthy (`/healthz`), the clock skew against the group server (the `Date` header of its cache endpoint: warn above 2 s, fail from 30 s; the group server itself is the reference), time synchronisation (timedatectl, systemsetup, w32tm), inotify limits (Linux), long paths (Windows), free disk, the native build (`native-build`: `ok` when the completion marker `.cache/f/native-bootstrap.done` of the provisioning exists, `warn` while the machine syncs but its native bootstrap is still pending), the daemon service (and on a group server the cache and relay), the daily compaction and the replica `status`. The group, the role (a machine named `<group>-server` is the group server), the store and the worktree come from `machine.json` and the topology unless given. All checks run at once with `timeoutMilliseconds` each; every finished check is reported through `progress` in every chosen language, and an aborted `signal` stops them and marks the report as cancelled. */
-export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{platform:FleetPlatformV1;group?:string;worktree?:string;store?:string;timeoutMilliseconds:number;languages:readonly PreflightLanguageV1[];signal:AbortSignal;progress:(line:string)=>void;probes?:Partial<PreflightProbesV1>}>):Promise<PreflightReportV1>{
+export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{platform:FleetPlatformV1;group?:string;worktree?:string;home?:string;uid?:number;store?:string;timeoutMilliseconds:number;languages:readonly PreflightLanguageV1[];signal:AbortSignal;progress:(line:string)=>void;probes?:Partial<PreflightProbesV1>}>):Promise<PreflightReportV1>{
  const {platform,timeoutMilliseconds,signal,languages}=options,probes:PreflightProbesV1={...systemProbes,...options.probes},limits=PREFLIGHT_LIMITS_V1;
  const sep=platform==="windows"?"\\":"/",at=(base:string,...parts:string[]):string=>[base.replace(/[\\/]+$/u,""),...parts].join(sep);
- const worktree=options.worktree??topology.worktree[platform],machineFile=at(worktree,".cache","f","machine.json");
+ const home=options.home??homedir(),worktree=options.worktree??worktreePathV1(topology,platform,home),machineFile=at(worktree,".cache","f","machine.json");
  const machineText=await probes.read(machineFile).catch(()=>undefined);
  let machine:{originId?:string;groupId?:string;storeRoot?:string}={};
  try{machine=machineText===undefined?{}:JSON.parse(machineText) as typeof machine;}catch{machine={};}
@@ -305,12 +310,14 @@ export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{pla
   })());
  };
  let facts:Readonly<Record<string,string>>|undefined,factsError:string|undefined;
- try{facts=factsV1(topology,groupId,platform);}catch(error){factsError=shorten(error);}
+ try{facts=factsV1(topology,groupId,platform,home);}catch(error){factsError=shorten(error);}
  const mounted=memo(async():Promise<MountedV1|undefined>=>{
-  if(platform==="linux"){const text=await probes.read("/proc/self/mountinfo");return text===undefined?undefined:mountedLinux(text,storeRoot);}
+  if(platform==="linux"){const text=await probes.read("/proc/self/mountinfo");return text===undefined?undefined:mountedLinux(text,storeRoot)??mountedLinux(text,await probes.resolved(storeRoot));}
   if(platform==="macos"){const [list,flags]=await Promise.all([probes.run("/sbin/mount",[],timeoutMilliseconds,signal),probes.run("/usr/bin/nfsstat",["-m"],timeoutMilliseconds,signal)]);return mountedMacos(list.stdout,flags.code===0?flags.stdout:"",storeRoot);}
-  return mountedWindows((await probes.run("net.exe",["use"],timeoutMilliseconds,signal)).stdout,storeRoot.slice(0,2));
+  const [nfs,smb]=await Promise.all([probes.run("mount.exe",[],timeoutMilliseconds,signal),probes.run("net.exe",["use"],timeoutMilliseconds,signal)]);
+  return mountedWindows(nfs.stdout,storeRoot.slice(0,2))??mountedWindows(smb.stdout,storeRoot.slice(0,2));
  });
+ const status=memo(()=>probes.status(worktree,storeRoot,signal));
  const health=memo(async()=>{const before=probes.now(),response=await probes.http(`${group.cache.endpoint}/healthz`,timeoutMilliseconds,signal);return {response,before,after:probes.now()};});
  const nonEmpty=(text:string):boolean=>text.trim().length>0;
  const unit=(part:string,wildcard:boolean):string=>{
@@ -322,9 +329,9 @@ export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{pla
    const list=timer?await probes.run("systemctl",["list-timers","--all","--plain","--no-legend",name],timeoutMilliseconds,signal):await probes.run("systemctl",["list-units",name,"--state=active","--plain","--no-legend"],timeoutMilliseconds,signal);
    return list.code===0&&nonEmpty(list.stdout)&&list.stdout.includes("semio-fleet");
   }
-  if(platform==="macos"){const print=await probes.run("launchctl",["print",`system/${name}`],timeoutMilliseconds,signal);return print.code===0&&(timer||/state = running/u.test(print.stdout));}
-  const query=await probes.run("schtasks.exe",["/Query","/TN",name,"/FO","LIST"],timeoutMilliseconds,signal);
-  return query.code===0&&(timer||/Status:\s*Running/iu.test(query.stdout));
+  if(platform==="macos"){const print=await probes.run("launchctl",["print",`gui/${options.uid??process.getuid?.()??501}/${name}`],timeoutMilliseconds,signal);return print.code===0&&(timer||/state = running/u.test(print.stdout));}
+  const query=await probes.run("powershell.exe",["-NoProfile","-NonInteractive","-Command",`(Get-ScheduledTask -TaskName '${name}' -ErrorAction Stop).State`],timeoutMilliseconds,signal);
+  return query.code===0&&(timer||/^\s*Running\s*$/imu.test(query.stdout));
  };
 
  add("identity",timeoutMilliseconds,async()=>{
@@ -376,9 +383,14 @@ export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{pla
  });
  add("timesync",timeoutMilliseconds,async()=>{
   if(platform==="linux"){const result=await probes.run("timedatectl",["show","-p","NTPSynchronized","--value"],timeoutMilliseconds,signal);return result.code!==0?warn("timesync.unknown"):result.stdout.trim()==="yes"?ok("timesync.ok"):warn("timesync.no");}
-  if(platform==="macos"){const result=await probes.run("/usr/sbin/systemsetup",["-getusingnetworktime"],timeoutMilliseconds,signal);return result.code!==0||!/Network Time:/u.test(result.stdout)?warn("timesync.unknown"):/Network Time:\s*On/u.test(result.stdout)?ok("timesync.ok"):warn("timesync.no");}
-  const result=await probes.run("w32tm.exe",["/query","/status"],timeoutMilliseconds,signal);
-  return result.code!==0?warn("timesync.no"):/Local CMOS Clock|Free-running/iu.test(result.stdout)?warn("timesync.no"):ok("timesync.ok");
+  if(platform==="macos"){
+   const result=await probes.run("/usr/sbin/systemsetup",["-getusingnetworktime"],timeoutMilliseconds,signal);
+   if(result.code===0&&/Network Time:/u.test(result.stdout))return /Network Time:\s*On/u.test(result.stdout)?ok("timesync.ok"):warn("timesync.no");
+   const stored=await probes.run("/usr/bin/defaults",["read","/Library/Preferences/com.apple.timed","TMAutoNetworkTimeEnabled"],timeoutMilliseconds,signal);
+   return stored.code!==0||!/^\s*[01]\s*$/u.test(stored.stdout)?warn("timesync.unknown"):stored.stdout.trim()==="1"?ok("timesync.ok"):warn("timesync.no");
+  }
+  const [service,type]=await Promise.all([probes.run("sc.exe",["query","w32time"],timeoutMilliseconds,signal),probes.run("reg.exe",["query","HKLM\\SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters","/v","Type"],timeoutMilliseconds,signal)]);
+  return service.code!==0||!/:\s*4\s/u.test(service.stdout)||type.code!==0||/REG_SZ\s+NoSync/iu.test(type.stdout)?warn("timesync.no"):ok("timesync.ok");
  });
  if(platform==="linux")add("limits",timeoutMilliseconds,async()=>{
   const wanted=Object.fromEntries(mountPartsV1(topology,groupId,"linux")["sysctl"]!.split("\n").map(item=>item.split("=") as [string,string])),found:string[]=[],low:string[]=[];
@@ -392,6 +404,10 @@ export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{pla
   add("longpaths",timeoutMilliseconds,async()=>{
    const result=await probes.run("reg.exe",["query","HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem","/v","LongPathsEnabled"],timeoutMilliseconds,signal);
    return parseRegistryNumber(result.stdout)===1?ok("longpaths.ok"):fail("longpaths.off");
+  });
+  add("logon",timeoutMilliseconds,async()=>{
+   const result=await probes.run("reg.exe",["query","HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon","/v","AutoAdminLogon"],timeoutMilliseconds,signal);
+   return /AutoAdminLogon\s+REG_SZ\s+1\s*$/mu.test(result.stdout)?ok("logon.auto"):warn("logon.manual");
   });
   const peers=topology.groups.filter(other=>other.id!==groupId),needSmb=server?peers.some(peer=>peer.server.protocol==="smb"):group.server.protocol==="smb",needNfs=server?peers.some(peer=>peer.server.protocol==="nfs"):group.server.protocol==="nfs";
   if(facts!==undefined&&(needSmb||needNfs))add("clientcache",timeoutMilliseconds,async()=>{
@@ -419,6 +435,22 @@ export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{pla
   const marker=at(worktree,".cache","f","native-bootstrap.done");
   return await probes.exists(marker)?ok("native.ok",{marker}):warn("native.pending",{marker,log:at(worktree,".cache","f","native-bootstrap.log")});
  });
+ add("git",timeoutMilliseconds,async()=>{
+  const found=await probes.git();
+  return found===null?warn("git.missing"):ok("git.ok",{path:found});
+ });
+ const longPaths=memo(async():Promise<boolean|null>=>platform==="windows"?parseRegistryNumber((await probes.run("reg.exe",["query","HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem","/v","LongPathsEnabled"],timeoutMilliseconds,signal)).stdout)===1:null);
+ const nodePlatform=platform==="windows"?"win32":platform==="macos"?"darwin":"linux",guards=memo(async()=>probes.guards(worktree,nodePlatform,await longPaths(),signal));
+ const guarded=(id:string,decide:(found:GitGuardsV1)=>Outcome):void=>add(id,Math.max(timeoutMilliseconds,120000),async()=>{const found=await guards();return found===null?skip("guards.skip"):decide(found);});
+ const sample=(found:GitGuardsV1,kind:string):string=>found.samples.filter(line=>line.startsWith(`${kind} `)).map(line=>line.slice(kind.length+1)).join(", ")||"-";
+ const before=(version:string,major:number,minor:number):boolean=>{const [first=0,second=0]=version.split(".").map(Number);return first<major||first===major&&second<minor;};
+ guarded("guards.git",found=>found.version===null||before(found.version,2,32)?fail("guards.git.old",{version:found.version??"?"}):ok("guards.git.ok",{version:found.version,pins:found.pins}));
+ guarded("guards.exclude",found=>found.infoExclude>0?fail("guards.exclude.fail",{count:found.infoExclude,file:at(worktree,".git","info","exclude")}):ok("guards.exclude.ok"));
+ guarded("guards.case",found=>found.caseMismatch>0?warn("guards.case.mismatch",{count:found.caseMismatch,paths:sample(found,"case-mismatch")}):found.caseIgnore>0?warn("guards.case.ignore",{count:found.caseIgnore,paths:sample(found,"case-ignore")}):ok("guards.case.ok",{case:found.volume.caseInsensitive?"A=a":"A≠a",normalisation:found.volume.normalisationInsensitive?"NFC=NFD":"NFC≠NFD"}));
+ guarded("guards.tracked",found=>found.trackedRefused>0?fail("guards.tracked.refused",{count:found.trackedRefused,paths:sample(found,"refused")+(found.samples.some(line=>line.startsWith("unsafe-link "))?`, ${sample(found,"unsafe-link")}`:"")}):found.trackedIgnored>0?warn("guards.tracked.ignored",{count:found.trackedIgnored}):found.modeMismatch!==null&&found.modeMismatch>0?warn("guards.tracked.mode",{count:found.modeMismatch,paths:sample(found,"mode")}):ok("guards.tracked.ok",{ignored:found.trackedIgnored,links:found.links}));
+ guarded("guards.paths",found=>{const budget=pathBudgetV1(nodePlatform,found.volume.longPaths===true);return found.overBudget>0?(platform==="windows"&&found.volume.longPaths!==true?fail:warn)("guards.paths.over",{count:found.overBudget,limit:budget.limit,unit:budget.unit==="utf16"?"UTF-16":"UTF-8",paths:sample(found,"over-budget")}):ok("guards.paths.ok",{limit:budget.limit,unit:budget.unit==="utf16"?"UTF-16":"UTF-8"});});
+ guarded("guards.symlinks",found=>found.volume.symlinks?ok("guards.symlinks.ok"):found.links>0?fail("guards.symlinks.fail",{count:found.links}):warn("guards.symlinks.warn"));
+ add("guards.scripts",Math.max(timeoutMilliseconds,120000),async()=>{const found=await probes.scripts(worktree,signal);return found===null?skip("guards.skip"):found.length>0?warn("guards.scripts.crlf",{count:found.length,paths:found.slice(0,5).join(", ")}):ok("guards.scripts.ok");});
  const worker=workerPartsV1(topology,groupId,platform),serverParts=server&&group.server.platform===platform?serverPartsV1(topology,groupId):undefined;
  add("service.replica",timeoutMilliseconds,async()=>{const name=unit(worker["target"]!,true);return await active(name)?ok("service.ok",{name}):fail("service.down",{name});});
  add("service.compact",timeoutMilliseconds,async()=>{
@@ -426,8 +458,26 @@ export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{pla
   return await active(name,true)?ok("compact.ok",{name}):warn("compact.missing",{name});
  });
  if(serverParts!==undefined)for(const part of["cache","relay"])add(`service.${part}`,timeoutMilliseconds,async()=>{const name=unit(serverParts[`${part}-target`]!,false);return await active(name)?ok("service.ok",{name}):fail("service.down",{name});});
+ const roleReceipts=async():Promise<ReturnType<typeof accessReceiptsLackingV1>>=>{
+  const directory=accessDirectoryV1(worktree,{platform:"darwin",home,environment:{}}),found:ReturnType<typeof accessReceiptsLackingV1>=[];
+  for(const role of ACCESS_ROLES){
+   const text=await probes.read(at(directory,`${role}.json`)).catch(()=>undefined);
+   try{const value=text===undefined?undefined:JSON.parse(text) as ReturnType<typeof accessReceiptsLackingV1>[number];if(value!==undefined&&value.version===1&&value.role===role&&typeof value.at==="number"&&typeof value.state==="string")found.push(value);}catch{}
+  }
+  return found;
+ };
+ add("access",timeoutMilliseconds,async()=>{
+  if(origin==="-")return skip("access.skip");
+  const text=await probes.read(at(storeRoot,"v1","origins",origin,"access.json")).catch(()=>undefined);
+  let state:string|undefined;
+  try{state=text===undefined?undefined:(JSON.parse(text) as {state?:string}).state;}catch{state=undefined;}
+  if(state==="denied"||state==="waiting-for-consent")return fail(`access.${state==="denied"?"denied":"waiting"}.${platform==="macos"?"macos":"other"}`,{worktree});
+  const lacking=platform==="macos"?accessReceiptsLackingV1(await roleReceipts(),{now:probes.now()}):[];
+  if(lacking.length===0)return ok("access.ok",{worktree});
+  return fail(`access.role.${lacking.some(receipt=>receipt.state==="denied")?"denied":"waiting"}`,{roles:lacking.map(receipt=>receipt.role).join(", "),worktree,folder:lacking[0]!.folder,identity:lacking[0]!.identity||"repo"});
+ });
  add("replica",Math.max(timeoutMilliseconds,15000),async()=>{
-  const report=await probes.status(worktree,storeRoot,signal);
+  const report=await status();
   if(!report.reachable)return fail("replica.unreachable",{store:report.storeRoot});
   if(!report.daemon.running)return fail("replica.stopped");
   const rejoin=report.origins.filter(entry=>entry.rejoinRequired).map(entry=>entry.origin);
@@ -435,6 +485,17 @@ export async function preflightV1(topology:FleetTopologyV1,options:Readonly<{pla
   const behind=report.origins.filter(entry=>entry.behindEvents>limits.lagEvents);
   if(behind.length>0)return warn("replica.behind",{origins:behind.map(entry=>`${entry.origin} (${entry.behindEvents})`).join(", ")});
   return ok("replica.ok",{files:report.files,origins:report.origins.length,incoming:report.queue.incoming,outgoing:report.queue.outgoing??"?"});
+ });
+ add("watcher",Math.max(timeoutMilliseconds,15000),async()=>{
+  const report=await status().catch(()=>undefined);
+  if(report===undefined||!report.daemon.running||report.health===null||report.health===undefined)return skip("watcher.skip");
+  return report.health.failures.some(item=>item.kind==="watch")?warn("watcher.degraded",{platform}):ok("watcher.ok");
+ });
+ add("visibility",Math.max(timeoutMilliseconds,15000),async()=>{
+  const report=await status().catch(()=>undefined),latency=report?.latency;
+  if(latency===null||latency===undefined||latency.samples.apply<limits.visibilitySamples||latency.applyMs.p95===null)return skip("visibility.skip",{minimum:limits.visibilitySamples});
+  const variables={platform,p50:latency.applyMs.p50??"?",p95:latency.applyMs.p95,samples:latency.samples.apply,limit:limits.visibilityWarnMilliseconds};
+  return latency.applyMs.p95>limits.visibilityWarnMilliseconds?warn("visibility.slow",variables):ok("visibility.ok",variables);
  });
  await Promise.all(pending);
  const cancelled=signal.aborted,checks=order.flatMap(id=>done.filter(check=>check.id===id)),failed=checks.filter(check=>check.status==="fail").length,warned=checks.filter(check=>check.status==="warn").length;

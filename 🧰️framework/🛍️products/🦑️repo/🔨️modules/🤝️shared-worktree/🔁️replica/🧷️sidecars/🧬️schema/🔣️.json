@@ -1,0 +1,34 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/replica/sidecars/v1",
+ "title": "Sidecars of the replica daemon: the identity record that a sidecar launcher keeps fresh, and the lease that the daemon renews so that a restarted daemon can adopt a living sidecar",
+ "definitions": {
+  "Count": {"type": "integer", "minimum": 0},
+  "Sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+  "Record": {
+   "description": "<name>.json below .cache/f/sidecars: written by the launcher of the sidecar at start and every two seconds (tmp + rename): its name, process, start, the time of this write and the sha256 of the entry script it runs. A daemon adopts the sidecar when the process lives, the write is at most fifteen seconds old and the entry script still has this hash.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "name", "pid", "startedMs", "wallMs", "entrySha256"],
+   "properties": {
+    "version": {"const": 1},
+    "name": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$"},
+    "pid": {"type": "integer", "minimum": 1},
+    "startedMs": {"$ref": "#/definitions/Count"},
+    "wallMs": {"$ref": "#/definitions/Count"},
+    "entrySha256": {"$ref": "#/definitions/Sha256"}
+   }
+  },
+  "Lease": {
+   "description": "<name>.lease below .cache/f/sidecars: written by the daemon that owns the sidecar every five seconds (tmp + rename). The launcher ends itself, and its child with it, once the last write is older than ten minutes: a daemon that restarts within that time adopts the sidecar, no daemon at all ends it.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "pid", "wallMs"],
+   "properties": {
+    "version": {"const": 1},
+    "pid": {"type": "integer", "minimum": 1},
+    "wallMs": {"$ref": "#/definitions/Count"}
+   }
+  }
+ }
+}

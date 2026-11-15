@@ -1,5 +1,5 @@
-use crate::geotechnics::earth_pressure::*;
-use crate::geotechnics::slope::{self, Circle, Pseudostatic};
+use semio_s_plugin_norm_mechanics::geotechnics::earth_pressure::*;
+use semio_s_plugin_norm_mechanics::geotechnics::slope::{self, Circle, Pseudostatic};
 use semio_s_plugin_norm_compliance::python_oracle;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;

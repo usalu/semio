@@ -409,6 +409,33 @@
           "file": "architecture-parametric-typology-de.pdf"
         }
       }
+    },
+    {
+      "id": "heating-cooling",
+      "topic": "energy",
+      "emoji": "🌡",
+      "title": {
+        "en": "Finger Exercise: Heating + Cooling",
+        "de": "Fingerübung Heizen + Kühlen"
+      },
+      "description": {
+        "en": "Calculate annual heating demand, heat-pump electricity costs, solar cooling load and supply-air duct diameter for a tiny home.",
+        "de": "Berechne Jahresheizwärmebedarf, Wärmepumpenstromkosten, solare Kühllast und Zuluftkanaldurchmesser eines Tiny Homes."
+      },
+      "documents": {
+        "en": {
+          "namespace": "course",
+          "id": "architecture-energy-heating-cooling-en",
+          "producer": "@teaching/architecture-course:build-heating-cooling-en",
+          "file": "architecture-energy-heating-cooling-en.pdf"
+        },
+        "de": {
+          "namespace": "course",
+          "id": "architecture-energy-heating-cooling-de",
+          "producer": "@teaching/architecture-course:build-heating-cooling-de",
+          "file": "architecture-energy-heating-cooling-de.pdf"
+        }
+      }
     }
   ]
 }

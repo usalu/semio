@@ -53,12 +53,11 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 load_vo_timing = _manim_module.load_vo_timing
 
-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
-set_vo_language("de")
+# 🗣️ Measured clause durations live in vo_timing.json.
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -185,7 +184,7 @@ def _room_thermometer(temp: ValueTracker):
 
     def reading():
         t = temp.get_value()
-        color = P_RED if t > 25 else (P_CYAN if t <= 21.5 else P_WHITE)
+        color = P_RED if t > 26.5 else P_WHITE
         return math_label(rf"{label_number(t)}\,\mathrm{{°C}}", size=SUBTITLE_FONT_SIZE, color=color)
 
     read = always_redraw(lambda: reading().next_to(th["group"][0], RIGHT, buff=0.22))
@@ -264,15 +263,15 @@ class Beat1_WinterGains(Scene):
          "People, devices and lights add internal gains — roughly a laptop and a person as everyday watt anchors.",
          "Personen, Geräte und Licht erzeugen interne Gewinne — greifbar wie Laptop und Person."),
         ("outro",
-         "Together they cover part of the winter heating demand in DIN V 18599. A design heating load after DIN EN 12831 usually ignores them.",
-         "Zusammen decken sie einen Teil des Heizwärmebedarfs nach DIN V 18599. Eine Auslegungsheizlast nach DIN EN 12831 lässt sie meist weg."),
+         "Together they cover part of the winter heating demand in DIN/TS 18599. A design heating load after DIN EN 12831-1 usually ignores them.",
+         "Zusammen decken sie einen Teil des Heizwärmebedarfs nach DIN/TS 18599. Eine Auslegungsheizlast nach DIN EN 12831-1 lässt sie meist weg."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("In winter: welcome free heat", "Im Winter: Erwünschte kostenlose Wärme"))
-        din = _din_ref("DIN V 18599-2")
+        din = _din_ref(_references.cite("!din-v-4108-6") + "\n" + _references.cite(("din-ts-18599-2", "intern")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -329,18 +328,18 @@ class Beat2_SummerOverheat(Scene):
          "Solar gains turn excessive under a harsh red sun, and internal gains keep stacking heat inside.",
          "Solare Gewinne werden übermäßig, und interne Gewinne stapeln weiter Wärme im Inneren."),
         ("trap",
-         "Heat is trapped in the insulated envelope — watch the room temperature climb toward thirty-five degrees.",
-         "Wärme staut sich in der gedämmten Hülle — die Raumtemperatur steigt Richtung fünfunddreißig Grad."),
+         r"Heat is trapped in the insulated envelope — watch the room temperature $\theta_{\mathrm{i}}$ climb toward $35\,\mathrm{°C}$.",
+         r"Wärme staut sich in der gedämmten Hülle — die Raumtemperatur $\theta_{\mathrm{i}}$ steigt Richtung $35\,\mathrm{°C}$."),
         ("outro",
-         "Without active cooling the room stays too warm on a hot summer afternoon.",
-         "Ohne aktive Kühlung bleibt der Raum am heißen Sommernachmittag zu warm."),
+         "Without cooling technology the room stays too warm on a hot summer afternoon.",
+         "Ohne Kühltechnik bleibt der Raum am heißen Sommernachmittag zu warm."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("In summer: overheating behind glass", "Im Sommer: Überhitzung hinter Glas"))
-        din = _din_ref("DIN 4108-2")
+        din = _din_ref(_references.cite(("din-4108-2", "abschn8")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -390,27 +389,27 @@ class Beat2_SummerOverheat(Scene):
 class Beat3_CoolingSystem(Scene):
     NARRATION = [
         ("intro",
-         "The cooling load is the heat-removal rate we must provide so the room returns to comfort.",
-         "Die Kühllast ist die Wärmeleistung, die wir aktiv abführen müssen, damit der Raum wieder komfortabel wird."),
+         r"The cooling load $\dot{Q}_{\mathrm{C}}$ is the heat flow we must remove so the room returns to comfort.",
+         r"Die Kühllast $\dot{Q}_{\mathrm{C}}$ ist der Wärmestrom, den wir aktiv abführen müssen, damit der Raum wieder komfortabel wird."),
         ("vent",
-         "An air-handling unit extracts the warm room air, cools outdoor air at its cooling coil and supplies it back to the room.",
-         "Ein Lüftungsgerät saugt die warme Raumluft als Abluft ab, kühlt Außenluft am Kühlregister und bläst sie als Zuluft ein."),
+         "An air-handling unit extracts the warm room air high up, cools outdoor air at its cooling coil and supplies it low into the room.",
+         "Ein Lüftungsgerät saugt die warme Raumluft oben als Abluft ab, kühlt Außenluft am Kühlregister und bläst sie unten als Zuluft ein."),
         ("coil",
-         "At the coil the outdoor air falls from thirty-two to nineteen degrees. That drop is the heat the unit removes.",
-         "Am Kühlregister fällt die Außenluft von 32 auf 19 Grad.\nGenau diese Differenz nimmt das Gerät auf."),
+         r"At the coil the outdoor air falls from $32\,\mathrm{°C}$ to $18\,\mathrm{°C}$, $\Delta\theta=14\,\mathrm{K}$: the sensible heat removed. Condensing moisture adds the latent part.",
+         r"Am Kühlregister fällt die Außenluft von $32\,\mathrm{°C}$ auf $18\,\mathrm{°C}$, $\Delta\theta=14\,\mathrm{K}$: sensible Wärme. Kondensierende Feuchte kommt latent dazu."),
         ("cool_down",
-         "As heat leaves, the interior cools and the thermometer settles near twenty-one degrees again.",
-         "Wenn Wärme abfließt, kühlt der Innenraum — das Thermometer sinkt wieder Richtung einundzwanzig Grad."),
+         r"As heat leaves, the interior cools and the thermometer settles near $26\,\mathrm{°C}$ again.",
+         r"Wenn Wärme abfließt, kühlt der Innenraum — das Thermometer sinkt wieder Richtung $26\,\mathrm{°C}$."),
         ("outro",
-         "That required heat removal rate is the cooling load we size the system for.",
-         "Genau diese abzuführende Leistung ist die Kühllast, nach der wir das System auslegen."),
+         r"The cooling load is the sum of transmission, ventilation, solar and internal loads: $\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{i}}$.",
+         r"Die Kühllast ist die Summe aus Transmissions-, Lüftungs-, solarer und interner Last: $\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{i}}$."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("The cooling load as power to be removed", "Die Kühllast als abzuführende Leistung"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-2078", "kuehllast")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -446,23 +445,23 @@ class Beat3_CoolingSystem(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "coil"))
         self.add(coil_read)
         self.play(
-            coil_temp.animate.set_value(19),
+            coil_temp.animate.set_value(18),
             *running(2.4),
             run_time=2.4,
         )
         hold_for(self, self.NARRATION, "coil", during=running)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cool_down"))
-        self.play(*running(4.0), house["air"].animate.set_fill(P_CYAN, opacity=0.06), temp.animate.set_value(21),
+        self.play(*running(4.0), house["air"].animate.set_fill(P_CYAN, opacity=0.06), temp.animate.set_value(26),
                   run_time=4.0)
         hold_for(self, self.NARRATION, "cool_down", during=running)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "outro"))
         top = np.array([ahu["top"][0], ahu["top"][1], 0.0])
-        qk_symbol = math_label(r"\dot{Q}_{K}", at=top + np.array([-1.15, 0.5, 0.0]), size=SUBTITLE_FONT_SIZE,
-                               color=P_CYAN, edge="left")
+        qk_symbol = math_label(r"\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{i}}",
+                               at=np.array([-6.4, 2.45, 0.0]), size=BODY_FONT_SIZE, color=P_CYAN, edge="left")
         qk_word = Text(tr("Cooling load", "Kühllast"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        qk_word.next_to(qk_symbol, RIGHT, buff=0.18).align_to(qk_symbol, DOWN)
+        qk_word.next_to(qk_symbol, DOWN, buff=0.12).align_to(qk_symbol, LEFT)
         self.play(FadeIn(qk_symbol), FadeIn(qk_word), *running(0.8), run_time=0.8)
         hold_for(self, self.NARRATION, "outro", during=running)
 

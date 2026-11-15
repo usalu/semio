@@ -27,7 +27,7 @@ pub mod mutations {
 pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
-pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::{WFC_BITMAP_DIALECT};
+pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::{WFC_BITMAP_DIALECT};
 pub use semio_s_artifact_wfc_bitmap_bitmap::{artifact_kind};
 
 #[path = "."]
@@ -85,7 +85,7 @@ pub mod editor {
         pub use semio_s_artifact_wfc_bitmap_transient::editor::bitmap::transient;
         #[path = "."]
         pub mod commands {
-            pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::editor::bitmap::commands::set_active_example;
+            pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::editor::bitmap::commands::set_active_example;
         }
         #[path = "."]
         pub mod modes {
@@ -134,4 +134,4 @@ pub mod editor {
         }
     }
 }
-pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::examples;
+pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::examples;

@@ -1,0 +1,6 @@
+🛋️furniture/office-swivel-chair
+🛋️furniture/operating-table
+🛋️furniture/park-bench
+🛋️furniture/picnic-table
+🛋️furniture/single-bed
+🛋️furniture/three-seat-sofa

@@ -25,22 +25,26 @@ def enrich(catalog: dict) -> dict:
     contract = collection_contract()
     course = json.loads((_TEACHING / contract["course"]).read_text(encoding="utf-8"))
     manifest = json.loads((_TEACHING / contract["manifest"]).read_text(encoding="utf-8"))
-    chapters = {video["id"]: video["chapters"] for video in manifest["videos"]}
-    declared = {entry["scene"] for entries in chapters.values() for entry in entries}
+    lessons = {video["id"]: video for video in manifest["videos"]}
+    declared = {entry["scene"] for video in lessons.values() for entry in video["chapters"]}
     if declared != set(contract["chapters"]):
         raise ValueError("Chapter navigation metadata must match the entire authored curriculum")
+    posters = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🖼️posters.🐍️")
     actual = set()
     for topic in result["topics"]:
         for clip in topic["videos"]:
             actual.add(clip["id"])
             clip["chapters"] = [{"id": entry["scene"], "title": contract["chapters"][entry["scene"]],
-                "icon": clip["icon"], "symbol": clip["symbol"], "cell": {"column": index % 3, "row": index // 3}}
-                for index, entry in enumerate(chapters[clip["id"]])]
-    if actual != set(chapters):
+                "icon": clip["icon"], "poster": entry["scene"], "cell": {"column": index % 3, "row": index // 3}}
+                for index, entry in enumerate(lessons[clip["id"]]["chapters"])]
+            clip["poster"] = posters.designated(lessons[clip["id"]])
+        topic["poster"] = next((clip["poster"] for clip in topic["videos"]), None)
+    if actual != set(lessons):
         raise ValueError("Clip navigation must cover every authored lesson exactly once")
     result["labels"].update(contract["labels"])
     result["courses"] = [{"id": course["id"], "title": course["title"], "icon": "🏛️",
-        "symbol": "bim", "cell": {"column": 0, "row": 0}, "topics": copy.deepcopy(result["topics"])}]
+        "poster": next((topic["poster"] for topic in result["topics"] if topic["poster"] is not None), None),
+        "cell": {"column": 0, "row": 0}, "topics": copy.deepcopy(result["topics"])}]
     return result
 
 

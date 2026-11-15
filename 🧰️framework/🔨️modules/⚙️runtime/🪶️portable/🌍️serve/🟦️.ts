@@ -46,7 +46,7 @@ export function serveHttpV1(options: RuntimeServeOptionsV1): Promise<RuntimeServ
     let boundPort = options.port ?? 0;
     const listener = (incoming: IncomingMessage, outgoing: ServerResponse): void => {
       void (async () => {
-        try { await respond(await options.fetch(requestOf(incoming, hostname, boundPort, options.maximumRequestBodyBytes, options.tls === undefined ? "http" : "https")), outgoing); }
+        try { await respond(await options.fetch(requestOf(incoming, hostname, boundPort, options.maximumRequestBodyBytes, options.tls === undefined ? "http" : "https"), incoming.socket.remoteAddress), outgoing); }
         catch (error) { if (!outgoing.headersSent) { outgoing.writeHead(500, { "content-type": "text/plain" }); outgoing.end(String((error as Error)?.message ?? error)); } else outgoing.destroy(); }
       })();
     };

@@ -1,0 +1,90 @@
+[
+  {
+    "name": "worktree renamed on its volume",
+    "anchor": "worktree",
+    "fault": "none",
+    "accepted": true
+  },
+  {
+    "name": "partition directory moved between worktrees",
+    "anchor": "partition",
+    "fault": "none",
+    "accepted": true
+  },
+  {
+    "name": "already bound to the current location",
+    "anchor": "worktree",
+    "fault": "already-current",
+    "accepted": true
+  },
+  {
+    "name": "copied image has another inode",
+    "anchor": "worktree",
+    "fault": "copied-image",
+    "accepted": false,
+    "failure": "Original Native image backing required"
+  },
+  {
+    "name": "hard linked image",
+    "anchor": "worktree",
+    "fault": "linked-image",
+    "accepted": false,
+    "failure": "Original Native image backing required"
+  },
+  {
+    "name": "resized image",
+    "anchor": "partition",
+    "fault": "resized-image",
+    "accepted": false,
+    "failure": "Original Native image backing required"
+  },
+  {
+    "name": "foreign receipt ancestry",
+    "anchor": "worktree",
+    "fault": "foreign-ancestry",
+    "accepted": false,
+    "failure": "Original Native image ancestry required"
+  },
+  {
+    "name": "declared origin is another place",
+    "anchor": "worktree",
+    "fault": "other-origin",
+    "accepted": false,
+    "failure": "Original Native image ancestry required"
+  },
+  {
+    "name": "origin still reaches the image",
+    "anchor": "worktree",
+    "fault": "aliased-origin",
+    "accepted": false,
+    "failure": "Verified Native image move required"
+  },
+  {
+    "name": "attached or filled root",
+    "anchor": "partition",
+    "fault": "attached-root",
+    "accepted": false,
+    "failure": "Detached original Native image root required"
+  },
+  {
+    "name": "replaced underlying root",
+    "anchor": "worktree",
+    "fault": "replaced-root",
+    "accepted": false,
+    "failure": "Detached original Native image root required"
+  },
+  {
+    "name": "pending publication",
+    "anchor": "worktree",
+    "fault": "pending-publication",
+    "accepted": false,
+    "failure": "Settled Native image publication required"
+  },
+  {
+    "name": "malformed receipt",
+    "anchor": "partition",
+    "fault": "malformed-receipt",
+    "accepted": false,
+    "failure": "Closed Native image receipt required"
+  }
+]

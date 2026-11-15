@@ -1,7 +1,6 @@
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import protobuf from "protobufjs";
-import descriptor from "protobufjs/ext/descriptor";
+import type protobufTypes from "protobufjs";
 import {mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -80,11 +79,12 @@ const descriptors=(()=>{
  for(const encoded of Object.values(fixture.files)){const data=withoutExtensions(Buffer.from(encoded,"base64")),head=[10];let size=data.length;while(size>=128){head.push((size&127)|128);size>>=7;}head.push(size);parts.push(Uint8Array.from(head),data);}
  return Buffer.concat(parts);
 })();
-const root=(()=>{
- const set=(descriptor as any).FileDescriptorSet.decode(descriptors),built=(protobuf.Root as any).fromDescriptor(set,{keepCase:true});
- return built as protobuf.Root;
+const library=await Promise.all([import("protobufjs"),import("protobufjs/ext/descriptor")]).then(([protobuf,descriptor])=>({protobuf:protobuf.default,descriptor:descriptor.default}),()=>undefined);
+const root=library===undefined?undefined:(()=>{
+ const set=(library.descriptor as any).FileDescriptorSet.decode(descriptors),built=(library.protobuf.Root as any).fromDescriptor(set,{keepCase:true});
+ return built as protobufTypes.Root;
 })();
-const third=(name:string)=>{const type=root.lookupType(name);type.resolveAll();return type;};
+const third=(name:string)=>{const type=root!.lookupType(name);type.resolveAll();return type;};
 
 test("the wire schema is exactly what the generator derives from the descriptors Bazel's own classes embed",()=>{
  const scratch=mkdtempSync(join(tmpdir(),"rxi-wire-")),source=join(scratch,"descriptors.json"),target=join(scratch,"messages.json");
@@ -103,7 +103,7 @@ test("the services the protocol needs are all declared with their streaming shap
  for(const service of Object.values(services))for(const method of Object.values(service)){expect(messages[method.request]).toBeDefined();expect(messages[method.response]).toBeDefined();}
 });
 
-test("every message encodes to the same bytes as the third-party protobuf library and decodes back, over seeded random values",()=>{
+test.skipIf(root===undefined)("every message encodes to the same bytes as the third-party protobuf library (protobufjs of the root package.json; skipped only where it is not installed) and decodes back, over seeded random values",()=>{
  const random=seeded(20261021);let count=0;
  for(const name of names.filter(name=>!name.endsWith("Entry"))){
   for(let round=0;round<6;round++){

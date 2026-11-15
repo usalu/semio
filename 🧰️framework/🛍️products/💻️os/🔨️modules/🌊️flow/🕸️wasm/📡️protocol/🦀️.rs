@@ -70,7 +70,7 @@ impl FlowFailure {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
-struct FlowFailureOwners{cause:FlowFailureCause,receipt_refusal:Option<semio_framework_value::ValueError>}
+pub struct FlowFailureOwners{cause:FlowFailureCause,receipt_refusal:Option<semio_framework_value::ValueError>}
 impl semio_framework_value::retirement::RetireOwned for FlowFailure {
  type RetirementCursor=<FlowFailureOwners as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
  fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::RetireOwned;FlowFailureOwners{cause:self.cause,receipt_refusal:self.receipt_refusal}.retirement_seed()}

@@ -1,0 +1,36 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-9888631afea4.log (lines after 0)
+-- graph lines
+graph: 658 stale projects, 0 taken from the fleet, 6 too heavy for this machine (@semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 8452 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB), @semio-tech/framework-plugin (about 4018 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 658
+graph: waiting for the fleet: 0 of 658 projects arrived
+graph: waiting for the fleet: 159 of 658 projects arrived
+-- last 30 lines when the try ended
+[repository:command] still running after 1060 s
+[repo] still working after 1070 s; last phase started: source.served
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repository:command] still running after 1070 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repository:command] still running after 1080 s
+[repository:command] still running after 1090 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repo] still working after 1100 s; last phase started: source.served
+[repository:command] still running after 1100 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repository:command] still running after 1110 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repository:command] still running after 1120 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repo] still working after 1130 s; last phase started: source.served
+[repository:command] still running after 1130 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repository:command] still running after 1140 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repository:command] still running after 1150 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repo] still working after 1160 s; last phase started: source.served
+[repository:command] still running after 1160 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+[repository:command] still running after 1170 s
+graph: waiting for the fleet: 159 of 658 projects arrived
+graph: nothing to wait for any longer: the fleet was asked for 658 stale projects and delivered 159 within 905 s; 499 remain, among them the too heavy project(s) @semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), workspace (about 6200 MB), which this machine must never infer itself (it can give about 3512 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-14T22:26:08.500Z graph-wanted-expired {"wanted":"658","arrived":"159","seconds":"905","missing":"499","local":"192","heavy":", among them the too heavy project(s) @semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), workspace (about 6200 MB) (this machine can give about 3512 MB per project)"}
+[repository:command] still running after 1180 s

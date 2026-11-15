@@ -36,7 +36,7 @@ def source_files() -> tuple[Path, ...]:
     authoring = _ROOT.parents[1]
     visuals = authoring / "🎨️visuals"
     helpers = (visuals / "🐍️.py", authoring / "🔤️fonts/🐍️.py", Path(runtime.__file__))
-    paths = {Path(__file__), Path(_timeline.__file__), _ROOT / "🔣️.json", _ROOT / "🧬️schema.json", *_theme.source_files(), *_interaction.source_files(), *_geometry.source_files(), *_typography.source_files(), *_browser.source_files(), *_hierarchy.source_files(), Path(_hierarchy_render.__file__),
+    paths = {Path(__file__), Path(_timeline.__file__), _ROOT / "🔣️.json", _ROOT / "🧬️schema.json", _ROOT / "🖼️posters/🐍️.py", *_theme.source_files(), *_interaction.source_files(), *_geometry.source_files(), *_typography.source_files(), *_browser.source_files(), *_hierarchy.source_files(), Path(_hierarchy_render.__file__),
              Path(_interaction_render.__file__), _ROOT / "🖱️interaction/🎬️scene/🐍️.py", _ROOT / "🖱️interaction/🎬️scene/🔣️.schema.json",
              visuals / "🔣️.json", visuals / "🔣️icons/🔣️.json", visuals / "🧍️staffage/🔣️.json"}
     for helper in helpers:

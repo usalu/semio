@@ -1,33 +1,60 @@
-/** 🧊️ The declarative volume solids of an asset as neutral kernel solids.
+/** 🧊️ The declarative volume solids of an asset as neutral kernel solids, one list of one authored scale at a time.
  *
+ * A scale of `asset.volumes` holds three lists (`body`, `thermal`, `structure`); {@link listOf} resolves the `{ of }` references of a list to the body solid of the same scale, so the geometry of a thermal or structural solid that reuses a body surface is that body solid by construction.
  * A volume solid is written in the bone-local `(u, v, w)` frame and keeps the geometry the kernel tessellator gives its raw numbers; only the frame changes: the node frame of a bone is `(u, v, -w)` (see ../🧭️frame), so every solid is mirrored in `w` through its own `transform` and `repeat` (a negative scale; the kernel re-winds the triangles to CCW outward).
- * Staffage-only properties (`bone`, `material`, `role`, `tone`, `region(s)`, `maxDenominator`) are dropped or become tags: `role`, `region-<id>` for every thermal region and the solid's own tags.
+ * Staffage-only properties (`bone`, `material`, `role`, `tone`, `region`, `layer`, `member`, `part`) are dropped or become tags: `role`, `region-<id>`, `layer-<id>`, `member-<id>`, `part-<kind>` and the solid's own tags.
+ * There is no filter by scale: every scale is individually authored, never a filtered copy of another.
  *
  * Loft sections pass through unchanged: each lies in the plane of its own `rotation` as the neutral kernel states (the frame change is the mirror of the solid).
  *
- * `maxDenominator` filters by scale: a solid whose `maxDenominator` is below the requested denominator is not part of the model at that scale (the coarsest preset scale that still shows it).
- *
- * @see ../../../🧬️schema/🟦️.ts — `VolumeSolid`
+ * @see ../../../🧬️schema/🟦️.ts — `AuthoredVolume`, `VolumeSolid`, `ThermalSolid`, `StructuralSolid`
  * @see ../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧬️schema/🟦️.ts — `Solid`
  */
-import type { Slug, Volume, VolumeSolid } from "../../../🧬️schema/🟦️.ts";
+import type { AuthoredVolume, RepresentationKey, ScaleVolume, Slug, StructuralPart, VolumeList, VolumeSolid } from "../../../🧬️schema/🟦️.ts";
 import type { Solid } from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 import { mirrorRepeat, mirrorTransform } from "../🧭️frame/🟦️.ts";
+import { ModelRequestError } from "../🚫️refusal/🟦️.ts";
 
-/** 🌿️ The thermal regions of a solid: `region` then `regions`, without duplicates. */
-export const regionsOfSolid = (solid: Pick<VolumeSolid, "region" | "regions">): readonly Slug[] => [...new Set([...(solid.region === undefined ? [] : [solid.region]), ...(solid.regions ?? [])])];
+/** 🧩️ A solid of a resolved list: the volume solid with the binding of its list (`region` and `layer` of a thermal solid, `member` and `part` of a structural one). */
+export type ListSolid = VolumeSolid & { readonly region?: Slug; readonly layer?: Slug; readonly member?: Slug; readonly part?: StructuralPart };
 
-/** 👁️ Whether a solid is part of the model at the preset denominator: `maxDenominator` is the largest denominator that still shows it. */
-export const shownAt = (solid: Pick<VolumeSolid, "maxDenominator">, denominator: number): boolean => solid.maxDenominator === undefined || denominator <= solid.maxDenominator;
+export { authoredScales } from "../../🔗️contracts/🟦️.ts";
 
-/** 🔺️ One volume solid as a kernel solid on node `bone` with material `material`. */
-export function solidOf(solid: VolumeSolid, material: Slug): Solid {
-  const regions = regionsOfSolid(solid);
+/** 🔌️ The scales a model can be asked for, as the keys of `asset.volumes`. */
+export const SCALE_KEYS: readonly RepresentationKey[] = ["50", "100", "200", "500"];
+
+/** 🔍️ The authored volume of a scale. Throws `model-scale-unknown` for a denominator that is not a preset scale and `model-scale-unavailable` for a scale whose volume is unavailable: there is no fallback to another scale. */
+export function authoredAt(volumes: Readonly<Record<string, ScaleVolume>> | undefined, scale: number, asset: Slug): AuthoredVolume {
+  const key = `${scale}`;
+  if (!SCALE_KEYS.includes(key as RepresentationKey)) throw new ModelRequestError("model-scale-unknown", `${asset} 1:${scale}`);
+  const found = volumes?.[key];
+  if (found === undefined || found.status !== "authored") throw new ModelRequestError("model-scale-unavailable", `${asset} 1:${scale}`);
+  return found;
+}
+
+/** 🔗️ The solids of a list with the `{ of }` references resolved to the geometry of their body solid (the reference keeps its own id and binding); throws `model-bad-reference` for a reference that names no body solid. */
+export function listOf(volume: AuthoredVolume, list: VolumeList): readonly ListSolid[] {
+  const body = new Map<Slug, VolumeSolid>(volume.body.map((solid) => [solid.id, solid]));
+  if (list === "body") return volume.body;
+  return (volume[list] as readonly ({ readonly id: Slug } & Record<string, unknown>)[]).map((entry) => {
+    if (!("of" in entry)) return entry as unknown as ListSolid;
+    const target = body.get(entry.of as Slug);
+    if (target === undefined) throw new ModelRequestError("model-bad-reference", `${list}/${entry.id} -> ${entry.of as string}`);
+    const { of: _of, id, ...binding } = entry;
+    return { ...target, id, ...binding } as ListSolid;
+  });
+}
+
+/** 🏷️ The tags of a solid: role, thermal region and layer, structural member and part, then its own tags. */
+const tagsOf = (solid: ListSolid): readonly Slug[] => [solid.role, ...(solid.region === undefined ? [] : [`region-${solid.region}`]), ...(solid.layer === undefined ? [] : [`layer-${solid.layer}`]), ...(solid.member === undefined ? [] : [`member-${solid.member}`]), ...(solid.part === undefined ? [] : [`part-${solid.part}`]), ...(solid.tags ?? [])];
+
+/** 🔺️ One volume solid as a kernel solid on node `node` (default its bone) with material `material`. */
+export function solidOf(solid: ListSolid, material: Slug, node: Slug = solid.bone): Solid {
   const common = {
     id: solid.id,
-    node: solid.bone,
+    node,
     material,
-    tags: [solid.role, ...regions.map((r) => `region-${r}`), ...(solid.tags ?? [])],
+    tags: tagsOf(solid),
     transform: mirrorTransform(solid.transform),
     ...(solid.repeat === undefined ? {} : { repeat: mirrorRepeat(solid.repeat)! }),
     ...(solid.weights === undefined ? {} : { weights: solid.weights.map((w) => ({ node: w.bone, weight: w.weight })) }),
@@ -47,6 +74,3 @@ export function solidOf(solid: VolumeSolid, material: Slug): Solid {
       return { ...common, kind: "loft", sections: solid.sections, capStart: solid.capStart, capEnd: solid.capEnd };
   }
 }
-
-/** 📏️ The solids of a volume shown at a denominator, in authored order. */
-export const shownSolids = (volume: Volume, denominator: number): readonly VolumeSolid[] => volume.solids.filter((solid) => shownAt(solid, denominator));

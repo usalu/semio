@@ -1,0 +1,7 @@
+👤️humans/child-on-kick-scooter
+👤️humans/courier-with-hand-truck
+👤️humans/cyclist
+👤️humans/elderly-with-cane
+👤️humans/jogger
+👤️humans/kneeling-gardener
+👤️humans/leaning-person

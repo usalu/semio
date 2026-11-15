@@ -1,0 +1,49 @@
+[ 1/23] ok   identity: origin g1-m03 of group g1 as worker, store /Volumes/semio-store
+[ 2/23] skip shell script line endings: not measured: no git, no repository or the guards could not be read
+[ 3/23] ok   free disk (worktree): 87.5 GiB free on /Users/ueli/Documents/semio
+[ 4/23] WARN native build: pending: the native bootstrap has not completed (/Users/ueli/Documents/semio/.cache/f/native-bootstrap.done is missing), so this machine syncs but cannot build yet; run the provisioning script again to retry it, the log is /Users/ueli/Documents/semio/.cache/f/native-bootstrap.log
+[ 5/23] ok   cache endpoint: http://192.168.178.70:6090/healthz answered ok in 11 ms
+[ 6/23] ok   clock skew: this clock is +0.3 s from the clock of g1-server
+[ 7/23] skip git version and pins: not measured: no git, no repository or the guards could not be read
+[ 8/23] skip private exclude rules: not measured: no git, no repository or the guards could not be read
+[ 9/23] skip case and normalisation of names: not measured: no git, no repository or the guards could not be read
+[10/23] skip tracked paths: not measured: no git, no repository or the guards could not be read
+[11/23] skip path length: not measured: no git, no repository or the guards could not be read
+[12/23] skip symbolic links: not measured: no git, no repository or the guards could not be read
+[13/23] ok   worktree access: the replica can read /Users/ueli/Documents/semio
+[14/23] ok   store mount: /Volumes/semio-store is nfs from 192.168.178.70:/Users/Shared/semio-store
+[15/23] ok   mount options: the correctness options are in effect: hard,acregmin=1,acregmax=1,acdirmin=0,acdirmax=0,nonegnamecache
+[16/23] ok   daily compaction: tech.semio.fleet.compact is scheduled
+[17/23] ok   replica daemon: tech.semio.fleet.replica is running
+[18/23] WARN time synchronisation: the synchronisation state cannot be read here (timedatectl or systemsetup missing or needs root)
+[19/23] ok   git: git found (/usr/bin/git); stage and commit state replicates on this machine
+[20/23] ok   store writable: a probe file in /Volumes/semio-store/v1/tmp was created, read back and removed in 70 ms
+[21/23] ok   replica status: daemon running, 281432 files, 9 origins, queue 10 incoming and ? outgoing
+[22/23] ok   file watcher: the recursive file watcher runs; the scans are only the safety net
+[23/23] ok   event visibility: events from other machines were applied after 276 ms (median) and 1111 ms (95th percentile) over 100 samples on macos; the limit is 5000 ms
+Preflight of g1-m03 (group g1, worker, macos); it only reads, apart from one probe file in the store that is removed at once.
+ok   identity: origin g1-m03 of group g1 as worker, store /Volumes/semio-store
+ok   store mount: /Volumes/semio-store is nfs from 192.168.178.70:/Users/Shared/semio-store
+ok   mount options: the correctness options are in effect: hard,acregmin=1,acregmax=1,acdirmin=0,acdirmax=0,nonegnamecache
+ok   store writable: a probe file in /Volumes/semio-store/v1/tmp was created, read back and removed in 70 ms
+ok   cache endpoint: http://192.168.178.70:6090/healthz answered ok in 11 ms
+ok   clock skew: this clock is +0.3 s from the clock of g1-server
+WARN time synchronisation: the synchronisation state cannot be read here (timedatectl or systemsetup missing or needs root)
+ok   free disk (worktree): 87.5 GiB free on /Users/ueli/Documents/semio
+WARN native build: pending: the native bootstrap has not completed (/Users/ueli/Documents/semio/.cache/f/native-bootstrap.done is missing), so this machine syncs but cannot build yet; run the provisioning script again to retry it, the log is /Users/ueli/Documents/semio/.cache/f/native-bootstrap.log
+ok   git: git found (/usr/bin/git); stage and commit state replicates on this machine
+skip git version and pins: not measured: no git, no repository or the guards could not be read
+skip private exclude rules: not measured: no git, no repository or the guards could not be read
+skip case and normalisation of names: not measured: no git, no repository or the guards could not be read
+skip tracked paths: not measured: no git, no repository or the guards could not be read
+skip path length: not measured: no git, no repository or the guards could not be read
+skip symbolic links: not measured: no git, no repository or the guards could not be read
+skip shell script line endings: not measured: no git, no repository or the guards could not be read
+ok   replica daemon: tech.semio.fleet.replica is running
+ok   daily compaction: tech.semio.fleet.compact is scheduled
+ok   worktree access: the replica can read /Users/ueli/Documents/semio
+ok   replica status: daemon running, 281432 files, 9 origins, queue 10 incoming and ? outgoing
+ok   file watcher: the recursive file watcher runs; the scans are only the safety net
+ok   event visibility: events from other machines were applied after 276 ms (median) and 1111 ms (95th percentile) over 100 samples on macos; the limit is 5000 ms
+23 checks, 2 with warnings, none failed: the machine works, look at the warnings.
+exit=0

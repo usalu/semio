@@ -12,8 +12,8 @@ import { testArtifactReleaseCleanupV1, testCoreExecutablePinControlV1, testExecu
 import { testPlaygroundPreparationBindingsV1, testPlaygroundPreparationModelV1 } from "../../🧊️preparation/🧪️tests/🟦️.ts";
 import { testGraphRevision } from "../../🔁️graph-revision/🟦️.ts";
 import { testWasmOptimizer } from "../../🕸️wasm/🟦️.ts";
-import { testBinaryenToolchain } from "@semio-tech/nx-bootstrap-tools/wasm/testing/binaryen-toolchain";
-import { testWasmToolFingerprint } from "@semio-tech/nx-bootstrap-tools/wasm/testing/tool-fingerprint";
+import { testBinaryenToolchain } from "../../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts";
+import { testWasmToolFingerprint } from "../../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts";
 import { testCiBaseline } from "../../../🚦️ci/🧭️baseline/🧪️tests/🧭️baseline-selection/🟦️.ts";
 import { testGithubHistory } from "../../../🚦️ci/🐙️github/🧪️tests/🐙️workflow-history/🟦️.ts";
 import { testCiEnvironment } from "../../../🚦️ci/🧭️baseline/🌿️environment/🧪️tests/🌿️workflow-context/🟦️.ts";
@@ -61,13 +61,13 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testNativeDependencies(workspace, output,invocation,phaseControl);
   await testCargoCleanupBoundary(workspace, output);
   await testWgpuBrowserServing(workspace, output, invocation);
-  const { testWgpuBootInputs } = await import("@semio-tech/framework-os/modules/renderer/engine/testing/wgpu-browser-boot-cache-inputs");
+  const { testWgpuBootInputs } = await import("../../../../../../../💻️os/📦️packages/🟦️typescript/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️testing/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts");
   await testWgpuBootInputs(workspace, output);
   const { testTypeScriptSourceInputs } = await import("../../../../🕸️dependencies/🟦️typescript/🧪️tests/⚡️inputs/🟦️.ts");
   await testTypeScriptSourceInputs(output);
   const { testGeneratorInputReceipt } = await import("../../../🔏️inputs/🧪️tests/🔏️receipt/🟦️.ts");
   await testGeneratorInputReceipt(workspace, output);
-  const { testPluginCoreOptimization } = await import("@semio-tech/framework-plugin/testing/native-optimization");
+  const { testPluginCoreOptimization } = await import("../../../../../../../💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🧪️testing/🕸️native-optimization/🟦️.ts");
   await testPluginCoreOptimization(workspace, output);
   testNxDaemonTaskEnvironment(workspace);
   testNxDaemonDiagnostics(workspace, output);
@@ -84,7 +84,7 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testPlaygroundPreferences();
   await testBrowserModuleRelocation(workspace);
   await testBrowserDistribution(workspace, output,invocation);
-  const { testProductionBrowserArtifacts } = await import("@semio-tech/framework-os-dev/distribution/components/testing/production-browser-artifacts");
+  const { testProductionBrowserArtifacts } = await import("../../../../../../../💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🚚️distribution/🔌️components/🧪️testing/🌐️production-browser-artifacts/🟦️.ts");
   await testProductionBrowserArtifacts(workspace, output);
   await testServiceReadiness(workspace, output,invocation);
   await testBunDependencies(workspace, output);
@@ -107,7 +107,7 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testNativeRuntime(workspace, output, invocation, phaseControl);
   const { testPlaygroundInputView } = await import("../../🎮️playground-input-view/🟦️.ts");
   await testPlaygroundInputView(workspace);
-  const { testInferredNativeInputs } = await import("@semio-tech/repo-test/dependencies/testing/inputs");
+  const { testInferredNativeInputs } = await import("../../../../../🧪️test/📦️packages/🟦️typescript/🕸️dependencies/🧪️testing/🦀️inputs/🟦️.ts");
   await testInferredNativeInputs(workspace, output);
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures");
   const root = mkdtempSync(join(output, "native-inputs-"));

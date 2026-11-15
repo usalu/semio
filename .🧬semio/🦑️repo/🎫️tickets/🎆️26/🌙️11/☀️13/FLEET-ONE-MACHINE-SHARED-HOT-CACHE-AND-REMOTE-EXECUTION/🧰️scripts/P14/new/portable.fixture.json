@@ -1,0 +1,729 @@
+{
+ "cases": [
+  {
+   "name": "a macOS record is portable and becomes a Linux record",
+   "root": "/Users/Shared/semio",
+   "rows": [
+    {
+     "kind": "lstat",
+     "path": "/",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/Users/Shared/semio/packages/ts/package.json",
+     "fact": {
+      "size": 120,
+      "mtimeMs": 1,
+      "ctimeMs": 2,
+      "ino": 3,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": "file"
+    },
+    {
+     "kind": "field",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": {
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "format": "package-identity",
+      "pointer": ""
+     }
+    },
+    {
+     "kind": "typescriptRealpath",
+     "path": "/Users/Shared/semio/node_modules/ajv",
+     "fact": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/ajv"
+    },
+    {
+     "kind": "directoryExists",
+     "path": "/Users/Shared/node_modules/ajv",
+     "fact": false
+    },
+    {
+     "kind": "analysis",
+     "path": "/Users/Shared/semio/packages/ts/index.ts",
+     "fact": {
+      "nestedObservations": [],
+      "provider": "p",
+      "resultSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     }
+    }
+   ],
+   "portable": [
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/Users/Shared/semio/packages/ts/package.json",
+     "fact": {
+      "size": 120,
+      "mtimeMs": 1,
+      "ctimeMs": 2,
+      "ino": 3,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/⟦generation⟧",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/⟦generation⟧/node_modules/typescript/lib/typescript.js",
+     "fact": "file"
+    },
+    {
+     "kind": "field",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/⟦generation⟧/node_modules/typescript/lib/typescript.js",
+     "fact": {
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "format": "package-identity",
+      "pointer": ""
+     }
+    },
+    {
+     "kind": "typescriptRealpath",
+     "path": "/Users/Shared/semio/node_modules/ajv",
+     "fact": "/Users/Shared/semio/.cache/b/d/m/j/⟦generation⟧/node_modules/ajv"
+    },
+    {
+     "kind": "directoryExists",
+     "path": "/Users/Shared/node_modules/ajv",
+     "fact": false
+    },
+    {
+     "kind": "analysis",
+     "path": "/Users/Shared/semio/packages/ts/index.ts",
+     "fact": {
+      "nestedObservations": [],
+      "provider": "p",
+      "resultSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     }
+    }
+   ],
+   "generation": "8714ffcdb7fdf62c3f57",
+   "local": [
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/Users/Shared/semio/packages/ts/package.json",
+     "fact": {
+      "size": 120,
+      "mtimeMs": 1,
+      "ctimeMs": 2,
+      "ino": 3,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/8714ffcdb7fdf62c3f57",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/8714ffcdb7fdf62c3f57/node_modules/typescript/lib/typescript.js",
+     "fact": "file"
+    },
+    {
+     "kind": "field",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/8714ffcdb7fdf62c3f57/node_modules/typescript/lib/typescript.js",
+     "fact": {
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "format": "package-identity",
+      "pointer": ""
+     }
+    },
+    {
+     "kind": "typescriptRealpath",
+     "path": "/Users/Shared/semio/node_modules/ajv",
+     "fact": "/Users/Shared/semio/.cache/b/d/m/j/8714ffcdb7fdf62c3f57/node_modules/ajv"
+    },
+    {
+     "kind": "directoryExists",
+     "path": "/Users/Shared/node_modules/ajv",
+     "fact": false
+    },
+    {
+     "kind": "analysis",
+     "path": "/Users/Shared/semio/packages/ts/index.ts",
+     "fact": {
+      "nestedObservations": [],
+      "provider": "p",
+      "resultSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     }
+    }
+   ]
+  },
+  {
+   "name": "a taker without a generation gets rows that cannot hold",
+   "root": "/Users/Shared/semio",
+   "rows": [
+    {
+     "kind": "lstat",
+     "path": "/",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/Users/Shared/semio/packages/ts/package.json",
+     "fact": {
+      "size": 120,
+      "mtimeMs": 1,
+      "ctimeMs": 2,
+      "ino": 3,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": "file"
+    },
+    {
+     "kind": "field",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": {
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "format": "package-identity",
+      "pointer": ""
+     }
+    },
+    {
+     "kind": "typescriptRealpath",
+     "path": "/Users/Shared/semio/node_modules/ajv",
+     "fact": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/ajv"
+    },
+    {
+     "kind": "directoryExists",
+     "path": "/Users/Shared/node_modules/ajv",
+     "fact": false
+    },
+    {
+     "kind": "analysis",
+     "path": "/Users/Shared/semio/packages/ts/index.ts",
+     "fact": {
+      "nestedObservations": [],
+      "provider": "p",
+      "resultSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     }
+    }
+   ],
+   "portable": [
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/Users/Shared/semio/packages/ts/package.json",
+     "fact": {
+      "size": 120,
+      "mtimeMs": 1,
+      "ctimeMs": 2,
+      "ino": 3,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/⟦generation⟧",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/⟦generation⟧/node_modules/typescript/lib/typescript.js",
+     "fact": "file"
+    },
+    {
+     "kind": "field",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/⟦generation⟧/node_modules/typescript/lib/typescript.js",
+     "fact": {
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "format": "package-identity",
+      "pointer": ""
+     }
+    },
+    {
+     "kind": "typescriptRealpath",
+     "path": "/Users/Shared/semio/node_modules/ajv",
+     "fact": "/Users/Shared/semio/.cache/b/d/m/j/⟦generation⟧/node_modules/ajv"
+    },
+    {
+     "kind": "directoryExists",
+     "path": "/Users/Shared/node_modules/ajv",
+     "fact": false
+    },
+    {
+     "kind": "analysis",
+     "path": "/Users/Shared/semio/packages/ts/index.ts",
+     "fact": {
+      "nestedObservations": [],
+      "provider": "p",
+      "resultSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     }
+    }
+   ],
+   "generation": null,
+   "local": [
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/Users/Shared/semio/packages/ts/package.json",
+     "fact": {
+      "size": 120,
+      "mtimeMs": 1,
+      "ctimeMs": 2,
+      "ino": 3,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/generation-unavailable",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/generation-unavailable/node_modules/typescript/lib/typescript.js",
+     "fact": "file"
+    },
+    {
+     "kind": "field",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/generation-unavailable/node_modules/typescript/lib/typescript.js",
+     "fact": {
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "format": "package-identity",
+      "pointer": ""
+     }
+    },
+    {
+     "kind": "typescriptRealpath",
+     "path": "/Users/Shared/semio/node_modules/ajv",
+     "fact": "/Users/Shared/semio/.cache/b/d/m/j/generation-unavailable/node_modules/ajv"
+    },
+    {
+     "kind": "directoryExists",
+     "path": "/Users/Shared/node_modules/ajv",
+     "fact": false
+    },
+    {
+     "kind": "analysis",
+     "path": "/Users/Shared/semio/packages/ts/index.ts",
+     "fact": {
+      "nestedObservations": [],
+      "provider": "p",
+      "resultSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     }
+    }
+   ]
+  },
+  {
+   "name": "a record with two generations keeps both ids and only loses the location rows",
+   "root": "/Users/Shared/semio",
+   "rows": [
+    {
+     "kind": "lstat",
+     "path": "/",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/Users/Shared/semio/packages/ts/package.json",
+     "fact": {
+      "size": 120,
+      "mtimeMs": 1,
+      "ctimeMs": 2,
+      "ino": 3,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": "file"
+    },
+    {
+     "kind": "field",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": {
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "format": "package-identity",
+      "pointer": ""
+     }
+    },
+    {
+     "kind": "typescriptRealpath",
+     "path": "/Users/Shared/semio/node_modules/ajv",
+     "fact": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/ajv"
+    },
+    {
+     "kind": "directoryExists",
+     "path": "/Users/Shared/node_modules/ajv",
+     "fact": false
+    },
+    {
+     "kind": "analysis",
+     "path": "/Users/Shared/semio/packages/ts/index.ts",
+     "fact": {
+      "nestedObservations": [],
+      "provider": "p",
+      "resultSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/8714ffcdb7fdf62c3f57/node_modules",
+     "fact": "directory"
+    }
+   ],
+   "portable": [
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/Users/Shared/semio/packages/ts/package.json",
+     "fact": {
+      "size": 120,
+      "mtimeMs": 1,
+      "ctimeMs": 2,
+      "ino": 3,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": "file"
+    },
+    {
+     "kind": "field",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": {
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "format": "package-identity",
+      "pointer": ""
+     }
+    },
+    {
+     "kind": "typescriptRealpath",
+     "path": "/Users/Shared/semio/node_modules/ajv",
+     "fact": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/ajv"
+    },
+    {
+     "kind": "directoryExists",
+     "path": "/Users/Shared/node_modules/ajv",
+     "fact": false
+    },
+    {
+     "kind": "analysis",
+     "path": "/Users/Shared/semio/packages/ts/index.ts",
+     "fact": {
+      "nestedObservations": [],
+      "provider": "p",
+      "resultSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/8714ffcdb7fdf62c3f57/node_modules",
+     "fact": "directory"
+    }
+   ],
+   "generation": "8714ffcdb7fdf62c3f57",
+   "local": [
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/Users/Shared/semio/packages/ts/package.json",
+     "fact": {
+      "size": 120,
+      "mtimeMs": 1,
+      "ctimeMs": 2,
+      "ino": 3,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": "file"
+    },
+    {
+     "kind": "field",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/typescript/lib/typescript.js",
+     "fact": {
+      "digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "format": "package-identity",
+      "pointer": ""
+     }
+    },
+    {
+     "kind": "typescriptRealpath",
+     "path": "/Users/Shared/semio/node_modules/ajv",
+     "fact": "/Users/Shared/semio/.cache/b/d/m/j/86415d695aa883fffc22/node_modules/ajv"
+    },
+    {
+     "kind": "directoryExists",
+     "path": "/Users/Shared/node_modules/ajv",
+     "fact": false
+    },
+    {
+     "kind": "analysis",
+     "path": "/Users/Shared/semio/packages/ts/index.ts",
+     "fact": {
+      "nestedObservations": [],
+      "provider": "p",
+      "resultSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/Users/Shared/semio/.cache/b/d/m/j/8714ffcdb7fdf62c3f57/node_modules",
+     "fact": "directory"
+    }
+   ]
+  },
+  {
+   "name": "a record without a generation keeps every row that is not a directory above the checkout",
+   "root": "/home/deck/semio",
+   "rows": [
+    {
+     "kind": "lstat",
+     "path": "/",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/home",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/home/deck",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/home/deck/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/home/deck/semio/a.json",
+     "fact": {
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "size": 1
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/home/deck/semio2",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/home/de",
+     "fact": "file"
+    }
+   ],
+   "portable": [
+    {
+     "kind": "lstat",
+     "path": "/home/deck/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/home/deck/semio/a.json",
+     "fact": {
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "size": 1
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/home/deck/semio2",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/home/de",
+     "fact": "file"
+    }
+   ],
+   "generation": "8714ffcdb7fdf62c3f57",
+   "local": [
+    {
+     "kind": "lstat",
+     "path": "/home/deck/semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "file",
+     "path": "/home/deck/semio/a.json",
+     "fact": {
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "size": 1
+     }
+    },
+    {
+     "kind": "lstat",
+     "path": "/home/deck/semio2",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "/home/de",
+     "fact": "file"
+    }
+   ]
+  },
+  {
+   "name": "Windows separators and drive roots",
+   "root": "C:\\work\\semio",
+   "rows": [
+    {
+     "kind": "lstat",
+     "path": "C:\\",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "C:\\work",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "C:\\work\\semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "C:\\workbench",
+     "fact": "directory"
+    }
+   ],
+   "portable": [
+    {
+     "kind": "lstat",
+     "path": "C:\\work\\semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "C:\\workbench",
+     "fact": "directory"
+    }
+   ],
+   "generation": null,
+   "local": [
+    {
+     "kind": "lstat",
+     "path": "C:\\work\\semio",
+     "fact": "directory"
+    },
+    {
+     "kind": "lstat",
+     "path": "C:\\workbench",
+     "fact": "directory"
+    }
+   ]
+  }
+ ]
+}

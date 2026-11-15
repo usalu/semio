@@ -1,6 +1,7 @@
 //! 🧭️ Spreading: the load spread of every concentrated load as a 3D wedge through the wall (EN 1996-1-1, 6.1.3): the bearing length at the top widens at 60° to the horizontal, to the effective length l_efm at mid-height, clipped to the wall, extruded through the thickness (the flat face view is `spread-…` in the loads module); the wedge carries the utilisation of the bearing check.
 
-use super::scene::projection_kit::{loc};
+use super::scene::projection_kit::loc;
+use super::profile::bearing_terms;
 use super::kit::*;
 use super::layout::{Layout, WallPose, EPS};
 use super::masonry as m;

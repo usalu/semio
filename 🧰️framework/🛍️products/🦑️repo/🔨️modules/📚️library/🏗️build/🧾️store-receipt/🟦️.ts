@@ -32,11 +32,17 @@ export async function checkStoreReceiptTasksV1(root:string,tasks:readonly StoreR
 
 const describe=(id:string,verdict:StoreReceiptVerdictV1)=>`${id}: ${verdict.state}${verdict.findings.length?" ("+verdict.findings.slice(0,3).map(row=>row.reason+" "+row.path).join(", ")+(verdict.findings.length>3?", ...":"")+")":""}`;
 
-/** 🔁️ Treats a cache hit whose receipt names missing or changed store content as a miss: the task re-executes uncached and replaces its cache entry. */
-export async function withStoreReceiptsV1(options:{readonly root:string;readonly tasks:readonly StoreReceiptTaskV1[];readonly run:()=>Promise<void>;readonly repair:(task:StoreReceiptTaskV1)=>Promise<void>;readonly mode?:StoreReceiptModeV1;readonly report?:(line:string)=>void}):Promise<void>{
+/** 🔁️ Treats a cache hit whose receipt names missing or changed store content as a miss: the task re-executes uncached and replaces its cache entry. Before that, `restore` may bring the content back from the fleet store (the payload of a receipt that another machine produced); a restore that fails or throws changes nothing and the task re-executes as before. */
+export async function withStoreReceiptsV1(options:{readonly root:string;readonly tasks:readonly StoreReceiptTaskV1[];readonly run:()=>Promise<void>;readonly repair:(task:StoreReceiptTaskV1)=>Promise<void>;readonly restore?:(task:StoreReceiptTaskV1)=>Promise<void>;readonly mode?:StoreReceiptModeV1;readonly report?:(line:string)=>void}):Promise<void>{
  const report=options.report??((line:string)=>console.log("[store-receipt] "+line)),execute=async():Promise<RunOutcomeV1>=>{try{await options.run();return {failed:false};}catch(error){return {failed:true,error};}};
  if(!options.tasks.length){await options.run();return;}
- const first=await execute(),verdicts=await checkStoreReceiptTasksV1(options.root,options.tasks,options.mode),stale=options.tasks.filter(task=>{const verdict=verdicts.get(task.id)!;return verdict.state==="invalid"||verdict.state==="malformed"||verdict.state==="unwritten"&&!first.failed;});
+ const first=await execute(),verdicts=new Map(await checkStoreReceiptTasksV1(options.root,options.tasks,options.mode));
+ if(options.restore){
+  const missing=options.tasks.filter(task=>verdicts.get(task.id)!.state==="invalid");
+  for(const task of missing)await options.restore(task).catch(()=>{});
+  if(missing.length)for(const [id,verdict] of await checkStoreReceiptTasksV1(options.root,missing,options.mode))verdicts.set(id,verdict);
+ }
+ const stale=options.tasks.filter(task=>{const verdict=verdicts.get(task.id)!;return verdict.state==="invalid"||verdict.state==="malformed"||verdict.state==="unwritten"&&!first.failed;});
  if(!stale.length){if(first.failed)throw first.error;return;}
  for(const task of stale){report("re-executing "+describe(task.id,verdicts.get(task.id)!));await options.repair(task);}
  const repaired=await checkStoreReceiptTasksV1(options.root,stale,options.mode),broken=stale.filter(task=>repaired.get(task.id)!.state!=="valid");

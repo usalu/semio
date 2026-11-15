@@ -169,6 +169,9 @@
             "native"
           ]
         },
+        "selection": {
+          "const": "included"
+        },
         "contract": {
           "$ref": "#/definitions/Contract"
         }

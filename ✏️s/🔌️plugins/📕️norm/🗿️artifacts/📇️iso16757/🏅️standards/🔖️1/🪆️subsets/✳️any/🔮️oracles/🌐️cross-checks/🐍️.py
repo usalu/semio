@@ -138,7 +138,7 @@ def rust_expr(node):
     t = node["node"]
     if t == "primitive":
         params = ", ".join(f'("{k}".into(), {v!r})' for k, v in node["parameters"].items())
-        return f'GeometryNode::Primitive {{ kind: "{node["kind"]}".into(), parameters: BTreeMap::from([{params}]) }}'
+        return f'GeometryNode::Primitive {{ kind: "{node["kind"]}".into(), parameters: IdMap::from([{params}]) }}'
     if t == "transform":
         return f'GeometryNode::Transform {{ translation: {node["translation"]!r}, rotation_deg: {node["rotationDeg"]!r}, child: Box::new({rust_expr(node["child"])}) }}'
     kids = ", ".join(rust_expr(c) for c in node["children"])

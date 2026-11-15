@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1997_model::Placement;
+use semio_s_artifact_norm_en1997_model::{ApproachChoice, Placement, SituationChoice};
 use semio_s_artifact_norm_en1997_model::{Anchor, CaseRow, CharacteristicBasis, EmbeddedWall, En1997Snapshot, FoundationLoadCase, Investigation, LabTest, LayerWater, Pile, PileGroup, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
 use framework_schema::ArtifactSchema;
 
@@ -26,9 +26,9 @@ pub struct En1997Artifact {
     #[state(artifact)]
     pub geotechnical_category: u8,
     #[state(artifact)]
-    pub design_situation: String,
+    pub design_situation: SituationChoice,
     #[state(artifact)]
-    pub design_approach: String,
+    pub design_approach: ApproachChoice,
     #[state(artifact)]
     pub annex: AnnexChoice,
     #[state(artifact)]

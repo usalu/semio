@@ -1,12 +1,14 @@
 /** 🎯️ Contract: the key of a planned task is the digest of its complete declaration, its resolved inputs and the keys of its dependencies; a task whose recorded key equals the key of the plan is up to date and every other task is stale. The keys and the stale sets equal an independent Python model after every edit, for a fixture that any implementation can run. */
 import{afterAll,expect,test}from"bun:test";
-import{chmodSync,mkdtempSync,readFileSync,rmSync}from"node:fs";
+import{chmodSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{createCasStoreV1}from"../../../../🗄️cas/🗃️store/🟦️.ts";
 import{createDerivedGraphV1}from"../../🟨️.mjs";
+import{createDiskWorldV1}from"../../🌍️world/🟨️.mjs";
+import{createStatIndexV1}from"../../🗂️stat-index/🟨️.mjs";
 import{KIND_RULES_V1,verifyObservedV1}from"../../🧩️kinds/🟨️.mjs";
 import{createTaskRecorderV1,taskKeysV1}from"../../🎯️task-state/🟨️.mjs";
 import fixture from"./🔣️.json";
@@ -55,4 +57,20 @@ test("a record that the content store collected makes its task stale again, and 
  const[pointerPath]=[...new Bun.Glob("**/*.json").scanSync(directory)],pointer=JSON.parse(readFileSync(join(directory,pointerPath!),"utf8")) as {record:string};
  chmodSync(cas.objectPath(pointer.record),0o644);rmSync(cas.objectPath(pointer.record));
  expect([...await recorder.upToDate("w",new Map([["p:t",key]]))],"the record is gone").toEqual([]);
+});
+
+test("an edit nobody announced, even a whitespace one, changes the key after the graph re-verifies its files, and an unchanged tree stays up to date",async()=>{
+ const scenario=(fixture.scenarios as unknown as Scenario[])[0]!,source=scratch("verify-source");
+ for(const[path,text]of Object.entries(scenario.files)){mkdirSync(dirname(join(source,path)),{recursive:true});writeFileSync(join(source,path),text);}
+ const world=createDiskWorldV1(source,{index:createStatIndexV1({root:scratch("verify-index")})}),graph=createDerivedGraphV1({rules:KIND_RULES_V1,world,statIndex:createStatIndexV1({root:scratch("verify-stats")}),environment:{},verifyObserved:verifyObservedV1});
+ const tasks=new Map(Object.entries(scenario.tasks).map(([id,task])=>[id,{...task,declaration:scenario.declarations[id]}])),keys=()=>taskKeysV1({graph,tasks,order:scenario.order});
+ const before=await keys();
+ expect(await graph.verify(),"nothing was edited").toEqual([]);
+ expect(await keys()).toEqual(before);
+ writeFileSync(join(source,"a/src/x.ts"),scenario.files["a/src/x.ts"]+"\n");
+ expect(await graph.verify(),"the edited file is found without any dirty set").toEqual(["a/src/x.ts"]);
+ const after=await keys();
+ expect(after.get("a:build")).not.toBe(before.get("a:build"));
+ expect(after.get("a:test"),"the edit reaches the task above").not.toBe(before.get("a:test"));
+ expect(after.get("b:build"),"an unrelated task keeps its key").toBe(before.get("b:build"));
 });

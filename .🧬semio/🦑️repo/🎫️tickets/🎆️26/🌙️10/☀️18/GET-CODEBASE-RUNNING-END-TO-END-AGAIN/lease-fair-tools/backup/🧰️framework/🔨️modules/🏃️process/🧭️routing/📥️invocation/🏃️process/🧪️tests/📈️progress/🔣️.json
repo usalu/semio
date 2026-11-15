@@ -1,0 +1,459 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "compiler",
+        "stage": "running"
+      },
+      "expected": null
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "compiler",
+        "stage": "running",
+        "activity": {
+          "resource": "ordinary-work",
+          "mode": "shared",
+          "elapsedMs": 14999
+        }
+      },
+      "expected": null
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "compiler",
+        "stage": "running",
+        "activity": {
+          "resource": "ordinary-work",
+          "mode": "shared",
+          "elapsedMs": 15000
+        }
+      },
+      "expected": "compiler remains active on ordinary-work (shared, 15 s)"
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "dependency-sync",
+        "stage": "running",
+        "activity": {
+          "resource": "retire-obsolete:256",
+          "mode": "exclusive",
+          "elapsedMs": 15499
+        }
+      },
+      "expected": "dependency-sync remains active on retire-obsolete:256 (exclusive, 15 s)"
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "dependency-sync",
+        "stage": "running",
+        "activity": {
+          "resource": "retire-obsolete:512",
+          "mode": "exclusive",
+          "elapsedMs": 15500
+        }
+      },
+      "expected": "dependency-sync remains active on retire-obsolete:512 (exclusive, 16 s)"
+    },
+    {
+      "progress": {
+        "owner": "process-progress-fixture",
+        "command": "registry",
+        "stage": "running",
+        "activity": {
+          "resource": "shared-volume",
+          "mode": "shared",
+          "elapsedMs": 60001
+        }
+      },
+      "expected": "registry remains active on shared-volume (shared, 60 s)"
+    }
+  ],
+  "sourceCases": [
+    {
+      "name": "configuration-before-work",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": "compiler · Checking source configuration: 1/4 semio-core · 0 reads · 0 files · 0 bytes"
+    },
+    {
+      "name": "german-read-checkpoint",
+      "environment": {
+        "SEMIO_DASHBOARD_LOCALE": "de"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"read\",\"unit\":2,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":16,\"files\":8,\"bytes\":4096}",
+      "expected": "compiler · Quellen lesen: 2/4 semio-core · 16 Lesevorgänge · 8 Dateien · 4096 Bytes"
+    },
+    {
+      "name": "german-system-selection",
+      "environment": {
+        "LC_ALL": "de_DE.UTF-8",
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"complete\",\"unit\":4,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":16,\"files\":8,\"bytes\":4096}",
+      "expected": "compiler · Quellen zugelassen: 4/4 semio-core · 16 Lesevorgänge · 8 Dateien · 4096 Bytes"
+    },
+    {
+      "name": "data-authored-fallback",
+      "environment": {
+        "LANG": "C"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"complete\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": "compiler · Source admitted: 1/4 semio-core · 0 reads · 0 files · 0 bytes"
+    },
+    {
+      "name": "unsupported-override-continues-chain",
+      "environment": {
+        "SEMIO_DASHBOARD_LOCALE": "fr",
+        "LC_MESSAGES": "de-AT"
+      },
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": "compiler · Quellkonfiguration prüfen: 1/4 semio-core · 0 Lesevorgänge · 0 Dateien · 0 Bytes"
+    },
+    {
+      "name": "impossible-unit-total",
+      "environment": {},
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":5,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "impossible-file-total",
+      "environment": {},
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":3,\"files\":4,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "negative-byte-total",
+      "environment": {},
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":-1}",
+      "expected": null
+    },
+    {
+      "name": "unsafe-total",
+      "environment": {},
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":9007199254740992}",
+      "expected": null
+    },
+    {
+      "name": "unknown-phase",
+      "environment": {},
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"waiting\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "unknown-field",
+      "environment": {},
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio-core\",\"readOperations\":0,\"files\":0,\"bytes\":0,\"unowned\":true}",
+      "expected": null
+    },
+    {
+      "name": "terminal-control-package",
+      "environment": {},
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"semio\\u001b[31m\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "oversized-payload",
+      "environment": {},
+      "resource": "cargo:source-admission:{\"version\":1,\"phase\":\"cfg\",\"unit\":1,\"units\":4,\"packageName\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"readOperations\":0,\"files\":0,\"bytes\":0}",
+      "expected": null
+    },
+    {
+      "name": "malformed-json",
+      "environment": {},
+      "resource": "cargo:source-admission:{broken",
+      "expected": null
+    }
+  ],
+  "parserCases": [
+    {
+      "name": "english-state",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:state:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Inspecting source metadata: 64 operations"
+    },
+    {
+      "name": "english-list",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:list:128",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Listing source entries: 128 operations"
+    },
+    {
+      "name": "english-readText",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:readText:192",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Reading source text: 192 operations"
+    },
+    {
+      "name": "english-membership",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:membership:256",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Checking source membership: 256 operations"
+    },
+    {
+      "name": "english-selection",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:selection:320",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Checking source selection: 320 operations"
+    },
+    {
+      "name": "english-publication",
+      "environment": {
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:publication:384",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Verifying source publication: 384 operations"
+    },
+    {
+      "name": "german-system-list",
+      "environment": {
+        "LC_ALL": "de_DE.UTF-8"
+      },
+      "resource": "build:parser-source:list:128",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Quelleinträge auflisten: 128 Vorgänge"
+    },
+    {
+      "name": "german-override-read",
+      "environment": {
+        "SEMIO_DASHBOARD_LOCALE": "de",
+        "LANG": "en_US.UTF-8"
+      },
+      "resource": "build:parser-source:readText:256",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Quelltext lesen: 256 Vorgänge"
+    },
+    {
+      "name": "unsupported-override-continues-chain",
+      "environment": {
+        "SEMIO_DASHBOARD_LOCALE": "fr",
+        "LC_MESSAGES": "de-AT"
+      },
+      "resource": "build:parser-source:selection:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Quellauswahl prüfen: 64 Vorgänge"
+    },
+    {
+      "name": "safe-maximum",
+      "environment": {},
+      "resource": "build:parser-source:state:9007199254740991",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": "repository:command · Inspecting source metadata: 9007199254740991 operations"
+    },
+    {
+      "name": "zero",
+      "environment": {},
+      "resource": "build:parser-source:list:0",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "negative",
+      "environment": {},
+      "resource": "build:parser-source:list:-1",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "leading-zero",
+      "environment": {},
+      "resource": "build:parser-source:list:064",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "fraction",
+      "environment": {},
+      "resource": "build:parser-source:list:1.5",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "scientific",
+      "environment": {},
+      "resource": "build:parser-source:list:1e3",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "unsafe",
+      "environment": {},
+      "resource": "build:parser-source:list:9007199254740992",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "unknown-operation",
+      "environment": {},
+      "resource": "build:parser-source:walk:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "wrong-case",
+      "environment": {},
+      "resource": "build:parser-source:readtext:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "extra-field",
+      "environment": {},
+      "resource": "build:parser-source:list:64:unowned",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "terminal-control",
+      "environment": {},
+      "resource": "build:parser-source:list:64\u001b[31m",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "missing-count",
+      "environment": {},
+      "resource": "build:parser-source:list:",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "exclusive-refused",
+      "environment": {},
+      "resource": "build:parser-source:list:64",
+      "command": "repository:command",
+      "mode": "exclusive",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "nonzero-elapsed-refused",
+      "environment": {},
+      "resource": "build:parser-source:list:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 1,
+      "expected": null
+    },
+    {
+      "name": "negative-elapsed-refused",
+      "environment": {},
+      "resource": "build:parser-source:list:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": -1,
+      "expected": null
+    },
+    {
+      "name": "command-control-refused",
+      "environment": {},
+      "resource": "build:parser-source:list:64",
+      "command": "repository\ncommand",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "empty-command-refused",
+      "environment": {},
+      "resource": "build:parser-source:list:64",
+      "command": "",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "oversized-command",
+      "environment": {},
+      "resource": "build:parser-source:list:64",
+      "command": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "oversized-resource",
+      "environment": {},
+      "resource": "build:parser-source:list:111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    },
+    {
+      "name": "hostile-operation",
+      "environment": {},
+      "resource": "build:parser-source:state\u001b[31m:64",
+      "command": "repository:command",
+      "mode": "shared",
+      "elapsedMs": 0,
+      "expected": null
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 use crate::panels::catalogue::*;
 use crate::unit_tests::context;
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_plugin::{TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]

@@ -1,6 +1,9 @@
 import AjvDraft07 from "ajv";
 import { expect, test } from "bun:test";
-import { posix } from "node:path";
+import { spawnSync } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv/dist/2020";
 import ts from "typescript";
@@ -152,4 +155,35 @@ test("no command of the root registry reaches an import its declared requirement
   const result = checkZeroTouchCommandsV1(repoRoot);
   expect(result.findings.map(subject)).toEqual([]);
   expect(Object.keys(result.files).sort()).toEqual(readZeroTouchCommandsV1(diskZeroTouchTreeV1(repoRoot).read(ZERO_TOUCH_COMMANDS_FILE)!).map((command) => `command:${command.id}`).sort());
+}, 120_000);
+
+test("the front door and the schema source closure load from a copy of their relative closure that has no node_modules anywhere", () => {
+  const tree = diskZeroTouchTreeV1(repoRoot), door = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts", schema = "🧰️framework/🔨️modules/🧬️schema/📄️source/🔗️closure/🟦️.ts", files = new Set<string>(), pending = [door, schema];
+  while (pending.length) {
+    const file = pending.pop()!;
+    if (files.has(file)) continue;
+    files.add(file);
+    const text = tree.read(file);
+    if (text === undefined || file.endsWith(".json")) continue;
+    for (const { specifier } of scanModuleSpecifiersV1(file, text)) {
+      if (!specifier.startsWith(".")) continue;
+      const base = posix.normalize(posix.join(posix.dirname(file), specifier.split("?")[0]!));
+      const target = [base, ...[".ts", ".mjs", ".js"].map((extension) => base + extension)].find((candidate) => /\.(?:[cm]?[jt]s|tsx|json)$/u.test(candidate) && tree.read(candidate) !== undefined);
+      if (target !== undefined) pending.push(target);
+    }
+  }
+  const copy = mkdtempSync(join(tmpdir(), "zero-touch-copy-"));
+  try {
+    for (const file of [...files, "package.json", "📋️project.json"]) {
+      if (tree.read(file) === undefined) continue;
+      mkdirSync(dirname(join(copy, file)), { recursive: true });
+      copyFileSync(join(repoRoot, file), join(copy, file));
+    }
+    expect(existsSync(join(copy, "node_modules"))).toBe(false);
+    const environment = { ...process.env, SEMIO_LANGUAGE: "en", SEMIO_REPO_SEAL: "live" };
+    const imported = spawnSync(process.execPath, ["-e", "const m = await import(process.argv[1]); process.stdout.write(typeof m.schemaReferenceClosure);", join(copy, schema)], { cwd: copy, env: environment, encoding: "utf8" });
+    expect([imported.status, imported.stdout, imported.stderr.slice(0, 300)]).toEqual([0, "function", ""]);
+    const help = spawnSync(process.execPath, [join(copy, door), "repo", "--help"], { cwd: copy, env: environment, encoding: "utf8" });
+    expect([help.status, help.stdout.includes("Usage:")]).toEqual([0, true]);
+  } finally { rmSync(copy, { recursive: true, force: true }); }
 }, 120_000);

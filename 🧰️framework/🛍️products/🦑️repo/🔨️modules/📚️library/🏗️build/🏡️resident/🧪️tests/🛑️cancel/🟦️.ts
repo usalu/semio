@@ -1,6 +1,7 @@
 import {afterAll,describe,expect,test} from "bun:test";
 import {copyFileSync,existsSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
-import {tmpdir} from "node:os";
+import {freemem,tmpdir} from "node:os";
+import {createHostAvailableBytesV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {join} from "node:path";
 import {spawn} from "node:child_process";
 import {createHash} from "node:crypto";
@@ -13,7 +14,7 @@ import {createReaperV1} from "../../🏗️composition/🌐️host/👷️slice-
 import {createPressureWatchV1,cgroupMeasuresV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs";
 import {HOST_POLICY_V1,renderBothV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import {createCgroupLimiterV1} from "../../../🧱️job-limits/🐧️cgroup/🟦️.ts";
-import {hostAvailableBytesV1,sliceLimitPolicyV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs";
+import {sliceLimitPolicyV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs";
 import {PlanRefusedErrorV1,requestPlanV1} from "../../🚪️client/🛰️plan/🟨️.mjs";
 
 const FIXTURE=JSON.parse(readFileSync(join(HERE,"🧫️fixtures/🛑️cancel.json"),"utf8")),BOUND=FIXTURE.boundMilliseconds as number;
@@ -176,6 +177,10 @@ describe("sustained memory throttling cancels the load instead of crawling",()=>
   delete files["/c/svc/memory.pressure"];expect(cgroupMeasuresV1({root:"/c",read,own:()=>"/svc",free:()=>5})()).toEqual({high:77});
   expect(cgroupMeasuresV1({root:"/nowhere",read:()=>{throw new Error("none");},own:()=>"",free:()=>5})()).toEqual({freeBytes:5});
  });
+ test("without a cgroup the default free measure is the memory the host can still give out, never the bare free pages that a loaded macOS host keeps near zero",()=>{
+  const none={root:"/nowhere",read:()=>{throw new Error("none");},own:()=>""};
+  expect(cgroupMeasuresV1(none)().freeBytes).toBeGreaterThanOrEqual(freemem()/2);
+ });
  test("a load under sustained pressure is cancelled, its processes are reaped and the host refuses with memory and retry later in both languages",async()=>{
   const worker=new URL("./🧒️spawning-worker.mjs",import.meta.url);let clock=0,child=0;
   const pool=createSlicePoolV1({workerUrl:worker,maximum:1,graceMilliseconds:500,heartbeatMilliseconds:100,sampleMilliseconds:50,pressure:()=>createPressureWatchV1({measures:()=>({full:90}),policy:{...FIXTURE.pressure.policy,sustainedSeconds:1},now:()=>(clock+=100)})});
@@ -250,10 +255,10 @@ describe("every slice load gets a hard memory limit of its own where cgroups are
   const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,heartbeatMilliseconds:20,headroom:()=>({limitBytes:L.headroom.limitMegabytes*MiB,currentBytes:L.headroom.currentMegabytes*MiB,availableBytes:1024*MiB}),marginMegabytes:L.marginMegabytes,limiter:{create:async()=>undefined} as never,reserve:({signal}:{signal:AbortSignal})=>new Promise((_resolve,reject)=>{signal.addEventListener("abort",()=>reject(signal.reason),{once:true});}),createWorker:()=>{started++;throw new Error("no worker may start");}});
   const running=pool.run({root:base},{signal:controller.signal,onProgress:(_ms:number,detail:any)=>progress.push(detail)}).then(()=>undefined,error=>error);
   expect(await waitFor(()=>progress.length>=2,5000)).toBe(true);
-  expect(progress[0]).toMatchObject({phase:"reservation",done:0,total:L.expect.memoryMaxMegabytes,decision:{key:"waiting",used:L.expect.memoryMaxMegabytes,budget:1024}});
+  expect(progress[0]).toMatchObject({phase:"reservation",done:0,total:L.expect.memoryMaxMegabytes,decision:{key:"reserving",used:L.expect.memoryMaxMegabytes,budget:1024}});
   controller.abort(new Error("stop waiting"));expect((await running).message).toBe("stop waiting");expect(started).toBe(0);expect(log).toEqual([]);await pool.close();
  });
- test("the host availability reads MemAvailable in kilobytes",()=>{expect(hostAvailableBytesV1(()=>"MemTotal: 1 kB\nMemAvailable:    2048 kB\n")).toBe(2048*1024);expect(hostAvailableBytesV1(()=>{throw Error("none");})).toBeGreaterThan(0);});
+ test("the host availability reads MemAvailable in kilobytes",()=>{expect(createHostAvailableBytesV1({platform:"linux",read:()=>"MemTotal: 1 kB\nMemAvailable:    2048 kB\n",total:()=>2**40,environment:{}})()).toBe(2048*1024);});
  test("a load is placed in its own cgroup with the computed limits and the group is killed and removed when the load ends",async()=>{
   const m=modelled(),pool=createSlicePoolV1({workerUrl:new URL("./🧒️spawning-worker.mjs",import.meta.url),maximum:1,graceMilliseconds:200,headroom,marginMegabytes:L.marginMegabytes,limiter:createCgroupLimiterV1("/cg/semio-jobs",m.ports)});
   await pool.run({root:base,mode:"done"});

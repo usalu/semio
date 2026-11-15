@@ -14,7 +14,7 @@
     "openFiles": 8112,
     "openFilesMaximum": 245760,
     "attachedImages": 2,
-    "availableBytes": 6746013696,
+    "availableBytes": 13119062016,
     "compressedBytes": 4809179136
    },
    "filesTable": "kern.num_files: 8112\nkern.maxfiles: 245760\n",
@@ -34,7 +34,7 @@
     "openFiles": 200000,
     "openFilesMaximum": 245760,
     "attachedImages": 0,
-    "availableBytes": 6746013696,
+    "availableBytes": 13119062016,
     "compressedBytes": 4809179136
    },
    "filesTable": "kern.num_files: 200000\nkern.maxfiles: 245760\nkern.maxfilesperproc: 122880\n",
@@ -54,7 +54,7 @@
     "openFiles": null,
     "openFilesMaximum": null,
     "attachedImages": null,
-    "availableBytes": 6746013696,
+    "availableBytes": 13119062016,
     "compressedBytes": 4809179136
    },
    "filesTable": "",

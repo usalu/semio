@@ -273,7 +273,7 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️
 [workspace.dependencies.semio-s-artifact-raster-raster-descriptor-diff]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📇️descriptor/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-raster-raster-mutations-layer-properties]
+[workspace.dependencies.semio-s-artifact-raster-raster-mutations-layer-props]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️layer-properties/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-raster-raster-editor-commands]

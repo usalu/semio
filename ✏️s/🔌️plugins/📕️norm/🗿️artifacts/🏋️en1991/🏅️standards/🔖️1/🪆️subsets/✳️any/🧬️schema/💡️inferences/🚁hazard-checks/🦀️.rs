@@ -1,7 +1,7 @@
 //! 🚁 Checks of the six hazard and execution collections: helicopter hard landings (EN 1991-1-7, 4.7), horizontal ties (Annex A), derailment (4.4), the construction loads of a stage (EN 1991-1-6, Annex A.2), falling
 //! loads and execution imperfections, and the altitude-corrected isotherm reference of EN 1991-1-5 Annex A. Registry values are unverified and reported as such; mechanics-only checks carry no normative factor.
 
-use semio_s_artifact_norm_en1991_inferences_rail_silo::{covers, first_non_positive, positive};
+use semio_s_artifact_norm_en1991_inferences_rail_silo::{covers, first_non_positive, info_check, invalid, positive};
 use semio_s_artifact_norm_en1991_checks::{copy, force_n as force, part_1_6, pressure_pa as pressure, raise_force_remedy, raise_pressure_remedy, temp_k as temp};
 use semio_s_plugin_norm_compliance::{CheckReport, ClauseId, SubjectRef};
 use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;

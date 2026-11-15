@@ -2,6 +2,17 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/framework/repository/dependency-bootstrap/v1",
   "definitions": {
+    "FundingMovementProtocol": {
+      "const": {
+        "key": "caching.dependency-store.funding-moving",
+        "maximumReruns": 3,
+        "pausesMilliseconds": [2000, 8000, 30000],
+        "signals": [
+          "Original Bun dependency input changed during installation",
+          "Original Bun dependency input appeared during installation"
+        ]
+      }
+    },
     "PreparationRequest": {
       "type": "object",
       "additionalProperties": false,

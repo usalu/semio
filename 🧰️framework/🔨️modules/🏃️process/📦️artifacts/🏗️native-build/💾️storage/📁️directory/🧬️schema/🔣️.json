@@ -160,6 +160,7 @@
           "batch": 8,
           "recentMilliseconds": 5000,
           "synchronousMaximumAgeMilliseconds": 900000,
+          "recordDirectory": "usage",
           "recordFile": "usage.json",
           "statusMaximumAgeMilliseconds": 604800000
         },

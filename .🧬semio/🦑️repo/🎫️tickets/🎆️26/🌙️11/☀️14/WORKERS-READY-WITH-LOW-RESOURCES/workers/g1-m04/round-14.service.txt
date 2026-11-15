@@ -1,0 +1,38 @@
+## /run/user/1000/semio-repo/1000/host-232e3d50b94d.log
+graph: No verified change journal cursor is recorded for generation 389; verifying the tree once.
+graph: 517 stale projects, 0 taken from the fleet, 68 too heavy for this machine (@semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 62 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 517
+graph: waiting for the fleet: 0 of 517 projects arrived
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: the fleet was asked for 517 stale projects and delivered 0 within 901 s; 517 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 62 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+## last waiting line: graph: waiting for the fleet: 0 of 517 projects arrived
+## last 30 lines
+[repo] still working after 890 s; last phase started: source.served
+[repository:command] still running after 890 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repository:command] still running after 900 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repository:command] still running after 910 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repo] still working after 920 s; last phase started: source.served
+[repository:command] still running after 920 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repository:command] still running after 930 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repository:command] still running after 940 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repo] still working after 950 s; last phase started: source.served
+[repository:command] still running after 950 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repository:command] still running after 960 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repository:command] still running after 970 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repo] still working after 980 s; last phase started: source.served
+[repository:command] still running after 980 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repository:command] still running after 990 s
+graph: waiting for the fleet: 0 of 517 projects arrived
+[repository:command] still running after 1000 s
+graph: this machine is linux-x64 (class posix-shared); only machines of that class serve its request, and their graph server logs 'serving' for it
+graph: nothing to wait for any longer: the fleet was asked for 517 stale projects and delivered 0 within 901 s; 517 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 62 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-15T02:29:33.112Z graph-wanted-expired {"wanted":"517","arrived":"0","seconds":"901","missing":"517","local":"0","heavy":", among them the too heavy project(s) @semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), workspace (about 13896 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 62 more (this machine can give about 0 MB per project)"}

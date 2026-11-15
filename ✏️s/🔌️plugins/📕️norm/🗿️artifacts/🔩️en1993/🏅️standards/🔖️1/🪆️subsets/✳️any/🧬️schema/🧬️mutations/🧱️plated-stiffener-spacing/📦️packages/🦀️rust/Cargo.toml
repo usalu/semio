@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-s-artifact-norm-en1993-mut-plated-stiffener-spacing"
+name = "semio-s-artifact-norm-en1993-mut-plated-spacing"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

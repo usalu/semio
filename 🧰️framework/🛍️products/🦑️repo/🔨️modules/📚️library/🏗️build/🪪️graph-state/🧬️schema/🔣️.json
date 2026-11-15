@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:graph-state:v1",
+  "title": "Graph State Identity And Fleet Exchange",
+  "description": "🪪️ The identity of the inputs that determine the build graph, computed from file digests without a file walk when a healthy replica holds them, and the entry a machine of the fleet publishes under that identity so the others install the graph instead of computing it.",
+  "oneOf": [
+    { "$ref": "#/definitions/Frame" },
+    { "$ref": "#/definitions/State" },
+    { "$ref": "#/definitions/Note" },
+    { "$ref": "#/definitions/Health" },
+    { "$ref": "#/definitions/TextCatalogue" }
+  ],
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "domain": "semio-graph-state-v1",
+        "slotDomain": "graph-state",
+        "rootToken": "⟦semio-root⟧",
+        "contentExtensions": [".json", ".toml", ".mod", ".sum", ".lock", ".rs", ".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".patch", ".feature", ".py", ".css", ".graphql", ".proto", ".wit", ".sty", ".tex", ".sh", ".ttf", ".otf", ".yaml", ".yml", ".txt"],
+        "contentBasenames": [".nxignore", ".gitignore", ".npmrc", "Cargo.lock", "bun.lock", "bunfig.toml", "nx.json", "rust-toolchain.toml"],
+        "healthMaximumAgeMilliseconds": 30000,
+        "maximumShared": 4194304,
+        "maximumPathBytes": 4096,
+        "readConcurrency": 64,
+        "treeStampFile": "graph-state-stamps.json",
+        "claimTtlMilliseconds": 30000,
+        "claimHeartbeatMilliseconds": 8000,
+        "claimWaitMaximumMilliseconds": 900000,
+        "claimRoundsMaximum": 64,
+        "documentMaximumBytes": 1073741824,
+        "entryMaximumDocuments": 4096,
+        "lookupTimeoutMilliseconds": 4000,
+        "documentTimeoutMilliseconds": 120000,
+        "installFileMode": 420,
+        "timeouts": {"lookupMilliseconds": 1500, "claimMilliseconds": 1500, "blobMilliseconds": 20000, "blobBytesPerSecond": 2097152, "awaitSliceMilliseconds": 20000, "headMilliseconds": 1500},
+        "breaker": {"downMilliseconds": 15000, "deniedMilliseconds": 60000, "noClaimsMilliseconds": 600000},
+        "slotHeader": "x-semio-slot",
+        "generatedDirectory": "🤖️generated",
+        "generatedSkipped": ["🧰️framework/🤖️generated"],
+        "generatedPruned": ["node_modules", "target", "dist", ".cache", ".git", ".nx", "🤖️generated"]
+      }
+    },
+    "Hex": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "Frame": {
+      "description": "The part of the identity that is not a file of the shared worktree: the schema version of the graph builder, the tooling and implementation digests the build already computes, the platform when an inference result depends on it, and the digests of ignored inputs that only exist on the machine.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "tooling", "implementation", "platform", "extra"],
+      "properties": {
+        "kind": { "enum": ["portable-graph", "nx-graph", "project-inference"] },
+        "tooling": { "$ref": "#/definitions/Hex" },
+        "implementation": { "$ref": "#/definitions/Hex" },
+        "platform": { "type": "string", "pattern": "^(neutral|[a-z0-9]+-[a-z0-9_]+)$" },
+        "extra": { "type": "object", "additionalProperties": { "$ref": "#/definitions/Hex" } }
+      }
+    },
+    "State": {
+      "description": "The identity of one state of the inputs. `names` folds the path of every shared file the graph walk can see (a file added or removed anywhere changes what a directory listing returns); `content` folds the path and the SHA-256 of every shared file whose bytes an inference can read. Both folds are order independent sums modulo 2^256 of SHA-256 terms, so a change of one file changes them by one term.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "frame", "names", "content", "files", "contentFiles", "digest"],
+      "properties": {
+        "version": { "const": 1 },
+        "frame": { "$ref": "#/definitions/Frame" },
+        "names": { "$ref": "#/definitions/Hex" },
+        "content": { "$ref": "#/definitions/Hex" },
+        "files": { "type": "integer", "minimum": 0 },
+        "contentFiles": { "type": "integer", "minimum": 0 },
+        "digest": { "$ref": "#/definitions/Hex" }
+      }
+    },
+    "Note": {
+      "description": "The inline description of one fleet entry, stored as the stdout of the Bazel action result whose output files are the documents. Documents are named by the SHA-256 of their neutral bytes; the machine root of the producer is replaced by the root token before hashing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "kind", "digest", "platform", "producer", "createdMs", "documents"],
+      "properties": {
+        "version": { "const": 1 },
+        "kind": { "enum": ["portable-graph", "nx-graph", "project-inference"] },
+        "digest": { "$ref": "#/definitions/Hex" },
+        "platform": { "type": "string" },
+        "producer": { "type": "string", "maxLength": 160 },
+        "createdMs": { "type": "integer", "minimum": 0 },
+        "documents": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "hash", "size"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^(?!(?:.*/)?\\.\\.(?:/|$))[A-Za-z0-9._@+-][A-Za-z0-9._@/+-]{0,239}$" },
+              "hash": { "$ref": "#/definitions/Hex" },
+              "size": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "Health": {
+      "description": "The replica daemon's own statement about itself (`.cache/f/health.json`), the only gate that lets the manifest stand in for a file walk.",
+      "type": "object",
+      "required": ["version", "wallMs", "pid", "store", "trust"],
+      "properties": {
+        "version": { "const": 1 },
+        "wallMs": { "type": "integer", "minimum": 0 },
+        "pid": { "type": "integer", "minimum": 1 },
+        "store": { "type": "string" },
+        "pending": {},
+        "failures": { "type": "array", "description": "Lifetime counters per kind, advisory: they play no part in the tier (see `trust`)." },
+        "trust": { "$ref": "#/definitions/Trust" }
+      }
+    },
+    "Trust": {
+      "description": "The same object as the `Trust` of the shared worktree trust schema (`🤝️shared-worktree/🔏️trust/🧬️schema/🔣️.json`; a test compares the two): for the scope `shared-source`, the start of the oldest sweep that found the manifest equal to the tree and when the last event happened that can make it wrong. The tier is `trusted` only when a verification began after the last loss and is not older than ten minutes.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "verifiedMs", "lostMs", "lostKind"],
+      "properties": {
+        "scope": { "enum": ["shared-source"] },
+        "verifiedMs": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/Count" }] },
+        "lostMs": { "anyOf": [{ "type": "null" }, { "$ref": "#/definitions/Count" }] },
+        "lostKind": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" }] }
+      }
+    },
+    "Count": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "TextCatalogue": {
+      "const": {
+        "hit": { "en": "Installed the {kind} of state {digest} from the fleet cache ({files} documents, {megabytes} MB, {seconds} s).", "de": "{kind} des Zustands {digest} aus dem Fleet-Cache installiert ({files} Dokumente, {megabytes} MB, {seconds} s)." },
+        "waited": { "en": "Another machine computes the {kind} of state {digest}; waiting for its upload ({seconds} s).", "de": "Eine andere Maschine berechnet {kind} des Zustands {digest}; Warten auf den Upload ({seconds} s)." },
+        "published": { "en": "Published the {kind} of state {digest} to the fleet cache ({files} documents, {megabytes} MB).", "de": "{kind} des Zustands {digest} im Fleet-Cache veröffentlicht ({files} Dokumente, {megabytes} MB)." },
+        "skipped": { "en": "The fleet cache is not used for the {kind}: {reason}.", "de": "Der Fleet-Cache wird für {kind} nicht verwendet: {reason}." }
+      }
+    }
+  }
+}

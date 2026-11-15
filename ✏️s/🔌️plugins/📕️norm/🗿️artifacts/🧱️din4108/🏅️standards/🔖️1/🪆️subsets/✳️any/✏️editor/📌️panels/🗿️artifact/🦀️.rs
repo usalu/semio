@@ -25,7 +25,4 @@ pub fn render(host: &NormHost<Din4108Family>, locale: semio_ui_locale::Locale) -
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

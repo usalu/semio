@@ -1,4 +1,5 @@
 import {once} from "node:events";
+import {createHash} from "node:crypto";
 import {readFileSync} from "node:fs";
 import http2 from "node:http2";
 import {gunzipSync,inflateSync} from "node:zlib";
@@ -13,7 +14,7 @@ export class GrpcErrorV1 extends Error{
 }
 
 /** 📞️ What a handler may know about the call it serves. */
-export type GrpcCallV1=Readonly<{method:string;metadata:Readonly<Record<string,string>>;signal:AbortSignal;peer:string}>;
+export type GrpcCallV1=Readonly<{method:string;metadata:Readonly<Record<string,string>>;signal:AbortSignal;peer:string;principal?:string}>;
 
 /** 🧩️ One handler per `package.Service/Method`: unary and client-streaming handlers answer a message, server-streaming handlers answer an async iterable of messages. */
 export type GrpcHandlersV1=Readonly<Record<string,(input:any,call:GrpcCallV1)=>any>>;
@@ -22,7 +23,7 @@ export type GrpcHandlersV1=Readonly<Record<string,(input:any,call:GrpcCallV1)=>a
 export type GrpcCallEventV1=Readonly<{stage:"call";method:string;code:number;milliseconds:number}>;
 
 /** ⚙️ Authors one gRPC listener. */
-export type GrpcServerOptionsV1=Readonly<{host:string;port:number;handlers:GrpcHandlersV1;authorize?:(call:Readonly<{method:string;metadata:Readonly<Record<string,string>>}>)=>void;tls?:Readonly<{certificate:string;key:string}>|undefined;maximumMessageBytes?:number;onCall?:(event:GrpcCallEventV1)=>void}>;
+export type GrpcServerOptionsV1=Readonly<{host:string;port:number;handlers:GrpcHandlersV1;authorize?:(call:Readonly<{method:string;metadata:Readonly<Record<string,string>>;peer:string}>)=>void|Readonly<{principal:string;content?:string}>|Promise<void|Readonly<{principal:string;content?:string}>>;tls?:Readonly<{certificate:string;key:string}>|undefined;maximumMessageBytes?:number;onCall?:(event:GrpcCallEventV1)=>void}>;
 
 /** 🛰️ A listening gRPC server. */
 export interface GrpcServerV1{readonly url:string;readonly port:number;stop():Promise<void>}
@@ -106,6 +107,7 @@ async function serve(stream:http2.ServerHttp2Stream,headers:http2.IncomingHttpHe
  const finish=(status:number,message:string,details?:Uint8Array):void=>{
   code=status;
   if(stream.destroyed||stream.closed)return;
+  stream.once("finish",()=>{if(!stream.destroyed&&!stream.closed&&!stream.readableEnded)stream.close(http2.constants.NGHTTP2_NO_ERROR);});
   const trailers:http2.OutgoingHttpHeaders={"grpc-status":String(status),...(message?{"grpc-message":percent(message)}:{}),...(details?{"grpc-status-details-bin":Buffer.from(details).toString("base64").replace(/=+$/u,"")}:{})};
   if(!sent){sent=true;stream.respond({":status":200,"content-type":"application/grpc",...trailers},{endStream:true});return;}
   stream.once("wantTrailers",()=>{stream.sendTrailers(trailers);});stream.end();
@@ -117,11 +119,12 @@ async function serve(stream:http2.ServerHttp2Stream,headers:http2.IncomingHttpHe
   const method=METHODS.get(key),handler=options.handlers[key];
   if(headers[":method"]!=="POST"||!String(headers["content-type"]??"").startsWith("application/grpc"))throw new GrpcErrorV1(GRPC_CODES_V1.INTERNAL,"gRPC request required");
   if(!method||!handler)throw new GrpcErrorV1(GRPC_CODES_V1.UNIMPLEMENTED,`Method not implemented: ${key}`);
-  options.authorize?.({method:key,metadata});
+  const peer=`${stream.session?.socket?.remoteAddress??"unknown"}`,verdict=await options.authorize?.({method:key,metadata,peer});
   const timeout=/^(\d{1,8})([HMSmun])$/u.exec(String(headers["grpc-timeout"]??""));
   if(timeout){timer=setTimeout(()=>{controller.abort(new GrpcErrorV1(GRPC_CODES_V1.DEADLINE_EXCEEDED,"Deadline exceeded"));},Number(timeout[1])*UNITS[timeout[2]!]!);}
-  const call:GrpcCallV1=Object.freeze({method:key,metadata,signal:controller.signal,peer:`${stream.session?.socket?.remoteAddress??"unknown"}`}),
-   requests=(async function*(){for await(const body of messageFrames(chunksOf(stream),limit,headers["grpc-encoding"] as string|undefined))yield decodeProtobufV1(method.request,body);})();
+  const call:GrpcCallV1=Object.freeze({method:key,metadata,signal:controller.signal,peer,...(verdict?.principal===undefined?{}:{principal:verdict.principal})}),
+   wire=createHash("sha256"),counted=(async function*(){for await(const chunk of chunksOf(stream)){wire.update(chunk);yield chunk;}})(),
+   requests=(async function*(){for await(const body of messageFrames(counted,limit,headers["grpc-encoding"] as string|undefined))yield decodeProtobufV1(method.request,body);if(verdict?.content!==undefined&&verdict.content!=="-"&&wire.digest("hex")!==verdict.content)throw new GrpcErrorV1(GRPC_CODES_V1.UNAUTHENTICATED,"The messages differ from the signed content hash");})();
   const aborted=new Promise<never>((_,reject)=>{controller.signal.addEventListener("abort",()=>{reject(controller.signal.reason);},{once:true});});
   void aborted.catch(()=>{});
   const run=async():Promise<void>=>{
@@ -178,32 +181,35 @@ export interface GrpcClientV1{
 }
 
 /** 🔭️ Connects a client to `grpc://host:port` or `grpcs://host:port` (an optional `ca` file trusts a private certificate authority). */
-export function connectGrpcV1(url:string,options:Readonly<{certificateAuthority?:string}>={}):GrpcClientV1{
+export function connectGrpcV1(url:string,options:Readonly<{certificateAuthority?:string;sign?:(method:string,content:string)=>Record<string,string>}>={}):GrpcClientV1{
  const parsed=new URL(url.replace(/^grpc(s?):/u,"http$1:")),session=http2.connect(parsed.origin,options.certificateAuthority?{ca:readFileSync(options.certificateAuthority)}:{});
  session.on("error",()=>{});
- const open=(method:string,call:GrpcClientCallV1|undefined)=>{
+ const open=(method:string,call:GrpcClientCallV1|undefined,content:string="-")=>{
   const definition=METHODS.get(method);
   if(!definition)throw Error(`Declared method required: ${method}`);
-  const headers:http2.OutgoingHttpHeaders={":method":"POST",":path":"/"+method,"content-type":"application/grpc",te:"trailers","grpc-accept-encoding":"identity",...(call?.timeoutMilliseconds?{"grpc-timeout":`${call.timeoutMilliseconds}m`}:{}),...(call?.metadata??{})},
+  const headers:http2.OutgoingHttpHeaders={":method":"POST",":path":"/"+method,"content-type":"application/grpc",te:"trailers","grpc-accept-encoding":"identity",...(call?.timeoutMilliseconds?{"grpc-timeout":`${call.timeoutMilliseconds}m`}:{}),...(options.sign?.(method,content)??{}),...(call?.metadata??{})},
    request=session.request(headers);
   call?.signal?.addEventListener("abort",()=>{request.close(http2.constants.NGHTTP2_CANCEL);},{once:true});
   return {definition,request};
  };
- async function* responses(method:string,send:(request:http2.ClientHttp2Stream,definition:ProtobufMethodV1)=>void,call?:GrpcClientCallV1):AsyncGenerator<ProtobufMessageV1>{
-  const {definition,request}=open(method,call);let status:string|undefined,message="",details:string|undefined;
+ async function* responses(method:string,send:(request:http2.ClientHttp2Stream,definition:ProtobufMethodV1)=>void,call?:GrpcClientCallV1,messages?:Iterable<ProtobufMessageV1>):AsyncGenerator<ProtobufMessageV1>{
+  const definition0=METHODS.get(method),hash=createHash("sha256");
+  if(messages!==undefined&&definition0!==undefined)for(const item of messages)hash.update(frame(encodeProtobufV1(definition0.request,item)));
+  const {definition,request}=open(method,call,hash.digest("hex"));let status:string|undefined,message="",details:string|undefined;
   request.on("response",headers=>{if(headers["grpc-status"]!==undefined){status=String(headers["grpc-status"]);message=decodeURIComponent(String(headers["grpc-message"]??""));details=headers["grpc-status-details-bin"] as string|undefined;}});
   request.on("trailers",headers=>{status=String(headers["grpc-status"]??"");message=decodeURIComponent(String(headers["grpc-message"]??""));details=headers["grpc-status-details-bin"] as string|undefined;});
   request.on("error",()=>{});
   send(request,definition);
-  for await(const body of messageFrames(chunksOf(request),33554432,undefined))yield decodeProtobufV1(definition.response,body);
+  try{for await(const body of messageFrames(chunksOf(request),33554432,undefined))yield decodeProtobufV1(definition.response,body);}
+  catch(error){if(error instanceof GrpcErrorV1||call?.signal?.aborted)throw error;throw new GrpcErrorV1(GRPC_CODES_V1.UNAVAILABLE,`Transport failed: ${(error as {code?:string}).code??(error as Error).message}`);}
   if(status===undefined)throw new GrpcErrorV1(GRPC_CODES_V1.UNAVAILABLE,"Call closed without status");
   if(Number(status)!==0)throw new GrpcErrorV1(Number(status),message,details===undefined?undefined:Buffer.from(details,"base64"));
  }
  const sendAll=(request:http2.ClientHttp2Stream,definition:ProtobufMethodV1,messages:Iterable<ProtobufMessageV1>)=>{for(const item of messages)request.write(frame(encodeProtobufV1(definition.request,item)));request.end();};
  const client:GrpcClientV1={
-  async unary(method,request,call){for await(const value of responses(method,(stream,definition)=>sendAll(stream,definition,[request]),call))return value;throw new GrpcErrorV1(GRPC_CODES_V1.INTERNAL,"Response message required");},
-  stream:(method,request,call)=>responses(method,(stream,definition)=>sendAll(stream,definition,[request]),call),
-  async upload(method,requests,call){for await(const value of responses(method,(stream,definition)=>sendAll(stream,definition,requests),call))return value;throw new GrpcErrorV1(GRPC_CODES_V1.INTERNAL,"Response message required");},
+  async unary(method,request,call){for await(const value of responses(method,(stream,definition)=>sendAll(stream,definition,[request]),call,[request]))return value;throw new GrpcErrorV1(GRPC_CODES_V1.INTERNAL,"Response message required");},
+  stream:(method,request,call)=>responses(method,(stream,definition)=>sendAll(stream,definition,[request]),call,[request]),
+  async upload(method,requests,call){const all=[...requests];for await(const value of responses(method,(stream,definition)=>sendAll(stream,definition,all),call,all))return value;throw new GrpcErrorV1(GRPC_CODES_V1.INTERNAL,"Response message required");},
   close:()=>{session.close();},
  };
  return Object.freeze(client);

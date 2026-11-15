@@ -554,10 +554,10 @@ function Write-WindowsReadinessFacts {
 function Stop-RepoPythonProcesses {
     param([string]$RepoRoot, [switch]$Consent)
 
-    $repoVenvRoots = @(
+    $repoVenvRoots = @(@(
         (Join-Path $RepoRoot ".venv"),
         (Join-Path $RepoRoot "coda\assistant\.venv")
-    ) | Where-Object { Test-Path -LiteralPath $_ } | ForEach-Object { (Resolve-Path $_).Path.TrimEnd("\") + "\" }
+    ) | Where-Object { Test-Path -LiteralPath $_ } | ForEach-Object { (Resolve-Path $_).Path.TrimEnd("\") + "\" })
 
     if ($repoVenvRoots.Count -eq 0) {
         return

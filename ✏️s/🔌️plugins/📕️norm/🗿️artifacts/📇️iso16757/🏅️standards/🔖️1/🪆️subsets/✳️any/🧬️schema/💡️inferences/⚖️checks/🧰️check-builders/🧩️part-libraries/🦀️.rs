@@ -1,7 +1,6 @@
 //! 🧩️ ISO 16757 compliance helpers: pure part 1, 2, 4 and 5 libraries over the document types.
 
-use std::collections::BTreeMap;
-use semio_s_artifact_norm_iso16757_model::CatalogueValue;
+use semio_s_artifact_norm_iso16757_model::{CatalogueValue, IdMap};
 
 //#region 🔖️ComplianceHelpers
 /// 📐️ Pure ISO 16757 compliance helpers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
@@ -181,9 +180,9 @@ pub mod part_2 {
     pub fn substitute_parameters(node: &GeometryNode, values: &HashMap<String, f64>) -> GeometryNode {
         match node {
             GeometryNode::Primitive { kind, parameters } => {
-                let mut resolved = BTreeMap::new();
-                for (key, value) in parameters {
-                    resolved.insert(key.clone(), *values.get(key).unwrap_or(value));
+                let mut resolved = IdMap::new();
+                for (key, value) in parameters.iter() {
+                    resolved.cold_insert(key.clone(), *values.get(key).unwrap_or(value));
                 }
                 GeometryNode::Primitive { kind: kind.clone(), parameters: resolved }
             }
@@ -431,7 +430,7 @@ pub mod part_5 {
 
     // 🔀️ O1 de-dyn: `ScriptRuntime` has exactly one impl (`DefaultScriptRuntime`) — the trait object is
     // deleted in favor of the concrete type (an enum of one is worse than none, R11).
-    pub fn calculate_part_number(rule: &PartNumberRule, inputs: &BTreeMap<String, CatalogueValue>, runtime: &DefaultScriptRuntime) -> Result<String, NormError> {
+    pub fn calculate_part_number(rule: &PartNumberRule, inputs: &IdMap<CatalogueValue>, runtime: &DefaultScriptRuntime) -> Result<String, NormError> {
         match rule {
             PartNumberRule::Literal { value } => Ok(value.clone()),
             PartNumberRule::Table { rows, output_column } => {

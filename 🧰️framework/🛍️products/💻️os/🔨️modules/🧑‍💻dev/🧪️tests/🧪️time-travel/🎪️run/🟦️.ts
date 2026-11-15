@@ -4,21 +4,21 @@ import {browserLaunchOptionsV1} from "../../../../../../🦑️repo/🔨️modul
 import { join } from "node:path";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🌐️browser/🟦️.ts";
 import { writeFileSync } from "node:fs";
-import { context, scenario, setCurrentLocale, setCurrentStep, setNavigations, setExpectedReloads, serveOrigin, renderer, universalRoute, wgpuSeedTerminology, lastBootFault, setWgpuSeedTerminology, page, navigations, probeReloadAt, setInvalidatedBy, invalidatedBy, setMod, mod, explore, OUT, stamp, cancelled, only, expectedReloads, setBrowser, locales, browser, chordLocales, reloadSelected, base, longHistory } from "@semio-tech/framework-time-travel-ts/testing/state";
-import type { Locale } from "@semio-tech/framework-time-travel-ts/testing/state";
+import { context, scenario, setCurrentLocale, setCurrentStep, setNavigations, setExpectedReloads, serveOrigin, renderer, universalRoute, wgpuSeedTerminology, lastBootFault, setWgpuSeedTerminology, page, navigations, probeReloadAt, setInvalidatedBy, invalidatedBy, setMod, mod, explore, OUT, stamp, cancelled, only, expectedReloads, setBrowser, locales, browser, chordLocales, reloadSelected, base, longHistory } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🧠️state/🟦️.ts";
+import type { Locale } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🧠️state/🟦️.ts";
 import { step9 } from "../📟️console-digest/🟦️.ts";
 import { stepU } from "../🌐️universal/🟦️.ts";
-import { log, verdict, note, verdicts, emit, notes, timeline } from "@semio-tech/framework-time-travel-ts/testing/report";
-import { openPage, DESKTOP, dumpJson, shot, evalSafe, sleep } from "@semio-tech/framework-time-travel-ts/testing/page";
-import { navigationCause, consoleRows, pageErrors, hardFaults } from "@semio-tech/framework-time-travel-ts/testing/console";
-import { historyInventory, openHistory, readHistory, treeWindow } from "@semio-tech/framework-time-travel-ts/testing/history";
-import { mirror, mirrorFind, mirrorLocator, chromeHits } from "@semio-tech/framework-time-travel-ts/testing/wgpu-mirror";
-import type { MirrorNode } from "@semio-tech/framework-time-travel-ts/testing/wgpu-mirror";
-import { attachFolder, pickSyncFolder } from "@semio-tech/framework-time-travel-ts/testing/history-session";
-import { closePanels, openTab, INSPECTION_TAB, presenceText } from "@semio-tech/framework-time-travel-ts/testing/chrome";
-import { prepareChord, band, shownNotices, finalizeDialog } from "@semio-tech/framework-time-travel-ts/testing/band";
-import { ariaFindings, ariaRoots } from "@semio-tech/framework-time-travel-ts/testing/aria-oracle";
-import { editor } from "@semio-tech/framework-time-travel-ts/testing/editor";
+import { log, verdict, note, verdicts, emit, notes, timeline } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🧾️report/🟦️.ts";
+import { openPage, DESKTOP, dumpJson, shot, evalSafe, sleep } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/📄️page/🟦️.ts";
+import { navigationCause, consoleRows, pageErrors, hardFaults } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🎧️console/🟦️.ts";
+import { historyInventory, openHistory, readHistory, treeWindow } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/📜️history/🟦️.ts";
+import { mirror, mirrorFind, mirrorLocator, chromeHits } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🧊️wgpu-mirror/🟦️.ts";
+import type { MirrorNode } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🧊️wgpu-mirror/🟦️.ts";
+import { attachFolder, pickSyncFolder } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🧵️history-session/🟦️.ts";
+import { closePanels, openTab, INSPECTION_TAB, presenceText } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🧱️chrome/🟦️.ts";
+import { prepareChord, band, shownNotices, finalizeDialog } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🎗️band/🟦️.ts";
+import { ariaFindings, ariaRoots } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/♿️aria-oracle/🟦️.ts";
+import { editor } from "../../../../../../../🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/🧪️testing/🖊️editor/🟦️.ts";
 
 /** 📟️ The steps every run carries whatever its scenario: the universal journey and the console digest. */
 const SHARED_STEPS: Readonly<Record<number, (context: object) => Promise<void>>> = { 9: step9, 24: stepU };

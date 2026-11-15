@@ -1,0 +1,114 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-007c265f8fa9.log (lines after 1998)
+graph: generation 211 (5101 projects) restored from the remote cache, 5105 documents (46 MB) downloaded in 12 s, from a state 36 min old with ? projects stale
+graph: refreshing 703 projects (generation 212)
+graph: plan stage inference starts (managed 1040 MB, resident 3425 MB)
+graph: plan stage inference took 52.1 s (managed 1494 MB, 454 MB more than at its start, resident 3490 MB)
+graph: plan stage environment starts (managed 1494 MB, resident 3490 MB)
+graph: plan stage environment took 1.9 s (managed 1543 MB, 49 MB more than at its start, resident 3493 MB)
+graph: plan stage tests starts (managed 1543 MB, resident 3493 MB)
+graph: plan stage tests took 10.8 s (managed 1669 MB, 126 MB more than at its start, resident 3593 MB)
+graph: plan stage policies starts (managed 1669 MB, resident 3593 MB)
+graph: plan stage policies took 0.8 s (managed 1669 MB, 0 MB more than at its start, resident 3593 MB)
+graph: plan stage dangling starts (managed 1669 MB, resident 3593 MB)
+graph: plan stage dangling took 0.6 s (managed 1670 MB, 1 MB more than at its start, resident 3594 MB)
+graph: plan stage files starts (managed 1670 MB, resident 3594 MB)
+graph: plan stage files took 0 s (managed 1670 MB, 0 MB more than at its start, resident 3594 MB)
+graph: plan stage test-edges starts (managed 1670 MB, resident 3594 MB)
+graph: plan stage test-edges took 0.1 s (managed 1670 MB, 0 MB more than at its start, resident 3594 MB)
+graph: plan stage edges starts (managed 1670 MB, resident 3594 MB)
+graph: plan stage edges took 5.7 s (managed 1892 MB, 223 MB more than at its start, resident 3597 MB)
+graph: plan stage metadata starts (managed 1892 MB, resident 3597 MB)
+graph: plan stage metadata took 0 s (managed 1892 MB, 0 MB more than at its start, resident 3597 MB)
+graph: plan stage result starts (managed 1892 MB, resident 3597 MB)
+graph: plan stage result took 0 s (managed 1892 MB, 0 MB more than at its start, resident 3597 MB)
+graph: plan stage inference starts (managed 1831 MB, resident 4987 MB)
+graph: plan stage inference took 353 s (managed 3223 MB, 1391 MB more than at its start, resident 4746 MB)
+graph: plan stage environment starts (managed 3223 MB, resident 4746 MB)
+graph: plan stage environment took 0.8 s (managed 3270 MB, 48 MB more than at its start, resident 4761 MB)
+graph: plan stage tests starts (managed 3270 MB, resident 4761 MB)
+graph: plan stage tests took 0 s (managed 3270 MB, 0 MB more than at its start, resident 4762 MB)
+graph: plan stage policies starts (managed 3270 MB, resident 4762 MB)
+graph: plan stage policies took 0 s (managed 3270 MB, 0 MB more than at its start, resident 4762 MB)
+graph: plan stage dangling starts (managed 3270 MB, resident 4762 MB)
+graph: plan stage dangling took 0 s (managed 3270 MB, 0 MB more than at its start, resident 4762 MB)
+graph: plan stage files starts (managed 3270 MB, resident 4762 MB)
+graph: plan stage files took 0 s (managed 3270 MB, 0 MB more than at its start, resident 4762 MB)
+graph: plan stage test-edges starts (managed 3270 MB, resident 4762 MB)
+graph: plan stage test-edges took 0 s (managed 3270 MB, 0 MB more than at its start, resident 4762 MB)
+graph: plan stage edges starts (managed 3270 MB, resident 4762 MB)
+graph: plan stage edges took 1 s (managed 3283 MB, 13 MB more than at its start, resident 4769 MB)
+graph: plan stage metadata starts (managed 3283 MB, resident 4769 MB)
+graph: plan stage metadata took 0 s (managed 3283 MB, 0 MB more than at its start, resident 4769 MB)
+graph: plan stage result starts (managed 3283 MB, resident 4769 MB)
+graph: plan stage result took 0 s (managed 3283 MB, 0 MB more than at its start, resident 4769 MB)
+graph: plan stage inference starts (managed 3213 MB, resident 5385 MB)
+graph: plan stage inference took 24.6 s (managed 2493 MB, -719 MB more than at its start, resident 5453 MB)
+graph: plan stage environment starts (managed 2493 MB, resident 5453 MB)
+graph: plan stage environment took 0.4 s (managed 2498 MB, 5 MB more than at its start, resident 5460 MB)
+graph: plan stage tests starts (managed 2498 MB, resident 5460 MB)
+graph: plan stage tests took 0 s (managed 2498 MB, 0 MB more than at its start, resident 5460 MB)
+graph: plan stage policies starts (managed 2498 MB, resident 5460 MB)
+graph: plan stage policies took 0 s (managed 2498 MB, 0 MB more than at its start, resident 5460 MB)
+graph: plan stage dangling starts (managed 2498 MB, resident 5460 MB)
+graph: plan stage dangling took 0 s (managed 2498 MB, 0 MB more than at its start, resident 5460 MB)
+graph: plan stage files starts (managed 2498 MB, resident 5460 MB)
+graph: plan stage files took 0 s (managed 2498 MB, 0 MB more than at its start, resident 5460 MB)
+graph: plan stage test-edges starts (managed 2498 MB, resident 5460 MB)
+graph: plan stage test-edges took 0 s (managed 2498 MB, 0 MB more than at its start, resident 5460 MB)
+graph: plan stage edges starts (managed 2498 MB, resident 5460 MB)
+graph: plan stage edges took 0.2 s (managed 2575 MB, 77 MB more than at its start, resident 5464 MB)
+graph: plan stage metadata starts (managed 2575 MB, resident 5464 MB)
+graph: plan stage metadata took 0 s (managed 2575 MB, 0 MB more than at its start, resident 5464 MB)
+graph: plan stage result starts (managed 2575 MB, resident 5464 MB)
+graph: plan stage result took 0 s (managed 2575 MB, 0 MB more than at its start, resident 5464 MB)
+graph: plan stage inference starts (managed 2549 MB, resident 5312 MB)
+graph: plan stage inference took 381.3 s (managed 3472 MB, 923 MB more than at its start, resident 4104 MB)
+graph: plan stage environment starts (managed 3472 MB, resident 4104 MB)
+graph: plan stage environment took 0.8 s (managed 3480 MB, 8 MB more than at its start, resident 4134 MB)
+graph: plan stage tests starts (managed 3480 MB, resident 4134 MB)
+graph: plan stage tests took 5.3 s (managed 3935 MB, 456 MB more than at its start, resident 4191 MB)
+graph: plan stage policies starts (managed 3935 MB, resident 4191 MB)
+graph: plan stage policies took 0.1 s (managed 3935 MB, 0 MB more than at its start, resident 4192 MB)
+graph: plan stage dangling starts (managed 3935 MB, resident 4192 MB)
+graph: plan stage dangling took 0 s (managed 3935 MB, 0 MB more than at its start, resident 4192 MB)
+graph: plan stage files starts (managed 3935 MB, resident 4192 MB)
+graph: plan stage files took 0 s (managed 3935 MB, 0 MB more than at its start, resident 4193 MB)
+graph: plan stage test-edges starts (managed 3935 MB, resident 4193 MB)
+graph: plan stage test-edges took 0 s (managed 3935 MB, 0 MB more than at its start, resident 4193 MB)
+graph: plan stage edges starts (managed 3935 MB, resident 4193 MB)
+graph: plan stage edges took 11.9 s (managed 3618 MB, -317 MB more than at its start, resident 4404 MB)
+graph: plan stage metadata starts (managed 3618 MB, resident 4404 MB)
+graph: plan stage metadata took 0.1 s (managed 3618 MB, 0 MB more than at its start, resident 4407 MB)
+graph: plan stage result starts (managed 3618 MB, resident 4407 MB)
+graph: plan stage result took 0 s (managed 3618 MB, 0 MB more than at its start, resident 4407 MB)
+-- last 30 lines when the try ended
+[repository:command] still running after 1881 s
+[repository:command] still running after 1891 s
+[repository:command] still running after 1901 s
+[repo] still working after 1910 s; last phase started: source.served
+[repository:command] still running after 1911 s
+[repository:command] still running after 1921 s
+[repository:command] still running after 1931 s
+[repo] still working after 1940 s; last phase started: source.served
+[repository:command] still running after 1941 s
+[repository:command] still running after 1951 s
+[repository:command] still running after 1961 s
+[repo] still working after 1970 s; last phase started: source.served
+[repository:command] still running after 1971 s
+[repository:command] still running after 1981 s
+[repository:command] still running after 1991 s
+[repo] still working after 2000 s; last phase started: source.served
+[repository:command] still running after 2001 s
+[repository:command] still running after 2011 s
+[repository:command] still running after 2021 s
+[repo] still working after 2030 s; last phase started: source.served
+[repository:command] still running after 2031 s
+[repository:command] still running after 2041 s
+[repository:command] still running after 2051 s
+[repo] still working after 2060 s; last phase started: source.served
+[repository:command] still running after 2061 s
+[repository:command] still running after 2071 s
+[repository:command] still running after 2081 s
+[repo] still working after 2090 s; last phase started: source.served
+[repository:command] still running after 2091 s
+[repository:command] still running after 2101 s

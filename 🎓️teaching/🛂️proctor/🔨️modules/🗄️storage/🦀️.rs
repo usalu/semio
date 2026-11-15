@@ -153,18 +153,21 @@ pub struct Database {
 }
 
 impl Database {
-    /// 📂️ Open (creating if needed) `directory/proctor.sqlite` read-write in WAL mode, create the
-    /// schema and stamp or verify the format row.
+    /// 📂️ Open (creating if needed) `directory/proctor.sqlite` read-write in WAL mode. An existing
+    /// file is inspected read-only first and refused untouched unless it is a proctor database of this
+    /// format; only an absent or empty file is set up, and the schema and the format row land in one
+    /// transaction, so a store is whole or not there ([`set_up`]).
     pub fn open(directory: &Path) -> Result<Self, StorageError> {
         std::fs::create_dir_all(directory).map_err(|error| StorageError::Backend(format!("cannot create {}: {error}", directory.display())))?;
         let path = directory.join(DATABASE_FILE);
-        let connection = Connection::open(&path).map_err(backend)?;
+        inspect_before_opening(&path)?;
+        let mut connection = Connection::open(&path).map_err(backend)?;
         connection.busy_timeout(BUSY_TIMEOUT).map_err(backend)?;
-        connection.pragma_update(None, "journal_mode", "WAL").map_err(backend)?;
-        connection.pragma_update(None, "synchronous", "FULL").map_err(backend)?;
-        connection.pragma_update(None, "foreign_keys", "ON").map_err(backend)?;
-        connection.execute_batch(SCHEMA).map_err(backend)?;
-        stamp_format(&connection, &path)?;
+        set_up(&mut connection, &path, |connection| {
+            connection.pragma_update(None, "journal_mode", "WAL").map_err(backend)?;
+            connection.pragma_update(None, "synchronous", "FULL").map_err(backend)?;
+            connection.pragma_update(None, "foreign_keys", "ON").map_err(backend)
+        })?;
         Ok(Self { connection: Arc::new(Mutex::new(connection)), location: Some(path) })
     }
 
@@ -180,10 +183,8 @@ impl Database {
 
     /// 🫧️ A private in-memory database: the same schema and statements, nothing survives the handle.
     pub fn memory() -> Result<Self, StorageError> {
-        let connection = Connection::open_in_memory().map_err(backend)?;
-        connection.pragma_update(None, "foreign_keys", "ON").map_err(backend)?;
-        connection.execute_batch(SCHEMA).map_err(backend)?;
-        stamp_format(&connection, Path::new(":memory:"))?;
+        let mut connection = Connection::open_in_memory().map_err(backend)?;
+        set_up(&mut connection, Path::new(":memory:"), |connection| connection.pragma_update(None, "foreign_keys", "ON").map_err(backend))?;
         Ok(Self { connection: Arc::new(Mutex::new(connection)), location: None })
     }
 
@@ -411,12 +412,66 @@ fn off_worker<T>(work: impl FnOnce() -> T) -> T {
     }
 }
 
-fn stamp_format(connection: &Connection, path: &Path) -> Result<(), StorageError> {
-    let stored: Option<(String, i64)> = connection.query_row("SELECT schema, version FROM proctor_format WHERE singleton = 1", [], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(backend)?;
-    match stored {
-        None => connection.execute("INSERT INTO proctor_format (singleton, schema, version) VALUES (1, ?1, ?2)", params![FORMAT_SCHEMA, FORMAT_VERSION]).map(|_| ()).map_err(backend),
-        Some(format) => check_format(format, path),
+/// 🔬️ Look at the file at `path` without writing a byte: absent and empty files may be set up, a
+/// proctor database must hold this format, anything else — an unreadable or foreign file, a
+/// database without the format table or row — is refused before any statement could change it.
+fn inspect_before_opening(path: &Path) -> Result<(), StorageError> {
+    let connection = match Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX) {
+        Ok(connection) => connection,
+        Err(_) if !path.exists() => return Ok(()),
+        Err(error) => return Err(refused(path, &error)),
+    };
+    connection.busy_timeout(BUSY_TIMEOUT).map_err(backend)?;
+    match stored_format(&connection).map_err(|error| refused(path, &error))? {
+        Stored::Empty => Ok(()),
+        Stored::Format(format) => check_format(format, path),
+        Stored::Foreign => Err(foreign(path)),
     }
+}
+
+/// 🧱️ Put `connection` to its pragmas and, inside one immediate transaction, create the schema and
+/// stamp the format row of an empty database or verify the format of a proctor one; whatever else
+/// it finds, the transaction ends without a change.
+fn set_up(connection: &mut Connection, path: &Path, pragmas: impl FnOnce(&Connection) -> Result<(), StorageError>) -> Result<(), StorageError> {
+    pragmas(connection)?;
+    let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(backend)?;
+    match stored_format(&transaction).map_err(|error| refused(path, &error))? {
+        Stored::Empty => {
+            transaction.execute_batch(SCHEMA).map_err(backend)?;
+            transaction.execute("INSERT INTO proctor_format (singleton, schema, version) VALUES (1, ?1, ?2)", params![FORMAT_SCHEMA, FORMAT_VERSION]).map_err(backend)?;
+            transaction.commit().map_err(backend)
+        }
+        Stored::Format(format) => check_format(format, path),
+        Stored::Foreign => Err(foreign(path)),
+    }
+}
+
+/// 🪪️ What a database holds as far as its identity goes.
+enum Stored {
+    Empty,
+    Format((String, i64)),
+    Foreign,
+}
+
+fn stored_format(connection: &Connection) -> Result<Stored, rusqlite::Error> {
+    let objects: i64 = connection.query_row("SELECT COUNT(*) FROM sqlite_schema", [], |row| row.get(0))?;
+    if objects == 0 {
+        return Ok(Stored::Empty);
+    }
+    let formatted: i64 = connection.query_row("SELECT COUNT(*) FROM sqlite_schema WHERE type = 'table' AND name = 'proctor_format'", [], |row| row.get(0))?;
+    if formatted == 0 {
+        return Ok(Stored::Foreign);
+    }
+    let stored: Option<(String, i64)> = connection.query_row("SELECT schema, version FROM proctor_format WHERE singleton = 1", [], |row| Ok((row.get(0)?, row.get(1)?))).optional()?;
+    Ok(stored.map_or(Stored::Foreign, Stored::Format))
+}
+
+fn refused(path: &Path, error: &dyn std::fmt::Display) -> StorageError {
+    StorageError::Backend(format!("{} is not a proctor database ({error}); it is left as it is", path.display()))
+}
+
+fn foreign(path: &Path) -> StorageError {
+    StorageError::Backend(format!("{} is not a proctor database: it holds data but no {FORMAT_SCHEMA} format row; it is left as it is", path.display()))
 }
 
 fn verify_format(connection: &Connection, path: &Path) -> Result<(), StorageError> {

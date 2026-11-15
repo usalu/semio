@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-s-artifact-norm-en1998-inferences-structural-system = { workspace = true }
+semio-s-artifact-norm-en1998-inferences-structural = { workspace = true }
 semio-s-artifact-norm-en1998-inferences-details = { workspace = true }
 serde = { workspace = true, optional = true }
 semio-os-kernel = { workspace = true }

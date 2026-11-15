@@ -2,7 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslOwnedReceiving)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "replace-presence")]
@@ -38,3 +38,5 @@ impl protocol::ColdMutationKind<ShootingPresence, ShootingPresenceMutation> for 
     Ok(vec![ShootingPresenceMutation::ReplacePresence(Self { presence: base.clone() })])
 }
 }
+
+protocol::retained_set_record!(ReplacePresence => ShootingPresence, ShootingPresenceDiff, ShootingPresenceMutation { authored: ReplacePresence = |leaf| leaf, source_work: 1, patch: |value: ReplacePresence| (ShootingPresenceDiff { selected_shot_ids: Some(value.presence.selected_shot_ids), camera: Some(value.presence.camera) }, 2), patch_work: || Ok(2), inverse: |root: ShootingPresence| (ReplacePresence { presence: root }.into(), 3), inverse_work: || Ok(3) });

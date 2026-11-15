@@ -129,7 +129,7 @@ const ENERGY_MODEL_PACKAGES = [
   "semio-s-artifact-energy-model-mut-week-schedule",
   "semio-s-artifact-energy-model-mut-window-layer",
   "semio-s-artifact-energy-model-mut-window-layer-optics",
-  "semio-s-artifact-energy-model-mut-window-layer-optics-visible",
+  "semio-s-artifact-energy-model-mut-layer-optics-visible",
   "semio-s-artifact-energy-model-mut-year-schedule",
   "semio-s-artifact-energy-model-mut-year-schedule-holidays",
   "semio-s-artifact-energy-model-mut-zone",

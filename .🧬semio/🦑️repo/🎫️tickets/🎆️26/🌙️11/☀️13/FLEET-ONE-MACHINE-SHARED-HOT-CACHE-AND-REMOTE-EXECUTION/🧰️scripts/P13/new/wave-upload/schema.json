@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "graph-generation-wave-upload-v1",
+  "definitions": {
+    "Policy": {
+      "description": "EN: How the serving machine keeps the generation of the fleet cache close to its own waves: at most one upload per minimum interval (the newest generation at that time), one upload at a time, a failed upload is not retried before the backoff, a generation that was not uploaded because the cache held a better head is looked at again after the retry time, an upload stops at the timeout, and nothing is uploaded while the machine has less free memory than the minimum. DE: Wie die bedienende Maschine die Generation des Flottencaches nahe an ihren Wellen haelt: hoechstens ein Upload je Mindestabstand (die dann neueste Generation), ein Upload zugleich, ein fehlgeschlagener Upload erst nach der Wartezeit erneut, eine Generation, die wegen eines besseren Kopfes nicht hochgeladen wurde, wird nach der Wiederholzeit neu betrachtet, ein Upload endet am Zeitlimit, und bei weniger freiem Speicher als dem Minimum wird nichts hochgeladen.",
+      "const": {
+        "version": 1,
+        "minimumIntervalMilliseconds": 180000,
+        "failureBackoffMilliseconds": 120000,
+        "retryMilliseconds": 600000,
+        "timeoutMilliseconds": 600000,
+        "minimumFreeMegabytes": 4096,
+        "stateFile": "wave-upload.json"
+      }
+    },
+    "State": {
+      "description": "EN: What the uploader remembers across a restart of the machine's agent: the generation it looked at last, when, and whether it went up. DE: Was der Uploader ueber einen Neustart des Agenten hinweg behaelt: die zuletzt betrachtete Generation, wann, und ob sie hochgeladen wurde.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "generation", "atMs", "uploaded"],
+      "properties": {
+        "version": { "const": 1 },
+        "generation": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "uploaded": { "type": "boolean" }
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "uploaded": "graph-server: generation {generation} uploaded to the fleet cache as a delta, {sent} of {documents} documents ({megabytes} MB) in {seconds} s, {stale} projects still stale",
+          "better": "graph-server: generation {generation} not uploaded, the fleet cache holds a better one",
+          "current": "graph-server: generation {generation} is already in the fleet cache",
+          "failed": "graph-server: upload of generation {generation} failed ({reason}), next try in {seconds} s",
+          "unknown": "unknown"
+        },
+        "de": {
+          "uploaded": "graph-server: Generation {generation} als Delta in den Flottencache hochgeladen, {sent} von {documents} Dokumenten ({megabytes} MB) in {seconds} s, {stale} Projekte noch veraltet",
+          "better": "graph-server: Generation {generation} nicht hochgeladen, der Flottencache hat eine bessere",
+          "current": "graph-server: Generation {generation} liegt schon im Flottencache",
+          "failed": "graph-server: Upload von Generation {generation} fehlgeschlagen ({reason}), nächster Versuch in {seconds} s",
+          "unknown": "unbekannt"
+        }
+      }
+    }
+  }
+}

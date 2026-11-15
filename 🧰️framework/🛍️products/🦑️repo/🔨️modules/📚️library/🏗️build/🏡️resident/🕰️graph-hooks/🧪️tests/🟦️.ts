@@ -324,6 +324,74 @@ describe("resuming a verify epoch",()=>{
   s.seams.commit({generation:4,owners:["a","b"],covered:new Set(["a"])});
   expect(s.store.map.get("g4")).toEqual({instance:"0123456789abcdef",seq:2,carry:{exact:["q"],subtrees:[]}});
  });
+ test("an epoch with more owed paths than the bound is still resumed inside the same process: the next read of that generation is a delta pass that doubts the stale and owed paths",async()=>{
+  const s=await setup2();
+  const first=await s.seams.membership(undefined);
+  let scans=0;
+  const seams=journalGraphSeamsV1({root:s.root,journal:s.journal.port,store:s.store,ports:s.ports,digest:()=>"d",maximumCarry:1,membership:async()=>{scans++;return{digest:"x",frontier:first.frontier,changes:[{path:"a",kind:"added",directory:false},{path:"b/c",kind:"added",directory:false}]};},holds:async rows=>!rows.some(row=>row.path===s.root+"/a/x/src/main.ts")});
+  const previous={manifest:{generation:1,membership:"d"},frontier:first.frontier};
+  seams.scope(true);await seams.membership(previous);
+  expect(await seams.holds([{kind:"file",path:s.root+"/a/x/src/main.ts",fact:{}},{kind:"file",path:s.root+"/a/y/Cargo.toml",fact:{}}])).toBe(false);
+  seams.factsVerified();
+  expect(s.store.map.size).toBe(0);expect(scans).toBe(1);
+  await seams.membership(previous);
+  expect(scans).toBe(1);expect(seams.stats.resumed).toBe(1);
+  const rows=["a","b/c","a/x/src/main.ts","a/y/Cargo.toml","untouched/x.ts"].map(path=>({kind:"file",path:s.root+"/"+path,fact:{}}));
+  expect([...seams.doubtful(rows as never)!]).toEqual([1,1,1,1,0]);
+ });
+ test("the change cursor proves a plan unchanged only while the journal stays at the cursor of the membership it was made from",async()=>{
+  const s=await setup2(),first=await s.seams.membership(undefined);
+  const live=await s.seams.membership(undefined);
+  expect(await s.seams.unchanged(live)).toBe(true);
+  expect(await s.seams.unchanged(first)).toBe(false);
+  expect(await s.seams.unchanged({...live})).toBe(false);
+  s.journal.state.head+=1;
+  expect(await s.seams.unchanged(live)).toBe(false);
+  const again=await s.seams.membership(undefined);
+  expect(await s.seams.unchanged(again)).toBe(true);
+  const dead=journalGraphSeamsV1({root:s.root,journal:{cursor:async()=>{throw Error("journal lost");},since:async()=>({complete:false,reason:"x"}),excluded:()=>()=>false},store:memoryStore(),ports:s.ports,digest:()=>"d",membership:async()=>({digest:"x",frontier:first.frontier,changes:[]}),holds:async()=>true});
+  expect(await dead.unchanged(await dead.membership(undefined).catch(()=>({})))).toBe(false);
+ });
+ test("a verify epoch whose stale paths exceed the old bound of 20000 persists its cursor and the next read resumes from it",async()=>{
+  const s=await setup2();
+  const first=await s.seams.membership(undefined);
+  const many=Array.from({length:25000},(_,index)=>({kind:"file",path:s.root+"/a/x/src/f"+index+".ts",fact:{}}));
+  const seams=journalGraphSeamsV1({root:s.root,journal:s.journal.port,store:s.store,ports:s.ports,digest:()=>"d",membership:async()=>({digest:"x",frontier:first.frontier,changes:[]}),holds:async()=>false});
+  const previous={manifest:{generation:1,membership:"d"},frontier:first.frontier};
+  seams.scope(true);await seams.membership(previous);
+  expect(await seams.holds(many as never)).toBe(false);
+  seams.factsVerified();
+  expect(s.store.map.size).toBe(1);
+  const stored=s.store.map.get("g1") as {carry?:{exact:string[]}}|undefined;
+  expect(stored?.carry?.exact.length).toBe(25000);
+ });
+ test("a generation published while the build goes on gets the cursor and the owed paths of the pass in progress, so a cut-off build resumes from its newest wave instead of verifying the whole tree",async()=>{
+  const s=await setup2();
+  const first=await s.seams.membership(undefined);
+  const seams=journalGraphSeamsV1({root:s.root,journal:s.journal.port,store:s.store,ports:s.ports,digest:()=>"d",membership:async()=>({digest:"x",frontier:first.frontier,changes:[]}),holds:async rows=>!rows.some(row=>row.path===s.root+"/a/x/src/main.ts")});
+  const previous={manifest:{generation:1,membership:"d"},frontier:first.frontier};
+  seams.scope(true);await seams.membership(previous);
+  expect(await seams.holds([{kind:"file",path:s.root+"/a/x/src/main.ts",fact:{}},{kind:"file",path:s.root+"/a/y/Cargo.toml",fact:{}}])).toBe(false);
+  seams.published(2);expect(s.store.map.has("g2"),"nothing is known before the facts are verified").toBe(false);
+  seams.factsVerified();
+  const verified=s.store.map.get("g1") as {instance:string;seq:number;carry:{exact:string[];subtrees:string[]}};
+  seams.published(2);seams.published(3);
+  for(const key of ["g2","g3"])expect(s.store.map.get(key),key).toEqual(verified);
+  const resumed=journalGraphSeamsV1({root:s.root,journal:s.journal.port,store:s.store,ports:s.ports,digest:()=>"d",membership:async()=>({digest:"x",frontier:first.frontier,changes:[]}),holds:async()=>true});
+  resumed.scope(true);await resumed.membership({manifest:{generation:3,membership:"d"},frontier:first.frontier});
+  expect(resumed.stats.verified,"the read of the wave generation is not an epoch").toBe(0);expect(resumed.stats.resumed).toBe(1);
+  const rows=["a/x/src/main.ts","a/y/Cargo.toml","untouched/x.ts"].map(path=>({kind:"file",path:s.root+"/"+path,fact:{}}));
+  expect([...resumed.doubtful(rows as never)!]).toEqual([1,1,0]);
+ });
+ test("a pass that could not persist its carry records nothing for the generations it publishes",async()=>{
+  const s=await setup2();
+  const first=await s.seams.membership(undefined);
+  const seams=journalGraphSeamsV1({root:s.root,journal:s.journal.port,store:s.store,ports:s.ports,digest:()=>"d",maximumCarry:1,membership:async()=>({digest:"x",frontier:first.frontier,changes:[]}),holds:async()=>false});
+  seams.scope(true);await seams.membership({manifest:{generation:1,membership:"d"},frontier:first.frontier});
+  await seams.holds([{kind:"file",path:s.root+"/a/x/src/main.ts",fact:{}},{kind:"file",path:s.root+"/a/y/Cargo.toml",fact:{}}]);
+  seams.factsVerified();seams.published(2);
+  expect(s.store.map.size).toBe(0);
+ });
  test("a scan with more owed paths than the bound commits nothing",async()=>{
   const s=await setup2();
   const first=await s.seams.membership(undefined);
@@ -391,6 +459,21 @@ describe("cursor store",()=>{
   writeFileSync(file,JSON.stringify({version:1,entries:[["c2","0123456789abcdef",1,{exact:[1],subtrees:[]}]]}));expect(store.get("c2")).toBeUndefined();
   store.set("g6",{instance:"0123456789abcdef",seq:1});expect(store.get("g6")).toEqual({instance:"0123456789abcdef",seq:1});
   expect(readdirSyncNames(directory).filter(name=>name.endsWith(".tmp"))).toEqual([]);
+ });
+});
+describe("cursor store carry bound",()=>{
+ test("only the newest carried cursors keep their paths: an older cursor whose carry would be dropped is dropped whole, uncarried cursors stay",()=>{
+  const directory=sandbox("dirty-carry-"),store=fileCursorStoreV1(directory,8),instance="0123456789abcdef",carry=(name:string)=>({exact:[name],subtrees:[]});
+  store.set("g1",{instance,seq:1});
+  store.set("g2",{instance,seq:2},carry("a"));store.set("g3",{instance,seq:3},carry("b"));store.set("g4",{instance,seq:4},carry("c"));store.set("g5",{instance,seq:5});
+  expect(GRAPH_HOOKS_POLICY_V1.maximumCarriedCursors).toBe(2);
+  expect(store.get("g1")).toEqual({instance,seq:1});
+  expect(store.get("g2")).toBeUndefined();
+  expect(store.get("g3")).toEqual({instance,seq:3,carry:carry("b")});
+  expect(store.get("g4")).toEqual({instance,seq:4,carry:carry("c")});
+  expect(store.get("g5")).toEqual({instance,seq:5});
+  const rows=JSON.parse(readFileSync(join(directory,GRAPH_HOOKS_POLICY_V1.cursorFile),"utf8")).entries.map((row:unknown[])=>[row[0],Boolean(row[3])]);
+  expect(rows).toEqual([["g1",false],["g3",true],["g4",true],["g5",false]]);
  });
 });
 function readdirSyncNames(directory:string):string[]{return require("node:fs").readdirSync(directory);}

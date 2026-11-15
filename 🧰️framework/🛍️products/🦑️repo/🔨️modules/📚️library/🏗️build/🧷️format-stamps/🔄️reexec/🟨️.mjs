@@ -16,6 +16,12 @@ export function launchReplacementProcessV1({execPath,args,environment}){
   child.once("close",(code,signal)=>{finish();accept(code??(signal?128+(osConstants.signals[signal]??0):1));});
  });
 }
+/** 🧭️ Names what asked for a restart: the path and reason of a concurrent edit, the declared stamps that moved, or the half-edited module; empty when a nested command only passed on its exit code. */
+export function restartCauseV1(stale){
+ if(stale.origin==="edit")return stale.edit.path+" ("+stale.edit.reason+")";
+ if(stale.moved?.length)return stale.moved.slice(0,protocol.maximumReportedStamps).map(row=>row.id).join(", ");
+ return stale.origin==="load"?stale.message:"";
+}
 /** ♻️ Runs the outermost command again as a new process with the current implementation when it yielded because a declared format stamp moved or its loaded implementation was edited (a peer edit while the run was queued or running): nested commands only propagate the exit code, and the restarts are bounded by the schema. A process that ran for `progressMilliseconds` before it yielded made progress, so the restart it asks for starts a new count: only restarts that keep failing early are a loop. A restart that was asked for by a run which only waited for a peer's graph build (`yielded` answers the environment of the next start after the front door waited for the ticket) is not a failed restart and does not count. A nested command names its cause on stderr before it yields, so the failed task tail that the lane of the outermost command reads can be classified. The custodies the failed run parked (the machine capacity grant) are offered to the replacement, which takes them over instead of queueing for them again, and are settled once it ended or none was started. */
 export async function runWithStaleReexecV1(run,{environment=process.env,outermost,argv=process.argv,execPath=process.execPath,execArgv=process.execArgv,launch=launchReplacementProcessV1,write=writeStderr,ranMilliseconds=Math.round(process.uptime()*1000),sleep=pause,yielded}={}){
  const leave=enterRestartScopeV1(outermost===true);
@@ -26,12 +32,13 @@ export async function runWithStaleReexecV1(run,{environment=process.env,outermos
   const attempt=ranMilliseconds>=protocol.progressMilliseconds?0:Number.parseInt(environment[protocol.reexecutionEnvironment]??"0",10)||0,languages=formatStampLanguagesV1(environment),say=(key,values)=>write(languages.map(language=>formatStampTextV1(language,key,values)).join("\n")+"\n");
   if((stale.origin==="error"||!outermost)&&stale.message)write(stale.message+"\n");
   if(!outermost)return{status:"yielded",code:protocol.exitCode};
-  if(attempt>=protocol.maximumReexecutions){if(stale.origin==="load"||stale.origin==="edit")write(stale.message+"\n");say("final",{});return{status:"exhausted",code:protocol.exitCode};}
+  const cause=restartCauseV1(stale)||environment[protocol.causeEnvironment]||"";
+  if(attempt>=protocol.maximumReexecutions){if(stale.origin==="load"||stale.origin==="edit")write(stale.message+"\n");if(cause)say("finalcause",{cause});say("final",{});return{status:"exhausted",code:protocol.exitCode};}
   if(stale.origin==="load"){const delay=protocol.loadFailure.backoffMs[Math.min(attempt,protocol.loadFailure.backoffMs.length-1)];say("loadfailure",{reason:stale.message,delay,attempt:attempt+1,maximum:protocol.maximumReexecutions});await sleep(delay);}
   else if(stale.origin==="edit"){const delays=protocol.editFailure.backoffMs,delay=delays[Math.min(attempt,delays.length-1)];write(renderEditRestartV1(languages,stale.edit,{delay,attempt:attempt+1,maximum:protocol.maximumReexecutions})+"\n");await sleep(delay);}
   else say("restart",{attempt:attempt+1,maximum:protocol.maximumReexecutions});
   const handover=await offerRestartCustodiesV1(environment);
-  const code=await launch({execPath,args:[...execArgv,...argv.slice(1)],environment:{...environment,...handover,[protocol.reexecutionEnvironment]:String(attempt+1)}});
+  const code=await launch({execPath,args:[...execArgv,...argv.slice(1)],environment:{...environment,...handover,[protocol.reexecutionEnvironment]:String(attempt+1),[protocol.causeEnvironment]:cause}});
   return{status:"reexecuted",code};
  }finally{leave();await settleRestartCustodiesV1();}
 }

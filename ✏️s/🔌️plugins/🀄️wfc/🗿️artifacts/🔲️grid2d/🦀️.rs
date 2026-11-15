@@ -14,7 +14,7 @@ use {semio_framework_artifact_reference::SubsetId};
 
 pub use crate::standards::v1::subsets::any::schema::snapshot::WFC_GRID2D_DOCUMENT_SCHEMA;
 
-pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::{WFC_GRID2D_DIALECT};
+pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::{WFC_GRID2D_DIALECT};
 
 pub use semio_s_artifact_wfc_grid2d_v1::{artifact_kind};
 
@@ -149,9 +149,9 @@ pub mod standards {
 
                 #[path = "."]
                 pub mod io {
-                    pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::standards::v1::subsets::any::io::*;
+                    pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::standards::v1::subsets::any::io::*;
 pub mod binary {
-    pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::standards::v1::subsets::any::io::binary::*;
     pub use semio_s_artifact_wfc_grid2d_diff::standards::v1::subsets::any::io::binary::diff;
 }
 pub mod sqlite {
@@ -159,7 +159,7 @@ pub mod sqlite {
     pub use semio_s_artifact_wfc_grid2d_snapshot::standards::v1::subsets::any::io::sqlite::snapshot;
 }
 pub mod text {
-    pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::standards::v1::subsets::any::io::text::*;
     pub use semio_s_artifact_wfc_grid2d_diff::standards::v1::subsets::any::io::text::diff;
 }
 
@@ -207,17 +207,17 @@ pub mod editor {
         pub use semio_s_artifact_wfc_grid2d_diff::editor::grid2d::presence;
         pub use semio_s_artifact_wfc_grid2d_diff::editor::grid2d::config;
 
-        pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::window;
+        pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::window;
 
         #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::modes::edit::*;
+                pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::modes::edit::*;
 
-                pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::modes::edit::windows;
+                pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::modes::edit::windows;
 
-                pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::editor::grid2d::modes::edit::tools;
+                pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::editor::grid2d::modes::edit::tools;
             }
         }
     }
@@ -227,7 +227,7 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod grid2d {
-        pub use semio_s_artifact_wfc_grid2d_tests_cuts_the_pinned_corner_out_of_the_problem::viewer::grid2d::*;
+        pub use semio_s_artifact_wfc_grid2d_tests_cuts_pinned_corner::viewer::grid2d::*;
 
         pub use semio_s_artifact_wfc_grid2d_diff::viewer::grid2d::presence;
         pub use semio_s_artifact_wfc_grid2d_diff::viewer::grid2d::config;

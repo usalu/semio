@@ -6459,12 +6459,12 @@
   ],
   "additional": [
     {
-      "packageName": "semio-s-artifact-energy-model-mut-window-layer-optics-visible",
-      "crateName": "semio_s_artifact_energy_model_mut_window_layer_optics_visible"
+      "packageName": "semio-s-artifact-energy-model-mut-layer-optics-visible",
+      "crateName": "semio_s_artifact_energy_model_mut_layer_optics_visible"
     },
     {
-      "packageName": "semio-s-artifact-energy-model-mut-window-layer-optics-visible",
-      "crateName": "semio_s_artifact_energy_model_mut_window_layer_optics_visible"
+      "packageName": "semio-s-artifact-energy-model-mut-layer-optics-visible",
+      "crateName": "semio_s_artifact_energy_model_mut_layer_optics_visible"
     }
   ],
   "roots": [

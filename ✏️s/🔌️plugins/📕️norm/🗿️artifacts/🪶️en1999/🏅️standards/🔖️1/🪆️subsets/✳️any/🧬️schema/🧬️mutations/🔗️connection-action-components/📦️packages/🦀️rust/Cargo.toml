@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-s-artifact-norm-en1999-mut-connection-action-components"
+name = "semio-s-artifact-norm-en1999-mut-connection-components"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

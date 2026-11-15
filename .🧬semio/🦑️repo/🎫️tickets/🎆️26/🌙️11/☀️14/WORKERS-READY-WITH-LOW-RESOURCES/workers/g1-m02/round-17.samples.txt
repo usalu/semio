@@ -1,0 +1,76 @@
+2026-11-15T03:47:35Z LAUNCHER BEFORE TRY 1
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T03:47:35Z TRY 1 START group 22781 log /Users/ueli/native-bootstrap-round-17.log
+2026-11-15T03:47:35Z pressure_level=1 run_group_max_rss_kib=2352
+1276240 94658 94657 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+804096 35202 35172 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+360416 51481 51480 /Users/ueli/Library/Application Support/Claude/claude-code/2.1.321/ddbdf2b334e1/claude.app/Contents/MacOS/claude --output-format stream-json --verbose --input-format stream-json --effort=medium --model=claude-fable-5-2 --permission-prompt-tool=stdio --resume=4fc6af00-df13-45c6-8db
+2026-11-15T03:48:05Z pressure_level=1 run_group_max_rss_kib=462864
+2374656 23024 35208 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1276384 94658 94657 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+990736 23175 23155 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node
+2026-11-15T03:48:35Z ACCESS LINES TRY 1: 2
+2026-11-15T03:48:22.978Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+2026-11-15T03:48:28.804Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+2026-11-15T03:48:44Z KEY LINES TRY 1: 2
+2026-11-15T03:48:22.978Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+2026-11-15T03:48:28.804Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+2026-11-15T03:48:44Z SERVICE FAILURE TRY 1
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T03:48:22.978Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+2026-11-15T03:48:22.979Z shutdown access-denied
+graph: plan answered, managed 121 MB, resident 453 MB (released 0 MB)
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[repo] still working after 10 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-15T03:48:44Z SERVICE FAILURE TRY 1
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[repo] still working after 5 s; last phase started: source.served
+2026-11-15T03:48:28.804Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+2026-11-15T03:48:28.805Z shutdown access-denied
+graph: plan answered, managed 121 MB, resident 434 MB (released 0 MB)
+repository:command failed with exit code 4
+=== /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-79a74804a430.log from byte 215427
+[repository:command] still running after 3911 s
+[repo] still working after 3920 s; last phase started: source.served
+[repository:command] still running after 3921 s
+[repository:command] still running after 3931 s
+2026-11-15T03:48:44Z P12 PEAK TRY 1: 2026-11-15T03:48:22Z pid=23539 rss=278MB footprint=[bun [23539]: 64-bit    Footprint: 90 MB (16384 bytes per page)] last=[graph: plan answered, managed 105 MB, resident 378 MB (released 0 MB)]
+2026-11-15T03:48:44Z LAUNCHER AFTER TRY 1
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T03:48:44Z LAUNCHER during try 1: unchanged
+2026-11-15T03:48:44Z TRY 1 END native_rc=4 peak_rss_kib=2374656 run_peak_rss_kib=462864 stop=None fleet_refusal=False closure_missing=False nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T03:48:44Z CONSENT: this process cannot read the worktree; round ends
+2026-11-15T03:48:44Z ROUND RUNNER END

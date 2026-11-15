@@ -1,0 +1,96 @@
+
+##### 2026-11-15T01:40:47Z before try 1
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T01:45:57Z after try 1
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T01:48:57Z before try 2
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T02:05:06Z after try 2
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T02:08:06Z before try 3
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T02:28:18Z after try 3
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T02:31:18Z before try 4
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T02:45:55Z after try 4
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T02:48:55Z before try 5
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T03:05:08Z after try 5
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T03:08:08Z before try 6
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+
+##### 2026-11-15T03:34:50Z after try 6
+101432264 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 12:28 /Users/ueli/.local/bin/repo
+101440789 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink: versions/cf25f2b751f83336/repo
+101440788 -rwxr-xr-x@ 1 ueli  staff  6523360 Nov 14 12:59 /Users/ueli/.local/share/semio/launcher/bin/repo
+Identifier=tech.semio.repo
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357

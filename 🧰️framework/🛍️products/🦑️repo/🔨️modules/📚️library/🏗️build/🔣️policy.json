@@ -32,6 +32,7 @@
     "server": {
       "host": "127.0.0.1",
       "port": 6090,
+      "fleetDirectory": ".cache/f/cache-server",
       "directory": ".🧬semio/🦑️repo/⚡️cache/remote-cache",
       "maximumBytes": 2684354560,
       "maximumEntryBytes": 536870912,
@@ -41,6 +42,7 @@
       "actionResults": "complete",
       "maximumActionResultBytes": 4194304,
       "maintenanceSeconds": 300,
+      "graceSeconds": 600,
       "environment": {
         "readOnly": "SEMIO_REMOTE_CACHE_SERVER_READ_ONLY",
         "tlsCertificate": "SEMIO_REMOTE_CACHE_SERVER_TLS_CERTIFICATE",
@@ -156,14 +158,28 @@
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/📥️entry/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👷️workers/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📏️incremental/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️texts/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔭️coverage/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧷️pin/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗓️scheduler/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚢️fleet-status/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/**/*",
-      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/**/*"
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧱️job-limits/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧵️workers/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️doctor/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️agent-sessions/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/**/*"
     ],
     "cargoToolchain": [
       "{workspaceRoot}/rustfmt.toml",
@@ -324,21 +340,24 @@
         "shape": "fixed",
         "fixedMegabytes": 5120,
         "cpu": 2,
-        "priority": "batch"
+        "priority": "batch",
+        "minimumMegabytes": 3072
       },
       {
         "name": "graph",
         "shape": "fixed",
         "fixedMegabytes": 5120,
         "cpu": 2,
-        "priority": "batch"
+        "priority": "batch",
+        "minimumMegabytes": 3072
       },
       {
         "name": "dependencies",
         "shape": "fixed",
         "fixedMegabytes": 6144,
         "cpu": 2,
-        "priority": "batch"
+        "priority": "batch",
+        "minimumMegabytes": 3072
       },
       {
         "name": "command",
@@ -396,8 +415,8 @@
       "rebuildPriorMegabytes": 4096,
       "rebuildShareBasisPoints": 5000,
       "maximumRebuildSlots": 4,
-      "quietReferenceMegabytes": 2048,
-      "quietMaximumMegabytes": 4096,
+      "quietReferenceMegabytes": 512,
+      "quietMaximumMegabytes": 1024,
       "quietFollowUpMilliseconds": 1800000
     }
   },
@@ -497,11 +516,16 @@
       "unmatchedSeconds": 120,
       "lingerSeconds": 5,
       "leaseSeconds": 30,
-      "maximumAttempts": 3,
-      "defaultActionSeconds": 3600,
-      "maximumQueued": 100000,
+      "maximumAttempts": 2,
+      "defaultActionSeconds": 1800,
+      "maximumActionSeconds": 1800,
+      "maximumQueued": 4096,
+      "maximumWorkers": 256,
+      "maximumRequestBytes": 16777216,
       "maximumMessageBytes": 33554432,
-      "maximumBatchBytes": 4194304
+      "maximumBatchBytes": 4194304,
+      "loadExpireSeconds": 15,
+      "refusalCooldownSeconds": 10
     },
     "worker": {
       "concurrency": 0,
@@ -511,7 +535,15 @@
       "materialize": "clone",
       "maximumBlobBytes": 268435456,
       "sandbox": "auto",
-      "inlineOutputBytes": 4096
+      "inlineOutputBytes": 4096,
+      "loadIntervalSeconds": 5,
+      "network": "deny",
+      "confinement": "best-effort",
+      "actions": "rustc",
+      "disk": {
+        "reserveGigabytes": 3,
+        "perActionGigabytes": 0.5
+      }
     }
   }
 }

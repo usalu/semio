@@ -70,13 +70,12 @@ impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowContribut
         let FlowCommand::SetContributions(payload) = input.command else {
             return Err(Fault::from("flow-contributions-route-rejected"));
         };
-        let maintenance=flow::retire_flow_extension_registries_step(cx.retained_grant());
+        let grant=cx.retained_grant();let maintenance=semio_plugin::app::plugin_effect_close(cx,grant,|effect|{let body=effect.grant().maximum_copy_bytes;match flow::retire_flow_extension_registries_step(body,effect){Ok(step)=>Ok(step),Err(semio_framework_value::RetirementPollExit::Pending(_))=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),Err(semio_framework_value::RetirementPollExit::Failed(failure))=>Err(failure.into_value_error())}});
         if !flow_contributions_registry_receipt(cx,maintenance)?{
             return Ok(ArtifactCommandWorkStep::Progress{stage:"flow-contributions-retirement",preview:br#"{"en":"Preparing operators","de":"Operatoren werden vorbereitet"}"#});
         }
         match set_contributions::register(payload){Ok(())=>{},Err(fault)if fault.message=="flow.registry-retirement-full"=>return Ok(ArtifactCommandWorkStep::Progress{stage:"flow-contributions-retirement",preview:br#"{"en":"Preparing operators","de":"Operatoren werden vorbereitet"}"#}),Err(fault)=>return Err(fault)}
         let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-contributions-instance-owner"))?;
-        let grant = cx.retained_grant();
         let invalidated = instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| owner.with_session(|session| -> Result<Option<bool>, Fault> {
             let Some((outcome, _)) = cx.with_original_effect(grant, |_, effect| set_contributions::invalidate(session, effect)).map_err(|error| Fault::from(error.to_string()))? else { return Ok(None) };
             outcome
@@ -188,4 +187,3 @@ impl FlowContributionsJobFactoryProofs {
 }
 //#endregion 🧩️ContributionsRoute
 
-semio_plugin::retained_command::terminal_frame_bound!(FlowContributionsWork);

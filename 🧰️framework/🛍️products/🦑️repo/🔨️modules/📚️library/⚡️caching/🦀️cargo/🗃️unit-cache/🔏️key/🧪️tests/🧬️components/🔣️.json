@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "input": {
+    "toolchain": "rustc 1.99.0-nightly\nhost: aarch64-apple-darwin\n",
+    "normalized": [
+      "--crate-name",
+      "libc",
+      "--edition=2021",
+      "src/lib.rs",
+      "--error-format=json",
+      "--json=diagnostic-rendered-ansi,artifacts",
+      "--crate-type",
+      "lib",
+      "--emit=dep-info,metadata,link",
+      "-C",
+      "embed-bitcode=no",
+      "-C",
+      "metadata=abc",
+      "-C",
+      "extra-filename=-abc",
+      "--cfg",
+      "feature=\"std\"",
+      "--check-cfg",
+      "cfg(feature, values(\"std\"))",
+      "--cap-lints",
+      "allow",
+      "--remap-path-prefix=@@semio-cwd@@=.",
+      "-L",
+      "native=/n",
+      "--extern",
+      "dep=#0123",
+      "-Z",
+      "threads=0"
+    ],
+    "sourceSha256": "cafe1fc6498cc4c972cabc7a6efb4e244d7d68e002eda108cfd5ae045f33331c",
+    "externs": [
+      {
+        "name": "core",
+        "sha256": "builtin"
+      },
+      {
+        "name": "dep",
+        "sha256": "0123456789abcdef0123"
+      }
+    ],
+    "environment": [
+      [
+        "CARGO_PKG_NAME",
+        "libc"
+      ],
+      [
+        "SDKROOT",
+        "/sdk"
+      ]
+    ]
+  },
+  "extra": {
+    "platform": "darwin/arm64",
+    "roots": "[]"
+  },
+  "variants": [
+    {
+      "name": "toolchain",
+      "changes": [
+        "toolchain"
+      ],
+      "set": {
+        "toolchain": "rustc other\n"
+      }
+    },
+    {
+      "name": "source",
+      "changes": [
+        "source"
+      ],
+      "set": {
+        "sourceSha256": "00cafe1fc6498cc4c972cabc7a6efb4e244d7d68e002eda108cfd5ae045f33331"
+      }
+    },
+    {
+      "name": "dependency artifact",
+      "changes": [
+        "extern:dep"
+      ],
+      "set": {
+        "externs": [
+          {
+            "name": "core",
+            "sha256": "builtin"
+          },
+          {
+            "name": "dep",
+            "sha256": "1123456789abcdef0123"
+          }
+        ]
+      }
+    },
+    {
+      "name": "environment value",
+      "changes": [
+        "env:SDKROOT"
+      ],
+      "set": {
+        "environment": [
+          [
+            "CARGO_PKG_NAME",
+            "libc"
+          ],
+          [
+            "SDKROOT",
+            "/other"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "features",
+      "changes": [
+        "args.features"
+      ],
+      "from": "feature=\"std\"",
+      "to": "feature=\"alloc\""
+    },
+    {
+      "name": "metadata hash",
+      "changes": [
+        "args.metadata"
+      ],
+      "from": "metadata=abc",
+      "to": "metadata=abd"
+    },
+    {
+      "name": "diagnostics",
+      "changes": [
+        "args.diagnostics"
+      ],
+      "from": "--error-format=json",
+      "to": "--error-format=human"
+    },
+    {
+      "name": "codegen",
+      "changes": [
+        "args.codegen"
+      ],
+      "from": "embed-bitcode=no",
+      "to": "embed-bitcode=yes"
+    },
+    {
+      "name": "lints",
+      "changes": [
+        "args.lints"
+      ],
+      "from": "allow",
+      "to": "warn"
+    },
+    {
+      "name": "unstable",
+      "changes": [
+        "args.unstable"
+      ],
+      "from": "threads=0",
+      "to": "threads=4"
+    },
+    {
+      "name": "native search",
+      "changes": [
+        "args.link"
+      ],
+      "from": "native=/n",
+      "to": "native=/m"
+    },
+    {
+      "name": "source path",
+      "changes": [
+        "args.source"
+      ],
+      "from": "src/lib.rs",
+      "to": "src/main.rs"
+    },
+    {
+      "name": "edition",
+      "changes": [
+        "args.edition"
+      ],
+      "from": "--edition=2021",
+      "to": "--edition=2024"
+    },
+    {
+      "name": "emit",
+      "changes": [
+        "args.kind"
+      ],
+      "from": "--emit=dep-info,metadata,link",
+      "to": "--emit=dep-info,metadata"
+    },
+    {
+      "name": "platform class",
+      "changes": [
+        "platform"
+      ],
+      "extra": {
+        "platform": "linux/x64",
+        "roots": "[]"
+      }
+    },
+    {
+      "name": "checkout root spelling",
+      "changes": [
+        "roots"
+      ],
+      "extra": {
+        "platform": "darwin/arm64",
+        "roots": "[\"/work/a\"]"
+      }
+    }
+  ]
+}

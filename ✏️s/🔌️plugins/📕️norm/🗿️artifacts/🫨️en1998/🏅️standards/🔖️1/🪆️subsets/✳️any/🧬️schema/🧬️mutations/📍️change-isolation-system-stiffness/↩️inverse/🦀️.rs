@@ -1,4 +1,4 @@
-//! ↩️ `change-isolation-system-stiffness` inverse: restores the previous `stiffness_n_per_m`.
+//! ↩️ `change-isolation-system-stiffness-n-per-m` inverse: restores the previous `stiffness_n_per_m`.
 
 use crate::change_isolation_system_stiffness::ChangeIsolationSystemStiffnessNPerM;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

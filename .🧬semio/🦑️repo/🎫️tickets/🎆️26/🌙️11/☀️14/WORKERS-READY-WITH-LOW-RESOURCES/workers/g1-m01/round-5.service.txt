@@ -1,0 +1,208 @@
+##### try 1: service log lines 166-195 (cut at 400 characters)
+[repository:command] still running after 150 s
+[repository:command] still running after 160 s
+[repo] still working after 170 s; last phase started: source.served
+[repository:command] still running after 170 s
+[repository:command] still running after 180 s
+[repository:command] still running after 190 s
+[repo] still working after 200 s; last phase started: source.served
+[repository:command] still running after 200 s
+[repository:command] still running after 210 s
+[repository:command] still running after 220 s
+[repo] still working after 230 s; last phase started: source.served
+[repository:command] still running after 230 s
+[repository:command] still running after 240 s
+[repository:command] still running after 250 s
+[repo] still working after 260 s; last phase started: source.served
+[repository:command] still running after 260 s
+[repository:command] still running after 270 s
+[repository:command] still running after 280 s
+[repo] still working after 290 s; last phase started: source.served
+[repository:command] still running after 290 s
+[repository:command] still running after 300 s
+[repository:command] still running after 310 s
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (6706 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[repo] still working after 320 s; last phase started: source.served
+2026-11-14T18:55:05.348Z request-failed e07192d7 Error: Relative filesystem fstatat failed (EPERM)
+
+##### try 2: service log lines 2890-2925 (cut at 400 characters)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:38:509:3:110:%40semio-tech%2Fframework-os-kernel|language%3Acargo|110|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|100|0,%40semio-tech%2Fframework-plugin|language%3Acargo|80|0:waiting|14643|0|","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[capacity] waiting 68s for exec: memory pressure is critical (need 1536 MB; -13943 MB spare above the 2048 MB floor, load 8.85; 4 running, 0 ahead); behind the host itself (nothing of ours)
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (14643 of 5397 MB reserved, 3 projects running)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 1170 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:38:48:3:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|105|0,%40semio-tech%2Fframework-plugin|language%3Acargo|85|0:waiting|14643|5397|","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 38 of 48 projects · 3 running, longest 115 s: @semio-tech/framework-os-kernel (language:cargo, 115 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 105 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 85 s, 0 rows) · waiting for memory headroom (14643 of 5397 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:38:509:3:115:%40semio-tech%2Fframework-os-kernel|language%3Acargo|115|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|105|0,%40semio-tech%2Fframework-plugin|language%3Acargo|85|0:waiting|14643|5397|","mode":"shared","elapsedMs":0}}
+[capacity] waiting 74s for exec: memory pressure is critical (need 1536 MB; -13943 MB spare above the 2048 MB floor, load 8.46; 4 running, 0 ahead); behind the host itself (nothing of ours)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (14643 of 3095 MB reserved, 3 projects running)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[capacity] waiting 79s for exec: memory pressure is critical (need 1536 MB; -13943 MB spare above the 2048 MB floor, load 8.35; 4 running, 0 ahead); behind the host itself (nothing of ours)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:38:48:3:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|110|0,%40semio-tech%2Fframework-plugin|language%3Acargo|95|0:waiting|14643|3095|","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 38 of 48 projects · 3 running, longest 120 s: @semio-tech/framework-os-kernel (language:cargo, 120 s, 0 rows), @semio-tech/framework-renderer-wgpu (language:cargo, 110 s, 0 rows), @semio-tech/framework-plugin (language:cargo, 95 s, 0 rows) · waiting for memory headroom (14643 of 3095 MB reserved)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:38:509:3:120:%40semio-tech%2Fframework-os-kernel|language%3Acargo|120|0,%40semio-tech%2Fframework-renderer-wgpu|language%3Acargo|110|0,%40semio-tech%2Fframework-plugin|language%3Acargo|95|0:waiting|14643|3095|","mode":"shared","elapsedMs":0}}
+graph: waiting for memory headroom (14643 of 2293 MB reserved, 3 projects running)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[repository:command] still running after 1180 s
+[repo] still working after 1190 s; last phase started: source.served
+[repository:command] still running after 1190 s
+[repository:command] still running after 1200 s
+
+##### try 3: service log lines 2953-2982 (cut at 400 characters)
+[repository:command] still running after 1410 s
+[repository:command] still running after 1420 s
+[repo] still working after 1430 s; last phase started: source.served
+[repository:command] still running after 1430 s
+[repository:command] still running after 1440 s
+[repository:command] still running after 1450 s
+[repo] still working after 1460 s; last phase started: source.served
+[repository:command] still running after 1460 s
+[repository:command] still running after 1470 s
+[repository:command] still running after 1480 s
+[repo] still working after 1490 s; last phase started: source.served
+[repository:command] still running after 1490 s
+[repository:command] still running after 1500 s
+[repository:command] still running after 1510 s
+[repo] still working after 1520 s; last phase started: source.served
+[repository:command] still running after 1520 s
+[repository:command] still running after 1530 s
+[repository:command] still running after 1540 s
+[repo] still working after 1550 s; last phase started: source.served
+[repository:command] still running after 1550 s
+[repository:command] still running after 1560 s
+[repository:command] still running after 1570 s
+[capacity] waiting 0s for graph-plan: not enough free memory (need 2048 MB; 278 MB spare above the 2048 MB floor, load 6.73; 1 running, 0 ahead); behind workspace:setup (quiet, 1 job(s), 2048 MB)
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (7898 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+2026-11-14T19:16:03.056Z request-failed e07192d7 Error: Relative filesystem fstatat failed (EPERM)
+
+##### try 4: service log lines 4294-4323 (cut at 400 characters)
+[repository:command] still running after 2231 s
+[repo] still working after 2240 s; last phase started: source.served
+[repository:command] still running after 2241 s
+[repository:command] still running after 2251 s
+[repository:command] still running after 2261 s
+[repo] still working after 2270 s; last phase started: source.served
+[repository:command] still running after 2271 s
+[repository:command] still running after 2281 s
+[repository:command] still running after 2291 s
+[repo] still working after 2300 s; last phase started: source.served
+[repository:command] still running after 2301 s
+[repository:command] still running after 2311 s
+[repository:command] still running after 2321 s
+[repo] still working after 2330 s; last phase started: source.served
+[repository:command] still running after 2331 s
+[repository:command] still running after 2341 s
+[repository:command] still running after 2351 s
+[repo] still working after 2360 s; last phase started: source.served
+[repository:command] still running after 2361 s
+[repository:command] still running after 2371 s
+[repository:command] still running after 2381 s
+[repo] still working after 2390 s; last phase started: source.served
+[repository:command] still running after 2391 s
+[repository:command] still running after 2401 s
+[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (8053 MB available, 2048 MB floor)
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+
+##### try 5: service log lines 4704-4738 (cut at 400 characters)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:159744:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 159744 of 247353 facts
+[repo] still working after 2420 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:163840:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 163840 of 247353 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:167936:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 167936 of 247353 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:176128:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 176128 of 247353 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:184320:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 184320 of 247353 facts
+[repository:command] still running after 2421 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:188416:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 188416 of 247353 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:192512:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 192512 of 247353 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:196608:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 196608 of 247353 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:200704:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 200704 of 247353 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:225280:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 225280 of 247353 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:247353:247353","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 247353 of 247353 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:assembly:0:703","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Assembling the graph: 0 of 703 projects
+[script] {"owner":"repository:build","command":"build:portable-inputs","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:expansion:0:169","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Expanding input closures: 0 of 169 closures
+2026-11-14T19:30:11.199Z request-failed 0db803f4 Error: ENOENT: no such file or directory, lstat '/Users/ueli/Documents/semio/.cache/b/g/m/build-input-closures/6eccb4ecc0e218f2bec2445f8f767aadf4e3446bba984509b1e297b2cf8a1d71.json'
+    at lstatSync (unknown)
+    at readInventoryRecordLeanV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🟨️.mjs:12:48)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📁️workspace/🟦️.ts:86:20)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:146:491)
+    at processTicksAndRejections (native:7:39)
+
+##### try 6: service log lines 5170-5204 (cut at 400 characters)
+[script] graph:slice-worker · Verifying graph facts: 196608 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:208896:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 208896 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:217088:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 217088 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:221184:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 221184 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:233472:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 233472 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:237568:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 237568 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:241664:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 241664 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:249856:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 249856 of 304913 facts
+[repository:command] still running after 2741 s
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:253952:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 253952 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:258048:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 258048 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:262144:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 262144 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:facts:304913:304913","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying graph facts: 304913 of 304913 facts
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:assembly:0:703","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Assembling the graph: 0 of 703 projects
+[script] {"owner":"repository:build","command":"build:portable-inputs","stage":"running"}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:expansion:0:169","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Expanding input closures: 0 of 169 closures
+2026-11-14T19:35:30.557Z request-failed 0db803f4 Error: ENOENT: no such file or directory, lstat '/Users/ueli/Documents/semio/.cache/b/g/m/build-input-closures/6eccb4ecc0e218f2bec2445f8f767aadf4e3446bba984509b1e297b2cf8a1d71.json'
+    at lstatSync (unknown)
+    at readInventoryRecordLeanV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🪶️lean-inventory/🟨️.mjs:12:48)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📁️workspace/🟦️.ts:86:20)
+    at async <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs:146:491)
+    at processTicksAndRejections (native:7:39)
+

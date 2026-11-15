@@ -1,0 +1,24 @@
+[repository:command] still running after 930 s
+graph: waiting for the fleet: 0 of 703 projects arrived
+[repository:command] still running after 940 s
+graph: waiting for the fleet: 0 of 703 projects arrived
+[repo] still working after 950 s; last phase started: source.served
+[repository:command] still running after 950 s
+graph: waiting for the fleet: 0 of 703 projects arrived
+[repository:command] still running after 960 s
+graph: waiting for the fleet: 0 of 703 projects arrived
+[repository:command] still running after 970 s
+graph: waiting for the fleet: 0 of 703 projects arrived
+[repo] still working after 980 s; last phase started: source.served
+[repository:command] still running after 980 s
+graph: waiting for the fleet: 0 of 703 projects arrived
+graph: nothing to wait for any longer: asked the fleet for 703 stale projects and received 0 within 902 s, 703 remain and this machine can infer only 192; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-14T16:30:05.934Z request-failed 20faee18 RepoError: timeout graph-wanted.expired {"wanted":703,"arrived":0,"seconds":902,"missing":703,"local":192}
+    at refuse (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts:20:232)
+    at fleetReadV1 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts:29:39)
+    at async fleetReadStaleGenerationV1 (unknown)
+    at async loadGenerationGraphV1 (unknown)
+    at async loadBuildGraphSliceV1 (unknown)
+    at unknown
+    at async withImplementationPinV1 (unknown)
+    at processTicksAndRejections (native:7:39)

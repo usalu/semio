@@ -15,6 +15,7 @@ fn project(node: BuiltNode) -> String {
 
 #[test]
 fn rows_of_an_interaction_domain_are_scoped_pick_targets_the_selection_mirror_resolves() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let tree = DslValue::object([("members".into(), DslValue::Array(vec![entity("b1", Some("Main beam")), entity("c2", None)])), ("loads".into(), DslValue::Array(vec![entity("b1", None)]))]);
     let entities = [OutlinedCollection { path: "members", label_en: "Members", label_de: "Stäbe" }, OutlinedCollection { path: "loads", label_en: "Loads", label_de: "Lasten" }];
     let state = OutlinerState { interaction_domain: Some("norm.mock"), ..Default::default() };

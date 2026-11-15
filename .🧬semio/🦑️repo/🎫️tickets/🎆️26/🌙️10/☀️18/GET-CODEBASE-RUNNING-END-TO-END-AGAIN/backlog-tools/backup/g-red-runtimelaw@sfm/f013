@@ -1,0 +1,362 @@
+{
+ "classes": [
+  {
+   "name": "check quoted",
+   "kind": "native",
+   "command": "repo \"a/script.ts\" native cargo check --manifest \"p/q/Cargo.toml\"",
+   "expected": {
+    "subcommand": "check",
+    "manifest": "p/q/Cargo.toml"
+   }
+  },
+  {
+   "name": "build unquoted",
+   "kind": "native",
+   "command": "repo a/script.ts native cargo build --manifest p/Cargo.toml",
+   "expected": {
+    "subcommand": "build",
+    "manifest": "p/Cargo.toml"
+   }
+  },
+  {
+   "name": "test emoji path",
+   "kind": "native",
+   "command": "repo \"a/📜️script.ts\" native cargo test --manifest \"🧰️x/🦀️rust/Cargo.toml\"",
+   "expected": {
+    "subcommand": "test",
+    "manifest": "🧰️x/🦀️rust/Cargo.toml"
+   }
+  },
+  {
+   "name": "component driver",
+   "kind": "orchestration",
+   "command": "repo \"🧰️x/🏗️build/🧩️driver-stages/📜️script.ts\" component --manifest \"🌎️y/🧩️component/📦️packages/🦀️rust/Cargo.toml\"",
+   "expected": { "subcommand": "build", "manifest": "🌎️y/🧩️component/📦️packages/🦀️rust/Cargo.toml" }
+  },
+  {
+   "name": "component driver unquoted",
+   "kind": "orchestration",
+   "command": "repo a/script.ts component --manifest p/Cargo.toml",
+   "expected": { "subcommand": "build", "manifest": "p/Cargo.toml" }
+  },
+  {
+   "name": "component command of a native task is no cargo task",
+   "kind": "native",
+   "command": "repo \"a/script.ts\" component --manifest \"p/Cargo.toml\"",
+   "expected": null
+  },
+  {
+   "name": "native cargo command of an orchestration is no cargo task",
+   "kind": "orchestration",
+   "command": "repo \"a/script.ts\" native cargo build --manifest \"p/Cargo.toml\"",
+   "expected": null
+  },
+  {
+   "name": "component command with a flag is no cargo task",
+   "kind": "orchestration",
+   "command": "repo \"a/script.ts\" component --manifest \"p/Cargo.toml\" --release",
+   "expected": null
+  },
+  {
+   "name": "source kind is no cargo task",
+   "kind": "source",
+   "command": "repo \"a/script.ts\" native cargo check --manifest \"p/Cargo.toml\"",
+   "expected": null
+  },
+  {
+   "name": "other command",
+   "kind": "native",
+   "command": "repo ./script.ts test",
+   "expected": null
+  },
+  {
+   "name": "unknown subcommand",
+   "kind": "native",
+   "command": "repo \"a/script.ts\" native cargo clippy --manifest \"p/Cargo.toml\"",
+   "expected": null
+  }
+ ],
+ "arguments": [
+  {
+   "action": {
+    "version": 1,
+    "id": "c1",
+    "subcommand": "check",
+    "manifest": "w/Cargo.toml",
+    "package": "p",
+    "selection": "--lib",
+    "configuration": "prototype",
+    "toolchain": "0000000000000000000000000000000000000000000000000000000000000000",
+    "artifacts": "none"
+   },
+   "expected": [
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--parallelism=1",
+    "--",
+    "check",
+    "--manifest-path",
+    "w/Cargo.toml",
+    "-p",
+    "p",
+    "--lib",
+    "--message-format=json-render-diagnostics"
+   ]
+  },
+  {
+   "action": {
+    "version": 1,
+    "id": "b1",
+    "subcommand": "build",
+    "manifest": "w/Cargo.toml",
+    "package": "semio-x",
+    "selection": "--lib",
+    "configuration": "prototype",
+    "toolchain": "0000000000000000000000000000000000000000000000000000000000000000",
+    "artifacts": "files",
+    "target": "wasm32-wasip2",
+    "suffixes": [
+     ".wasm"
+    ]
+   },
+   "expected": [
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--parallelism=1",
+    "--",
+    "build",
+    "--manifest-path",
+    "w/Cargo.toml",
+    "-p",
+    "semio-x",
+    "--lib",
+    "--target",
+    "wasm32-wasip2",
+    "--message-format=json-render-diagnostics"
+   ]
+  },
+  {
+   "action": {
+    "version": 1,
+    "id": "t1",
+    "subcommand": "test",
+    "manifest": "w/Cargo.toml",
+    "package": "p",
+    "selection": "--all-targets",
+    "configuration": "release",
+    "toolchain": "0000000000000000000000000000000000000000000000000000000000000000",
+    "artifacts": "none",
+    "features": [
+     "b",
+     "a"
+    ]
+   },
+   "expected": [
+    "cargo",
+    "--store=shared",
+    "--configuration=release",
+    "--parallelism=1",
+    "--",
+    "test",
+    "--manifest-path",
+    "w/Cargo.toml",
+    "-p",
+    "p",
+    "--all-targets",
+    "--features",
+    "a,b",
+    "--message-format=json-render-diagnostics"
+   ]
+  },
+  {
+   "action": {
+    "version": 1,
+    "id": "bad",
+    "subcommand": "clean",
+    "manifest": "w/Cargo.toml",
+    "package": "p",
+    "selection": "--lib",
+    "configuration": "prototype",
+    "toolchain": "0000000000000000000000000000000000000000000000000000000000000000",
+    "artifacts": "none"
+   },
+   "expected": null
+  },
+  {
+   "action": {
+    "version": 1,
+    "id": "bad2",
+    "subcommand": "check",
+    "manifest": "/abs/Cargo.toml",
+    "package": "p",
+    "selection": "--lib",
+    "configuration": "prototype",
+    "toolchain": "0000000000000000000000000000000000000000000000000000000000000000",
+    "artifacts": "none"
+   },
+   "expected": null
+  }
+ ],
+ "artifacts": [
+  {
+   "name": "real cargo check of three packages, bulge only",
+   "package": "bzlrust-bulge",
+   "suffixes": [
+    ".rmeta"
+   ],
+   "lines": [
+    "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///ws/.%F0%9F%A7%ACsemio/%F0%9F%A6%91%EF%B8%8Frepo/%F0%9F%8E%AB%EF%B8%8Ftickets/%F0%9F%8E%86%EF%B8%8F26/%F0%9F%8C%99%EF%B8%8F10/%E2%98%80%EF%B8%8F18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/%F0%9F%97%91%EF%B8%8Fgenerated/bzl-rust-ws/geometry/%E2%9A%99%EF%B8%8Fengine/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust#bzlrust-primitives@0.1.0\",\"manifest_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/⚙️engine/📦️packages/🦀️rust/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"bzlrust_primitives\",\"src_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/⚙️engine/📦️packages/🦀️rust/../../🦀️.rs\",\"edition\":\"2021\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":1,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/ws/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/b/isolated/c6ef530779dd/build/prototype/build/bzlrust-primitives/c3a5affafa75dee0/out/libbzlrust_primitives-c3a5affafa75dee0.rmeta\"],\"executable\":null,\"fresh\":false}",
+    "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///ws/.%F0%9F%A7%ACsemio/%F0%9F%A6%91%EF%B8%8Frepo/%F0%9F%8E%AB%EF%B8%8Ftickets/%F0%9F%8E%86%EF%B8%8F26/%F0%9F%8C%99%EF%B8%8F10/%E2%98%80%EF%B8%8F18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/%F0%9F%97%91%EF%B8%8Fgenerated/bzl-rust-ws/geometry/%E2%9E%97%EF%B8%8Fvector/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust#bzlrust-vector@0.1.0\",\"manifest_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/➗️vector/📦️packages/🦀️rust/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"bzlrust_vector\",\"src_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/➗️vector/📦️packages/🦀️rust/../../🦀️.rs\",\"edition\":\"2021\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":1,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/ws/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/b/isolated/c6ef530779dd/build/prototype/build/bzlrust-vector/8c28d58fe5c2886a/out/libbzlrust_vector-8c28d58fe5c2886a.rmeta\"],\"executable\":null,\"fresh\":false}",
+    "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///ws/.%F0%9F%A7%ACsemio/%F0%9F%A6%91%EF%B8%8Frepo/%F0%9F%8E%AB%EF%B8%8Ftickets/%F0%9F%8E%86%EF%B8%8F26/%F0%9F%8C%99%EF%B8%8F10/%E2%98%80%EF%B8%8F18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/%F0%9F%97%91%EF%B8%8Fgenerated/bzl-rust-ws/geometry/%F0%9F%8C%99%EF%B8%8Fbulge/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust#bzlrust-bulge@0.1.0\",\"manifest_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/🌙️bulge/📦️packages/🦀️rust/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"bzlrust_bulge\",\"src_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/🌙️bulge/📦️packages/🦀️rust/../../🦀️.rs\",\"edition\":\"2021\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":1,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/ws/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/b/isolated/c6ef530779dd/build/prototype/build/bzlrust-bulge/9787fb401da39418/out/libbzlrust_bulge-9787fb401da39418.rmeta\"],\"executable\":null,\"fresh\":false}",
+    "{\"reason\":\"build-finished\",\"success\":true}"
+   ],
+   "expected": [
+    "/ws/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/b/isolated/c6ef530779dd/build/prototype/build/bzlrust-bulge/9787fb401da39418/out/libbzlrust_bulge-9787fb401da39418.rmeta"
+   ]
+  },
+  {
+   "name": "suffix without match",
+   "package": "bzlrust-bulge",
+   "suffixes": [
+    ".wasm"
+   ],
+   "lines": [
+    "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///ws/.%F0%9F%A7%ACsemio/%F0%9F%A6%91%EF%B8%8Frepo/%F0%9F%8E%AB%EF%B8%8Ftickets/%F0%9F%8E%86%EF%B8%8F26/%F0%9F%8C%99%EF%B8%8F10/%E2%98%80%EF%B8%8F18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/%F0%9F%97%91%EF%B8%8Fgenerated/bzl-rust-ws/geometry/%E2%9A%99%EF%B8%8Fengine/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust#bzlrust-primitives@0.1.0\",\"manifest_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/⚙️engine/📦️packages/🦀️rust/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"bzlrust_primitives\",\"src_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/⚙️engine/📦️packages/🦀️rust/../../🦀️.rs\",\"edition\":\"2021\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":1,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/ws/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/b/isolated/c6ef530779dd/build/prototype/build/bzlrust-primitives/c3a5affafa75dee0/out/libbzlrust_primitives-c3a5affafa75dee0.rmeta\"],\"executable\":null,\"fresh\":false}",
+    "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///ws/.%F0%9F%A7%ACsemio/%F0%9F%A6%91%EF%B8%8Frepo/%F0%9F%8E%AB%EF%B8%8Ftickets/%F0%9F%8E%86%EF%B8%8F26/%F0%9F%8C%99%EF%B8%8F10/%E2%98%80%EF%B8%8F18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/%F0%9F%97%91%EF%B8%8Fgenerated/bzl-rust-ws/geometry/%E2%9E%97%EF%B8%8Fvector/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust#bzlrust-vector@0.1.0\",\"manifest_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/➗️vector/📦️packages/🦀️rust/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"bzlrust_vector\",\"src_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/➗️vector/📦️packages/🦀️rust/../../🦀️.rs\",\"edition\":\"2021\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":1,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/ws/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/b/isolated/c6ef530779dd/build/prototype/build/bzlrust-vector/8c28d58fe5c2886a/out/libbzlrust_vector-8c28d58fe5c2886a.rmeta\"],\"executable\":null,\"fresh\":false}",
+    "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///ws/.%F0%9F%A7%ACsemio/%F0%9F%A6%91%EF%B8%8Frepo/%F0%9F%8E%AB%EF%B8%8Ftickets/%F0%9F%8E%86%EF%B8%8F26/%F0%9F%8C%99%EF%B8%8F10/%E2%98%80%EF%B8%8F18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/%F0%9F%97%91%EF%B8%8Fgenerated/bzl-rust-ws/geometry/%F0%9F%8C%99%EF%B8%8Fbulge/%F0%9F%93%A6%EF%B8%8Fpackages/%F0%9F%A6%80%EF%B8%8Frust#bzlrust-bulge@0.1.0\",\"manifest_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/🌙️bulge/📦️packages/🦀️rust/Cargo.toml\",\"target\":{\"kind\":[\"lib\"],\"crate_types\":[\"lib\"],\"name\":\"bzlrust_bulge\",\"src_path\":\"/ws/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/🗑️generated/bzl-rust-ws/geometry/🌙️bulge/📦️packages/🦀️rust/../../🦀️.rs\",\"edition\":\"2021\",\"doc\":true,\"doctest\":true,\"test\":true},\"profile\":{\"opt_level\":\"0\",\"debuginfo\":1,\"debug_assertions\":true,\"overflow_checks\":true,\"test\":false},\"features\":[],\"filenames\":[\"/ws/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/b/isolated/c6ef530779dd/build/prototype/build/bzlrust-bulge/9787fb401da39418/out/libbzlrust_bulge-9787fb401da39418.rmeta\"],\"executable\":null,\"fresh\":false}",
+    "{\"reason\":\"build-finished\",\"success\":true}"
+   ],
+   "expected": []
+  },
+  {
+   "name": "deduplicated by file name, sorted",
+   "package": "p",
+   "suffixes": [
+    ".wasm"
+   ],
+   "lines": [
+    "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///w#p@0.1.0\",\"filenames\":[\"/t/deps/z.wasm\",\"/t/b.wasm\"]}",
+    "{\"reason\":\"compiler-artifact\",\"package_id\":\"path+file:///w#p@0.1.0\",\"filenames\":[\"/t/up/z.wasm\"]}",
+    "not json at all"
+   ],
+   "expected": [
+    "/t/b.wasm",
+    "/t/up/z.wasm"
+   ]
+  }
+ ],
+ "toolchain": [
+  {
+   "name": "pinned and installed",
+   "platform": "darwin-arm64",
+   "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\n",
+   "installed": "channel manifest bytes",
+   "expected_parts": {
+    "channel": "nightly-2026-07-20",
+    "host": "aarch64-apple-darwin"
+   }
+  },
+  {
+   "name": "pinned, not installed",
+   "platform": "linux-x64",
+   "file": "[toolchain]\nchannel = \"nightly-2026-07-20\"\n",
+   "installed": null,
+   "expected_parts": {
+    "channel": "nightly-2026-07-20",
+    "host": "x86_64-unknown-linux-gnu"
+   }
+  },
+  {
+   "name": "nothing pinned",
+   "platform": "win32-x64",
+   "file": null,
+   "installed": null,
+   "expected_parts": {
+    "channel": null,
+    "host": "x86_64-pc-windows-msvc"
+   }
+  }
+ ],
+ "render": [
+  {
+   "name": "two actions sorted by label with deduplicated sorted sources",
+   "load": ":tasks.bzl",
+   "bun": "/bin/bun",
+   "runner": "runner.ts",
+   "actions": [
+    {
+     "label": "b",
+     "id": "b",
+     "manifest": "b.json",
+     "srcs": [
+      "s/z",
+      "s/a",
+      "s/a"
+     ]
+    },
+    {
+     "label": "a",
+     "id": "a",
+     "manifest": "a.json",
+     "srcs": []
+    }
+   ]
+  }
+ ],
+ "adapter": {
+  "graph": {
+   "projects": {
+    "p": {
+     "root": "p",
+     "targets": {
+      "check": {
+       "execution": {
+        "kind": "command",
+        "command": "repo \"x/script.ts\" native cargo check --manifest \"p/Cargo.toml\""
+       },
+       "metadata": {
+        "semio": {
+         "execution": {
+          "version": 1,
+          "kind": "native",
+          "scope": "production"
+         }
+        }
+       },
+       "cache": true,
+       "outputs": [],
+       "inputs": [
+        "{projectRoot}/**/*"
+       ]
+      },
+      "lint": {
+       "execution": {
+        "kind": "command",
+        "command": "repo ./script.ts lint"
+       },
+       "cache": true,
+       "outputs": [],
+       "inputs": [
+        "{projectRoot}/**/*"
+       ]
+      }
+     }
+    }
+   },
+   "dependencies": [],
+   "namedInputs": {}
+  },
+  "request": {
+   "tasks": [
+    "p:check",
+    "p:lint"
+   ]
+  },
+  "expected": {
+   "p:check": true,
+   "p:lint": false
+  }
+ }
+}

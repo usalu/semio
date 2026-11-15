@@ -11,7 +11,7 @@ import (
 	"unicode/utf16"
 )
 
-// 🏷️WorkspaceNamespaceClassification identifies the bootstrap phase without granting dependency readiness or content authority.
+// 🏷️WorkspaceNamespaceClassification identifies the bootstrap phase (cold, unmanaged, managed, or detached when the managed store is not attached) without granting dependency readiness or content authority.
 type WorkspaceNamespaceClassification struct {
 	Kind            string `json:"kind"`
 	Authority       bool   `json:"authority"`
@@ -268,6 +268,23 @@ func workspaceReadyShape(ready workspaceManagedReady, contract workspaceManagedC
 	return true
 }
 
+// 🔌️classifyDetachedWorkspaceNamespace recognizes a managed link whose store is not attached, so that its existing owner attaches the store again; a link that names anything but a generation of the declared store is refused with its remedy.
+func classifyDetachedWorkspaceNamespace(endpoint string, contract workspaceManagedContract) (WorkspaceNamespaceClassification, error) {
+	target, err := os.Readlink(endpoint)
+	if err != nil {
+		return WorkspaceNamespaceClassification{}, err
+	}
+	if !filepath.IsAbs(target) {
+		target = filepath.Join(filepath.Dir(endpoint), target)
+	}
+	target = filepath.Clean(target)
+	generation := filepath.Base(filepath.Dir(target))
+	if filepath.Base(target) != contract.rootEndpoint || len(generation) != contract.prefixUnits || !shaPattern.MatchString(generation+strings.Repeat("0", 64-len(generation))) || !workspacePathEqual(canonicalRoot(filepath.Dir(filepath.Dir(target))), canonicalRoot(contract.generationRoot)) || len(utf16.Encode([]rune(target))) > contract.maximumPathUnits {
+		return WorkspaceNamespaceClassification{}, Failure{ID: "namespaceDangling", Values: map[string]string{"path": endpoint, "target": target, "command": "repo dependencies sync --all"}}
+	}
+	return WorkspaceNamespaceClassification{Kind: "detached"}, nil
+}
+
 // 🧊️ClassifyWorkspaceNamespace recognizes an exact managed binding and leaves dependency readiness exclusively to its existing owner.
 func ClassifyWorkspaceNamespace(root string, policy WorkspaceLinksPolicy) (WorkspaceNamespaceClassification, error) {
 	classification := WorkspaceNamespaceClassification{}
@@ -293,6 +310,9 @@ func ClassifyWorkspaceNamespace(root string, policy WorkspaceLinksPolicy) (Works
 		return classification, err
 	}
 	target, err := workspaceCanonicalDirectory(endpoint)
+	if os.IsNotExist(err) {
+		return classifyDetachedWorkspaceNamespace(endpoint, contract)
+	}
 	if err != nil {
 		return classification, err
 	}

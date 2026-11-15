@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "label": "@teaching/architecture-course:typecheck",
+  "texts": [
+    {
+      "id": "nx-moved-stamp-en",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: [bazel] task x failed\n@teaching/architecture-course:typecheck: This command runs an outdated implementation: the declared format stamp graph.record moved from 1 to 2. It yields r without producing anything.\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "moved-format-stamp",
+      "disposition": "reexec"
+    },
+    {
+      "id": "nx-moved-stamp-de",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: Dieser Befehl führt eine veraltete Implementierung aus: der deklarierte Formatstempel graph.record wechselte von 1 zu 2.\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "moved-format-stamp",
+      "disposition": "reexec"
+    },
+    {
+      "id": "nx-stale-reader",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: error: Stale loaded Source revision reader; restart required\n@teaching/architecture-course:typecheck:  at current\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "stale-loaded-implementation",
+      "disposition": "reexec"
+    },
+    {
+      "id": "nx-stale-observation",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: Stale loaded observation implementation; restart required\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "stale-loaded-implementation",
+      "disposition": "reexec"
+    },
+    {
+      "id": "nx-generation-moved",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: error: Current shared Source-owner generation changed during consumption\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "source-owner-generation",
+      "disposition": "reobserve"
+    },
+    {
+      "id": "nx-bun-manifest",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: Bun current manifest changed during verification: /w/package.json\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "bun-ownership",
+      "disposition": "reobserve"
+    },
+    {
+      "id": "nx-topology",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: Original Cargo workspace topology changed: /w/Cargo.toml\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "cargo-workspace-topology",
+      "disposition": "reobserve"
+    },
+    {
+      "id": "nx-exhausted-en",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: /w/a.txt kept changing in all 6 attempts (its bytes changed): another process edits it continuously. Run the command again once the edits have stopped.\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "retries-exhausted",
+      "disposition": "reobserve"
+    },
+    {
+      "id": "nx-exhausted-de",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: /w/a.txt änderte sich in allen 4 Versuchen (seine Bytes änderten sich): ein anderer Prozess bearbeitet es laufend. Den Befehl erneut ausführen, sobald die Änderungen aufgehört haben.\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "retries-exhausted",
+      "disposition": "reobserve"
+    },
+    {
+      "id": "nx-own-custody",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: Error: Actual compilation destination changed\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": "own-output-or-store-custody",
+      "disposition": "fatal"
+    },
+    {
+      "id": "nx-ordinary-compile-error",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: error TS2322: Type 'string' is not assignable to type 'number'.\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": null,
+      "disposition": null
+    },
+    {
+      "id": "nx-retry-announcement-is-not-a-refusal",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: Another process edited /w/a.txt while it was read (its bytes changed). Taking a new snapshot, attempt 2 of 6, in 10 ms.\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": null,
+      "disposition": null
+    },
+    {
+      "id": "nx-plain-type-error",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: error TS2322: Type 'string' is not assignable to type 'number'.\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": null,
+      "disposition": null
+    },
+    {
+      "id": "nx-no-output",
+      "text": "",
+      "class": null,
+      "disposition": null
+    },
+    {
+      "id": "nx-lockfile-frozen",
+      "text": "\n> nx run @teaching/architecture-course:deps-javascript  [local cache]\n\n> nx run @teaching/architecture-course:typecheck\n\n@teaching/architecture-course:typecheck: building\n@teaching/architecture-course:typecheck: error: lockfile had changes, but lockfile is frozen\n\n NX   Running target typecheck for project @teaching/architecture-course and 3 task(s) they depend on failed\n\nFailed tasks:\n\n- @teaching/architecture-course:typecheck\n\nHint: run the command with --verbose for more details.\n",
+      "class": null,
+      "disposition": null
+    }
+  ]
+}

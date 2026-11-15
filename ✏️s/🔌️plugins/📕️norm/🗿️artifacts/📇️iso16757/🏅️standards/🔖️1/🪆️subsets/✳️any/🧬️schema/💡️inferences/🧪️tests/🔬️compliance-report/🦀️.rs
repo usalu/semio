@@ -78,7 +78,7 @@ async fn remedy_law_writing_required_improves_or_passes() {
 #[semio_framework_async_macros::async_test]
 async fn part_number_script_uses_document_limits_and_inputs() {
     let mut doc = Iso16757Snapshot::default();
-    doc.part_number_inputs.insert("dn".into(), CatalogueValue::Decimal { value: 40.0 });
+    doc.part_number_inputs.cold_insert("dn".into(), CatalogueValue::Decimal { value: 40.0 });
     let report = evaluate(&doc);
     let pn = report.checks.iter().find(|c| c.id == "iso16757.5.6.10.partNumber").expect("pn");
     assert_eq!(pn.status, CheckStatus::Pass);
@@ -379,7 +379,7 @@ async fn applying_applicable_fail_remedies_reduces_failures() {
             if let Some(gid) = doc.geometry.objects.keys().next() {
                 variant.geometry_id = Some(gid.clone());
             }
-            variant.parameter_values.insert("dn".into(), CatalogueValue::Decimal { value: 50.0 });
+            variant.parameter_values.cold_insert("dn".into(), CatalogueValue::Decimal { value: 50.0 });
             if variant.property_values.is_empty() {
                 if let Some(def) = doc.catalogue.property_definitions.iter().find(|d| d.id == "prop-dn") {
                     variant.property_values.push(semio_s_artifact_norm_iso16757_model::part_1::PropertyValue {

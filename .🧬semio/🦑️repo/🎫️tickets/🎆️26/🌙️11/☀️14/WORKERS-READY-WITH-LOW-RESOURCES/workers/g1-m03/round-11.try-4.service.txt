@@ -1,0 +1,32 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ac6bfe8f337c.log
+-- last 30 lines
+[repo] still working after 3590 s; last phase started: source.served
+[repository:command] still running after 3591 s
+[repository:command] still running after 3601 s
+[repository:command] still running after 3611 s
+[repo] still working after 3620 s; last phase started: source.served
+[repository:command] still running after 3621 s
+[repository:command] still running after 3631 s
+[repository:command] still running after 3641 s
+[repo] still working after 3650 s; last phase started: source.served
+[repository:command] still running after 3651 s
+[repository:command] still running after 3661 s
+[repository:command] still running after 3671 s
+[repo] still working after 3680 s; last phase started: source.served
+[repository:command] still running after 3681 s
+[repository:command] still running after 3691 s
+[repository:command] still running after 3701 s
+[repo] still working after 3710 s; last phase started: source.served
+[repository:command] still running after 3711 s
+[repository:command] still running after 3721 s
+[repository:command] still running after 3731 s
+[repo] still working after 3740 s; last phase started: source.served
+[repository:command] still running after 3741 s
+[repository:command] still running after 3751 s
+[repository:command] still running after 3761 s
+[repo] still working after 3770 s; last phase started: source.served
+[repository:command] still running after 3771 s
+[repository:command] still running after 3781 s
+[repository:command] still running after 3791 s
+[repo] still working after 3800 s; last phase started: source.served
+[repository:command] still running after 3801 s

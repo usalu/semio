@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-15T03:55:11Z",
+  "selected_lines": [
+    "\tstate = running",
+    "\truns = 12",
+    "\tlast exit code = 0",
+    "\t\tstate = active",
+    "\t\tstate = active"
+  ],
+  "kickstart_count": 0,
+  "digest": "97445096cc0a4394ffbc45b5ae588ae86aea987d1329f6f4aa4f7779616437ea",
+  "pid": 36520,
+  "health_age_s": 4.864
+}

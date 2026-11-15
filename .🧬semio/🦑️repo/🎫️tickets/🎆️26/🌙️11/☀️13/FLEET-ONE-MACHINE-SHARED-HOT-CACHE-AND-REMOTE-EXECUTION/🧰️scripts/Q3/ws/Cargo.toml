@@ -1,0 +1,11 @@
+cargo-features = ["trim-paths"]
+[workspace]
+resolver = "2"
+members = ["app"]
+[profile.dev]
+debug = 0
+trim-paths = "object"
+incremental = false
+
+[profile.prototype]
+inherits = "dev"

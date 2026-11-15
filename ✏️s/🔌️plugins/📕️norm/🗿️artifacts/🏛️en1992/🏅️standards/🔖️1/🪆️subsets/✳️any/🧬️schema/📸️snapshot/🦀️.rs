@@ -67,6 +67,13 @@ pub struct En1992Snapshot {
     pub reliability_class: ReliabilityClass,
 }
 
+/// 🌱 Initial subject of a live evaluation session: the worked example.
+impl Default for En1992Snapshot {
+    fn default() -> Self {
+        Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En)
+    }
+}
+
 impl En1992Snapshot {
     /// 📸️ Reference EN 1992 subject under the explicitly chosen annex; the annex is never defaulted.
     pub fn example(annex: semio_s_plugin_norm_compliance::AnnexChoice) -> Self {
@@ -593,7 +600,8 @@ pub enum ExposureClass {
 }
 
 /// 🪨 Concrete grade — editable f_ck; Table 3.1 derived properties via methods.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -677,7 +685,8 @@ pub enum BondCondition {
 }
 
 /// 🔩 Reinforcing steel — editable f_yk, ductility class, k, ε_uk (checked vs Table C.1).
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -704,7 +713,8 @@ impl ReinforcementGrade {
 }
 
 /// 🧵 Prestressing steel (f_pk, f_p0_1k in Pa).
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -837,6 +847,20 @@ pub enum ActionKind {
     Wind,
     Accidental,
     Prestress,
+}
+
+/// 🔤 Lower-case key of the kind for messages and labels.
+impl std::fmt::Display for ActionKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Permanent => "permanent",
+            Self::Imposed => "imposed",
+            Self::Snow => "snow",
+            Self::Wind => "wind",
+            Self::Accidental => "accidental",
+            Self::Prestress => "prestress",
+        })
+    }
 }
 
 /// 🧮 Source of the characteristic internal forces of an action.

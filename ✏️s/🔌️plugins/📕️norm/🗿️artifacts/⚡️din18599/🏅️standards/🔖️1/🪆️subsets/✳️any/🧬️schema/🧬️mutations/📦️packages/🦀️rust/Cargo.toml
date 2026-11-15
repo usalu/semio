@@ -20,6 +20,11 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-norm-contract = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
 serde = { workspace = true, optional = true }
 semio-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true }

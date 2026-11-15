@@ -3,6 +3,7 @@
 use super::kit::*;
 use super::layout::{deck_width, GAP};
 use super::scene::*;
+use super::collections::surface;
 use super::{checks, handles, Ctx};
 use checks::{part_1_2, part_1_3, part_2};
 

@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph plan stages / Stufen des Graph-Plans",
+  "description": "EN: After the projects of a wave are inferred, the plan of the graph still assembles the wave: the environment, the test and policy owners, the file ownership, the edges and the metadata. Each of these stages is named, timed and measured, and the whole plan runs as ONE owner of the memory governor: when the managed bytes it added pass what this machine gives a plan (a declared share of the physical memory, never on a serving machine), the plan is stopped at its next yield point or stage boundary with the typed refusal graph.plan-too-heavy, which names the stage and the size, long before the host runs short of memory. The slice pool of the service stops a worker whose process tree passes the same kind of limit from outside (code plan-memory), because a worker busy in synchronous work cannot stop itself. DE: Nachdem die Projekte einer Welle abgeleitet sind, setzt der Graph-Plan die Welle noch zusammen: die Umgebung, die Test- und Richtlinien-Eigner, die Dateizuordnung, die Kanten und die Metadaten. Jede dieser Stufen wird benannt, zeitlich erfasst und gemessen, und der ganze Plan läuft als EIN Eigner des Speicher-Reglers: wächst er über das, was diese Maschine einem Plan gibt (ein deklarierter Anteil des physischen Speichers, nie auf einer bedienenden Maschine), wird er an der nächsten Abgabestelle oder Stufengrenze mit der typisierten Ablehnung graph.plan-too-heavy gestoppt, die Stufe und Größe nennt, lange bevor dem Rechner der Speicher ausgeht. Der Slice-Pool des Dienstes stoppt einen Arbeiter, dessen Prozessbaum eine Grenze gleicher Art überschreitet, von außen (Code plan-memory), weil ein Arbeiter in synchroner Arbeit sich nicht selbst stoppen kann.",
+  "definitions": {
+    "Policy": {
+      "description": "EN: The limit of a plan is hostShare of the physical memory, at least minimumMegabytes and at most maximumMegabytes; a machine of serveHostMegabytes or more serves the fleet and has none; SEMIO_GRAPH_PLAN_LIMIT_MB names another number of megabytes, off disables it. EN: The worker processes a plan starts (the project farm) count with their processes, not with the managed bytes of the plan: together with the plan they stay within treeShare of the physical memory, below the ceiling of the slice guard. DE: Die Arbeitsprozesse, die ein Plan startet (die Projekt-Farm), zählen mit ihren Prozessen, nicht mit den verwalteten Bytes des Plans: zusammen mit dem Plan bleiben sie innerhalb von treeShare des physischen Speichers, unter der Obergrenze der Slice-Wache. DE: Die Grenze eines Plans ist hostShare des physischen Speichers, mindestens minimumMegabytes und höchstens maximumMegabytes; eine Maschine ab serveHostMegabytes bedient die Flotte und hat keine; SEMIO_GRAPH_PLAN_LIMIT_MB nennt eine andere Anzahl Megabyte, off schaltet sie ab. EN: A stage may have a budget of its own (stageMegabytes): the growth of the plan since that stage started, checked with the same rules as the limit of the plan; the environment of a graph read reads about 26 MB of manifests and costs 131 MB, and the sweep of the closure store that runs beside it holds at most about 650 MB, so its budget is 1024 MB. DE: Eine Stufe kann ein eigenes Budget haben (stageMegabytes): das Wachstum des Plans seit Beginn der Stufe, mit denselben Regeln geprüft wie die Grenze des Plans; die Umgebung eines Graph-Lesens liest etwa 26 MB Manifeste und kostet 131 MB, und das Aufräumen des Hüllen-Speichers daneben hält höchstens etwa 650 MB, ihr Budget sind 1024 MB.",
+      "const": {
+        "version": 1,
+        "hostShare": 0.3,
+        "treeShare": 0.5,
+      "treeShare": 0.5,
+        "minimumMegabytes": 2048,
+        "maximumMegabytes": 16384,
+        "serveHostMegabytes": 24000,
+        "limitEnvironment": "SEMIO_GRAPH_PLAN_LIMIT_MB",
+        "off": "off",
+        "owner": "plan",
+        "stages": [
+          "inference",
+          "environment",
+          "tests",
+          "policies",
+          "dangling",
+          "files",
+          "test-edges",
+          "edges",
+          "metadata",
+          "result"
+        ],
+        "stageMegabytes": {
+          "environment": 1024
+        },
+        "sampleMilliseconds": 250,
+        "recentSamples": 40
+      }
+    },
+    "Messages": {
+      "description": "EN: The lines of the plan stages, one per language of the environment (English first, German second, no default language). DE: Die Zeilen der Plan-Stufen, eine je Sprache der Umgebung (zuerst Englisch, dann Deutsch, keine Standardsprache).",
+      "const": {
+        "en": {
+          "started": "graph: plan stage {stage} starts (managed {managed} MB, resident {resident} MB)",
+          "finished": "graph: plan stage {stage} took {seconds} s (managed {managed} MB, {delta} MB more than at its start, resident {resident} MB)",
+          "stopped": "graph: plan stage {stage} (during {operation}) grew the plan by {used} MB, more than the {budget} MB this machine allows for it; it is stopped before the host runs short of memory",
+          "detail": "graph: plan stop detail {json}"
+        },
+        "de": {
+          "started": "Graph: Plan-Stufe {stage} beginnt (verwaltet {managed} MB, resident {resident} MB)",
+          "finished": "Graph: Plan-Stufe {stage} dauerte {seconds} s (verwaltet {managed} MB, {delta} MB mehr als bei ihrem Beginn, resident {resident} MB)",
+          "stopped": "Graph: die Plan-Stufe {stage} (während {operation}) hat den Plan um {used} MB wachsen lassen, mehr als die {budget} MB, die diese Maschine dafür erlaubt; er wird gestoppt, bevor dem Rechner der Speicher ausgeht",
+          "detail": "Graph: Plan-Stopp Einzelheiten {json}"
+        }
+      }
+    },
+    "StageEvent": {
+      "description": "EN: The message a slice worker sends to its service when a plan stage starts, so that the service can name the stage of a worker it has to stop. DE: Die Nachricht, die ein Slice-Arbeiter an seinen Dienst sendet, wenn eine Plan-Stufe beginnt, damit der Dienst die Stufe eines Arbeiters nennen kann, den er stoppen muss.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "stage",
+        "managedMegabytes",
+        "residentMegabytes"
+      ],
+      "properties": {
+        "type": {
+          "const": "stage"
+        },
+        "stage": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "managedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "residentMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    "StopDetail": {
+      "description": "EN: What the guard writes when it stops a plan, measured at that moment (not a periodic sample): the memory counters of the process, the fresh heap statistics of the runtime, the pending native requests and the last samples every sampleMilliseconds. DE: Was die Wache schreibt, wenn sie einen Plan stoppt, in diesem Moment gemessen (keine periodische Stichprobe): die Speicherzähler des Prozesses, die frischen Heap-Statistiken der Laufzeit, die offenen nativen Anfragen und die letzten Stichproben im Abstand von sampleMilliseconds.",
+      "type": "object",
+      "required": [
+        "stage",
+        "operation",
+        "memory",
+        "recent"
+      ],
+      "properties": {
+        "stage": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        },
+        "memory": {
+          "type": "object",
+          "required": [
+            "rss",
+            "heapTotal",
+            "heapUsed",
+            "external",
+            "arrayBuffers"
+          ],
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "heap": {
+          "type": "object"
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "recent": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "atMs",
+              "heapUsed",
+              "external",
+              "arrayBuffers",
+              "rss",
+              "operation"
+            ],
+            "properties": {
+              "atMs": {
+                "type": "integer"
+              },
+              "heapUsed": {
+                "type": "integer"
+              },
+              "external": {
+                "type": "integer"
+              },
+              "arrayBuffers": {
+                "type": "integer"
+              },
+              "rss": {
+                "type": "integer"
+              },
+              "operation": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+## /run/user/1000/semio-repo/1000/host-81f15d8fbbe2.log
+graph: 516 stale projects, 0 taken from the fleet, 516 too heavy for this machine (@semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB), and 510 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 516
+## last 30 lines
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:6","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:6:6","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1025:1070","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1025 of 1070 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1041:1070","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1041 of 1070 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1052:1070","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1052 of 1070 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1067:1070","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1067 of 1070 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:1070:1070","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 1070 of 1070 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:1647","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:1647:1647","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:2","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:2:2","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+graph: 516 stale projects, 0 taken from the fleet, 516 too heavy for this machine (@semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB), and 510 more; it can give about 0 MB per project), it can infer 0 of the others (0 per wave); asking the fleet for 516
+graph: the fleet cache cannot be reached, so 516 stale projects cannot be requested from it; this machine can infer 0
+graph: nothing to wait for any longer: the fleet was asked for 516 stale projects and delivered 0 within 0 s; 516 remain, among them the too heavy project(s) @semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB), and 510 more, which this machine must never infer itself (it can give about 0 MB per project); try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-14T21:36:53.452Z graph-wanted-expired {"wanted":"516","arrived":"0","seconds":"0","missing":"516","local":"0","heavy":", among them the too heavy project(s) @semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 7676 MB), @semio-tech/framework-os-kernel (about 7676 MB), @semio-tech/framework-rs (about 6518 MB), workspace (about 6200 MB), and 510 more (this machine can give about 0 MB per project)"}
+[repository:command] still running after 90 s
+[repository:command] still running after 100 s
+## /run/user/1000/semio-repo/1000/host-90c88f72a8b1.log
+graph: 516 stale projects, 0 taken from the fleet, this machine can infer 0 (0 per wave); asking the fleet for 516
+graph: waiting for the fleet: 0 of 516 projects arrived
+## last 30 lines
+[repo] still working after 1940 s; last phase started: source.served
+[repository:command] still running after 1940 s
+[repository:command] still running after 1950 s
+[repository:command] still running after 1960 s
+[repo] still working after 1970 s; last phase started: source.served
+[repository:command] still running after 1970 s
+[repository:command] still running after 1980 s
+[repository:command] still running after 1990 s
+[repo] still working after 2000 s; last phase started: source.served
+[repository:command] still running after 2000 s
+[repository:command] still running after 2010 s
+[repository:command] still running after 2020 s
+[repo] still working after 2030 s; last phase started: source.served
+[repository:command] still running after 2030 s
+[repository:command] still running after 2040 s
+[repository:command] still running after 2050 s
+[repo] still working after 2060 s; last phase started: source.served
+[repository:command] still running after 2060 s
+[repository:command] still running after 2070 s
+[repository:command] still running after 2080 s
+[repo] still working after 2090 s; last phase started: source.served
+[repository:command] still running after 2090 s
+[repository:command] still running after 2100 s
+[repository:command] still running after 2110 s
+[repo] still working after 2120 s; last phase started: source.served
+[repository:command] still running after 2120 s
+[repository:command] still running after 2130 s
+2026-11-14T21:36:35.936Z shutdown superseded
+[repository:command] still running after 2140 s
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}

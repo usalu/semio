@@ -197,3 +197,15 @@ fn a_family_free_paint_reads_the_partial_report_within_the_paint_budget() {
     assert_eq!(seen.get(), Some(PAINT_BUDGET));
     assert!(report.checks.is_empty());
 }
+
+#[test]
+fn the_flat_gesture_of_a_nudge_button_moves_the_field_by_one_schema_step() {
+    let mut handle = length_handle();
+    handle.id = "b1/x".into();
+    handle.anchor = Vec3::new(1.0, 0.0, 0.0);
+    handle.writes = vec![FieldBinding::new("beams[id=b1].xM", Affine::IDENTITY, "m")];
+    handle.snap = SnapRule { grid: None, increment: Some(0.5), targets: vec![], catalogue: vec![], tolerance: 0.1 };
+    handle.limits = Some(Interval::new(-5.0, 5.0));
+    let plus = Gesture::parse(r#"{"handle":"b1/x","s":1.5,"origin":1.0,"phase":"commit","ctrl":true}"#).expect("the flat gesture of the plus button");
+    assert_eq!(commit_writes(&[handle], &plus), Some(vec![FieldWrite::number("beams[id=b1].xM", 1.5)]));
+}

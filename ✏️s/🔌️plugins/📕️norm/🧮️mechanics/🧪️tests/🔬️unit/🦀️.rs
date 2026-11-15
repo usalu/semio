@@ -1,6 +1,6 @@
-use crate::linalg::*;
-use crate::ltb::*;
-use crate::*;
+use semio_s_plugin_norm_mechanics::linalg::*;
+use semio_s_plugin_norm_mechanics::ltb::*;
+use semio_s_plugin_norm_mechanics::*;
 use semio_s_plugin_norm_compliance::python_oracle;
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
@@ -12,7 +12,6 @@ const RHO: f64 = 7850.0;
 const A: f64 = 0.01;
 const I: f64 = 8e-5;
 const J: f64 = 1e-4;
-const FEATURE: &str = include_str!("../🧮️mechanics/🥒️.feature");
 
 fn close(actual: f64, expected: f64, tol: f64, what: &str) {
     assert!((actual - expected).abs() <= tol * expected.abs().max(1e-300), "{what}: {actual} vs {expected} (rel tol {tol})");
@@ -62,19 +61,10 @@ fn reaction<'a>(r: &'a StaticResult, node: &str) -> &'a Dof6 {
     &r.reactions.iter().find(|d| d.node == node).expect("reaction").force
 }
 
+const EULER_COLUMNS: [(&str, &str); 4] = [("pinned-pinned", "1"), ("fixed-free", "0.25"), ("fixed-pinned", "2.04576"), ("fixed-fixed", "4")];
+const BEAM_MODES: [(&str, &str); 3] = [("1", "1"), ("2", "4"), ("3", "9")];
 const T: bool = true;
 const F: bool = false;
-
-fn rows(title: &str) -> Vec<Vec<String>> {
-    let start = FEATURE.find(title).expect("outline");
-    FEATURE[start..]
-        .lines()
-        .skip_while(|l| !l.trim().starts_with("Examples:"))
-        .skip(2)
-        .take_while(|l| l.trim().starts_with('|'))
-        .map(|l| l.trim().trim_matches('|').split('|').map(|c| c.trim().to_string()).collect())
-        .collect()
-}
 
 fn oracle() -> BTreeMap<String, f64> {
     let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🔮️oracles/🐍️.py");
@@ -268,7 +258,7 @@ fn column(support_name: &str) -> Model {
 
 #[test]
 fn euler_columns_follow_the_feature_table() {
-    for row in rows("Scenario Outline: Euler column") {
+    for row in EULER_COLUMNS.map(|(support, factor)| [support, factor]) {
         let m = column(&row[0]);
         let r = analyse(&m).buckling(&m.load_cases[0], 2, &Control::none()).unwrap();
         let expected = row[1].parse::<f64>().unwrap() * PI * PI * E * I / 25.0;
@@ -295,7 +285,7 @@ fn simply_supported_beam_frequencies_follow_the_feature_table() {
     let r = analyse(&m).modal(8, MassType::Consistent, &Control::none()).unwrap();
     let base = PI / (2.0 * 36.0) * (E * I / (RHO * A)).sqrt();
     let bending: Vec<&ModalMode> = r.modes.iter().filter(|x| x.shape.iter().any(|s| s.u[1].abs().max(s.u[2].abs()) > 0.5)).collect();
-    for row in rows("Scenario Outline: Simply supported beam mode") {
+    for row in BEAM_MODES.map(|(mode, factor)| [mode, factor]) {
         let mode: usize = row[0].parse().unwrap();
         close(bending[2 * (mode - 1)].frequency_hz, row[1].parse::<f64>().unwrap() * base, 1e-3, &format!("mode {mode}"));
     }

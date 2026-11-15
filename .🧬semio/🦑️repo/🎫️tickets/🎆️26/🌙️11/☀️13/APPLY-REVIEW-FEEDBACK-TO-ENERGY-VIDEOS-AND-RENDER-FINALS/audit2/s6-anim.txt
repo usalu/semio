@@ -1,0 +1,99 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/❓️quiz/🔣️.json:859: "de": "Dichter Rechnerraum mit durchgehender Kühlung"
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:211: _step("2", tr("Window · cross · night", "Fenster · Quer · Nacht"), tr("free cooling", "freie Kühlung"), P_CYAN),
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:275: """🌞 Sorptionsgestützte Kühlung (DEC): Entfeuchten → Wärmetausch →
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:305: subtitle = section_heading(tr("Sorption-assisted cooling (DEC)", "Sorptionsgestützte Kühlung (DEC)"))
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:502: subtitle = section_heading(tr("Strategy: free cooling first", "Strategie: freie Kühlung zuerst"))
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🔀️transitions/🔣️.json:72: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🔀️transitions/🔣️.json:117: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🗺️roadmap/🐍️.py:1: """🗺️ Cooling roadmap — the Fahrplan that opens the Kühlung video, ahead of heating versus cooling.
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:647: "de": "Lüftung und aktive Kühlung müssen abgestimmt werden, damit keine unnötige Außenwärme eingetragen wird."
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/❓️quiz/🔣️.json:651: "de": "Abgestimmte Lüftung und Kühlung"
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:184: """🧲 Every named formula slot is fed by the drawn quantity it stands for, then the rest of the formula appears.
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py:239: "Diesen Bedarf gibt es im Winter wie im Sommer, darum bedarf es immer der Lüftung neben Heizung und Kühlung."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:229: """✨ Bring a factor row on screen: its meter and name fade in, the live readout starts counting."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:251: """🔖 Season marker — Winter belongs to Heizung, Sommer to Kühlung, in the colour of its hand-over chip."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:779: r"Die Heizung übernimmt den Winterwert als Lüftungsverlust $\dot{Q}_{\mathrm{V}}$, die Kühlung beide Sommeranteile als Lüftungslast $\dot{Q}_{\mathrm{V}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:862: to_k = _handover_chip(tr("→ Cooling:", "→ Kühlung:"), r"\dot{Q}_{\mathrm{V}}", KUEHLUNG)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:296: """🌘 Animation that fades everything in ``mob`` to ``factor`` of its current opacity — context stays, focus moves on."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:914: r"Ein Luftstrom, zwei Schreibweisen: Die Heizung schreibt $V \cdot n$ in $\mathrm{m^3/h}$, die Kühlung $q_{v,\mathrm{R}}$ in $\mathrm{m^3/s}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:1027: card_k = card(tr("Cooling · Summer", "Kühlung · Sommer"), r"q_{v,\mathrm{R}}", rf"{label_number(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN, 3.4)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py:1095: _handover_chip(tr(r"\to\;\text{Cooling:}\;q_{v,\mathrm{R}}", r"\to\;\text{Kühlung:}\;q_{v,\mathrm{R}}"), P_CYAN, LABEL_FONT_SIZE)).arrange(RIGHT, buff=0.5)
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🗺️roadmap/🐍️.py:30: """🗺️ Roadmap of the video as six cards that light up in order, ending on the hand-over chips for Heizung and Kühltechnik."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🗺️roadmap/🐍️.py:53: r"Zuletzt die Übergabe: Die Heizung übernimmt den Winterwert von $\dot{Q}_{\mathrm{V}}$, die Kühlung den Sommerwert."),
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🗺️roadmap/🐍️.py:68: {"text": (r"\to\;\text{Cooling:}\;\dot{Q}_{\mathrm{V}}", r"\to\;\text{Kühlung:}\;\dot{Q}_{\mathrm{V}}"), "color": "P_CYAN"},
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:1: """🌬️ Ventilation Chapter 6 — Übergabe an Heizung und Kühlung.
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🔊️speech/🐍️.py:1: """🔊 Subtitle voiceover for Ventilation Chapter 6 (Übergabe an Heizung und Kühlung) — synth, align, verify.
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:197: """🧠 Keep the authored fill and stroke opacity of every member so ``_level`` can fade without flattening it."""
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:209: """🔥 Cross-fade the radiator between its warm (rated) and cold (off) thermal staffage."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:749: """🌡️ Diffuse long-wave emission — half-rings spread from warm surface points in every direction and fade.
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:1101: """🧪 Bulb thermometer whose column follows a 0–1 ``level`` tracker; ``tracker`` shares an existing one, ``ramp`` maps the level to the column colour, ``gate`` is a 0–1 tracker that fades the column and ``tick_color`` adds a mid-height tick (``"tick"``)."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py:2174: # the seconds spent since this clause's caption faded in, so the clause starts
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:1019: """〰️ One drawn path; a path the drawing leaves unfilled (an open stroke) keeps a fill opacity of zero when the group is faded in with `set_opacity`, so open strokes never gain a fill."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:1179: """🎞️ A cast that swaps its frame from scene time; moving, scaling, rotating and fading the group carries over to every later frame.
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🐍️.py:1290: """🚶 Play a clip or transient cast through scene time at `rate` times real time from the scene time it first appears, looping when the clip loops or `loop` repeats a clip that does not (wrapping at its duration); `window` keeps only the paths fully inside it (cast metres), and the group is bounded b
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:213: fade = CASE["fade"]
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:218: group.set_opacity(fade["opacity"])
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:221: self.assertEqual(member.get_fill_opacity(), fade["unfilledFillOpacity"])
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:222: self.assertAlmostEqual(float(member.get_stroke_opacity()), fade["strokeOpacity"])
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:224: self.assertTrue(all(slot.get_fill_opacity() == fade["unfilledFillOpacity"] for slot in motion.slots if slot.has_points()))
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🔣️.json:404: "fade": {
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:203: "en": "Finally, all the energy in the air leaving the room simply disappears through the opening. With η equal to zero nothing is recovered: in winter the full 1500 watts of ventilation heat loss.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:204: "de": "Die gesamte Energie der abströmenden Luft verschwindet durch die Öffnung:\nη = 0, im Winter gehen die vollen 1500 W Lüftungswärmeverlust verloren."
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:213: "de": "Mechanische Lüftung mit WRG schließt diese vier Lücken. Das nächste Kapitel legt die Basis für Heizung und Kühlung.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:216: "de": "Diese vier Lücken schließt die mechanische Lüftung mit\nWärmerückgewinnung — nächstes Kapitel, Basis für Heizung und Kühlung."
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:349: "en": "Watch the sun travel from east over south to west above the house: each facade lights up in turn and draws its own power curve — east in the morning, south at noon, west in the afternoon, north stays low."
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:437: "de": "Mit Stoffeigenschaften lässt sich ohne Kältemaschine kühlen: die sorptions-\ngestützte Kühlung verkettet Trocknen, Wärmetausch und Verdunstung."
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️staffage_only.json:91: "⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py::Beat7_SensibelLatent.construct": "diagram: fade-out group of the psychrometric chart parts, no new object",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🎚️profile/🗃️cache/💾️disk/🐍️.py:55: """👆 Mark an entry recently used so pruning evicts it last; a vanished file is ignored."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📚️collection/🔣️.json:91: "de": "Auslegung der Kühlung"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🖌️render/🐍️.py:54: group = VGroup(*parts).fade(1 - style["opacity"])
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖼️posters/🐍️.py:128: """⌛ A stored poster is stale when its moment changed or any authored source it was captured from changed or vanished."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🗺️roadmap/🐍️.py:1: """🗺️ Shared roadmap (Fahrplan) of an energy video: numbered step cards that light up in order, optional hand-over chips.
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🗺️roadmap/🐍️.py:187: """🗺️ Draw the roadmap: heading, numbered cards, then each card lights up on its own clause; hand-over chips follow the last card."""
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🗺️roadmap/🧪️tests/🔣️.cases.json:19: "handovers": ["Heizung", "Kühlung"],
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🗺️roadmap/🧪️tests/🔣️.cases.json:44: "receives": {"bilanz": ["Heizung", "Kühlung"]}
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py:444: """💬 ``swap_caption`` that keeps particles and heat ripples running through the two fades."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:515: """🧹 Stop every live effect, then fade the whole beat out except the chapter header."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:370: """🧲 Every named formula slot is fed by the drawn quantity it stands for, then the rest of the formula appears.
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:1060: r"Size the plant far above the peak and a large reserve appears.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py:750: "Once one exists, its key entries have to appear in commercial property ads.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🗺️roadmap/🐍️.py:63: {"text": (r"←\;\text{Cooling:}\;Q_{\mathrm{c}}", r"←\;\text{Kühlung:}\;Q_{\mathrm{c}}"), "color": "P_CYAN"}]},
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:211: """🧊 Stop every updater under ``mobs`` so they fade out instead of being redrawn at full opacity."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:218: """🚪 Tracker that mirrors ``source`` times ``gate`` — fading ``gate`` to 0 clears a stream without touching ``source``."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py:225: """🔅 Live typeset number whose opacity follows the ``gate`` tracker, so it fades with its gauge."""
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:18: V6["Lüftung Kapitel 6<br/>Übergabe an Heizung und Kühlung"]
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:25: C1["Kühlung Teil 1<br/>Heiz- vs Kühllast"]
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:26: C2["Kühlung Teil 2<br/>Interne Lasten"]
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:27: C3["Kühlung Teil 3<br/>Transmission & Lüftungslast"]
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:28: C4["Kühlung Teil 4<br/>Solarstrahlung"]
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:29: C5["Kühlung Teil 5<br/>Kühlen mit Luft"]
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:30: C6["Kühlung Teil 6<br/>Sommerstrategie"]
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:170: """🌅 Straight sun ray that fades in from transparent at its sun-side end."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:352: """🔆 Parallel straight rays at one elevation — bright and fading in outside, dimmer past the glass."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔀️transitions/🔣️.json:27: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔀️transitions/🔣️.json:72: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔀️transitions/🔣️.json:117: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔀️transitions/🔣️.json:162: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔀️transitions/🔣️.json:207: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔀️transitions/🔣️.json:342: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:177: """🧲 Copies of drawn values fly into their empty panel slots, then the rest of the formula and its box appear."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1222: r"Real bridges appear where material pierces the insulation: a continuous balcony slab with $\psi = 0.5\,\mathrm{W/(mK)}$ over $l = 8\,\mathrm{m}$ adds $4\,\mathrm{W/K}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json:27: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json:72: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json:117: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json:162: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json:207: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json:252: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json:297: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔀️transitions/🔣️.json:618: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:241: """🔁 ``flow_animation`` particles on a closed loop — coloured by ``color_fn(t)``, no fade at the seam."""
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🗺️roadmap/🐍️.py:30: """🗺️ Roadmap of the physical fundamentals as six cards that light up in order."""
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:402: """🌡️ Diffuse long-wave emission — half-rings spread from warm surface points in every direction and fade.
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2745: "Im Sommer muss die Kühlung auch entfeuchten: Das kalte Register nimmt der Luft Wasser ab."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3060: s_head = Text(tr("Summer: cooling dehumidifies", "Sommer: Kühlung entfeuchtet"), font_size=LABEL_FONT_SIZE, color=P_BLUE).move_to(
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3136: "Mit diesen sieben Bausteinen rechnen wir nun Heizung und Kühlung."),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🔀️transitions/🔣️.json:27: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🔀️transitions/🔣️.json:72: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🔀️transitions/🔣️.json:117: "recipe": "fade",
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🔀️transitions/🔣️.json:162: "recipe": "fade",
+TOTAL 98

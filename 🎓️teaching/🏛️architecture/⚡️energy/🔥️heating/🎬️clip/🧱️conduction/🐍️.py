@@ -69,21 +69,25 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 label_number = _manim_module.label_number
 TOASTER_RATE = 8.0
 
 # 🗣️ Timing follows German captions (reading floor in hold_for).
-set_vo_language("de")
 
 # 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
 TITLE_DE = "Modul 2: Transmission"
 
 
 #region Shared numbers
+UNIT_R = r"\frac{\mathrm{m^{2}\,K}}{\mathrm{W}}"
+UNIT_U = r"\frac{\mathrm{W}}{\mathrm{m^{2}\,K}}"
+UNIT_LAM = r"\frac{\mathrm{W}}{\mathrm{m\,K}}"
+UNIT_PSI = r"\frac{\mathrm{W}}{\mathrm{m\,K}}"
+UNIT_H = r"\frac{\mathrm{W}}{\mathrm{K}}"
 #region Wall build-ups
 R_SI, R_SE = 0.13, 0.04
 LAMBDA_INSULATION = 0.035
@@ -104,7 +108,7 @@ def _wall_layers(insulation_d: float) -> list[tuple[str, float, float, str]]:
 
 
 def _r_total(layers) -> float:
-    """➕ R_ges = R_si + Σ d/λ + R_se (DIN EN ISO 6946)."""
+    """➕ R_T = R_si + Σ d/λ + R_se (DIN EN ISO 6946)."""
     return R_SI + sum(d / lam for _n, d, lam, _c in layers) + R_SE
 
 
@@ -371,8 +375,8 @@ class Beat1_MakroUndMikro(Scene):
          "An insulation layer full of air pockets breaks that chain — conduction nearly stops.",
          "Eine Dämmschicht mit Lufteinschlüssen unterbricht die Kette — die Leitung stoppt fast."),
         ("blocked",
-         "Small trapped air pockets slow conduction. Large cavities can convect; DIN 4108 still requires a minimum envelope resistance.",
-         "Kleine Luftporen bremsen die Leitung, große Hohlräume können konvektieren — DIN 4108 verlangt trotzdem einen Mindestwärmeschutz."),
+         "Small trapped air pockets slow conduction. Large cavities can convect; DIN 4108-2 still requires a minimum envelope resistance.",
+         "Kleine Luftporen bremsen die Leitung, in großen Hohlräumen strömt die Luft. DIN 4108-2 verlangt einen Mindestwärmeschutz."),
     ]
 
     def construct(self):
@@ -380,7 +384,7 @@ class Beat1_MakroUndMikro(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Macroscopic and microscopic", "Makroskopisch und mikroskopisch"))
-        din = _din_ref("DIN 4108-2")
+        din = _din_ref(_references.cite("din-4108-2"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "macro"))
@@ -397,19 +401,28 @@ class Beat1_MakroUndMikro(Scene):
                                   np.array([1.25, 1.55, 0.0]), color=PASTEL_WHITE, edge="center")
         wall_note = body_text(tr("Two bricks in the same masonry", "Zwei Ziegel im selben Mauerwerk"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY)
         wall_note.move_to(DOWN * 1.3)
-        therms = []
-        for x, trk, color in ((-3.2, t_left, PASTEL_RED), (3.2, t_right, PASTEL_BLUE)):
-            th = thermometer_glyph(np.array([x, -0.7, 0.0]), height=1.75, color=color, level=trk.get_value() / 40.0)
+        therms, therm_marks, therm_reads = [], VGroup(), []
+        t_bottom, t_height = -0.7, 1.75
+        for x, trk, color, side in ((-3.2, t_left, PASTEL_RED, -1), (3.2, t_right, PASTEL_BLUE, 1)):
+            th = thermometer_glyph(np.array([x, t_bottom, 0.0]), height=t_height, color=color, level=trk.get_value() / 40.0)
             th["level"].add_updater(lambda m, trk=trk: m.set_value(trk.get_value() / 40.0))
             therms.append(th)
+            for v in (0, 20, 40):
+                y = t_bottom + 0.05 + (t_height - 0.12) * v / 40.0
+                therm_marks.add(Line(np.array([x + side * 0.14, y, 0.0]), np.array([x + side * 0.26, y, 0.0]), color=P_PRIMARY, stroke_width=1.6),
+                                math_label(rf"{v}", np.array([x + side * 0.5, y - 0.04, 0.0]), size=LABEL_FONT_SIZE - 2, color=P_PRIMARY))
+            therm_marks.add(math_label(r"\theta\;\text{in}\;\mathrm{°C}", np.array([x, t_bottom + t_height + 0.3, 0.0]), size=LABEL_FONT_SIZE - 2, color=P_PRIMARY))
+            therm_reads.append(math_readout(lambda trk=trk: rf"{label_number(trk.get_value())}\,\mathrm{{°C}}", np.array([x, t_bottom - 0.42, 0.0]),
+                                            size=BODY_FONT_SIZE, color=color, edge="center"))
 
         self.play(
             FadeIn(left_block, shift=RIGHT * 0.3),
             FadeIn(right_block, shift=LEFT * 0.3),
             FadeIn(left_read), FadeIn(right_read), FadeIn(wall_note),
-            *[FadeIn(th["group"]) for th in therms],
+            *[FadeIn(th["group"]) for th in therms], FadeIn(therm_marks),
             run_time=1.2,
         )
+        self.add(*therm_reads)
         self.add(*[th["level"] for th in therms], *[th["column"] for th in therms])
         heat_paths = _flow_lines([((-2.2, y, 0.0), (2.2, y, 0.0)) for y in np.linspace(-0.6, 0.9, 4)])
         hold_for(self, self.NARRATION, "macro", used=1.2 + 0.35, during=lambda rt: [
@@ -445,7 +458,7 @@ class Beat1_MakroUndMikro(Scene):
         micro_sub = section_heading(tr("Microscopic lattice & thermal barrier", "Mikroskopisches Gitter & Wärmebarriere"))
         self.play(
             FadeOut(left_block), FadeOut(right_block), FadeOut(eq_label), FadeOut(merged_outline), FadeOut(wall_note),
-            *[FadeOut(VGroup(th["group"], th["column"])) for th in therms],
+            *[FadeOut(VGroup(th["group"], th["column"])) for th in therms], FadeOut(therm_marks), *[FadeOut(r) for r in therm_reads],
             stage.transition("heating.conduction.micro.subtitle-to-micro", source=subtitle, target=micro_sub),
             run_time=1.0,
         )
@@ -503,7 +516,7 @@ class Beat1_MakroUndMikro(Scene):
             .move_to(np.array([insulation_x, y_c, 0.0]))
             for y_c in np.linspace(barrier_rect.get_bottom()[1] + 0.25, barrier_rect.get_top()[1] - 0.25, 5)
         ])
-        ins_text = Text(tr("Insulation layer (DIN 4108)", "Dämmschicht (DIN 4108)"), font_size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
+        ins_text = Text(tr("Insulation layer", "Dämmschicht"), font_size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
         ins_text.next_to(barrier_rect, UP, buff=0.12)
         insulation_barrier = VGroup(barrier_rect, air_gaps, ins_text)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "insulation"))
@@ -541,20 +554,20 @@ class Beat1_MakroUndMikro(Scene):
 class Beat2_RWert(Scene):
     NARRATION = [
         ("intro",
-         "Zoom back out: that insulating slab has a thermal resistance R.",
-         "Herauszoomen: diese Dämmplatte hat einen Wärmedurchlasswiderstand R."),
+         r"Zoom back out: that insulating slab has a thermal resistance $R$.",
+         r"Herauszoomen: diese Dämmplatte hat einen Wärmedurchlasswiderstand $R$."),
         ("formula",
-         "R equals thickness d over conductivity lambda — unit square-meter kelvin per watt.",
-         "R ist Dicke d geteilt durch Leitfähigkeit Lambda — Einheit Quadratmeter Kelvin pro Watt."),
+         r"$R$ equals thickness $d$ over conductivity $\lambda$ — unit square-meter kelvin per watt.",
+         r"$R$ ist Dicke $d$ geteilt durch Wärmeleitfähigkeit $\lambda$ — Einheit Quadratmeter Kelvin pro Watt."),
         ("d",
-         "d is the layer thickness in meters — here 0.07 meters, so R is 2.0.",
-         "d ist die Schichtdicke in Metern — hier 0,07 m, also R gleich 2,0."),
+         r"$d$ is the layer thickness — here $d = 0.07\,\mathrm{m}$, so $R = 2.0\,\mathrm{m^{2}K/W}$.",
+         r"$d$ ist die Schichtdicke — hier $d = 0{,}07\,\mathrm{m}$, also $R = 2{,}0\,\mathrm{m^{2}K/W}$."),
         ("lam",
-         "Lambda is thermal conductivity in watts per meter and kelvin, from DIN 4108: 0.035 for this insulation.",
-         "Lambda ist die Wärmeleitfähigkeit in Watt pro Meter und Kelvin, nach DIN 4108: 0,035 für diese Dämmung."),
+         r"$\lambda$ is the thermal conductivity: $0.035\,\mathrm{W/(mK)}$ for this insulation.",
+         r"$\lambda$ ist die Wärmeleitfähigkeit: $0{,}035\,\mathrm{W/(mK)}$ für diese Dämmung."),
         ("stretch",
-         "Double the thickness to 0.14 meters and R doubles to 4.0 — resistance scales linearly with d.",
-         "Verdoppelt man die Dicke auf 0,14 m, verdoppelt sich R auf 4,0 — der Widerstand skaliert linear mit d."),
+         r"Double the thickness to $0.14\,\mathrm{m}$ and $R$ doubles to $4.0\,\mathrm{m^{2}K/W}$ — resistance scales linearly with $d$.",
+         r"Verdoppelt man die Dicke auf $0{,}14\,\mathrm{m}$, verdoppelt sich $R$ auf $4{,}0\,\mathrm{m^{2}K/W}$ — der Widerstand skaliert linear mit $d$."),
     ]
 
     def construct(self):
@@ -563,7 +576,7 @@ class Beat2_RWert(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Thermal resistance R", "Wärmedurchlasswiderstand R"))
-        din = _din_ref("DIN EN ISO 6946")
+        din = _din_ref(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -585,7 +598,7 @@ class Beat2_RWert(Scene):
             fill_color=INSULATION, fill_opacity=0.4,
         ).move_to(slab_c)
         rect_label = body_text(tr("Insulation", "Dämmung"), font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(rect.get_center())
-        lam_label = math_label(tr(r"\lambda = 0.035\,\mathrm{W/(m\,K)}", r"\lambda = 0{,}035\,\mathrm{W/(m\,K)}"), color=PASTEL_CYAN)
+        lam_label = math_label(tr(rf"\lambda = 0.035\,{UNIT_LAM}", rf"\lambda = 0{{,}}035\,{UNIT_LAM}"), color=PASTEL_CYAN)
         lam_label.next_to(rect, LEFT, buff=0.35)
 
         def slab_heat(rt):
@@ -598,7 +611,7 @@ class Beat2_RWert(Scene):
         panel = math_panel([
             ("r", "R", P_PRIMARY), (None, "=", PASTEL_WHITE),
             ("frac", rf"\frac{{\textcolor{{{PASTEL_ORANGE}}}{{d}}}}{{\textcolor{{{PASTEL_CYAN}}}{{\lambda}}}}", PASTEL_WHITE),
-            (None, r"\;[\mathrm{m^{2}\,K/W}]", PASTEL_WHITE),
+            (None, rf"\quad[R] = {UNIT_R}", PASTEL_WHITE),
         ])
         row, box, items = panel
         frac = items["frac"][0]
@@ -617,8 +630,8 @@ class Beat2_RWert(Scene):
                               lambda: np.array([left_x + max(meas.get_value(), 1.0) / 2, y_dim - 0.45, 0.0]),
                               color=PASTEL_ORANGE, edge="center")
         r_read = math_readout(
-            lambda: (rf"R = \frac{{d}}{{\lambda}} = \frac{{{label_number(d_now(), 2)}}}{{{label_number(0.035, 3)}}}"
-                     rf" = {label_number(d_now() / LAMBDA_INSULATION, 1)}\,\mathrm{{m^{{2}}K/W}}"),
+            lambda: (rf"R = \frac{{d}}{{\lambda}} = \frac{{{label_number(d_now(), 2)}\,\mathrm{{m}}}}{{{label_number(LAMBDA_INSULATION, 3)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m\,K}}}}}}"
+                     rf" = {label_number(d_now() / LAMBDA_INSULATION, 1)}\,{UNIT_R}"),
             np.array([left_x, rect.get_top()[1] + 0.42, 0.0]), color=PASTEL_YELLOW, edge="left")
         ring_d = highlight_param({"d": frac[0]}, "d", color=PASTEL_ORANGE)
         self.add(d_span, d_read, r_read)
@@ -653,26 +666,26 @@ class Beat2_RWert(Scene):
 class Beat3_UWertUndGradient(Scene):
     NARRATION = [
         ("u_intro",
-         "Flip resistance and you get the U-value — heat flow per area and kelvin.",
-         "Den Widerstand umdrehen ergibt den U-Wert — Wärmestrom pro Fläche und Kelvin."),
+         r"Recall the U-value: flip the total resistance $R_{\mathrm{T}}$ of the wall, and you get the heat flow per area and kelvin.",
+         r"Zur Erinnerung der U-Wert: Dreht man den Gesamtwiderstand $R_{\mathrm{T}}$ der Wand um, erhält man den Wärmestrom pro Fläche und Kelvin."),
         ("u_formula",
-         "U equals one over R, in watts per square meter and kelvin.",
-         "U ist eins durch R, in Watt pro Quadratmeter und Kelvin."),
+         r"$U = \frac{1}{R_{\mathrm{T}}}$ with $R_{\mathrm{T}} = R_{\mathrm{si}} + \Sigma\frac{d}{\lambda} + R_{\mathrm{se}}$, in watts per square meter and kelvin.",
+         r"$U = \frac{1}{R_{\mathrm{T}}}$ mit $R_{\mathrm{T}} = R_{\mathrm{si}} + \Sigma\frac{d}{\lambda} + R_{\mathrm{se}}$, in Watt pro Quadratmeter und Kelvin."),
         ("tile",
-         "U is the heat flow through exactly one square meter of wall for one kelvin of difference.",
-         "U ist der Wärmestrom durch genau einen Quadratmeter Wand bei einem Kelvin Unterschied."),
+         r"$U$ is the heat flow through exactly one square meter of wall for one kelvin of difference.",
+         r"$U$ ist der Wärmestrom durch genau einen Quadratmeter Wand bei einem Kelvin Unterschied."),
         ("thick",
-         "The thickness is already inside U through R equals d over lambda — so U is normalised to one square meter.",
-         "Die Dicke steckt schon in U, über R gleich d durch Lambda — deshalb ist U auf 1 m² normiert."),
+         r"The thickness is already inside $U$ through $R = \frac{d}{\lambda}$ — so $U$ is normalised to one square meter.",
+         r"Die Dicke steckt schon in $U$, über $R = \frac{d}{\lambda}$ — deshalb ist $U$ auf 1 m² normiert."),
         ("area",
-         "A real wall is many such square meters. Each one carries U — together that is U times A.",
-         "Eine echte Wand besteht aus vielen solchen Quadratmetern. Jeder trägt U — zusammen ergibt das U mal A."),
+         r"A real wall is many such square meters. Each one carries $U$ — together that is $U \cdot A$.",
+         r"Eine echte Wand besteht aus vielen solchen Quadratmetern. Jeder trägt $U$ — zusammen ergibt das $U \cdot A$."),
         ("profile",
-         "Through the wall, temperature drops from indoors to outdoors — that gap is delta theta.",
-         "Durch die Wand fällt die Temperatur von innen nach außen — diese Lücke ist Delta-Theta."),
+         r"Through the wall, the temperature drops from indoors to outdoors — this is the temperature difference $\Delta\theta$.",
+         r"Durch die Wand fällt die Temperatur von innen nach außen — dies ist die Temperaturdifferenz $\Delta\theta$."),
         ("steeper",
-         "A steeper gradient means a larger driving force and a higher heat flow.",
-         "Ein steilerer Gradient heißt größere Triebkraft und höherer Wärmestrom."),
+         r"A steeper gradient means a larger driving force $\Delta\theta$ and a higher heat flow $\Phi$.",
+         r"Ein steilerer Gradient heißt größere Triebkraft $\Delta\theta$ und höheren Wärmestrom $\Phi$."),
     ]
 
     def construct(self):
@@ -681,27 +694,29 @@ class Beat3_UWertUndGradient(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("U-value and temperature gradient", "U-Wert und Temperaturgradient"))
-        din = _din_ref("DIN EN ISO 6946")
+        din = _din_ref(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "u_intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        r_lbl = math_label(r"R", np.array([0.0, 0.7, 0.0]), size=FORMULA_FONT_SIZE, color=P_PRIMARY)
+        r_lbl = math_label(r"R_{\mathrm{T}}", np.array([0.0, 0.7, 0.0]), size=FORMULA_FONT_SIZE, color=P_PRIMARY)
         self.play(FadeIn(r_lbl), run_time=0.7)
         hold_for(self, N, "u_intro", used=0.7 + 0.3)
 
         p_u = math_panel([
             ("u", "U", PASTEL_ORANGE), (None, "=", PASTEL_WHITE),
-            ("frac", rf"\frac{{1}}{{\textcolor{{{P_PRIMARY}}}{{R}}}}", PASTEL_WHITE),
-            (None, r"\;[\mathrm{W/(m^{2}\,K)}]", PASTEL_WHITE),
+            ("frac", rf"\frac{{1}}{{\textcolor{{{P_PRIMARY}}}{{R_{{\mathrm{{T}}}}}}}}", PASTEL_WHITE),
+            (None, rf"\quad[U] = {UNIT_U}", PASTEL_WHITE),
         ])
+        r_def = math_label(r"R_{\mathrm{T}} = R_{\mathrm{si}} + \Sigma\,\frac{d}{\lambda} + R_{\mathrm{se}}", np.array([0.0, 1.75, 0.0]),
+                           size=BODY_FONT_SIZE, color=PASTEL_YELLOW)
         caption = swap_caption(self, caption, subtitle_text(N, "u_formula"))
         _fly_into(self, stage, "heating.conduction.u.fly", p_u, {"frac": r_lbl}, run_time=1.0)
         ring = highlight_param(p_u[2], "u", color=PASTEL_ORANGE)
-        self.play(FadeOut(r_lbl), Create(ring), run_time=0.6)
-        hold_for(self, N, "u_formula")
-        self.play(FadeOut(ring), run_time=0.2)
+        self.play(FadeOut(r_lbl), Create(ring), FadeIn(r_def, shift=DOWN * 0.1), run_time=0.8)
+        hold_for(self, N, "u_formula", used=0.8)
+        self.play(FadeOut(ring), FadeOut(r_def), run_time=0.3)
 
         side = 1.8
         depth = np.array([0.95, 0.55, 0.0]) * (D_INSULATED / 0.52)
@@ -767,7 +782,7 @@ class Beat3_UWertUndGradient(Scene):
         _drop_panel(self, p_u)
         p_h = math_panel([
             ("h", "H", PASTEL_YELLOW), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
-            ("a", "A", PASTEL_CYAN), (None, r"\;[\mathrm{W/K}]", PASTEL_WHITE),
+            ("a", "A", PASTEL_CYAN), (None, rf"\quad[H] = {UNIT_H}", PASTEL_WHITE),
         ])
         _fly_into(self, stage, "heating.conduction.h.fly", p_h, {"u": tiles[12][1], "a": a_lbl}, run_time=1.2)
         hold_for(self, N, "area")
@@ -784,7 +799,7 @@ class Beat3_UWertUndGradient(Scene):
         ])
         wall_band = Rectangle(width=axes.c2p(2.0, 0)[0] - axes.c2p(1.0, 0)[0], height=3.0, stroke_width=0,
                               fill_color=INSULATION, fill_opacity=0.18).move_to(axes.c2p(1.5, 2.5))
-        t_in_lbl = math_label(r"20\,\mathrm{°C}", axes.c2p(0, 20) + LEFT * 0.15 + DOWN * 0.07, size=LABEL_FONT_SIZE,
+        t_in_lbl = math_label(r"\theta_{\mathrm{i}} = 20\,\mathrm{°C}", axes.c2p(0, 20) + LEFT * 0.15 + DOWN * 0.07, size=LABEL_FONT_SIZE,
                               color=PASTEL_RED, edge="right")
         t_out = ValueTracker(20.0)
 
@@ -802,11 +817,14 @@ class Beat3_UWertUndGradient(Scene):
         span_x = axes.get_right()[0] + 0.3
         dt_span = always_redraw(lambda: _span((span_x, axes.c2p(0, 20)[1], 0.0), (span_x, axes.c2p(0, t_out.get_value())[1], 0.0),
                                               color=PASTEL_YELLOW))
-        t_out_lbl = math_readout(lambda: rf"{label_number(t_out.get_value())}\,\mathrm{{°C}}",
+        t_out_lbl = math_readout(lambda: rf"\theta_{{\mathrm{{e}}}} = {label_number(t_out.get_value())}\,\mathrm{{°C}}",
                                  lambda: axes.c2p(2.5, t_out.get_value()) + DOWN * 0.38, size=LABEL_FONT_SIZE,
                                  color=PASTEL_BLUE, edge="center")
         dt_lbl = always_redraw(lambda: math_label(r"\Delta\theta", size=FORMULA_FONT_SIZE, color=PASTEL_YELLOW).move_to(
-            np.array([span_x + 0.45, (axes.c2p(0, 20)[1] + axes.c2p(0, t_out.get_value())[1]) / 2, 0.0])))
+            np.array([span_x + 0.45, (axes.c2p(0, 20)[1] + axes.c2p(0, t_out.get_value())[1]) / 2 + 0.2, 0.0])))
+        dt_val = math_readout(lambda: rf"{label_number(20.0 - t_out.get_value())}\,\mathrm{{K}}",
+                              lambda: np.array([span_x + 0.45, (axes.c2p(0, 20)[1] + axes.c2p(0, t_out.get_value())[1]) / 2 - 0.25, 0.0]),
+                              size=LABEL_FONT_SIZE, color=PASTEL_YELLOW, edge="center")
         band_paths = _flow_lines([(axes.c2p(0.55, y), axes.c2p(2.1, y)) for y in (-17.5, -21.5)])
 
         def band_heat(rt):
@@ -814,14 +832,14 @@ class Beat3_UWertUndGradient(Scene):
             return [_heat_flow([(band_paths, PASTEL_RED, PASTEL_BLUE)], rt, period=2.4 / drive, waves=3, radius=0.075)]
 
         self.play(Create(axes), FadeIn(wall_band), FadeIn(x_labels), FadeIn(t_in_lbl), run_time=1.0)
-        self.add(prof, t_out_lbl, dt_span, dt_lbl)
+        self.add(prof, t_out_lbl, dt_span, dt_lbl, dt_val)
         caption = swap_caption(self, caption, subtitle_text(N, "profile"))
         self.play(t_out.animate.set_value(-5.0), run_time=2.0)
         _drop_panel(self, p_h)
         p_q = math_panel([
-            ("q", r"\dot{Q}", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
+            ("q", r"\Phi", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
             ("a", "A", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE), ("dt", r"\Delta\theta", PASTEL_YELLOW),
-            (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
+            (None, r"\quad\Phi\;\text{in}\;\mathrm{W}", PASTEL_WHITE),
         ])
         _fly_into(self, stage, "heating.conduction.q.fly", p_q, {"dt": dt_lbl.copy().clear_updaters()}, run_time=1.0)
         hold_for(self, N, "profile", during=band_heat)
@@ -845,11 +863,11 @@ class Beat4_WattVergleich(Scene):
          "The same 25 square meter wall at 20 degrees inside and 0 outside — uninsulated, with 12 and with 30 centimeters of insulation.",
          "Dieselbe Wand mit 25 m², innen 20 °C, außen 0 °C — ungedämmt, mit 12 cm und mit 30 cm Dämmung."),
         ("u",
-         "Every layer adds its resistance d over lambda. That gives U-values of 1.43, 0.24 and 0.11.",
-         "Jede Schicht addiert ihren Widerstand d durch Lambda. Das ergibt U-Werte von 1,43, 0,24 und 0,11."),
+         r"Every layer adds its resistance $\frac{d}{\lambda}$. That gives U-values of $1.43$, $0.24$ and $0.11\,\mathrm{W/(m^{2}K)}$.",
+         r"Jede Schicht addiert ihren Widerstand $\frac{d}{\lambda}$. Das ergibt U-Werte von $1{,}43$, $0{,}24$ und $0{,}11\,\mathrm{W/(m^{2}K)}$."),
         ("q",
-         "Times 25 square meters and 20 kelvin: about 715, 120 and 55 watts flow through the wall.",
-         "Mal 25 m² und 20 K fließen rund 715 W, 120 W und 55 W durch die Wand."),
+         r"Times $25\,\mathrm{m^{2}}$ and $20\,\mathrm{K}$: about $715\,\mathrm{W}$, $120\,\mathrm{W}$ and $55\,\mathrm{W}$ flow through the wall.",
+         r"Mal $25\,\mathrm{m^{2}}$ und $20\,\mathrm{K}$ fließen rund $715\,\mathrm{W}$, $120\,\mathrm{W}$ und $55\,\mathrm{W}$ durch die Wand."),
         ("compare",
          "Heat loss equals 0.8 toasters uninsulated, one resting person insulated, or 1.5 tealights highly insulated.",
          "Die ungedämmte Wand verliert so viel wie 0,8 Toaster, die gedämmte etwa einen ruhenden Menschen, die hochgedämmte eineinhalb Teelichter."),
@@ -861,7 +879,7 @@ class Beat4_WattVergleich(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("How many watts pass through the wall?", "Wie viel Watt gehen durch die Wand?"))
-        din = _din_ref("DIN EN ISO 6946")
+        din = _din_ref(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -890,7 +908,7 @@ class Beat4_WattVergleich(Scene):
 
         scale = 3.0
         y0, wall_h = 0.0, 1.45
-        legend = math_label(tr(r"\text{inside}\;20\,\mathrm{°C} \;\to\; A = 25\,\mathrm{m^{2}} \;\to\; \text{outside}\;0\,\mathrm{°C}", r"\text{innen}\;20\,\mathrm{°C} \;\to\; A = 25\,\mathrm{m^{2}} \;\to\; \text{außen}\;0\,\mathrm{°C}"),
+        legend = math_label(tr(r"\text{inside}\;\theta_{\mathrm{i}} = 20\,\mathrm{°C} \;\to\; A = 25\,\mathrm{m^{2}} \;\to\; \text{outside}\;\theta_{\mathrm{e}} = 0\,\mathrm{°C}", r"\text{innen}\;\theta_{\mathrm{i}} = 20\,\mathrm{°C} \;\to\; A = 25\,\mathrm{m^{2}} \;\to\; \text{außen}\;\theta_{\mathrm{e}} = 0\,\mathrm{°C}"),
                             np.array([0.0, 2.15, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY)
         sections, titles, data = [], VGroup(), []
         for x, (name, layers) in zip(xs, WALLS):
@@ -913,7 +931,7 @@ class Beat4_WattVergleich(Scene):
         self.play(FadeOut(intro), FadeIn(legend), FadeIn(titles), run_time=0.7)
         r_trk = [ValueTracker(0.0) for _ in data]
         r_reads = [
-            math_readout(lambda t=t: rf"R_{{\mathrm{{ges}}}} = {label_number(t.get_value(), 2)}\,\mathrm{{m^{{2}}K/W}}",
+            math_readout(lambda t=t: rf"R_{{\mathrm{{T}}}} = {label_number(t.get_value(), 2)}\,{UNIT_R}",
                          np.array([d["x"], -0.45, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_YELLOW, edge="center")
             for t, d in zip(r_trk, data)
         ]
@@ -927,15 +945,15 @@ class Beat4_WattVergleich(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "u"))
         p_r = math_panel([
-            ("r", r"R_{\mathrm{ges}}", PASTEL_YELLOW), (None, "=", PASTEL_WHITE), (None, r"R_{\mathrm{si}}", PASTEL_WHITE),
+            ("r", r"R_{\mathrm{T}}", PASTEL_YELLOW), (None, "=", PASTEL_WHITE), (None, r"R_{\mathrm{si}}", PASTEL_WHITE),
             (None, "+", PASTEL_WHITE), ("sum", r"\Sigma\,\frac{d}{\lambda}", PASTEL_ORANGE), (None, "+", PASTEL_WHITE),
             (None, r"R_{\mathrm{se}}", PASTEL_WHITE), (None, r"\quad", PASTEL_WHITE),
-            ("u", r"U = \frac{1}{R_{\mathrm{ges}}}", PASTEL_ORANGE),
+            ("u", r"U = \frac{1}{R_{\mathrm{T}}}", PASTEL_ORANGE),
         ])
         self.play(FadeIn(p_r[0]), Create(p_r[1]), run_time=0.8)
         u_trk = [ValueTracker(0.0) for _ in data]
         u_reads = [
-            math_readout(lambda t=t: rf"U = {label_number(t.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}",
+            math_readout(lambda t=t: rf"U = {label_number(t.get_value(), 2)}\,{UNIT_U}",
                          np.array([d["x"], -0.95, 0.0]), color=PASTEL_ORANGE, edge="center")
             for t, d in zip(u_trk, data)
         ]
@@ -946,13 +964,13 @@ class Beat4_WattVergleich(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "q"))
         _drop_panel(self, p_r)
         p_q = math_panel([
-            ("q", r"\dot{Q}", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
+            ("q", r"\Phi", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
             ("a", r"25\,\mathrm{m^{2}}", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE), ("dt", r"20\,\mathrm{K}", PASTEL_BLUE),
         ])
         _fly_into(self, stage, "heating.conduction.compare.fly", p_q, {"u": u_reads[0]}, run_time=1.0)
         q_trk = [ValueTracker(0.0) for _ in data]
         q_reads = [
-            math_readout(lambda t=t: rf"\dot{{Q}} = {label_number(t.get_value())}\,\mathrm{{W}}",
+            math_readout(lambda t=t: rf"\Phi = {label_number(t.get_value())}\,\mathrm{{W}}",
                          np.array([d["x"], -1.45, 0.0]), color=PASTEL_RED, edge="center")
             for t, d in zip(q_trk, data)
         ]
@@ -987,9 +1005,10 @@ class Beat4_WattVergleich(Scene):
         def device_warmth(rt):
             return [_warmth(device_heat, rt, r_max=0.32)]
 
-        devices.add(_ground_line(y0))
+        ground = _ground_line(y0)
         self.play(stage.transition("heating.conduction.compare.sections-to-devices", source=sections, target=devices),
-                  *[FadeOut(r) for r in r_reads], run_time=1.4)
+                  FadeIn(ground), *[FadeOut(r) for r in r_reads], run_time=1.4)
+        devices.add(ground)
         self.play(*[FadeIn(h, shift=UP * 0.1) for h in hints], *device_warmth(0.6), run_time=0.6)
         self.play(*[Indicate(h, color=PASTEL_YELLOW) for h in hints], *device_warmth(0.8), run_time=0.8)
         hold_for(self, N, "compare", during=device_warmth)
@@ -1004,17 +1023,17 @@ class Beat5_Gebaeudehuelle(Scene):
          "For the whole building, add every envelope piece: roof, walls, windows, door, floor.",
          "Für das ganze Gebäude addieren wir jedes Hüllteil: Dach, Außenwand, Fenster, Haustür, Boden."),
         ("formula",
-         "Transmission heat loss is the sum of U-i times A-i times delta theta i — in watts, per DIN EN 12831-1 and DIN EN ISO 13789.",
-         "Der Transmissionswärmeverlust ist die Summe aus U-i mal A-i mal Delta-Theta-i — in Watt, nach DIN EN 12831-1 und DIN EN ISO 13789."),
+         r"Each part has its heat flow $\Phi = U \cdot A \cdot \Delta\theta$. Their sum $\Sigma\,\Phi$ is the transmission load $\dot{Q}_{\mathrm{T}}$ at the room.",
+         r"Jedes Teil hat seinen Wärmestrom $\Phi = U \cdot A \cdot \Delta\theta$. Ihre Summe $\Sigma\,\Phi$ ist die Transmissionslast $\dot{Q}_{\mathrm{T}}$ am Raum."),
         ("paths",
-         "Each pathway leaks on its own: the 209 square meter wall loses most, the windows follow with their high U-value.",
-         "Jeder Pfad leckt für sich: die Außenwand mit 209 m² verliert am meisten, die Fenster folgen mit ihrem hohen U-Wert."),
+         r"Each pathway leaks on its own: the wall with $209\,\mathrm{m^{2}}$ loses most, the windows follow with their high U-value.",
+         r"Jeder Pfad leckt für sich: die Außenwand mit $209\,\mathrm{m^{2}}$ verliert am meisten, die Fenster folgen mit ihrem hohen U-Wert."),
         ("ground",
-         "The floor borders soil at about 10 degrees, so only 10 kelvin drive the flow there.",
-         "Der Boden grenzt an Erdreich mit rund 10 °C — dort treiben nur 10 K den Wärmestrom."),
+         r"The floor borders soil at about $10\,\mathrm{°C}$, so only $\Delta\theta = 10\,\mathrm{K}$ drives the flow there.",
+         r"Der Boden grenzt an Erdreich mit rund $10\,\mathrm{°C}$ — dort treibt nur $\Delta\theta = 10\,\mathrm{K}$ den Wärmestrom."),
         ("outro",
-         "Together that is about 2311 watts of transmission heat loss. Heat bridges come on top — that is next.",
-         "Zusammen sind das rund 2 311 W Transmissionswärmeverlust. Dazu kommen noch die Wärmebrücken."),
+         r"Together that is about $\dot{Q}_{\mathrm{T}} = 2\,311\,\mathrm{W}$ of transmission load. Thermal bridges come on top — that is next.",
+         r"Zusammen sind das rund $\dot{Q}_{\mathrm{T}} = 2\,311\,\mathrm{W}$ Transmissionslast. Dazu kommen noch die Wärmebrücken."),
     ]
 
     def construct(self):
@@ -1023,7 +1042,7 @@ class Beat5_Gebaeudehuelle(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("The thermal building envelope", "Die thermische Gebäudehülle"))
-        din = _din_ref("DIN EN ISO 13789")
+        din = _din_ref(_references.cite(("din-en-iso-13789", "transmission")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -1071,9 +1090,10 @@ class Beat5_Gebaeudehuelle(Scene):
         hold_for(self, N, "intro", used=2.2 + 0.3, during=room_warmth)
 
         panel = math_panel([
-            ("phi", r"\Phi_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), (None, r"\Sigma\,(", PASTEL_WHITE),
+            ("phi", r"\dot{Q}_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), (None, r"\Sigma\,\Phi", PASTEL_WHITE),
+            (None, "=", PASTEL_WHITE), (None, r"\Sigma\,(", PASTEL_WHITE),
             ("u", r"U_{i}", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE), ("a", r"A_{i}", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE),
-            ("dt", r"\Delta\theta_{i}", PASTEL_BLUE), (None, ")", PASTEL_WHITE), (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
+            ("dt", r"\Delta\theta_{i}", PASTEL_BLUE), (None, ")", PASTEL_WHITE), (None, r"\quad\dot{Q}_{\mathrm{T}}\;\text{in}\;\mathrm{W}", PASTEL_WHITE),
         ], buff=0.13)
         row, box, items = panel
         caption = swap_caption(self, caption, subtitle_text(N, "formula"))
@@ -1085,15 +1105,20 @@ class Beat5_Gebaeudehuelle(Scene):
         y_head, y_rows = 2.2, [1.45, 0.92, 0.39, -0.14, -0.67]
         heads = VGroup(
             body_text(tr("Component", "Bauteil"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(np.array([x_name, y_head, 0.0]), aligned_edge=LEFT),
-            math_label(r"A_{i}\;[\mathrm{m^{2}}]", np.array([x_a, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_CYAN),
+            math_label(r"A_{i}", np.array([x_a, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_CYAN),
             math_label(r"U_{i}", np.array([x_u, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_ORANGE),
-            math_label(r"\Delta\theta_{i}\;[\mathrm{K}]", np.array([x_t, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_BLUE),
-            math_label(r"\Phi_{i}\;[\mathrm{W}]", np.array([x_phi, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, edge="right"),
+            math_label(r"\Delta\theta_{i}", np.array([x_t, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_BLUE),
+            math_label(r"\Phi", np.array([x_phi, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, edge="right"),
         )
-        u_unit = math_label(r"[\mathrm{W/(m^{2}K)}]", np.array([x_u, y_head - 0.42, 0.0]), size=14, color=PASTEL_ORANGE)
+        units = VGroup(
+            math_label(r"\text{in}\;\mathrm{m^{2}}", np.array([x_a, y_head - 0.42, 0.0]), size=17, color=PASTEL_CYAN),
+            math_label(rf"\text{{in}}\;\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}K}}}}", np.array([x_u, y_head - 0.42, 0.0]), size=17, color=PASTEL_ORANGE),
+            math_label(r"\text{in}\;\mathrm{K}", np.array([x_t, y_head - 0.42, 0.0]), size=17, color=PASTEL_BLUE),
+            math_label(r"\text{in}\;\mathrm{W}", np.array([x_phi, y_head - 0.42, 0.0]), size=17, edge="right"),
+        )
         rule = Line(np.array([x_name, y_head - 0.55, 0.0]), np.array([x_bar + 1.5, y_head - 0.55, 0.0]),
                     color=P_PRIMARY, stroke_width=1.2)
-        self.play(FadeIn(heads), FadeIn(u_unit), Create(rule), run_time=0.6)
+        self.play(FadeIn(heads), FadeIn(units), Create(rule), run_time=0.6)
 
         rows, bars, fracs = [], [], []
         for (name, a, u, dt, color), y in zip(ENVELOPE, y_rows):
@@ -1163,7 +1188,7 @@ class Beat5_Gebaeudehuelle(Scene):
             segs.add(Rectangle(width=0.5, height=h, stroke_width=1, stroke_color=PASTEL_WHITE, fill_color=color, fill_opacity=0.8)
                      .move_to(np.array([stack_x, cursor + h / 2, 0.0])))
             cursor += h
-        stack_lbl = math_label(r"\Phi_{\mathrm{T}}", np.array([stack_x, cursor + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
+        stack_lbl = math_label(r"\dot{Q}_{\mathrm{T}}", np.array([stack_x, cursor + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
         self.play(Create(sum_rule), FadeIn(sum_label), FadeIn(sum_a), *heat(0.5), run_time=0.5)
         self.add(sum_phi)
         self.play(stage.transition("heating.conduction.sum.bars-to-stack", source=bars, target=segs),
@@ -1179,32 +1204,32 @@ class Beat5_Gebaeudehuelle(Scene):
 class Beat6_Waermebruecken(Scene):
     NARRATION = [
         ("paper",
-         "For the calculation every wall becomes a sheet of paper without thickness — an area with a U-value.",
-         "Für die Rechnung wird jede Wand zu einem Blatt Papier ohne Dicke — eine Fläche mit U-Wert."),
+         r"For the calculation every wall becomes a sheet of paper without thickness — an area with its U-value, here $U = 0.24\,\mathrm{W/(m^{2}K)}$.",
+         r"Für die Rechnung wird jede Wand zu einem Blatt Papier ohne Dicke — eine Fläche mit ihrem U-Wert, hier $U = 0{,}24\,\mathrm{W/(m^{2}K)}$."),
         ("choice",
          "So one must decide where that sheet lies: outside, in the middle or inside.",
          "Man muss entscheiden, wo das Blatt liegt: außen, in der Mitte oder innen."),
         ("outer",
-         "With outside dimensions the corner square counts twice — too much area. Psi turns negative, a deduction of 0.48 watts per kelvin.",
-         "Mit Außenmaßen zählt das Eckquadrat doppelt — zu viel Fläche. Psi wird negativ, ein Abschlag von 0,48 W/K."),
+         r"With outside dimensions the corner square counts twice — too much area. $\psi$ turns negative: a deduction of $0.48\,\mathrm{W/K}$.",
+         r"Mit Außenmaßen zählt das Eckquadrat doppelt — zu viel Fläche. $\psi$ wird negativ: ein Abschlag von $0{,}48\,\mathrm{W/K}$."),
         ("inner",
-         "With inside dimensions the corner is missing — too little area. Psi turns positive, a surcharge of 0.67 watts per kelvin.",
-         "Mit Innenmaßen fehlt die Ecke — zu wenig Fläche. Psi wird positiv, ein Zuschlag von 0,67 W/K."),
+         r"With inside dimensions the corner is missing — too little area. $\psi$ turns positive: a surcharge of $0.67\,\mathrm{W/K}$.",
+         r"Mit Innenmaßen fehlt die Ecke — zu wenig Fläche. $\psi$ wird positiv: ein Zuschlag von $0{,}67\,\mathrm{W/K}$."),
         ("diff",
-         "The difference is exactly the corner: U times two d, so 0.19 watts per meter and kelvin.",
-         "Der Unterschied ist genau die Ecke: U mal zwei d, also 0,19 W pro Meter und Kelvin."),
+         r"The difference is exactly the corner: $U \cdot 2d$, so $0.19\,\mathrm{W/(mK)}$.",
+         r"Der Unterschied ist genau die Ecke: $U \cdot 2d$, also $0{,}19\,\mathrm{W/(mK)}$."),
         ("balcony",
-         "Real bridges appear where material pierces the insulation: a continuous balcony slab, 0.5 times 8 meters, adds 4 watts per kelvin.",
-         "Echte Wärmebrücken entstehen, wo Material die Dämmung durchstößt: eine Balkonplatte mit 0,5 mal 8 m ergibt 4 W/K Zuschlag."),
+         r"Real bridges appear where material pierces the insulation: a continuous balcony slab with $\psi = 0.5\,\mathrm{W/(mK)}$ over $l = 8\,\mathrm{m}$ adds $4\,\mathrm{W/K}$.",
+         r"Echte Wärmebrücken entstehen, wo Material die Dämmung durchstößt: eine Balkonplatte mit $\psi = 0{,}5\,\mathrm{W/(mK)}$ auf $l = 8\,\mathrm{m}$ ergibt $4\,\mathrm{W/K}$."),
         ("methods",
-         "In detail, every psi times its length is added: four outer corners and the balcony slab give about 2.1 watts per kelvin here.",
-         "Genau gerechnet addiert man jedes Psi mal Länge: vier Außenecken und die Balkonplatte ergeben hier rund 2,1 W/K."),
+         r"In detail every $\psi \cdot l$ is added: four outer corners and the balcony slab give about $2.1\,\mathrm{W/K}$ here.",
+         r"Genau gerechnet addiert man jedes $\psi \cdot l$: vier Außenecken und die Balkonplatte ergeben hier rund $2{,}1\,\mathrm{W/K}$."),
         ("pauschal",
-         "As a flat rate, delta U WB is added on the whole envelope: 0.10 without proof, 0.05 with details per DIN 4108 supplement 2.",
-         "Pauschal kommt Delta-U-WB auf die ganze Hülle: 0,10 ohne Nachweis, 0,05 mit Details nach DIN 4108 Beiblatt 2."),
+         r"As a flat rate, $\Delta U_{\mathrm{WB}}$ is added on the whole envelope: $0.10\,\mathrm{W/(m^{2}K)}$ without proof, $0.05\,\mathrm{W/(m^{2}K)}$ with details per DIN 4108 Beiblatt 2.",
+         r"Pauschal kommt $\Delta U_{\mathrm{WB}}$ auf die ganze Hülle: $0{,}10\,\mathrm{W/(m^{2}K)}$ ohne Nachweis, $0{,}05\,\mathrm{W/(m^{2}K)}$ mit Details nach DIN 4108 Beiblatt 2."),
         ("result",
-         "On 410 square meters that adds 41 or 20.5 watts per kelvin to 115.6.",
-         "Auf 410 m² sind das 41 oder 20,5 W/K zusätzlich zu 115,6 W/K."),
+         r"On $410\,\mathrm{m^{2}}$ that adds $41\,\mathrm{W/K}$ or $20.5\,\mathrm{W/K}$ to $115.6\,\mathrm{W/K}$.",
+         r"Auf $410\,\mathrm{m^{2}}$ sind das $41\,\mathrm{W/K}$ oder $20{,}5\,\mathrm{W/K}$ zusätzlich zu $115{,}6\,\mathrm{W/K}$."),
     ]
 
     def construct(self):
@@ -1213,7 +1238,7 @@ class Beat6_Waermebruecken(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Thermal bridges", "Wärmebrücken"))
-        din = _din_ref("DIN 4108 Bbl. 2 · DIN V 18599-2")
+        din = _din_ref(_references.cite("din-4108-beiblatt-2", "din-ts-18599-2"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "paper"))
@@ -1229,8 +1254,8 @@ class Beat6_Waermebruecken(Scene):
         t_dim = dim_arrow(O + UP * (L + 0.2), O + UP * (L + 0.2) + RIGHT * D, color=PASTEL_ORANGE)
         t_lbl = math_label(rf"d = {label_number(CORNER_D, 2)}\,\mathrm{{m}}", O + UP * (L + 0.2) + RIGHT * (D + 0.18) + DOWN * 0.07,
                            size=LABEL_FONT_SIZE, color=PASTEL_ORANGE, edge="left")
-        u_tag = math_label(rf"U = {label_number(U_INSULATED, 2)}\,\mathrm{{W/(m^{{2}}K)}}", O + np.array([2.0, 1.2, 0.0]),
-                           size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
+        u_tag = math_label(rf"U = {label_number(U_INSULATED, 2)}\,{UNIT_U}", O + np.array([2.4, 1.0, 0.0]),
+                           size=BODY_FONT_SIZE, color=PASTEL_ORANGE)
         self.play(DrawBorderThenFill(corner), FadeIn(inside_lbl), FadeIn(outside_lbl), run_time=1.2)
         self.play(GrowFromCenter(t_dim), FadeIn(t_lbl), FadeIn(u_tag), run_time=0.6)
 
@@ -1269,8 +1294,8 @@ class Beat6_Waermebruecken(Scene):
         y_rows = {"e": 1.35, "a": 0.75, "i": 0.15}
         names = {"e": tr("Outside", "Außenmaß"), "a": tr("Centreline", "Achsmaß"), "i": tr("Inside", "Innenmaß")}
         heads = VGroup(
-            math_label(r"l\;[\mathrm{m}]", np.array([x_l, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="center"),
-            math_label(rf"U \cdot l \cdot h\;[\mathrm{{W/K}}],\; h = {label_number(CORNER_H)}\,\mathrm{{m}}",
+            math_label(r"l\;\text{in}\;\mathrm{m}", np.array([x_l, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="center"),
+            math_label(rf"U \cdot l \cdot h\;\text{{in}}\;{UNIT_H}\quad(h = {label_number(CORNER_H)}\,\mathrm{{m}})",
                        np.array([x_bar, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="left"),
         )
         grow = {k: ValueTracker(0.0) for k in offsets}
@@ -1302,7 +1327,7 @@ class Beat6_Waermebruecken(Scene):
         real_x = x_bar + k_bar * real
         real_line = VGroup(*[DashedLine(np.array([real_x, a, 0.0]), np.array([real_x, b, 0.0]), color=PASTEL_GREEN, stroke_width=2.5)
                              for a, b in ((1.7, y_rows["i"] + 0.2), (y_rows["i"] - 0.2, -0.15))])
-        real_lbl = math_label(tr(rf"\text{{actual}}\;{label_number(real, 2)}\,\mathrm{{W/K}}", rf"\text{{tatsächlich}}\;{label_number(real, 2)}\,\mathrm{{W/K}}"), np.array([real_x + 0.4, -0.45, 0.0]),
+        real_lbl = math_label(tr(rf"\text{{actual}}\;{label_number(real, 2)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}", rf"\text{{tatsächlich}}\;{label_number(real, 2)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}"), np.array([real_x + 0.4, -0.45, 0.0]),
                               size=LABEL_FONT_SIZE, color=PASTEL_GREEN, edge="center")
 
         caption = swap_caption(self, caption, subtitle_text(N, "outer"))
@@ -1314,8 +1339,8 @@ class Beat6_Waermebruecken(Scene):
         self.add(parts_e)
         self.play(grow["e"].animate.set_value(1.0), FadeIn(twice), *corner_heat(1.4), run_time=1.4)
         self.play(Create(real_line), FadeIn(real_lbl), *corner_heat(0.8), run_time=0.8)
-        psi_e = math_label(rf"\Psi_{{\mathrm{{e}}}} = {label_number(real - hu['e'], 2)}\,\mathrm{{W/K}} \,/\, {label_number(CORNER_H)}\,\mathrm{{m}}"
-                           rf" = {label_number(psi['e'], 3)}\,\mathrm{{W/(m\,K)}}", np.array([x_name, -0.95, 0.0]),
+        psi_e = math_label(rf"\psi_{{\mathrm{{e}}}} = \frac{{{label_number(real - hu['e'], 2)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}}}{{{label_number(CORNER_H)}\,\mathrm{{m}}}}"
+                           rf" = {label_number(psi['e'], 3)}\,{UNIT_PSI}", np.array([x_name, -1.15, 0.0]),
                            size=LABEL_FONT_SIZE, color=colors["e"], edge="left")
         cut_e = Arrow(np.array([x_bar + k_bar * hu["e"], y_rows["e"] + 0.3, 0.0]), np.array([real_x, y_rows["e"] + 0.3, 0.0]),
                       buff=0, color=PASTEL_RED, stroke_width=5, max_tip_length_to_length_ratio=0.6, tip_length=0.16)
@@ -1333,8 +1358,8 @@ class Beat6_Waermebruecken(Scene):
         self.play(grow["a"].animate.set_value(1.0), grow["i"].animate.set_value(1.0), *corner_heat(1.4), run_time=1.4)
         add_i = Arrow(np.array([x_bar + k_bar * hu["i"], y_rows["i"] - 0.3, 0.0]), np.array([real_x, y_rows["i"] - 0.3, 0.0]),
                       buff=0, color=PASTEL_GREEN, stroke_width=5, max_tip_length_to_length_ratio=0.6, tip_length=0.16)
-        psi_i = math_label(rf"\Psi_{{\mathrm{{i}}}} = +{label_number(real - hu['i'], 2)}\,\mathrm{{W/K}} \,/\, {label_number(CORNER_H)}\,\mathrm{{m}}"
-                           rf" = +{label_number(psi['i'], 3)}\,\mathrm{{W/(m\,K)}}", np.array([x_name, -1.4, 0.0]),
+        psi_i = math_label(rf"\psi_{{\mathrm{{i}}}} = \frac{{+{label_number(real - hu['i'], 2)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}}}{{{label_number(CORNER_H)}\,\mathrm{{m}}}}"
+                           rf" = +{label_number(psi['i'], 3)}\,{UNIT_PSI}", np.array([x_name, -1.95, 0.0]),
                            size=LABEL_FONT_SIZE, color=colors["i"], edge="left")
         self.play(GrowArrow(add_i), FadeIn(psi_i, shift=RIGHT * 0.1), *corner_heat(0.8), run_time=0.8)
         hold_for(self, N, "inner", during=corner_heat)
@@ -1350,10 +1375,10 @@ class Beat6_Waermebruecken(Scene):
                   *[t.animate.set_opacity(1.0) for t in tags], *corner_heat(0.5), run_time=0.5)
         self.play(GrowFromCenter(ext_a), GrowFromCenter(ext_b), FadeIn(ext_lbl), *corner_heat(0.8), run_time=0.8)
         p_diff = math_panel([
-            ("psi", r"\Psi_{\mathrm{i}} - \Psi_{\mathrm{e}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_WHITE),
+            ("psi", r"\psi_{\mathrm{i}} - \psi_{\mathrm{e}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_WHITE),
             (None, r"\cdot", PASTEL_WHITE), ("d", r"2\,d", PASTEL_ORANGE), (None, "=", PASTEL_WHITE),
-            (None, rf"{label_number(U_INSULATED, 2)} \cdot {label_number(2 * CORNER_D, 2)}", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
-            (None, rf"{label_number(U_INSULATED * 2 * CORNER_D, 2)}\,\mathrm{{W/(m\,K)}}", PASTEL_YELLOW),
+            (None, rf"{label_number(U_INSULATED, 2)}\,{UNIT_U} \cdot {label_number(2 * CORNER_D, 2)}\,\mathrm{{m}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
+            (None, rf"{label_number(U_INSULATED * 2 * CORNER_D, 2)}\,{UNIT_PSI}", PASTEL_YELLOW),
         ])
         _fly_into(self, stage, "heating.conduction.bridge.fly", p_diff, {"d": ext_lbl}, run_time=1.2)
         hold_for(self, N, "diff", during=corner_heat)
@@ -1386,8 +1411,8 @@ class Beat6_Waermebruecken(Scene):
         l_read = math_readout(lambda: rf"l = {label_number(l_trk.get_value(), 1)}\,\mathrm{{m}}",
                               lambda: np.array([bx0 + 0.31 * max(l_trk.get_value(), 2.0), by - 0.78, 0.0]),
                               size=LABEL_FONT_SIZE, color=PASTEL_ORANGE, edge="center")
-        chi_read = math_readout(lambda: rf"\Psi \cdot l = {label_number(BALCONY_PSI, 1)}\,\mathrm{{W/(m\,K)}} \cdot "
-                                        rf"{label_number(l_trk.get_value(), 1)}\,\mathrm{{m}} = {label_number(BALCONY_PSI * l_trk.get_value(), 1)}\,\mathrm{{W/K}}",
+        chi_read = math_readout(lambda: rf"\psi \cdot l = {label_number(BALCONY_PSI, 1)}\,{UNIT_PSI} \cdot "
+                                        rf"{label_number(l_trk.get_value(), 1)}\,\mathrm{{m}} = {label_number(BALCONY_PSI * l_trk.get_value(), 1)}\,{UNIT_H}",
                                 np.array([bx0, -0.6, 0.0]), color=PASTEL_YELLOW, edge="left")
         slab_top = slab.get_top()[1]
         bridge_spots = [np.array([x, slab_top + 0.02, 0.0]) for x in (-2.95, -2.2)]
@@ -1408,22 +1433,22 @@ class Beat6_Waermebruecken(Scene):
         n_corners = 4
         corner_sum = n_corners * CORNER_H * PSI_E
         psi_sum = corner_sum + BALCONY_PSI * BALCONY_L
-        sum_line = math_label(rf"\Sigma\,\Psi_{{k}}\,l_{{k}} = {n_corners} \cdot {label_number(CORNER_H)}\,\mathrm{{m}} \cdot ({label_number(PSI_E, 3)})"
-                              rf" + {label_number(BALCONY_PSI * BALCONY_L, 1)} = {label_number(psi_sum, 1)}\,\mathrm{{W/K}}",
-                              np.array([0.0, 1.9, 0.0]), color=PASTEL_YELLOW)
+        sum_line = math_label(rf"\Sigma\,\psi_{{k}}\,l_{{k}} = {n_corners} \cdot {label_number(CORNER_H)}\,\mathrm{{m}} \cdot \left({label_number(PSI_E, 3)}\,{UNIT_PSI}\right)"
+                              rf" + {label_number(BALCONY_PSI * BALCONY_L, 1)}\,{UNIT_H} = {label_number(psi_sum, 1)}\,{UNIT_H}",
+                              np.array([0.0, 1.9, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
         self.play(FadeOut(VGroup(brick, ins, slab, sec_in, sec_out, slab_lbl, strip, strip_lbl, l_span, l_read)),
                   stage.transition("heating.conduction.psi.chi-to-sum", source=chi_read, target=sum_line), run_time=0.9)
         p_det = math_panel([
             ("h", r"H_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("ua", r"\Sigma\,U_{i}A_{i}", PASTEL_ORANGE),
-            (None, "+", PASTEL_WHITE), ("psi", r"\Sigma\,\Psi_{k}\,l_{k}", PASTEL_YELLOW), (None, r"\;[\mathrm{W/K}]", PASTEL_WHITE),
+            (None, "+", PASTEL_WHITE), ("psi", r"\Sigma\,\psi_{k}\,l_{k}", PASTEL_YELLOW), (None, rf"\quad[H_{{\mathrm{{T}}}}] = {UNIT_H}", PASTEL_WHITE),
         ])
         _fly_into(self, stage, "heating.conduction.psi.fly", p_det, {"psi": sum_line}, run_time=1.2)
         base_y, k_h = -0.72, 0.018
         cols_x = (-5.1, -1.7, 1.7, 5.1)
         adds = (0.0, psi_sum, DU_WB[0] * ENVELOPE_AREA, DU_WB[1] * ENVELOPE_AREA)
-        heads_b = [tr(r"\text{without thermal bridges}", r"\text{ohne Wärmebrücken}"), r"+\,\Sigma\,\Psi_{k}\,l_{k}",
-                   rf"+\,{label_number(DU_WB[0], 2)} \cdot A", rf"+\,{label_number(DU_WB[1], 2)} \cdot A"]
-        notes_b = ["", tr("detailed", "detailliert"), tr("flat rate, no proof", "pauschal, ohne Nachweis"), tr("flat rate, DIN 4108 Suppl. 2", "pauschal, DIN 4108 Bbl. 2")]
+        heads_b = [tr(r"\text{without thermal bridges}", r"\text{ohne Wärmebrücken}"), r"+\,\Sigma\,\psi_{k}\,l_{k}",
+                   rf"+\,{label_number(DU_WB[0], 2)}\,{UNIT_U} \cdot A", rf"+\,{label_number(DU_WB[1], 2)}\,{UNIT_U} \cdot A"]
+        notes_b = ["", tr("detailed", "detailliert"), tr("flat rate, no proof", "pauschal, ohne Nachweis"), tr("flat rate, Suppl. 2", "pauschal, nach Bbl. 2")]
         grow_b = [ValueTracker(0.0) for _ in cols_x]
         add_b = [ValueTracker(0.0) for _ in cols_x]
         labels_b = VGroup(*[math_label(tex, np.array([x, base_y - 0.3, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
@@ -1441,9 +1466,9 @@ class Beat6_Waermebruecken(Scene):
                                                              stroke_width=0, fill_color=PASTEL_YELLOW, fill_opacity=0.85)
                                   .move_to(np.array([x, base_y + k_h * H_T * grow_b[i].get_value(), 0.0]), aligned_edge=DOWN))
                     for i, x in enumerate(cols_x) if adds[i] > 0]
-        tops = [math_readout(lambda i=i: rf"{label_number(H_T * grow_b[i].get_value(), 1)}"
-                                         + (rf" + {label_number(adds[i] * add_b[i].get_value(), 1)}" if adds[i] > 0 else "")
-                                         + r"\,\mathrm{W/K}",
+        tops = [math_readout(lambda i=i: (r"\left(" if adds[i] > 0 else "") + rf"{label_number(H_T * grow_b[i].get_value(), 1)}"
+                                         + (rf" + {label_number(adds[i] * add_b[i].get_value(), 1)}\right)" if adds[i] > 0 else "")
+                                         + r"\,\frac{\mathrm{W}}{\mathrm{K}}",
                              lambda i=i, x=x: np.array([x, base_y + col_height(i) + 0.18, 0.0]),
                              size=LABEL_FONT_SIZE, color=PASTEL_WHITE, edge="center")
                 for i, x in enumerate(cols_x)]
@@ -1456,7 +1481,7 @@ class Beat6_Waermebruecken(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "pauschal"))
         p_flat = math_panel([
             ("h", r"H_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("ua", r"\Sigma\,U_{i}A_{i}", PASTEL_ORANGE),
-            (None, "+", PASTEL_WHITE), ("du", r"\Delta U_{\mathrm{WB}} \cdot A", PASTEL_YELLOW), (None, r"\;[\mathrm{W/K}]", PASTEL_WHITE),
+            (None, "+", PASTEL_WHITE), ("du", r"\Delta U_{\mathrm{WB}} \cdot A", PASTEL_YELLOW), (None, rf"\quad[H_{{\mathrm{{T}}}}] = {UNIT_H}", PASTEL_WHITE),
         ])
         self.play(stage.transition("heating.conduction.flat.formula-head", source=p_det[0], target=p_flat[0]), stage.transition("heating.conduction.flat.formula-box", source=p_det[1], target=p_flat[1]),
                   FadeIn(labels_b[2:]), FadeIn(notes_vg[1:]), run_time=0.9)

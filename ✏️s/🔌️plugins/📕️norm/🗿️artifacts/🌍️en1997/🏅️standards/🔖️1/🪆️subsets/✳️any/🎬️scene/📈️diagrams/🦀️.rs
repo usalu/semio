@@ -660,7 +660,7 @@ fn diagrams_unbased(document: &En1997Snapshot, report: &CheckReport, focus: Opti
     let handles = Vec::new();
     let input = SceneInput { document, report, placements: &placements, revision: SceneRevision { document_seq: 0, report_seq: 0 } };
     let ctx = Ctx { input: &input, layout: &layout, handles: &handles };
-    let is = |ids: &mut dyn Iterator<Item = &String>| focus.is_none_or(|f| ids.any(|id| id == f));
+    let is = |mut ids: &mut dyn Iterator<Item = &String>| focus.is_none_or(|f| Iterator::any(&mut ids, |id| id == f));
     let ground = is(&mut document.layers.iter().map(|l| &l.id));
     let footing = is(&mut document.footings.iter().map(|f| &f.id));
     let mut out = earth_pressure(&ctx, focus);

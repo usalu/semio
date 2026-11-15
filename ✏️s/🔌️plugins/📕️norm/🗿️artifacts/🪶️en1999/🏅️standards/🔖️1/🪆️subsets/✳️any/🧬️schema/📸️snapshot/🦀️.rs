@@ -794,6 +794,13 @@ fn default_welds() -> WeldGroup {
     WeldGroup { filler_alloy: "4043".into(), throat: 0.004, length: 0.120, beta_w: 0.63, haz_extent: 0.025 }
 }
 
+/// 🌱 Initial subject of a live evaluation session: the worked example.
+impl Default for En1999Snapshot {
+    fn default() -> Self {
+        Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En)
+    }
+}
+
 impl En1999Snapshot {
     /// 📸️ Reference EN 1999 subject under the explicitly chosen annex; the annex is never defaulted.
     pub fn example(annex: semio_s_plugin_norm_compliance::AnnexChoice) -> Self {

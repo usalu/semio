@@ -1,18 +1,29 @@
 #!/usr/bin/env repo
 import {spawn,spawnSync} from "node:child_process";
-import {existsSync,mkdtempSync,mkdirSync,readFileSync,readdirSync,rmdirSync,statSync,unlinkSync,writeFileSync} from "node:fs";
+import {existsSync,mkdtempSync,mkdirSync,readFileSync,readdirSync,realpathSync,rmdirSync,statSync,unlinkSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join,resolve} from "node:path";
-import {admitFactsV1,expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseRustcUnitV1,rustcBypassV1,toolchainIdentityV1,unitKeyPartsV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "./🔏️key/🟦️.ts";
+import {basename,join,resolve} from "node:path";
+import {admitFactsV1,expandRustcArgumentsV1,keyEnvironmentV1,normalizeRustcArgumentsV1,parseRustcUnitV1,rustcBypassV1,toolchainIdentityV1,unitKeyComponentsV1,unitKeyPartsV1,unitKeyV1,UNIT_CACHE_POLICY_V1} from "./🔏️key/🟦️.ts";
 import {acquireSlotV1,acquireUnitClaimV1,type ClaimV1} from "./🔒️lock/🟦️.ts";
-import {digestFileV1,emitUnitEventV1,lookupUnitV1,publishUnitV1,restoreUnitV1,type UnitEventV1} from "./💾️store/🟦️.ts";
-import {lanePathsV1} from "./🧵️lane/🟦️.ts";
+import {digestFileV1,emitUnitEventV1,forgetCrateEntriesV1,lookupUnitV1,publishUnitV1,churnReportV1,readEvictionsV1,readLookupsV1,recordLookupV1,restoreUnitV1,type UnitEventV1} from "./💾️store/🟦️.ts";
+import {compilerTemporaryArgumentsV1,lanePathsV1} from "./🧵️lane/🟦️.ts";
 import {jobserverChildEnvironmentV1,jobserverClosedMessageV1,jobserverPlanV1,jobserverStdioV1} from "./🎰️jobserver/🟦️.ts";
 import {buildScriptsEnabledV1,installBuildScriptShimV1,isBuildScriptUnitV1} from "./🏗️buildscript/🟦️.ts";
 import {brokerOfV1,recallProvenanceV1,replayCachedUnitV1} from "./🛰️broker/🟦️.ts";
 import {collectGarbageSingleFlightV1,collectGarbageV1,measureGcV1,measureVolumeV1,planGcV1,watchUnitCachePressureV1} from "./🧹️gc/🟦️.ts";
 import {fillRatesV1,readFillSamplesV1} from "./🧹️gc/📈️fill/🟦️.ts";
+import {linkRootArgumentsV1,remappedNameV1,remappedV1,remapsOfV1} from "./🧭️remap/🟦️.ts";
+import {pathSensitiveV1} from "./🧭️remap/🔍️embedding/🟦️.ts";
+import {externIdentityV1,markExternIdentityV1} from "./🪪️extern/🟦️.ts";
+import {announcedPathsV1,expectedOutputsV1,missingOutputsV1,uncoveredOutputsV1} from "./✅️complete/🟦️.ts";
+import {portableKeyV1,portableRootsV1,portableTextV1} from "./🛰️fleet/🪪️identity/🟦️.ts";
+import {fleetSkipReasonV1,obtainFleetUnitV1,offerFleetUnitV1,prepareFleetV1,shareFleetUnitV1,unitBasicsV1,unitToolchainV1,type FleetHoldV1} from "./🛰️fleet/🟦️.ts";
+import {drainUploadsV1} from "./🛰️fleet/📤️uploader/🟦️.ts";
+import {countUnitV1} from "./🛰️fleet/📊️counters/🟦️.ts";
+import {OFFLOAD_POLICY_V1,offloadModeV1} from "../../../🏗️build/🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts";
+import type {OffloadAdmissionPortsV1} from "../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import {exitWithStatusOfV1,UNFINISHED_EXIT_STATUS_V1} from "./🏁️exit/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1;
 type Environment=Readonly<Record<string,string|undefined>>;
@@ -41,20 +52,14 @@ function run(inner:readonly string[],args:readonly string[],environment:Environm
   const jobs=jobserverPlanV1(environment),message=jobserverClosedMessageV1(jobs);
   if(message)process.stderr.write(message+"\n");
   const prepared=compilerArgumentsV1(inner,args);let child:ReturnType<typeof spawn>;
-  try{child=spawn(inner[0]!,[...inner.slice(1),...prepared.args],{env:jobserverChildEnvironmentV1(environment,jobs),stdio:jobserverStdioV1(jobs.descriptors,capture)});}catch(error){prepared.close();throw error;}
+  try{child=spawn(inner[0]!,[...inner.slice(1),...prepared.args],{env:jobserverChildEnvironmentV1(environment,jobs),stdio:jobserverStdioV1(jobs.descriptors,capture)});}catch(error){prepared.close();jobs.release?.();throw error;}
   const out:Buffer[]=[],err:Buffer[]=[];let failure:Error|undefined;
   const forward=(signal:NodeJS.Signals)=>{child.kill(signal);};
   for(const signal of["SIGINT","SIGTERM"] as const)process.once(signal,()=>forward(signal));
   if(capture){child.stdout!.on("data",chunk=>{out.push(chunk);process.stdout.write(chunk);});child.stderr!.on("data",chunk=>{err.push(chunk);process.stderr.write(chunk);});}
   child.on("error",error=>{failure??=error;});
-  child.on("close",(status,signal)=>{prepared.close();if(failure){fail(failure);return;}done({status:status??(signal?128+({SIGINT:2,SIGTERM:15,SIGKILL:9} as Record<string,number>)[signal]!:1),stdout:Buffer.concat(out).toString("utf8"),stderr:Buffer.concat(err).toString("utf8")});});
+  child.on("close",(status,signal)=>{prepared.close();jobs.release?.();if(failure){fail(failure);return;}done({status:status??(signal?128+({SIGINT:2,SIGTERM:15,SIGKILL:9} as Record<string,number>)[signal]!:1),stdout:Buffer.concat(out).toString("utf8"),stderr:Buffer.concat(err).toString("utf8")});});
  });
-}
-
-function artifactsOf(text:string):string[]{
- const found:string[]=[];
- for(const line of text.split("\n")){if(!line.startsWith("{")||!line.includes("\"artifact\""))continue;try{const row=JSON.parse(line);if(typeof row.artifact==="string"&&["link","metadata","dep-info"].includes(row.emit))found.push(row.artifact);}catch{}}
- return[...new Set(found)];
 }
 
 /** 🪞️ Drops the compiler path Cargo puts before the arguments when it runs the stand-in as `<wrapper> <rustc> <arguments>`; every compiler argument list starts with a flag, a response file or a stdin dash. */
@@ -63,70 +68,131 @@ export function withoutCompilerPathV1(argv:readonly string[]):readonly string[]{
  return first!==undefined&&!first.startsWith("-")&&!first.startsWith("@")&&!first.endsWith(".rs")?argv.slice(1):argv;
 }
 
-/** 🛠️ Serves one rustc command line from the cache or compiles it exactly once across all lanes. Never throws on cache faults: any fault is a miss. A miss compiles the command line Cargo gave, so a workspace unit Cargo compiles incrementally keeps rustc's incremental session in the lane (the next edit of that crate, also when it is a dependency of the focused one, recompiles incrementally) and is published like every other unit; the focused crates always compile in the lane and are never published. */
-export async function wrapRustcV1(argv:readonly string[],environment:Environment,cwd:string):Promise<number>{
+/** 🧭️ Appended to every compilation that Cargo gave a `--remap-path-scope` (the repository's `trim-paths = "object"` profile remaps only object code): rustc then remaps the source names of the metadata as well, so a unit gives the same bytes on every machine and at every checkout path, whoever compiles it (an extern's content hash is part of the key of its dependants). The scope Cargo gave is replaced (rustc refuses the option twice). */
+export const PATH_NEUTRAL_FLAGS_V1:readonly string[]=Object.freeze(["--remap-path-scope=all"]);
+
+/** 🔍️ The first compiled output (not the dependency file) whose bytes contain one of this machine's roots or their resolved spelling (the checkout, the Cargo home and the Rust home among them), as `<file>: <root>`, `undefined` when none does: such a unit holds a real path of this machine and may be shared only between machines with the same paths (`pathSensitiveV1`), never under a key that ignores them. */
+export function leakedPathsV1(outputs:readonly string[],roots:readonly (string|undefined)[]):string|undefined{
+ const given=roots.filter((root):root is string=>root!==undefined&&root.length>=4),known=[...new Set([...given,...given.flatMap(root=>{try{return[realpathSync(root)];}catch{return[];}})])];
+ for(const path of outputs){
+  if(path.endsWith(".d"))continue;
+  let bytes:Buffer;try{bytes=readFileSync(path);}catch{continue;}
+  for(const root of known)if(bytes.includes(root))return path.split("/").at(-1)+": "+root;
+ }
+ return undefined;
+}
+
+/** 🛠️ Serves one rustc command line from the cache or compiles it exactly once across all lanes. Never throws on cache faults: any fault is a miss. A miss compiles the command line Cargo gave, so a workspace unit Cargo compiles incrementally keeps rustc's incremental session in the lane (the next edit of that crate, also when it is a dependency of the focused one, recompiles incrementally) and is published like every other unit; the focused crates are served and published like all others (every machine holds the same synchronized worktree, so a crate compiled on one machine is a hit on the others), and a focused miss still compiles incrementally in the lane. */
+export async function wrapRustcV1(argv:readonly string[],environment:Environment,cwd:string,ports:Readonly<{admission?:OffloadAdmissionPortsV1}>={}):Promise<number>{
  argv=withoutCompilerPathV1(argv);const settings=readSettingsV1(environment);
+ if(settings&&argv.some(argument=>argument.startsWith("--remap-path-scope")))argv=[...argv.filter(argument=>!argument.startsWith("--remap-path-scope")),...PATH_NEUTRAL_FLAGS_V1];
  if(!settings)return(await run(environment.SEMIO_UNIT_CACHE_INNER?JSON.parse(environment.SEMIO_UNIT_CACHE_INNER):["rustc"],argv,environment,false)).status;
  const args=expandRustcArgumentsV1(argv,cwd),unit=parseRustcUnitV1(args),bypass=rustcBypassV1(unit,args),crate=unit.crateName||"-";
  const event=(kind:UnitEventV1["kind"],key:string|null,milliseconds:number,waitedMs=0,reason?:string)=>emitUnitEventV1(settings.root,{lane:settings.lane,kind,crate,key,milliseconds,waitedMs,...(reason?{reason}:{})});
  const compile=async(capture:boolean):Promise<Outcome>=>{
   let slot:ClaimV1|undefined;
   if(settings.slots>0&&unit.source.endsWith(".rs")){slot=await acquireSlotV1(settings.root,settings.slots,{onWait:waited=>event("slot-wait",null,0,waited)});}
-  try{return await run(settings.inner,argv,environment,capture);}finally{slot?.release();}
+  try{return await run(settings.inner,[...argv,...linkRootArgumentsV1(args,resolve(cwd,unit.outDir)),...compilerTemporaryArgumentsV1(settings.laneRoot?join(settings.laneRoot,policy.layout.compilerTemporaries):lanePathsV1(settings.root,settings.lane).temporaries,args)],environment,capture);}finally{slot?.release();}
  };
- const started=Date.now();
+ const started=Date.now(),workspaceOf=environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined;
  if(bypass){
   const outcome=await compile(false);
   if(unit.source.endsWith(".rs"))event("bypass",null,Date.now()-started,0,bypass);
   return outcome.status;
  }
- const focused=unit.incremental!==undefined&&settings.focus.has(environment.CARGO_PKG_NAME??"");
- if(focused){const outcome=await compile(false);event("incremental",null,Date.now()-started);return outcome.status;}
- let key:string,parts="";
+ const expected=expectedOutputsV1(unit,args);
+ let key:string,parts="",keyInput:Parameters<typeof unitKeyV1>[0];
  const digests=new Map<string,string>();
+ const remaps=remapsOfV1(args),covered=remappedV1(remaps,cwd),manifestDir=environment.CARGO_MANIFEST_DIR,roots=portableRootsV1({cwd,workspace:workspaceOf,hints:[manifestDir,environment.PWD]});
+ let sensitive:readonly string[]=[];
  try{
   const sourceSha=digestFileV1(resolve(cwd,unit.source),settings.stamps);if(sourceSha===null)throw Error("source");
-  for(const row of unit.externs){if(row.path==="")continue;const sha=digestFileV1(resolve(cwd,row.path),settings.stamps);if(sha===null)throw Error("extern");digests.set(row.path,sha);}
-  const keyInput={toolchain:toolchainIdentityV1(settings.root,settings.inner,environment),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),sourceSha256:sourceSha,externs:unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===""?"builtin":digests.get(row.path)!})),environment:keyEnvironmentV1(environment,settings.laneRoot)};key=unitKeyV1(keyInput);parts=unitKeyPartsV1(keyInput);
- }catch{const outcome=await compile(false);event("bypass",null,Date.now()-started,0,"unreadable-input");return outcome.status;}
+  for(const row of unit.externs){if(row.path==="")continue;const path=resolve(cwd,row.path),sha=digestFileV1(path,settings.stamps);if(sha===null)throw Error("extern "+row.name);digests.set(row.path,externIdentityV1(path,sha,settings.stamps)??sha);}
+  sensitive=covered?pathSensitiveV1({source:resolve(cwd,unit.source),manifest:manifestDir,cwd}):[...new Set([manifestDir,cwd].filter((path):path is string=>path!==undefined))].sort();
+  keyInput={toolchain:unitToolchainV1({root:settings.root,environment,inner:settings.inner,unit,args},()=>toolchainIdentityV1(settings.root,settings.inner,environment)),normalized:normalizeRustcArgumentsV1(args,digests,settings.laneRoot),sourceSha256:sourceSha,externs:unit.externs.map(row=>({name:row.flags+row.name,sha256:row.path===""?"builtin":digests.get(row.path)!})),environment:[...keyEnvironmentV1(environment,settings.laneRoot),...covered?[["⟨recorded-name⟩",remappedNameV1(remaps,cwd)] as [string,string]]:[]]};key=unitKeyV1(keyInput);parts=unitKeyPartsV1(keyInput);
+ }catch(error){const outcome=await compile(false);event("bypass",null,Date.now()-started,0,"unreadable-input"+(/^extern /u.test(String((error as Error)?.message))?": "+(error as Error).message:""));return outcome.status;}
+ const lookup=(outcome:"local-hit"|"fleet-hit"|"miss",remote?:string):void=>{
+  const portable=keyInput.normalized.map(argument=>portableTextV1(argument,roots)),named=unitKeyComponentsV1({...keyInput,normalized:portable,environment:keyInput.environment.map(([name,value])=>[name,portableTextV1(value,roots)] as [string,string])},{platform:process.platform+"/"+process.arch,roots:JSON.stringify(keyInput.normalized.filter((argument,index)=>portable[index]!==argument))});
+  recordLookupV1(settings.root,{lane:settings.lane,crate,key,...(remote===undefined?{}:{remote}),outcome,components:named.components,values:named.values});
+ };
  const context={cwd,laneRoot:settings.laneRoot,environment,stampDirectory:settings.stamps},outDir=resolve(cwd,unit.outDir),shimming=isBuildScriptUnitV1(unit)&&buildScriptsEnabledV1(environment),facts=brokerOfV1(environment)?admitFactsV1(args,environment,cwd):undefined;
  const shim=(outputs:readonly string[]):void=>{if(!shimming)return;const artifact=outputs.find(path=>!path.endsWith(".d")&&!path.endsWith(".rmeta"));if(artifact)installBuildScriptShimV1(artifact);};
  const serve=async():Promise<boolean>=>{
-  const entry=lookupUnitV1(settings.root,key,context);if(!entry)return false;
-  const messages=restoreUnitV1(settings.root,entry,{outDir,laneRoot:settings.laneRoot,stampDirectory:settings.stamps});
+  const entry=lookupUnitV1(settings.root,key,{...context,expected});if(!entry)return false;
+  const messages=restoreUnitV1(settings.root,entry,{outDir,laneRoot:settings.laneRoot,stampDirectory:settings.stamps}),absent=missingOutputsV1({directory:outDir,cwd,expected,text:messages.stderr+messages.stdout});
+  if(absent.length>0){event("incomplete",key,0,0,"restored unit lacks "+absent.join(","));return false;}
   shim(entry.outputs.filter(row=>!row.template).map(row=>join(outDir,row.name)));
+  markExternIdentityV1(entry.outputs.filter(row=>!row.template).map(row=>join(outDir,row.name)),portableKeyV1(keyInput,roots),sensitive,settings.stamps);
   if(facts){const replayed=await replayCachedUnitV1(environment,facts,key,entry.provenance);if(!replayed)event("broker-unreachable",key,0,0,"replay");else event("broker-replay",key,0);}
   process.stdout.write(messages.stdout);process.stderr.write(messages.stderr);return true;
  };
- try{if(await serve()){event("hit",key,Date.now()-started);return 0;}}catch{}
+ const offloadUnitV1=async():Promise<(Outcome&{origin:string})|undefined>=>{
+  const mode=offloadModeV1(environment);
+  if(mode==="never"||!unit.source.endsWith(".rs")||(unit.crateTypes.length?unit.crateTypes:["bin"]).some(type=>!OFFLOAD_POLICY_V1.crateTypes.includes(type)))return undefined;
+  const controller=new AbortController();let received:number|undefined;
+  const handlers=(["SIGINT","SIGTERM"] as const).map(name=>{const handler=()=>{received=name==="SIGINT"?130:143;controller.abort();};process.once(name,handler);return[name,handler] as const;});
+  try{
+   const offload=await import("../../../🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts");
+   if(mode==="auto"&&!offload.worthARoundTripV1(settings.root,crate))return undefined;
+   if(mode==="auto"&&offload.slotQueueMillisecondsV1(settings.root,settings.slots)<OFFLOAD_POLICY_V1.limits.queueThresholdMilliseconds&&(await offload.sharedUnitAdmissionV1(settings.root,ports.admission)).verdict!=="wait")return undefined;
+   const answer=await offload.offloadRustcUnitV1({args,environment,cwd,root:settings.root,lane:settings.lane,crate,key,compiler:settings.inner,digest:path=>digestFileV1(path,settings.stamps),signal:controller.signal});
+   if(received!==undefined)return{status:received,stdout:"",stderr:"",origin:""};
+   return answer.kind==="done"?{status:answer.status,stdout:answer.stdout,stderr:answer.stderr,origin:answer.origin}:undefined;
+  }catch{return received===undefined?undefined:{status:received,stdout:"",stderr:"",origin:""};}
+  finally{for(const [name,handler] of handlers)process.off(name,handler);}
+ };
+ try{if(await serve()){event("hit",key,Date.now()-started);lookup("local-hit");countUnitV1(workspaceOf,"localHit");if(environment.SEMIO_REMOTE_CACHE_ENDPOINT&&environment.SEMIO_REMOTE_CACHE_ACCESS==="read-write"){const basics=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),shared=basics?prepareFleetV1({root:settings.root,environment,basics,unit,args,cwd,laneRoot:settings.laneRoot,localKey:key,keyInput,toolchain:keyInput.toolchain,crate,sensitive,expected}):undefined;if(shared)offerFleetUnitV1(shared);}return 0;}}catch{}
+ const basics=unitBasicsV1({root:settings.root,environment,inner:settings.inner,unit,args,cwd}),fleet=basics?prepareFleetV1({root:settings.root,environment,basics,unit,args,cwd,laneRoot:settings.laneRoot,localKey:key,keyInput,toolchain:keyInput.toolchain,crate,sensitive,expected}):undefined;
+ if(!fleet){const why=fleetSkipReasonV1(settings.root,environment);if(why!==undefined){event("remote-skip",key,0,0,"breaker: "+why);countUnitV1(workspaceOf,"skipped");}}
  let claim:ClaimV1|undefined;
  try{claim=await acquireUnitClaimV1(join(settings.root,policy.layout.locks),key.slice(0,40),{});}catch{claim=undefined;}
  const waited=claim?.waitedMs??0;
  if(waited>50||!claim)event(claim?"lock-wait":"lock-timeout",key,0,waited);
  try{
-  if(claim){try{if(await serve()){event("hit",key,Date.now()-started,waited,"after-wait");return 0;}}catch{}}
-  const compiled=Date.now(),outcome=await compile(true);
-  if(outcome.status!==0){event("failed",key,Date.now()-compiled,waited);return outcome.status;}
-  event("miss",key,Date.now()-compiled,waited,unit.incremental===undefined?parts:parts+" incremental:lane");
-  const outputs=[...new Set([...artifactsOf(outcome.stderr),...artifactsOf(outcome.stdout)])].map(path=>resolve(cwd,path)).filter(path=>existsSync(path));
+  if(claim){try{if(await serve()){event("hit",key,Date.now()-started,waited,"after-wait");lookup("local-hit");countUnitV1(workspaceOf,"localHit");return 0;}}catch{}}
+  let hold:FleetHoldV1|undefined;
+  if(fleet){
+   const decision=await obtainFleetUnitV1(fleet,(kind,milliseconds,waitedMs,reason)=>event(kind,key,milliseconds,waitedMs,reason));
+   if(decision.outcome==="hit"){try{if(await serve()){lookup("fleet-hit",fleet.key);countUnitV1(workspaceOf,"remoteHit");return 0;}}catch{}}
+   else hold=decision.hold;
+  }
+  const compiled=Date.now();let remote=await offloadUnitV1();
+  if(remote&&remote.status===0){const absent=missingOutputsV1({directory:outDir,cwd,expected,text:remote.stderr+remote.stdout});if(absent.length>0){event("incomplete",key,Date.now()-compiled,0,"offload "+remote.origin+" returned a unit without "+absent.join(","));remote=undefined;}}
+  const outcome=remote??await compile(true);
+  if(remote){process.stdout.write(remote.stdout);process.stderr.write(remote.stderr);}
+  if(outcome.status!==0){await hold?.release();event("failed",key,Date.now()-compiled,waited);return outcome.status;}
+  if(!remote){const took=Date.now()-compiled;void import("../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").then(module=>{module.writeUnitCostV1(settings.root,crate,took);}).catch(()=>undefined);}event("miss",key,Date.now()-compiled,waited,(unit.incremental===undefined?parts:parts+" incremental:lane")+(remote?" offloaded:"+remote.origin:""));countUnitV1(workspaceOf,"miss");lookup("miss",fleet?.key);
+  const outputs=[...new Set([...announcedPathsV1(outcome.stderr),...announcedPathsV1(outcome.stdout)])].map(path=>resolve(cwd,path)).filter(path=>existsSync(path)),lacking=uncoveredOutputsV1(outputs.map(path=>basename(path)),expected);
   try{
-   const provenance=facts?await recallProvenanceV1(environment,facts):undefined;
-   const entry=outputs.length?publishUnitV1(settings.root,{key,crate,cwd,outDir,laneRoot:settings.laneRoot,outputs,stdout:outcome.stdout,stderr:outcome.stderr,stampDirectory:settings.stamps,provenance:provenance??null}):undefined;
+   markExternIdentityV1(outputs,portableKeyV1(keyInput,roots),sensitive,settings.stamps);
+   const provenance=facts&&!remote?await recallProvenanceV1(environment,facts):undefined;
+   const publish=(spill=false)=>publishUnitV1(settings.root,{key,crate,cwd,outDir,laneRoot:settings.laneRoot,outputs,expected,stdout:outcome.stdout,stderr:outcome.stderr,stampDirectory:settings.stamps,provenance:provenance??null,...(basics?{slot:basics.slot}:{}),...(spill?{spill:true}:{})});
+   let entry:ReturnType<typeof publishUnitV1>;
+   if(outputs.length===0||lacking.length>0)entry=undefined;else try{entry=publish();}catch{await new Promise(done=>setTimeout(done,250));try{entry=publish();}catch(error){if(!fleet)throw error;entry=publish(true);if(entry)event("publish",key,Date.now()-compiled,0,"spill: the host store refused the objects, the fleet upload reads them from the spill folder");}}
    if(entry)event("publish",key,Date.now()-compiled,0);
-  }catch{}
+   else event("publish-skip",key,Date.now()-compiled,0,outputs.length===0?"no-outputs":lacking.length>0?"incomplete: "+lacking.join(","):outputs.some(path=>path.endsWith(".d"))?"refused":"no-dep-info");
+   const leaking=fleet&&entry&&sensitive.length===0?leakedPathsV1(outputs,[cwd,manifestDir,workspaceOf,settings.laneRoot,environment.CARGO_HOME,environment.RUSTUP_HOME]):undefined;
+   if(fleet&&entry&&leaking===undefined){if(!shareFleetUnitV1(fleet,{claimed:hold,costMs:Date.now()-compiled}))await hold?.release();}
+   else{if(leaking!==undefined){event("remote-skip",key,0,0,"path-dependent: the compiled bytes hold "+leaking+", which the source scan did not announce, so the unit is not shared");countUnitV1(workspaceOf,"skipped");}await hold?.release();}
+  }catch(error){event("publish-skip",key,Date.now()-compiled,0,"error: "+String((error as Error)?.message??error).slice(0,200));await hold?.release();}
   try{shim(outputs);}catch{}
   return 0;
  }finally{claim?.release();}
 }
 
-/** 🧰️ Operator commands, run as `--semio-unit-cache <command> --root <dir> …`: `stats` summarises the event logs, `plan` and `gc` run the bounded cleanup; `gc --single-flight` is the background collector (one at a time, progress lines on stderr, SIGINT and SIGTERM cancel it), `gc --single-flight --watch` keeps it alive while compiles run (it collects whenever the image falls below its floor), `fill` prints the fill rates of the last half hour. */
+/** 🧰️ Operator commands, run as `--semio-unit-cache <command> --root <dir> …`: `forget --crate <name>` drops the local entries of one crate (the fleet copy stays), `stats` summarises the event logs (decisions, the reasons units were not shared, evictions, lookup outcomes), `churn [--since-minutes <n>] [--crate <name>] [--limit <n>]` explains every crate that was looked up under more than one key by the named key components that differ between its keys (see `unitKeyComponentsV1`), `plan` and `gc` run the bounded cleanup; `gc --single-flight` is the background collector (one at a time, progress lines on stderr, SIGINT and SIGTERM cancel it), `gc --single-flight --watch` keeps it alive while compiles run (it collects whenever the image falls below its floor), `fill` prints the fill rates of the last half hour, `fleet-upload` is the machine's upload worker for the fleet cache (`--once` drains the spool and exits). */
 export async function manageV1(args:readonly string[]):Promise<unknown>{
  const [command,...rest]=args,value=(flag:string)=>{const index=rest.indexOf(flag);return index<0?undefined:rest[index+1];},root=resolve(value("--root")??"");
  if(command==="stats"){
   const totals:Record<string,number>={};let maximumWait=0,files=0;const directory=join(root,policy.layout.events);
   if(existsSync(directory))for(const name of readdirSync(directory)){files++;for(const line of readFileSync(join(directory,name),"utf8").split("\n")){if(!line)continue;try{const row=JSON.parse(line);totals[row.kind]=(totals[row.kind]??0)+1;maximumWait=Math.max(maximumWait,row.waitedMs);}catch{}}}
-  return{lanes:files,totals,maximumWaitMs:maximumWait};
+  const reasons:Record<string,number>={};
+  if(existsSync(directory))for(const name of readdirSync(directory)){for(const line of readFileSync(join(directory,name),"utf8").split("\n")){if(!line)continue;try{const row=JSON.parse(line) as {kind:string;reason?:string};if(row.kind==="bypass"||row.kind==="remote-skip"||row.kind==="publish-skip"||row.kind==="incomplete"){const label=row.kind+": "+(row.reason??"").split(/[:,]/u)[0]!.trim();reasons[label]=(reasons[label]??0)+1;}}catch{}}}
+  return{lanes:files,totals,maximumWaitMs:maximumWait,notShared:reasons,evictions:readEvictionsV1(root),lookups:readLookupsV1(root).reduce<Record<string,number>>((counts,row)=>{counts[row.outcome]=(counts[row.outcome]??0)+1;return counts;},{})};
  }
+ if(command==="churn"){const minutes=Number(value("--since-minutes")??0),limit=Number(value("--limit")??50),wanted=value("--crate"),report=churnReportV1(readLookupsV1(root,minutes>0?Date.now()-minutes*60000:0).filter(row=>wanted===undefined||row.crate===wanted),Number.isSafeInteger(limit)&&limit>0?limit:50);return report;}
+ if(command==="forget"){const crate=value("--crate");if(!crate)throw Error("--crate <name> required");return forgetCrateEntriesV1(root,crate);}
+ if(command==="fleet-upload"){const idle=rest.includes("--once")?0:undefined;return await drainUploadsV1(root,process.env,idle===undefined?{}:{idleMilliseconds:idle});}
  const capacity=Number(value("--capacity")??0);if(!Number.isSafeInteger(capacity)||capacity<1)throw Error("--capacity <bytes> required");
  if(command==="plan")return planGcV1(measureGcV1(root,capacity,Date.now()));
  if(command==="gc"&&!rest.includes("--single-flight"))return collectGarbageV1(root,capacity);
@@ -147,4 +213,6 @@ export async function runUnitCacheMainV1(argv:readonly string[],environment:Envi
  }catch(error){console.error(String((error as Error)?.message??error));return 1;}
 }
 
-if(isMainModuleV1(import.meta.url))runUnitCacheMainV1(process.argv.slice(2),process.env,process.cwd()).then(status=>{process.exitCode=status;});
+export {UNFINISHED_EXIT_STATUS_V1};
+
+if(isMainModuleV1(import.meta.url))exitWithStatusOfV1(()=>runUnitCacheMainV1(process.argv.slice(2),process.env,process.cwd()));

@@ -1,8 +1,8 @@
 //! ⏱️ Latency gates of the heavy shared kernels (architecture §5.7): the slope grid search and the Mononobe–Okabe sweep must fit the 12 ms drag preview, the fibre moment-curvature the 400 ms commit-to-checks budget. Every figure is measured on what the user does: `cold` (the first evaluation of a fresh session, one sample, its own budget), `drag` (a different input every step) and `commit` (a different real edit of a fresh section every round, so the section memo never answers). Release budgets; debug builds get 20 times.
 
-use crate::geotechnics::earth_pressure::{critical_wedge, thrust, Acceleration, Interface, Side, Water};
-use crate::geotechnics::slope::{bishop_with, Circle, Pseudostatic};
-use crate::section::fibre::{elastic_plastic, parabola_rectangle, rectangle_fibres, Fibre, FibreSection, Limits, Reinforcement};
+use semio_s_plugin_norm_mechanics::geotechnics::earth_pressure::{critical_wedge, thrust, Acceleration, Interface, Side, Water};
+use semio_s_plugin_norm_mechanics::geotechnics::slope::{bishop_with, Circle, Pseudostatic};
+use semio_s_plugin_norm_mechanics::section::fibre::{elastic_plastic, parabola_rectangle, rectangle_fibres, Fibre, FibreSection, Limits, Reinforcement};
 use std::time::Instant;
 
 const DRAG_MS: f64 = 12.0;

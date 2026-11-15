@@ -270,7 +270,7 @@ semio-s-artifact-energy-model-mut-water-system = { workspace = true }
 semio-s-artifact-energy-model-mut-week-schedule = { workspace = true }
 semio-s-artifact-energy-model-mut-window-layer = { workspace = true }
 semio-s-artifact-energy-model-mut-window-layer-optics = { workspace = true }
-semio-s-artifact-energy-model-mut-window-layer-optics-visible = { workspace = true }
+semio-s-artifact-energy-model-mut-layer-optics-visible = { workspace = true }
 semio-s-artifact-energy-model-mut-year-schedule = { workspace = true }
 semio-s-artifact-energy-model-mut-year-schedule-holidays = { workspace = true }
 semio-s-artifact-energy-model-mut-zone = { workspace = true }

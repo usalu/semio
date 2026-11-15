@@ -1,0 +1,4 @@
+{
+  "at": "2026-11-14T18:01:57.061110+00:00",
+  "disk": "Filesystem   1024-blocks      Used Available Capacity iused      ifree %iused  Mounted on\n/dev/disk3s5   239362496  84400000 116800000    42%  831680 1171305840    0%   /System/Volumes/Data\n"
+}

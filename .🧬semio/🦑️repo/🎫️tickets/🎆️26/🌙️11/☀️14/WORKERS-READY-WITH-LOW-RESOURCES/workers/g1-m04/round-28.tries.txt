@@ -1,0 +1,7 @@
+try 1: start 2026-11-15T12:40:53Z end 2026-11-15T12:45:56Z native_rc=7 ended at 2026-11-15T12:46:56Z peak_rss_kib=9270444 slice_peak_mb=9035 stop=process of the run above 8 GB resident (9272008 KiB)
+try 2: start 2026-11-15T12:51:56Z end 2026-11-15T13:02:03Z native_rc=7 ended at 2026-11-15T13:03:03Z peak_rss_kib=8983992 slice_peak_mb=8778 stop=process of the run above 8 GB resident (8985264 KiB)
+try 3: start 2026-11-15T13:08:03Z  native_rc=none ended at 2026-11-15T13:15:07Z peak_rss_kib=9855228 slice_peak_mb=9624 stop=process of the run above 8 GB resident (9855228 KiB)
+try 4: start 2026-11-15T13:20:07Z end 2026-11-15T13:25:10Z native_rc=7 ended at 2026-11-15T13:26:10Z peak_rss_kib=9362336 slice_peak_mb=9142 stop=process of the run above 8 GB resident (9362212 KiB)
+try 5: start 2026-11-15T13:31:10Z end 2026-11-15T13:36:14Z native_rc=7 ended at 2026-11-15T13:37:14Z peak_rss_kib=9410420 slice_peak_mb=9170 stop=process of the run above 8 GB resident (9408240 KiB)
+try 6: start 2026-11-15T13:42:14Z end 2026-11-15T13:47:17Z native_rc=7 ended at 2026-11-15T13:48:17Z peak_rss_kib=9257208 slice_peak_mb=9041 stop=process of the run above 8 GB resident (9256632 KiB)
+try 7: start 2026-11-15T13:53:17Z end 2026-11-15T13:58:20Z native_rc=7 ended at 2026-11-15T13:59:20Z peak_rss_kib=9282668 slice_peak_mb=9066 stop=process of the run above 8 GB resident (9277536 KiB)

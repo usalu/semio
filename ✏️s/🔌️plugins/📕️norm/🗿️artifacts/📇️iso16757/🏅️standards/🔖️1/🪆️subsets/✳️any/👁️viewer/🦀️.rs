@@ -29,7 +29,7 @@ semio_plugin::view_commands! {
     }
 }
 
-semio_s_plugin_norm_app_surface::norm_viewer_commands!(Iso16757Snapshot);
+semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_iso16757_model::Iso16757Snapshot);
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(Iso16757ViewBoundedCommandJobFactory, Iso16757Viewer);
 

@@ -1,0 +1,3159 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "head",
+     "kind": "ellipsoid",
+     "bone": "head",
+     "material": "skin",
+     "role": "body",
+     "tone": 0.85,
+     "radii": [
+      0.115,
+      0.095,
+      0.085
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "hair",
+     "kind": "revolve",
+     "bone": "head",
+     "material": "hair",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.1,
+       0.1007
+      ],
+      [
+       0.16095,
+       0.0872
+      ],
+      [
+       0.2056,
+       0.0504
+      ],
+      [
+       0.22005,
+       0.01749
+      ],
+      [
+       0.2219,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "lateralScale": 0.895
+    },
+    {
+     "id": "neck",
+     "kind": "capsule",
+     "bone": "head",
+     "material": "skin",
+     "role": "body",
+     "tone": 0.85,
+     "p0": [
+      -0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.06,
+      0,
+      0
+     ],
+     "r0": 0.0485,
+     "r1": 0.0485,
+     "weights": [
+      {
+       "bone": "head",
+       "weight": 0.7
+      },
+      {
+       "bone": "torso",
+       "weight": 0.3
+      }
+     ]
+    },
+    {
+     "id": "nose",
+     "kind": "ellipsoid",
+     "bone": "head",
+     "material": "skin",
+     "role": "detail",
+     "tone": 0.85,
+     "radii": [
+      0.016,
+      0.01,
+      0.012
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       -0.092,
+       0
+      ]
+     }
+    },
+    {
+     "id": "torso",
+     "kind": "loft",
+     "bone": "torso",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.16,
+       "ry": 0.1261,
+       "exponent": 2.4,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      },
+      {
+       "at": [
+        0.22,
+        0,
+        0
+       ],
+       "rx": 0.18,
+       "ry": 0.14,
+       "exponent": 2.4,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      },
+      {
+       "at": [
+        0.45,
+        0,
+        0
+       ],
+       "rx": 0.19,
+       "ry": 0.1552,
+       "exponent": 2.2,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "buttons",
+     "kind": "ellipsoid",
+     "bone": "torso",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.7,
+     "radii": [
+      0.008,
+      0.004,
+      0.008
+     ],
+     "transform": {
+      "translation": [
+       0.15,
+       -0.138,
+       0
+      ]
+     },
+     "repeat": {
+      "count": 3,
+      "translation": [
+       0.08,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "pelvis",
+     "kind": "ellipsoid",
+     "bone": "pelvis",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "radii": [
+      0.12,
+      0.1358,
+      0.17
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "arm-l",
+     "kind": "capsule",
+     "bone": "arm-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0,
+      0,
+      0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      0.225
+     ],
+     "r0": 0.04365,
+     "r1": 0.03395
+    },
+    {
+     "id": "thigh-l",
+     "kind": "capsule",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      0.09
+     ],
+     "r0": 0.08245,
+     "r1": 0.06305
+    },
+    {
+     "id": "shank-l",
+     "kind": "capsule",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      0.09
+     ],
+     "r0": 0.0582,
+     "r1": 0.0388
+    },
+    {
+     "id": "shoe-l",
+     "kind": "extrude",
+     "bone": "foot-l",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.06,
+       -0.065
+      ],
+      [
+       0.2,
+       -0.065
+      ],
+      [
+       0.21,
+       -0.055
+      ],
+      [
+       0.21,
+       -0.045
+      ],
+      [
+       0.14,
+       -0.02
+      ],
+      [
+       0.03,
+       -0.01
+      ],
+      [
+       -0.04,
+       -0.01
+      ],
+      [
+       -0.06,
+       -0.03
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.045,
+     "to": 0.135
+    },
+    {
+     "id": "sole-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "leather-shoe",
+     "role": "detail",
+     "tone": 0.08,
+     "size": [
+      0.27,
+      0.015,
+      0.09
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       0.09
+      ]
+     }
+    },
+    {
+     "id": "arm-r",
+     "kind": "capsule",
+     "bone": "arm-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0,
+      0,
+      -0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      -0.225
+     ],
+     "r0": 0.04365,
+     "r1": 0.03395
+    },
+    {
+     "id": "thigh-r",
+     "kind": "capsule",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      -0.09
+     ],
+     "r0": 0.08245,
+     "r1": 0.06305
+    },
+    {
+     "id": "shank-r",
+     "kind": "capsule",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      -0.09
+     ],
+     "r0": 0.0582,
+     "r1": 0.0388
+    },
+    {
+     "id": "shoe-r",
+     "kind": "extrude",
+     "bone": "foot-r",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.06,
+       -0.065
+      ],
+      [
+       0.2,
+       -0.065
+      ],
+      [
+       0.21,
+       -0.055
+      ],
+      [
+       0.21,
+       -0.045
+      ],
+      [
+       0.14,
+       -0.02
+      ],
+      [
+       0.03,
+       -0.01
+      ],
+      [
+       -0.04,
+       -0.01
+      ],
+      [
+       -0.06,
+       -0.03
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.135,
+     "to": -0.045
+    },
+    {
+     "id": "sole-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "leather-shoe",
+     "role": "detail",
+     "tone": 0.08,
+     "size": [
+      0.27,
+      0.015,
+      0.09
+     ],
+     "cornerRadius": 0.005,
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       -0.09
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "t-head",
+     "of": "head",
+     "region": "head"
+    },
+    {
+     "id": "t-hair",
+     "of": "hair",
+     "region": "head"
+    },
+    {
+     "id": "t-neck",
+     "of": "neck",
+     "region": "head"
+    },
+    {
+     "id": "t-nose",
+     "of": "nose",
+     "region": "head"
+    },
+    {
+     "id": "t-torso",
+     "of": "torso",
+     "region": "torso",
+     "layer": "garment"
+    },
+    {
+     "id": "t-pelvis",
+     "of": "pelvis",
+     "region": "torso",
+     "layer": "garment"
+    },
+    {
+     "id": "t-arm-l",
+     "of": "arm-l",
+     "region": "arms",
+     "layer": "garment"
+    },
+    {
+     "id": "t-arm-r",
+     "of": "arm-r",
+     "region": "arms",
+     "layer": "garment"
+    },
+    {
+     "id": "t-thigh-l",
+     "of": "thigh-l",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shank-l",
+     "of": "shank-l",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-thigh-r",
+     "of": "thigh-r",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shank-r",
+     "of": "shank-r",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shoe-l",
+     "of": "shoe-l",
+     "region": "feet"
+    },
+    {
+     "id": "t-shoe-r",
+     "of": "shoe-r",
+     "region": "feet"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-pelvis",
+     "kind": "ellipsoid",
+     "bone": "pelvis",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "radii": [
+      0.1,
+      0.11,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0,
+       0
+      ]
+     },
+     "member": "pelvis",
+     "part": "mass"
+    },
+    {
+     "id": "m-torso",
+     "kind": "capsule",
+     "bone": "torso",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0
+     ],
+     "p1": [
+      0.45,
+      0,
+      0
+     ],
+     "r0": 0.07,
+     "r1": 0.075,
+     "member": "torso",
+     "part": "member"
+    },
+    {
+     "id": "m-head",
+     "kind": "capsule",
+     "bone": "head",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      -0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.1,
+      0,
+      0
+     ],
+     "r0": 0.05,
+     "r1": 0.08,
+     "member": "head",
+     "part": "member"
+    },
+    {
+     "id": "m-arm-l",
+     "kind": "capsule",
+     "bone": "arm-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      0.225
+     ],
+     "r0": 0.04,
+     "r1": 0.032,
+     "member": "arm-l",
+     "part": "member"
+    },
+    {
+     "id": "m-thigh-l",
+     "kind": "capsule",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      0.09
+     ],
+     "r0": 0.075,
+     "r1": 0.058,
+     "member": "thigh-l",
+     "part": "member"
+    },
+    {
+     "id": "m-shank-l",
+     "kind": "capsule",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      0.09
+     ],
+     "r0": 0.052,
+     "r1": 0.036,
+     "member": "shank-l",
+     "part": "member"
+    },
+    {
+     "id": "m-foot-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.26,
+      0.03,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.05,
+       0.09
+      ]
+     },
+     "member": "foot-l",
+     "part": "member"
+    },
+    {
+     "id": "m-arm-r",
+     "kind": "capsule",
+     "bone": "arm-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      -0.225
+     ],
+     "r0": 0.04,
+     "r1": 0.032,
+     "member": "arm-r",
+     "part": "member"
+    },
+    {
+     "id": "m-thigh-r",
+     "kind": "capsule",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      -0.09
+     ],
+     "r0": 0.075,
+     "r1": 0.058,
+     "member": "thigh-r",
+     "part": "member"
+    },
+    {
+     "id": "m-shank-r",
+     "kind": "capsule",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      -0.09
+     ],
+     "r0": 0.052,
+     "r1": 0.036,
+     "member": "shank-r",
+     "part": "member"
+    },
+    {
+     "id": "m-foot-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.26,
+      0.03,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.05,
+       -0.09
+      ]
+     },
+     "member": "foot-r",
+     "part": "member"
+    },
+    {
+     "id": "j-hip-l",
+     "kind": "ellipsoid",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       0.09
+      ]
+     },
+     "member": "thigh-l",
+     "part": "joint"
+    },
+    {
+     "id": "j-knee-l",
+     "kind": "ellipsoid",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       0.09
+      ]
+     },
+     "member": "shank-l",
+     "part": "joint"
+    },
+    {
+     "id": "j-hip-r",
+     "kind": "ellipsoid",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.09
+      ]
+     },
+     "member": "thigh-r",
+     "part": "joint"
+    },
+    {
+     "id": "j-knee-r",
+     "kind": "ellipsoid",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.09
+      ]
+     },
+     "member": "shank-r",
+     "part": "joint"
+    },
+    {
+     "id": "j-shoulder-l",
+     "kind": "ellipsoid",
+     "bone": "arm-l",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.03,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       0.225
+      ]
+     },
+     "member": "arm-l",
+     "part": "joint"
+    },
+    {
+     "id": "j-ankle-l",
+     "kind": "ellipsoid",
+     "bone": "foot-l",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.03,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       0.09
+      ]
+     },
+     "member": "foot-l",
+     "part": "joint"
+    },
+    {
+     "id": "j-shoulder-r",
+     "kind": "ellipsoid",
+     "bone": "arm-r",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.03,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.225
+      ]
+     },
+     "member": "arm-r",
+     "part": "joint"
+    },
+    {
+     "id": "j-ankle-r",
+     "kind": "ellipsoid",
+     "bone": "foot-r",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.03,
+      0.03,
+      0.03
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.09
+      ]
+     },
+     "member": "foot-r",
+     "part": "joint"
+    },
+    {
+     "id": "s-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.27,
+      0.015,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       0.09
+      ]
+     },
+     "member": "foot-l",
+     "part": "support"
+    },
+    {
+     "id": "s-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.27,
+      0.015,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       -0.09
+      ]
+     },
+     "member": "foot-r",
+     "part": "support"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Smallest feature 7.5 mm: every solid of the test figure is modelled, including nose, buttons and soles; the thermal list reuses the body surfaces of the head, coat, limbs and shoes (shared geometry by construction); the structure list has capsule members, joint spheres at hip, knee, shoulder and ankle, soles as supports and the pelvis as mass.",
+     "de": "Kleinstes Merkmal 7,5 mm: jeder Körper der Testfigur ist modelliert, auch Nase, Knöpfe und Sohlen; die thermische Liste verwendet die Körperflächen von Kopf, Mantel, Gliedmassen und Schuhen wieder (geteilte Geometrie per Konstruktion); die Tragwerksliste hat Kapselstäbe, Gelenkkugeln an Hüfte, Knie, Schulter und Knöchel, die Sohlen als Auflager und das Becken als Masse."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "head",
+     "kind": "ellipsoid",
+     "bone": "head",
+     "material": "skin",
+     "role": "body",
+     "tone": 0.85,
+     "radii": [
+      0.115,
+      0.095,
+      0.085
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "hair",
+     "kind": "revolve",
+     "bone": "head",
+     "material": "hair",
+     "role": "body",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.1,
+       0.1007
+      ],
+      [
+       0.16095,
+       0.0872
+      ],
+      [
+       0.2056,
+       0.0504
+      ],
+      [
+       0.22005,
+       0.01749
+      ],
+      [
+       0.2219,
+       0
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "lateralScale": 0.895
+    },
+    {
+     "id": "neck",
+     "kind": "capsule",
+     "bone": "head",
+     "material": "skin",
+     "role": "body",
+     "tone": 0.85,
+     "p0": [
+      -0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.06,
+      0,
+      0
+     ],
+     "r0": 0.0485,
+     "r1": 0.0485,
+     "weights": [
+      {
+       "bone": "head",
+       "weight": 0.7
+      },
+      {
+       "bone": "torso",
+       "weight": 0.3
+      }
+     ]
+    },
+    {
+     "id": "torso",
+     "kind": "loft",
+     "bone": "torso",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.16,
+       "ry": 0.1261,
+       "exponent": 2.4,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      },
+      {
+       "at": [
+        0.22,
+        0,
+        0
+       ],
+       "rx": 0.18,
+       "ry": 0.14,
+       "exponent": 2.4,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      },
+      {
+       "at": [
+        0.45,
+        0,
+        0
+       ],
+       "rx": 0.19,
+       "ry": 0.1552,
+       "exponent": 2.2,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "pelvis",
+     "kind": "ellipsoid",
+     "bone": "pelvis",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "radii": [
+      0.12,
+      0.1358,
+      0.17
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "arm-l",
+     "kind": "capsule",
+     "bone": "arm-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0,
+      0,
+      0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      0.225
+     ],
+     "r0": 0.04365,
+     "r1": 0.03395
+    },
+    {
+     "id": "thigh-l",
+     "kind": "capsule",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      0.09
+     ],
+     "r0": 0.08245,
+     "r1": 0.06305
+    },
+    {
+     "id": "shank-l",
+     "kind": "capsule",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      0.09
+     ],
+     "r0": 0.0582,
+     "r1": 0.0388
+    },
+    {
+     "id": "shoe-l",
+     "kind": "extrude",
+     "bone": "foot-l",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.06,
+       -0.065
+      ],
+      [
+       0.2,
+       -0.065
+      ],
+      [
+       0.21,
+       -0.055
+      ],
+      [
+       0.21,
+       -0.045
+      ],
+      [
+       0.14,
+       -0.02
+      ],
+      [
+       0.03,
+       -0.01
+      ],
+      [
+       -0.04,
+       -0.01
+      ],
+      [
+       -0.06,
+       -0.03
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.045,
+     "to": 0.135
+    },
+    {
+     "id": "arm-r",
+     "kind": "capsule",
+     "bone": "arm-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0,
+      0,
+      -0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      -0.225
+     ],
+     "r0": 0.04365,
+     "r1": 0.03395
+    },
+    {
+     "id": "thigh-r",
+     "kind": "capsule",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      -0.09
+     ],
+     "r0": 0.08245,
+     "r1": 0.06305
+    },
+    {
+     "id": "shank-r",
+     "kind": "capsule",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      -0.09
+     ],
+     "r0": 0.0582,
+     "r1": 0.0388
+    },
+    {
+     "id": "shoe-r",
+     "kind": "extrude",
+     "bone": "foot-r",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.06,
+       -0.065
+      ],
+      [
+       0.2,
+       -0.065
+      ],
+      [
+       0.21,
+       -0.055
+      ],
+      [
+       0.21,
+       -0.045
+      ],
+      [
+       0.14,
+       -0.02
+      ],
+      [
+       0.03,
+       -0.01
+      ],
+      [
+       -0.04,
+       -0.01
+      ],
+      [
+       -0.06,
+       -0.03
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.135,
+     "to": -0.045
+    }
+   ],
+   "thermal": [
+    {
+     "id": "t-head",
+     "of": "head",
+     "region": "head"
+    },
+    {
+     "id": "t-neck",
+     "of": "neck",
+     "region": "head"
+    },
+    {
+     "id": "t-torso",
+     "of": "torso",
+     "region": "torso",
+     "layer": "garment"
+    },
+    {
+     "id": "t-pelvis",
+     "of": "pelvis",
+     "region": "torso",
+     "layer": "garment"
+    },
+    {
+     "id": "t-arm-l",
+     "of": "arm-l",
+     "region": "arms",
+     "layer": "garment"
+    },
+    {
+     "id": "t-arm-r",
+     "of": "arm-r",
+     "region": "arms",
+     "layer": "garment"
+    },
+    {
+     "id": "t-thigh-l",
+     "of": "thigh-l",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shank-l",
+     "of": "shank-l",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-thigh-r",
+     "of": "thigh-r",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shank-r",
+     "of": "shank-r",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shoe-l",
+     "of": "shoe-l",
+     "region": "feet"
+    },
+    {
+     "id": "t-shoe-r",
+     "of": "shoe-r",
+     "region": "feet"
+    },
+    {
+     "id": "t-hair-cap",
+     "kind": "ellipsoid",
+     "bone": "head",
+     "material": "hair",
+     "role": "body",
+     "tone": 0.2,
+     "radii": [
+      0.12,
+      0.1,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.11,
+       0,
+       0
+      ]
+     },
+     "region": "head"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-pelvis",
+     "kind": "ellipsoid",
+     "bone": "pelvis",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "radii": [
+      0.1,
+      0.11,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0,
+       0
+      ]
+     },
+     "member": "pelvis",
+     "part": "mass"
+    },
+    {
+     "id": "m-torso",
+     "kind": "capsule",
+     "bone": "torso",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0
+     ],
+     "p1": [
+      0.45,
+      0,
+      0
+     ],
+     "r0": 0.07,
+     "r1": 0.075,
+     "member": "torso",
+     "part": "member"
+    },
+    {
+     "id": "m-head",
+     "kind": "capsule",
+     "bone": "head",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      -0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.1,
+      0,
+      0
+     ],
+     "r0": 0.05,
+     "r1": 0.08,
+     "member": "head",
+     "part": "member"
+    },
+    {
+     "id": "m-arm-l",
+     "kind": "capsule",
+     "bone": "arm-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      0.225
+     ],
+     "r0": 0.04,
+     "r1": 0.032,
+     "member": "arm-l",
+     "part": "member"
+    },
+    {
+     "id": "m-thigh-l",
+     "kind": "capsule",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      0.09
+     ],
+     "r0": 0.075,
+     "r1": 0.058,
+     "member": "thigh-l",
+     "part": "member"
+    },
+    {
+     "id": "m-shank-l",
+     "kind": "capsule",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      0.09
+     ],
+     "r0": 0.052,
+     "r1": 0.036,
+     "member": "shank-l",
+     "part": "member"
+    },
+    {
+     "id": "m-foot-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.26,
+      0.03,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.05,
+       0.09
+      ]
+     },
+     "member": "foot-l",
+     "part": "member"
+    },
+    {
+     "id": "m-arm-r",
+     "kind": "capsule",
+     "bone": "arm-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      -0.225
+     ],
+     "r0": 0.04,
+     "r1": 0.032,
+     "member": "arm-r",
+     "part": "member"
+    },
+    {
+     "id": "m-thigh-r",
+     "kind": "capsule",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      -0.09
+     ],
+     "r0": 0.075,
+     "r1": 0.058,
+     "member": "thigh-r",
+     "part": "member"
+    },
+    {
+     "id": "m-shank-r",
+     "kind": "capsule",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      -0.09
+     ],
+     "r0": 0.052,
+     "r1": 0.036,
+     "member": "shank-r",
+     "part": "member"
+    },
+    {
+     "id": "m-foot-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.26,
+      0.03,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.05,
+       -0.09
+      ]
+     },
+     "member": "foot-r",
+     "part": "member"
+    },
+    {
+     "id": "j-hip-l",
+     "kind": "ellipsoid",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       0.09
+      ]
+     },
+     "member": "thigh-l",
+     "part": "joint"
+    },
+    {
+     "id": "j-knee-l",
+     "kind": "ellipsoid",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       0.09
+      ]
+     },
+     "member": "shank-l",
+     "part": "joint"
+    },
+    {
+     "id": "j-hip-r",
+     "kind": "ellipsoid",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.04,
+      0.04,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.09
+      ]
+     },
+     "member": "thigh-r",
+     "part": "joint"
+    },
+    {
+     "id": "j-knee-r",
+     "kind": "ellipsoid",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "detail",
+     "tone": 0.2,
+     "radii": [
+      0.035,
+      0.035,
+      0.035
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.09
+      ]
+     },
+     "member": "shank-r",
+     "part": "joint"
+    },
+    {
+     "id": "s-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.27,
+      0.015,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       0.09
+      ]
+     },
+     "member": "foot-l",
+     "part": "support"
+    },
+    {
+     "id": "s-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.27,
+      0.015,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       -0.09
+      ]
+     },
+     "member": "foot-r",
+     "part": "support"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Smallest feature 15 mm: nose, buttons and soles are merged into their parents; the hair stays as a cap of its own thermal solid; joint spheres remain only at hip and knee.",
+     "de": "Kleinstes Merkmal 15 mm: Nase, Knöpfe und Sohlen gehen in ihren Eltern auf; das Haar bleibt als eigener thermischer Kappenkörper; Gelenkkugeln bleiben nur an Hüfte und Knie."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "head",
+     "kind": "ellipsoid",
+     "bone": "head",
+     "material": "skin",
+     "role": "body",
+     "tone": 0.85,
+     "radii": [
+      0.12,
+      0.1,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "torso",
+     "kind": "loft",
+     "bone": "torso",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.16,
+       "ry": 0.1261,
+       "exponent": 2.4,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      },
+      {
+       "at": [
+        0.45,
+        0,
+        0
+       ],
+       "rx": 0.19,
+       "ry": 0.1552,
+       "exponent": 2.2,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "pelvis",
+     "kind": "ellipsoid",
+     "bone": "pelvis",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "radii": [
+      0.12,
+      0.1358,
+      0.17
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "arm-l",
+     "kind": "capsule",
+     "bone": "arm-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0,
+      0,
+      0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      0.225
+     ],
+     "r0": 0.04365,
+     "r1": 0.04
+    },
+    {
+     "id": "thigh-l",
+     "kind": "capsule",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      0.09
+     ],
+     "r0": 0.08245,
+     "r1": 0.06305
+    },
+    {
+     "id": "shank-l",
+     "kind": "capsule",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      0.09
+     ],
+     "r0": 0.0582,
+     "r1": 0.04
+    },
+    {
+     "id": "shoe-l",
+     "kind": "extrude",
+     "bone": "foot-l",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.06,
+       -0.065
+      ],
+      [
+       0.2,
+       -0.065
+      ],
+      [
+       0.21,
+       -0.055
+      ],
+      [
+       0.21,
+       -0.045
+      ],
+      [
+       0.14,
+       -0.02
+      ],
+      [
+       0.03,
+       -0.01
+      ],
+      [
+       -0.04,
+       -0.01
+      ],
+      [
+       -0.06,
+       -0.03
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.045,
+     "to": 0.135
+    },
+    {
+     "id": "arm-r",
+     "kind": "capsule",
+     "bone": "arm-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0,
+      0,
+      -0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      -0.225
+     ],
+     "r0": 0.04365,
+     "r1": 0.04
+    },
+    {
+     "id": "thigh-r",
+     "kind": "capsule",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      -0.09
+     ],
+     "r0": 0.08245,
+     "r1": 0.06305
+    },
+    {
+     "id": "shank-r",
+     "kind": "capsule",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      -0.09
+     ],
+     "r0": 0.0582,
+     "r1": 0.04
+    },
+    {
+     "id": "shoe-r",
+     "kind": "extrude",
+     "bone": "foot-r",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.15,
+     "profile": [
+      [
+       -0.06,
+       -0.065
+      ],
+      [
+       0.2,
+       -0.065
+      ],
+      [
+       0.21,
+       -0.055
+      ],
+      [
+       0.21,
+       -0.045
+      ],
+      [
+       0.14,
+       -0.02
+      ],
+      [
+       0.03,
+       -0.01
+      ],
+      [
+       -0.04,
+       -0.01
+      ],
+      [
+       -0.06,
+       -0.03
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.135,
+     "to": -0.045
+    }
+   ],
+   "thermal": [
+    {
+     "id": "t-head",
+     "of": "head",
+     "region": "head"
+    },
+    {
+     "id": "t-torso",
+     "of": "torso",
+     "region": "torso",
+     "layer": "garment"
+    },
+    {
+     "id": "t-pelvis",
+     "of": "pelvis",
+     "region": "torso",
+     "layer": "garment"
+    },
+    {
+     "id": "t-arm-l",
+     "of": "arm-l",
+     "region": "arms",
+     "layer": "garment"
+    },
+    {
+     "id": "t-arm-r",
+     "of": "arm-r",
+     "region": "arms",
+     "layer": "garment"
+    },
+    {
+     "id": "t-thigh-l",
+     "of": "thigh-l",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shank-l",
+     "of": "shank-l",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-thigh-r",
+     "of": "thigh-r",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shank-r",
+     "of": "shank-r",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shoe-l",
+     "of": "shoe-l",
+     "region": "feet"
+    },
+    {
+     "id": "t-shoe-r",
+     "of": "shoe-r",
+     "region": "feet"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-pelvis",
+     "kind": "ellipsoid",
+     "bone": "pelvis",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "radii": [
+      0.1,
+      0.11,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0,
+       0
+      ]
+     },
+     "member": "pelvis",
+     "part": "mass"
+    },
+    {
+     "id": "m-torso",
+     "kind": "capsule",
+     "bone": "torso",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0
+     ],
+     "p1": [
+      0.45,
+      0,
+      0
+     ],
+     "r0": 0.0875,
+     "r1": 0.0938,
+     "member": "torso",
+     "part": "member"
+    },
+    {
+     "id": "m-head",
+     "kind": "capsule",
+     "bone": "head",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      -0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.1,
+      0,
+      0
+     ],
+     "r0": 0.0625,
+     "r1": 0.1,
+     "member": "head",
+     "part": "member"
+    },
+    {
+     "id": "m-arm-l",
+     "kind": "capsule",
+     "bone": "arm-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      0.225
+     ],
+     "r0": 0.05,
+     "r1": 0.04,
+     "member": "arm-l",
+     "part": "member"
+    },
+    {
+     "id": "m-thigh-l",
+     "kind": "capsule",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      0.09
+     ],
+     "r0": 0.0938,
+     "r1": 0.0725,
+     "member": "thigh-l",
+     "part": "member"
+    },
+    {
+     "id": "m-shank-l",
+     "kind": "capsule",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      0.09
+     ],
+     "r0": 0.065,
+     "r1": 0.045,
+     "member": "shank-l",
+     "part": "member"
+    },
+    {
+     "id": "m-foot-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.26,
+      0.03,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.05,
+       0.09
+      ]
+     },
+     "member": "foot-l",
+     "part": "member"
+    },
+    {
+     "id": "m-arm-r",
+     "kind": "capsule",
+     "bone": "arm-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      -0.225
+     ],
+     "r0": 0.05,
+     "r1": 0.04,
+     "member": "arm-r",
+     "part": "member"
+    },
+    {
+     "id": "m-thigh-r",
+     "kind": "capsule",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      -0.09
+     ],
+     "r0": 0.0938,
+     "r1": 0.0725,
+     "member": "thigh-r",
+     "part": "member"
+    },
+    {
+     "id": "m-shank-r",
+     "kind": "capsule",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      -0.09
+     ],
+     "r0": 0.065,
+     "r1": 0.045,
+     "member": "shank-r",
+     "part": "member"
+    },
+    {
+     "id": "m-foot-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.26,
+      0.03,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.05,
+       -0.09
+      ]
+     },
+     "member": "foot-r",
+     "part": "member"
+    },
+    {
+     "id": "s-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.27,
+      0.015,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       0.09
+      ]
+     },
+     "member": "foot-l",
+     "part": "support"
+    },
+    {
+     "id": "s-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.27,
+      0.015,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       -0.09
+      ]
+     },
+     "member": "foot-r",
+     "part": "support"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Smallest feature 30 mm: the head is one ellipsoid, the torso a two-section loft, the limbs are thickened to the smallest feature and the shoes are generalised; members are thickened and joints are absorbed into the members.",
+     "de": "Kleinstes Merkmal 30 mm: der Kopf ist ein Ellipsoid, der Rumpf ein Loft aus zwei Schnitten, die Gliedmassen sind auf das kleinste Merkmal verdickt und die Schuhe verallgemeinert; Stäbe sind verdickt und Gelenke in den Stäben aufgegangen."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "head",
+     "kind": "ellipsoid",
+     "bone": "head",
+     "material": "skin",
+     "role": "body",
+     "tone": 0.85,
+     "radii": [
+      0.125,
+      0.105,
+      0.095
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "torso",
+     "kind": "loft",
+     "bone": "torso",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.45,
+     "sections": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.16,
+       "ry": 0.1261,
+       "exponent": 2.4,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      },
+      {
+       "at": [
+        0.45,
+        0,
+        0
+       ],
+       "rx": 0.19,
+       "ry": 0.1552,
+       "exponent": 2.2,
+       "rotation": [
+        0,
+        0.7071067811865476,
+        0,
+        0.7071067811865476
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true
+    },
+    {
+     "id": "pelvis",
+     "kind": "ellipsoid",
+     "bone": "pelvis",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "radii": [
+      0.12,
+      0.1358,
+      0.17
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "id": "arm-l",
+     "kind": "box",
+     "bone": "arm-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.6,
+      0.085,
+      0.085
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0,
+       0.225
+      ]
+     }
+    },
+    {
+     "id": "thigh-l",
+     "kind": "box",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.45,
+      0.145,
+      0.145
+     ],
+     "transform": {
+      "translation": [
+       0.225,
+       0,
+       0.09
+      ]
+     }
+    },
+    {
+     "id": "shank-l",
+     "kind": "box",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.43,
+      0.095,
+      0.095
+     ],
+     "transform": {
+      "translation": [
+       0.215,
+       0,
+       0.09
+      ]
+     }
+    },
+    {
+     "id": "shoe-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.27,
+      0.075,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.03,
+       0.09
+      ]
+     }
+    },
+    {
+     "id": "arm-r",
+     "kind": "box",
+     "bone": "arm-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.6,
+      0.085,
+      0.085
+     ],
+     "transform": {
+      "translation": [
+       0.3,
+       0,
+       -0.225
+      ]
+     }
+    },
+    {
+     "id": "thigh-r",
+     "kind": "box",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.45,
+      0.145,
+      0.145
+     ],
+     "transform": {
+      "translation": [
+       0.225,
+       0,
+       -0.09
+      ]
+     }
+    },
+    {
+     "id": "shank-r",
+     "kind": "box",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.43,
+      0.095,
+      0.095
+     ],
+     "transform": {
+      "translation": [
+       0.215,
+       0,
+       -0.09
+      ]
+     }
+    },
+    {
+     "id": "shoe-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.15,
+     "size": [
+      0.27,
+      0.075,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.03,
+       -0.09
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "t-head",
+     "of": "head",
+     "region": "head"
+    },
+    {
+     "id": "t-torso",
+     "of": "torso",
+     "region": "torso",
+     "layer": "garment"
+    },
+    {
+     "id": "t-pelvis",
+     "of": "pelvis",
+     "region": "torso",
+     "layer": "garment"
+    },
+    {
+     "id": "t-arm-l",
+     "of": "arm-l",
+     "region": "arms",
+     "layer": "garment"
+    },
+    {
+     "id": "t-arm-r",
+     "of": "arm-r",
+     "region": "arms",
+     "layer": "garment"
+    },
+    {
+     "id": "t-thigh-l",
+     "of": "thigh-l",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shank-l",
+     "of": "shank-l",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-thigh-r",
+     "of": "thigh-r",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shank-r",
+     "of": "shank-r",
+     "region": "legs",
+     "layer": "garment"
+    },
+    {
+     "id": "t-shoe-l",
+     "of": "shoe-l",
+     "region": "feet"
+    },
+    {
+     "id": "t-shoe-r",
+     "of": "shoe-r",
+     "region": "feet"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-pelvis",
+     "kind": "ellipsoid",
+     "bone": "pelvis",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "radii": [
+      0.1,
+      0.11,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0,
+       0
+      ]
+     },
+     "member": "pelvis",
+     "part": "mass"
+    },
+    {
+     "id": "m-torso",
+     "kind": "capsule",
+     "bone": "torso",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0
+     ],
+     "p1": [
+      0.45,
+      0,
+      0
+     ],
+     "r0": 0.119,
+     "r1": 0.1275,
+     "member": "torso",
+     "part": "member"
+    },
+    {
+     "id": "m-head",
+     "kind": "capsule",
+     "bone": "head",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      -0.06,
+      0,
+      0
+     ],
+     "p1": [
+      0.1,
+      0,
+      0
+     ],
+     "r0": 0.085,
+     "r1": 0.136,
+     "member": "head",
+     "part": "member"
+    },
+    {
+     "id": "m-arm-l",
+     "kind": "capsule",
+     "bone": "arm-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      0.225
+     ],
+     "r0": 0.068,
+     "r1": 0.0544,
+     "member": "arm-l",
+     "part": "member"
+    },
+    {
+     "id": "m-thigh-l",
+     "kind": "capsule",
+     "bone": "thigh-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      0.09
+     ],
+     "r0": 0.1275,
+     "r1": 0.0986,
+     "member": "thigh-l",
+     "part": "member"
+    },
+    {
+     "id": "m-shank-l",
+     "kind": "capsule",
+     "bone": "shank-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      0.09
+     ],
+     "r0": 0.0884,
+     "r1": 0.0612,
+     "member": "shank-l",
+     "part": "member"
+    },
+    {
+     "id": "m-foot-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.26,
+      0.03,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.05,
+       0.09
+      ]
+     },
+     "member": "foot-l",
+     "part": "member"
+    },
+    {
+     "id": "m-arm-r",
+     "kind": "capsule",
+     "bone": "arm-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.225
+     ],
+     "p1": [
+      0.6,
+      0,
+      -0.225
+     ],
+     "r0": 0.068,
+     "r1": 0.0544,
+     "member": "arm-r",
+     "part": "member"
+    },
+    {
+     "id": "m-thigh-r",
+     "kind": "capsule",
+     "bone": "thigh-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.45,
+      0,
+      -0.09
+     ],
+     "r0": 0.1275,
+     "r1": 0.0986,
+     "member": "thigh-r",
+     "part": "member"
+    },
+    {
+     "id": "m-shank-r",
+     "kind": "capsule",
+     "bone": "shank-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.4,
+     "p0": [
+      0,
+      0,
+      -0.09
+     ],
+     "p1": [
+      0.43,
+      0,
+      -0.09
+     ],
+     "r0": 0.0884,
+     "r1": 0.0612,
+     "member": "shank-r",
+     "part": "member"
+    },
+    {
+     "id": "m-foot-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "cotton-clothing",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.26,
+      0.03,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.07,
+       -0.05,
+       -0.09
+      ]
+     },
+     "member": "foot-r",
+     "part": "member"
+    },
+    {
+     "id": "s-l",
+     "kind": "box",
+     "bone": "foot-l",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.27,
+      0.015,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       0.09
+      ]
+     },
+     "member": "foot-l",
+     "part": "support"
+    },
+    {
+     "id": "s-r",
+     "kind": "box",
+     "bone": "foot-r",
+     "material": "leather-shoe",
+     "role": "body",
+     "tone": 0.1,
+     "size": [
+      0.27,
+      0.015,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.075,
+       -0.0725,
+       -0.09
+      ]
+     },
+     "member": "foot-r",
+     "part": "support"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Smallest feature 75 mm: head and pelvis are ellipsoids, the torso a two-section loft, limbs and shoes plain boxes; the structure keeps one thickened member per bone, the soles as supports and the pelvis as mass.",
+     "de": "Kleinstes Merkmal 75 mm: Kopf und Becken sind Ellipsoide, der Rumpf ein Loft aus zwei Schnitten, Gliedmassen und Schuhe einfache Quader; das Tragwerk behält einen verdickten Stab je Knochen, die Sohlen als Auflager und das Becken als Masse."
+    }
+   ]
+  }
+ }
+}

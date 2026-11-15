@@ -31,6 +31,7 @@ test("the prime derives the shared entries once and no owner derives shared work
  await storage.withBuildGraphStagingV1({root:stage},async()=>{
   const scripts=createScriptInputCache({workspaceRoot:root,lateClosures:true}),recipes=fixture.shared.map(entry=>({fn:"closure-of",entries:[entry],extras:[],role:"test-discovery"})),steps:string[]=[];
   const primed=await observation.observeInferenceSnapshotV1(()=>scriptInputs.primeSharedClosuresV1(root,scripts,{recipes,progress:({done,total}:{done:number;total:number})=>{steps.push(done+"/"+total);}}));
+  expect(scriptInputs.closureEntriesWithLayersV1()).toBe(0);
   expect(primed.recipes).toBe(fixture.primed.recipes);expect(primed.derived).toBe(fixture.primed.derived);expect(steps).toEqual(["0/"+recipes.length,...recipes.map((_,at)=>(at+1)+"/"+recipes.length)]);
   for(const[at,owner]of fixture.owners.entries()){
    const before=scriptInputs.closureEntryCountsV1().derived,ownerScripts=createScriptInputCache({workspaceRoot:root,lateClosures:true}),api=scriptInputs.closureApiV1(ownerScripts,root);

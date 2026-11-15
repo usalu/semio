@@ -5,6 +5,7 @@ extern crate semio_s_artifact_norm_en1991_model as model;
 extern crate semio_s_artifact_norm_en1991_scene_fields as fields;
 extern crate semio_s_artifact_norm_en1991_scene_members as members;
 extern crate semio_s_plugin_norm_compliance as norm;
+extern crate semio_s_plugin_norm_mechanics as mechanics;
 extern crate semio_s_plugin_norm_structural_scene as scene;
 
 use members::kit::Out;

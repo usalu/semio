@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "namePatterns": [
+    { "name": "probe a.b(c)+[d]", "pattern": "^probe a\\.b\\(c\\)\\+\\[d\\]$" },
+    { "name": "probe a.b(c)+[d]x", "pattern": "^probe a\\.b\\(c\\)\\+\\[d\\]x$" },
+    { "name": "plain name", "pattern": "^plain name$" },
+    { "name": "back\\slash {1} ^$|*?", "pattern": "^back\\\\slash \\{1\\} \\^\\$\\|\\*\\?$" }
+  ],
+  "executed": [
+    { "birth": "setup", "pattern": "^probe birth carries the declared repository request$", "pass": 1 },
+    { "birth": "setup", "pattern": "^probe a\\.b\\(c\\)\\+\\[d\\]$", "pass": 1 }
+  ],
+  "escalation": [
+    { "previous": "setup", "failure": "Original immutable SDK required", "next": "setup-sdk" },
+    { "previous": "setup", "failure": "Original bounded Nx namespace required", "next": "orchestration" },
+    { "previous": "setup", "failure": "Original resource loan deadline exhausted", "next": null }
+  ]
+}

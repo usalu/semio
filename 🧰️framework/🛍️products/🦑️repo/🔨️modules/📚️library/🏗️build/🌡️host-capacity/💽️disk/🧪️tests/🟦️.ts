@@ -10,7 +10,7 @@ import {createCasGuardV1,resetCasGuardsV1} from "../../../🗄️cas/🚦️guar
 import type {CasCollectionV1} from "../../../🗄️cas/🧹️collector/🟦️.ts";
 import type {CasPartitionV1} from "../../../🗄️cas/🌡️partition/🟦️.ts";
 import {withBuildCapacityV1} from "../../🟦️.ts";
-import {admitBuildDiskV1} from "../🟦️.ts";
+import {admitBuildDiskV1,expectedDiskGrowthBytesV1} from "../🟦️.ts";
 
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(tmpdir(),"disk-admit-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
@@ -66,4 +66,21 @@ test("an environment that is no real user session leaves the host alone, and the
  const roomy=createCasGuardV1({root:environment.SEMIO_CAS_ROOT+"2",partition:()=>volume(500),usage:async()=>0,collect:async()=>stub});
  await withBuildCapacityV1(["run","@x/y:build","--parallel=2"],environment,async()=>{ran=true;},{directory,policy,strip:(args:readonly string[])=>args,tool:"bazel",write:()=>undefined,disk:{guard:roomy,partition:()=>volume(500),mount:()=>"/same"}});
  expect(ran).toBe(true);
+});
+
+test("the expected growth of a command counts before it starts: a partition 96% used admits nothing that would cross 97%, while a no-growth command is admitted",async()=>{
+ resetCasGuardsV1();
+ const environment=real("en");
+ const measured=()=>volume(40);
+ await admitBuildDiskV1(environment,{guard:createCasGuardV1({root:environment.SEMIO_CAS_ROOT,partition:measured,usage:async()=>0,collect:async()=>stub}),partition:measured,mount:path=>path,workspace:environment.HOME,expectedBytes:0});
+ resetCasGuardsV1();
+ const failure=await admitBuildDiskV1(environment,{guard:createCasGuardV1({root:environment.SEMIO_CAS_ROOT,partition:measured,usage:async()=>0,collect:async()=>stub}),partition:measured,mount:path=>path,workspace:environment.HOME,expectedBytes:20*MIB}).then(()=>undefined,reason=>reason);
+ expect(failure?.key).toBe("process.disk.low-space");
+});
+
+test("expected growth: 4 GiB for a Cargo build, an explicit environment value wins, other classes expect nothing",()=>{
+ expect(expectedDiskGrowthBytesV1({},"cargo")).toBe(4*1024**3);
+ expect(expectedDiskGrowthBytesV1({},"show")).toBe(0);
+ expect(expectedDiskGrowthBytesV1({SEMIO_BUILD_EXPECTED_DISK_BYTES:"123"},"cargo")).toBe(123);
+ expect(expectedDiskGrowthBytesV1({SEMIO_BUILD_EXPECTED_DISK_BYTES:"junk"},"cargo")).toBe(4*1024**3);
 });

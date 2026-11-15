@@ -1,0 +1,5 @@
+=== /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-b814083e21d9.log from byte 149440
+[repo] still working after 920 s; last phase started: source.served
+[repository:command] still running after 920 s
+[repository:command] still running after 930 s
+[repository:command] still running after 940 s

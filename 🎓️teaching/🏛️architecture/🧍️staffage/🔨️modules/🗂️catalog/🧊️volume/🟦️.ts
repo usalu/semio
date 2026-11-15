@@ -1,21 +1,23 @@
-/** 🧊️ Semantic rules of the declarative 3D volume (`asset.volume`): what the JSON Schema cannot say about solids bound to bones.
+/** 🧊️ Semantic rules of the declarative 3D volume (`asset.volumes`): what the JSON Schema cannot say about solids bound to bones.
  *
  * Every finding is an {@link Issue} with a stable rule id: `volume-empty`, `volume-duplicate-id`, `volume-bone`, `volume-material`, `volume-region`, `volume-weights-bone`, `volume-weights-count`, `volume-weights-sum`,
  * `volume-size`, `volume-non-finite`, `volume-extrude-range`, `volume-profile-degenerate`, `volume-profile-self-intersecting`, `volume-hole-outside`, `volume-holes-overlap`, `volume-loft-sections`, `volume-repeat`,
- * `volume-transform` and `volume-max-denominator`. Profiles are simple polygons: at least three distinct points, a non-zero area, no edge touching or crossing a non-adjacent edge; holes lie strictly inside the outline and
+ * `volume-transform`, `volume-of`, `volume-layer`, `volume-member`, `volume-anchor` and `volume-envelope`, applied to every list (body, thermal, structure) of every authored scale; `volume-region` also covers the thermal solids. Profiles are simple polygons: at least three distinct points, a non-zero area, no edge touching or crossing a non-adjacent edge; holes lie strictly inside the outline and
  * apart from each other. A revolve profile is a simple open polyline of [axial, radial] points with non-negative radial values.
  *
  * THE REFERENCE for the polygon rules is shapely (`Polygon.is_valid`), see `🧪️tests/🧊️volume-schema/🐍️.py`.
  *
  * `exportIssues` judges the `exports` that name `glb`, `fbx` or `model`: `exports-model-volume`, `exports-glb-pose`, `exports-fbx-clip`; `modelFormats` says which of them an asset can produce.
  *
- * @see ../../../🧬️schema/🔣️.json — `Volume`, `VolumeSolid`
+ * @see ../../../🧬️schema/🔣️.json — `Volumes`, `VolumeSolid`, `ThermalSolid`, `StructuralSolid`
  * @see ../🟦️.ts — `validateAsset`, which runs these rules
  */
-import { SCALE_DENOMINATORS, VOLUME_REPEAT_MAX, VOLUME_WEIGHTS_MAX } from "../../../🧬️schema/🟦️.ts";
+import { VOLUME_LISTS, VOLUME_REPEAT_MAX, VOLUME_WEIGHTS_MAX } from "../../../🧬️schema/🟦️.ts";
 import type { Asset, ExportFormat, Text, Vector2, VolumeSolid } from "../../../🧬️schema/🟦️.ts";
 import type { Issue } from "../🟦️.ts";
+import { authoredVolumes, isReference } from "../🧊️volumes/🧱️lists/🟦️.ts";
 import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
+import { loftFault, revolveClosure, taperFault } from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts";
 
 /** ➕️ Allowed deviation of the weights of one solid from a sum of 1. */
 export const WEIGHT_SUM_TOLERANCE = 1e-6;
@@ -96,7 +98,7 @@ export const holesOverlap = (p: readonly Vector2[], q: readonly Vector2[]): bool
 
 /** 🔺️ The 3D model formats an asset can produce: `model` (the neutral JSON) and `model-zip` (every pose and clip) from its volume, `glb` (one per named pose) from its volume and one named pose, `fbx` (one per clip) from its volume and at least one clip; none without a volume. */
 export function modelFormats(asset: Asset): readonly ExportFormat[] {
-  if (asset.volume === undefined) return [];
+  if (authoredVolumes(asset).length === 0) return [];
   return [...(asset.poses.some((pose) => pose.key !== true) ? (["glb"] as const) : []), ...(asset.clips.length > 0 ? (["fbx"] as const) : []), "model", "model-zip"];
 }
 
@@ -108,41 +110,60 @@ export function exportIssues(asset: Asset): readonly Issue[] {
     if (format !== "glb" && format !== "fbx" && format !== "model" && format !== "model-zip") return;
     if (producible.has(format)) return;
     const path = `exports[${index}]`;
-    if (asset.volume === undefined) out.push({ path, code: "exports-model-volume", message: text(`The export "${format}" needs an authored volume, which this asset does not have.`, `Der Export "${format}" braucht ein erstelltes Volumen, das dieses Asset nicht hat.`) });
+    if (authoredVolumes(asset).length === 0) out.push({ path, code: "exports-model-volume", message: text(`The export "${format}" needs an authored volume, which this asset does not have.`, `Der Export "${format}" braucht ein erstelltes Volumen, das dieses Asset nicht hat.`) });
     else if (format === "glb") out.push({ path, code: "exports-glb-pose", message: text('The export "glb" is one file per named pose and the asset has none.', 'Der Export "glb" ist eine Datei je benannter Pose und das Asset hat keine.') });
     else out.push({ path, code: "exports-fbx-clip", message: text('The export "fbx" is one file per clip and the asset has no clip.', 'Der Export "fbx" ist eine Datei je Clip und das Asset hat keinen Clip.') });
   });
   return out;
 }
 
-/** 🧱️ Every semantic problem of the volume of an asset; empty for a valid volume and for an asset without one. */
+/** 🧱️ Every semantic problem of the solids of an asset: per authored scale and per list (body, thermal, structure) the ids, bones, materials, weights, transforms, repeats and geometry, the `{ of }` references, the thermal regions and layers and the structural member bones; empty for a valid volume and for an asset without volumes. */
 export function volumeIssues(asset: Asset): readonly Issue[] {
-  const volume = asset.volume;
-  if (volume === undefined) return [];
   const out: Issue[] = [];
   const add = (path: string, code: string, en: string, de: string): void => void out.push({ path, code, message: text(en, de) });
   const bones = new Set(asset.rig.bones.map((bone) => bone.id));
   const materials = new Set(asset.materials.map((material) => material.id));
-  const regions = new Set(asset.thermal.regions.map((region) => region.id));
-  const seen = new Set<string>();
-  if (volume.solids.length === 0) add("volume.solids", "volume-empty", "The volume needs at least one solid.", "Das Volumen braucht mindestens einen Körper.");
-  volume.solids.forEach((solid, index) => {
-    const p = `volume.solids[${index}]`;
-    const label = `Solid "${solid.id}"`;
-    const bez = `Körper "${solid.id}"`;
-    if (seen.has(solid.id)) add(`${p}.id`, "volume-duplicate-id", `${label} repeats an id already used in the volume.`, `${bez} wiederholt eine im Volumen schon verwendete Id.`);
-    seen.add(solid.id);
-    if (!bones.has(solid.bone)) add(`${p}.bone`, "volume-bone", `${label} is bound to bone "${solid.bone}", which does not exist in the rig.`, `${bez} ist an den Knochen "${solid.bone}" gebunden, der im Rig nicht existiert.`);
-    if (!materials.has(solid.material)) add(`${p}.material`, "volume-material", `${label} uses material "${solid.material}", which is not in the asset's materials.`, `${bez} verwendet das Material "${solid.material}", das nicht in den Materialien des Assets steht.`);
-    for (const region of [...(solid.region === undefined ? [] : [solid.region]), ...(solid.regions ?? [])])
-      if (!regions.has(region)) add(`${p}.${solid.region === region ? "region" : "regions"}`, "volume-region", `${label} names thermal region "${region}", which does not exist in thermal.regions.`, `${bez} nennt die thermische Region "${region}", die in thermal.regions nicht existiert.`);
-    if (solid.maxDenominator !== undefined && !(SCALE_DENOMINATORS as readonly number[]).includes(solid.maxDenominator))
-      add(`${p}.maxDenominator`, "volume-max-denominator", `${label} has maxDenominator ${solid.maxDenominator}, which is not a preset scale (${SCALE_DENOMINATORS.join(", ")}).`, `${bez} hat maxDenominator ${solid.maxDenominator}, das keine voreingestellte Maßstabszahl ist (${SCALE_DENOMINATORS.join(", ")}).`);
-    weightIssues(solid, p, bones, add);
-    transformIssues(solid, p, add);
-    if (solid.repeat !== undefined) repeatIssues(solid, p, add);
-    geometryIssues(solid, p, add);
-  });
+  const layers = new Map(asset.thermal.regions.map((region) => [region.id, new Set(region.layers.map((layer) => layer.id))] as const));
+  const finest = authoredVolumes(asset)[0]?.denominator;
+  for (const volume of authoredVolumes(asset)) {
+    const base = `volumes.${volume.denominator}`;
+    const bodyIds = new Set(volume.body.map((solid) => solid.id));
+    for (const list of VOLUME_LISTS) {
+      const solids = volume[list] as readonly (VolumeSolid & { readonly of?: string; readonly region?: string; readonly layer?: string; readonly member?: string })[];
+      const seen = new Set<string>();
+      if (solids.length === 0) add(`${base}.${list}`, "volume-empty", `The ${list} list of 1:${volume.denominator} needs at least one solid.`, `Die Liste ${list} von 1:${volume.denominator} braucht mindestens einen Körper.`);
+      solids.forEach((solid, index) => {
+        const p = `${base}.${list}[${index}]`;
+        const label = `Solid "${solid.id}" of ${list} 1:${volume.denominator}`;
+        const bez = `Körper "${solid.id}" von ${list} 1:${volume.denominator}`;
+        if (seen.has(solid.id)) add(`${p}.id`, "volume-duplicate-id", `${label} repeats an id already used in its list.`, `${bez} wiederholt eine in der Liste schon verwendete Id.`);
+        seen.add(solid.id);
+        if ((solid as { envelope?: boolean }).envelope === true && volume.denominator === finest) add(`${p}.envelope`, "volume-envelope", `${label} is an envelope prism, but 1:${volume.denominator} is the finest authored scale and has no finer lattice to stand for.`, `${bez} ist ein Hüllprisma, aber 1:${volume.denominator} ist der feinste erstellte Maßstab und hat kein feineres Gitter, für das es steht.`);
+        if (isReference(solid)) {
+          if (list === "body") return;
+          if (!bodyIds.has(solid.of!)) add(`${p}.of`, "volume-of", `${label} refers to body solid "${solid.of}", which does not exist at 1:${volume.denominator}.`, `${bez} verweist auf den Körper "${solid.of}", der bei 1:${volume.denominator} nicht existiert.`);
+        } else {
+          if (!bones.has(solid.bone)) add(`${p}.bone`, "volume-bone", `${label} is bound to bone "${solid.bone}", which does not exist in the rig.`, `${bez} ist an den Knochen "${solid.bone}" gebunden, der im Rig nicht existiert.`);
+          if (!materials.has(solid.material)) add(`${p}.material`, "volume-material", `${label} uses material "${solid.material}", which is not in the asset's materials.`, `${bez} verwendet das Material "${solid.material}", das nicht in den Materialien des Assets steht.`);
+          weightIssues(solid, p, bones, add);
+          transformIssues(solid, p, add);
+          if (solid.repeat !== undefined) repeatIssues(solid, p, add);
+          geometryIssues(solid, p, add);
+        }
+        if (list === "thermal") {
+          if (!layers.has(solid.region!)) add(`${p}.region`, "volume-region", `${label} names thermal region "${solid.region}", which does not exist in thermal.regions.`, `${bez} nennt die thermische Region "${solid.region}", die in thermal.regions nicht existiert.`);
+          else if (solid.layer !== undefined && !layers.get(solid.region!)!.has(solid.layer)) add(`${p}.layer`, "volume-layer", `${label} names layer "${solid.layer}", which region "${solid.region}" does not have.`, `${bez} nennt die Schicht "${solid.layer}", die die Region "${solid.region}" nicht hat.`);
+        }
+        if (list === "structure") {
+          const anchor = (solid as { anchor?: string }).anchor;
+          const part = (solid as { part?: string }).part;
+          if (part === "support" && (anchor === undefined || !asset.structure.supports.includes(anchor))) add(`${p}.anchor`, "volume-anchor", `${label} is a support but names ${anchor === undefined ? "no anchor" : `anchor "${anchor}", which is not in structure.supports`}.`, `${bez} ist ein Auflager, nennt aber ${anchor === undefined ? "keinen Anker" : `den Anker "${anchor}", der nicht in structure.supports steht`}.`);
+          else if (part !== "support" && anchor !== undefined) add(`${p}.anchor`, "volume-anchor", `${label} names anchor "${anchor}" but is not a support.`, `${bez} nennt den Anker "${anchor}", ist aber kein Auflager.`);
+        }
+        if (list === "structure" && !bones.has(solid.member!)) add(`${p}.member`, "volume-member", `${label} idealises bone "${solid.member}", which does not exist in the rig.`, `${bez} idealisiert den Knochen "${solid.member}", der im Rig nicht existiert.`);
+      });
+    }
+  }
   return out;
 }
 
@@ -254,4 +275,36 @@ function profileIssues(points: readonly Vector2[], path: string, closed: boolean
   if (verdict === "degenerate") add(path, "volume-profile-degenerate", `The profile of solid "${id}" is degenerate: it needs ${closed ? "three" : "two"} distinct points, no zero-length edge${closed ? " and a non-zero area" : " and a positive radial value"}.`, `Das Profil von Körper "${id}" ist entartet: es braucht ${closed ? "drei" : "zwei"} verschiedene Punkte, keine Kante der Länge null${closed ? " und eine Fläche ungleich null" : " und einen positiven Radialwert"}.`);
   if (verdict === "self-intersecting") add(path, "volume-profile-self-intersecting", `The profile of solid "${id}" is self-intersecting: an edge crosses, touches or folds back onto another edge.`, `Das Profil von Körper "${id}" überschneidet sich selbst: eine Kante kreuzt, berührt oder faltet sich auf eine andere Kante zurück.`);
   return verdict === "simple";
+}
+
+/** 🪤️ The silent geometry traps of the solids of an asset, judged by the kernel's classifiers (they are valid solids that do not mean what the author wrote), per authored scale and list, references excluded:
+ * `volume-revolve-implied-closure` an open revolve profile that stays off the axis at both ends (farther than 2 % of its largest radius) while the straight chord from its last to its first point closes it into a simple loop: it is closed through the axis and gives a filled body, not a shell; repeat the first point as the last to revolve the loop, start or end on the axis to mean the filled body;
+ * `volume-taper-uniform` both `taperTo` factors equal and not 1 (no taper, a prism of the scaled profile: `taperTo` is [scale at from, scale at to], not [scale u, scale v]); `volume-taper-degenerate` both 0 or a factor in (0, 0.001);
+ * `volume-loft-fold` consecutive loft sections that overlap (the path turns back or bends tighter than the section is wide).
+ * Kept apart from {@link volumeIssues} so that the catalog in flight does not turn red; `🎫️tickets/…/kernel-traps.md` lists what authors have to repair, after which `validateAsset` adds this function.
+ * @see ../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts — `revolveClosure`, `taperFault`, `loftFault` */
+export function volumeTrapIssues(asset: Asset): readonly Issue[] {
+  const out: Issue[] = [];
+  const add = (path: string, code: string, en: string, de: string): void => void out.push({ path, code, message: text(en, de) });
+  for (const volume of authoredVolumes(asset)) {
+    for (const list of VOLUME_LISTS) {
+      (volume[list] as readonly (VolumeSolid & { readonly of?: string })[]).forEach((solid, index) => {
+        if (isReference(solid)) return;
+        const p = `volumes.${volume.denominator}.${list}[${index}]`;
+        const label = `Solid "${solid.id}" of ${list} 1:${volume.denominator}`;
+        const bez = `Körper "${solid.id}" von ${list} 1:${volume.denominator}`;
+        if (solid.kind === "revolve" && solid.profile.every((q) => vector(q, 2)) && revolveClosure(solid.profile).kind === "shell") add(`${p}.profile`, "volume-revolve-implied-closure", `${label} has an open revolve profile that stays off the axis at both ends: it is closed through the axis and gives a filled body, not a shell. Repeat the first point as the last point to revolve the loop, or start or end the profile on the axis to mean the filled body.`, `${bez} hat ein offenes Rotationsprofil, das an beiden Enden von der Achse entfernt bleibt: es wird über die Achse geschlossen und ergibt einen gefüllten Körper, keine Schale. Den ersten Punkt als letzten wiederholen, um die Schleife zu drehen, oder das Profil auf der Achse beginnen oder enden lassen, um den gefüllten Körper zu meinen.`);
+        if (solid.kind === "extrude" && vector(solid.taperTo, 2)) {
+          const fault = taperFault(solid.taperTo as Vector2);
+          if (fault === "uniform") add(`${p}.taperTo`, "volume-taper-uniform", `${label} has taperTo ${JSON.stringify(solid.taperTo)} with equal factors: that is no taper, only a prism of the scaled profile. taperTo is [scale at from, scale at to], not a scale along u and v.`, `${bez} hat taperTo ${JSON.stringify(solid.taperTo)} mit gleichen Faktoren: das ist keine Verjüngung, nur ein Prisma des skalierten Profils. taperTo ist [Maßstab bei from, Maßstab bei to], kein Maßstab entlang u und v.`);
+          else if (fault !== null) add(`${p}.taperTo`, "volume-taper-degenerate", `${label} has taperTo ${JSON.stringify(solid.taperTo)}, which collapses an end to a point or a speck: use exactly 0 for an apex and a real size otherwise.`, `${bez} hat taperTo ${JSON.stringify(solid.taperTo)}, was ein Ende zu einem Punkt oder Fleck zusammenfallen lässt: genau 0 für eine Spitze, sonst eine echte Größe.`);
+        }
+        if (solid.kind === "loft" && solid.sections.length >= 2 && solid.sections.every((section) => vector(section.at, 3) && positive(section.rx) && positive(section.ry) && unit(section.rotation))) {
+          const fold = loftFault(solid.sections);
+          if (fold !== null) add(`${p}.sections[${fold[1]}]`, "volume-loft-fold", `${label} has loft sections ${fold[0]} and ${fold[1]} that overlap: the path turns back or bends tighter than the section is wide, so the skin crosses itself.`, `${bez} hat die Loft-Schnitte ${fold[0]} und ${fold[1]}, die sich überlappen: der Pfad kehrt um oder biegt enger, als der Schnitt breit ist, die Haut durchdringt sich selbst.`);
+        }
+      });
+    }
+  }
+  return out;
 }

@@ -195,6 +195,7 @@
       "required": [
         "uv",
         "tool",
+        "cpython",
         "interpreters",
         "projects",
         "layout",
@@ -208,6 +209,9 @@
         "tool": {
           "$ref": "#/definitions/Tool",
           "description": "The checksum-pinned uv archives; the version equals `uv`."
+        },
+        "cpython": {
+          "$ref": "#/definitions/Cpython"
         },
         "interpreters": {
           "type": "object",
@@ -309,7 +313,7 @@
         },
         "archive": {
           "type": "string",
-          "pattern": "^[A-Za-z0-9._-]+\\.(?:tar\\.gz|zip)$",
+          "pattern": "^[A-Za-z0-9._+-]+\\.(?:tar\\.gz|zip)$",
           "maxLength": 128
         },
         "format": {
@@ -348,6 +352,72 @@
         }
       }
     },
+    "InterpreterDistribution": {
+      "description": "One checksum-pinned CPython archive for one host and the uv installation directory it unpacks to.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "archive",
+        "format",
+        "bytes",
+        "sha256",
+        "prefix",
+        "binaryDirectory",
+        "binaries",
+        "directory"
+      ],
+      "properties": {
+        "host": {
+          "$ref": "#/definitions/Host"
+        },
+        "archive": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._+-]+\\.(?:tar\\.gz|zip)$",
+          "maxLength": 128
+        },
+        "format": {
+          "enum": [
+            "tar.gz",
+            "zip"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        },
+        "sha256": {
+          "$ref": "#/definitions/Sha256"
+        },
+        "prefix": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^(?:[A-Za-z0-9._-]+)?$"
+        },
+        "binaryDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^(?:\\.|[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*)$"
+        },
+        "binaries": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]+$"
+          }
+        },
+        "directory": {
+          "description": "The directory name below the interpreter directory that uv recognises as a managed installation.",
+          "type": "string",
+          "pattern": "^cpython-[0-9]+\\.[0-9]+\\.[0-9]+-(?:macos|linux|windows)-(?:aarch64|x86_64)-(?:none|gnu)$",
+          "maxLength": 64
+        }
+      }
+    },
     "Tool": {
       "type": "object",
       "additionalProperties": false,
@@ -379,6 +449,58 @@
           "minItems": 1,
           "items": {
             "$ref": "#/definitions/Distribution"
+          }
+        }
+      }
+    },
+    "Cpython": {
+      "description": "The checksum-pinned CPython builds of the python-build-standalone release: one entry per interpreter series, each with its full version and one archive per host.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release",
+        "versionArguments",
+        "series"
+      ],
+      "properties": {
+        "release": {
+          "type": "string",
+          "pattern": "^https://github\\.com/astral-sh/python-build-standalone/releases/download/[0-9]{8}$"
+        },
+        "versionArguments": {
+          "description": "The arguments that make the executable print its version.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "series": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "#/definitions/Series"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "version",
+              "distributions"
+            ],
+            "properties": {
+              "version": {
+                "$ref": "#/definitions/Version"
+              },
+              "distributions": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/definitions/InterpreterDistribution"
+                }
+              }
+            }
           }
         }
       }

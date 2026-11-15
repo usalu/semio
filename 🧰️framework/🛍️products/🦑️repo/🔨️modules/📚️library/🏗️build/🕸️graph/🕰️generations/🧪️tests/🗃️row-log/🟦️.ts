@@ -117,3 +117,17 @@ test("the patch learns the index row of a log row once: 300 owners that share a 
   expect(afterReads-before).toBeLessThan(3300);
  }finally{log.close();rmSync(directory,{recursive:true,force:true});}
 },120000);
+
+test("a builder leaves out the rows of an excluded list, whichever order they arrive in, and keeps the others once",()=>{
+ const directory=mkdtempSync(join(tmpdir(),"row-log-exclude-")),log=createRowLogV1({path:join(directory,"rows.log")});
+ try{
+  const row=(n:number)=>({kind:"exists",path:`/w/${n}`,fact:true}),supported=log.append([row(1),row(2),row(3)]),builder=log.builder();
+  builder.exclude(supported);
+  builder.add([row(2),row(4),row(4),row(5)]);
+  builder.addList(log.append([row(3),row(6)]));
+  expect([...builder.finish().rows()].map(each=>each.path)).toEqual(["/w/4","/w/5","/w/6"]);
+  const plain=log.builder();plain.add([row(2)]);
+  expect([...plain.finish().rows()].map(each=>each.path)).toEqual(["/w/2"]);
+  expect(()=>log.builder().exclude({} as never)).toThrow();
+ }finally{log.close();rmSync(directory,{recursive:true,force:true});}
+});

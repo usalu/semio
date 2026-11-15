@@ -6656,10 +6656,10 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-schema-validator",
  "semio-framework-test-fixtures",
+ "semio-framework-test-original-snapshot-owners",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-os-kernel",
- "semio-os-space-testing-sqlite-native-caller",
  "semio-plugin",
  "serde_json",
 ]
@@ -6927,13 +6927,13 @@ name = "semio-framework-replication-retained-field"
 version = "0.1.0"
 dependencies = [
  "semio-framework-mutation-diff",
- "semio-framework-replication-retained-field-preparation",
+ "semio-framework-replication-retained-field-prep",
  "semio-framework-value",
  "semio-framework-value-persistent",
 ]
 
 [[package]]
-name = "semio-framework-replication-retained-field-preparation"
+name = "semio-framework-replication-retained-field-prep"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-retained-clone",
@@ -7856,6 +7856,7 @@ dependencies = [
 name = "semio-framework-test-original-snapshot-owners"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-native-owned",

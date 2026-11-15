@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../.."
-name = "semio-s-artifact-norm-vdi3805-examples-failing-blatt-4-to-19"
+name = "semio-s-artifact-norm-vdi3805-failing-blatt-4-to-19"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

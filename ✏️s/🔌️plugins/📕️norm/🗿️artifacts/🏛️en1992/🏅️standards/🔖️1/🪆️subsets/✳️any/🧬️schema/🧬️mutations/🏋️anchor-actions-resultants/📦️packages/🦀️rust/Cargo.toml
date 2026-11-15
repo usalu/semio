@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-s-artifact-norm-en1992-mut-anchor-actions-resultants"
+name = "semio-s-artifact-norm-en1992-mut-anchor-resultants"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

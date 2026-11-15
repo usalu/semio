@@ -1,4 +1,4 @@
-//! 📍️ `change-pier-base-soil-unit-weight-n-m3` diff: patches `soil_unit_weight_n_m3` of the addressed pier_base row.
+//! 📍️ `change-pier-base-soil-unit-weight-nm3` diff: patches `soil_unit_weight_n_m3` of the addressed pier_base row.
 
 use crate::change_pier_base_soil_unit_weight_n_m3::ChangePierBaseSoilUnitWeightNM3;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998PierBaseDelta, En1998PierBasePatch};

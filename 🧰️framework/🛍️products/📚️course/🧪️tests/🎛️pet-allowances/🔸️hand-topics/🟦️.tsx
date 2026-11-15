@@ -72,7 +72,8 @@ export function registerHandTopicsTests(): void {
         expect(card.dataset.card).toBe(`quiz:${card.dataset.petTopic}`);
         expect(card.hasAttribute("data-pet-prop")).toBe(false);
         expect(card.closest(COURSE_PET_CONTROLS)).not.toBeNull();
-        expect(card.closest(COURSE_PET_CONTROLS)).toBe(card.closest("[data-layered-card]"));
+        expect(card.closest(COURSE_PET_CONTROLS)).toBe(card);
+        expect(card.closest("[data-layered-card]")!.closest(COURSE_PET_CONTROLS)).toBeNull();
         expect(card.querySelectorAll("[data-pet-prop]")).toHaveLength(0);
       }
       expect([...document.querySelectorAll(COURSE_PET_PROPS)].filter((element) => element.closest("[data-layered-card]") !== null)).toEqual([]);

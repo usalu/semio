@@ -18,8 +18,14 @@ pub const R_SI_FLOOR: f64 = 0.17;
 /// 🦠 DIN 4108-2 §6.2 surface resistance of the mould criterion [m²K/W].
 pub const R_SI_MOULD: f64 = 0.25;
 
-/// 🦠 DIN 4108-2 §6.2 interior temperature of the mould criterion [°C].
+/// 🦠 DIN 4108-2 §6.2 reference interior temperature of the mould criterion [°C].
 pub const MOULD_T_INT_C: f64 = 20.0;
+
+/// 🦠 DIN 4108-2 §6.2 reference interior relative humidity of the mould criterion [-].
+pub const MOULD_RH_INT: f64 = 0.50;
+
+/// 🦠 DIN 4108-2 §6.2 relative humidity at the interior surface that must not be exceeded to avoid mould [-].
+pub const MOULD_SURFACE_RH: f64 = 0.80;
 
 /// 🦠 DIN 4108-2 §6.2 exterior temperature of the mould criterion [°C].
 pub const MOULD_T_EXT_C: f64 = -5.0;
@@ -27,8 +33,15 @@ pub const MOULD_T_EXT_C: f64 = -5.0;
 /// 📐️ EN ISO 6946 §6.7.2.4 largest R'_T/R''_T ratio for which the combined method is valid.
 pub const COMBINED_METHOD_MAX_RATIO: f64 = 1.5;
 
-/// 🦠 DIN 4108-2 mould criterion — temperature factor at interior surface.
+/// 🦠 DIN 4108-2 mould criterion — temperature factor at interior surface for the reference climate (`MOULD_T_INT_C`, `MOULD_RH_INT`).
 pub const F_RSI_MINIMUM: f64 = 0.70;
+
+/// 🦠 Minimum temperature factor `f_Rsi,min = (θ_si,min − θ_e)/(θ_i − θ_e)` of the room climate: `θ_si,min` is the surface temperature at which the air of `rh_int` reaches `MOULD_SURFACE_RH` (Magnus inverse over water, rounded to 0.1 K), the factor is rounded to 0.01; 20 °C / 50 % gives exactly [`F_RSI_MINIMUM`] (θ_si,min = 12.6 °C).
+pub fn f_rsi_minimum(t_int_c: f64, rh_int: f64) -> f64 {
+    let ln = (rh_int * crate::part_3::saturation_vapor_pressure_pa(t_int_c) / MOULD_SURFACE_RH / 610.5).ln();
+    let theta_si_min = (237.3 * ln / (17.269 - ln) * 10.0).round() / 10.0;
+    (((theta_si_min - MOULD_T_EXT_C) / (t_int_c - MOULD_T_EXT_C)) * 100.0).round() / 100.0
+}
 
 /// ❄️ DIN 4108-3 winter condensed mass limit for most constructions [kg/m²].
 pub const GLASER_MASS_LIMIT: f64 = 1.0;

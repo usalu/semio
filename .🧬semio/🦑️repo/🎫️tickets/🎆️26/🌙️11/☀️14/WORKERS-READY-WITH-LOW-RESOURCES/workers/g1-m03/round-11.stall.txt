@@ -1,0 +1,66 @@
+== try 3 stalled 2026-11-15T01:11:58Z, last progress: > nx run workspace:deps-build-tools:prototype|0 of 1 projects inferred|
+-- ps lines of the graph service and its children
+41996     1       41:20  66176 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/M-pM^_M-'M-0M-oM-8M^Oframework/M-pM^_M^[M^MM-oM-8M^Oproducts/M-pM^_M-&M^QM-oM-8M^Orepo/M-pM^_M^TM-(M-oM-8M^Omodules/M-pM^_M^SM^ZM-oM-8M^Olibrary/M-pM^_M^OM^WM-oM-8M^Obuild/M-pM^_M^ZM-*M-oM-8M^Odoor/M-pM^_M^SM^\M-oM-8M^Oscript.
+42029 41996       41:16 318848 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex
+42029 41996       41:16 318848 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node:module');\012const hash=value=>crypto.createHash('sha256').update(value).digest('hex
+-- last 60 lines of /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-ac6bfe8f337c.log
+[repo] still working after 2030 s; last phase started: source.served
+[repository:command] still running after 2031 s
+[repository:command] still running after 2041 s
+[repository:command] still running after 2051 s
+[repo] still working after 2060 s; last phase started: source.served
+[repository:command] still running after 2061 s
+[repository:command] still running after 2071 s
+[repository:command] still running after 2081 s
+[repo] still working after 2090 s; last phase started: source.served
+[repository:command] still running after 2091 s
+[repository:command] still running after 2101 s
+[repository:command] still running after 2111 s
+[repo] still working after 2120 s; last phase started: source.served
+[repository:command] still running after 2121 s
+[repository:command] still running after 2131 s
+[repository:command] still running after 2141 s
+[repo] still working after 2150 s; last phase started: source.served
+[repository:command] still running after 2151 s
+[repository:command] still running after 2161 s
+[repository:command] still running after 2171 s
+[repo] still working after 2180 s; last phase started: source.served
+[repository:command] still running after 2181 s
+[repository:command] still running after 2191 s
+[repository:command] still running after 2201 s
+[repo] still working after 2210 s; last phase started: source.served
+[repository:command] still running after 2211 s
+[repository:command] still running after 2221 s
+[repository:command] still running after 2231 s
+[repo] still working after 2240 s; last phase started: source.served
+[repository:command] still running after 2241 s
+[repository:command] still running after 2251 s
+[repository:command] still running after 2261 s
+[repo] still working after 2270 s; last phase started: source.served
+[repository:command] still running after 2271 s
+[repository:command] still running after 2281 s
+[repository:command] still running after 2291 s
+[repo] still working after 2300 s; last phase started: source.served
+[repository:command] still running after 2301 s
+[repository:command] still running after 2311 s
+[repository:command] still running after 2321 s
+[repo] still working after 2330 s; last phase started: source.served
+[repository:command] still running after 2331 s
+[repository:command] still running after 2341 s
+[repository:command] still running after 2351 s
+[repo] still working after 2360 s; last phase started: source.served
+[repository:command] still running after 2361 s
+[repository:command] still running after 2371 s
+[repository:command] still running after 2381 s
+[repo] still working after 2390 s; last phase started: source.served
+[repository:command] still running after 2391 s
+[repository:command] still running after 2401 s
+[repository:command] still running after 2411 s
+[repo] still working after 2420 s; last phase started: source.served
+[repository:command] still running after 2421 s
+[repository:command] still running after 2431 s
+[repository:command] still running after 2441 s
+[repo] still working after 2450 s; last phase started: source.served
+[repository:command] still running after 2451 s
+[repository:command] still running after 2461 s
+[repository:command] still running after 2471 s

@@ -25,20 +25,23 @@ export function directJournalPortV1(root:string,environment:Readonly<Record<stri
 
 const carryValid=(value:unknown):boolean=>!!value&&typeof value==='object'&&Array.isArray((value as DirtyCarryV1).exact)&&Array.isArray((value as DirtyCarryV1).subtrees)&&[...(value as DirtyCarryV1).exact,...(value as DirtyCarryV1).subtrees].every(path=>typeof path==='string');
 
-/** 💾️ Keeps the cursor at which each generation was verified in the journal directory of the workspace, bounded to the newest entries; a lost or foreign file only costs one verify epoch. */
+type CursorRowV1=[string,string,number,(DirtyCarryV1|null)?,string?];
+
+/** 💾️ Keeps the cursor at which each generation was verified in the journal directory of the workspace, bounded to the newest entries and to the newest `maximumCarriedCursors` entries that carry paths (an older generation with its carry dropped would vouch for rows it never checked, so it is dropped whole); a lost or foreign file only costs one verify epoch. */
 export function fileCursorStoreV1(directory:string,maximum:number=GRAPH_HOOKS_POLICY_V1.maximumCursors,file:string=GRAPH_HOOKS_POLICY_V1.cursorFile):CursorStoreV1{
  const path=join(directory,file);
- const read=():[string,string,number,DirtyCarryV1|null?,string?][]=>{
+ const bounded=(rows:CursorRowV1[]):CursorRowV1[]=>{let owing=0;return rows.reduceRight<CursorRowV1[]>((kept,entry)=>{if(entry[3]){if(++owing>GRAPH_HOOKS_POLICY_V1.maximumCarriedCursors)return kept;}kept.unshift(entry);return kept;},[]);};
+ const read=():CursorRowV1[]=>{
   try{
    const value=JSON.parse(readFileSync(path,"utf8")) as {version?:unknown;entries?:unknown};
    if(value.version!==1||!Array.isArray(value.entries))return[];
-   return value.entries.filter((row):row is [string,string,number,DirtyCarryV1|null?,string?]=>Array.isArray(row)&&row.length>=3&&row.length<=5&&typeof row[0]==="string"&&/^[0-9a-f]{16}$/u.test(String(row[1]))&&Number.isSafeInteger(row[2])&&row[2]>=0&&(row[3]===undefined||row[3]===null||carryValid(row[3]))&&(row[4]===undefined||typeof row[4]==="string"&&/^[0-9a-f]{64}$/u.test(row[4])));
+   return value.entries.filter((row):row is CursorRowV1=>Array.isArray(row)&&row.length>=3&&row.length<=5&&typeof row[0]==="string"&&/^[0-9a-f]{16}$/u.test(String(row[1]))&&Number.isSafeInteger(row[2])&&row[2]>=0&&(row[3]===undefined||row[3]===null||carryValid(row[3]))&&(row[4]===undefined||typeof row[4]==="string"&&/^[0-9a-f]{64}$/u.test(row[4])));
   }catch{return[];}
  };
  return{
   get(key){const row=read().find(entry=>entry[0]===key);return row?{instance:row[1],seq:row[2],...(row[3]?{carry:row[3]}:{}),...(row[4]?{install:row[4]}:{})}:undefined;},
   set(key,cursor,carry){
-   const install=(cursor as {install?:string}).install,withCarry=carry&&(carry.exact.length||carry.subtrees.length)?carry:null,row:[string,string,number,DirtyCarryV1|null?,string?]=install?[key,cursor.instance,cursor.seq,withCarry,install]:withCarry?[key,cursor.instance,cursor.seq,withCarry]:[key,cursor.instance,cursor.seq],entries=[...read().filter(entry=>entry[0]!==key),row].slice(-maximum),temporary=path+"."+process.pid+".tmp";
+   const install=(cursor as {install?:string}).install,withCarry=carry&&(carry.exact.length||carry.subtrees.length)?carry:null,row:CursorRowV1=install?[key,cursor.instance,cursor.seq,withCarry,install]:withCarry?[key,cursor.instance,cursor.seq,withCarry]:[key,cursor.instance,cursor.seq],entries=bounded([...read().filter(entry=>entry[0]!==key),row].slice(-maximum)),temporary=path+"."+process.pid+".tmp";
    try{mkdirSync(directory,{recursive:true,mode:0o700});writeFileSync(temporary,JSON.stringify({version:1,entries}),{mode:0o600});renameSync(temporary,path);}
    catch{try{rmSync(temporary,{force:true});}catch{}}
   },

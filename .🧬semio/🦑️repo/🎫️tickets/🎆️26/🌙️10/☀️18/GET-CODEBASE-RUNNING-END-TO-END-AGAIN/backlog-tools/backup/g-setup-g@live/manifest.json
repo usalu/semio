@@ -1,0 +1,87 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧰️native-helpers/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "5f09751ea2b9026c779ae82513bf5383ec4532dda5471b09bde28ed72ad402a7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🛗️zero-touch/🗂️closures/🔣️.json": {
+  "file": "f001",
+  "before": "f7d72fb6f081b677b318431b90579410b3340ed74497ee89ea30573a98da9107",
+  "after": "af71c0d4455328ec2e95008cd4f3b541ce5f7267fa3c8ea78c3b438c2e52a183"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/⌨️command/🟦️.ts": {
+  "file": "f002",
+  "before": "d0420033ade08a771df8f4f4eb0b3453537dc2108091504068af8e95d2eab830",
+  "after": "c11daea5b56820fdbc07acd7b9cdc6fe6573a25eb04c253c50f1d46068e647f6"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🔣️.json": {
+  "file": "f003",
+  "before": "c93f6e1fc0b0bf98c878245ebdd80348078ea4abe68c920d6ec975e3935334d1",
+  "after": "d37f1698126dd70a6286361d4e5fb8ad3dd53c1f3e86fadc0bd74aa95da091db"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🟦️.ts": {
+  "file": "f004",
+  "before": "3665b082a9c50e97acbf697ed3289f1a5a45fc5672a9092002f520056760ecc3",
+  "after": "c73aa8fc638d4c1878ad55f3497a9bffc44850b9cd1581eb140fc9306be92944"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f005",
+  "before": "8de566a3059b7ea4ed7093247addf24091830ac2d0f464f3ceb068df7506fce3",
+  "after": "a73f0a79bedfc7de32177fde193b740654243c7ddab84536fa3f3cbd70e1e2a4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🧪️tests/🪜️steps/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "c623c15a032db4b9ca66783e6b70eb520a3a18c59d1e63e7443cd7e227c5355d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-setup/🧬️schema/🔣️.json": {
+  "file": "f007",
+  "before": "9529a3557d5decfe8518752f98b48982f60789821ed619588148dcf439ae92c0",
+  "after": "aaf9180b732f78529118f5905025dc7d435972ae8d64996796c21de659fdfe03"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/💊️remedies/📖️texts/🔣️.json": {
+  "file": "f008",
+  "before": "d9889f2bbcac2fc17d5f1d6b8e68d73c42137a915f84c077d0f7cbc7ff86296c",
+  "after": "3a4067632024582ffa575a5ed6f6eb56d4984e8e9cf68dae06e256a47f17afd2"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/💊️remedies/🧪️tests/🟦️.ts": {
+  "file": "f009",
+  "before": "3befc8b015e0ee14dac513281b846c473f7586797cbafa64715f4be1c0f70c70",
+  "after": "59a34cc74fd525c877855d2c3a38d83dc05cfa731a49335689f0929dbabea88f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🔣️policy.json": {
+  "file": "f010",
+  "before": "cc538d3e29f41a57812a2f189c604187e0f042298be3ae5e0f94fddfc9cc8976",
+  "after": "f2b3d0f7443f3b34b235fd37fed941ef71fe1b7240a7c31279a0d7f7748b2c6a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🟦️.ts": {
+  "file": "f011",
+  "before": "8dad8643695103d74c6fd51eb954df4b330871ecb6862c84cc805af12cf31a08",
+  "after": "9fdd0583e0bc5df1ea2333cc156ccbcad23a782ea9c11a27ee631af2a3d9c5f7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🧮️matrix/🔣️.json": {
+  "file": "f012",
+  "before": "bb2974370bb52c361d9a7d8985c3c786a2c3731c0a217d64a86db064e3a0e243",
+  "after": "ee8e7e4a84cad0c3223de630f410b8403d8783a4bfa9aa01504697f2ca034afb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🧰️toolchain/🐍️oracle/🐍️.py": {
+  "file": null,
+  "before": null,
+  "after": "4677741d3c95fe0c2c311bb2c72fd6998f75199854a2e3a9c3bda0380985a034"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🧰️toolchain/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "a6f0734b418eee45567c9f5d9c1dcaae9324e4eb287ec172ad34c84c206ca056"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧫️fixtures/🔣️.json": {
+  "file": "f015",
+  "before": "1a756edfcebc7c8ff6f0a0fc2953efd2e473ad183b1e591a66d2f1d5b815cc85",
+  "after": "3cfaf527d75285a80f516e8050d2c2ccb35ce60a9f2c2dc7b8bdd8372156056c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧬️schema/🔣️.json": {
+  "file": "f016",
+  "before": "98e859a145abcfe3fd2a687fce58d86221eccfc75e0d23fc66580c67bc2b9c3f",
+  "after": "944b385b885b6c1168201d568abff96af8191c40d23e604d162d6453e558e273"
+ }
+}

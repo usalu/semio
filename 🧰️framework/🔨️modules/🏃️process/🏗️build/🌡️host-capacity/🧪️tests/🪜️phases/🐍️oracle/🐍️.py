@@ -43,6 +43,10 @@ def phase_class(phase):
     return "phase:"+phase
 
 def record(policy,store,lineage,operation,default,run):
+    ceiling=run.get("ceilingMegabytes")
+    if ceiling is not None:
+        run={**run,"peakMegabytes":min(run["peakMegabytes"],max(0,ceiling))}
+        if run.get("phases"):run["phases"]=[{**row,"peakMegabytes":min(row["peakMegabytes"],max(0,ceiling))} for row in run["phases"]]
     phases=run.get("phases") or []
     if not phases:
         return base.record(policy,store,lineage,{"operation":operation,"jobs":run["jobs"],"peakMegabytes":run["peakMegabytes"],"defaultMegabytes":default,"activeMilliseconds":run["activeMilliseconds"],"peakAtMilliseconds":run["peakAtMilliseconds"],"endedAtMs":run["endedAtMs"]})
@@ -65,8 +69,7 @@ def record(policy,store,lineage,operation,default,run):
 
 def estimate_phase(policy,store,phase,prior,now):
     rules=policy["estimates"]
-    samples=store["classes"].get(phase_class(phase),{"samples":[]})["samples"]
-    weight=base.weights(policy,samples,now)
+    samples,weight=base.robust(policy,store["classes"].get(phase_class(phase),{"samples":[]})["samples"],now)
     total=sum(weight)
     if not samples or total==0:return None
     effective=total/1e6
@@ -104,7 +107,7 @@ def resize(policy,req,est,capacity,phase,context):
     def ramp(ms):return clamp(MINIMUM_RAMP,ms,rules["maximumRampMilliseconds"])
     if phase=="rebuild":
         build=est["phases"].get("rebuild")
-        wanted=0 if build is None else min(capacity,build["megabytes"])
+        wanted=0 if build is None else min(capacity*policy["estimates"]["rebuildShareBasisPoints"]//10000,build["megabytes"])
         if build is not None and wanted>context["reservedMegabytes"]:return {"reservedMegabytes":wanted,"rampMilliseconds":ramp(build["rampMilliseconds"])}
         return None
     order=["assembly","plan","execution"]
@@ -206,7 +209,7 @@ def random_run(rng,now,with_phases=True,rebuild=None):
 def generate():
     policy={"estimates":base.POLICY,"memory":{"rampMilliseconds":MINIMUM_RAMP}}
     rng=random.Random(20261026)
-    out={"policy":base.POLICY,"segmentCases":[],"recordCases":[],"estimateCases":[],"resizeCases":[],"slotCases":[],"floorCases":[],"replay":[]}
+    out={"policy":base.POLICY,"segmentCases":[],"recordCases":[],"estimateCases":[],"resizeCases":[],"slotCases":[],"floorCases":[],"clampCases":[],"replay":[]}
     for index in range(60):
         run,raw=random_run(rng,1_000_000_000)
         out["segmentCases"].append({"name":f"segments-{index}","readings":raw["readings"],"transitions":raw["transitions"],"end":raw["end"],"expect":run["phases"]})
@@ -237,7 +240,17 @@ def generate():
             out["floorCases"].append({"request":req,"ratioBasisPoints":ratio,"capacityMegabytes":capacity,"floorMegabytes":floor_mb,"expect":scale_floor(policy,req,ratio,capacity,floor_mb)})
         for total,floor in ((32768,4096),(16384,2048)):
             out["slotCases"].append({"totalMegabytes":total,"floorMegabytes":floor,"nowMs":now,"expect":rebuild_slots(policy,store,total,floor,now)})
+    for name,ceiling,peaks in (("a thrashing builder read at 27 GB on a 14 GB host",14336,[27488,27488,27488]),("sane builds under the ceiling",14336,[5200,6100,5800]),("one overcount among sane builds",14336,[5200,29964,5800,6100])):
+        run_=lambda peak,at:{"jobs":1,"peakMegabytes":peak,"activeMilliseconds":300000,"peakAtMilliseconds":20000,"endedAtMs":at,"ceilingMegabytes":ceiling,"phases":[{"phase":"assembly","startMilliseconds":0,"activeMilliseconds":4000,"peakMegabytes":380,"peakAtMilliseconds":2000},{"phase":"rebuild","startMilliseconds":4000,"activeMilliseconds":290000,"peakMegabytes":peak,"peakAtMilliseconds":20000},{"phase":"execution","startMilliseconds":294000,"activeMilliseconds":6000,"peakMegabytes":900,"peakAtMilliseconds":296000}]}
+        history=[{"lineage":["show","show:projects"],"operation":"show","defaultMegabytes":5120,"run":run_(peak,1_000_000+index*1000)} for index,peak in enumerate(peaks)]
+        store={"version":1,"classes":{}}
+        for step in history:store=record(policy,store,step["lineage"],step["operation"],step["defaultMegabytes"],step["run"])
+        out["clampCases"].append({"name":name,"ceilingMegabytes":ceiling,"nowMs":1_000_000+10_000,"history":history,"expect":store,"rebuild":estimate_phase(policy,store,"rebuild",base.POLICY["rebuildPriorMegabytes"],1_000_000+10_000)})
     out["replay"]=replay(7,300,0.25)
+    out["outliers"]=[]
+    for name,ratios in (("the live incident: a rebuild of 25 times and one of 1.16 times",[250518,11563]),("a rebuild spike among four ordinary ones",[250518,11000,12000,11500,10500]),("two heavy rebuilds are a heavy tail",[250518,240000,11563]),("a lone heavy rebuild",[250518])):
+        store={"version":1,"classes":{"phase:rebuild":{"samples":[{"atMs":1_000_000-index*1000,"ratioBasisPoints":ratio,"activeMilliseconds":48347,"peakAtMilliseconds":20983} for index,ratio in enumerate(ratios)]}}}
+        out["outliers"].append({"name":name,"store":store,"prior":base.POLICY["rebuildPriorMegabytes"],"nowMs":1_000_000,"expect":estimate_phase(policy,store,"rebuild",base.POLICY["rebuildPriorMegabytes"],1_000_000)})
     return out
 
 if __name__=="__main__":

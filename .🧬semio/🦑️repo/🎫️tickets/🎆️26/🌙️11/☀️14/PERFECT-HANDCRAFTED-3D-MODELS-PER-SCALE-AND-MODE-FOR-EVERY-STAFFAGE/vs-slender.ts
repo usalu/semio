@@ -1,0 +1,11 @@
+import { assetPathsFromFiles, readStreamedAsset } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+const dir = process.env.VALIDATOR_MODULE ?? "🧊️volumes";
+const S0 = await import(`../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/${dir}/🌓️silhouette/🟦️.ts`);
+const { measureAsset } = S0;
+if (process.env.NOSEAL) S0.Mask.prototype.seal = () => {};
+const [slug, scale] = [process.argv[2]!, Number(process.argv[3])];
+const entry = (await assetPathsFromFiles()).find((e) => e.folder === slug)!;
+const { asset } = await readStreamedAsset(entry);
+const t = Date.now();
+const m = measureAsset(asset as never, scale as never, undefined, undefined, (0.15 * scale) / 1000);
+console.log(dir, slug, scale, Date.now() - t, "ms", Object.entries(m.views).map(([v, x]: any) => `${v} iou ${x.iou.toFixed(3)} p95 ${(x.p95M * 1000).toFixed(1)} hd ${(x.hausdorffM * 1000).toFixed(0)}`).join(" | "));

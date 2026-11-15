@@ -390,22 +390,32 @@ impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowDirectSto
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{let result=(||{
-            if !self.closing {
-                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
-            }
-            if !self.retirement.is_empty() {
-                return self.retirement.step(grant);
-            }
-            if grant.maximum_items == 0 {
-                return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
-            }
-            if let Some(values) = self.preview_off.take().or_else(|| self.preview_next.take()).or_else(|| self.edge_ids.take()).or_else(|| self.node_ids.take()) {
-                self.retirement.push(values);
-                return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } });
-            }
-            Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() })
-        })();let work=u64::from(matches!(&result,Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}) if *progress!=Default::default()));semio_framework_value::RetainedWorkOutcome{result,work}})
+        use semio_framework_job::InteractiveJobCloseStep as Close;
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
+        if !self.closing {
+            return Ok(Close::Blocked);
+        }
+        if !self.retirement.is_empty() {
+            let demand = self.retirement.demands(cx.retained_grant().maximum_copy_bytes)?;
+            let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+                let body = effect.grant().maximum_copy_bytes;
+                self.retirement.step(body, effect)
+            })?;
+            return Ok(if self.terminal_is_empty() { Close::Complete { progress: step.progress() } } else { Close::Pending { progress: step.progress() } });
+        }
+        if self.preview_off.is_some() || self.preview_next.is_some() || self.edge_ids.is_some() || self.node_ids.is_some() {
+            let step = semio_framework_job::close_original_retained_effect_step(cx, RetirementDemand { depth: 1, ..Default::default() }, |effect| {
+                if effect.remaining_work_units()? == 0 || !effect.performed(1)? {
+                    return Ok::<_, semio_framework_value::ValueError>(RetainedCloneStep::Progress(Default::default()));
+                }
+                if let Some(values) = self.preview_off.take().or_else(|| self.preview_next.take()).or_else(|| self.edge_ids.take()).or_else(|| self.node_ids.take()) {
+                    self.retirement.push(values);
+                }
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+            })?;
+            return Ok(Close::Pending { progress: step.progress() });
+        }
+        Ok(Close::Complete { progress: Default::default() })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -435,4 +445,3 @@ impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowDirectSto
 }
 //#endregion 🧵️DirectStoreLaneRoutes
 
-semio_plugin::retained_command::terminal_frame_bound!(FlowDirectStoreWork);

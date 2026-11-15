@@ -65,9 +65,9 @@ record change-zone-theta-i-heat-c tag=28
 field payload bytes
 record change-zone-theta-i-cool-c tag=29
 field payload bytes
-record change-zone-internal-gains-w-m2 tag=30
+record change-zone-internal-gains-wm2 tag=30
 field payload bytes
-record change-zone-lighting-power-w-m2 tag=31
+record change-zone-lighting-power-wm2 tag=31
 field payload bytes
 record insert-element tag=32
 field payload bytes

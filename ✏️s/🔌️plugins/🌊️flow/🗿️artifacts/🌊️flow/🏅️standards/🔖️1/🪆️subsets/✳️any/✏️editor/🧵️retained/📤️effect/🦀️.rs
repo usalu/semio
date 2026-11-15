@@ -1,20 +1,21 @@
 use super::*;
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,arc_custody::SharedControlledRetirement};
+use semio_framework_value::retirement::{RetireOwned,arc_custody::ArcLease};
 
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct FlowHostEffectSources {
+#[doc(hidden)]
+pub struct FlowHostEffectSources {
  command:FlowCommand,
- snapshot:SharedControlledRetirement<FlowSnapshot>,
- config:SharedControlledRetirement<FlowMainWindowConfig>,
- history:SharedControlledRetirement<semio_plugin::HistoryView>,
- children:SharedControlledRetirement<semio_plugin::ChildContentView>,
+ snapshot:ArcLease<FlowSnapshot>,
+ config:ArcLease<FlowMainWindowConfig>,
+ history:ArcLease<semio_plugin::HistoryView>,
+ children:ArcLease<semio_plugin::ChildContentView>,
  instance_owner:semio_plugin::ArtifactInstanceOperationOwnerHandle,
  completion:semio_plugin::ArtifactToolCompletion<semio_plugin::EditorApp<FlowPlayApp>>,
 }
 
 impl RetireOwned for FlowHostEffectPayload {
- fn retirement(self)->Box<dyn RetirementCursor>{let Self{command,snapshot,config,history,children,instance_owner,completion}=self;FlowHostEffectSources{command,snapshot:SharedControlledRetirement::lease(snapshot),config:SharedControlledRetirement::lease(config),history:SharedControlledRetirement::lease(history),children:SharedControlledRetirement::lease(children),instance_owner,completion}.retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes};sequence_birth_bytes(&[deferred_birth_bytes::<FlowCommand>(),deferred_birth_bytes::<SharedControlledRetirement<FlowSnapshot>>(),deferred_birth_bytes::<SharedControlledRetirement<FlowMainWindowConfig>>(),deferred_birth_bytes::<SharedControlledRetirement<semio_plugin::HistoryView>>(),deferred_birth_bytes::<SharedControlledRetirement<semio_plugin::ChildContentView>>(),deferred_birth_bytes::<semio_plugin::ArtifactInstanceOperationOwnerHandle>(),deferred_birth_bytes::<semio_plugin::ArtifactToolCompletion<semio_plugin::EditorApp<FlowPlayApp>>>()])}
+ type RetirementCursor=<FlowHostEffectSources as RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{let Self{command,snapshot,config,history,children,instance_owner,completion}=self;FlowHostEffectSources{command,snapshot:ArcLease::new(snapshot),config:ArcLease::new(config),history:ArcLease::new(history),children:ArcLease::new(children),instance_owner,completion}.retirement_seed()}
  fn controlled_retirement_supported()->bool{true}
 }

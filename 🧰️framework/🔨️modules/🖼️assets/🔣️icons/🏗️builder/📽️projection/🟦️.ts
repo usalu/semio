@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
+import { leadingEmojiIdentity } from "../../../../../📦️packages/🟦️typescript/🪪️identity/🧩️grapheme/🟦️.ts";
 
 const assetsRoot = (): string => join(import.meta.dirname, "..", "..", "..");
 

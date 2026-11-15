@@ -24,8 +24,8 @@
         "motion": "spin"
       },
       "prompt": {
-        "en": "Assign each building its specific cooling load in W/m² (the heat to remove on a hot design day, VDI 2078) and its annual cooling demand in kWh/(m²·a) (the useful cooling per year to keep about 26 °C), both per m² of floor area. Allow about five minutes: compare every item, check units, and review your answer. New design examples use representative teaching estimates rather than universal limits.",
-        "de": "Ordne jedem Gebäude seine spezifische Kühllast in W/m² (die an einem heißen Auslegungstag abzuführende Wärme, VDI 2078) und seinen Jahres-Kühlbedarf in kWh/(m²·a) (die Nutzkälte pro Jahr, um etwa 26 °C zu halten) zu, beide je m² Fläche. Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbeispiele verwenden typische Lehrannahmen statt allgemeingültiger Grenzwerte."
+        "en": "Assign each building its specific cooling load in W/m² (the heat to remove on a hot design day, VDI 2078:2015-06) and its annual cooling demand in kWh/(m²·a) (the useful cooling per year to keep about 26 °C), both per m² of floor area. Allow about five minutes: compare every item, check units, and review your answer. New design examples use representative teaching estimates rather than universal limits.",
+        "de": "Ordne jedem Gebäude seine spezifische Kühllast in W/m² (die an einem heißen Auslegungstag abzuführende Wärme, VDI 2078:2015-06) und seinen Jahres-Kühlbedarf in kWh/(m²·a) (die Nutzkälte pro Jahr, um etwa 26 °C zu halten) zu, beide je m² Fläche. Plane etwa fünf Minuten ein: Vergleiche alle Beispiele, prüfe die Einheiten und kontrolliere deine Antwort. Neue Auslegungsbeispiele verwenden typische Lehrannahmen statt allgemeingültiger Grenzwerte."
       },
       "dimensions": [
         {
@@ -98,8 +98,8 @@
         {
           "id": "new-home-geg",
           "label": {
-            "en": "New home to GEG 2024 with external blinds (DIN 4108-2)",
-            "de": "Neues Wohngebäude nach GEG 2024 mit Außenjalousien (DIN 4108-2)"
+            "en": "New home to GModG with external blinds (DIN 4108-2:2013-02, Abschn. 8)",
+            "de": "Neues Wohngebäude nach GModG mit Außenjalousien (DIN 4108-2:2013-02, Abschn. 8)"
           },
           "short": {
             "en": "New home with external blinds",
@@ -114,15 +114,15 @@
             "cooling-demand": 5
           },
           "explanation": {
-            "en": "About 15 W/m² and 5 kWh/(m²·a): the summer heat protection of DIN 4108-2, which the GEG (German Buildings Energy Act) requires, limits solar gains, so cooling is needed only on a few hot days (≈ 350 full-load hours).",
-            "de": "Rund 15 W/m² und 5 kWh/(m²·a): der sommerliche Wärmeschutz nach DIN 4108-2 begrenzt die Solargewinne, gekühlt wird nur an wenigen heißen Tagen (≈ 350 Volllaststunden)."
+            "en": "About 15 W/m² and 5 kWh/(m²·a): the summer heat protection of DIN 4108-2:2013-02 (section 8), which GModG §14 (formerly GEG) requires, limits solar gains, so cooling is needed only on a few hot days (≈ 350 full-load hours).",
+            "de": "Rund 15 W/m² und 5 kWh/(m²·a): der sommerliche Wärmeschutz nach DIN 4108-2:2013-02 (Abschn. 8, GModG §14) begrenzt die Solargewinne, gekühlt wird nur an wenigen heißen Tagen (≈ 350 Volllaststunden)."
           }
         },
         {
           "id": "school-new-build",
           "label": {
-            "en": "New school building (GEG), cooled",
-            "de": "Neues Schulgebäude (GEG), gekühlt"
+            "en": "New school building (GModG), cooled",
+            "de": "Neues Schulgebäude (GModG), gekühlt"
           },
           "short": {
             "en": "Cooled new school building",
@@ -164,8 +164,8 @@
         {
           "id": "office-geg-shading",
           "label": {
-            "en": "New office building (GEG) with external sun shading",
-            "de": "Neues Bürogebäude (GEG) mit außenliegendem Sonnenschutz"
+            "en": "New office building (GModG) with external sun shading",
+            "de": "Neues Bürogebäude (GModG) mit außenliegendem Sonnenschutz"
           },
           "short": {
             "en": "New office with external shading",
@@ -180,8 +180,8 @@
             "cooling-demand": 20
           },
           "explanation": {
-            "en": "About 40 W/m² and 20 kWh/(m²·a): people, computers and lighting add about 25 W/m² to the shaded solar gains; offices see about 500 full-load hours of cooling (VDI 2078 practice).",
-            "de": "Rund 40 W/m² und 20 kWh/(m²·a): Menschen, Computer und Licht bringen rund 25 W/m² zu den verschatteten Solargewinnen; Büros kommen auf etwa 500 Kühl-Volllaststunden (Praxis nach VDI 2078)."
+            "en": "About 40 W/m² and 20 kWh/(m²·a): people, computers and lighting add about 25 W/m² to the shaded solar gains; offices see about 500 full-load hours of cooling (VDI 2078:2015-06 practice).",
+            "de": "Rund 40 W/m² und 20 kWh/(m²·a): Menschen, Computer und Licht bringen rund 25 W/m² zu den verschatteten Solargewinnen; Büros kommen auf etwa 500 Kühl-Volllaststunden (Praxis nach VDI 2078:2015-06)."
           }
         },
         {
@@ -204,8 +204,8 @@
           },
           "familiar": true,
           "explanation": {
-            "en": "About 50 W/m² and 25 kWh/(m²·a): the sun heats the roof surface to 60–70 °C (sol-air temperature, VDI 2078), and the heat passes the uninsulated roof almost unhindered.",
-            "de": "Rund 50 W/m² und 25 kWh/(m²·a): die Sonne heizt die Dachhaut auf 60–70 °C auf (Sonnenlufttemperatur, VDI 2078), und die Wärme gelangt fast ungehindert durch das ungedämmte Dach."
+            "en": "About 50 W/m² and 25 kWh/(m²·a): the sun heats the roof surface to 60–70 °C (sol-air temperature, VDI 2078:2015-06), and the heat passes the uninsulated roof almost unhindered.",
+            "de": "Rund 50 W/m² und 25 kWh/(m²·a): die Sonne heizt die Dachhaut auf 60–70 °C auf (Sonnenlufttemperatur, VDI 2078:2015-06), und die Wärme gelangt fast ungehindert durch das ungedämmte Dach."
           }
         },
         {
@@ -227,8 +227,8 @@
             "cooling-demand": 90
           },
           "explanation": {
-            "en": "About 70 W/m² and 90 kWh/(m²·a): medical equipment, strict room conditions (DIN 1946-4) and 24-hour operation add up to about 1,300 full-load hours.",
-            "de": "Rund 70 W/m² und 90 kWh/(m²·a): Medizintechnik, strenge Raumbedingungen (DIN 1946-4) und Betrieb rund um die Uhr ergeben etwa 1.300 Volllaststunden."
+            "en": "About 70 W/m² and 90 kWh/(m²·a): medical equipment, strict room conditions (DIN 1946-4:2018-09) and 24-hour operation add up to about 1,300 full-load hours.",
+            "de": "Rund 70 W/m² und 90 kWh/(m²·a): Medizintechnik, strenge Raumbedingungen (DIN 1946-4:2018-09) und Betrieb rund um die Uhr ergeben etwa 1.300 Volllaststunden."
           }
         },
         {
@@ -856,7 +856,7 @@
           "id": "compute-room",
           "label": {
             "en": "Dense computing room with continuous cooling",
-            "de": "Dichter Rechnerraum mit durchgehender Kühlung"
+            "de": "Dichter Rechnerraum mit durchgehender Kühltechnik"
           },
           "icon": {
             "emoji": "🏫",
@@ -982,3 +982,4 @@
     }
   ]
 }
+                         

@@ -24,7 +24,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts"
     ],
     "default": [
-      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🔨️modules/🕸️graph/🤖️generated\"" }, "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧫️fixtures/🔣️outputs.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts",
@@ -52,8 +52,14 @@
   "targets": {
     "generate": {
       "executor": "repo:script",
+      "outputs": [],
       "metadata": {
         "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          },
           "sourceInputObservation": "freshness"
         }
       },
@@ -62,7 +68,7 @@
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts generate"
       },
-      "cache": true,
+      "cache": false,
       "inputs": [
         "generatorSources"
       ]

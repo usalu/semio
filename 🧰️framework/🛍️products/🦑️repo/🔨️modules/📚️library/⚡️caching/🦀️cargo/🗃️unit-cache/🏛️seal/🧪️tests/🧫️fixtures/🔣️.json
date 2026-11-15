@@ -1,0 +1,11 @@
+{
+ "entry": "set/main.ts",
+ "files": {
+  "set/main.ts": "import {value} from \"./lib/x.ts\";\nimport data from \"../data.json\" with {type:\"json\"};\nconst lazy=new URL(\"./lib/lazy.ts\",import.meta.url);\nconsole.log(String(value+data.n)+\":\"+lazy.pathname.endsWith(\"lazy.ts\"));\n",
+  "set/lib/x.ts": "export const value=40;\n",
+  "set/lib/lazy.ts": "export const lazy=true;\n",
+  "data.json": "{\"n\":2}\n"
+ },
+ "digest": "8d9ccc91e7ff4493",
+ "output": "42:true\n"
+}

@@ -118,3 +118,8 @@ export function waveArgumentsV1(forwarded: readonly string[], wave: WaveV1, work
   return [...rest, ...wave.projects.flatMap(project => ["--project", project]), "--workers", wave.parallel && explicit !== undefined ? explicit : String(workers)];
 }
 //#endregion 🍰️Shards
+
+/** 🪪️ Narrows the caller's output grant to what one repository command policy admits (a grant may exceed it, e.g. a million lines). */
+export function browserInstallOutputV1(grant: { readonly maximumBytes: number; readonly maximumLines: number }): { readonly maximumBytes: number; readonly maximumLines: number } {
+  return { maximumBytes: Math.min(grant.maximumBytes, 268_435_456), maximumLines: Math.min(grant.maximumLines, 65_536) };
+}

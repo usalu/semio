@@ -620,7 +620,7 @@
    "id": "sensitive-bunfig",
    "path": "bunfig.toml",
    "edit": {
-    "text": "[install]\nlinker = \"hoisted\"\n"
+    "text": "[install]\nlinker = \"isolated\"\n"
    },
    "expect": "different"
   },

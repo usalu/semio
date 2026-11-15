@@ -1,0 +1,67 @@
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:28: [UNI] | `V`, `n`, `V̇ = V·n` (= `q_v,R`) | Kapitel 2 | `Q̇_V = V̇·c_Luft·Δθ` (Φ as the generic heat flow, Q̇ as the load at the room, index V = ventilation) | `q_v,R` in `Q̇_V = ρ·c_p·Δθ·q_v,R` |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:29: [UNI] | `c_Luft = ρ·c_p / 3600 ≈ 0,34 Wh/(m³·K)` (ρ ≈ 1,2 kg/m³ at 20 °C, 1,27 kg/m³ at 5 °C; the norm uses the fixed 0,34) | Kapitel 3 | winter factor | summer factor |
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:49: [UNI] Winter: Δθ = 20 K → Q̇_V,sens ≈ 1500 W   → mit WRG (η = 0,8) ≈ 300 W
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:50: [UNI] Δx = 4,3 g/kg → Q̇_V,lat ≈ 770 W (Plattentauscher gewinnt nichts zurück;
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:52: [UNI] Sommer: Δθ =  6 K → Q̇_V,sens ≈  450 W   → mit WRG (η = 0,8) ≈  90 W
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md:53: [UNI] Δx = 4,5 g/kg → Q̇_V,lat ≈ 810 W (Plattentauscher gewinnt nichts zurück)
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:62: [UNI] | 3 | Energie bleibt erhalten — jedes Watt wird Wärme | E_ein = E_aus + ΔE_Speicher · Lampe 5 % Licht + 95 % Wärme → 100 % Wärme · Mensch 100 W · Winter/Sommer |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:65: [UNI] | 6 | Thermische Masse — speichern und zeitversetzt abgeben | Q = m · c · ΔT an 1 m² Betondecke · 24-h-Verlauf, Phasenverschiebung, Dämpfung · warum die Decke · Nachtlüftung/Sonnengewinne |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:66: [UNI] | 7 | Sensible und latente Wärme | T-Q-Diagramm Wasser · Sättigungskurve x_s(ϑ) · Taupunkt · Mensch 70 W sensibel + 30 W latent · Tauwasser/Entfeuchtung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:67: [UNI] | 8 | Zusammenfassung — was wir gelernt haben | Sieben Zeilen, eine je Baustein: P = E / t · 1 kW · 1 h = 1 kWh · E_ein = E_aus + ΔE_Speicher · COP = Q_H / W_el · Q̇_S = g · A · I · Q = m · c · ΔT · Q
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:84: [UNI] | **Thermische Masse** | Wärmespeicher eines Bauteils, Q = m · c · ΔT | 1 m² Beton, 10 cm, 2 K → 480 kJ ≈ 0,13 kWh |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:95: [UNI] | **Q = m · c · ΔT** | sensible Wärme (Dusche, Betondecke, Wasser) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:98: [UNI] | **E_ein = E_aus + ΔE_Speicher** | 1. Hauptsatz für einen Raum |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:102: [UNI] | **m = ρ · A · d** | 2 400 kg/m³ · 1 m² · 0,10 m = 240 kg |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:104: [UNI] | **A₁ · v₁ = A₂ · v₂**, **p + ½ ρ v² = konstant** | Kontinuität und Bernoulli |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:166: [UNI] | 4 · Natürliche Lüftung | Fensterregeln · Stoß oder Kipp · Querlüftung · Auftrieb · Nachtlüftung · Grenzen | Fenster als Regler · 340 Wh gegen ≈ 780 Wh · 1/A_eff² = 1/A₁² + 1/A₂² · Δp = h · g · (ρ_a 
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:167: [UNI] | 5 · Mechanische Lüftung und WRG | Grundtypen · Wärmerückgewinnung · Anlagenvergleich · Kanalquerschnitt | η_WRG = (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL) · Winter 1 500 → 300 W · Sommer sensibel 450 → 90 
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:177: [UNI] | **c_Luft** | volumenbezogene Wärmekapazität, ρ · c_p / 3 600 | ≈ 0,34 Wh/(m³·K) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:178: [UNI] | **Δθ** | Temperaturdifferenz innen − außen, mit Vorzeichen | Winter 20 K · Sommer −6 K (Gewinn) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:179: [UNI] | **Δx** | Differenz der absoluten Feuchte | 4,5 g/kg (15,0 gegen 10,5 g/kg) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:180: [UNI] | **η_WRG** | Temperaturänderungsgrad der Wärmerückgewinnung | 0,8 |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:187: [UNI] | **c_Luft = ρ · c_p / 3 600** | 1,2 · 1 005 / 3 600 ≈ 0,34 Wh/(m³·K) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:188: [UNI] | **Q̇_V,sens = V̇ · c_Luft · Δθ** | sensible Lüftungsleistung; Winter 440 · 0,5 · 0,34 · 20 ≈ 1 500 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:189: [UNI] | **Q̇_V,lat = ρ · r · Δx · q_v,R** | latente Last; 1,2 · 2 450 kJ/kg · 4,5 g/kg · 0,061 m³/s ≈ 810 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:190: [UNI] | **Q̇_V,sens · (1 − η_WRG)** | mit Wärmerückgewinnung; 1 500 → 300 W, 450 → 90 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:197: [UNI] | **Heizung** | Φ_V = Q̇_V,sens als Lüftungsterm der Heizlast (1 500 W, mit WRG 300 W); Stoß- statt Kipplüftung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:205: [UNI] - Ein **offenes Fenster** gewinnt nichts zurück (η = 0); erst die Zu-/Abluftanlage kann η_WRG nutzen.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:225: [UNI] | **Δθ** | Temperaturdifferenz — einziger Antrieb des Wärmestroms (warm → kalt) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:228: [UNISPELL] | **λ (Lambda)** | Wärmeleitfähigkeit des Materials [W/(m·K)] |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:235: [UNI] | **R = d / λ** | Widerstand einer Schicht |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:236: [UNI] | **R_ges = R_si + Σ(d/λ) + R_se** | Gesamtwiderstand inkl. Oberflächenwiderständen |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:238: [UNI] | **Q̇ = U · A · Δθ** | Wärmestrom durch Bauteil [W] |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:245: [UNI] - **Nur U ist eine Entwurfsentscheidung** — Dämmung ist der Hebel (A und Δθ sind gegeben).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:263: [UNI] | **U-Wert je 1 m²** | Watt durch genau 1 m² Bauteil bei 1 K — die Dicke steckt schon über R = d/λ im U-Wert |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:267: [UNI] | **ΔU_WB** | pauschaler Wärmebrückenzuschlag auf die ganze Hüllfläche [W/(m²·K)] |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:273: [UNI] | **R = d / λ** | pro Schicht |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:276: [UNI] | **Φ_T = Σ (U_i · A_i · Δθ_i)** | Transmissionswärmestrom der Hülle [W] |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:277: [UNI] | **H_T = Σ U_i·A_i + Σ Ψ_k·l_k** | mit Wärmebrücken (detailliert) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:278: [UNI] | **H_T = Σ U_i·A_i + ΔU_WB · A** | mit Wärmebrücken (pauschal, ΔU_WB = 0,10 bzw. 0,05 nach DIN 4108 Beiblatt 2) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:280: [UNI] ### Wattvergleich (25 m² Wand, Δθ = 20 K)
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:302: [UNI] Die Lüftungswärmeverluste aus dem Lüftungsvideo (`2_ventilation/`) mit einer kurzen Erinnerung in die Heizlast einsetzen: V̇ = V · n, c_Luft und das winterliche Δθ ergeben Φ_V, das neben dem Transmiss
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:308: [UNI] | **Φ_V = V · n · c_Luft · Δθ** | Lüftungswärmeverlust ohne WRG; 440 · 0,5 · 0,34 · 20 ≈ 1 500 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:309: [UNI] | **Φ_V = V · n · (1 − η_WRG) · c_Luft · Δθ** | mit Wärmerückgewinnung η_WRG = 0,8: ≈ 300 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:313: [UNI] - Φ_T ≈ 2 300 W plus Φ_V ≈ 1 500 W ergibt 3 800 W; mit WRG bleiben 2 600 W.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:314: [UNI] - Die Bausteine V, n, c_Luft, Δθ und η_WRG stammen aus dem Lüftungsvideo (Kapitel 2, 3 und 5).
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:397: [UNI] | **Q̇_T = Σ U · A · Δθ** | Transmissionsverluste in W (Wärmestrom Φ als Last am Gebäude) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:398: [UNI] | **Q̇_V = n · V · ρ c_p · Δθ** | Lüftungsverluste in W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:400: [UNI] | **G_t20/15 = Σ (θ_i − θ_e)** | Gradtagzahl in Kd/a: nur Tage mit θ_e < 15 °C (Heizgrenze), Raumtemperatur θ_i = 20 °C (VDI 3807 Blatt 1) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:403: [UNI] | **Q_h = Q_l − η · Q_g, Q_g = Q_S + Q_i** | **Heizwärmebedarf** (DIN V 4108-6) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:410: [UNI] | **η** | Ausnutzungsgrad der Gewinne — Anteil der Gewinnfläche unter der Verlustkurve; schwere Bauweise speichert den Überschuss und hebt η |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:492: [UNI] Sommerliche Transmissionslast (mit ΔT_eq für solare Aufheizung, Zeitverzögerung) und — als kurze Erinnerung, ohne Herleitung — die Lüftungslast aus dem Lüftungsvideo (450 W sensibel + 810 W latent) ne
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:498: [UNI] | **Q̇_T = U · A · ΔT_eq** | Transmissionskühllast (opake Bauteile, Sommer) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:505: [UNI] | **ΔT_eq** | Äquivalente Temperaturdifferenz (solare Oberflächenaufheizung) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:510: [UNI] - Luftmenge, c_Luft, Δx und Rückgewinnung werden im Lüftungsvideo (Kapitel 2, 3, 5) erklärt; hier steht die Last neben der Transmission.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:556: [UNI] | **Q̇_V = ρ_a · c_p,a · Δθ · q_v,R** | Volumenstrom-Kühlleistung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:557: [UNI] | **q_v,R = Q̇_S,tr / (ρ_a · c_p,a · Δθ)** | Erforderlicher Volumenstrom aus solarer Last (≈ 0,126 m³/s bei Q̇_S,tr ≈ 1 060 W, Δθ = 7 K) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:595: [UNI] - Ein Passivhaus braucht Zu-/Abluft mit WRG; ein offenes Fenster hat η = 0 — die sommerliche Nachtlüftung bleibt als Ergänzung.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:605: [UNI] | Leistung | P, Q̇, Φ | W, kW | Fluss (momentan) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:608: [UNI] | Wärmeleitfähigkeit | λ | W/(m·K) | Material |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:612: [UNI] | Temperaturdifferenz | Δθ, ΔT | K | Treiber |
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:357: [UNI] "en": "0.28 W/(m²·K): e.g. masonry with about 12 cm of insulation (λ = 0.035 W/(m·K)). Source: GEG 2024, Annex 1.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:358: [UNI] "de": "0,28 W/(m²·K): z. B. Mauerwerk mit rund 12 cm Dämmung (λ = 0,035 W/(m·K)). Quelle: GEG 2024, Anlage 1."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:379: [UNI] "en": "0.20 W/(m²·K): reference value for roofs and top-floor ceilings, roughly 17 cm of insulation (λ = 0.035 W/(m·K)). Source: GEG 2024, Annex 1.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:380: [UNI] "de": "0,20 W/(m²·K): Referenzwert für Dächer und oberste Geschossdecken, rund 17 cm Dämmung (λ = 0,035 W/(m·K)). Quelle: GEG 2024, Anlage 1."
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:423: [UNI] "en": "0.10 W/(m²·K): about 35 cm of insulation (λ = 0.035 W/(m·K), R ≈ 10 m²·K/W), typical for passive-house roofs. Source: Passive House Institute.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/❓️quiz/🔣️.json:424: [UNI] "de": "0,10 W/(m²·K): rund 35 cm Dämmung (λ = 0,035 W/(m·K), R ≈ 10 m²·K/W), typisch für Passivhausdächer. Quelle: Passivhaus Institut."
+TOTAL 66

@@ -1,5 +1,5 @@
-use crate::section::{mesh, profiles};
-use crate::*;
+use semio_s_plugin_norm_mechanics::section::{mesh, profiles};
+use semio_s_plugin_norm_mechanics::*;
 use semio_s_plugin_norm_compliance::python_oracle;
 use std::cell::RefCell;
 use std::collections::BTreeMap;

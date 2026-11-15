@@ -6,6 +6,7 @@ import policy from "./🔣️.json" with {type:"json"};
 import {buildOperationArgumentsV1,normalizeBuildOptionsV1} from "../⚙️operations/🔤️options/🟦️.ts";
 import {buildHelpForArgumentsV1,resolveBuildCliLanguageV1} from "../⚙️operations/📖️help/🟦️.ts";
 import {profileCurrentPhaseV1,profilePhaseV1} from "../⏱️profile/🟨️.mjs";
+import {healReplicaAgentV1} from "./🩹️replica-agent/🟦️.ts";
 import {writeResultLineV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
 
 /** 🛃️ The part of the neutral operations catalogue the front door reads: languages, global options with their allowed values, command and subcommand names. */
@@ -126,9 +127,10 @@ export function startBuildDoorLivenessV1(environment:NodeJS.ProcessEnv,options:R
  return()=>{stopped=true;if(timer!==undefined)clearTimeout(timer);};
 }
 
-/** 🛎️ Serves help, refusals and light commands; returns `full` only when the build implementation has to start, so a command that needs none never loads it. */
+/** 🛎️ Serves help, refusals and light commands (a real invocation first starts a replica agent that launchd loaded but does not run, see `🩹️replica-agent`); returns `full` only when the build implementation has to start, so a command that needs none never loads it. */
 export async function runBuildDoorV1(root:string,typed:readonly string[],environment:NodeJS.ProcessEnv,ports:BuildDoorPortsV1=buildDoorProcessPortsV1(),sources:BuildDoorSourcesV1={}):Promise<"handled"|"full">{
  const rules=sources.policy??(policy as BuildDoorPolicyV1);
+ if(environment===process.env)try{healReplicaAgentV1();}catch{}
  let plan:BuildDoorPlanV1;
  try{plan=await profilePhaseV1("door.plan",()=>planBuildDoorV1(typed,environment,sources));}catch(error){ports.error(error instanceof Error?error.message:String(error));ports.exit(rules.refusedExitCode);return "handled";}
  if(environment===process.env)process.env.SEMIO_LANGUAGE=plan.language;

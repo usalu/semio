@@ -166,7 +166,8 @@ class SceneScaleTest(unittest.TestCase):
         metre =(module.CEIL_Y - module.FLOOR_Y) / CASES["house"]["storey_m"]
         self.assertAlmostEqual(module.WALL_X1 - module.WALL_X0, 0.35 * metre, places=6)
         stage = module._stage()
-        self.assertAlmostEqual(stage["occupant"].height, CASES["house"]["person_m"] * metre, delta=0.06 * metre)
+        self.assertAlmostEqual(stage["occupant"].height, shared.staffage_height("shared-person-winter") * metre, delta=0.06 * metre)
+        self.assertAlmostEqual(shared.staffage_height("shared-person-winter"), CASES["house"]["person_m"], delta=0.1 * CASES["house"]["person_m"])
         self.assertAlmostEqual(stage["radiator"].height, shared.staffage_height("shared-radiator-front-winter") * metre, delta=0.06 * metre)
 
 

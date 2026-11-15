@@ -1,0 +1,15 @@
+import { entryOf, loadSource, merged } from "./volumes-lib.ts";
+const P = "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🌓️silhouette/🟦️.ts";
+const { measureAsset } = (await import(P)) as any;
+const [spec, sc, view = "elevation"] = process.argv.slice(2);
+const { entry, asset } = entryOf(spec!);
+const src = process.env.SRC ? JSON.parse((await import("node:fs")).readFileSync(process.env.SRC, "utf8")) : loadSource(entry)!;
+const m = merged(asset, src);
+const vol = m.volumes[sc!];
+const soft = new Set<string>(vol.thermal.filter((s: any) => s.of && (process.env.SOFT ?? "leaf-sun,leaf-shade").split(",").includes(s.region)).map((s: any) => s.of));
+const r = measureAsset(m, Number(sc), m.presentation.defaultPose, undefined, 0.15e-3 * Number(sc), soft);
+const v = r.views[view];
+console.log("cell", v.spread.cellM, "p95", v.p95M, "soft p95", v.p95SoftM, "iou", v.iou);
+const h: number[] = v.spread.hard;
+const tot = h.reduce((a: number, b: number) => a + b, 0);
+console.log("hard total", tot, "bins", h.map((x, k) => (x ? `${k}:${x}` : "")).filter(Boolean).join(" "));

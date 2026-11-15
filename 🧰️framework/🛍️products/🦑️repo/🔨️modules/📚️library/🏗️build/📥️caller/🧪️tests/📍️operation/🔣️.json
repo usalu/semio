@@ -1,0 +1,19 @@
+{
+  "task": {"project": "workspace", "target": "deps-build-tools"},
+  "operation": ["tools", "setup", "all"],
+  "request": ["repo", "tools", "setup", "all"],
+  "accepted": [
+    {"version": 1, "kind": "orchestration", "operation": ["tools", "setup", "all"]},
+    {"version": 1, "kind": "orchestration", "operation": ["tools", "verify"]}
+  ],
+  "rejected": [
+    {"version": 1, "kind": "orchestration", "operation": []},
+    {"version": 1, "kind": "orchestration", "operation": ["Tools"]},
+    {"version": 1, "kind": "orchestration", "operation": ["tools setup"]},
+    {"version": 1, "kind": "orchestration", "operation": "tools"},
+    {"version": 1, "kind": "orchestration", "operation": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q"]},
+    {"version": 1, "kind": "orchestration", "operation": ["tools"], "children": [{"project": "child", "target": "compile"}]},
+    {"version": 1, "kind": "source", "operation": ["tools"]},
+    {"version": 1, "kind": "orchestration", "operation": ["tools"], "extra": true}
+  ]
+}

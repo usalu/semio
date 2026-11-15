@@ -29,7 +29,7 @@ semio_plugin::view_commands! {
     }
 }
 
-semio_s_plugin_norm_app_surface::norm_viewer_commands!(Din16798Snapshot);
+semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_din16798_model::Din16798Snapshot);
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(Din16798ViewBoundedCommandJobFactory, Din16798Viewer);
 
@@ -106,7 +106,7 @@ impl ArtifactViewer for Din16798Viewer {
     }
 
     fn reference_birth()->Option<fn()->Result<Din16798Snapshot,semio_plugin::Fault>>{Some(||{
-        Ok(Din16798Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
+        Ok(Din16798Snapshot::default())
     })}
 
     /// 👁️ Structurally read-only: `ViewEmit` cannot carry an artifact or draft mutation, and the one row (`viewportAct`) emits nothing at all; its effect is the ephemeral view lane.

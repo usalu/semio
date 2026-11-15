@@ -4,7 +4,7 @@
   "sourceRoot": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust",
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*.rs",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🔨️modules/⏳️async/🤖️generated\"" }, "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/**/*.rs",
       "{projectRoot}/**/*",
       "sharedGlobals"
     ],

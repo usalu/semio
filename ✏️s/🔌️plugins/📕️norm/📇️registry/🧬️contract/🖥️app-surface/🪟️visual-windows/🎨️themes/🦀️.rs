@@ -2,6 +2,15 @@
 //!
 //! 🔗️ Bundles are plain files in the schema of [`schema`]; colour maps come from `semio_s_plugin_norm_structural_scene::colour_maps`.
 
+#![allow(async_fn_in_trait, unused_imports)]
+
+extern crate semio_os_kernel as dsl;
+extern crate semio_framework_schema as schema_contract;
+extern crate semio_framework_value_derive as value_derive;
+
+pub use semio_s_plugin_norm_app_surface_viewport3d as viewport3d;
+pub use semio_s_plugin_norm_app_surface_visual_chrome::accessibility;
+
 use semio_s_plugin_norm_structural_scene::colour_maps::{metrics, ramp, MapKind, RampId, ResultField, Variant};
 use semio_s_plugin_norm_structural_scene::{LocalizedCopy, Rgb};
 
@@ -95,9 +104,9 @@ pub fn accessibility_findings(theme: &ThemeBundle) -> Vec<String> {
 pub fn ramp_for(theme: &ThemeBundle, field: ResultField) -> Option<RampId> {
     RampId::parse(match field {
         ResultField::Stress => &theme.result_ramps.stress,
-        ResultField::Temperature => &theme.result_ramps.temperature,
+        ResultField::Temperature | ResultField::HeatFlow => &theme.result_ramps.temperature,
         ResultField::Pressure => &theme.result_ramps.pressure,
-        ResultField::Settlement => &theme.result_ramps.settlement,
+        ResultField::Settlement | ResultField::Airflow => &theme.result_ramps.settlement,
     })
 }
 

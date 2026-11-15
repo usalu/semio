@@ -3,7 +3,7 @@
   "emoji": "🔀",
   "status": "closed",
   "description": "Resolve every unmerged path by keeping valuable changes from both sides. Unmerged files: .claude/launch.json, .vscode/launch.json, .vscode/🧰launch.seed.jsonc, Cargo.lock, bun.lock, framework rust script.ts, 2d test config, ui oracle json, and repo library mjs. Do not discard unique configurations, dependencies, or code from either side.",
-  "summary": "Resolved the stash conflicts in staffage and the energy authoring script, keeping axonometric drawing and level-of-detail behavior. Staffage typecheck passes. See resolution-2026-11-12.md.",
+  "summary": "Resolved the three unmerged graph-memory paths. The governor keeps attributable sample windows; the process-tree reader stays. 23 memory tests pass. Index stages are clear. See resolution-2026-11-12-memory.md.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2766"
   },
@@ -12,7 +12,8 @@
     "⚪6be5f84b0acd4c409a8573a0468cd41c",
     "cdf472ee-eec5-4075-9b2d-faf8d041b1c8",
     "5d1111dc-4f0a-464d-9b4f-55564dcd4776",
-    "44c50187-1896-46ad-b62f-a8f8dde1f6ef"
+    "44c50187-1896-46ad-b62f-a8f8dde1f6ef",
+    "9a173c48-dd41-41e0-b0c0-6a59f74f64b5"
   ],
   "interactions": [
     {
@@ -896,6 +897,39 @@
         },
         {
           "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/resolution-2026-11-12.md"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-12 22:34:23",
+      "author": "",
+      "system": "mac",
+      "client": "cursor-chat",
+      "checkpoint": "",
+      "prompt": "Solve all conflicts",
+      "llm": "grok-4"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-12 22:35:45",
+      "author": "ueli",
+      "system": "mac",
+      "client": "cursor-chat",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "Resolved the three unmerged graph-memory paths. The governor keeps attributable sample windows; the process-tree reader stays. 23 memory tests pass. Index stages are clear. See resolution-2026-11-12-memory.md.",
+      "files": [
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.mjs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🟨️.d.mts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🧪️tests/🟦️.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/resolution-2026-11-12-memory.md"
         }
       ]
     }

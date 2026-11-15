@@ -33,6 +33,52 @@ async fn a_database_file_is_stamped_and_a_foreign_format_is_refused() {
     assert!(FORMAT_VERSION == 3 && earlier.contains("v2;") && earlier.contains("v3"), "{earlier}");
 }
 
+/// 🧊️ Write the database file of `directory` as `build` leaves it, and answer its bytes.
+fn written(directory: &Path, build: impl FnOnce(&Connection)) -> Vec<u8> {
+    let file = directory.join(DATABASE_FILE);
+    let raw = Connection::open(&file).expect("raw");
+    build(&raw);
+    drop(raw);
+    std::fs::read(&file).expect("bytes")
+}
+
+#[test]
+fn a_refused_database_is_left_byte_identical_and_only_an_empty_file_is_set_up() {
+    let wal_tables = |raw: &Connection, version: i64| {
+        raw.pragma_update(None, "journal_mode", "WAL").expect("wal");
+        raw.execute_batch(SCHEMA).expect("schema");
+        raw.execute("INSERT INTO proctor_format (singleton, schema, version) VALUES (1, ?1, ?2)", params![FORMAT_SCHEMA, version]).expect("format");
+    };
+    let refused: [(&str, Box<dyn Fn(&Connection)>); 4] = [
+        ("an earlier format in WAL mode", Box::new(move |raw| wal_tables(raw, FORMAT_VERSION - 1))),
+        ("a foreign database", Box::new(|raw| raw.execute_batch("CREATE TABLE notes (id INTEGER PRIMARY KEY, body TEXT); INSERT INTO notes (body) VALUES ('mine');").expect("notes"))),
+        ("a format table without its row", Box::new(|raw| raw.execute_batch("CREATE TABLE proctor_format (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), schema TEXT NOT NULL, version INTEGER NOT NULL);").expect("table"))),
+        ("a format table of another shape", Box::new(|raw| raw.execute_batch("CREATE TABLE proctor_format (name TEXT); INSERT INTO proctor_format (name) VALUES ('x');").expect("table"))),
+    ];
+    for (label, build) in refused {
+        let directory = scratch("untouched");
+        let before = written(&directory.0, build);
+        let Err(StorageError::Backend(detail)) = Database::open(&directory.0) else { panic!("{label} must be refused") };
+        assert!(detail.contains(DATABASE_FILE), "{label}: {detail}");
+        assert_eq!(std::fs::read(directory.0.join(DATABASE_FILE)).expect("bytes"), before, "{label}: the file is byte-identical after the refusal");
+        let wal = directory.0.join(format!("{DATABASE_FILE}-wal"));
+        assert!(std::fs::metadata(&wal).map_or(true, |wal| wal.len() == 0), "{label}: no write reached the log");
+        let raw = Connection::open(directory.0.join(DATABASE_FILE)).expect("raw");
+        let proctor_tables: i64 = raw.query_row("SELECT COUNT(*) FROM sqlite_schema WHERE name = 'proctor_event'", [], |row| row.get(0)).expect("count");
+        assert_eq!(proctor_tables, i64::from(label.starts_with("an earlier")), "{label}: no schema was created");
+    }
+    let garbage = scratch("garbage");
+    let bytes = vec![0x5a; 4096];
+    std::fs::write(garbage.0.join(DATABASE_FILE), &bytes).expect("garbage");
+    assert!(matches!(Database::open(&garbage.0), Err(StorageError::Backend(_))), "a file that is no database is refused");
+    assert_eq!(std::fs::read(garbage.0.join(DATABASE_FILE)).expect("bytes"), bytes, "and left as it is");
+    let empty = scratch("empty");
+    std::fs::write(empty.0.join(DATABASE_FILE), b"").expect("empty file");
+    drop(Database::open(&empty.0).expect("an empty file is set up"));
+    assert_eq!(Database::inspect(&empty.0.join(DATABASE_FILE)).expect("whole").events, 0);
+    drop(Database::open(&empty.0).expect("and reopened"));
+}
+
 #[tokio::test]
 async fn the_log_orders_events_of_every_stream_by_commit() {
     let mut store = SqliteAuthorityStore::new(Database::memory().expect("memory"));

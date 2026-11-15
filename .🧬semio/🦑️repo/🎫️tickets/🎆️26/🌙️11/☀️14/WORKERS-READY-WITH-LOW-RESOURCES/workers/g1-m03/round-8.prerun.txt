@@ -1,0 +1,26 @@
+Pre-run facts, 2026-11-14T20:56:05Z
+- replica agent: launchctl print gui/501/tech.semio.fleet.replica:
+    	state = running
+    	runs = 45
+    	pid = 37539
+    	last exit code = 0
+    		state = active
+    		state = active
+- replica code digest (.cache/f/health.json): 590fdef8b75853d124d6f615cd2612d607146e27aaf2b94715a5d7b7606ad2f1, store ok, daemon pid 37556 , health.json age 1 s
+- "bootVersion":6
+- replica agent kickstarted: 0 times (state = running)
+- graph service jobs:
+    -	4	tech.semio.repo.service.a909995b451a
+    -	0	tech.semio.repo.service.d8505b2379b9
+- `repo service host` processes:
+  (0 process(es))
+- last 8 lines of .cache/f/sidecars/build-agent.log:
+    2026-11-14T20:53:49.053Z joining http://192.168.178.70:8981 offering rustc for 3 target(s)
+    2026-11-14T20:53:49.100Z worker sandbox: darwin-sandbox confined network denied
+    2026-11-14T20:53:49.103Z worker registered: ac4dd325-a539-4082-ab7e-dd9ddcef595f cache http://192.168.178.70:6094
+    2026-11-14T20:54:18.506Z agent code changed, restarting
+    2026-11-14T20:54:18.508Z worker stopped: ueli-workstation-mac-mini-m4-16gb-256gb-03-lan.fritz.box-37651
+    2026-11-14T20:54:19.970Z joining http://192.168.178.70:8981 offering rustc for 3 target(s)
+    2026-11-14T20:54:20.041Z worker sandbox: darwin-sandbox confined network denied
+    2026-11-14T20:54:20.045Z worker registered: 4498c6fe-2d81-43a2-afbe-54b35b96086d cache http://192.168.178.70:6094
+- memory pressure level 1, free disk 87Gi

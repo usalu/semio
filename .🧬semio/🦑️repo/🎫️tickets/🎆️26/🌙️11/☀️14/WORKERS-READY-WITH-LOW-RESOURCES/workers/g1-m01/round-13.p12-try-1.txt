@@ -1,0 +1,63 @@
+service log at start: /var/folders/gd/byw98s3s0p95zhdpzyv769740000gn/T/semio-repo/501/host-ac6bfe8f337c.log (line 18261 on)
+closure entries before: 42533
+2026-11-15T01:40:51Z no slice worker
+2026-11-15T01:40:56Z no slice worker
+2026-11-15T01:41:01Z no slice worker
+2026-11-15T01:41:06Z no slice worker
+2026-11-15T01:41:11Z no slice worker
+2026-11-15T01:41:16Z no slice worker
+2026-11-15T01:41:21Z no slice worker
+2026-11-15T01:41:26Z pid=54243 rss=337MB footprint=[bun [54243]: 64-bit    Footprint: 90 MB (16384 bytes per page)] last=[]
+2026-11-15T01:41:31Z pid=54243 rss=375MB footprint=[bun [54243]: 64-bit    Footprint: 124 MB (16384 bytes per page)] last=[]
+2026-11-15T01:41:36Z pid=54243 rss=512MB footprint=[bun [54243]: 64-bit    Footprint: 225 MB (16384 bytes per page)] last=[]
+2026-11-15T01:41:41Z pid=54243 rss=1586MB footprint=[bun [54243]: 64-bit    Footprint: 798 MB (16384 bytes per page)] last=[]
+2026-11-15T01:41:46Z pid=54243 rss=1627MB footprint=[bun [54243]: 64-bit    Footprint: 131 MB (16384 bytes per page)] last=[graph: generation 211 (5101 projects) restored from the remote cache, 5105 documents (46 MB) downloaded in 12 s, from a state 26 min old with ? projects stale]
+2026-11-15T01:41:51Z pid=54243 rss=1702MB footprint=[bun [54243]: 64-bit    Footprint: 111 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:41:56Z pid=54243 rss=1753MB footprint=[bun [54243]: 64-bit    Footprint: 118 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:01Z pid=54243 rss=1777MB footprint=[bun [54243]: 64-bit    Footprint: 128 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:06Z pid=54243 rss=2123MB footprint=[bun [54243]: 64-bit    Footprint: 150 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:12Z pid=54243 rss=2237MB footprint=[bun [54243]: 64-bit    Footprint: 204 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:17Z pid=54243 rss=2237MB footprint=[bun [54243]: 64-bit    Footprint: 204 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:22Z pid=54243 rss=2238MB footprint=[bun [54243]: 64-bit    Footprint: 194 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:27Z pid=54243 rss=2247MB footprint=[bun [54243]: 64-bit    Footprint: 185 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:32Z pid=54243 rss=2254MB footprint=[bun [54243]: 64-bit    Footprint: 188 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:37Z pid=54243 rss=2271MB footprint=[bun [54243]: 64-bit    Footprint: 190 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:42Z pid=54243 rss=2271MB footprint=[bun [54243]: 64-bit    Footprint: 188 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:47Z pid=54243 rss=2275MB footprint=[bun [54243]: 64-bit    Footprint: 188 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:52Z pid=54243 rss=2283MB footprint=[bun [54243]: 64-bit    Footprint: 186 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:42:57Z pid=54243 rss=2424MB footprint=[bun [54243]: 64-bit    Footprint: 302 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:43:02Z pid=54243 rss=2437MB footprint=[bun [54243]: 64-bit    Footprint: 213 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:43:07Z pid=54243 rss=2437MB footprint=[bun [54243]: 64-bit    Footprint: 213 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:43:12Z pid=54243 rss=2440MB footprint=[bun [54243]: 64-bit    Footprint: 194 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:43:17Z pid=54243 rss=2440MB footprint=[bun [54243]: 64-bit    Footprint: 194 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:43:23Z pid=54243 rss=2441MB footprint=[bun [54243]: 64-bit    Footprint: 194 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:43:28Z pid=54243 rss=2491MB footprint=[bun [54243]: 64-bit    Footprint: 214 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:43:33Z pid=54243 rss=2491MB footprint=[bun [54243]: 64-bit    Footprint: 211 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 211; verifying the tree once.]
+2026-11-15T01:43:38Z pid=54243 rss=2494MB footprint=[bun [54243]: 64-bit    Footprint: 202 MB (16384 bytes per page)] last=[]
+2026-11-15T01:43:43Z pid=54243 rss=2630MB footprint=[bun [54243]: 64-bit    Footprint: 273 MB (16384 bytes per page)] last=[]
+2026-11-15T01:43:48Z pid=54243 rss=2636MB footprint=[bun [54243]: 64-bit    Footprint: 204 MB (16384 bytes per page)] last=[]
+2026-11-15T01:43:53Z pid=54243 rss=2822MB footprint=[bun [54243]: 64-bit    Footprint: 425 MB (16384 bytes per page)] last=[]
+2026-11-15T01:43:58Z pid=54243 rss=1632MB footprint=[bun [54243]: 64-bit    Footprint: 2295 MB (16384 bytes per page)] last=[]
+2026-11-15T01:44:03Z pid=54243 rss=2097MB footprint=[bun [54243]: 64-bit    Footprint: 2264 MB (16384 bytes per page)] last=[]
+2026-11-15T01:44:08Z pid=54243 rss=2143MB footprint=[bun [54243]: 64-bit    Footprint: 2124 MB (16384 bytes per page)] last=[]
+2026-11-15T01:44:13Z pid=54243 rss=2232MB footprint=[bun [54243]: 64-bit    Footprint: 2046 MB (16384 bytes per page)] last=[]
+2026-11-15T01:44:18Z pid=54243 rss=2312MB footprint=[bun [54243]: 64-bit    Footprint: 1839 MB (16384 bytes per page)] last=[]
+2026-11-15T01:44:24Z pid=54243 rss=2762MB footprint=[bun [54243]: 64-bit    Footprint: 2000 MB (16384 bytes per page)] last=[]
+2026-11-15T01:44:29Z pid=54243 rss=2869MB footprint=[bun [54243]: 64-bit    Footprint: 1849 MB (16384 bytes per page)] last=[]
+2026-11-15T01:44:34Z pid=54243 rss=3012MB footprint=[bun [54243]: 64-bit    Footprint: 1590 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 1078 MB, resident 3012 MB)]
+2026-11-15T01:44:39Z pid=54243 rss=3046MB footprint=[bun [54243]: 64-bit    Footprint: 1596 MB (16384 bytes per page)] last=[graph: headroom of 1024 MB is below one project (1082 MB), inferring one project at a time]
+2026-11-15T01:44:44Z pid=54243 rss=3050MB footprint=[bun [54243]: 64-bit    Footprint: 1586 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1082 of 1024 MB reserved, 1 projects running)]
+2026-11-15T01:44:49Z pid=54243 rss=3147MB footprint=[bun [54243]: 64-bit    Footprint: 1588 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (1082 of 1078 MB reserved, 1 projects running)]
+2026-11-15T01:44:54Z pid=54243 rss=3157MB footprint=[bun [54243]: 64-bit    Footprint: 1590 MB (16384 bytes per page)] last=[graph: headroom of 752 MB is below one project (1082 MB), inferring one project at a time]
+2026-11-15T01:44:59Z pid=54243 rss=3168MB footprint=[bun [54243]: 64-bit    Footprint: 1590 MB (16384 bytes per page)] last=[graph: headroom of 749 MB is below one project (1082 MB), inferring one project at a time]
+2026-11-15T01:45:04Z pid=54243 rss=3171MB footprint=[bun [54243]: 64-bit    Footprint: 1590 MB (16384 bytes per page)] last=[graph: headroom of 589 MB again (122 MB taken), resuming]
+2026-11-15T01:45:09Z pid=54243 rss=3173MB footprint=[bun [54243]: 64-bit    Footprint: 1590 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (665 of 682 MB reserved, 1 projects running)]
+2026-11-15T01:45:14Z pid=54243 rss=3175MB footprint=[bun [54243]: 64-bit    Footprint: 1590 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (365 of 877 MB reserved, 1 projects running)]
+2026-11-15T01:45:19Z pid=54243 rss=3292MB footprint=[bun [54243]: 64-bit    Footprint: 1672 MB (16384 bytes per page)] last=[graph: plan stage environment starts (managed 1632 MB, resident 3177 MB)]
+2026-11-15T01:45:25Z pid=54243 rss=5401MB footprint=[bun [54243]: 64-bit    Footprint: 2723 MB (16384 bytes per page)] last=[graph: plan stage environment starts (managed 1632 MB, resident 3177 MB)]
+2026-11-15T01:45:30Z pid=54243 rss=6606MB footprint=[bun [54243]: 64-bit    Footprint: 5996 MB (16384 bytes per page)] last=[graph: plan stage environment grew the plan by 4943 MB, more than the 4915 MB this machine gives a plan; it is stopped before the host runs short of memory]
+2026-11-15T01:45:35Z no slice worker
+2026-11-15T01:45:40Z no slice worker
+2026-11-15T01:45:45Z no slice worker
+2026-11-15T01:45:50Z no slice worker
+closure entries after: 42533

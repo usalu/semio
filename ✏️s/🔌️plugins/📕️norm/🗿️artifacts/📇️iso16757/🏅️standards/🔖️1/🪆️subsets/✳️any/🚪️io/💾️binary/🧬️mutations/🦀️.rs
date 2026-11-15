@@ -364,3 +364,5 @@ pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     out.extend_from_slice(s.as_bytes());
 }
 }
+
+dsl::original_pack_value_operation_receiving!(crate::Iso16757Mutation);

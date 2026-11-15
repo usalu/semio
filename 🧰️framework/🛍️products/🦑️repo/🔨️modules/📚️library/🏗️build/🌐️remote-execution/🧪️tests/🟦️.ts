@@ -9,7 +9,7 @@ import {decodeProtobufV1,encodeProtobufV1,REAPI_V1} from "../📡️wire/📦️
 import {createHash} from "node:crypto";
 import {testScratchRootV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {requireRemoteExecutionShapeV1,remoteExecutionHostPropertiesV1} from "../🟦️.ts";
-import {eventuallyV1,NAMESPACE_V1,startClusterV1,textOfV1,type ClusterV1} from "./🧰️cluster/🟦️.ts";
+import {eventuallyV1,NAMESPACE_V1,startClusterV1,textOfV1,writeHostViewV1,type ClusterV1} from "./🧰️cluster/🟦️.ts";
 import {selectRemoteExecutionSandboxV1} from "../🔒️sandbox/🟦️.ts";
 
 const sha=(data:Uint8Array|string)=>createHash("sha256").update(data).digest("hex"),clusters:ClusterV1[]=[],scratch:string[]=[];
@@ -136,7 +136,7 @@ test.skipIf(!sandboxed)("the host sandbox confines an action to its input root: 
 
 test("a worker started as its own process joins, runs actions and leaves on SIGTERM",async()=>{
  const cluster=await start({workers:0}),work=temporary(),entry=join(import.meta.dir,"..","🏃️entry","🟦️.ts");
- const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","proc-1","--concurrency","2","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env}});
+ const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","proc-1","--concurrency","2","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env,SEMIO_REMOTE_EXECUTION_HOST_VIEW:writeHostViewV1(join(work,"view.json"))}});
  try{
   await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,20000,"the worker process must register");
   const run=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","echo from-process > out.txt"],outputPaths:["out.txt"]}));
@@ -150,7 +150,7 @@ test("a worker started as its own process joins, runs actions and leaves on SIGT
 
 test("work of a worker that dies is re-queued after its lease expires and finished by another worker",async()=>{
  const cluster=await start({workers:0,scheduler:{leaseSeconds:2}}),work=temporary(),entry=join(import.meta.dir,"..","🏃️entry","🟦️.ts"),marker=join(work,"started");
- const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","doomed","--concurrency","1","--sandbox","isolated-root","--work-directory",join(work,"w"),"--lang","en"],{stdout:"ignore",stderr:"ignore",cwd:work,env:{...process.env}});
+ const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","doomed","--concurrency","1","--sandbox","isolated-root","--work-directory",join(work,"w"),"--lang","en"],{stdout:"ignore",stderr:"ignore",cwd:work,env:{...process.env,SEMIO_REMOTE_EXECUTION_HOST_VIEW:writeHostViewV1(join(work,"view.json"))}});
  try{
  await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,20000,"the doomed worker must register");
  const run=cluster.execute(await cluster.action({arguments:["/bin/sh","-c",`echo go > ${marker}; sleep 2; echo survived > out.txt`],outputPaths:["out.txt"]}));
@@ -212,7 +212,7 @@ const lan=Object.values(networkInterfaces()).flat().find(row=>row&&row.family===
 test.skipIf(lan===undefined)("a worker on another network interface joins with tokens, fetches inputs from the shared store through the scheduler's address and runs an action",async()=>{
  const tokens={read:"read-secret-1",write:"write-secret-2",worker:"worker-secret-3"},cluster=await start({workers:0,bind:"0.0.0.0",advertise:lan!,tokens}),work=temporary(),entry=join(import.meta.dir,"..","🏃️entry","🟦️.ts");
  expect(cluster.server.workerUrl.startsWith(`http://${lan}:`)).toBe(true);
- const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","lan-worker","--concurrency","1","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env,SEMIO_REMOTE_EXECUTION_WORKER_TOKEN:tokens.worker,SEMIO_REMOTE_CACHE_TOKEN:tokens.write}});
+ const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","lan-worker","--concurrency","1","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env,SEMIO_REMOTE_EXECUTION_WORKER_TOKEN:tokens.worker,SEMIO_REMOTE_CACHE_TOKEN:tokens.write,SEMIO_REMOTE_EXECUTION_HOST_VIEW:writeHostViewV1(join(work,"view.json"))}});
  try{
   await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,30000,"the worker must register through the LAN address");
   const run=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","cat in.txt > out.txt"],files:{"in.txt":"over the network\n"},outputPaths:["out.txt"]}));
@@ -229,4 +229,16 @@ test("a client that lost its stream re-attaches to the running operation by name
  let response:any;for await(const row of cluster.client.stream(`${NAMESPACE_V1}.Execution/WaitExecution`,{name}))if(row.done)response=decodeProtobufV1(REAPI_V1.executeResponse,row.response.value);
  expect(response.status.code).toBe(0);expect(response.result.output_files[0].path).toBe("out.txt");expect(cluster.server.scheduler.status().counters.cancelled).toBe(0);
  expect(await code((async()=>{for await(const _ of cluster.client.stream(`${NAMESPACE_V1}.Execution/WaitExecution`,{name:"operations/unknown"}));})())).toBe(GRPC_CODES_V1.NOT_FOUND);
+});
+
+test("attack: a worker with the default policy runs no arbitrary command; an unconfined worker cannot be set to run any; the sandbox hides the host",async()=>{
+ const cluster=await start({workers:0,worker:{actions:"rustc"}});
+ cluster.startWorker({name:"closed",origin:"closed",sandbox:"isolated-root"});
+ await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,15000,"the closed worker must join");
+ const marker=join(temporary(),"ran.txt"),action=await cluster.action({arguments:["/bin/sh","-c",`echo pwned > ${marker}; cat ~/.ssh/id_rsa`],outputPaths:["x"],platform:HOST.map(row=>({...row})),salt:"closed"});
+ const run=await cluster.execute(action);
+ expect(run.response.status.code,"refused as a precondition: the requester runs it locally").toBe(9);expect(run.response.status.message).toContain("worker policy");
+ expect(existsSync(marker),"the command never started").toBe(false);
+ const { runRemoteExecutionWorkerV1 }=await import("../👷️worker/🟦️.ts");
+ await expect(runRemoteExecutionWorkerV1({scheduler:"http://127.0.0.1:1",concurrency:1,directory:temporary(),sandbox:"isolated-root",actions:"any",materialize:"copy",maximumBlobBytes:1<<20,inlineOutputBytes:10,signal:new AbortController().signal})).rejects.toThrow("needs a confining sandbox");
 });

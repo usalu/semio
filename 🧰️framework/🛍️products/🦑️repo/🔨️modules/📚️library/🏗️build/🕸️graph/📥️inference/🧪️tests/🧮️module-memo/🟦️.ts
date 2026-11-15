@@ -3,6 +3,10 @@ import{mkdtempSync,mkdirSync,writeFileSync,rmSync}from"node:fs";
 import{join,dirname,resolve}from"node:path";
 import{Database}from"bun:sqlite";
 import corpus from"./🔣️.json";
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import{declareLibraryBuildTestEnvelopeV1}from"../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+await privateRepositoryWorkspaceV1("graph");
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference",scratch:"checkout"});
 const inference=await import("../../🟨️.mjs"),scripts=await import("../../🧭️script-inputs/🟨️.mjs");await inference.libraryBootstrap;
 test("resource overlays preserve closure answers without duplicating module memo observations",async()=>{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Owned test artifacts required");mkdirSync(artifacts,{recursive:true});const root=mkdtempSync(join(artifacts,"mm-")),cache=inference.createScriptInputCache(),db=new Database(":memory:");

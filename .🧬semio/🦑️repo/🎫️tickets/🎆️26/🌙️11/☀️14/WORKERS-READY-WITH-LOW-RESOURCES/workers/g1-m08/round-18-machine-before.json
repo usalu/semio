@@ -1,0 +1,6 @@
+{
+  "at": "2026-11-15T03:53:28Z",
+  "os": "ProductName:\t\tmacOS\nProductVersion:\t\t27.2\nBuildVersion:\t\t26B123",
+  "memory_bytes": "17179869184",
+  "disk": "Filesystem   1024-blocks      Used Available Capacity iused      ifree %iused  Mounted on\n/dev/disk3s5   239362496  94144244 105384572    48%  840042 1053845720    0%   /System/Volumes/Data"
+}

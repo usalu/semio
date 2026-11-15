@@ -372,8 +372,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 8 W: roughly 800 lm at an efficacy of 100 lm/W, where an incandescent lamp would need about 60 W. The watts say how fast the lamp draws energy, not how much it has used.",
+            "de": "Rund 8 W: etwa 800 lm bei einer Lichtausbeute von 100 lm/W, wofür eine Glühlampe rund 60 W bräuchte. Die Watt sagen, wie schnell die Lampe Energie aufnimmt, nicht wie viel sie schon verbraucht hat."
           },
           "short": {
             "en": "LED desk lamp",
@@ -392,8 +392,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 1 kW: ten seated adults × about 100 W each (1 met = 58 W per m² of skin × 1.8 m²; ISO 7730). It is a heat flow; only the hours they stay turn it into an energy.",
+            "de": "Rund 1 kW: zehn sitzende Erwachsene × rund 100 W (1 met = 58 W pro m² Haut × 1,8 m²; ISO 7730). Das ist ein Wärmestrom; erst die Aufenthaltsdauer macht daraus eine Energie."
           },
           "short": {
             "en": "Body heat of ten seated adults",
@@ -412,8 +412,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 70 kW ≈ 95 PS (1 PS = 735.5 W): touring motorcycles are rated between roughly 60 and 100 kW. Rated output is a power, not a fuel amount.",
+            "de": "Rund 70 kW ≈ 95 PS (1 PS = 735,5 W): Reisemotorräder haben etwa 60 bis 100 kW Nennleistung. Die Nennleistung ist eine Leistung, keine Kraftstoffmenge."
           },
           "short": {
             "en": "Touring motorcycle engine",
@@ -432,8 +432,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 12 MW at rated wind speed of roughly 12 m/s; current offshore turbines range from 8 to 15 MW. Over a year at about 4,000 full-load hours it delivers around 48 GWh, which is the energy.",
+            "de": "Rund 12 MW bei Nennwindgeschwindigkeit von etwa 12 m/s; heutige Offshore-Anlagen liegen zwischen 8 und 15 MW. Über ein Jahr mit rund 4.000 Volllaststunden ergibt das etwa 48 GWh, und das ist die Energie."
           },
           "short": {
             "en": "Offshore wind turbine",
@@ -452,8 +452,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 25 W while writing and browsing; typical laptops draw 15 to 45 W. A 60 Wh battery therefore lasts about 60 ÷ 25 ≈ 2.4 hours.",
+            "de": "Rund 25 W beim Schreiben und Surfen; übliche Laptops nehmen 15 bis 45 W auf. Ein Akku mit 60 Wh hält damit etwa 60 ÷ 25 ≈ 2,4 Stunden."
           },
           "short": {
             "en": "Laptop doing ordinary office work",
@@ -472,8 +472,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 1 kW: the heating coil on a 230 V circuit draws roughly 4.3 A. Ten minutes of drying then use only about 0.17 kWh.",
+            "de": "Rund 1 kW: die Heizwendel an 230 V nimmt etwa 4,3 A auf. Zehn Minuten Föhnen brauchen dann nur rund 0,17 kWh."
           },
           "short": {
             "en": "Compact hair dryer on its warm setting",
@@ -492,8 +492,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 15 kW rated shaft power of a three-phase asynchronous motor, a common size in workshops. Running it for 8 hours at full load would convert 120 kWh.",
+            "de": "Rund 15 kW Nennwellenleistung eines Drehstrom-Asynchronmotors, eine in Werkstätten übliche Größe. Acht Stunden Volllast würden 120 kWh umsetzen."
           },
           "short": {
             "en": "Large workshop electric drive motor",
@@ -512,8 +512,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 90 kW: screw compressors for factory compressed air are built for 75 to 110 kW. A full 8-hour shift at this rate converts about 720 kWh.",
+            "de": "Rund 90 kW: Schraubenkompressoren für Druckluft in Fabriken haben 75 bis 110 kW. Eine volle Acht-Stunden-Schicht mit dieser Leistung setzt etwa 720 kWh um."
           },
           "short": {
             "en": "Large industrial compressor drive",
@@ -532,8 +532,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 60 W, the classic bulb rating: only around 5 % becomes light and the rest heat. Over its rated life of 1,000 hours it would convert 60 kWh.",
+            "de": "Rund 60 W, die klassische Glühlampe: nur etwa 5 % werden zu Licht, der Rest ist Wärme. Über ihre Nennlebensdauer von 1.000 Stunden würde sie 60 kWh umsetzen."
           },
           "short": {
             "en": "Traditional incandescent room lamp",
@@ -552,8 +552,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 2.5 kW while heating up (230 V × about 11 A). The thermostat then switches it on and off, so the average power over a bake is much lower.",
+            "de": "Rund 2,5 kW beim Aufheizen (230 V × etwa 11 A). Danach schaltet der Thermostat ihn ein und aus, sodass die mittlere Leistung beim Backen deutlich niedriger liegt."
           },
           "short": {
             "en": "Domestic electric oven during heating",
@@ -572,8 +572,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 150 kW ≈ 204 PS: typical for a family electric car, far above the 15 to 20 kW needed at steady motorway speed. The kW rating says how fast the motor can convert energy.",
+            "de": "Rund 150 kW ≈ 204 PS: typisch für ein Elektroauto der Mittelklasse, weit über den 15 bis 20 kW bei gleichmäßiger Autobahnfahrt. Die kW-Angabe sagt, wie schnell der Motor Energie umsetzen kann."
           },
           "short": {
             "en": "Electric family-car drive",
@@ -592,8 +592,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 800 MW electrical: coal and gas blocks are built for 500 to 1,000 MW. The block is rated by its power; what it feeds into the grid over a year is an energy.",
+            "de": "Rund 800 MW elektrisch: Kohle- und Gasblöcke werden für 500 bis 1.000 MW gebaut. Der Block wird nach seiner Leistung bemessen; was er in einem Jahr ins Netz einspeist, ist Energie."
           },
           "short": {
             "en": "Thermal power-station electrical block",
@@ -612,8 +612,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 30 W: small desk fans draw 20 to 40 W, mostly to move air. In a 10-hour day that adds up to only 0.3 kWh.",
+            "de": "Rund 30 W: kleine Tischventilatoren nehmen 20 bis 40 W auf, vor allem zum Bewegen der Luft. Über einen Tag mit 10 Stunden summiert sich das auf nur 0,3 kWh."
           },
           "short": {
             "en": "Desk fan at medium speed",
@@ -632,8 +632,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 4.5 kW for a cabin of roughly 4 to 5 m³ (rule of thumb: 1 kW per m³ of room volume), connected to three phases. Heating up for half an hour then needs about 2.3 kWh.",
+            "de": "Rund 4,5 kW für eine Kabine von etwa 4 bis 5 m³ (Faustregel: 1 kW je m³ Rauminhalt), angeschlossen an drei Phasen. Eine halbe Stunde Aufheizen braucht dann etwa 2,3 kWh."
           },
           "short": {
             "en": "Small domestic sauna heater",
@@ -652,8 +652,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 150 kW: public DC fast chargers deliver 50 to 350 kW. At that rate about 50 kWh are added in 20 minutes; the kilowatts are the speed, the kilowatt-hours the amount.",
+            "de": "Rund 150 kW: öffentliche Gleichstrom-Schnelllader liefern 50 bis 350 kW. Damit kommen in 20 Minuten etwa 50 kWh in den Akku; die Kilowatt sind die Geschwindigkeit, die Kilowattstunden die Menge."
           },
           "short": {
             "en": "Public electric car fast charger",
@@ -672,8 +672,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 2 GW installed: the largest hydropower complexes, such as the Hoover Dam with about 2.1 GW, reach this size. Their yearly generation of several TWh is the energy.",
+            "de": "Rund 2 GW installiert: die größten Wasserkraftanlagen wie der Hoover-Damm mit etwa 2,1 GW erreichen diese Größe. Ihre Jahreserzeugung von mehreren TWh ist die Energie."
           },
           "short": {
             "en": "Large hydroelectric generating complex",
@@ -692,8 +692,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 700 W rated input; since 2017 EU ecodesign rules cap vacuum cleaners at 900 W. The rating is the draw while running, not what a cleaning session uses.",
+            "de": "Rund 700 W Nennaufnahme; seit 2017 begrenzen die EU-Ökodesign-Regeln Staubsauger auf 900 W. Die Angabe ist die Aufnahme im Betrieb, nicht der Verbrauch einer Reinigung."
           },
           "short": {
             "en": "Compact vacuum cleaner at rated input",
@@ -712,8 +712,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 18 kW (3 × 400 V × 26 A). It heats roughly 8.6 litres per minute by 30 K (18 kW ÷ (4.18 kJ/(kg·K) × 30 K) ≈ 0.14 kg/s), which is why it needs three phases.",
+            "de": "Rund 18 kW (3 × 400 V × 26 A). Er erwärmt etwa 8,6 Liter pro Minute um 30 K (18 kW ÷ (4,18 kJ/(kg·K) × 30 K) ≈ 0,14 kg/s), weshalb er drei Phasen braucht."
           },
           "short": {
             "en": "Shower instantaneous water heater",
@@ -732,8 +732,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 25 MW: a medium generator unit of a river power station. Running at full load for a day it would produce 25 MW × 24 h = 600 MWh.",
+            "de": "Rund 25 MW: ein mittleres Generatorset eines Flusskraftwerks. Einen Tag unter Volllast würde es 25 MW × 24 h = 600 MWh erzeugen."
           },
           "short": {
             "en": "Medium hydroelectric generator unit",
@@ -752,8 +752,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 300 MW: for example 25 turbines of 12 MW rated output each. The sum of the ratings is a power; its yearly generation in GWh is the energy.",
+            "de": "Rund 300 MW: zum Beispiel 25 Anlagen mit je 12 MW Nennleistung. Die Summe der Nennleistungen ist eine Leistung; die Jahreserzeugung in GWh ist die Energie."
           },
           "short": {
             "en": "Large wind farm at rated output",
@@ -772,8 +772,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 800 W: enough to heat a small, well insulated room of about 10 m² at 80 W/m². All of the electricity ends up as heat, but the watts only give the rate.",
+            "de": "Rund 800 W: genug für einen kleinen, gut gedämmten Raum von etwa 10 m² bei 80 W/m². Der gesamte Strom wird zu Wärme, doch die Watt geben nur die Rate an."
           },
           "short": {
             "en": "Electric resistance radiator",
@@ -792,8 +792,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 8 kW: roughly 130 m² × 60 W/m² on the coldest design day (DIN EN 12831), well below the 18 kW of an unrenovated 1960s house. It is the heat flow the heating must be able to deliver.",
+            "de": "Rund 8 kW: etwa 130 m² × 60 W/m² am kältesten Auslegungstag (DIN EN 12831), deutlich weniger als die 18 kW eines unsanierten Hauses der 1960er-Jahre. Es ist der Wärmestrom, den die Heizung liefern können muss."
           },
           "short": {
             "en": "House design heating load",
@@ -812,8 +812,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 6 MW: modern main-line locomotives such as the Siemens Vectron reach up to 6.4 MW. The rating limits how fast the train can be accelerated, not how far it travels.",
+            "de": "Rund 6 MW: moderne Streckenlokomotiven wie die Siemens Vectron erreichen bis zu 6,4 MW. Die Angabe begrenzt, wie schnell der Zug beschleunigen kann, nicht wie weit er fährt."
           },
           "short": {
             "en": "Main-line locomotive at full output",
@@ -832,8 +832,8 @@
           },
           "category": "power",
           "explanation": {
-            "en": "This is a rate of energy transfer, measured in watts. Multiplying by time gives energy.",
-            "de": "Dies ist ein Energieumsatz pro Zeit, gemessen in Watt. Multiplikation mit Zeit ergibt Energie."
+            "en": "About 3.9 GW thermal: Isar 2 produced 1.4 GW electrical from about 3.95 GW of heat, an efficiency of roughly 36 %. This is a heat flow, not an amount.",
+            "de": "Rund 3,9 GW thermisch: Isar 2 erzeugte aus etwa 3,95 GW Wärme 1,4 GW elektrisch, ein Wirkungsgrad von rund 36 %. Das ist ein Wärmestrom, keine Menge."
           },
           "short": {
             "en": "Reactor block thermal output",
@@ -852,8 +852,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 60 Wh (typical range 45 to 70 Wh): a stored amount of energy, comparable to four smartphone batteries of 15 Wh. At 25 W it lasts about 2.4 hours.",
+            "de": "Rund 60 Wh (üblich sind 45 bis 70 Wh): eine gespeicherte Energiemenge, vergleichbar mit vier Smartphone-Akkus zu 15 Wh. Bei 25 W hält sie etwa 2,4 Stunden."
           },
           "short": {
             "en": "Full ordinary laptop battery",
@@ -872,8 +872,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "1 kWh = 2 kW × 0.5 h = 3.6 MJ. With it a kettle could heat about 10 litres of water from 20 °C to boiling (330 kJ per litre), ignoring losses.",
+            "de": "1 kWh = 2 kW × 0,5 h = 3,6 MJ. Damit könnte ein Wasserkocher etwa 10 Liter Wasser von 20 °C zum Kochen bringen (330 kJ je Liter), Verluste nicht gerechnet."
           },
           "short": {
             "en": "Half-hour kettle electricity",
@@ -892,8 +892,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 30 kWh: small city electric cars hold roughly 25 to 40 kWh. At 15 kWh per 100 km that is a range of about 200 km.",
+            "de": "Rund 30 kWh: kleine Elektro-Stadtautos fassen etwa 25 bis 40 kWh. Bei 15 kWh je 100 km ergibt das rund 200 km Reichweite."
           },
           "short": {
             "en": "Full small electric car battery",
@@ -912,8 +912,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "2,000 kWh = 1 kW × 2,000 h. This is close to the annual electricity use of a one- to two-person household, so a small constant load adds up considerably over a year.",
+            "de": "2.000 kWh = 1 kW × 2.000 h. Das liegt nahe am Jahresstromverbrauch eines Ein- bis Zweipersonenhaushalts, eine kleine Dauerlast summiert sich also über ein Jahr erheblich."
           },
           "short": {
             "en": "Annual electricity of a small pump",
@@ -932,8 +932,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 15 Wh: a lithium-ion pack of 7.2 V × 2.1 Ah, about as much as one smartphone battery. It supplies a few hundred photos.",
+            "de": "Rund 15 Wh: ein Lithium-Ionen-Akku mit 7,2 V × 2,1 Ah, etwa so viel wie ein Smartphone-Akku. Er reicht für einige hundert Fotos."
           },
           "short": {
             "en": "Full digital camera battery",
@@ -952,8 +952,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "1 kWh = 10 people × 100 W × 1 h. The same group gives off 1 kW as a power; only the hour of staying together turns this into an energy.",
+            "de": "1 kWh = 10 Personen × 100 W × 1 h. Dieselbe Gruppe gibt 1 kW als Leistung ab; erst die gemeinsame Stunde macht daraus eine Energie."
           },
           "short": {
             "en": "Hourly heat from ten adults",
@@ -972,8 +972,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 100 kWh: large electric SUVs and luxury cars carry 90 to 110 kWh. At 20 kWh per 100 km that is about 500 km, and 9 hours at an 11 kW wall box.",
+            "de": "Rund 100 kWh: große Elektro-SUVs und Oberklassewagen haben 90 bis 110 kWh. Bei 20 kWh je 100 km sind das etwa 500 km, an einer 11-kW-Wallbox rund 9 Stunden Ladezeit."
           },
           "short": {
             "en": "Full large electric car battery",
@@ -992,8 +992,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "3 kWp × 950 full-load hours = 2,850 kWh per year, a little more than a two-person household uses. Peak power times hours is an energy.",
+            "de": "3 kWp × 950 Volllaststunden = 2.850 kWh pro Jahr, etwas mehr als ein Zweipersonenhaushalt verbraucht. Spitzenleistung mal Stunden ist eine Energie."
           },
           "short": {
             "en": "Small domestic solar annual yield",
@@ -1012,8 +1012,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 46 Wh ≈ 167 kJ: 0.5 kg × 4.18 kJ/(kg·K) × 80 K. This is the amount needed whether the kettle takes one minute or ten.",
+            "de": "Rund 46 Wh ≈ 167 kJ: 0,5 kg × 4,18 kJ/(kg·K) × 80 K. Diese Menge wird benötigt, ob der Kocher eine Minute braucht oder zehn."
           },
           "short": {
             "en": "Half-litre water heating",
@@ -1032,8 +1032,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 9 kWh: net calorific value of petrol ≈ 32 MJ/l (8.9 kWh/l), slightly less than the 10 kWh of a litre of heating oil. A calorific value is an energy content per volume.",
+            "de": "Rund 9 kWh: Heizwert von Benzin ≈ 32 MJ/l (8,9 kWh/l), etwas weniger als die 10 kWh eines Liters Heizöl. Ein Heizwert ist ein Energieinhalt pro Volumen."
           },
           "short": {
             "en": "Energy in one litre of petrol",
@@ -1052,8 +1052,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 400 kWh: 40 l × 36 MJ/l = 1,440 MJ ≈ 400 kWh, four times a large electric car battery, though a combustion engine turns only about a third of it into drive energy.",
+            "de": "Rund 400 kWh: 40 l × 36 MJ/l = 1.440 MJ ≈ 400 kWh, viermal so viel wie ein großer Elektroauto-Akku, wobei ein Verbrennungsmotor nur etwa ein Drittel davon in Antriebsenergie umsetzt."
           },
           "short": {
             "en": "Full forty-litre diesel tank",
@@ -1072,8 +1072,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "15,000 kWh per year = 150 m² × 100 kWh/(m²·a), less than half of the 33,000 kWh of the unrenovated house. An annual demand is an amount of energy.",
+            "de": "15.000 kWh pro Jahr = 150 m² × 100 kWh/(m²·a), weniger als die Hälfte der 33.000 kWh des unsanierten Hauses. Ein Jahresbedarf ist eine Energiemenge."
           },
           "short": {
             "en": "Retrofit-house annual useful heat",
@@ -1092,8 +1092,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 74 Wh = 20 Ah × 3.7 V, enough for roughly five charges of a 15 Wh smartphone. Airlines limit power banks to 100 Wh; an amp-hour figure alone is not yet an energy.",
+            "de": "Rund 74 Wh = 20 Ah × 3,7 V, genug für etwa fünf Ladungen eines Smartphones mit 15 Wh. Fluggesellschaften begrenzen Powerbanks auf 100 Wh; eine Amperestunden-Angabe allein ist noch keine Energie."
           },
           "short": {
             "en": "Full twenty-amp-hour USB power bank",
@@ -1112,8 +1112,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 10 kWh: wood pellets have a net calorific value of about 4.9 kWh/kg (≥ 4.6 kWh/kg for ENplus), so 2 kg ≈ 9.8 kWh, the same as one litre of heating oil.",
+            "de": "Rund 10 kWh: Holzpellets haben einen Heizwert von etwa 4,9 kWh/kg (≥ 4,6 kWh/kg bei ENplus), also 2 kg ≈ 9,8 kWh, so viel wie ein Liter Heizöl."
           },
           "short": {
             "en": "Two kilograms of dry wood pellets",
@@ -1132,8 +1132,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "5 kW × 24 h = 120 kWh of heat. A heat pump with a coefficient of performance of 3 would need only about 40 kWh of electricity for it.",
+            "de": "5 kW × 24 h = 120 kWh Wärme. Eine Wärmepumpe mit einer Leistungszahl von 3 bräuchte dafür nur etwa 40 kWh Strom."
           },
           "short": {
             "en": "Full day of five-kilowatt useful heat",
@@ -1152,8 +1152,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "40,000 kWh per year = 500 m² × 80 kWh/(m²·a), more than the 33,000 kWh of an unrenovated single-family house. It is an annual energy demand.",
+            "de": "40.000 kWh pro Jahr = 500 m² × 80 kWh/(m²·a), mehr als die 33.000 kWh eines unsanierten Einfamilienhauses. Es ist ein Jahresenergiebedarf."
           },
           "short": {
             "en": "Annual heating for a 500 m² school wing",
@@ -1172,8 +1172,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "1 kWh = 1 kW × 1 h = 3.6 MJ: for a one-hour run the kilowatt-hours equal the kilowatts numerically, but the unit shows that it is an amount.",
+            "de": "1 kWh = 1 kW × 1 h = 3,6 MJ: bei einer Betriebsstunde stimmen Kilowattstunden und Kilowatt zahlenmäßig überein, die Einheit zeigt aber, dass es eine Menge ist."
           },
           "short": {
             "en": "Radiator electricity over an hour",
@@ -1192,8 +1192,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "10 kWh = 1 kW × 10 h = 36 MJ, the energy content of about one litre of heating oil. Running ten times as long uses ten times the energy at the same power.",
+            "de": "10 kWh = 1 kW × 10 h = 36 MJ, der Energieinhalt von etwa einem Liter Heizöl. Zehnmal so lange Betrieb braucht bei gleicher Leistung zehnmal so viel Energie."
           },
           "short": {
             "en": "Ten hours of radiator electricity",
@@ -1212,8 +1212,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 1,500 kWh per year (teaching estimate): spread over 8,760 h it is an average power of only about 0.17 kW. The yearly sum is an energy.",
+            "de": "Rund 1.500 kWh pro Jahr (Lehrannahme): auf 8.760 h verteilt ergibt das eine mittlere Leistung von nur etwa 0,17 kW. Die Jahressumme ist eine Energie."
           },
           "short": {
             "en": "Single-person annual electricity",
@@ -1232,8 +1232,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "30,000 kWh per year = 30 kWp × 1,000 full-load hours, the electricity of about 12 two-person households. Peak power times hours is an energy.",
+            "de": "30.000 kWh pro Jahr = 30 kWp × 1.000 Volllaststunden, der Strom von rund 12 Zweipersonenhaushalten. Spitzenleistung mal Stunden ist eine Energie."
           },
           "short": {
             "en": "Annual rooftop photovoltaic yield",
@@ -1252,8 +1252,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 350 kcal ≈ 0.41 kWh (1 kcal = 1.163 Wh) for 100 g of dry rice. Food labels state energy, even if the number looks small in kilowatt-hours.",
+            "de": "Rund 350 kcal ≈ 0,41 kWh (1 kcal = 1,163 Wh) für 100 g trockenen Reis. Nährwertangaben nennen Energie, auch wenn die Zahl in Kilowattstunden klein wirkt."
           },
           "short": {
             "en": "Dry rice serving food energy",
@@ -1272,8 +1272,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 9.3 kWh ≈ 33 MJ: 200 kg × 4.18 kJ/(kg·K) × 40 K. A hot-water store holds an amount of heat; how fast it is drawn off is a separate power.",
+            "de": "Rund 9,3 kWh ≈ 33 MJ: 200 kg × 4,18 kJ/(kg·K) × 40 K. Ein Warmwasserspeicher enthält eine Wärmemenge; wie schnell sie entnommen wird, ist eine eigene Leistung."
           },
           "short": {
             "en": "Two-hundred-litre hot-water store",
@@ -1292,8 +1292,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "About 4,000 kWh per year (teaching estimate): an average power of about 0.46 kW over 8,760 h. The yearly sum is an energy.",
+            "de": "Rund 4.000 kWh pro Jahr (Lehrannahme): über 8.760 h eine mittlere Leistung von etwa 0,46 kW. Die Jahressumme ist eine Energie."
           },
           "short": {
             "en": "Four-person annual electricity",
@@ -1312,8 +1312,8 @@
           },
           "category": "energy",
           "explanation": {
-            "en": "This is an accumulated or stored energy amount, measured in watt-hours or joules, rather than a rate.",
-            "de": "Dies ist eine summierte oder gespeicherte Energiemenge, gemessen in Wattstunden oder Joule, statt eines Energieumsatzes pro Zeit."
+            "en": "36,000 kWh per year = 200 m² × 180 kWh/(m²·a), about the demand of the unrenovated single-family house. An annual heating demand is an energy.",
+            "de": "36.000 kWh pro Jahr = 200 m² × 180 kWh/(m²·a), etwa so viel wie das unsanierte Einfamilienhaus. Ein jährlicher Heizbedarf ist eine Energie."
           },
           "short": {
             "en": "Older duplex annual heating",

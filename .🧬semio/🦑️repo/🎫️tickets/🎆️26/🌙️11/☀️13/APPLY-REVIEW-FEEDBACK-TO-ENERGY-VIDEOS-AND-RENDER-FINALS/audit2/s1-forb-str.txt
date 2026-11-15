@@ -1,0 +1,12 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md:46: The cooling load is the sum $\dot{Q}_\mathrm{C} = \dot{Q}_\mathrm{T} + \dot{Q}_\mathrm{V} + \dot{Q}_\mathrm{S} + \dot{Q}_\mathrm{I}$ in W (transmission, ventilation, solar, internal), the same $\dot{Q}$ notation as in the heating video; index `V` always means ventilation, with the latent part `V,lat
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📝️narration/🧮️tex/🔣️.json:13: "vartheta": {"char": "ϑ", "kind": "letter"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py:199: actual = Text("A ϑ", font_size=24, color=WHITE)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py:201: self.assertIn("ϑ", actual.t2f)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py:202: self.assertTrue(self.source_coverage(actual.t2f["ϑ"], "ϑ"))
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py:244: rendered = math_text(r"\vartheta_{\mathrm{i}}=20\,\mathrm{°C}\to\vartheta_e", font_size=24)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:3: "required_symbols": "%+<=>|~°±²³·×÷ΔΣΦΨηθλμπρτφχψϑ…₂←↑→↓⇒−√∞∮≈≠≤≥",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:4: "missing_in_body": "ΔΣΦΨηθλμπρτφχψϑ₂←↑→↓⇒√∞∮≈≠≤≥",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:8: {"family": "Libertinus Math", "source": "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/🧮️LibertinusMath-Regular.otf", "text": "ϑ₂⇒∮≈≤≥"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:33: "ϑ",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:37: "ϑ ← ↑ → ↓ ⇒ ∮"
+TOTAL 11

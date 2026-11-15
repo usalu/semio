@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../../../.."
-name = "semio-s-artifact-energy-model-native-mutations-singletons"
+name = "semio-s-artifact-energy-model-native-mutations-single"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

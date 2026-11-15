@@ -1,0 +1,60 @@
+[script] build:projects · Inferring projects: 4 of 683 projects · 1 running, longest 5 s: @semio-tech/2d-path-stroke-rs (language:rust, 5 s, 0 rows)
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:5:683:2:5:%40semio-tech%2F2d-path-stroke-rs|language%3Arust|5|0,%40semio-tech%2Fnative-build-compiler-resources-rs|language%3Arust|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 5 of 683 projects · 2 running, longest 5 s: @semio-tech/2d-path-stroke-rs (language:rust, 5 s, 0 rows), @semio-tech/native-build-compiler-resources-rs (language:rust, 0 s, 0 rows)
+graph: 0 of 703 projects arrived from the fleet, 5 inferred here, 698 left; the server last progressed 535 s ago, estimated time left: about 11 min
+graph: waiting for memory headroom (1218 of 1529 MB reserved, 2 projects running): @semio-tech/font-noto-emoji-faces-regular-rs needs 705 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[repository:command] still running after 3990 s
+[repository:command] still running after 4000 s
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: project @semio-tech/native-build-compiler-resources-rs (language:rust) grew by 1167 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+graph: waiting for memory headroom (1952 of 1574 MB reserved, 2 projects running): @semio-tech/font-noto-emoji-faces-regular-rs needs 705 MB and has waited 20 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:5:683:2:25:%40semio-tech%2F2d-path-stroke-rs|language%3Arust|25|0,%40semio-tech%2Fnative-build-compiler-resources-rs|language%3Arust|15|0:waiting|1952|1574|language%3Acargo","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 5 of 683 projects · 2 running, longest 25 s: @semio-tech/2d-path-stroke-rs (language:rust, 25 s, 0 rows), @semio-tech/native-build-compiler-resources-rs (language:rust, 15 s, 0 rows) · waiting for memory headroom (1952 of 1574 MB reserved)
+graph: 0 of 703 projects arrived from the fleet, 5 inferred here, 698 left; the server last progressed 542 s ago, estimated time left: about 11 min
+[repo] still working after 4010 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:5:683:1:25:%40semio-tech%2F2d-path-stroke-rs|language%3Arust|25|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 5 of 683 projects · 1 running, longest 25 s: @semio-tech/2d-path-stroke-rs (language:rust, 25 s, 0 rows)
+graph: project @semio-tech/2d-path-stroke-rs (language:rust) grew by 1189 MB, more than the 1024 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:5:683","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 5 of 683 projects
+graph: headroom of -343 MB is below one project (705 MB), inferring one project at a time
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[repository:command] still running after 4010 s
+graph: waiting for memory headroom (1176 of 612 MB reserved, 1 projects running): semio-plugin-original-job-ownership needs 705 MB and has waited 4 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:683:1:0:%40semio-tech%2Fcompute-ownership-runner|project|0|0:waiting|1176|612|language%3Acargo","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 683 projects · 1 running, longest 0 s: @semio-tech/compute-ownership-runner (project, 0 s, 0 rows) · waiting for memory headroom (1176 of 612 MB reserved)
+graph: 0 of 703 projects arrived from the fleet, 7 inferred here, 696 left; the server last progressed 551 s ago, estimated time left: about 11 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:6:683","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 6 of 683 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: headroom of 1089 MB again (705 MB taken), resuming
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:8:683","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 8 of 683 projects
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: 0 of 703 projects arrived from the fleet, 10 inferred here, 693 left; the server last progressed 566 s ago, estimated time left: about 11 min
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (705 of 824 MB reserved, 1 projects running): semio-framework-value-testing-effect-bank needs 705 MB and has waited 1 s; after 60 s it runs alone if it fits the 1024 MB one project is granted, otherwise the run is refused with exit 75
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:9:683:1:0:semio-os-infinite|language%3Acargo|0|0:waiting|705|824|language%3Acargo","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 9 of 683 projects · 1 running, longest 0 s: semio-os-infinite (language:cargo, 0 s, 0 rows) · waiting for memory headroom (705 of 824 MB reserved)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[repository:command] still running after 4020 s
+[repository:command] still running after 4030 s
+graph: plan stage inference settled from 6417 to 7004 MB
+Graph: Plan-Stufe inference beruhigt von 6417 auf 7004 MB
+[repo] still working after 4040 s; last phase started: source.served
+[repository:command] still running after 4040 s
+[repository:command] still running after 4050 s
+[repository:command] still running after 4060 s

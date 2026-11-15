@@ -1,0 +1,122 @@
+🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md:46: The cooling load is the sum $\dot{Q}_\mathrm{C} = \dot{Q}_\mathrm{T} + \dot{Q}_\mathrm{V} + \dot{Q}_\mathrm{S} + \dot{Q}_\mathrm{I}$ in W (transmission, ventilation, solar, internal), the same $\dot{Q}$ notation as in the heating video; index `V` always means ventilation, with the latent part `V,lat
+🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:5: sensible flow as Φ_V, Kühlung takes sensible plus latent flow, the airflow, the night purge and the cold recovery.
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:369: "de": "Q Punkt V ist gleich Rho a mal c p a mal Delta Theta mal q v R.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json:380: "de": "Weil Q Punkt V gleich Q Punkt S t r ist, stellen wir um: q v R nach links, die Last geteilt durch Rho a mal c p a mal Delta Theta.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:49: PHI_T_W = round(sum(area * u * delta for _name, area, u, delta in ENVELOPE), -2)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:50: PHI_V_W = round(V_DOT_M3_H * C_LUFT_WH_M3_K * D_THETA_WINTER_K, -2)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:51: PHI_V_WRG_W = round(PHI_V_W * (1.0 - ETA_WRG), -2)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:52: H_T_W_K = PHI_T_W / D_THETA_WINTER_K
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:53: H_V_W_K = PHI_V_W / D_THETA_WINTER_K
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🐍️.py:54: PHI_LOSS_W = PHI_T_W + PHI_V_W
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🧪️tests/🐍️.py:11: self.assertEqual(E.PHI_T_W, 2300.0)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🧪️tests/🐍️.py:12: self.assertEqual(E.PHI_V_W, 1500.0)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🧪️tests/🐍️.py:13: self.assertEqual(E.PHI_V_WRG_W, 300.0)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📏️running-example/🧪️tests/🐍️.py:14: self.assertEqual(E.PHI_LOSS_W, 3800.0)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📝️narration/🧪️tests/🛡️guard/🐍️.py:98: ("a", "The delta theta here", "Die Temperaturdifferenz Delta-Theta hier", 10, 11, 12),
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📝️narration/🧮️tex/🔣️.json:13: "vartheta": {"char": "ϑ", "kind": "letter"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🗣️lexicon/🔣️.json:166: "\\Delta\\theta": {"de": "Delta Theta", "en": "delta theta"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🐍️.py:58: self.assertEqual(LEXICON.spoken_math("\\Delta\\theta = 5", "de"), "Delta Theta gleich 5")
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🐍️.py:122: self.assertEqual(SPEECH.subtitle_clauses(narration), ["Treiber Delta Theta", ""])
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🐍️.py:124: self.assertEqual(SPEECH.subtitle_narration_text(narration, "a"), "Treiber Delta Theta")
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:3: {"tex": "\\Delta\\theta", "de": "Delta Theta", "en": "delta theta"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:4: {"tex": "\\Delta\\theta = \\theta_i - \\theta_e", "de": "Delta Theta gleich Theta i minus Theta e", "en": "delta theta equals theta i minus theta e"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:28: {"tex": "\\frac{\\Phi}{\\Delta\\theta}", "de": "Phi durch Delta Theta", "en": "phi over delta theta"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:29: {"tex": "U \\cdot A \\cdot \\Delta\\theta", "de": "U mal A mal Delta Theta", "en": "U times A times delta theta"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:30: {"tex": "\\Delta\\theta_{\\mathrm{eq}}", "de": "Delta Theta äquivalent", "en": "delta theta equivalent"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:42: "de": "Treiber ist die Temperaturdifferenz Delta Theta, innen minus außen.",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:56: {"text": "Die Temperaturdifferenz Delta-Theta ist es", "rules": ["greek-name"]},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🧪️tests/🗣️lexicon/🔣️.cases.json:64: {"text": "Delta-Theta stehen nur in Formeln wie $\\Delta\\theta$", "rules": ["greek-name"]}
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py:199: actual = Text("A ϑ", font_size=24, color=WHITE)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py:201: self.assertIn("ϑ", actual.t2f)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py:202: self.assertTrue(self.source_coverage(actual.t2f["ϑ"], "ϑ"))
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py:244: rendered = math_text(r"\vartheta_{\mathrm{i}}=20\,\mathrm{°C}\to\vartheta_e", font_size=24)
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:3: "required_symbols": "%+<=>|~°±²³·×÷ΔΣΦΨηθλμπρτφχψϑ…₂←↑→↓⇒−√∞∮≈≠≤≥",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:4: "missing_in_body": "ΔΣΦΨηθλμπρτφχψϑ₂←↑→↓⇒√∞∮≈≠≤≥",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:8: {"family": "Libertinus Math", "source": "🧰️framework/🔨️modules/📚️compiler/🌍️world/🔤️fonts/🧮️LibertinusMath-Regular.otf", "text": "ϑ₂⇒∮≈≤≥"},
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:33: "ϑ",
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json:37: "ϑ ← ↑ → ↓ ⇒ ∮"
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:551: r"The heating load $\dot{Q}_H$ is calculated to DIN EN 12831-1 — which calls it $\Phi_{HL}$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:552: r"Die Heizlast $\dot{Q}_H$ wird nach DIN EN 12831-1 berechnet — dort heißt sie $\Phi_{HL}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:589: r"It comes with its own standard and its own rules — the standard writes $\Phi_{\mathrm{HL}}$ for it.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:590: r"Dazu gehören eine eigene Norm und eigene Regeln — die Norm schreibt dafür $\Phi_{\mathrm{HL}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py:652: _fact(tr("Symbol:", "Formelzeichen:"), math_label(tr(r"\dot{Q}_{H}\;\text{— in the standard}\;\Phi_{\mathrm{HL}}", r"\dot{Q}_{H}\;\text{— in der Norm}\;\Phi_{\mathrm{HL}}"), size=LABEL_FONT_SIZE, color=POWER)),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:129: PHI_SURFACES = [u * a * d for _n, a, u, d, _c in SURFACES]
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:130: PHI_WB = DU_WB * A_HUELLE * D_THETA
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:131: PHI_V = V_NET * N_AIR * RHO_C * D_THETA
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:132: BAR_UNIT = 3.0 / (sum(PHI_SURFACES) + PHI_WB + PHI_V)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:674: segments = [(tr({"Außenwand": "Exterior wall", "Dach": "Roof", "Fenster": "Windows", "Boden": "Floor"}[n], n), phi, c) for (n, _a, _u, _d, c), phi in zip(SURFACES, PHI_SURFACES)]
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py:675: segments += [(tr("Thermal bridges", "Wärmebrücken"), PHI_WB, P_ORANGE), (tr("Ventilation", "Lüftung"), PHI_V, VENT_BLUE)]
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️tests/🔗️chain/🔣️.json:8: "forbidden_source": ["\\;[\\mathrm", "\\,[\\mathrm", "Delta Theta", "Delta-Theta", "vartheta", "Q_{Senke}", "Q_{Quelle}"],
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:65: | 6 | Thermische Masse — speichern und zeitversetzt abgeben | Q = m · c · ΔT an 1 m² Betondecke · 24-h-Verlauf, Phasenverschiebung, Dämpfung · warum die Decke · Nachtlüftung/Sonnengewinne |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:66: | 7 | Sensible und latente Wärme | T-Q-Diagramm Wasser · Sättigungskurve x_s(ϑ) · Taupunkt · Mensch 70 W sensibel + 30 W latent · Tauwasser/Entfeuchtung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:67: | 8 | Zusammenfassung — was wir gelernt haben | Sieben Zeilen, eine je Baustein: P = E / t · 1 kW · 1 h = 1 kWh · E_ein = E_aus + ΔE_Speicher · COP = Q_H / W_el · Q̇_S = g · A · I · Q = m · c · ΔT · Q_lat = m · r · Überleitung zu Heizung und Kühlung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:84: | **Thermische Masse** | Wärmespeicher eines Bauteils, Q = m · c · ΔT | 1 m² Beton, 10 cm, 2 K → 480 kJ ≈ 0,13 kWh |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:95: | **Q = m · c · ΔT** | sensible Wärme (Dusche, Betondecke, Wasser) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:197: | **Heizung** | Φ_V = Q̇_V,sens als Lüftungsterm der Heizlast (1 500 W, mit WRG 300 W); Stoß- statt Kipplüftung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:198: | **Kühlung** | Q̇_L = sensibel + latent (450 W + 810 W), V̇ als Auslegungsgröße für Luftmenge und Kanal, Nachtlüftung als Speicherentladung, Kälterückgewinnung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:236: | **R_ges = R_si + Σ(d/λ) + R_se** | Gesamtwiderstand inkl. Oberflächenwiderständen |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:237: | **U = 1 / R_ges** | U-Wert |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:274: | **U = 1 / R_ges** | Wärmestrom je 1 m² und 1 K |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:302: Die Lüftungswärmeverluste aus dem Lüftungsvideo (`2_ventilation/`) mit einer kurzen Erinnerung in die Heizlast einsetzen: V̇ = V · n, c_Luft und das winterliche Δθ ergeben Φ_V, das neben dem Transmissionsverlust aus Modul 2 steht. Luftmenge, Stoß- und Kipplüftung, Wärmerückgewinnung und Anlagenvergl
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:308: | **Φ_V = V · n · c_Luft · Δθ** | Lüftungswärmeverlust ohne WRG; 440 · 0,5 · 0,34 · 20 ≈ 1 500 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:309: | **Φ_V = V · n · (1 − η_WRG) · c_Luft · Δθ** | mit Wärmerückgewinnung η_WRG = 0,8: ≈ 300 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:313: - Φ_T ≈ 2 300 W plus Φ_V ≈ 1 500 W ergibt 3 800 W; mit WRG bleiben 2 600 W.
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:458: | **Q̇_Licht = P_Licht · f_g** | Beleuchtungslast |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:459: | **Q̇_i = Q̇_Pers + Q̇_Geräte + Q̇_Licht** | Gesamte interne Last |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:499: | **Q̇_L = Q̇_V,sens + Q̇_V,lat** | Lüftungslast aus dem Lüftungsvideo (Kapitel 3); 450 W + 810 W ≈ 1 260 W |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:529: | **I_reduziert = I_S,max · F_V** | Nach Verschattung |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:531: | **Q̇_S,tr = A · F_F · F_V · g_tot · I_S,max** | Solare Transmissionskühllast |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:538: | **F_V** | Verschattungsfaktor (Außen-/Innenschatten) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:612: | Temperaturdifferenz | Δθ, ΔT | K | Treiber |
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:134: PHI_GA = G_WINTER * WIN_A
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:135: PHI_SOLAR = PHI_GA * G_VALUE * FF_GLASS * FW_INCIDENCE * FS_WINTER * FC_WINTER
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:1201: width=max(1e-3, bar_w * phi() / PHI_GA), height=0.2, stroke_width=0,
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py:1204: full = math_text(rf"{label_number(PHI_GA)}\,\mathrm{{W}}", font_size=LABEL_FONT_SIZE, color=GREY_B)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:105: Q_V_W = _example.PHI_V_W
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py:106: Q_T_W = _example.PHI_T_W
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:91: PHI_P_W = 80.0
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:92: PHI_E_LAPTOP_W, PHI_E_DEVICE_W = 60.0, 90.0
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:93: PHI_E_W = PHI_E_LAPTOP_W + PHI_E_DEVICE_W
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:94: PHI_L_W = 60.0
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:95: PHI_INT_W = PHI_P_W + PHI_E_W + PHI_L_W
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:395: anchor = watt_anchor(PHI_P_W, compare="seated", title=tr("a seated person", "eine sitzende Person"), color=PASTEL_YELLOW)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:400: self.play(phi_p.animate.set_value(PHI_P_W), room["air"].animate.set_fill(COLOR_HEAT, opacity=0.1),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:501: self.play(*device_heat(1.3), Flash(lap_at, color=COLOR_HEAT, flash_radius=0.3, line_length=0.12), lap_w.animate.set_value(PHI_E_LAPTOP_W),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:504: dev_w.animate.set_value(PHI_E_DEVICE_W), room["air"].animate.set_fill(COLOR_HEAT, opacity=0.08),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:583: phi_l.animate.set_value(PHI_L_W),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:608: B5_BAR_UNIT = 3.0 / PHI_INT_W
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:660: ("p", PHI_P_W, COLOR_PEOPLE, tr("People", "Personen")),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:661: ("e", PHI_E_W, COLOR_EQUIP, tr("Equipment", "Geräte")),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:662: ("l", PHI_L_W, COLOR_LIGHT, tr("Lighting", "Beleuchtung")),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:694: np.array([B5_STACK_X, B5_BASE_Y + PHI_INT_W * B5_BAR_UNIT + 0.22, 0.0]),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:725: total.animate.set_value(PHI_INT_W),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:81: _PHI_T = _example.PHI_T_W
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:83: _PHI_V = _example.PHI_V_W
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:85: _PHI_LOSS = _example.PHI_LOSS_W
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:371: self.play(*leak(3.0), phi_t.animate.set_value(_PHI_T), run_time=3.0)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:390: self.play(*losses(3.0), phi_v.animate.set_value(_PHI_V), run_time=3.0)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:399: loss_slot = math_label(rf"= {label_number(_PHI_LOSS)}\,\mathrm{{W}}", size=32).next_to(loss_desc, DOWN, buff=0.25)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:410: tot.animate.set_value(_PHI_LOSS), *losses(2.0), run_time=2.0)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:500: lambda: rf"H_{{\mathrm{{T}}}} = \frac{{{label_number(_PHI_T)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:504: lambda: rf"H_{{\mathrm{{V}}}} = \frac{{{label_number(_PHI_V)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:137: PHI_T = sum(a * u * t for _n, a, u, t, _c in ENVELOPE)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:138: H_T = PHI_T / DT_DESIGN
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1026: r"Each part has its heat flow $\Phi_i = U_i \cdot A_i \cdot \Delta\theta_i$. Their sum is the transmission load $\dot{Q}_{\mathrm{T}}$ at the room.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1027: r"Jedes Teil hat seinen Wärmestrom $\Phi_i = U_i \cdot A_i \cdot \Delta\theta_i$. Ihre Summe ist die Transmissionslast $\dot{Q}_{\mathrm{T}}$ am Raum."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1093: ("phi", r"\dot{Q}_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), (None, r"\Sigma\,\Phi_{i}", PASTEL_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1111: math_label(r"\Phi_{i}", np.array([x_phi, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, edge="right"),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1195: total.animate.set_value(PHI_T), *heat(2.6), run_time=2.6)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:375: return math_label(rf"\Phi_{{\mathrm{{{sub}}}}}", size=FORMULA_FONT_SIZE, color=color)
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:626: r"That heat flow through the solid is called $\Phi_{\mathrm{k}}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:627: r"Diesen Wärmestrom durch den Feststoff nennen wir $\Phi_{\mathrm{k}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:736: r"Heat carried by moving air is $\Phi_{\mathrm{c}}$. Exchanging room air with outdoor air is ventilation — that is the Ventilation video.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:737: r"Wärme, die bewegte Luft trägt, nennen wir $\Phi_{\mathrm{c}}$. Den Luftaustausch mit außen zeigt das Lüftungsvideo."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:913: r"This heat flow is $\Phi_{\mathrm{r}}$.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:914: r"Diesen Wärmestrom nennen wir $\Phi_{\mathrm{r}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1014: ("k", r"Inside the wall only conduction works: $\Phi_{\mathrm{k}}$.", r"In der Wand wirkt nur die Leitung: $\Phi_{\mathrm{k}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1015: ("c", r"At both surfaces moving air carries the heat: $\Phi_{\mathrm{c}}$.", r"An beiden Oberflächen trägt bewegte Luft die Wärme: $\Phi_{\mathrm{c}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1016: ("r", r"Next to it the surfaces radiate: $\Phi_{\mathrm{r}}$.", r"Daneben strahlen die Oberflächen: $\Phi_{\mathrm{r}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1057: ("ci", r"\Phi_{\mathrm{c,i}}", PASTEL_CYAN), (None, "+", PASTEL_WHITE), ("ri", r"\Phi_{\mathrm{r,i}}", PASTEL_YELLOW),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1058: (None, "=", PASTEL_WHITE), ("k", r"\Phi_{\mathrm{k}}", PASTEL_RED), (None, "=", PASTEL_WHITE),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1059: ("ce", r"\Phi_{\mathrm{c,e}}", PASTEL_CYAN), (None, "+", PASTEL_WHITE), ("re", r"\Phi_{\mathrm{r,e}}", PASTEL_YELLOW),
+TOTAL 121

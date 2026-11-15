@@ -1,0 +1,21 @@
+{
+  "round": 4,
+  "attempt": 2,
+  "start": "2026-11-14T17:46:39Z",
+  "end": "2026-11-14T17:47:25Z",
+  "wall_s": 45.645,
+  "log": "/Users/ueli/native-bootstrap-round-4-try-2.log",
+  "wrapper_rc": 0,
+  "native_rc": 75,
+  "hard_stop": null,
+  "peak_owned_rss_kib": 1042768,
+  "sample_count": 2,
+  "fleet_refusal": true,
+  "fleet_numbers": null,
+  "first_arrived_line": null,
+  "last_arrived_line": null,
+  "retry_wait_s": 180.003,
+  "marker_exists": false,
+  "reference": null,
+  "graph_hosts": {}
+}

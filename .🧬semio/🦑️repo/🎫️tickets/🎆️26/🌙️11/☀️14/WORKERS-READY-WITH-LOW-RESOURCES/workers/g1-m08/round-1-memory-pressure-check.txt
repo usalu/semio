@@ -1,0 +1,5 @@
+2026-11-14T11:35:51Z
+1
+The system has 17179869184 (1048576 pages with a page size of 16384).
+System-wide memory free percentage: 71%
+254:#define DISPATCH_MEMORYPRESSURE_NORMAL		0x01

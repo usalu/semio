@@ -281,7 +281,7 @@ macro_rules! norm_live_acceptance {
                         _ => Vec::new(),
                     };
                     let editable = leaves.iter().any(|(key, value)| {
-                        let writes = $crate::entity_editing::bulk_writes(&tree, &spec.collection, &ids, key, value).expect("bulk writes");
+                        let writes = $crate::bulk_writes(&tree, &spec.collection, &ids, key, value).expect("bulk writes");
                         let mut resolve = |d: &Doc, e: &$crate::NormEdit| <$app as $crate::NormLiveEditor>::live_resolve(d, e);
                         $crate::resolve_set_fields(&doc, &writes, &mut resolve).is_ok_and(|mutations| !mutations.is_empty())
                     });
@@ -411,7 +411,7 @@ macro_rules! norm_live_acceptance {
             fn the_grip_walk_cycles_inside_an_entity_the_shell_keys_drive_it_and_the_paint_marks_the_focus_and_honours_the_platform_preferences() {
                 use $crate::{walk_grips, GripRef, GripStep, GripWalk};
                 use $crate::accessibility::A11yPrefs;
-                use $crate::viewport3d::lane_overlays::{grips, GripView, LaneOverlays};
+                use $crate::lane_overlays::{grips, GripView, LaneOverlays};
                 use semio_framework::PluginShellHooks as _;
                 use semio_plugin::World3dAnnotation;
                 let doc = Doc::default();
@@ -604,7 +604,7 @@ macro_rules! norm_live_acceptance {
                 let first = entities.first().expect("the default document offers an entity");
                 let (collection, ids) = $crate::selected_rows(&tree, std::slice::from_ref(&first.id)).expect("the first entity is a row of the document");
                 let context = $crate::HostContext { collection: collection.clone(), ids: ids.clone(), clip_json: Some("{}".to_owned()) };
-                let menu = $crate::touch_menu(ids.len(), true);
+                let menu = $crate::touch_menu(ids.len(), true, None);
                 assert!(menu.iter().all(|entry| entry.enabled), "with a selection and a clip every entry of the Edit menu is on");
                 let select_all = $crate::accessibility::focus_order::shortcut_action_id(&$crate::accessibility::focus_order::ShortcutAction::SelectAll);
                 for entry in menu.iter().filter(|entry| entry.action_id != select_all) {
@@ -635,15 +635,15 @@ macro_rules! norm_live_acceptance {
                     if handles.is_empty() {
                         continue;
                     }
-                    let view = $crate::viewport3d::toolbar::ViewportView { lanes: $crate::viewport3d::lane_overlays::LaneOverlays { handles: handles.clone(), ..Default::default() }, ..Default::default() };
+                    let view = $crate::toolbar::ViewportView { lanes: $crate::lane_overlays::LaneOverlays { handles: handles.clone(), ..Default::default() }, ..Default::default() };
                     for locale in [Locale::En, Locale::De] {
-                        let controls = $crate::viewport3d::toolbar::render_touch_controls(&view, Some(DeviceClass::Mobile), "norm.law", locale, "norm.law").expect("the touch controls render").unwrap_or_else(|| panic!("{what}: a phone offers nudge buttons for the selected grips"));
+                        let controls = $crate::toolbar::render_touch_controls(&view, Some(DeviceClass::Mobile), "norm.law", locale, "norm.law").expect("the touch controls render").unwrap_or_else(|| panic!("{what}: a phone offers nudge buttons for the selected grips"));
                         let projected = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(controls)).expect("the touch controls project");
                         for handle in &handles {
                             assert!(projected.contains(&format!("norm-viewport.nudge.{}.minus", handle.id)) && projected.contains(&format!("norm-viewport.nudge.{}.plus", handle.id)), "{what}: grip '{}' has a minus and a plus button in {locale:?}", handle.id);
                         }
                     }
-                    assert!($crate::viewport3d::toolbar::render_touch_controls(&view, Some(DeviceClass::Desktop), "norm.law", Locale::En, "norm.law").expect("renders").is_none(), "{what}: the desktop keeps the keyboard and the pointer");
+                    assert!($crate::toolbar::render_touch_controls(&view, Some(DeviceClass::Desktop), "norm.law", Locale::En, "norm.law").expect("renders").is_none(), "{what}: the desktop keeps the keyboard and the pointer");
                     for handle in &handles {
                         grips += 1;
                         let rest = $crate::accessibility::published_nodes::rest_parameter(handle);

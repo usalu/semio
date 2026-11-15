@@ -1,0 +1,50 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json": {
+  "file": "f000",
+  "after": "7b047f9b48d120746e42d8e54b5be1311c255b5e98ccffe4395547a7f52daeb4"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🟦️.ts": {
+  "file": "f001",
+  "after": "7942c84e77982cd30682e09a365f1a1089ce3dacaba787b84fccacd684f3e5db"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🟦️.ts": {
+  "file": "f002",
+  "after": "cde88db0b07d010db86db43ff585ba1a174b39fe269668fcd823aea0b2b5f816"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/📋️contract/🟦️.ts": {
+  "file": "f003",
+  "after": "6c444708246ea1c08d89b516565b1067bc59848d049da7d5e2cf5230fbff493e"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧬️schema/🔣️.json": {
+  "file": "f004",
+  "after": "ca6d92f2ce8a11721791907abebddeceab408399a6beb65a3a0f5fa9288fb87b"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/🧩️component-driver/🟦️.ts": {
+  "file": "f005",
+  "after": "bccccbba7ac1f156df23206deb6133a190d211a43722d7a265ecb1860209a9c4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🟦️.ts": {
+  "file": "f006",
+  "after": "90425f4ea2202a7f3e985d3699e908fc86e2bddbb67a0abe3f81da75746b758b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts": {
+  "file": "f007",
+  "after": "71ecad02da25f915153c06d759d8a87884748bd8672ec2365af133de2c9895c5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/📥️phase/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f008",
+  "after": "328820cceda71290073a92cd8cd50c15cba03d4e473cd9ea4a52b3f02cc2115a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧪️tests/🟦️.ts": {
+  "file": null,
+  "after": "416ab08a7b8d93e7c8a500d87da490dd31777eb970446356ddf65ca5b5654bd9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": null,
+  "after": "7b08a87f9dbc3ca06a7b777eae8fa582c3341c15143dfc39c9f509f2b41f58ef"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🧪️tests/🐍️.py": {
+  "file": null,
+  "after": "879549e6b58d231fe182234241589860a1e541d1f4b9db112851af99de2cd58f"
+ }
+}

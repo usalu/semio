@@ -8,5 +8,5 @@ export {sealedGenerationPinV1,recordSealedGenerationPinV1} from "./📍️pin/�
 export {taggedOwnersRetainedV1,buildGraphGenerationIdentityV1,pendingCrateManifestV1} from "./🏷️retention/🟦️.ts";
 export {generationHostV1} from "./🕰️host/🟦️.ts";
 export {prefetchBuildGraphProjectsV1,ownerContentStampsV1,edgeRefreshOwnersV1,previousEnvironmentOwnersV1,edgeConsumersOfPartV1} from "./🤝️prefetch/🟦️.ts";
-export {withRepositoryBuildGraphPublicationV1,requireBuildGraphExternalInputsV1,pendingOwnerRootsV1,adoptPendingBuildOwnersV1,loadBuildGraphV1} from "./📥️load/🟦️.ts";
+export {withRepositoryBuildGraphPublicationV1,requireBuildGraphExternalInputsV1,pendingOwnerRootsV1,vanishedOwnerRootsV1,adoptPendingBuildOwnersV1,loadBuildGraphV1} from "./📥️load/🟦️.ts";
 export {resolveBuildTargetV1,resolveBuildInputsV1} from "./🎯️resolve/🟦️.ts";

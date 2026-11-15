@@ -249,7 +249,7 @@ pub(super) fn check_product_geometry(
                     ));
             }
             out.push(p.build());
-            for (pk, pv) in &geom.parameters {
+            for (pk, pv) in geom.parameters.iter() {
                 let mut pkc = CheckResult::assess(
                     format!("vdi3805.1.geometry.parameter.{article}.{pk}"),
                     part_label(1),

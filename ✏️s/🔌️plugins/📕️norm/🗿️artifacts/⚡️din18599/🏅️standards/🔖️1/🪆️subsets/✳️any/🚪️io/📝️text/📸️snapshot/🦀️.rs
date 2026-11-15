@@ -39,27 +39,6 @@ use semio_s_artifact_norm_din18599_model::*;
 use semio_s_artifact_norm_din18599_model::{Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem};
 use framework_schema::ArtifactSchema;
 
-/// ✉️ `ArtifactDsl` and `ArtifactPack` over the one derived record spec, composed child included.
-impl pack::snapshot::ArtifactDsl for Din18599Snapshot {
-    const EXTENSION: &'static str = "din18599";
-    fn envelope_id() -> &'static str {
-        "norm.din18599"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
 /// 📤️ The canonical JSON projection of a [`Din18599Snapshot`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_din18599_snapshot_json(snapshot: &Din18599Snapshot) -> String {

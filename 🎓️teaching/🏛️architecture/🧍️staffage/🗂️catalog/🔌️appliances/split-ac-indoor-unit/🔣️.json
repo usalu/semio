@@ -1659,7 +1659,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "abs-white",
-          "areaM2": 0.62,
+          "areaM2": 0.73,
           "characteristicLengthM": 0.29,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.3,
@@ -1696,7 +1696,7 @@
           "kind": "surface",
           "model": "passive",
           "material": "abs-grey",
-          "areaM2": 0.1,
+          "areaM2": 0.0829,
           "characteristicLengthM": 0.12,
           "geometry": "horizontal-plate-up",
           "skyViewFactor": 0.4,
@@ -1729,7 +1729,7 @@
           "kind": "surface",
           "model": "operating",
           "material": "abs-grey",
-          "areaM2": 0.1,
+          "areaM2": 0.1243,
           "characteristicLengthM": 0.12,
           "geometry": "vertical-plate",
           "skyViewFactor": 0.3,
@@ -1802,164 +1802,885 @@
       ],
       "clinical": false
     },
-    "volume": {
-      "status": "authored",
-      "solids": [
-        {
-          "id": "casing",
-          "kind": "extrude",
-          "bone": "unit",
-          "material": "abs-white",
-          "role": "body",
-          "tone": 0.88,
-          "region": "casing",
-          "profile": [
-            [0, 0],
-            [0.065, 0],
-            [0.065, 0.03],
-            [0.185, 0.03],
-            [0.19206, 0.03993],
-            [0.19815, 0.05444],
-            [0.20312, 0.07313],
-            [0.20685, 0.09556],
-            [0.20919, 0.12132],
-            [0.21, 0.15],
-            [0.21, 0.245],
-            [0.20875, 0.25875],
-            [0.205, 0.27],
-            [0.19875, 0.27875],
-            [0.19, 0.285],
-            [0.17875, 0.28875],
-            [0.165, 0.29],
-            [0, 0.29]
-          ],
-          "plane": "xy",
-          "from": -0.425,
-          "to": 0.425
-        },
-        {
-          "id": "end-cap",
-          "kind": "box",
-          "bone": "unit",
-          "material": "abs-white",
-          "role": "body",
-          "tone": 0.88,
-          "region": "casing",
-          "size": [0.12, 0.03, 0.035],
-          "transform": {
-            "translation": [0.125, 0.015, -0.4075]
+    "volumes": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "body": [
+          {
+            "id": "casing",
+            "kind": "extrude",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "body",
+            "tone": 0.88,
+            "profile": [
+              [0, 0],
+              [0.065, 0],
+              [0.065, 0.03],
+              [0.185, 0.03],
+              [0.19206, 0.03993],
+              [0.19815, 0.05444],
+              [0.20312, 0.07313],
+              [0.20685, 0.09556],
+              [0.20919, 0.12132],
+              [0.21, 0.15],
+              [0.21, 0.245],
+              [0.20875, 0.25875],
+              [0.205, 0.27],
+              [0.19875, 0.27875],
+              [0.19, 0.285],
+              [0.17875, 0.28875],
+              [0.165, 0.29],
+              [0, 0.29]
+            ],
+            "plane": "xy",
+            "from": -0.425,
+            "to": 0.425
           },
-          "repeat": {
-            "count": 2,
-            "translation": [0, 0, 0.815]
+          {
+            "id": "end-cap",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "body",
+            "tone": 0.88,
+            "size": [0.12, 0.03, 0.035],
+            "transform": {
+              "translation": [0.125, 0.015, -0.4075]
+            },
+            "repeat": {
+              "count": 2,
+              "translation": [0, 0, 0.815]
+            }
+          },
+          {
+            "id": "intake-grille",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "texture",
+            "tone": 0.45,
+            "size": [0.11, 0.0032, 0.74],
+            "cornerRadius": 0.0015,
+            "transform": {
+              "translation": [0.085, 0.2916, 0]
+            }
+          },
+          {
+            "id": "grille-slat-z-0",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.047, 0.285, -0.36],
+            "p1": [0.047, 0.285, 0.36],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-z-1",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.07200000000000001, 0.285, -0.36],
+            "p1": [0.07200000000000001, 0.285, 0.36],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-z-2",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.097, 0.285, -0.36],
+            "p1": [0.097, 0.285, 0.36],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-z-3",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.12200000000000001, 0.285, -0.36],
+            "p1": [0.12200000000000001, 0.285, 0.36],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-x-0",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.045, 0.281, -0.32],
+            "p1": [0.125, 0.281, -0.32],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-x-1",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.045, 0.281, -0.24],
+            "p1": [0.125, 0.281, -0.24],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-x-2",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.045, 0.281, -0.16],
+            "p1": [0.125, 0.281, -0.16],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-x-3",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.045, 0.281, -0.08000000000000002],
+            "p1": [0.125, 0.281, -0.08000000000000002],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-x-4",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.045, 0.281, 0.0],
+            "p1": [0.125, 0.281, 0.0],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-x-5",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.045, 0.281, 0.08000000000000002],
+            "p1": [0.125, 0.281, 0.08000000000000002],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-x-6",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.045, 0.281, 0.15999999999999998],
+            "p1": [0.125, 0.281, 0.15999999999999998],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-x-7",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.045, 0.281, 0.24000000000000005],
+            "p1": [0.125, 0.281, 0.24000000000000005],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "grille-slat-x-8",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.5,
+            "p0": [0.045, 0.281, 0.32],
+            "p1": [0.125, 0.281, 0.32],
+            "r0": 0.004,
+            "r1": 0.004
+          },
+          {
+            "id": "display-window",
+            "kind": "box",
+            "bone": "unit",
+            "material": "display",
+            "role": "glazing",
+            "tone": 0.1,
+            "size": [0.004, 0.04, 0.06],
+            "cornerRadius": 0.0019,
+            "transform": {
+              "translation": [0.2085, 0.142, 0.35]
+            }
+          },
+          {
+            "id": "vane",
+            "kind": "extrude",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [
+              [0, -0.015],
+              [0.11, -0.015],
+              [0.11458, -0.01417],
+              [0.11833, -0.01167],
+              [0.12125, -0.0075],
+              [0.12333, -0.00167],
+              [0.12458, 0.00583],
+              [0.125, 0.015],
+              [0.12, 0.015],
+              [0, 0.015]
+            ],
+            "plane": "xy",
+            "from": -0.39,
+            "to": 0.39
           }
-        },
-        {
-          "id": "intake-grille",
-          "kind": "box",
-          "bone": "unit",
-          "material": "abs-grey",
-          "role": "detail",
-          "tone": 0.3,
-          "region": "intake-grille",
-          "maxDenominator": 200,
-          "size": [0.11, 0.0032, 0.74],
-          "cornerRadius": 0.0015,
-          "transform": {
-            "translation": [0.085, 0.2916, 0]
+        ],
+        "thermal": [
+          {
+            "id": "th-casing",
+            "of": "casing",
+            "region": "casing",
+            "layer": "shell"
+          },
+          {
+            "id": "th-grille",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "texture",
+            "tone": 0.45,
+            "size": [0.112, 0.009, 0.74],
+            "cornerRadius": 0.004,
+            "transform": {
+              "translation": [0.085, 0.2916, 0]
+            },
+            "region": "intake-grille",
+            "layer": "shell",
+            "sectionFaces": ["-v", "+u", "-u", "+w", "-w"]
+          },
+          {
+            "id": "th-vane",
+            "kind": "box",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.127, 0.032, 0.782],
+            "cornerRadius": 0.012,
+            "transform": {
+              "translation": [0.0625, 0, 0]
+            },
+            "region": "discharge-vane",
+            "layer": "shell",
+            "sectionFaces": ["+v", "-u"]
+          },
+          {
+            "id": "th-cold-jet",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.1, 0.1, 0.5],
+            "transform": {
+              "translation": [0.1, 0.15, 0]
+            },
+            "region": "casing",
+            "tags": ["cold-jet"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
           }
-        },
-        {
-          "id": "grille-slat-z",
-          "kind": "capsule",
-          "bone": "unit",
-          "material": "abs-grey",
-          "role": "detail",
-          "tone": 0.7,
-          "region": "intake-grille",
-          "maxDenominator": 50,
-          "p0": [0.047, 0.285, -0.36],
-          "p1": [0.047, 0.285, 0.36],
-          "r0": 0.0035,
-          "r1": 0.0035,
-          "repeat": {
-            "count": 4,
-            "translation": [0.025, 0, 0]
+        ],
+        "structure": [
+          {
+            "id": "member-unit-backplate",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.03, 0.26, 0.84],
+            "transform": {
+              "translation": [0.0155, 0.145, 0]
+            },
+            "member": "unit",
+            "part": "member"
+          },
+          {
+            "id": "member-unit-chassis",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.1, 0.2, 0.78],
+            "transform": {
+              "translation": [0.1, 0.15, 0]
+            },
+            "member": "unit",
+            "part": "member"
+          },
+          {
+            "id": "member-vane",
+            "kind": "capsule",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "body",
+            "tone": 0.5,
+            "p0": [0.0, 0.0, -0.39],
+            "p1": [0.0, 0.0, 0.39],
+            "r0": 0.0082,
+            "r1": 0.0082,
+            "member": "vane",
+            "part": "member"
+          },
+          {
+            "id": "joint-vane",
+            "kind": "ellipsoid",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.4,
+            "radii": [0.014, 0.014, 0.04],
+            "transform": {
+              "translation": [0.0, 0.0, 0.2]
+            },
+            "member": "vane",
+            "part": "joint"
+          },
+          {
+            "id": "support-wall-hook",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "ground",
+            "tone": 0.3,
+            "size": [0.02, 0.02, 0.1],
+            "transform": {
+              "translation": [0.012, 0.27, 0]
+            },
+            "member": "unit",
+            "part": "support",
+            "anchor": "wall-hook"
+          },
+          {
+            "id": "support-wall-rest",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "ground",
+            "tone": 0.3,
+            "p0": [0.0, 0.02, -0.05],
+            "p1": [0.0, 0.02, 0.05],
+            "r0": 0.0082,
+            "r1": 0.0082,
+            "member": "unit",
+            "part": "support",
+            "anchor": "wall-rest"
+          },
+          {
+            "id": "mass-unit",
+            "kind": "ellipsoid",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.07, 0.1, 0.3],
+            "transform": {
+              "translation": [0.1, 0.15, 0]
+            },
+            "member": "unit",
+            "part": "mass"
+          },
+          {
+            "id": "mass-vane",
+            "kind": "box",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.04, 0.03, 0.4],
+            "transform": {
+              "translation": [0.06, 0, 0]
+            },
+            "member": "vane",
+            "part": "mass"
           }
-        },
-        {
-          "id": "grille-slat-x",
-          "kind": "capsule",
-          "bone": "unit",
-          "material": "abs-grey",
-          "role": "detail",
-          "tone": 0.7,
-          "region": "intake-grille",
-          "maxDenominator": 50,
-          "p0": [0.045, 0.281, -0.32],
-          "p1": [0.125, 0.281, -0.32],
-          "r0": 0.0035,
-          "r1": 0.0035,
-          "repeat": {
-            "count": 9,
-            "translation": [0, 0, 0.08]
+        ],
+        "decisions": [
+          {
+            "en": "Body: the casing is the drawn extrude with its rounded front, flat back and the slot step; two end caps close the ends, the intake grille is a texture plate with four lengthwise and nine cross slats of 8 mm, the display window a glazing plate and the vane a 30 mm profile extruded over 0.78 m that turns about the slot edge.",
+            "de": "Körper: das Gehäuse ist der gezeichnete Extrusionskörper mit gerundeter Front, ebener Rückseite und Ausblasstufe; zwei Endkappen schließen die Enden, das Ansauggitter ist eine Texturplatte mit vier Längs- und neun Querstäben von 8 mm, das Anzeigefenster eine Verglasungsplatte und die Lamelle ein 30-mm-Profil über 0,78 m, das sich um die Schlitzkante dreht."
+          },
+          {
+            "en": "Thermal: the casing skin is the casing itself (the wall face is excluded), the grille a plate skin 9 mm thick whose lower face is a section face, the vane a skin around the vane whose upper face and root are section faces and the cold-jet emitter a 0.1 m duct inside the casing.",
+            "de": "Thermik: die Gehäusehaut ist das Gehäuse selbst (die Wandfläche ist ausgenommen), das Gitter eine 9 mm dicke Plattenhaut mit Schnittfläche unten, die Lamelle eine Haut um die Lamelle mit Schnittflächen oben und an der Wurzel und der Emitter cold-jet ein 0,1-m-Kanal im Gehäuse."
+          },
+          {
+            "en": "Structure: back plate and chassis as the unit member, the vane axle as member with a hinge joint, a hook block at the upper wall hook, a roller across w at the lower wall rest, masses for unit and vane.",
+            "de": "Tragwerk: Rückplatte und Chassis als Glied des Geräts, die Lamellenachse als Glied mit Scharniergelenk, ein Hakenblock am oberen Wandhaken, eine Rolle quer zu w am unteren Wandanschlag, Massen für Gerät und Lamelle."
           }
-        },
-        {
-          "id": "display-window",
-          "kind": "box",
-          "bone": "unit",
-          "material": "display",
-          "role": "detail",
-          "tone": 0.15,
-          "region": "casing",
-          "maxDenominator": 100,
-          "size": [0.004, 0.04, 0.06],
-          "cornerRadius": 0.0019,
-          "transform": {
-            "translation": [0.2085, 0.142, 0.35]
+        ]
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "body": [
+          {
+            "id": "casing",
+            "kind": "extrude",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "body",
+            "tone": 0.88,
+            "profile": [
+              [0, 0],
+              [0.065, 0],
+              [0.065, 0.03],
+              [0.185, 0.03],
+              [0.19206, 0.03993],
+              [0.19815, 0.05444],
+              [0.20312, 0.07313],
+              [0.20685, 0.09556],
+              [0.20919, 0.12132],
+              [0.21, 0.15],
+              [0.21, 0.245],
+              [0.20875, 0.25875],
+              [0.205, 0.27],
+              [0.19875, 0.27875],
+              [0.19, 0.285],
+              [0.17875, 0.28875],
+              [0.165, 0.29],
+              [0, 0.29]
+            ],
+            "plane": "xy",
+            "from": -0.425,
+            "to": 0.425
+          },
+          {
+            "id": "intake-grille",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "texture",
+            "tone": 0.45,
+            "size": [0.12, 0.0035, 0.74],
+            "cornerRadius": 0.0015,
+            "transform": {
+              "translation": [0.085, 0.2882, 0]
+            }
+          },
+          {
+            "id": "display-window",
+            "kind": "box",
+            "bone": "unit",
+            "material": "display",
+            "role": "glazing",
+            "tone": 0.1,
+            "size": [0.004, 0.04, 0.06],
+            "transform": {
+              "translation": [0.2085, 0.142, 0.35]
+            }
+          },
+          {
+            "id": "vane",
+            "kind": "extrude",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0, -0.017], [0.11, -0.017], [0.12, -0.014], [0.127, 0.0], [0.127, 0.017], [0, 0.017]],
+            "plane": "xy",
+            "from": -0.39,
+            "to": 0.39
           }
-        },
-        {
-          "id": "vane",
-          "kind": "extrude",
-          "bone": "vane",
-          "material": "abs-grey",
-          "role": "body",
-          "tone": 0.6,
-          "region": "discharge-vane",
-          "maxDenominator": 200,
-          "profile": [
-            [0, -0.015],
-            [0.11, -0.015],
-            [0.11458, -0.01417],
-            [0.11833, -0.01167],
-            [0.12125, -0.0075],
-            [0.12333, -0.00167],
-            [0.12458, 0.00583],
-            [0.125, 0.015],
-            [0.12, 0.015],
-            [0, 0.015]
-          ],
-          "plane": "xy",
-          "from": -0.39,
-          "to": 0.39
-        }
-      ],
-      "decisions": [
-        {
-          "en": "The casing is the extrusion of the elevation profile (wall plate, discharge recess of 30 mm, front curvature) over the full 0.85 m length; the recess is closed at both ends by a small end cap (one solid repeated) and spanned by the vane, so the unit reads as a closed body when the vane is shut.",
-          "de": "Das Gehäuse ist die Extrusion des Seitenprofils (Wandplatte, 30-mm-Ausblasnische, Frontkrümmung) über die volle Länge von 0,85 m; die Nische ist an beiden Enden durch eine kleine Endkappe (ein wiederholter Körper) geschlossen und von der Lamelle überspannt, sodass das Gerät bei geschlossener Lamelle als geschlossener Körper erscheint."
-        },
-        {
-          "en": "The vane is the extrusion of its profile over 0.78 m on its own bone, hinged at the front edge of the recess; it swings from 0 to -55 degrees without leaving the recess. The grille is a dark panel with four slats along z (elevation) and nine ribs along x (plan), 7 mm thick bars at 1:50 only.",
-          "de": "Die Lamelle ist die Extrusion ihres Profils über 0,78 m an ihrem eigenen Knochen, am vorderen Nischenrand angelenkt; sie schwenkt von 0 bis -55 Grad, ohne die Nische zu verlassen. Das Gitter ist eine dunkle Platte mit vier Stäben entlang z (Seitenansicht) und neun Rippen entlang x (Grundriss), 7 mm dick, nur im Maßstab 1:50."
-        },
-        {
-          "en": "The display window is drawn at three different places (elevation y 0.13 to 0.18, front y 0.12 to 0.155 and z 0.32 to 0.38, plan z 0.30 to 0.38); the volume takes the front view for z and y and 4 mm depth. Rounded plan corners (20 mm) and front corners (45 mm) of the casing are not modelled; they are drawn but cost under 1 % of the silhouette.",
-          "de": "Das Anzeigefenster ist an drei verschiedenen Orten gezeichnet (Seitenansicht y 0,13 bis 0,18, Vorderansicht y 0,12 bis 0,155 und z 0,32 bis 0,38, Grundriss z 0,30 bis 0,38); das Volumen übernimmt z und y aus der Vorderansicht und 4 mm Tiefe. Die gerundeten Grundrissecken (20 mm) und Frontecken (45 mm) des Gehäuses werden nicht modelliert; sie sind gezeichnet, kosten aber unter 1 % der Silhouette."
-        }
-      ]
+        ],
+        "thermal": [
+          {
+            "id": "th-casing",
+            "of": "casing",
+            "region": "casing",
+            "layer": "shell"
+          },
+          {
+            "id": "th-grille",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "texture",
+            "tone": 0.45,
+            "size": [0.112, 0.015, 0.74],
+            "transform": {
+              "translation": [0.085, 0.2946, 0]
+            },
+            "region": "intake-grille",
+            "layer": "shell",
+            "sectionFaces": ["-v", "+u", "-u", "+w", "-w"]
+          },
+          {
+            "id": "th-vane",
+            "kind": "extrude",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0.0, -0.018], [0.12, -0.018], [0.128, 0.0], [0.128, 0.018], [0.0, 0.018]],
+            "plane": "xy",
+            "from": -0.391,
+            "to": 0.391,
+            "region": "discharge-vane",
+            "layer": "shell",
+            "sectionFaces": ["+v", "-u"]
+          },
+          {
+            "id": "th-cold-jet",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.1, 0.1, 0.5],
+            "transform": {
+              "translation": [0.1, 0.15, 0]
+            },
+            "region": "casing",
+            "tags": ["cold-jet"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-unit-chassis",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.14, 0.25, 0.8],
+            "transform": {
+              "translation": [0.09, 0.145, 0]
+            },
+            "member": "unit",
+            "part": "member"
+          },
+          {
+            "id": "member-vane",
+            "kind": "capsule",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "body",
+            "tone": 0.5,
+            "p0": [0.0, 0.0, -0.39],
+            "p1": [0.0, 0.0, 0.39],
+            "r0": 0.0155,
+            "r1": 0.0155,
+            "member": "vane",
+            "part": "member"
+          },
+          {
+            "id": "support-wall-hook",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "ground",
+            "tone": 0.3,
+            "size": [0.031, 0.031, 0.1],
+            "transform": {
+              "translation": [0.0155, 0.27, 0]
+            },
+            "member": "unit",
+            "part": "support",
+            "anchor": "wall-hook"
+          },
+          {
+            "id": "support-wall-rest",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "ground",
+            "tone": 0.3,
+            "p0": [0.0, 0.02, -0.05],
+            "p1": [0.0, 0.02, 0.05],
+            "r0": 0.0155,
+            "r1": 0.0155,
+            "member": "unit",
+            "part": "support",
+            "anchor": "wall-rest"
+          },
+          {
+            "id": "mass-unit",
+            "kind": "ellipsoid",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.07, 0.1, 0.3],
+            "transform": {
+              "translation": [0.1, 0.15, 0]
+            },
+            "member": "unit",
+            "part": "mass"
+          },
+          {
+            "id": "mass-vane",
+            "kind": "box",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.3,
+            "size": [0.04, 0.03, 0.4],
+            "transform": {
+              "translation": [0.06, 0, 0]
+            },
+            "member": "vane",
+            "part": "mass"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: modelled anew: casing without end caps (merged), one grille plate instead of the slats, the display window and a 34 mm vane profile with a rounded tip.",
+            "de": "Körper: neu gebaut: Gehäuse ohne Endkappen (aufgenommen), eine Gitterplatte statt der Stäbe, das Anzeigefenster und ein 34-mm-Lamellenprofil mit gerundeter Spitze."
+          },
+          {
+            "en": "Thermal: the three regions keep one skin each, the grille skin and vane skin at 15 and 36 mm.",
+            "de": "Thermik: die drei Regionen behalten je eine Haut, Gitter- und Lamellenhaut mit 15 und 36 mm."
+          },
+          {
+            "en": "Structure: one 0.14 m chassis member for back plate and chassis, vane axle of 31 mm, 31 mm hook block and roller and two masses; the hinge joint is merged into the axle.",
+            "de": "Tragwerk: ein 0,14-m-Chassisglied für Rückplatte und Chassis, Lamellenachse von 31 mm, 31-mm-Hakenblock und Rolle und zwei Massen; das Scharniergelenk ist in der Achse aufgegangen."
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "body": [
+          {
+            "id": "casing",
+            "kind": "extrude",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "body",
+            "tone": 0.88,
+            "profile": [
+              [0, 0],
+              [0.065, 0],
+              [0.065, 0.03],
+              [0.185, 0.03],
+              [0.19206, 0.03993],
+              [0.19815, 0.05444],
+              [0.20312, 0.07313],
+              [0.20685, 0.09556],
+              [0.20919, 0.12132],
+              [0.21, 0.15],
+              [0.21, 0.245],
+              [0.20875, 0.25875],
+              [0.205, 0.27],
+              [0.19875, 0.27875],
+              [0.19, 0.285],
+              [0.17875, 0.28875],
+              [0.165, 0.29],
+              [0, 0.29]
+            ],
+            "plane": "xy",
+            "from": -0.425,
+            "to": 0.425
+          },
+          {
+            "id": "intake-grille",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "texture",
+            "tone": 0.45,
+            "size": [0.11, 0.0035, 0.74],
+            "transform": {
+              "translation": [0.085, 0.2882, 0]
+            }
+          },
+          {
+            "id": "vane",
+            "kind": "extrude",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "body",
+            "tone": 0.5,
+            "profile": [[0, -0.018], [0.11, -0.018], [0.125, -0.005], [0.125, 0.018], [0, 0.018]],
+            "plane": "xy",
+            "from": -0.39,
+            "to": 0.39
+          }
+        ],
+        "thermal": [
+          {
+            "id": "th-casing",
+            "of": "casing",
+            "region": "casing",
+            "layer": "shell"
+          },
+          {
+            "id": "th-grille",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "texture",
+            "tone": 0.45,
+            "size": [0.112, 0.03, 0.74],
+            "transform": {
+              "translation": [0.085, 0.2946, 0]
+            },
+            "region": "intake-grille",
+            "layer": "shell",
+            "sectionFaces": ["-v", "+u", "-u", "+w", "-w"]
+          },
+          {
+            "id": "th-vane",
+            "kind": "box",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.127, 0.036, 0.782],
+            "transform": {
+              "translation": [0.0625, 0, 0]
+            },
+            "region": "discharge-vane",
+            "layer": "shell",
+            "sectionFaces": ["+v", "-u"]
+          },
+          {
+            "id": "th-cold-jet",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-grey",
+            "role": "detail",
+            "tone": 0.4,
+            "size": [0.1, 0.1, 0.5],
+            "transform": {
+              "translation": [0.1, 0.15, 0]
+            },
+            "region": "casing",
+            "tags": ["cold-jet"],
+            "sectionFaces": ["+u", "-u", "+v", "-v", "+w", "-w"]
+          }
+        ],
+        "structure": [
+          {
+            "id": "member-unit-chassis",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "body",
+            "tone": 0.5,
+            "size": [0.15, 0.24, 0.76],
+            "transform": {
+              "translation": [0.09, 0.145, 0]
+            },
+            "member": "unit",
+            "part": "member"
+          },
+          {
+            "id": "member-vane",
+            "kind": "capsule",
+            "bone": "vane",
+            "material": "abs-grey",
+            "role": "body",
+            "tone": 0.5,
+            "p0": [0.0, 0.0, -0.39],
+            "p1": [0.0, 0.0, 0.39],
+            "r0": 0.0165,
+            "r1": 0.0165,
+            "member": "vane",
+            "part": "member"
+          },
+          {
+            "id": "support-wall-hook",
+            "kind": "box",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "ground",
+            "tone": 0.3,
+            "size": [0.031, 0.031, 0.1],
+            "transform": {
+              "translation": [0.0165, 0.27, 0]
+            },
+            "member": "unit",
+            "part": "support",
+            "anchor": "wall-hook"
+          },
+          {
+            "id": "support-wall-rest",
+            "kind": "capsule",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "ground",
+            "tone": 0.3,
+            "p0": [0.0, 0.02, -0.05],
+            "p1": [0.0, 0.02, 0.05],
+            "r0": 0.0155,
+            "r1": 0.0155,
+            "member": "unit",
+            "part": "support",
+            "anchor": "wall-rest"
+          },
+          {
+            "id": "mass-unit",
+            "kind": "ellipsoid",
+            "bone": "unit",
+            "material": "abs-white",
+            "role": "detail",
+            "tone": 0.3,
+            "radii": [0.07, 0.1, 0.3],
+            "transform": {
+              "translation": [0.1, 0.15, 0]
+            },
+            "member": "unit",
+            "part": "mass"
+          }
+        ],
+        "decisions": [
+          {
+            "en": "Body: casing, one grille plate and a 36 mm wedge vane; display window and end caps are merged.",
+            "de": "Körper: Gehäuse, eine Gitterplatte und eine 36-mm-Keillamelle; Anzeigefenster und Endkappen sind aufgenommen."
+          },
+          {
+            "en": "Thermal: three skins at 30 mm and more.",
+            "de": "Thermik: drei Häute mit 30 mm und mehr."
+          },
+          {
+            "en": "Structure: chassis member, vane axle, supports and masses at 31 mm.",
+            "de": "Tragwerk: Chassisglied, Lamellenachse, Auflager und Massen mit 31 mm."
+          }
+        ]
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500
+      }
     },
     "presentation": {
       "defaultPose": "off",

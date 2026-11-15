@@ -1,4 +1,4 @@
-//! ↩️ `change-critical-region-long-steel-area` inverse: restores the previous `longitudinal_steel_area_m2`.
+//! ↩️ `change-critical-region-longitudinal-steel-area-m2` inverse: restores the previous `longitudinal_steel_area_m2`.
 
 use crate::change_critical_region_long_steel_area::ChangeCriticalRegionLongitudinalSteelAreaM2;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;

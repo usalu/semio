@@ -1,0 +1,24 @@
+{
+  "schema": "s.norm.browser-journey.v1",
+  "example": { "picker": "playground.navbar.fixture", "id": "heb240-compliant" },
+  "regions": [
+    { "role": "outliner", "names": { "en": "Model outline", "de": "Modellstruktur" } },
+    { "role": "viewport", "names": { "en": "3D model", "de": "3D-Modell" } },
+    { "role": "properties", "names": { "en": "Properties", "de": "Eigenschaften" } },
+    { "role": "checks", "names": { "en": "Checks", "de": "Nachweise" } },
+    { "role": "diagrams", "names": { "en": "Diagrams", "de": "Diagramme" } }
+  ],
+  "viewerRegions": ["viewport", "checks", "diagrams"],
+  "member": { "idSuffix": "member-b1", "title": "Beam-column B1" },
+  "edit": { "field": { "en": "Length", "de": "Länge" }, "key": "ArrowUp", "times": 5, "commit": "Enter" },
+  "utilisation": { "pattern": "\\d+(?:[.,]\\d+)?\\s?%", "settleMs": 30000 },
+  "chrome": { "settings": "os.openSettings", "language": "framework.settings.language" },
+  "checks": [
+    { "id": "editor-windows", "phase": "editor", "description": "The EN 1993 editor shows its five windows: model outline, 3D model, properties, checks and diagrams." },
+    { "id": "select-member", "phase": "editor", "description": "Selecting the member in the outline marks its row selected." },
+    { "id": "edit-value", "phase": "editor", "description": "Stepping the member length in Properties commits and the field value changes." },
+    { "id": "checks-utilisation-updates", "phase": "editor", "description": "The checks window shows a changed utilisation after the edit." },
+    { "id": "language-de", "phase": "editor", "description": "Switching English to German relabels every window and sets the document language." },
+    { "id": "viewer-windows", "phase": "viewer", "description": "The read-only viewer shows exactly the 3D model, checks and diagrams windows." }
+  ]
+}

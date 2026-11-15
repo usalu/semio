@@ -1,0 +1,15 @@
+pre-run facts, taken 2026-11-14T16:51:37Z
+replica code digest: "code":"39e3688eb315d48831772ca305d78bcb6f35975794444da47750bc5fa7459759"
+repo show projects / repo service host processes (pid ppid etime rss command):
+(end of list)
+last 8 lines of .cache/f/sidecars/build-agent.log:
+2026-11-14T16:46:08.077Z joining http://192.168.178.70:8981 offering rustc for 4 target(s)
+2026-11-14T16:46:08.118Z worker sandbox: linux-sandbox confined network denied
+2026-11-14T16:46:08.151Z worker registered: 932cd337-4706-417b-ad31-c3625781c3e4 cache http://192.168.178.70:6094
+2026-11-14T16:47:07.942Z agent code changed, restarting
+2026-11-14T16:47:07.944Z worker stopped: ueli-workstation-lin-1-2170640
+2026-11-14T16:47:08.620Z joining http://192.168.178.70:8981 offering rustc for 4 target(s)
+2026-11-14T16:47:08.659Z worker sandbox: linux-sandbox confined network denied
+2026-11-14T16:47:08.666Z worker registered: ea6f755d-94aa-48f8-ae2a-c453569f0877 cache http://192.168.178.70:6094
+memory: Mem:           15848        5804        3979          50        6456       10043 | swap: Swap:          25331        9891       15440
+psi: full avg10=0.00 avg60=0.00 avg300=0.00 total=21077643045

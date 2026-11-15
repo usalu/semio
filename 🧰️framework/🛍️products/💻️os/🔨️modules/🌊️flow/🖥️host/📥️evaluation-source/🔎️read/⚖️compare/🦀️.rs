@@ -15,7 +15,7 @@ impl SourceCompare{
  pub(super) fn result(&self)->Option<bool>{self.result}
  pub(super) fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub(super) fn demands(&self)->Result<RetirementDemand,ValueError>{
-  if self.closing{return Ok(if self.frames.is_empty(){RetirementDemand{release_bytes:self.frames.next_release_allocation_bytes().map_err(ValueError::from)?,depth:self.frames.next_release_depth_demand().map_err(ValueError::from)?,..Default::default()}}else{RetirementDemand{copy_bytes:size_of::<Frame>(),depth:self.frames.next_pop_depth_demand().map_err(ValueError::from)?,..Default::default()}})}
+  if self.closing{return Ok(if self.frames.is_empty(){RetirementDemand{copy_bytes:self.frames.next_release_copy_byte_demand().map_err(ValueError::from)?,release_bytes:self.frames.next_release_allocation_bytes().map_err(ValueError::from)?,depth:self.frames.next_release_depth_demand().map_err(ValueError::from)?,..Default::default()}}else{RetirementDemand{copy_bytes:size_of::<Frame>(),depth:self.frames.next_pop_depth_demand().map_err(ValueError::from)?,..Default::default()}})}
   let push=!self.started||self.frames.last().is_some_and(|frame|frame.phase==3);
   let birth=push&&!self.frames.has_reserved_slot();
   let path=if birth{self.frames.next_reserve_depth_demand()}else if push{self.frames.next_push_depth_demand()}else if self.frames.last().is_some_and(|frame|frame.phase==4){self.frames.next_pop_depth_demand()}else if !self.frames.is_empty(){self.frames.next_get_depth_demand(self.frames.len()-1)}else{Ok(1)}.map_err(ValueError::from)?;

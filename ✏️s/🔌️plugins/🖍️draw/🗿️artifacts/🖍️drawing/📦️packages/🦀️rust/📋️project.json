@@ -7,7 +7,7 @@
     "role:artifact",
     "family:draw"
   ],
-  "namedInputs": {
+  "namedInputs": { "default": ["{projectRoot}/**/*", "sharedGlobals", { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🤖️generated\"" }],
     "nativeSources": [
       "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/**/*.{ts,tsx,json,semio,wit,sql}",
       "{workspaceRoot}/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/**/*",

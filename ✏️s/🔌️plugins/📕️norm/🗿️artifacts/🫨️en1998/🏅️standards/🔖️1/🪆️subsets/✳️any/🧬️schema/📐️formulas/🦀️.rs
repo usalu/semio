@@ -71,6 +71,8 @@ pub mod na_de {
 }
 
 pub mod part_1 {
+    use semio_s_artifact_norm_en1998_model::T1Method;
+
     /// 📊️ ψ₂ from EN 1990 Table A1.1 / DIN EN 1990/NA Table NA.A.1.1.
     pub fn psi2_de(category: semio_s_artifact_norm_en1998_model::ImposedCategory) -> f64 {
         use semio_s_artifact_norm_en1998_model::ImposedCategory as C;

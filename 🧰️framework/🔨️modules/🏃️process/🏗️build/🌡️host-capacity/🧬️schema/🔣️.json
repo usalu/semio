@@ -105,7 +105,9 @@
         "growSpareJobs": 1,
         "growSettleAttempts": 2,
         "upgradeNarrowedMinimumJobs": 1,
-        "staleSampleMilliseconds": 30000
+        "staleSampleMilliseconds": 30000,
+        "lendKeepBasisPoints": 4500,
+        "outlierBasisPoints": 40000
       }
     },
     "Level": {
@@ -184,6 +186,11 @@
         },
         "forecast": {
           "type": "boolean"
+        },
+        "minimumMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
         }
       }
     },
@@ -649,8 +656,10 @@
         "priority": {
           "enum": [
             "batch",
-            "interactive"
-          ]
+            "interactive",
+            "lent"
+          ],
+          "description": "The class of a request. `interactive` is served before `batch`; `lent` is work of another machine of the fleet running here: it is served after every request of this machine, never ages into a higher class, and is admitted only while no request of this machine waits, so a lent action takes only capacity the local user is not asking for."
         },
         "minimumJobs": {
           "type": "integer",
@@ -698,6 +707,15 @@
         "label": {
           "type": "string",
           "pattern": "^[^\\p{Cc}]{1,120}$"
+        },
+        "minimumMegabytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "holder": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,32}$"
         }
       }
     },
@@ -836,6 +854,10 @@
         "grownAtMs": {
           "type": "integer",
           "minimum": 0
+        },
+        "holder": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,32}$"
         }
       }
     },
@@ -854,7 +876,11 @@
         "load",
         "queue-order",
         "ramp",
-        "quiet-limit"
+        "quiet-limit",
+        "shrunk",
+        "never",
+        "starved",
+        "lent"
       ]
     },
     "Decision": {
@@ -1011,6 +1037,7 @@
         "admitted",
         "reduced",
         "override",
+        "unsatisfiable",
         "bypassed",
         "status",
         "grant",
@@ -1026,6 +1053,7 @@
         "treeUnobserved",
         "footprintFallback",
         "countersPartial",
+        "availableUnread",
         "phased",
         "quiet",
         "upgrading",
@@ -1040,7 +1068,9 @@
         "grown",
         "blocker",
         "blockerHost",
-        "blockerStates"
+        "blockerStates",
+        "shrunk",
+        "lent"
       ],
       "properties": {
         "waiting": {
@@ -1085,6 +1115,9 @@
         "override": {
           "type": "string"
         },
+        "unsatisfiable": {
+          "type": "string"
+        },
         "bypassed": {
           "type": "string"
         },
@@ -1102,7 +1135,9 @@
             "load",
             "queue-order",
             "ramp",
-            "quiet-limit"
+            "quiet-limit",
+            "never",
+            "starved"
           ],
           "properties": {
             "memory": {
@@ -1137,6 +1172,12 @@
             },
             "quiet-limit": {
               "type": "string"
+            },
+            "never": {
+              "type": "string"
+            },
+            "starved": {
+              "type": "string"
             }
           }
         },
@@ -1166,7 +1207,9 @@
             "planJobs",
             "countersUnavailable",
             "platformUnsupported",
-            "quietUpgradeRequired"
+            "quietUpgradeRequired",
+            "memoryNeverFits",
+            "memoryStarved"
           ],
           "properties": {
             "planRequired": {
@@ -1200,6 +1243,12 @@
               "type": "string"
             },
             "quietUpgradeRequired": {
+              "type": "string"
+            },
+            "memoryNeverFits": {
+              "type": "string"
+            },
+            "memoryStarved": {
               "type": "string"
             }
           }
@@ -1253,6 +1302,9 @@
         "countersPartial": {
           "type": "string"
         },
+        "availableUnread": {
+          "type": "string"
+        },
         "phased": {
           "type": "string"
         },
@@ -1288,6 +1340,12 @@
         },
         "grown": {
           "type": "string"
+        },
+        "shrunk": {
+          "type": "string"
+        },
+        "lent": {
+          "type": "string"
         }
       }
     },
@@ -1306,6 +1364,7 @@
           "admitted": "[capacity] admitted {operation}: {jobs} job(s), {reserved} MB reserved ({available} MB available, {floor} MB floor)",
           "reduced": "[capacity] admitted {operation} with {jobs} of {preferred} job(s): the host cannot carry more right now",
           "override": "[capacity] admitted {operation} after {seconds}s although {reason}: nothing of ours is running and memory holds",
+          "unsatisfiable": "[capacity] admitted {operation} after {seconds}s with {reserved} MB of the {asked} MB it asked for: even if every run of ours ended the host would have only {available} MB above its {floor} MB floor, so waiting can never free more",
           "bypassed": "[capacity] host capacity governor is switched off ({switch}=off)",
           "status": "[capacity] {available} MB available of {total} MB (floor {floor} MB, {spare} MB spare), pressure {pressure}, swap {swap} MB, load {load}, open files {files}, attached images {images}; {grants} running, {waiters} waiting",
           "grant": "[capacity]   running {id} {operation}: {jobs} job(s), {reserved} MB reserved, {observed} MB observed, pid {pid}, since {seconds}s",
@@ -1322,7 +1381,9 @@
             "load": "the cores are fully booked by our own running jobs",
             "queue-order": "an earlier request is still waiting",
             "ramp": "too many learned reservations are still growing to their peak",
-            "quiet-limit": "enough quiet reservations are already held"
+            "quiet-limit": "enough quiet reservations are already held",
+            "never": "the request can never fit this machine",
+            "starved": "not even the least memory it needs is free and nothing of ours is running"
           },
           "errors": {
             "planRequired": "Closed host capacity plan required",
@@ -1336,7 +1397,9 @@
             "countersUnavailable": "Linux memory counters unavailable",
             "platformUnsupported": "Host capacity does not support {platform}",
             "inheritedIdentifier": "Closed inherited host capacity grant identifier required",
-            "quietUpgradeRequired": "a quiet request needs the full request it may grow into, under the same id"
+            "quietUpgradeRequired": "a quiet request needs the full request it may grow into, under the same id",
+            "memoryNeverFits": "{operation} needs at least {minimum} MB of memory, but this machine has {total} MB of which {floor} MB stay reserved, so at most {capacity} MB can ever be given out. It cannot run here: use a machine with more memory (at least {needed} MB), or take the result from the fleet cache instead of computing it here.",
+            "memoryStarved": "{operation} needs at least {minimum} MB of free memory, but after {seconds} s only {spare} MB are free above the {floor} MB floor of this machine ({total} MB) and nothing of ours is running, so waiting longer cannot help. Close other applications (or stop the resident graph service with `repo service host stop`, which can hold more than 1 GB) until {minimum} MB are free, then run the command again."
           },
           "handover": "[capacity] keeping the {operation} grant ({jobs} job(s), {reserved} MB reserved) for the command that replaces this one: it does not queue again",
           "adopted": "[capacity] took over the {operation} grant of the command this one replaces ({jobs} job(s), {reserved} MB reserved): no queue",
@@ -1352,6 +1415,7 @@
           "treeUnobserved": "[capacity] the memory of running process trees cannot be observed on {platform} ({reason}); nothing is learned from this run and admission uses the declared sizes",
           "footprintFallback": "[capacity] the memory footprint of running process trees cannot be read on {platform} ({reason}); the resident set is used instead, which can overstate what a process holds",
           "countersPartial": "[capacity] the {platform} memory counters could not be read ({reason}); pressure and swap are unknown and the host is treated as under raised pressure, available memory is the operating system's free memory",
+          "availableUnread": "[capacity] the memory this {platform} host can still give out cannot be read ({reason}); limits that depend on it are not applied and no run waits for it",
           "phased": "[capacity] {operation}: sized at {percent}% of the default from {samples} earlier run(s) of its class, at least {floor} MB because of its {phase} phase",
           "quiet": "[capacity] {operation}: forecast quiet because the last run of its class executed nothing ({samples} quiet run(s) behind its size, {percent}% of the recent runs): {reserved} MB reserved now, the full {full} MB only if work has to run",
           "upgrading": "[capacity] {operation}: work has to run, waiting {seconds}s to grow the reservation from {from} MB to {to} MB: {reason} ({spare} MB spare above the {floor} MB floor; {running} running, {ahead} ahead); behind {behind}",
@@ -1363,7 +1427,9 @@
           "waiterUpgrade": "[capacity]   growing {id} {operation}: wants {jobs} job(s), {need} MB, since {seconds}s, pid {pid}",
           "quietFollowUp": "[capacity] {operation}: forecast quiet because the earlier run of its class finished {seconds}s ago and left its results cached: {reserved} MB reserved now, the full {full} MB only if work has to run",
           "reducedGrows": "[capacity] admitted {operation} with {jobs} of {preferred} job(s): the host cannot carry more right now; the run grows to more jobs once memory frees up",
-          "grown": "[capacity] {operation}: grown from {from} to {jobs} of {preferred} job(s) after {seconds}s, reservation {before} MB -> {reserved} MB: memory freed up and nothing of ours waits ({available} MB available, {floor} MB floor); work that starts from now on uses the new jobs"
+          "grown": "[capacity] {operation}: grown from {from} to {jobs} of {preferred} job(s) after {seconds}s, reservation {before} MB -> {reserved} MB: memory freed up and nothing of ours waits ({available} MB available, {floor} MB floor); work that starts from now on uses the new jobs",
+          "shrunk": "[capacity] admitted {operation} with {reserved} of {wanted} MB: only {spare} MB are free above the {floor} MB floor right now, and {minimum} MB are enough to start",
+          "lent": "[capacity] admitted {operation} inside the reservation of {holder}: {jobs} job(s), {reserved} MB lent from its unused part, the parent keeps what it needs"
         },
         "de": {
           "waiting": "[capacity] wartet seit {seconds} s auf {operation}: {reason} (benötigt {need} MB; {spare} MB frei oberhalb der Untergrenze von {floor} MB, Last {load}; {running} laufen, {ahead} davor); hinter {behind}",
@@ -1378,6 +1444,7 @@
           "admitted": "[capacity] zugelassen {operation}: {jobs} Job(s), {reserved} MB reserviert ({available} MB verfügbar, Untergrenze {floor} MB)",
           "reduced": "[capacity] {operation} mit {jobs} von {preferred} Job(s) zugelassen: der Rechner trägt gerade nicht mehr",
           "override": "[capacity] {operation} nach {seconds} s zugelassen, obwohl {reason}: nichts von uns läuft und der Speicher reicht",
+          "unsatisfiable": "[capacity] {operation} nach {seconds} s mit {reserved} MB der angefragten {asked} MB zugelassen: selbst wenn jeder Lauf von uns endete, hätte der Rechner nur {available} MB über seiner Reserve von {floor} MB, Warten kann also nie mehr freigeben",
           "bypassed": "[capacity] Kapazitätswächter des Rechners ist ausgeschaltet ({switch}=off)",
           "status": "[capacity] {available} MB verfügbar von {total} MB (Untergrenze {floor} MB, {spare} MB frei), Speicherdruck {pressure}, Auslagerung {swap} MB, Last {load}, offene Dateien {files}, eingehängte Images {images}; {grants} laufen, {waiters} warten",
           "grant": "[capacity]   läuft {id} {operation}: {jobs} Job(s), {reserved} MB reserviert, {observed} MB beobachtet, pid {pid}, seit {seconds} s",
@@ -1394,7 +1461,9 @@
             "load": "die Kerne sind von unseren laufenden Jobs voll belegt",
             "queue-order": "eine frühere Anfrage wartet noch",
             "ramp": "zu viele gelernte Reservierungen wachsen noch auf ihren Spitzenwert an",
-            "quiet-limit": "es werden schon genug ruhige Reservierungen gehalten"
+            "quiet-limit": "es werden schon genug ruhige Reservierungen gehalten",
+            "never": "die Anfrage passt nie auf diesen Rechner",
+            "starved": "nicht einmal der kleinste benötigte Speicher ist frei, und nichts von uns läuft"
           },
           "errors": {
             "planRequired": "Geschlossener Kapazitätsplan des Rechners erforderlich",
@@ -1408,7 +1477,9 @@
             "countersUnavailable": "Linux-Speicherzähler nicht verfügbar",
             "platformUnsupported": "Die Rechnerkapazität unterstützt {platform} nicht",
             "inheritedIdentifier": "Eine gültige Kennung der geerbten Rechner-Kapazitätszusage ist erforderlich",
-            "quietUpgradeRequired": "eine ruhige Anfrage braucht die volle Anfrage, in die sie wachsen darf, unter derselben Kennung"
+            "quietUpgradeRequired": "eine ruhige Anfrage braucht die volle Anfrage, in die sie wachsen darf, unter derselben Kennung",
+            "memoryNeverFits": "{operation} braucht mindestens {minimum} MB Speicher, dieser Rechner hat aber {total} MB, von denen {floor} MB reserviert bleiben, also können höchstens {capacity} MB vergeben werden. Es kann hier nicht laufen: einen Rechner mit mehr Speicher verwenden (mindestens {needed} MB) oder das Ergebnis aus dem Flottencache holen, statt es hier zu berechnen.",
+            "memoryStarved": "{operation} braucht mindestens {minimum} MB freien Speicher, aber nach {seconds} s sind nur {spare} MB über der Untergrenze von {floor} MB dieses Rechners ({total} MB) frei, und nichts von uns läuft; längeres Warten hilft nicht. Andere Anwendungen schließen (oder den residenten Graphdienst mit `repo service host stop` beenden, er kann über 1 GB halten), bis {minimum} MB frei sind, und den Befehl dann erneut ausführen."
           },
           "handover": "[capacity] die Zusage für {operation} ({jobs} Job(s), {reserved} MB reserviert) bleibt für den Befehl, der diesen ersetzt: er reiht sich nicht erneut ein",
           "adopted": "[capacity] Zusage für {operation} des ersetzten Befehls übernommen ({jobs} Job(s), {reserved} MB reserviert): keine Warteschlange",
@@ -1424,6 +1495,7 @@
           "treeUnobserved": "[capacity] Der Speicher laufender Prozessbäume kann unter {platform} nicht beobachtet werden ({reason}); aus diesem Lauf wird nichts gelernt und die Zulassung nutzt die deklarierten Größen",
           "footprintFallback": "[capacity] Der Speicher-Fußabdruck laufender Prozessbäume kann unter {platform} nicht gelesen werden ({reason}); stattdessen gilt der residente Speicher, der überschätzen kann, was ein Prozess hält",
           "countersPartial": "[capacity] Die Speicherzähler von {platform} konnten nicht gelesen werden ({reason}); Speicherdruck und Auslagerung sind unbekannt, der Rechner gilt als unter erhöhtem Druck, verfügbar ist der freie Speicher des Betriebssystems",
+          "availableUnread": "[capacity] der Speicher, den dieser {platform}-Host noch hergeben kann, ist nicht lesbar ({reason}); davon abhängige Grenzen gelten nicht und kein Lauf wartet darauf",
           "phased": "[capacity] {operation}: auf {percent} % des Standardwerts bemessen, aus {samples} früheren Läufen seiner Klasse, mindestens {floor} MB wegen der Phase {phase}",
           "quiet": "[capacity] {operation}: ruhig prognostiziert, weil der letzte Lauf seiner Klasse nichts ausführte ({samples} ruhige Läufe hinter ihrer Größe, {percent} % der jüngsten Läufe): jetzt {reserved} MB reserviert, die vollen {full} MB nur, wenn Arbeit laufen muss",
           "upgrading": "[capacity] {operation}: es muss Arbeit laufen, wartet seit {seconds} s darauf, die Reservierung von {from} MB auf {to} MB zu vergrößern: {reason} ({spare} MB frei oberhalb der Untergrenze von {floor} MB; {running} laufen, {ahead} davor); hinter {behind}",
@@ -1435,7 +1507,9 @@
           "waiterUpgrade": "[capacity]   wächst {id} {operation}: möchte {jobs} Job(s), {need} MB, seit {seconds} s, pid {pid}",
           "quietFollowUp": "[capacity] {operation}: ruhig prognostiziert, weil der frühere Lauf seiner Klasse vor {seconds} s endete und seine Ergebnisse zwischengespeichert hinterließ: jetzt {reserved} MB reserviert, die vollen {full} MB nur, wenn Arbeit laufen muss",
           "reducedGrows": "[capacity] {operation} mit {jobs} von {preferred} Job(s) zugelassen: der Rechner trägt gerade nicht mehr; der Lauf wächst auf mehr Jobs, sobald Speicher frei wird",
-          "grown": "[capacity] {operation}: nach {seconds} s von {from} auf {jobs} von {preferred} Job(s) gewachsen, Reservierung {before} MB -> {reserved} MB: Speicher ist frei geworden und nichts von uns wartet ({available} MB verfügbar, Untergrenze {floor} MB); Arbeit, die ab jetzt startet, nutzt die neuen Jobs"
+          "grown": "[capacity] {operation}: nach {seconds} s von {from} auf {jobs} von {preferred} Job(s) gewachsen, Reservierung {before} MB -> {reserved} MB: Speicher ist frei geworden und nichts von uns wartet ({available} MB verfügbar, Untergrenze {floor} MB); Arbeit, die ab jetzt startet, nutzt die neuen Jobs",
+          "shrunk": "[capacity] {operation} mit {reserved} von {wanted} MB zugelassen: gerade sind nur {spare} MB über der Untergrenze von {floor} MB frei, und {minimum} MB genügen zum Start",
+          "lent": "[capacity] {operation} innerhalb der Reservierung von {holder} zugelassen: {jobs} Job(s), {reserved} MB aus dem ungenutzten Teil geliehen, der Elternprozess behält, was er braucht"
         }
       }
     },
@@ -1963,7 +2037,9 @@
         "reasonCharacters": 200,
         "heartbeatFirstMilliseconds": 3000,
         "settledOutcomeLimit": 256,
-        "quickQuantileBasisPoints": 5000
+        "quickQuantileBasisPoints": 5000,
+        "availableAgeMilliseconds": 5000,
+        "availableCommandMilliseconds": 2000
       }
     },
     "LimitsDescriptions": {
@@ -1976,7 +2052,9 @@
           "reasonCharacters": "The most characters of the reason a failed probe reports.",
           "heartbeatFirstMilliseconds": "The longest wait before the first heartbeat of a waiting request, whatever the policy interval says.",
           "settledOutcomeLimit": "The most upgrade outcomes remembered by key; the oldest goes first.",
-          "quickQuantileBasisPoints": "The quantile of the active time, in basis points, that decides whether a class of runs counts as quick (the median)."
+          "quickQuantileBasisPoints": "The quantile of the active time, in basis points, that decides whether a class of runs counts as quick (the median).",
+          "availableAgeMilliseconds": "How long one reading of the memory the host can still give out is reused before the platform is asked again.",
+          "availableCommandMilliseconds": "The hard timeout of the command (macOS: vm_stat) that reads the memory the host can still give out."
         },
         "de": {
           "optionalProbeMilliseconds": "Wie lange eine optionale Zaehlerabfrage (Disk-Images, Speicherdruck) laufen darf, bevor sie verworfen wird.",
@@ -1986,7 +2064,9 @@
           "reasonCharacters": "Die meisten Zeichen des Grundes, den eine fehlgeschlagene Abfrage meldet.",
           "heartbeatFirstMilliseconds": "Die längste Wartezeit bis zum ersten Herzschlag einer wartenden Anfrage, egal was das Richtlinien-Intervall sagt.",
           "settledOutcomeLimit": "Die meisten nach Schlüssel gemerkten Hochstufungs-Ergebnisse; das älteste geht zuerst.",
-          "quickQuantileBasisPoints": "Das Quantil der aktiven Zeit in Basispunkten, das entscheidet, ob eine Laufklasse als schnell gilt (der Median)."
+          "quickQuantileBasisPoints": "Das Quantil der aktiven Zeit in Basispunkten, das entscheidet, ob eine Laufklasse als schnell gilt (der Median).",
+          "availableAgeMilliseconds": "Wie lange eine Messung des Speichers, den der Host noch hergeben kann, wiederverwendet wird, bevor die Plattform erneut gefragt wird.",
+          "availableCommandMilliseconds": "Das harte Zeitlimit des Befehls (macOS: vm_stat), der den Speicher liest, den der Host noch hergeben kann."
         }
       }
     },

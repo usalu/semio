@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:remote-cache-guard:v1",
+  "title": "Remote Cache Guard",
+  "description": "🛡️ Target kinds whose declared outputs are known to be incomplete: a remote hit would restore a receipt without its payload or skip work without restoring its files. Such a target keeps its local cache, but its Nx hash carries the identity of the machine (so no other machine can hit it) and its upload is dropped by the single-flight front. A row is removed when the real fix of its kind lands.",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/Policy"
+    }
+  ],
+  "definitions": {
+    "Policy": {
+      "type": "object",
+      "const": {
+        "version": 1,
+        "machineRuntime": "repo tools exec --light node -- -p \"require('os').hostname()\"",
+        "rows": [
+          {
+            "targets": [
+              "wasm"
+            ],
+            "reason": {
+              "en": "The browser wasm package (wasm-pack, wasm-bindgen, wasm-opt) has no two-checkout proof yet: it is shared only after its outputs are shown byte-identical at two checkout paths, as the plugin component payload is.",
+              "de": "Das Browser-Wasm-Paket (wasm-pack, wasm-bindgen, wasm-opt) hat noch keinen Zwei-Checkout-Beweis: es wird erst geteilt, wenn seine Ausgaben an zwei Checkout-Pfaden byte-gleich gezeigt sind, wie bei der Plugin-Komponenten-Nutzlast."
+            }
+          },
+          {
+            "targets": [
+              "preview-generated"
+            ],
+            "reason": {
+              "en": "The target writes nothing (it prints the generated tree), but its output depends on the gitignored generated directory (stale removals), which the Nx hasher cannot see and no runtime digest covers.",
+              "de": "Das Target schreibt nichts (es gibt den erzeugten Baum aus), seine Ausgabe hängt aber vom ignorierten Verzeichnis der erzeugten Dateien ab (veraltete Entfernungen), das der Nx-Hasher nicht sieht und das kein Laufzeit-Digest abdeckt."
+            }
+          },
+          {
+            "targets": [
+              "test-api-contract",
+              "check-types",
+              "test-types-source",
+              "test-crate-boundaries",
+              "test-browser-ownership"
+            ],
+            "reason": {
+              "en": "The task reads a file of a gitignored generated directory by explicit path; the Nx hasher cannot see it and no runtime digest covers it, so a shared hit could be stale.",
+              "de": "Die Task liest per ausdrücklichem Pfad eine Datei aus einem ignorierten Verzeichnis erzeugter Dateien; der Nx-Hasher sieht sie nicht und kein Laufzeit-Digest deckt sie ab, ein geteilter Treffer könnte veraltet sein."
+            }
+          }
+        ]
+      }
+    }
+  }
+}

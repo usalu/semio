@@ -1,0 +1,149 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/resilience/v1",
+ "title": "Shared worktree resilience: sealed code snapshots, the self-check report, the health file and the language-agnostic fixture",
+ "definitions": {
+  "Sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+  "OriginId": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"},
+  "Count": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+  "RelativePath": {"type": "string", "minLength": 1, "maxLength": 240, "pattern": "^[^/\\\\][^\\\\]*$"},
+  "SealedFile": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["bytes", "path", "sha256"],
+   "properties": {"path": {"$ref": "#/definitions/RelativePath"}, "bytes": {"$ref": "#/definitions/Count"}, "sha256": {"$ref": "#/definitions/Sha256"}}
+  },
+  "SealedCode": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["createdMs", "digest", "files", "moduleRoot", "version"],
+   "properties": {
+    "version": {"const": 1},
+    "digest": {"$ref": "#/definitions/Sha256"},
+    "createdMs": {"$ref": "#/definitions/Count"},
+    "moduleRoot": {"$ref": "#/definitions/RelativePath"},
+    "files": {"type": "array", "items": {"$ref": "#/definitions/SealedFile"}}
+   }
+  },
+  "SelfCheck": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["digest", "error", "modules", "ok", "schemas", "texts", "version"],
+   "properties": {
+    "version": {"const": 1},
+    "ok": {"type": "boolean"},
+    "digest": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Sha256"}]},
+    "modules": {"$ref": "#/definitions/Count"},
+    "schemas": {"$ref": "#/definitions/Count"},
+    "texts": {"$ref": "#/definitions/Count"},
+    "error": {"anyOf": [{"type": "null"}, {"type": "string", "maxLength": 2048}]}
+   }
+  },
+  "Failure": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["count", "kind", "lastMs"],
+   "properties": {
+    "kind": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$"},
+    "count": {"$ref": "#/definitions/Count"},
+    "lastMs": {"$ref": "#/definitions/Count"}
+   }
+  },
+  "Pending": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["code", "ok", "reason"],
+   "properties": {"code": {"$ref": "#/definitions/Sha256"}, "ok": {"const": false}, "reason": {"type": "string", "maxLength": 512}}
+  },
+  "Health": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["code", "failures", "pending", "pid", "store", "storeSinceMs", "version", "wallMs"],
+   "properties": {
+    "version": {"const": 1},
+    "wallMs": {"$ref": "#/definitions/Count"},
+    "pid": {"$ref": "#/definitions/Count"},
+    "code": {"$ref": "#/definitions/Sha256"},
+    "store": {"enum": ["ok", "stalled", "unreachable"]},
+    "storeSinceMs": {"$ref": "#/definitions/Count"},
+    "pending": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/Pending"}]},
+    "failures": {"type": "array", "maxItems": 8, "items": {"$ref": "#/definitions/Failure"}}
+   }
+  },
+  "JitterCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["digest", "expected", "originId", "span"],
+   "properties": {
+    "originId": {"$ref": "#/definitions/OriginId"},
+    "digest": {"$ref": "#/definitions/Sha256"},
+    "span": {"$ref": "#/definitions/Count"},
+    "expected": {"$ref": "#/definitions/Count"}
+   }
+  },
+  "SourceFile": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["path", "text"],
+   "properties": {"path": {"$ref": "#/definitions/RelativePath"}, "text": {"type": "string"}}
+  },
+  "ClosureCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["entries", "expected", "files", "name"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "files": {"type": "array", "items": {"$ref": "#/definitions/SourceFile"}},
+    "entries": {"type": "array", "items": {"$ref": "#/definitions/RelativePath"}},
+    "expected": {"type": "array", "items": {"$ref": "#/definitions/RelativePath"}}
+   }
+  },
+  "TextsCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["catalogue", "error", "name"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "catalogue": {"type": "object"},
+    "error": {"anyOf": [{"type": "null"}, {"type": "string", "minLength": 1}]}
+   }
+  },
+  "PruneCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["created", "keep", "kept", "name"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "keep": {"$ref": "#/definitions/Count"},
+    "created": {"type": "object", "additionalProperties": {"$ref": "#/definitions/Count"}},
+    "kept": {"type": "array", "items": {"type": "string"}}
+   }
+  },
+  "RotateCase": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["keepBytes", "maxBytes", "name", "rotated", "tail", "text"],
+   "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "text": {"type": "string"},
+    "maxBytes": {"$ref": "#/definitions/Count"},
+    "keepBytes": {"$ref": "#/definitions/Count"},
+    "rotated": {"type": "boolean"},
+    "tail": {"type": "string"}
+   }
+  },
+  "Fixture": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["closure", "jitter", "prune", "rotate", "texts", "version"],
+   "properties": {
+    "version": {"const": 1},
+    "jitter": {"type": "array", "items": {"$ref": "#/definitions/JitterCase"}},
+    "closure": {"type": "array", "items": {"$ref": "#/definitions/ClosureCase"}},
+    "texts": {"type": "array", "items": {"$ref": "#/definitions/TextsCase"}},
+    "prune": {"type": "array", "items": {"$ref": "#/definitions/PruneCase"}},
+    "rotate": {"type": "array", "items": {"$ref": "#/definitions/RotateCase"}}
+   }
+  }
+ }
+}

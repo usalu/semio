@@ -1,0 +1,24 @@
+        heat_y = -0.55
+        warm_in = [np.array([x_block_inner, heat_y, 0.0])]
+
+        def glass_heat(rt):
+            return [*sunshine(rt), ripples(warm_in, r_max=0.5, color=COLOR_GLASS_HEAT, cycles=max(1.0, rt / 1.4), facing=0.0)]
+
+        g_lbl = math_label(rf"{SYM_G} = {label_number(G_VALUE, 2)}", np.array([0.95, heat_y, 0.0]),
+                           size=FORMULA_FONT_SIZE, color=COLOR_GVAL, edge="left")
+        g_sum = Text(tr("50 % + 10 % = 60 % reach the room", "50 % + 10 % = 60 % erreichen den Raum"),
+                     font_size=LABEL_FONT_SIZE, color=COLOR_GVAL).next_to(g_lbl, DOWN, buff=0.2, aligned_edge=LEFT)
+        self.play(FadeIn(g_lbl, shift=RIGHT * 0.1), FadeIn(g_sum), panes.animate.set_fill(COLOR_GLASS_HEAT, opacity=0.45),
+                  *glass_heat(1.6), run_time=1.6)
+        hold_for(self, N, "gval", during=glass_heat)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "phi"))
+        g_sym = math_label(SYM_G, size=FORMULA_FONT_SIZE, color=COLOR_GVAL)
+        g_sym.move_to(g_lbl.get_left() + RIGHT * g_sym.width / 2)
+        panel = math_panel([
+            ("phi", SYM_QS, PASTEL_WHITE), (None, "=", PASTEL_WHITE),
+            ("g_irr", SYM_IS, COLOR_G), (None, r"\cdot", PASTEL_WHITE),
+            ("a", "A", COLOR_A), (None, r"\cdot", PASTEL_WHITE),
+            ("g", SYM_G, COLOR_GVAL), (None, r"\cdot", PASTEL_WHITE),
+            ("ff", SYM_FF, COLOR_FF), (None, UNIT_TAIL, PASTEL_WHITE),
+        ])

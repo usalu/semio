@@ -1,0 +1,195 @@
+[
+  {
+    "at": "2026-11-14T21:33:53Z",
+    "elapsed_s": 0.005,
+    "pressure": "1",
+    "warning_streak": 0,
+    "critical_streak": 0,
+    "top3_with_parents_verbatim": "1497088 29075 29074 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run\n524608  6959  6930 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/157.0.8103.78/Helpers/Codex (Aperitif Renderer).app/Contents/MacOS/Codex (Aperitif Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --code-cache-schemes=app --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --start-stack-profiler --enable-blink-features=WebMCP,FocusgroupV2 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=8 --launch-time-ticks=18241780293 --shared-files --metrics-shmem-handle=1752395122,r,6121802591936840752,1743079678216674005,1572864 --field-trial-handle=1718379636,r,3089663580297264058,9954380167774086212,262144 --enable-features=DevToolsWebMCPSupport,DocumentPolicyIncludeJSCallStacksInCrashReports,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlNativeCaret,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15594513949212912552,12137183214413531065,4 --trace-process-track-uuid=3190708993808206286 --seatbelt-client=176 --force-fieldtrials=WebRTC-Sctp-Snap/Enabled/WebRTC-IceHandshakeDtls/Enabled/WebRTC-ForceDtls13/Enabled/\n307904  6930     1 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT",
+    "top3_base_verbatim": "1497088 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run\n524608 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/157.0.8103.78/Helpers/Codex (Aperitif Renderer).app/Contents/MacOS/Codex (Aperitif Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --code-cache-schemes=app --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --start-stack-profiler --enable-blink-features=WebMCP,FocusgroupV2 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=8 --launch-time-ticks=18241780293 --shared-files --metrics-shmem-handle=1752395122,r,6121802591936840752,1743079678216674005,1572864 --field-trial-handle=1718379636,r,3089663580297264058,9954380167774086212,262144 --enable-features=DevToolsWebMCPSupport,DocumentPolicyIncludeJSCallStacksInCrashReports,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlNativeCaret,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15594513949212912552,12137183214413531065,4 --trace-process-track-uuid=3190708993808206286 --seatbelt-client=176 --force-fieldtrials=WebRTC-Sctp-Snap/Enabled/WebRTC-IceHandshakeDtls/Enabled/WebRTC-ForceDtls13/Enabled/\n307904 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT",
+    "ancestor_chains": [
+      [
+        {
+          "pid": 29075,
+          "ppid": 29074,
+          "rss_kib": 1497088,
+          "args": "/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run"
+        },
+        {
+          "pid": 29074,
+          "ppid": 29058,
+          "rss_kib": 30080,
+          "args": "/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs run"
+        },
+        {
+          "pid": 29058,
+          "ppid": 1,
+          "rss_kib": 1248,
+          "args": "/bin/sh /Users/ueli/Library/Application Support/semio/fleet/entry/boot.sh run"
+        },
+        {
+          "pid": 1,
+          "ppid": 0,
+          "rss_kib": 20560,
+          "args": "/sbin/launchd"
+        }
+      ],
+      [
+        {
+          "pid": 6959,
+          "ppid": 6930,
+          "rss_kib": 524608,
+          "args": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/157.0.8103.78/Helpers/Codex (Aperitif Renderer).app/Contents/MacOS/Codex (Aperitif Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --code-cache-schemes=app --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --start-stack-profiler --enable-blink-features=WebMCP,FocusgroupV2 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=8 --launch-time-ticks=18241780293 --shared-files --metrics-shmem-handle=1752395122,r,6121802591936840752,1743079678216674005,1572864 --field-trial-handle=1718379636,r,3089663580297264058,9954380167774086212,262144 --enable-features=DevToolsWebMCPSupport,DocumentPolicyIncludeJSCallStacksInCrashReports,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlNativeCaret,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15594513949212912552,12137183214413531065,4 --trace-process-track-uuid=3190708993808206286 --seatbelt-client=176 --force-fieldtrials=WebRTC-Sctp-Snap/Enabled/WebRTC-IceHandshakeDtls/Enabled/WebRTC-ForceDtls13/Enabled/"
+        },
+        {
+          "pid": 6930,
+          "ppid": 1,
+          "rss_kib": 307760,
+          "args": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+        },
+        {
+          "pid": 1,
+          "ppid": 0,
+          "rss_kib": 20560,
+          "args": "/sbin/launchd"
+        }
+      ],
+      [
+        {
+          "pid": 6930,
+          "ppid": 1,
+          "rss_kib": 307760,
+          "args": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+        },
+        {
+          "pid": 1,
+          "ppid": 0,
+          "rss_kib": 20560,
+          "args": "/sbin/launchd"
+        }
+      ]
+    ],
+    "owned_top3": [
+      [
+        49311,
+        32615,
+        49311,
+        2272,
+        "bash /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/native-bootstrap.sh /Users/ueli/native-bootstrap-round-8-try-2.log"
+      ],
+      [
+        49314,
+        49311,
+        49311,
+        1584,
+        "(bash)"
+      ]
+    ]
+  },
+  {
+    "at": "2026-11-14T21:34:23Z",
+    "elapsed_s": 30.343,
+    "pressure": "1",
+    "warning_streak": 0,
+    "critical_streak": 0,
+    "top3_with_parents_verbatim": "1497152 29075 29074 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run\n542032  6959  6930 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/157.0.8103.78/Helpers/Codex (Aperitif Renderer).app/Contents/MacOS/Codex (Aperitif Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --code-cache-schemes=app --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --start-stack-profiler --enable-blink-features=WebMCP,FocusgroupV2 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=8 --launch-time-ticks=18241780293 --shared-files --metrics-shmem-handle=1752395122,r,6121802591936840752,1743079678216674005,1572864 --field-trial-handle=1718379636,r,3089663580297264058,9954380167774086212,262144 --enable-features=DevToolsWebMCPSupport,DocumentPolicyIncludeJSCallStacksInCrashReports,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlNativeCaret,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15594513949212912552,12137183214413531065,4 --trace-process-track-uuid=3190708993808206286 --seatbelt-client=176 --force-fieldtrials=WebRTC-Sctp-Snap/Enabled/WebRTC-IceHandshakeDtls/Enabled/WebRTC-ForceDtls13/Enabled/\n402464 49784  6961 /Library/Developer/CommandLineTools/usr/bin/git -c attr.tree= -c core.attributesFile= -c safe.bareRepository=explicit -c core.hooksPath=/dev/null -c core.fsmonitor= status --renames --porcelain=v1 -z --untracked-files=normal",
+    "top3_base_verbatim": "1497152 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run\n542144 /Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/157.0.8103.78/Helpers/Codex (Aperitif Renderer).app/Contents/MacOS/Codex (Aperitif Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --code-cache-schemes=app --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --start-stack-profiler --enable-blink-features=WebMCP,FocusgroupV2 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=8 --launch-time-ticks=18241780293 --shared-files --metrics-shmem-handle=1752395122,r,6121802591936840752,1743079678216674005,1572864 --field-trial-handle=1718379636,r,3089663580297264058,9954380167774086212,262144 --enable-features=DevToolsWebMCPSupport,DocumentPolicyIncludeJSCallStacksInCrashReports,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlNativeCaret,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15594513949212912552,12137183214413531065,4 --trace-process-track-uuid=3190708993808206286 --seatbelt-client=176 --force-fieldtrials=WebRTC-Sctp-Snap/Enabled/WebRTC-IceHandshakeDtls/Enabled/WebRTC-ForceDtls13/Enabled/\n307584 /Applications/ChatGPT.app/Contents/MacOS/ChatGPT",
+    "ancestor_chains": [
+      [
+        {
+          "pid": 29075,
+          "ppid": 29074,
+          "rss_kib": 1497152,
+          "args": "/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run"
+        },
+        {
+          "pid": 29074,
+          "ppid": 29058,
+          "rss_kib": 30080,
+          "args": "/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Library/Application Support/semio/fleet/entry/boot.mjs run"
+        },
+        {
+          "pid": 29058,
+          "ppid": 1,
+          "rss_kib": 1248,
+          "args": "/bin/sh /Users/ueli/Library/Application Support/semio/fleet/entry/boot.sh run"
+        },
+        {
+          "pid": 1,
+          "ppid": 0,
+          "rss_kib": 20560,
+          "args": "/sbin/launchd"
+        }
+      ],
+      [
+        {
+          "pid": 6959,
+          "ppid": 6930,
+          "rss_kib": 542032,
+          "args": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/157.0.8103.78/Helpers/Codex (Aperitif Renderer).app/Contents/MacOS/Codex (Aperitif Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --code-cache-schemes=app --owl-scoped-user-agent-additional-hosts=openai.com,chatgpt.com,chatgpt.site,chatgpt-team.site --owl-scoped-user-agent-prefix=CodexBrowser --start-stack-profiler --enable-blink-features=WebMCP,FocusgroupV2 --disable-blink-features=ReplacedNormalFlowStackingInlinePaint --lang=en-US --num-raster-threads=4 --enable-zero-copy --enable-gpu-memory-buffer-compositor-resources --enable-main-frame-before-activation --renderer-client-id=8 --launch-time-ticks=18241780293 --shared-files --metrics-shmem-handle=1752395122,r,6121802591936840752,1743079678216674005,1572864 --field-trial-handle=1718379636,r,3089663580297264058,9954380167774086212,262144 --enable-features=DevToolsWebMCPSupport,DocumentPolicyIncludeJSCallStacksInCrashReports,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlNativeCaret,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15594513949212912552,12137183214413531065,4 --trace-process-track-uuid=3190708993808206286 --seatbelt-client=176 --force-fieldtrials=WebRTC-Sctp-Snap/Enabled/WebRTC-IceHandshakeDtls/Enabled/WebRTC-ForceDtls13/Enabled/"
+        },
+        {
+          "pid": 6930,
+          "ppid": 1,
+          "rss_kib": 307584,
+          "args": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+        },
+        {
+          "pid": 1,
+          "ppid": 0,
+          "rss_kib": 20560,
+          "args": "/sbin/launchd"
+        }
+      ],
+      [
+        {
+          "pid": 49784,
+          "ppid": 6961,
+          "rss_kib": 402464,
+          "args": "/Library/Developer/CommandLineTools/usr/bin/git -c attr.tree= -c core.attributesFile= -c safe.bareRepository=explicit -c core.hooksPath=/dev/null -c core.fsmonitor= status --renames --porcelain=v1 -z --untracked-files=normal"
+        },
+        {
+          "pid": 6961,
+          "ppid": 6930,
+          "rss_kib": 132032,
+          "args": "/Applications/ChatGPT.app/Contents/Frameworks/Codex Framework.framework/Versions/157.0.8103.78/Helpers/Codex (Aperitif).app/Contents/MacOS/Codex (Aperitif) --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/ueli/Library/Application Support/Codex --standard-schemes=app,codex-sandbox --service-worker-schemes=codex-sandbox --secure-schemes=app,codex-sandbox --fetch-schemes=app,codex-sandbox --cors-schemes=codex-sandbox --streaming-schemes=app,codex-sandbox --code-cache-schemes=app --shared-files --metrics-shmem-handle=1752395122,r,8757001424511842846,14749605722773978290,524288 --field-trial-handle=1718379636,r,3089663580297264058,9954380167774086212,262144 --enable-features=DevToolsWebMCPSupport,DocumentPolicyIncludeJSCallStacksInCrashReports,ReportStuckThrottle --disable-features=DropInputEventsWhilePaintHolding,OwlNativeCaret,WebUIOmniboxAimPopup,WebUIOmniboxPopup --variations-seed-version --pseudonymization-salt-handle=1935764596,r,15594513949212912552,12137183214413531065,4 --trace-process-track-uuid=3190708994745248135"
+        },
+        {
+          "pid": 6930,
+          "ppid": 1,
+          "rss_kib": 307584,
+          "args": "/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"
+        },
+        {
+          "pid": 1,
+          "ppid": 0,
+          "rss_kib": 20560,
+          "args": "/sbin/launchd"
+        }
+      ]
+    ],
+    "owned_top3": [
+      [
+        49816,
+        49317,
+        49311,
+        118736,
+        "/Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo run workspace:setup"
+      ],
+      [
+        49317,
+        49311,
+        49311,
+        2912,
+        "bash /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup"
+      ],
+      [
+        49311,
+        32615,
+        49311,
+        2304,
+        "bash /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/native-bootstrap.sh /Users/ueli/native-bootstrap-round-8-try-2.log"
+      ]
+    ]
+  }
+]

@@ -33,7 +33,7 @@ import { PROJECTIONS, modelSheet, resolveSheet, withNote, type Projection } from
 import { ModelRequestError } from "../../🧊️volume/🟦️.ts";
 import { writeGlb } from "../🧊️glb/🟦️.ts";
 import { writeFbx } from "../🎬️fbx/🟦️.ts";
-import { modelExtension, modelStem, writeModel } from "../🗿️model/🟦️.ts";
+import { fbxName, glbName, modelName, writeModel, zipName } from "../🗿️model/🟦️.ts";
 import { writeModelBundle } from "../🗜️zip/📦️models/🟦️.ts";
 import { repoToolPort, type ToolPort } from "../🔌️tools/🟦️.ts";
 
@@ -41,7 +41,7 @@ import { repoToolPort, type ToolPort } from "../🔌️tools/🟦️.ts";
 //#region 🔖️Options
 /** 📄️ The formats. */
 export const CLI_FORMATS = ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "sheet-svg", "sheet-pdf", "sheet-dxf", "sheet-dwg", "glb", "fbx", "model", "model-zip"] as const;
-/** 🧊️ The formats of the 3D model pipeline: a GLB per static pose, an FBX per clip, the neutral JSON model of a pose or clip, and the ZIP bundle of all of them. */
+/** 🧊️ The formats of the 3D model pipeline: a GLB per static pose holding every authored scale and mode as scenes, an FBX per clip at one scale in one view, the multi-scene neutral JSON model of a pose or clip, and the ZIP bundle of all of them. */
 export const MODEL_FORMATS = ["glb", "fbx", "model", "model-zip"] as const;
 /** 📤️ One of {@link MODEL_FORMATS}. */
 export type ModelFormat = (typeof MODEL_FORMATS)[number];
@@ -50,13 +50,13 @@ export const isModelFormat = (format: CliFormat): format is ModelFormat => (MODE
 /** 🗂️ One of {@link CLI_FORMATS}. */
 export type CliFormat = (typeof CLI_FORMATS)[number];
 
-/** ⚙️ The parsed command line. */
+/** ⚙️ The parsed command line. For the 3D model formats `scale` 0 means every authored scale (a GLB, a model JSON or a ZIP then holds all of them). */
 export type CliOptions = { readonly asset: string; readonly clip?: string; readonly pose?: string; readonly view: View; readonly viewpoint?: Viewpoint; readonly projection?: Projection; readonly axonometric?: AxonometricSpec; readonly sheetAxonometric?: boolean; readonly time?: number; readonly environment?: Slug; readonly scale: number; readonly fps?: number; readonly format: CliFormat; readonly out: string; readonly catalog: string; readonly language: Language; readonly pxPerMm: number; readonly background: string; readonly spanK?: number };
 
 const SYNTAX = "--asset <slug> (--clip <slug> | --pose <slug>) --view <view> --scale <denominator> [--fps <n>] --format <svg|pdf|dxf|dwg|png-sequence|mp4|webm|sheet-svg|sheet-pdf|sheet-dxf|sheet-dwg|glb|fbx|model|model-zip> --out <dir> --lang <en|de> (--viewpoint elevation|front|plan|axonometric [--camera isometric|dimetric|<azimuth>,<elevation>] | --projection first|third [--views elevation,front,plan,axonometric]) [--time <s>] [--environment <preset>] [--catalog <dir>] [--px-per-mm <n>] [--background #rrggbb]";
 const USAGE: Text = { en: `usage: ${SYNTAX}`, de: `Aufruf: ${SYNTAX}` };
 
-const SYNTAX_MODEL = "--asset <slug> --scale <denominator> --lang <en|de> --out <dir> --format glb --pose <slug> | --format fbx --clip <slug> [--view <view>] | --format model (--pose <slug> | --clip <slug>) | --format model-zip, each with [--environment <preset>] [--span-k <kelvin>] [--catalog <dir>]";
+const SYNTAX_MODEL = "--asset <slug> --lang <en|de> --out <dir> --format glb --pose <slug> [--scale <denominator>] | --format fbx --clip <slug> --scale <denominator> [--view <view>] | --format model (--pose <slug> | --clip <slug>) [--scale <denominator>] | --format model-zip [--scale <denominator>], each with [--environment <preset>] [--span-k <kelvin>] [--catalog <dir>]; without --scale a GLB, a model and a ZIP hold every authored scale and mode, with --scale only that scale";
 const USAGE_MODEL: Text = { en: `3D models: ${SYNTAX_MODEL}`, de: `3D-Modelle: ${SYNTAX_MODEL}` };
 
 /** 🚫️ Thrown for a malformed command line: the message carries English then German, `reason` both. */
@@ -94,8 +94,9 @@ export function parseArguments(argv: readonly string[]): CliOptions {
     if (format === "model" && (clip === undefined) === (pose === undefined)) throw new ModelRequestError("model-needs-one");
     if (format === "model-zip" && (clip !== undefined || pose !== undefined)) throw new ModelRequestError("bundle-takes-neither");
     if (format !== "fbx" && values.has("view")) throw new ModelRequestError("model-all-views");
+    if (format === "fbx" && !values.has("scale")) throw refuse("missing --scale: an FBX is one scale", "--scale fehlt: eine FBX hat einen Massstab", USAGE_MODEL);
     if (format === "fbx" && values.has("environment") && values.get("view") !== "thermal") throw new ModelRequestError("model-environment-view");
-    return { asset: need("asset"), ...(clip === undefined ? {} : { clip }), ...(pose === undefined ? {} : { pose }), view: values.has("view") ? oneOf("view", VIEWS) : "light-solid", ...(values.has("environment") ? { environment: values.get("environment")! as Slug } : {}), ...(values.has("span-k") ? { spanK: positive("span-k") } : {}), scale: positive("scale"), format, out: resolve(need("out")), catalog: resolve(values.get("catalog") ?? DEFAULT_CATALOG_ROOT), language: oneOf("lang", LANGUAGES), pxPerMm: positive("px-per-mm", 8), background: values.get("background") ?? "#ffffff" };
+    return { asset: need("asset"), ...(clip === undefined ? {} : { clip }), ...(pose === undefined ? {} : { pose }), view: values.has("view") ? oneOf("view", VIEWS) : "light-solid", ...(values.has("environment") ? { environment: values.get("environment")! as Slug } : {}), ...(values.has("span-k") ? { spanK: positive("span-k") } : {}), scale: values.has("scale") ? positive("scale") : 0, format, out: resolve(need("out")), catalog: resolve(values.get("catalog") ?? DEFAULT_CATALOG_ROOT), language: oneOf("lang", LANGUAGES), pxPerMm: positive("px-per-mm", 8), background: values.get("background") ?? "#ffffff" };
   }
   if (values.has("span-k")) throw refuse("--span-k applies to the 3D model formats only", "--span-k gilt nur für die 3D-Modellformate", USAGE_MODEL);
   if ((clip === undefined) === (pose === undefined)) throw refuse("give exactly one of --clip and --pose", "genau eines von --clip und --pose angeben");
@@ -202,25 +203,26 @@ async function rasterise(tools: ToolPort, scenes: readonly DrawingScene[], direc
   return canvas;
 }
 
-/** 🌟️ Runs one 3D model command: a GLB of a static pose, an FBX of a clip, the neutral JSON of a pose or clip, or the ZIP of all of them; the thermal variant solves under `--environment`, else the asset's reference environment, else its own, with `--span-k` as the thermal span. Returns the files written. */
+/** 🌟️ Runs one 3D model command: a GLB of a static pose, an FBX of a clip at one scale, the neutral multi-scene JSON of a pose or clip, or the ZIP of all of them (`scale` 0: every authored scale); the thermal variant solves under `--environment`, else the asset's reference environment, else its own, with `--span-k` as the thermal span. Returns the files written. */
 export async function runModelExport(options: CliOptions, format: ModelFormat, asset: Asset, control: JobControl = {}): Promise<readonly string[]> {
   const presets = new Map(((await loadEnvironments(options.catalog, control.signal))?.presets ?? []).map((preset) => [preset.id, preset]));
   const environment = resolveThermalEnvironment(asset, presets, options.environment);
-  const shared = { scale: options.scale, ...(environment === undefined ? {} : { environment }), ...(options.spanK === undefined ? {} : { thermalSpanK: options.spanK }) };
+  const shared = { ...(environment === undefined ? {} : { environment }), ...(options.spanK === undefined ? {} : { thermalSpanK: options.spanK }) };
   await mkdir(options.out, { recursive: true });
-  const [name, extension, bytes] = await (async (): Promise<readonly [string, string, string | Uint8Array]> => {
+  const scales = options.scale > 0 ? { scales: [options.scale] } : {};
+  const [name, bytes] = await (async (): Promise<readonly [string, string | Uint8Array]> => {
     switch (format) {
       case "glb":
-        return [modelStem(options.asset, options.pose!, "all", options.scale), "glb", await writeGlb(asset, { ...shared, pose: options.pose! }, control)];
+        return [glbName(options.asset, options.pose!), await writeGlb(asset, { ...shared, ...scales, pose: options.pose! }, control)];
       case "fbx":
-        return [modelStem(options.asset, options.clip!, options.view, options.scale), "fbx", await writeFbx(asset, { ...shared, clip: options.clip!, view: options.view }, control)];
+        return [fbxName(options.asset, options.clip!, options.scale, options.view), await writeFbx(asset, { ...shared, scale: options.scale, clip: options.clip!, view: options.view }, control)];
       case "model":
-        return [modelStem(options.asset, options.clip ?? options.pose!, "all", options.scale), modelExtension(options.clip === undefined ? "pose" : "clip"), await writeModel(asset, { ...shared, ...(options.clip === undefined ? { pose: options.pose! } : { clip: options.clip }) }, control)];
+        return [modelName(options.asset, options.clip === undefined ? "pose" : "clip", options.clip ?? options.pose!), await writeModel(asset, { ...shared, ...scales, ...(options.clip === undefined ? { pose: options.pose! } : { clip: options.clip }) }, control)];
       case "model-zip":
-        return [`${options.asset}-all-model-1to${options.scale}`, "zip", await writeModelBundle(asset, { ...shared, view: options.view }, control)];
+        return [zipName(options.asset), await writeModelBundle(asset, { ...shared, ...scales }, control)];
     }
   })();
-  const path = join(options.out, `${name}.${extension}`);
+  const path = join(options.out, name);
   await writeFile(path, bytes);
   control.progress?.(1, 1, PROGRESS);
   return [path];

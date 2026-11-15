@@ -2,7 +2,7 @@
 """🐍️ Independent model of the Bun lock check: reads the same corpus and shares no code with the Bun test (stdlib only).
 
 usage: 🐍️.py CORPUS.json      (exit 0 when every verdict holds)"""
-import json, re, sys
+import json, re, sys, unicodedata
 
 corpus = json.load(open(sys.argv[1], encoding="utf8"))
 TABLES = ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"]
@@ -58,7 +58,7 @@ def check(text, manifests):
         lock = jsonc(text)
     except ValueError:
         return [{"kind": "invalid-lockfile", "manifest": "bun.lock", "frozen": True}]
-    rows = lock.get("workspaces") if isinstance(lock.get("workspaces"), dict) else {}
+    rows = {unicodedata.normalize("NFC", k): v for k, v in lock.get("workspaces").items()} if isinstance(lock.get("workspaces"), dict) else {}
     locked = locked_names(lock.get("packages") if isinstance(lock.get("packages"), dict) else {})
     used = used_names(lock.get("packages") if isinstance(lock.get("packages"), dict) else {}, manifests)
     out, seen = [], set()
@@ -78,7 +78,7 @@ def check(text, manifests):
                 emit("version-mismatch", manifest, certain(name, "version"), section=section, dependency=name, manifestVersion=a, lockVersion=t)
 
     for path, doc in manifests:
-        manifest = path.replace("\\", "/")
+        manifest = unicodedata.normalize("NFC", path.replace("\\", "/"))
         key = "" if manifest == "package.json" else re.sub(r"/package\.json$", "", manifest)
         seen.add(key)
         row = rows.get(key)

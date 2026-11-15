@@ -11,7 +11,7 @@ import { type ChildProcess } from "node:child_process";
 import { closeSync, existsSync, linkSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createConnection } from "node:net";
 import { dirname, join, resolve } from "node:path";
-import { protectOwnerOnly } from "@semio-tech/repo-lib/process";
+import { protectOwnerOnly } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 
 
 

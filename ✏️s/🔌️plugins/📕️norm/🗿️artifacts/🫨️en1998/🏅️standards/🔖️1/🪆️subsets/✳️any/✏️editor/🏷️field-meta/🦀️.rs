@@ -334,6 +334,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("foundations[].pileMomentRdNm", m!("Pile bending resistance M_Rd", "Biegetragfähigkeit M_Rd des Pfahls", UnitId::NewtonMetre)),
     ("foundations[].baseFrictionAngleDeg", m!("Interface friction angle δ of the footing base for the seismic sliding resistance (V − u) tan δ / γ_Rd (0 = no friction credited)", "Sohlreibungswinkel δ der Fundamentsohle für den Gleitwiderstand (V − u) tan δ / γ_Rd (0 = keine Reibung angesetzt)", UnitId::Degree)),
     ("foundations[].basePorePressurePa", m!("Pore water pressure u under the footing base (0 = none)", "Porenwasserdruck u unter der Fundamentsohle (0 = keiner)", UnitId::Pascal)),
+    ("foundations[].pileAxialLoadN", m!("Pile axial load N_Ed", "Pfahlnormalkraft N_Ed", UnitId::Newton)),
     ("retainingWalls[].id", m!("Wall id", "Wand-ID")),
     ("retainingWalls[].heightM", m!("Wall height", "Wandhöhe", UnitId::Metre)),
     ("retainingWalls[].phiDeg", m!("Friction angle φ′", "Reibungswinkel φ′")),

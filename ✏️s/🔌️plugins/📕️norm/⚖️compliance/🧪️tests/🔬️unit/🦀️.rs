@@ -1,4 +1,7 @@
-use crate::*;
+use semio_s_plugin_norm_compliance::*;
+extern crate semio_os_kernel as dsl;
+extern crate semio_os_kernel as store;
+extern crate semio_framework_value_derive as value_derive;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 
@@ -326,13 +329,13 @@ async fn registry_is_sorted_unique_and_looked_up_statically() {
     assert!(NDP_TABLE.iter().all(|entry| ndp_is_verified(entry.id) == (entry.status == NdpStatus::Verified)));
     assert!(NDP_TABLE.iter().all(|entry| {
         let status = pass_with(&[entry.id]).status;
-        if entry.status == NdpStatus::Verified { status == CheckStatus::Pass } else { status == CheckStatus::UnverifiedBasis }
+        if entry.verification(AnnexChoice::En) == NdpStatus::Verified { status == CheckStatus::Pass } else { status == CheckStatus::UnverifiedBasis }
     }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn registry_matches_the_language_agnostic_json() {
-    let data: serde_json::Value = serde_json::from_str(include_str!("../../📜️annex-and-tables/🔖️ndp/🔣️.json")).expect("registry json");
+    let data: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📜️annex-and-tables/🔖️ndp/🔣️.json")).expect("registry json file")).expect("registry json");
     let entries = data["entries"].as_array().expect("entries");
     assert_eq!(entries.len(), NDP_TABLE.len());
     for (json, entry) in entries.iter().zip(NDP_TABLE) {
@@ -558,7 +561,7 @@ async fn a_verified_annex_value_supports_a_verdict_while_the_other_annex_stays_o
 /// 🧪️ The shared action factors read the EN 1990 registry rows: K_FI scales γ_G,sup and γ_Q of persistent situations only, γ_G,inf and ξ stay, exceptional situations and serviceability carry 1.0, ψ follow the category and bridges split γ_Q by traffic family.
 #[test]
 fn action_factors_follow_the_registry_class_situation_and_domain() {
-    use crate::action_factors::{Domain, PsiRow};
+    use semio_s_plugin_norm_compliance::action_factors::{Domain, PsiRow};
     let value = |id: &str, annex: AnnexChoice| ndp_number(id, annex);
     for annex in [AnnexChoice::En, AnnexChoice::De] {
         for class in ReliabilityClass::ALL {

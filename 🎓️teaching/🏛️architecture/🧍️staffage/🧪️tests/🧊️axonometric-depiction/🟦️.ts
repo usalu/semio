@@ -5,6 +5,8 @@
  *
  * @see ./🥒️.feature — the scenarios
  */
+import { modeOf } from "../../🔨️modules/🧊️volume/🟦️.ts";
+import { bodyOf } from "../🧰️support/🧊️volumes/🟦️.ts";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -27,7 +29,7 @@ import { modelOf } from "../../🔨️modules/🧊️volume/🟦️.ts";
 import { Slots, frameDataOf } from "../../🔨️modules/🧊️volume/🧷️frames/🟦️.ts";
 import { lineLook } from "../../🔨️modules/🧊️volume/🎨️looks/🟦️.ts";
 import { fixture, STAFFAGE_ROOT } from "../🧰️support/🧰️.ts";
-import { sampleFigure } from "../🧰️support/🧊️.ts";
+import { scaledFigure as sampleFigure } from "../🧰️support/🧊️volumes/🟦️.ts";
 
 beforeAll(loadAxonometric);
 
@@ -89,23 +91,23 @@ describe("🧊️ the axonometric view is a normal DrawingScene in the seven rep
 describe("🧊️ the seven representations paint the colours of the planar views", () => {
   const planar = (view: View, scale: number): Map<string, Extract<DrawingItem, { kind: "path" }>> => byId(depict(stateAt(scale), defaultDepictionOptions(view, "en", scale, "elevation"), analysisOf(view, scale)));
   for (const view of VIEWS)
-    it(`${view}: with flat shading every fill, opacity, hatch pattern and value of a solid equals the planar item of the same id`, () => {
+    it(`${view}: with flat shading every fill, opacity, hatch pattern and value of a solid equals the planar item of the same bone (tone views), thermal region (thermal) or member (forces, moments)`, () => {
       const scale = 50;
       const flat = byId(axo(view, scale, { shading: "flat" }));
       const reference = planar(view, scale);
       let compared = 0;
-      for (const solid of asset.volume!.solids) {
+      for (const solid of solidsAt(asset, scale, modeOf(view))) {
         const ours = flat.get(`shape:${solid.id}`);
-        const theirs = reference.get(`shape:${solid.id}`);
+        const theirs = view === "thermal" ? [...reference.values()].find((i) => i.id.startsWith("shape:") && i.region === solid.region && i.fill !== undefined) : view === "forces" || view === "moments" ? (solid.part === "member" || solid.part === "joint" ? [...reference.values()].find((i) => i.id.startsWith("shape:") && i.bone === solid.member && i.fill !== undefined) : undefined) : reference.get(`shape:${solid.id}`);
         if (ours?.fill === undefined || theirs?.fill === undefined) continue;
         expect(ours.fill.color, `${view} ${solid.id}`).toBe(theirs.fill!.color);
         expect(ours.fill.opacity, `${view} ${solid.id} opacity`).toBe(theirs.fill!.opacity);
-        expect(ours.fill.pattern, `${view} ${solid.id} pattern`).toBe(theirs.fill!.pattern);
+        if (view !== "thermal") expect(ours.fill.pattern, `${view} ${solid.id} pattern`).toBe(theirs.fill!.pattern);
         expect(ours.value, `${view} ${solid.id} value`).toEqual(theirs.value);
-        expect(ours.bone).toBe(theirs.bone);
+        if (view !== "thermal" && view !== "forces" && view !== "moments") expect(ours.bone).toBe(theirs.bone);
         compared++;
       }
-      expect(compared, `${view} solids compared`).toBeGreaterThan(8);
+      expect(compared, `${view} solids compared`).toBeGreaterThan(view === "thermal" || view === "forces" || view === "moments" ? 5 : 8);
     });
 
   it("thermal, forces and moments carry the legends of the planar views (quantity, unit, range, ramp)", () => {
@@ -122,7 +124,7 @@ describe("🧊️ the seven representations paint the colours of the planar view
 
   it("the colours are those of the looks the neutral model uses (one source of truth): light-solid, thermal and moments", async () => {
     for (const view of ["light-solid", "thermal", "moments"] as const) {
-      const doc = await modelOf(asset, { scale: 50, poses: [POSE], clips: [], views: [view] });
+      const doc = await modelOf(asset, { scale: 50, poses: [POSE], clips: [], view });
       const flat = byId(axo(view, 50, { shading: "flat" }));
       let compared = 0;
       for (const solid of doc.solids.filter((s) => !s.tags?.includes("glyph"))) {
@@ -165,8 +167,8 @@ describe("🧊️ pens, levels of detail and what is to scale", () => {
   for (const scale of SCALES)
     it(`1:${scale}: every line is stroked with the pen of the role of its solid, times 1 in the line views, ½ in the analytic views and in the solid views at 1:100 and larger, none in the solid views at 1:${scale > 100 ? scale : "—"}`, () => {
       const pens = pensOf(scale);
-      const roles = new Map(asset.volume!.solids.map((s) => [s.id, s.role]));
       for (const view of VIEWS) {
+        const roles = new Map(solidsAt(asset, scale, modeOf(view)).map((s) => [s.id, s.role]));
         const multiplier = view.endsWith("-line") ? 1 : view.endsWith("-solid") ? (scale <= 100 ? 0.5 : 0) : 0.5;
         const scene = axo(view, scale);
         const edges = paths(scene).filter((p) => p.id.startsWith("edge:"));
@@ -184,15 +186,25 @@ describe("🧊️ pens, levels of detail and what is to scale", () => {
       }
     });
 
-  it("level of detail: a solid that is shown only at 1:50 (`maxDenominator`) is drawn at 1:50 and absent at 1:100", () => {
-    const fine = asset.volume!.solids.filter((s) => s.maxDenominator === 50).map((s) => s.id);
+  it("level of detail: every scale draws its own individually authored body solids, never the solids of another scale", () => {
+    for (const scale of [50, 100, 200, 500]) {
+      const own = bodyOf(asset, scale).map((s) => s.id);
+      expect(solidsAt(asset, scale).map((s) => s.id)).toEqual(own);
+      const drawn = new Set([...byId(axo("light-line", scale)).keys()].filter((id) => id.startsWith("shape:")).map((id) => id.slice(6).replace(/:band-\d+$/u, "")));
+      expect(drawn.size, `1:${scale}`).toBeGreaterThan(0);
+      for (const id of drawn) expect(own.includes(id) || id.startsWith("glyph") || id.includes(":"), `1:${scale} draws ${id}`).toBe(true);
+    }
+    const fine = bodyOf(asset, 50).map((s) => s.id).filter((id) => !bodyOf(asset, 100).some((s) => s.id === id));
     expect(fine.length).toBeGreaterThan(0);
-    expect(solidsAt(asset, 50).map((s) => s.id)).toEqual(expect.arrayContaining(fine));
     expect(solidsAt(asset, 100).map((s) => s.id).filter((id) => fine.includes(id))).toEqual([]);
-    const at50 = [...byId(axo("light-line", 50)).keys()].filter((id) => id.startsWith("shape:") && fine.includes(id.slice(6).replace(/:band-\d+$/u, "")));
-    const at100 = [...byId(axo("light-line", 100)).keys()].filter((id) => id.startsWith("shape:") && fine.includes(id.slice(6)));
-    expect(at50.length).toBeGreaterThan(0);
-    expect(at100).toEqual([]);
+  });
+
+  it("draws the thermal view from the thermal solids and the forces view from the structure solids of the scale", () => {
+    expect(solidsAt(asset, 50, "thermal").length).toBeGreaterThan(0);
+    expect(solidsAt(asset, 50, "structure").length).toBeGreaterThan(0);
+    const thermal = new Set([...byId(axo("thermal", 50)).keys()].filter((id) => id.startsWith("shape:")).map((id) => id.slice(6).replace(/:band-\d+$/u, "")));
+    const own = new Set(solidsAt(asset, 50, "thermal").map((s) => s.id));
+    expect([...thermal].filter((id) => !own.has(id) && !id.startsWith("emitter-"))).toEqual([]);
   });
 
   it("the tessellation follows the scale: the chord is 0.04 paper millimetres, so a smaller scale has coarser triangles", () => {
@@ -216,7 +228,7 @@ describe("🧊️ pens, levels of detail and what is to scale", () => {
   });
 
   it("the ground outline is to scale along the axes: its sides measure the footprint of the posed model plus 0.3 m on each side, along the ahead and the lateral axis", async () => {
-    const doc = await tessellate(await modelOf(asset, { scale: 100, poses: [POSE], clips: [], views: [] }), qualityAt(100));
+    const doc = await tessellate(await modelOf(asset, { scale: 100, poses: [POSE], clips: [], view: "light-solid" }), qualityAt(100));
     const world = poseModel(doc, POSE).world;
     let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
     for (const node of doc.nodes) {
@@ -248,7 +260,7 @@ describe("🧊️ the volume is posed by the evaluated state", () => {
   it("the posed vertices of every bone equal the kernel's pose of the neutral model (placementsOf against poseModel), in the stand pose and a stride", async () => {
     for (const pose of [POSE, "stride-left-forward"]) {
       const state = stateAt(50, pose);
-      const doc = await tessellate(await modelOf(asset, { scale: 50, poses: [pose], clips: [], views: [] }), qualityAt(50));
+      const doc = await tessellate(await modelOf(asset, { scale: 50, poses: [pose], clips: [], view: "light-solid" }), qualityAt(50));
       const world = poseModel(doc, pose).world;
       const frame = frameDataOf({ asset, views: ["light-line"], theme: "light", mm: 0.05, longestMm: 10, looks: { thermal: undefined, forces: undefined, moments: undefined, fixed: { "light-line": lineLook("light", "light-line") } }, slots: new Slots() }, state, {});
       const soup = poseSoup(asset, frame, new Map(), 50);

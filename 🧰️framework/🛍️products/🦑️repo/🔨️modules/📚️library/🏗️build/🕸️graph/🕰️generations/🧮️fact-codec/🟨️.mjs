@@ -229,6 +229,111 @@ export function decodeFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>t
 }
 
 /**
+ * 🔁️ Rewrites every text of a binary fact index in place of the document: the string table, the keys and values of the facts, the owner names and the paths of the rows are mapped by `mapText`, the table is rebuilt (deduplicated, in the order of the UTF-8 bytes), ids are renumbered and the objects of the facts are written in the order of their new key numbers; row numbers, owner numbers and the class lists are copied as they are. The output is the document `encodeFactIndexV1` writes for the rewritten logical index, byte for byte, without ever holding the rows or the facts as objects. Two texts that map to the same text inside one object are refused.
+ */
+export function transcodeFactIndexV1(bytes,{mapText,maximumBytes=bytes.length*2+1048576}){
+ if(!(bytes instanceof Uint8Array)||bytes.length>maximumBytes||typeof mapText!=="function")throw fail("Bounded fact index bytes and a text map required");
+ const buffer=Buffer.from(bytes.buffer,bytes.byteOffset,bytes.length),decoder=new TextDecoder("utf-8",{fatal:true});let at=0;
+ const refuse=()=>{throw fail("Closed binary fact index required");};
+ const varint=()=>{
+  let value=0,scale=1;
+  for(let step=0;step<P.maximumVarintBytes;step++){
+   if(at>=buffer.length)refuse();
+   const byte=buffer[at++];value+=(byte&127)*scale;
+   if(byte<128){if(!Number.isSafeInteger(value))refuse();return value;}
+   scale*=128;
+  }
+  return refuse();
+ };
+ const count=()=>{const value=varint();if(value>buffer.length-at)refuse();return value;};
+ if(buffer.length<MAGIC.length||Buffer.compare(buffer.subarray(0,MAGIC.length),MAGIC)!==0)refuse();
+ at=MAGIC.length;
+ const stringCount=count(),kindCount=count(),ownerCount=count(),factCount=count(),rowCount=count(),classCount=count();
+ const slotOf=new Uint32Array(stringCount),known=new Map(),entries=[];
+ let current=Buffer.allocUnsafe(256),currentLength=0;
+ for(let id=0;id<stringCount;id++){
+  const lcp=varint(),suffix=varint();
+  if(lcp>currentLength||suffix>buffer.length-at)refuse();
+  if(id===0?lcp!==0:lcp===currentLength?suffix===0:suffix===0||buffer[at]<=current[lcp])refuse();
+  const length=lcp+suffix;
+  if(length>current.length){const grown=Buffer.allocUnsafe(Math.max(length,current.length*2));current.copy(grown,0,0,currentLength);current=grown;}
+  buffer.copy(current,lcp,at,at+suffix);at+=suffix;currentLength=length;
+  let text;try{text=decoder.decode(current.subarray(0,length));}catch{refuse();}
+  const moved=mapText(text);
+  let entry=known.get(moved);
+  if(entry===undefined){
+   if(typeof moved!=="string"||LONE_SURROGATE.test(moved))throw fail("Well formed text required in a fact index: "+JSON.stringify(String(moved).slice(0,64)));
+   entry={bytes:Buffer.from(moved,"utf8"),rank:0,slot:entries.length};entries.push(entry);known.set(moved,entry);
+  }
+  slotOf[id]=entry.slot;
+ }
+ const order=[...entries].sort((a,b)=>Buffer.compare(a.bytes,b.bytes));
+ order.forEach((entry,rank)=>{entry.rank=rank;});
+ const rank=new Uint32Array(stringCount);for(let id=0;id<stringCount;id++)rank[id]=entries[slotOf[id]].rank;
+ const stringId=()=>{const id=varint();if(id>=stringCount)refuse();return id;};
+ const skipValue=depth=>{
+  if(at>=buffer.length)refuse();
+  const tag=buffer[at++];
+  if((tag===T.array||tag===T.object)&&depth>P.maximumDepth)refuse();
+  switch(tag){
+   case T.null:case T.false:case T.true:return;
+   case T.uint:varint();return;
+   case T.negint:if(varint()===0)refuse();return;
+   case T.float:if(buffer.length-at<8||!Number.isFinite(buffer.readDoubleLE(at)))refuse();at+=8;return;
+   case T.string:stringId();return;
+   case T.hex:if(buffer.length-at<32)refuse();at+=32;return;
+   case T.array:{const items=count();for(let item=0;item<items;item++)skipValue(depth+1);return;}
+   case T.object:{const items=count();let previous=-1;for(let item=0;item<items;item++){const key=varint();if(key>=stringCount||key<=previous)refuse();previous=key;skipValue(depth+1);}return;}
+   default:refuse();
+  }
+ };
+ const sink=createFactSinkV1(maximumBytes);
+ const copyValue=depth=>{
+  if(at>=buffer.length)refuse();
+  const tag=buffer[at++];
+  if((tag===T.array||tag===T.object)&&depth>P.maximumDepth)refuse();
+  switch(tag){
+   case T.null:case T.false:case T.true:sink.byte(tag);return;
+   case T.uint:case T.negint:sink.byte(tag);sink.varint(varint());return;
+   case T.float:if(buffer.length-at<8)refuse();sink.byte(tag);sink.bytes(buffer.subarray(at,at+8));at+=8;return;
+   case T.string:sink.byte(tag);sink.varint(rank[stringId()]);return;
+   case T.hex:if(buffer.length-at<32)refuse();sink.byte(tag);sink.bytes(buffer.subarray(at,at+32));at+=32;return;
+   case T.array:{const items=count();sink.byte(tag);sink.varint(items);for(let item=0;item<items;item++)copyValue(depth+1);return;}
+   case T.object:{
+    const items=count(),spans=new Array(items);let previous=-1;
+    for(let item=0;item<items;item++){const key=varint();if(key>=stringCount||key<=previous)refuse();previous=key;const start=at;skipValue(depth+1);spans[item]=[rank[key],start];}
+    const end=at;
+    spans.sort((a,b)=>a[0]-b[0]);
+    for(let item=1;item<items;item++)if(spans[item][0]===spans[item-1][0])throw fail("Distinct keys must stay distinct when texts are rewritten");
+    sink.byte(tag);sink.varint(items);
+    for(const[key,start]of spans){sink.varint(key);at=start;copyValue(depth+1);}
+    at=end;return;
+   }
+   default:refuse();
+  }
+ };
+ const kinds=new Array(kindCount),owners=new Array(ownerCount);
+ for(let kind=0;kind<kindCount;kind++)kinds[kind]=rank[stringId()];
+ for(let owner=0;owner<ownerCount;owner++)owners[owner]=rank[stringId()];
+ sink.bytes(MAGIC);
+ for(const total of[order.length,kindCount,ownerCount,factCount,rowCount,classCount])sink.varint(total);
+ let previous=Buffer.alloc(0);
+ for(const{bytes:text}of order){
+  const limit=Math.min(previous.length,text.length);let lcp=0;while(lcp<limit&&previous[lcp]===text[lcp])lcp++;
+  sink.varint(lcp);sink.varint(text.length-lcp);sink.bytes(text,lcp);previous=text;
+ }
+ for(const id of kinds)sink.varint(id);
+ for(const id of owners)sink.varint(id);
+ for(let fact=0;fact<factCount;fact++)copyValue(1);
+ for(let row=0;row<rowCount;row++){const kind=varint();if(kind>=kindCount)refuse();sink.varint(kind);sink.varint(rank[stringId()]);const fact=varint();if(fact>=factCount)refuse();sink.varint(fact);}
+ const classesAt=at;
+ for(let cls=0;cls<classCount;cls++)for(const limit of[rowCount,ownerCount]){const items=count();let last=0;for(let item=0;item<items;item++){const zigzag=varint(),delta=zigzag%2?-(zigzag+1)/2:zigzag/2;last+=delta;if(last<0||last>=limit)refuse();}}
+ if(at!==buffer.length)refuse();
+ sink.bytes(buffer.subarray(classesAt));
+ return sink.result();
+}
+
+/**
  * 🪶️ Opens a binary fact index as a bounded view: the document stays one packed buffer, strings, facts, rows and class lists are decoded when they are read and live in bounded least recently used caches (`🧊️bounded`, sizes in the schema policy `view`), so the resident size is the document plus small offset tables whatever is read. Every bound the full decoder checks is checked here, including the well formed UTF-8 of every string. `owners` is a plain array; `rows` and `classes` are read only array views (`length`, index, iteration and the array methods work, nothing is stored when they are walked); `rowKindOf(id)` answers a kind without reading the row; `document` names the offset tables of the packed bytes for a streaming reader of the same layout (`../🌊️stream-patch`); `stats()` lists the caches.
  * [bounded caches](../../../🧊️bounded/🟨️.mjs)
  */
@@ -364,5 +469,5 @@ export function openFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>tex
  });
  const caches=[texts,factCache,rowCache,classCache];
  const document=Object.freeze({classTyped:id=>({r:readTyped(listAt[id*2]),o:readTyped(listAt[id*2+1])}),buffer,stringCount,kinds,kindString,ownerString,factCount,factAt,factsEnd,rowCount,rowKind,rowPath,rowFact,classCount,suffixAt,suffixLength,lcps,textAt});
- return{version:1,owners,rows:view(rowCount,rowAt),classes:view(classCount,classAt),rowKindOf:id=>kinds[rowKind[id]],document,rowsRead:()=>read,stats:()=>({bytes:buffer.length,caches:caches.map(cache=>cache.stats())}),drop:()=>{for(const cache of caches)cache.clear();}};
+ return{version:1,owners,rows:view(rowCount,rowAt),classes:view(classCount,classAt),rowKindOf:id=>kinds[rowKind[id]],rowPathIdOf:id=>rowPath[id],textOf:id=>textAt(id,false),stringCount,document,rowsRead:()=>read,stats:()=>({bytes:buffer.length,caches:caches.map(cache=>cache.stats())}),drop:()=>{for(const cache of caches)cache.clear();}};
 }

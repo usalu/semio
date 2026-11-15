@@ -1,0 +1,39 @@
+🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json:563: "scene": "Beat4_Gradtagszahl"
+🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🧩️chapters/🔣️.cases.json:570: "scene": "Beat4_Gradtagszahl"
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:28: | Verfahren | 12 Monatsbilanzen, Klimadaten, `G_t20/15` (bezogen auf `θ_i = 20 °C`, Heizgrenze `θ_HG = 15 °C`), `F_Gt = 0,024 · G_t` | Kapitel 2 |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:61: DIN V 4108-6:2003-06: 3.2 symbols, 5.5 balance methods, 6.1 transmission, 6.2 ventilation, 6.3 internal, 6.4 solar, 6.5 utilisation, Anhang A meteorological data, D.2 Heizperiodenbilanz (`Q_l = 0,024 · (H_T + H_V) · G_t`), D.5 Referenzklima.
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:90: The first segment of `EnergyBalance_01_Energiebilanz` is `🗺️roadmap` `Beat1_Fahrplan`, the Fahrplan of the whole video: seven cards, one per chapter (Bilanz `Q_h, Q_c`, taken over from the heating and cooling videos → Klima `θ_e, G_t` → Leistung `Q̇_H, Q_h` → Endenergie `e_E, Q_E` → Primärenergie `f
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md:101: | 2 | `Beat4_Gradtagszahl` | Innentemperatur `θ_i`, Heizgrenze, `G_t20/15`, `F_Gt` |
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🏗️composition/🐍️.py:20: (BASE_DIR / "🐍️.py", "Beat4_Gradtagszahl", SPEECH_DIR / "beat_4_audio.mp3"),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:99: # certified data row; it reproduces G_t20/15 = 3500 Kd/a of the running example.
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:146: """🌡️ Gradtagszahl G_t20/15 in Kd/a: the sum of θ_i − θ_e over the days below the heating limit, swept up to ``reach`` months."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1101: #region Beat 4 – Heizgrenze & Gradtagszahl
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1103: class Beat4_Gradtagszahl(Scene):
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1109: r"One number compresses it: the degree-day figure $G_t$ — always stated for an indoor temperature $\theta_i$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1110: r"Eine Zahl verdichtet sie: die Gradtagszahl $G_t$ — stets bezogen auf eine Innentemperatur $\theta_i$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1121: r"The area between $\theta_i$ and the outdoor curve shows the principle: $G_{t,20/15}$ for $\theta_i = 20$ and $\theta_{HG} = 15$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1122: r"Die Fläche zwischen $\theta_i$ und der Außenkurve zeigt das Prinzip: $G_{t,20/15}$ für $\theta_i = 20$ und $\theta_{HG} = 15$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1125: r"Real wird die Gradtagszahl als Summe der Tagesdifferenzen $\theta_i - \theta_e$ über die Heiztage berechnet."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1128: r"Ein kalter Winter ergibt eine große Gradtagszahl."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1133: r"It makes winters comparable, and $F_{Gt} = 0.024 \cdot G_t$ gives the transmission loss $Q_T = F_{Gt} \cdot H_T$.",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1134: r"Sie macht Winter vergleichbar, und $F_{Gt} = 0{,}024 \cdot G_t$ liefert den Transmissionsverlust $Q_T = F_{Gt} \cdot H_T$."),
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1141: subtitle = section_heading(tr("Heating limit & degree days", "Heizgrenze & Gradtagszahl"))
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1174: teaser = math_label(r"G_{t,20/15}=\,?", size=BODY_FONT_SIZE + 4, color=P_ORANGE).move_to(
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1209: r"\;\mathrm{Kd/a}",
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1226: daily_note = note_line(tr("Principle diagram — real degree-day figures come from daily values", "Prinzipdarstellung — reale Gradtagszahlen aus Tageswerten"), color=P_ORANGE)
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1238: cold_gt = math_label(tr(rf"G_{{t,\mathrm{{cold}}}}={label_number(g_cold, 0)}\;\mathrm{{Kd/a}}", rf"G_{{t,\mathrm{{kalt}}}}={label_number(g_cold, 0)}\;\mathrm{{Kd/a}}"), size=BODY_FONT_SIZE,
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1240: mild_gt = math_label(rf"G_{{t,\mathrm{{mild}}}}={label_number(g_mild, 0)}\;\mathrm{{Kd/a}}", size=BODY_FONT_SIZE,
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py:1323: """📆 Daily outdoor temperatures scatter around the monthly mean — the basis of the real G_t."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🔊️speech/🐍️.py:29: Beat4_Gradtagszahl = _scene.Beat4_Gradtagszahl
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🔊️speech/🐍️.py:47: Beat4_Gradtagszahl,
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🧪️tests/🧮️balance/🐍️.py:73: """🌡️ G_t20/15 of the schematic climate equals the running example's 3500 Kd/a."""
+🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🗺️roadmap/🐍️.py:41: r"Dann Regelwerk und Klimadaten: Monatsbilanzen und die Gradtagszahl $G_{\mathrm{t}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:400: | **G_t20/15 = Σ (θ_i − θ_e)** | Gradtagzahl in Kd/a: nur Tage mit θ_e < 15 °C (Heizgrenze), Raumtemperatur θ_i = 20 °C (VDI 3807 Blatt 1) |
+🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md:401: | **F_Gt = 24 h/d · G_t** | Gradtagzahlfaktor in kKh/a (DIN V 4108-6, Heizperiodenverfahren) |
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:198: """🌡️ Daily mean outdoor temperature θ_e of the example year in °C — its heating days (θ_e below the heating limit) add up to exactly G_t20/15 (VDI 3807 Blatt 1)."""
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:427: r"Die Gradtagzahl braucht eine Innentemperatur: Raumtemperatur $\theta_{\mathrm{i}} = 20\,\mathrm{°C}$ und Heizgrenze $15\,\mathrm{°C}$ — zusammen $G_{\mathrm{t20/15}}$."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:429: r"On every day with $\theta_{\mathrm{e}} < 15\,\mathrm{°C}$ the difference $\theta_{\mathrm{i}} - \theta_{\mathrm{e}}$ counts: the shaded area is about $3\,500\,\mathrm{Kd/a}$, kelvin-days per year.",
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:430: r"An jedem Tag mit $\theta_{\mathrm{e}} < 15\,\mathrm{°C}$ zählt die Differenz $\theta_{\mathrm{i}} - \theta_{\mathrm{e}}$: Die gefärbte Fläche beträgt rund $3\,500\,\mathrm{Kd/a}$, Kelvintage pro Jahr."),
+🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py:642: "Heizperiodenverfahren nach DIN V 4108-6 (Anhang D.2) · Gradtagzahl Gt20/15 nach VDI 3807 Blatt 1"),
+🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/❓️quiz/🔣️.json:3393: "de": "Jahresertrag einer 8-MW-Offshoreanlage bei 3.500 Volllaststunden"
+TOTAL 38

@@ -1,0 +1,8 @@
+try 1 started pid=18076 2026-11-14T20:09:21Z log=/Users/ueli/native-bootstrap-round-7.log
+try 1 ended 2026-11-14T20:33:24Z native_rc=75 stopped=0 fleet_refusal=1 source_differs=0 closure_enoent=0 failed=[]
+try 1 refusal: waiting 120 s
+try 2 started pid=31307 2026-11-14T20:35:24Z log=/Users/ueli/native-bootstrap-round-7-try-2.log
+try 2 ended 2026-11-14T20:39:55Z native_rc=4 stopped=0 fleet_refusal=0 source_differs=0 closure_enoent=0 failed=[]
+try 2 exit 4: consent, no further try
+round ended 2026-11-14T20:39:55Z
+wait for round > 7 started 2026-11-14T20:41:27Z

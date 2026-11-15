@@ -1,0 +1,18 @@
+const [module]=process.argv.slice(2);
+const tiers=await import(`${module}/🎣️tiers/🟦️.ts`);
+import {mkdtempSync,mkdirSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+const root=mkdtempSync(join(tmpdir(),"hintcost-"));
+await tiers.ensureHintsV1(root);
+const N=5000;
+for(let i=0;i<200;i++)await tiers.takeHintsV1(root);
+const c0=process.cpuUsage(),t0=performance.now();
+for(let i=0;i<N;i++)await tiers.takeHintsV1(root);
+const c=process.cpuUsage(c0),w=performance.now()-t0;
+console.log(JSON.stringify({polls:N,wallUsPerPoll:+(w*1000/N).toFixed(1),cpuUsPerPoll:+(((c.user+c.system))/N).toFixed(1),cpuPercentAt50ms:+(((c.user+c.system)/N)/50000*100).toFixed(3)}));
+const writeStart=performance.now();
+for(let i=0;i<200;i++)await tiers.writeHintV1(root,["a/b.txt"]);
+const wms=(performance.now()-writeStart)/200;
+const takeStart=performance.now();const got=await tiers.takeHintsV1(root);
+console.log(JSON.stringify({writeMsPerHint:+wms.toFixed(2),takeOf200Ms:+(performance.now()-takeStart).toFixed(1),paths:got.length}));

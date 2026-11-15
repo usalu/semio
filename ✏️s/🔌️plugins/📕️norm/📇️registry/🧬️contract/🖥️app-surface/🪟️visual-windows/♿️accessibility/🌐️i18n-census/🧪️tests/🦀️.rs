@@ -44,7 +44,7 @@ fn identifiers_ending_in_en_are_not_field_pairs() {
 
 #[test]
 fn every_user_visible_string_of_the_norm_plugin_has_english_and_german() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../..");
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../..");
     let census = scan_tree(&root);
     assert!(census.files > 100 && census.pairs > 1000, "census scanned {} files and {} pairs", census.files, census.pairs);
     let report: Vec<String> = census.findings.iter().map(|f| format!("{}:{} {} (en {:?}, de {:?})", f.file, f.line, f.rule, f.en, f.de)).collect();

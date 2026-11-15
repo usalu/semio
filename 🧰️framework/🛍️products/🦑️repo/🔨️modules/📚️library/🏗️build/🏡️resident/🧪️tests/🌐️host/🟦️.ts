@@ -7,6 +7,7 @@ import {spawnSync} from "node:child_process";
 import {HERE,ORACLE,sleep} from "../🟦️.ts";
 import {createIndexPoolV1} from "../../🏛️service/🌐️host/🧊️pool/🟨️.mjs";
 import {createHostServiceV1,makeRoomV1} from "../../🏛️service/🌐️host/🟨️.mjs";
+import {planRetentionV1} from "../../🏛️service/🌐️host/🧹️retention/🟨️.mjs";
 import {createGraphPlannerPortV1} from "../../🔌️ports/🧭️plan/🟨️.mjs";
 import {spawnHostServiceV1} from "../../🏗️composition/🌐️host/🟨️.mjs";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
@@ -75,11 +76,11 @@ describe("planner port against the Python oracle",()=>{
  });
 });
 
-function inProcess(name:string,extra:Record<string,unknown>={},loadMs=0){
+function inProcess(name:string,extra:Record<string,unknown>={},loadMs=0,morePorts:Record<string,unknown>={}){
  const env=environment(name),implementation=digestOf("impl-"+name),runtime=hostEndpointsV1(implementation,env);
  const loads={count:0};
  const planner=createGraphPlannerPortV1({identify:async({root}:any)=>createHash("sha256").update(readFileSync(join(root,"graph.json"))).digest("hex"),loadGraph:async({root,signal}:any)=>{loads.count++;if(loadMs)await sleep(loadMs);signal?.throwIfAborted();return JSON.parse(readFileSync(join(root,"graph.json"),"utf8"));}});
- const service=createHostServiceV1({runtime,implementation,ports:{planner},policy:{residentCheckMilliseconds:50,...extra}});
+ const service=createHostServiceV1({runtime,implementation,ports:{planner,...morePorts},policy:{residentCheckMilliseconds:50,...extra}});
  const spawnService=async()=>{await service.start();};
  return{env,implementation,runtime,service,loads,spawnService};
 }
@@ -144,6 +145,7 @@ describe("slice worker pool",()=>{
 describe("slice memory guard",()=>{
  test("the host policy declares a finite safety margin and the pool refuses a missing or non-finite margin instead of disabling its guard",()=>{
   expect(Number.isFinite(HOST_POLICY_V1.sliceSafetyMarginMegabytes)&&HOST_POLICY_V1.sliceSafetyMarginMegabytes>0).toBe(true);
+  expect(HOST_POLICY_V1.sliceUnlearnedMegabytes>0&&HOST_POLICY_V1.sliceUnlearnedMegabytes<=2048).toBe(true);
   const workerUrl=new URL("./🐌️slow-slice-worker.mjs",import.meta.url);
   for(const marginMegabytes of [Number(undefined),-1,Infinity])expect(()=>createSlicePoolV1({workerUrl,maximum:1,marginMegabytes})).toThrow("Finite memory margin and budget required");
  });
@@ -269,6 +271,21 @@ describe("host service in process",()=>{
    expect(readdirSync(directory).sort()).toEqual(["keep.json","stay.json"]);
   }finally{rmSync(directory,{recursive:true,force:true});}
  });
+ test("plan retention decisions match the language-agnostic fixture",()=>{
+  const fixture=JSON.parse(readFileSync(join(HERE,"🧫️fixtures/🧹️plan-retention.json"),"utf8"));
+  for(const entry of fixture.cases)expect([entry.name,planRetentionV1({files:entry.files,live:entry.live,policy:fixture.policy}).sort()]).toEqual([entry.name,[...entry.remove].sort()]);
+ });
+ test("the service sweeps plans past the bounds on its timer, keeps young ones and still plans",async()=>{
+  const h=inProcess("s",{planMaximumAgeMilliseconds:1000,planRetainMilliseconds:5000,planSweepMilliseconds:50}),root=workspace("sw");
+  const directory=join(h.runtime.directory,"plans-"+h.runtime.tag);await h.service.start();mkdirSync(directory,{recursive:true,mode:0o700});
+  const old=join(directory,"a".repeat(64)+".json"),young=join(directory,"b".repeat(64)+".json");
+  writeFileSync(old,"x");writeFileSync(young,"x");utimesSync(old,new Date(Date.now()-60000),new Date(Date.now()-60000));
+  await sleep(300);
+  expect(readdirSync(directory).sort()).toEqual(["b".repeat(64)+".json"]);
+  const result=await requestPlanV1({root,implementation:h.implementation,targets:["app:test"],agent:"a",language:"en",environment:h.env,spawnService:h.spawnService});
+  checkPlan(result.plan.tasks,["app:test"]);
+  await h.service.stop("test");
+ });
  test("bounded: more workspaces than the bound close the least recently used one",async()=>{
   const h=inProcess("e",{maximumWorkspaces:2}),roots=["x1","x2","x3"].map(n=>workspace(n));
   for(const root of roots)await requestPlanV1({root,implementation:h.implementation,targets:["core:build"],agent:"a",language:"en",environment:h.env,spawnService:h.spawnService});
@@ -299,6 +316,24 @@ describe("bounded memory",()=>{
    expect(error.message_.en).toContain("10 minutes");expect(error.message_.de).toContain("10 Minuten");expect(error.message_.en).not.toContain("process.routing");
   }finally{await service.stop("test");}
  });
+ test("a graph read the fleet did not serve reaches the client as the typed refusal: code unserved, retry later (exit 75), the numbers in both languages, never internal",async()=>{
+  const values={wanted:703,arrived:0,seconds:902,missing:703,local:192};
+  const typed=Object.assign(new Error("unserved build.graph.wanted-expired "+JSON.stringify(values)),{name:"RepoError",code:"unserved",key:"build.graph.wanted-expired",values});
+  const textOnly=Object.assign(new Error("unserved build.graph.wanted-expired "+JSON.stringify(values)),{name:"RepoError"});
+  for(const [label,thrown] of [["typed",typed],["text only",textOnly],["wrapped",Object.assign(new Error("slice worker failed"),{cause:typed})]] as const){
+   const env=environment("unserved-"+label.replace(" ","-")),implementation=digestOf("impl-unserved-"+label),runtime=hostEndpointsV1(implementation,env),root=workspace("unserved-w-"+label.replace(" ","-"));
+   const planner=createGraphPlannerPortV1({identify:async()=>"id",loadGraph:async()=>{throw thrown;}});
+   const service=createHostServiceV1({runtime,implementation,ports:{planner},policy:{residentCheckMilliseconds:50}});
+   await service.start();
+   try{
+    const error=await requestPlanV1({root,implementation,targets:["core:build"],agent:"a",language:"en",environment:env}).then(()=>undefined,reason=>reason as any);
+    expect(error?.name,label).toBe("PlanRefusedErrorV1");expect(error.code,label).toBe("unserved");expect(error.retry,label).toBe("later");
+    for(const text of [error.message_.en,error.message_.de])for(const number of ["703","192","902"])expect(text,label).toContain(number);
+    expect(error.message_.en).toContain("delivered 0");expect(error.message_.de).toContain("lieferte innerhalb von 902 s 0");
+    expect(JSON.stringify(error.message_)).not.toContain("wanted-expired");expect(JSON.stringify(error.message_)).not.toContain("reference");
+   }finally{await service.stop("test");}
+  }
+ });
  test("an unexpected failure reaches the client localized and retryable, never as the raw error text",async()=>{
   const env=environment("internal"),implementation=digestOf("impl-internal"),runtime=hostEndpointsV1(implementation,env),root=workspace("internal-w");
   const planner=createGraphPlannerPortV1({identify:async()=>"id",loadGraph:async()=>{throw new Error("secret implementation detail");}});
@@ -325,6 +360,15 @@ describe("bounded memory",()=>{
    expect(error.message_.en).toContain("The disk is full");expect(error.message_.de).toContain("Datenträger ist voll");expect(error.message_.en).toMatch(/free/u);
    expect(error.message_.en).not.toContain("unexpected failure");expect(logged.some(line=>line.startsWith("disk-full "))).toBe(true);
   }finally{await service.stop("test");}
+ });
+ test("a full cache image is named with its size, fill, largest subtrees and the gc command that frees it, in English and German; the host partition is named only when no image is full",async()=>{
+  const{failureRefusalV1}=await import("../../🏛️service/🧯️failure/🟨️.mjs"),GiB=2**30,error=Object.assign(new Error("ENOSPC: no space left on device, write"),{code:"ENOSPC"}),logged:string[]=[];
+  const image={id:"graph",directory:".cache/b/g",sizeBytes:12*GiB,usedBytes:12*GiB-40*2**20,freeBytes:40*2**20,hostFreeBytes:92*GiB,filledBy:"inference/selections (10.7 GiB)"};
+  const refusal=failureRefusalV1(error,{log:(event:string)=>logged.push(event),logPath:"/log",root:"/w",fullImage:()=>image});
+  expect(refusal.code).toBe("disk");expect(refusal.key).toBe("image-full");expect(refusal.fields).toMatchObject({image:"graph",size:"12 GiB",host:"92 GiB",filledBy:"inference/selections (10.7 GiB)",command:"repo cache gc"});
+  const messages=(await import("../../🧬️schema/🔣️.json")).default.definitions.Policy.const.messages as Record<string,Record<string,string>>;
+  for(const language of["en","de"]){const text=Object.entries(refusal.fields).reduce((line,[key,value])=>line.replaceAll("{"+key+"}",String(value)),messages[language]!["image-full"]!);expect(text).toContain("graph");expect(text).toContain("12 GiB");expect(text).toContain("repo cache gc");expect(text).toContain("inference/selections");expect(text).not.toContain("{");}
+  expect(failureRefusalV1(error,{log:()=>undefined,logPath:"/log",root:"/w",fullImage:()=>undefined}).key).not.toBe("image-full");
  });
  test("the host service ticks the cache upkeep at start and every interval, once at a time, logs a failing tick and cancels a running one when it stops",async()=>{
   const env=environment("tick"),implementation=digestOf("impl-tick"),runtime=hostEndpointsV1(implementation,env),logged:string[]=[],signals:AbortSignal[]=[];let ticks=0,release:()=>void=()=>undefined;
@@ -440,8 +484,15 @@ describe("host service reports recorded tasks up to date",()=>{
 });
 
 describe("host service held by a long run",()=>{
+ test("a run the machine reports in flight keeps an otherwise idle service alive: the probe is asked again and again and the service never retires",async()=>{
+  let asked=0;const h=inProcess("inflight",{idleShutdownMilliseconds:200},0,{runInFlight:async()=>{asked++;return true;}});await h.service.start();
+  const exits:string[]=[];h.service.closed.then(reason=>exits.push(reason));
+  for(let at=0;at<200&&asked<3;at++)await sleep(25);
+  expect(asked).toBeGreaterThanOrEqual(3);expect(exits).toEqual([]);
+  await h.service.stop("test");
+ });
  test("a held connection keeps the idle rule from retiring the service for as long as it is held, and the service retires after it is released",async()=>{
-  const h=inProcess("hold",{idleShutdownMilliseconds:200});await h.service.start();
+  const h=inProcess("hold",{idleShutdownMilliseconds:200},0,{runInFlight:async()=>false});await h.service.start();
   const exits:string[]=[];h.service.closed.then(reason=>exits.push(reason));
   const release=await holdHostV1({implementation:h.implementation,environment:h.env});
   await sleep(1200);expect(exits).toEqual([]);

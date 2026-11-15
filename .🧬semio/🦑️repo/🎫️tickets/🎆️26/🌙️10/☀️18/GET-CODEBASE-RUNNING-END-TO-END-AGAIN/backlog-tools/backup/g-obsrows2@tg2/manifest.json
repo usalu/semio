@@ -1,0 +1,58 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/👷️closure-read-worker/🟨️.mjs": {
+  "file": "f000",
+  "before": "1259170b18173f2ebc66fe74587143cdf2aba0dadcfd8002fbe76b16c35d0475"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🟦️.ts": {
+  "file": "f001",
+  "before": "7e39a30e7b2471b0dc99a026b2df5d6461c639bf4cb408c0f3d462405b02b4fb"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🧪️tests/📇️formats/🟦️.ts": {
+  "file": "f002",
+  "before": "d59e925f91cc9689c62e838266a6e076fefb76858e172fc46d136ddc1eb7e156"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts": {
+  "file": "f003",
+  "before": "5929fcc634690ee444381851f4fa405d672b3b78d427771c63b9eefdf50a4ec1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📦️projects/🟦️.ts": {
+  "file": "f004",
+  "before": "50ad2616322e8f50311cc03481849757b1326e294486761fff3fc609b5a96d92"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/📦️projects/🔣️.json": {
+  "file": "f005",
+  "before": "0cfa285f94ba7cf01e4dcf9e1fa9bc0e0f10e5c2237b5d5a1d166b87c95966ba"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs": {
+  "file": "f006",
+  "before": "d77e709a51243bd707bc1bd4820f15787ec06ffacbe20c491739ac55bc22b1e8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs": {
+  "file": "f007",
+  "before": "65505b932182a386628a9654d4197ebcb2da52fda7516f6bf3c64717e38915ac"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+  "file": "f008",
+  "before": "be912fa8fd6e9f802976ee687e0e67c4e76e822b73027bfcec46d86015ad43ea"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌱️native-scope/🟦️.ts": {
+  "file": "f009",
+  "before": "0d197a9e9d9369e764a0876f8562d983a456bf9629a7d0c5feedc19f47a31611"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts": {
+  "file": "f010",
+  "before": "70ad03f0b669a966badaae303bad943b51222c865360161a113b9833861ed177"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts": {
+  "file": "f011",
+  "before": "fb844143c0b5098f5def6f90b769e8bc9431cc3901f294615f03e9a792e7a350"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts": {
+  "file": "f012",
+  "before": "74e7d9cfd072618e15be881435ea44691f15adb3e0278b2e97772548d62ea76c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json": {
+  "file": "f013",
+  "before": "72eac6c808e20b38d6ca3fac2849e8d27b5c0271a41494fc8a29c94609b72f14"
+ }
+}

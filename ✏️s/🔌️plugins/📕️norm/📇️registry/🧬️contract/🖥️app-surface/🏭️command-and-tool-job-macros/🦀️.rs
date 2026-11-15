@@ -249,8 +249,8 @@ macro_rules! norm_owned_tool_job_factory {
                 semio_framework::ToolJobFactory::admission_demands(&self.0, operation, payload, input, checkpoint)
             }
 
-            fn admit_job(&mut self, context: &mut semio_framework_job::StepContext<'_>, operation: &semio_framework_job::Operation, payload: &mut Option<Box<Self::Payload>>, input: &mut Option<semio_framework_action_bus::RetainedToolWireInput>, checkpoint: &mut Option<semio_framework_action_bus::RetainedToolWireInput>, output: &mut Option<Box<Self::Job>>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-                semio_framework::ToolJobFactory::admit_job(&mut self.0, context, operation, payload, input, checkpoint, output)
+            fn admit_job(&mut self, context: &mut semio_framework_job::StepContext<'_>, admission: &mut semio_framework_job::OriginalConstructionAdmission, operation: &semio_framework_job::Operation, payload: &mut Option<Box<Self::Payload>>, input: &mut Option<semio_framework_action_bus::RetainedToolWireInput>, checkpoint: &mut Option<semio_framework_action_bus::RetainedToolWireInput>, output: &mut Option<Box<Self::Job>>) -> Result<semio_framework_job::OriginalConstructionStatus, semio_framework_job::OriginalTurnFailure> {
+                semio_framework::ToolJobFactory::admit_job(&mut self.0, context, admission, operation, payload, input, checkpoint, output)
             }
         }
 

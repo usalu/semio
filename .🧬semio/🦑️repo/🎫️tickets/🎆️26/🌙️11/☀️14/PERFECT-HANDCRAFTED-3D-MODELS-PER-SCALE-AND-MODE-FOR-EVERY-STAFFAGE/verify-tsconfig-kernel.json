@@ -1,0 +1,6 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": { "types": ["bun"], "noEmit": true, "incremental": false },
+  "include": ["../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/**/*.ts"],
+  "exclude": ["**/node_modules/**", "**/🗑️generated/**"]
+}

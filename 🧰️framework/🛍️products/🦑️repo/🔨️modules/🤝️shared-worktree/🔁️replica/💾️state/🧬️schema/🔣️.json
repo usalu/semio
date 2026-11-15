@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:shared-worktree-replica-state:v1",
+  "title": "Shared Worktree Replica Binary State",
+  "description": "💾️ The binary local state of the replica daemon below `.cache/f/`: `state.ckp`, a checkpoint of the typed tables (96-byte header, a directory of named parts, the raw parts; the payload after the header is covered by the sha256 in the header, the header by its own check), and `state.wal`, the delta log (16-byte header, then frames `u32 length | u32 bitwise complement of the length | first 8 bytes of sha256(payload) | payload` of records). All integers are little-endian. These definitions describe the DECODED shapes that the TypeScript codec and the Python oracle both print; the byte layout is in the descriptions. A checkpoint is replaced by temp + fsync + rename; a log frame is the unit of atomicity, an unfinished last frame is cut off at the next start, a failed checkpoint or a frame that fails its checksum before the end of the log makes the replica rebuild its state from the store fold.",
+  "oneOf": [
+    { "$ref": "#/definitions/Header" },
+    { "$ref": "#/definitions/WalHeader" },
+    { "$ref": "#/definitions/WalRecord" },
+    { "$ref": "#/definitions/Decoded" },
+    { "$ref": "#/definitions/Fixture" }
+  ],
+  "definitions": {
+    "Count": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "Hlc": { "type": "string", "pattern": "^[0-9]{13}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,39}$" },
+    "Header": {
+      "description": "Checkpoint header, 96 bytes: 0 magic `SEMIOSNP` (8), 8 format version u32 (1), 12 generation u32, 16 paths u32 (entries of the path book), 20 files u32 (live local files), 24 queue u32 (queued store winners), 28 parts u32, 32 payload bytes u64 (file size minus 96), 40 sha256 of the payload (32), 72 first 8 bytes of the sha256 of bytes 0 to 71, 80 reserved zeros (16); the header check and the zeros are verified, so no byte of the file is unguarded. The payload is the directory followed by the parts in directory order.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "generation", "paths", "files", "queue", "parts", "payloadBytes", "sha256"],
+      "properties": {
+        "version": { "const": 1 },
+        "generation": { "$ref": "#/definitions/Count" },
+        "paths": { "$ref": "#/definitions/Count" },
+        "files": { "$ref": "#/definitions/Count" },
+        "queue": { "$ref": "#/definitions/Count" },
+        "parts": { "$ref": "#/definitions/Count" },
+        "payloadBytes": { "type": "integer", "minimum": 0 },
+        "sha256": { "$ref": "#/definitions/Sha256" }
+      }
+    },
+    "PartName": {
+      "description": "Directory entry, 32 bytes: name as NUL-padded ASCII (24, shorter than 24) and length u64. Parts, in this order: `meta` f64[4] = shared files, folds used, file rows, 0; `origins` UTF-8 names joined by LF; `fold` u8[32] order-independent manifest digest of the shared files; `book.starts` f64[paths] (page * 1 MiB + offset), `book.lengths` u16[paths], `book.hashes` u32[paths] (FNV-1a of the UTF-8 path), `book.folded` u32[paths] (FNV-1a of the lower-cased path as UTF-16 code units), `book.pages` raw 1 MiB path pages, the last one cut at its used bytes; `files.flags` u8[rows] (bit 0 live, bits 1-2 operation 1 put 2 delete 3 link, bit 3 executable, bit 4 seen), `files.ms` f64, `files.counter` u32, `files.origin` u16 (index into origins), `files.bytes` f64, `files.sha` u8[32 * rows], `files.mtime` f64, `files.seen` f64, `files.targets` records `u32 id | u32 length | UTF-8`; `queue.ids` i32[queue] with the same columns `queue.flags` .. `queue.sha` and `queue.targets` for the manifest rows of the queued paths; `folds.slots` i32, the case-fold index, `folds.dirs` and `folds.parents` i32 pairs (bucket, count) of the non-zero buckets of its two 1048576-bucket directory counters; `dirs.mtime` f64 and `dirs.present` u8 per path id (the directory table that remembers directory modification times), `dirs.members` i32 path ids in the order the directories were learnt; then `memo:<name>` opaque blobs.",
+      "type": "string",
+      "enum": ["meta", "origins", "fold", "book.starts", "book.lengths", "book.hashes", "book.folded", "book.pages", "files.flags", "files.ms", "files.counter", "files.origin", "files.bytes", "files.sha", "files.mtime", "files.seen", "files.targets", "queue.ids", "queue.flags", "queue.ms", "queue.counter", "queue.origin", "queue.bytes", "queue.sha", "queue.targets", "folds.slots", "folds.dirs", "folds.parents", "dirs.mtime", "dirs.present", "dirs.members"]
+    },
+    "WalHeader": {
+      "description": "Log header, 16 bytes: magic `SEMIOWAL` (8), format version u32 (1), generation u32 of the checkpoint the log extends; a log whose generation is older than the checkpoint is stale and ignored, a newer one is corruption.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "generation"],
+      "properties": {
+        "version": { "const": 1 },
+        "generation": { "$ref": "#/definitions/Count" }
+      }
+    },
+    "Entry": {
+      "description": "A local or manifest entry as the tables hold it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hlc", "operation"],
+      "properties": {
+        "hlc": { "$ref": "#/definitions/Hlc" },
+        "operation": { "enum": ["put", "delete", "link"] },
+        "sha256": { "$ref": "#/definitions/Sha256" },
+        "bytes": { "type": "number", "minimum": 0 },
+        "executable": { "type": "boolean" },
+        "target": { "type": "string", "minLength": 1 },
+        "mtimeMs": { "type": "number", "minimum": 0 },
+        "seenMs": { "type": "number", "minimum": 0 }
+      }
+    },
+    "WalRecord": {
+      "description": "One decoded record of a frame. Binary: `u8 kind` (1 files set, 2 files remove, 3 queue set, 4 queue remove, 5 memo set, 6 memo remove), `u16 length | UTF-8` path or memo name; a set additionally `u8 operation` (1 put, 2 delete, 3 link), `u8 flags` (1 executable, 2 has seen, 4 has mtime), `u8 length | ASCII` hlc, `f64 mtime`, `f64 seen`, `f64 bytes`, then 32 raw sha256 bytes for a put or `u32 length | UTF-8` target for a link; a memo set `u32 length | bytes`. Memo values are shown as base64.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "path", "entry"],
+          "properties": {
+            "kind": { "enum": ["files", "queue"] },
+            "path": { "type": "string", "minLength": 1 },
+            "entry": { "oneOf": [{ "$ref": "#/definitions/Entry" }, { "type": "null" }] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "name", "value"],
+          "properties": {
+            "kind": { "const": "memo" },
+            "name": { "type": "string", "minLength": 1 },
+            "value": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+          }
+        }
+      ]
+    },
+    "Decoded": {
+      "description": "What a reader reconstructs from a checkpoint: the header, the part directory, the origins, the live local files and the queued entries by path, the memos as base64, and the manifest digest recomputed from the entries (sha256 of `path NUL operation NUL value`, XORed, over every shared put and link; the `.cache/f/index-base` and `.cache/f/index/` realm contributes nothing) together with the number of shared entries; it must equal the stored `fold` part and `meta[0]`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["header", "parts", "origins", "files", "queue", "memo", "manifest"],
+      "properties": {
+        "header": { "$ref": "#/definitions/Header" },
+        "parts": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "length"], "properties": { "name": { "type": "string" }, "length": { "type": "integer", "minimum": 0 } } } },
+        "origins": { "type": "array", "items": { "type": "string" } },
+        "files": { "type": "array", "items": { "type": "object", "required": ["path", "hlc", "operation"], "properties": { "path": { "type": "string", "minLength": 1 }, "hlc": { "$ref": "#/definitions/Hlc" }, "operation": { "enum": ["put", "delete", "link"] } } } },
+        "queue": { "type": "array", "items": { "type": "object", "required": ["path", "hlc", "operation"], "properties": { "path": { "type": "string", "minLength": 1 }, "hlc": { "$ref": "#/definitions/Hlc" }, "operation": { "enum": ["put", "delete", "link"] } } } },
+        "memo": { "type": "object", "additionalProperties": { "type": "string" } },
+        "manifest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["digest", "shared", "stored", "storedShared"],
+          "properties": {
+            "digest": { "$ref": "#/definitions/Sha256" },
+            "shared": { "$ref": "#/definitions/Count" },
+            "stored": { "$ref": "#/definitions/Sha256" },
+            "storedShared": { "$ref": "#/definitions/Count" }
+          }
+        }
+      }
+    },
+    "Fixture": {
+      "description": "Language-agnostic vectors: a checkpoint and a delta log as base64 with the decoded result every implementation must reproduce, and the frame cases of the log scanner.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "checkpoints", "logs"],
+      "properties": {
+        "version": { "const": 1 },
+        "checkpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "base64", "decoded"],
+            "properties": { "name": { "type": "string" }, "base64": { "type": "string" }, "decoded": { "$ref": "#/definitions/Decoded" } }
+          }
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "base64", "generation", "verdict", "good", "records"],
+            "properties": {
+              "name": { "type": "string" },
+              "base64": { "type": "string" },
+              "generation": { "oneOf": [{ "$ref": "#/definitions/Count" }, { "type": "null" }] },
+              "verdict": { "enum": ["empty", "clean", "torn", "corrupt"] },
+              "good": { "$ref": "#/definitions/Count" },
+              "records": { "type": "array", "items": { "$ref": "#/definitions/WalRecord" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

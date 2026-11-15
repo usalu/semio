@@ -18,6 +18,21 @@ fn a_loopback_proctor_defaults_to_development() {
 }
 
 #[test]
+fn the_production_site_origin_is_granted_exactly_and_no_lookalike_is() {
+    let production = [(BIND, "0.0.0.0"), (MODE, "production"), (ALLOWED_ORIGINS, "https://architektur-und-technologie.de"), (TRUSTED_FORWARDING, "proxy")];
+    let config = ProctorConfig::from_environment(environment(&[&REQUIRED[..], &production[..]].concat())).expect("the production deployment");
+    let admits = |origin: &str| config.origins.admits(origin);
+    assert!(admits("https://architektur-und-technologie.de"));
+    for other in ["http://architektur-und-technologie.de", "https://www.architektur-und-technologie.de", "https://architektur-und-technologie.de.evil.example", "https://evil.example/architektur-und-technologie.de", "https://architektur-und-technologie.de:8443", "https://architektur-und-technologie.de/", "null", "*", "", "http://localhost:6061"] {
+        assert!(!admits(other), "{other:?}");
+    }
+    for entry in ["https://architektur-und-technologie.de/", "*", "https://*.architektur-und-technologie.de", "architektur-und-technologie.de", "null"] {
+        let rejected = ProctorConfig::from_environment(environment(&[&REQUIRED[..], &[(BIND, "0.0.0.0"), (MODE, "production"), (ALLOWED_ORIGINS, entry), (TRUSTED_FORWARDING, "proxy")][..]].concat()));
+        assert!(rejected.expect_err("only a serialized origin is an allowlist entry").0.contains(ALLOWED_ORIGINS), "{entry}");
+    }
+}
+
+#[test]
 fn data_and_course_are_required() {
     let missing = ProctorConfig::from_environment(environment(&[(COURSE, "course.json")])).expect_err("data is required");
     assert!(missing.0.contains(DATA));

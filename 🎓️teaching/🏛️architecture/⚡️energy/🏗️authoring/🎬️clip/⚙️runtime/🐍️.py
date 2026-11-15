@@ -51,8 +51,10 @@ def load_manifest(*, source_ids: list[str] | None = None) -> list[dict]:
     if not videos or len({video["id"] for video in videos}) != len(videos):
         raise ValueError("The curriculum must contain distinct videos")
     for video in videos:
-        if set(video) != {"id", "script", "chapters", "output"} or not video["chapters"]:
+        if set(video) - {"poster"} != {"id", "script", "chapters", "output"} or not video["chapters"]:
             raise ValueError(f"Invalid video contract: {video.get('id')}")
+        if "poster" in video and (not isinstance(video["poster"], dict) or set(video["poster"]) != {"chapter"} or video["poster"]["chapter"] not in {chapter["scene"] for chapter in video["chapters"]}):
+            raise ValueError(f"Invalid lesson poster: {video['id']}")
         validate_source = source_ids is None or video["id"] in source_ids
         wrapper = (root / video["script"]).resolve()
         if "\\" in video["script"] or not wrapper.is_relative_to(root) or (validate_source and not wrapper.is_file()):
@@ -61,8 +63,11 @@ def load_manifest(*, source_ids: list[str] | None = None) -> list[dict]:
         if len({chapter["scene"] for chapter in video["chapters"]}) != len(video["chapters"]):
             raise ValueError(f"Duplicate logical chapter: {video['id']}")
         for chapter in video["chapters"]:
-            if set(chapter) != {"scene", "segments"} or not chapter["segments"]:
+            if set(chapter) - {"poster"} != {"scene", "segments"} or not chapter["segments"]:
                 raise ValueError(f"Invalid chapter contract: {video['id']}")
+            moment = chapter.get("poster", {})
+            if not isinstance(moment, dict) or set(moment) - {"segment", "animation"} or any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in moment.values()):
+                raise ValueError(f"Invalid chapter poster: {chapter['scene']}")
         for segment in segments:
             script = (root / segment["script"]).resolve()
             if not {"script", "scene"} <= set(segment) or set(segment) - {"script", "scene", "clauses"} or "\\" in segment["script"] or not script.is_relative_to(root) or (validate_source and not script.is_file()) or not segment["scene"].isascii() or not segment["scene"].isidentifier():
@@ -462,7 +467,7 @@ def segment_state(segment: dict, settings: dict) -> dict:
     sources = [Path(__file__), Path(_profile.__file__), *source_dependencies(script), shared / "🔤️fonts/🐍️.py", shared / "🎨️visuals/🐍️.py",
                shared / "🔊️speech/🐍️.py", *interaction.source_files(), helper / "🐍️.py", helper / "🔣️.schema.json"]
     assets = [path for owner in {source.parent for source in sources if source.suffix == ".py"} for path in owner.rglob("*")
-              if "🧪️tests" not in path.relative_to(owner).parts and path.suffix.lower() in
+              if not {"🧪️tests", "🖼️posters"} & set(path.relative_to(owner).parts) and path.suffix.lower() in
               (".json", ".pdf", ".svg", ".png", ".jpg", ".jpeg", ".webp", ".ttf", ".otf", ".mp3", ".wav", ".m4a", ".flac", ".ogg")]
     theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
     timing = [source_speech_root(source, language=settings["language"]) / "timing.json" for source in sources]
@@ -858,6 +863,10 @@ def compose_videos(video_ids: list[str] | None = None, *, language: str, audienc
         _export.write_work(group["clip"], _export.collect_work([segment_root / str(job["source_ordinal"]) for job in group["entries"]], profile), profile)
         _write_state(sidecar, group["state"])
         print(f"[chapter] Complete {group['chapter']['scene']}", flush=True)
+
+    if not errors:
+        posters = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🖼️posters.🐍️")
+        _presentation_hierarchy.capture_posters(posters.prepare([(group["chapter"]["scene"], group["sources"]) for group in groups], settings))
 
     if selected_chapters:
         if errors:

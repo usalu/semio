@@ -267,15 +267,14 @@ pub trait CaseCatalogue {
 pub fn entry<C: CaseCatalogue>(id: &str) -> Option<CaseEntry> { C::entries().into_iter().find(|entry| entry.id == id) }
 /// 🏷️ The input definition of `key` for `entry_id`: a row scoped to the entry wins over the unscoped row.
 pub fn spec<C: CaseCatalogue>(entry_id: &str, key: &str) -> Option<&'static InputSpec> {
-    let rows = |name: &str| C::vocabulary().iter().filter(|row| row.key == name && row.applies_to(entry_id)).collect::<Vec<_>>();
-    let pick = |name: &str| {
-        let found = rows(name);
-        found.iter().find(|row| !row.scope.is_empty()).or_else(|| found.first()).copied()
-    };
-    pick(key).filter(|row| !row.is_sequence()).or_else(|| C::vocabulary().iter().find(|row| row.is_sequence() && row.applies_to(entry_id) && row.element_index(key).is_some()))
+    row::<C>(entry_id, key).filter(|row| !row.is_sequence()).or_else(|| C::vocabulary().iter().find(|row| row.is_sequence() && row.applies_to(entry_id) && row.element_index(key).is_some()))
 }
-/// 📝 The inputs an entry declares, in declaration order; keys without a vocabulary row are skipped.
-pub fn declared<C: CaseCatalogue>(entry: &CaseEntry) -> Vec<&'static InputSpec> { entry.inputs.iter().filter_map(|key| spec::<C>(entry.id, key)).collect() }
+fn row<C: CaseCatalogue>(entry_id: &str, key: &str) -> Option<&'static InputSpec> {
+    let found = C::vocabulary().iter().filter(|row| row.key == key && row.applies_to(entry_id)).collect::<Vec<_>>();
+    found.iter().find(|row| !row.scope.is_empty()).or_else(|| found.first()).copied()
+}
+/// 📝 The inputs an entry declares, in declaration order, vectors and series by their base key; keys without a vocabulary row are skipped.
+pub fn declared<C: CaseCatalogue>(entry: &CaseEntry) -> Vec<&'static InputSpec> { entry.inputs.iter().filter_map(|key| row::<C>(entry.id, key)).collect() }
 /// 🌱 A new case of `entry` with the example values of its declared inputs and the entry title as label.
 pub fn seed<C: CaseCatalogue>(entry: &CaseEntry, id: &str) -> DesignCase {
     let mut values = CaseValues::default();

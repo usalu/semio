@@ -3,48 +3,71 @@
   "cases": [
     {
       "name": "unchanged",
-      "changes": [
-        [],
-        []
-      ],
+      "before": [],
+      "after": [],
       "environment": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "readmitted": false,
+      "probeCalls": 0,
       "identityCalls": 1,
       "guardAccepted": true
     },
     {
-      "name": "changed-before-preparation",
-      "changes": [
-        [
-          "plugin.mjs"
-        ]
+      "name": "code-moved-before-preparation",
+      "before": [
+        "plugin.mjs"
       ],
+      "after": [],
+      "environment": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "readmitted": false,
+      "probeCalls": 1,
+      "identityCalls": 0,
+      "guardAccepted": true
+    },
+    {
+      "name": "contract-moved-before-preparation",
+      "before": [
+        "pin.json"
+      ],
+      "after": [],
       "environment": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "readmitted": true,
+      "probeCalls": 0,
       "identityCalls": 0,
       "guardAccepted": false
     },
     {
-      "name": "changed-before-launch",
-      "changes": [
-        [],
-        [
-          "plugin.mjs"
-        ]
+      "name": "code-moved-before-launch",
+      "before": [],
+      "after": [
+        "plugin.mjs"
       ],
       "environment": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "readmitted": true,
+      "probeCalls": 0,
       "identityCalls": 1,
       "guardAccepted": false
     },
     {
-      "name": "forged-stable-binding",
-      "changes": [
-        [],
-        []
+      "name": "code-moved-twice",
+      "before": [
+        "plugin.mjs"
       ],
+      "after": [
+        "plugin.mjs"
+      ],
+      "environment": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "readmitted": true,
+      "probeCalls": 1,
+      "identityCalls": 0,
+      "guardAccepted": false
+    },
+    {
+      "name": "forged-stable-binding",
+      "before": [],
+      "after": [],
       "environment": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "readmitted": false,
+      "probeCalls": 0,
       "identityCalls": 1,
       "guardAccepted": false
     }

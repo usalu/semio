@@ -25,6 +25,7 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
+extern crate self as semio_s_artifact_norm_iso16757_mutations;
 
 use semio_s_artifact_norm_iso16757_diff::Iso16757Diff;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
@@ -185,3 +186,9 @@ pub mod mutation_bridge {
     }
 }
 pub use crate::mutation_bridge::*;
+
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;

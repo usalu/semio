@@ -35,7 +35,7 @@ pub mod standards {
                         pub mod area_volume {
                             #[path = "."]
                             pub mod enclosed_volume {
-                                pub use semio_s_artifact_stdio_gltf_inferences_connected_components::standards::v2_0::subsets::any::schema::inferences::area_volume::enclosed_volume::*;
+                                pub use semio_s_artifact_stdio_gltf_inferences_connected::standards::v2_0::subsets::any::schema::inferences::area_volume::enclosed_volume::*;
                                 #[cfg(test)]
                                 #[path = "../../../../🧱️area-volume/📥️enclosed-volume/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;

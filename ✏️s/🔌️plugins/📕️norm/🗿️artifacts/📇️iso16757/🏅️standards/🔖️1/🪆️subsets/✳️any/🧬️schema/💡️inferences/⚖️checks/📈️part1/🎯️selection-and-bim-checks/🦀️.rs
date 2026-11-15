@@ -156,7 +156,7 @@ pub(super) fn check_selection(catalogue: &Catalogue, selection: &SelectionReques
                 }
             }
             for variant in &product.variants {
-                for (_k, v) in &variant.parameter_values {
+                for (_k, v) in variant.parameter_values.iter() {
                     match v {
                         CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => value_opts.push(value.to_string()),
                         CatalogueValue::Integer { value } => value_opts.push(value.to_string()),
@@ -289,7 +289,7 @@ pub(super) fn check_bim_embeddings(catalogue: &Catalogue, report: &mut CheckRepo
         let mut params = HashMap::new();
         if let Some(vid) = &index.variant_id {
             if let Some(variant) = product.variants.iter().find(|v| &v.id == vid) {
-                for (k, v) in &variant.parameter_values {
+                for (k, v) in variant.parameter_values.iter() {
                     params.insert(k.clone(), v.clone());
                 }
             }

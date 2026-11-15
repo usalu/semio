@@ -23,7 +23,7 @@ type Vectors = {
   tolerances: { poseWorldM: number; clipKeyWorldM: number; clipBetweenKeysM: number; clipBetweenKeysRad: number };
 };
 const vectors = fixture<Vectors>("🧊️model-skeleton");
-const OPTIONS = { scale: 50, views: ["light-solid"] } as const;
+const OPTIONS = { scale: 50, view: "light-solid" } as const;
 const near = (a: readonly number[], b: readonly number[], eps: number, what = ""): void => void a.forEach((v, i) => expect(Math.abs(v - b[i]!), `${what} ${a} vs ${b}`).toBeLessThanOrEqual(eps));
 
 const variantOf = (v: Vectors["variants"][number]): Asset => {

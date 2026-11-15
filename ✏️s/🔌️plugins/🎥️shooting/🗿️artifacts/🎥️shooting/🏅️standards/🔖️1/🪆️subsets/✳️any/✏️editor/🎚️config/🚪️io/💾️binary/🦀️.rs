@@ -13,7 +13,7 @@ use semio_framework_dsl_record_derive::DslRecord;
 use protocol::Identified;
 
 //#region 🔖️Domain
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive, semio_framework_dsl_record_derive::DslOwnedReceiving, semio_framework_value::SnapshotProjection)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -48,6 +48,27 @@ impl Default for ShootingCamera {
         Self { position: default_camera_position(), target: default_camera_target(), zoom: 1.0, fov: default_fov(), up: None, projection: None }
     }
 }
+
+macro_rules! shooting_native_default {
+    ($ty:ty) => {
+        impl ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue for $ty {
+            fn default_demand() -> ::semio_framework_value::RetirementDemand {
+                ::semio_framework_value::RetirementDemand { copy_bytes: 2 * ::std::mem::size_of::<Self>(), depth: 1, ..Default::default() }
+            }
+            fn default_work_demand()->Result<u64,::semio_framework_value::ValueError>{Ok(1)}
+fn admit_default<'reply>(output:&mut Option<Self>,effect:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{::semio_framework_value_native_owned::native_decoding::owned::native_admit_default(output,<Self as ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand(),||Self::default(),effect,reply)}
+fn recover_default<'reply>(_:&mut Option<Self>,_:&mut ::semio_framework_value::RetainedAllocationEffect<'_>,reply: ::semio_framework_value_native_owned::native_decoding::OriginalEffectReply<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<::semio_framework_value_native_owned::native_decoding::OriginalEffectReplyComplete<'reply,::semio_framework_value::RetainedCloneStep,::semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>,::semio_framework_value::ValueError>{Ok(reply.pending())}
+        }
+        impl ::semio_framework_value_native_owned::native_decoding::owned::NativeDefault for $ty {
+            type Cursor = ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor<Self>;
+            fn default_cursor() -> Self::Cursor {
+                ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor::new()
+            }
+        }
+    };
+}
+
+shooting_native_default!(ShootingCamera);
 
 pub fn default_camera_position() -> [f64; 3] {
     [420.0, -420.0, 320.0]

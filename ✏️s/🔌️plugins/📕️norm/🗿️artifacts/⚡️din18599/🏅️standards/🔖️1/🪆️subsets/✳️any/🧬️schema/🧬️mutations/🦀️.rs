@@ -42,8 +42,8 @@ use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_area_m2;
 use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_volume_m3;
 use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_theta_i_heat_c;
 use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_theta_i_cool_c;
-use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_internal_gains_w_m2;
-use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_lighting_power_w_m2;
+use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_internal_gains_wm2;
+use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_lighting_power_wm2;
 use semio_s_artifact_norm_din18599_mut_zone_fields::change_zone_thermal_mass;
 use semio_s_artifact_norm_din18599_mut_element_rows::insert_element;
 use semio_s_artifact_norm_din18599_mut_element_rows::remove_element;
@@ -94,8 +94,8 @@ pub enum Din18599Mutation {
     ChangeZoneVolumeM3(change_zone_volume_m3::ChangeZoneVolumeM3),
     ChangeZoneThetaIHeatC(change_zone_theta_i_heat_c::ChangeZoneThetaIHeatC),
     ChangeZoneThetaICoolC(change_zone_theta_i_cool_c::ChangeZoneThetaICoolC),
-    ChangeZoneInternalGainsWM2(change_zone_internal_gains_w_m2::ChangeZoneInternalGainsWM2),
-    ChangeZoneLightingPowerWM2(change_zone_lighting_power_w_m2::ChangeZoneLightingPowerWM2),
+    ChangeZoneInternalGainsWM2(change_zone_internal_gains_wm2::ChangeZoneInternalGainsWM2),
+    ChangeZoneLightingPowerWM2(change_zone_lighting_power_wm2::ChangeZoneLightingPowerWM2),
     ChangeZoneThermalMass(change_zone_thermal_mass::ChangeZoneThermalMass),
     InsertElement(insert_element::InsertElement),
     RemoveElement(remove_element::RemoveElement),
@@ -139,8 +139,8 @@ pub const KINDS: &[&str] = &[
     "change-zone-volume-m3",
     "change-zone-theta-i-heat-c",
     "change-zone-theta-i-cool-c",
-    "change-zone-internal-gains-w-m2",
-    "change-zone-lighting-power-w-m2",
+    "change-zone-internal-gains-wm2",
+    "change-zone-lighting-power-wm2",
     "change-zone-thermal-mass",
     "insert-element",
     "remove-element",
@@ -195,3 +195,9 @@ pub mod mutation_bridge {
     }
 }
 pub use crate::mutation_bridge::*;
+
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;

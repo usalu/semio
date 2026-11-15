@@ -17,10 +17,6 @@ pub mod screen_reader;
 pub mod published_nodes;
 
 #[cfg(test)]
-#[path = "🌐️i18n-census/🦀️.rs"]
-mod i18n_census;
-
-#[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
 

@@ -1,0 +1,10 @@
+\\Phi_\{?V|Φ_\{?V|Φ_T|\\Phi_\{?T\b
+Q̇_L|Q_L\b|\\dot\{Q\}_\{?L\b|\\dot\{Q\}_\{?\\?m?a?t?h?r?m?\{?L\}
+Q̇_K|\\dot\{Q\}_\{?\\?m?a?t?h?r?m?\{?K\b|Q̇_Kühl|Q_K\b|Q̇_K
+F_\{?sh|F_\{?V\b|F_\{?f\b|F_\{?\\mathrm\{sh|F_f\b
+R_ges|R_\{ges|R_\{\\mathrm\{ges|R_\{?tot
+ϑ|\\vartheta
+ΔT|\\Delta T\b|\\Delta\\,T\b|\\Delta\s*T_
+I_S,max|I_\{S,max|I_reduziert|I_\{?S\b
+Q̇_Licht|Q̇_Pers|Q̇_Geräte|Q_Licht
+Q̇_\{?\\?m?a?t?h?r?m?\{?H\}?L|\\Phi_\{\\?m?a?t?h?r?m?\{?HL|Φ_HL

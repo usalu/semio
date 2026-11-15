@@ -60,7 +60,7 @@ pub(super) enum Puzzle5dSetActiveExampleStage {
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle5dSetActiveExampleWorkOwners {
     pub mutations: Vec<Puzzle5dMutation>,
-    pub before: Option<std::sync::Arc<Puzzle5dSetActiveExampleBefore>>,
+    pub before: Option<semio_framework_value::retirement::arc_custody::ArcLease<Puzzle5dSetActiveExampleBefore>>,
 }
 
 pub struct Puzzle5dSetActiveExampleWork {
@@ -335,7 +335,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 
     fn begin_close(&mut self) {
         self.stage = Puzzle5dSetActiveExampleStage::Closing;
-        self.close_owners.stage(Puzzle5dSetActiveExampleWorkOwners { mutations: std::mem::take(&mut self.mutations), before: std::mem::take(&mut self.before) });
+        self.close_owners.stage(Puzzle5dSetActiveExampleWorkOwners { mutations: std::mem::take(&mut self.mutations), before: std::mem::take(&mut self.before).map(semio_framework_value::retirement::arc_custody::ArcLease::new) });
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{

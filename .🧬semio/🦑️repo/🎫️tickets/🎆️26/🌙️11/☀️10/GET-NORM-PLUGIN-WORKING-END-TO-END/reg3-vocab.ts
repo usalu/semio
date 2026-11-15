@@ -1,5 +1,9 @@
-import {policySemanticVocabularyBreaches,policyListSemanticVocabularyScanFiles} from "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
-import {policyDiscoveredAllowlist} from "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🔒️allowlist/🟦️.ts";
+import { execFileSync as gitExecFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+const T = fileURLToPath(new URL(".", import.meta.url)).replace(/[\\/]$/, "");
+const R = gitExecFileSync("git", ["-C", T, "rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
+import {policySemanticVocabularyBreaches,policyListSemanticVocabularyScanFiles} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
+import {policyDiscoveredAllowlist} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🔒️allowlist/🟦️.ts";
 import {existsSync} from "node:fs";
 const root=process.cwd(),b=policySemanticVocabularyBreaches(root),files=policyListSemanticVocabularyScanFiles(root),allow=policyDiscoveredAllowlist(root,"semantic-vocabulary");
 const high=b.filter(x=>x.priority==="high");

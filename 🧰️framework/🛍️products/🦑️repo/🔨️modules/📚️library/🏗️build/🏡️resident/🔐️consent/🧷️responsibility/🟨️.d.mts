@@ -1,0 +1,2 @@
+export function responsiblePidV1(pid?:number,options?:{platform?:string;call?:(pid:number)=>number|Promise<number>}):Promise<number|undefined>;
+export function createResponsibilityWatchV1(options?:{pid?:number;ask?:(pid:number)=>Promise<number|undefined>}):Readonly<{tick():Promise<{responsible:number|undefined;own:boolean;lost?:true;was?:number;now?:number|undefined}>;adopt():Promise<void>;was():number|undefined}>;

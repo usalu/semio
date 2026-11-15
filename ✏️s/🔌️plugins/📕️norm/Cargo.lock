@@ -2026,13 +2026,13 @@ name = "semio-framework-replication-retained-field"
 version = "0.1.0"
 dependencies = [
  "semio-framework-mutation-diff",
- "semio-framework-replication-retained-field-preparation",
+ "semio-framework-replication-retained-field-prep",
  "semio-framework-value",
  "semio-framework-value-persistent",
 ]
 
 [[package]]
-name = "semio-framework-replication-retained-field-preparation"
+name = "semio-framework-replication-retained-field-prep"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value-retained-clone",
@@ -6858,6 +6858,7 @@ dependencies = [
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-surface",
+ "semio-plugin-document-media",
  "semio-plugin-instance-app",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
@@ -7384,6 +7385,7 @@ dependencies = [
  "semio-s-plugin-norm-results-config",
  "semio-s-plugin-norm-structural-scene",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -7422,6 +7424,7 @@ dependencies = [
  "semio-s-plugin-norm-results-config",
  "semio-s-plugin-norm-structural-scene",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -7522,6 +7525,7 @@ dependencies = [
  "semio-s-plugin-norm-results-config",
  "semio-s-plugin-norm-structural-scene",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-locale",
  "serde",
  "serde_json",
@@ -7543,6 +7547,7 @@ dependencies = [
  "semio-s-plugin-norm-app-surface-live-core",
  "semio-s-plugin-norm-compliance",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-locale",
 ]
 
@@ -7571,6 +7576,7 @@ dependencies = [
  "semio-s-plugin-norm-results-config",
  "semio-s-plugin-norm-structural-scene",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -7602,6 +7608,7 @@ dependencies = [
  "semio-s-plugin-norm-results-config",
  "semio-s-plugin-norm-structural-scene",
  "semio-ui-contract",
+ "semio-ui-contract-values",
  "semio-ui-locale",
  "serde_json",
 ]
@@ -7626,6 +7633,33 @@ dependencies = [
  "semio-s-plugin-norm-app-surface-viewport3d",
  "semio-s-plugin-norm-app-surface-visual-chrome",
  "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-structural-scene",
+ "semio-ui-contract",
+ "semio-ui-locale",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-norm-app-surface-themes"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-action-bus",
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-registry",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-plugin",
+ "semio-s-plugin-norm-app-surface-foundation",
+ "semio-s-plugin-norm-app-surface-viewport3d",
+ "semio-s-plugin-norm-app-surface-visual-chrome",
+ "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-results-config",
  "semio-s-plugin-norm-structural-scene",
  "semio-ui-contract",
  "semio-ui-locale",
@@ -7699,6 +7733,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-os-kernel",
  "semio-s-plugin-norm-compliance-core",
+ "semio-s-plugin-norm-design-case",
  "semio-s-plugin-norm-ndp",
  "semio-ui-locale",
  "serde",
@@ -7726,6 +7761,33 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "semio-s-plugin-norm-design-case"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-async-macros",
+ "semio-framework-diagnostic",
+ "semio-framework-dispatch-macros",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-s-plugin-norm-compliance-core",
+ "semio-s-plugin-norm-ndp",
+ "semio-ui-locale",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-plugin-norm-i18n-census"
+version = "0.1.0"
 
 [[package]]
 name = "semio-s-plugin-norm-inspector-forms"
@@ -8069,6 +8131,7 @@ name = "semio-ui-contract-values"
 version = "0.1.0"
 dependencies = [
  "semio-framework-job",
+ "semio-framework-job-testing-caller",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",

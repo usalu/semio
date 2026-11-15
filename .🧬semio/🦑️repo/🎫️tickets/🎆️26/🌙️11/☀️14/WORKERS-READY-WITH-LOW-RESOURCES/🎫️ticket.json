@@ -1,0 +1,22 @@
+{
+  "title": "Workers Ready With Low Resources",
+  "emoji": "🛬️",
+  "status": "open",
+  "description": "Every fleet worker completes the native bootstrap on a 16 GB machine and reports ready; blockers are fixed in the shared tree and verified through a replicated worker protocol.",
+  "goal": "aioptimizedrepo",
+  "sessions": [
+    "9f6d3d77-cfd2-486b-942c-2101ee51a1fb"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-14 11:45:00",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "prompt": "Make sure that the workers can properly join with low resources and optimize everything to make real collaboration possible. Until now, none of the workers has managed to be ready. Manual open: repo MCP did not connect.",
+      "llm": "claude-fable-5-2"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 use super::facts::{self, Band};
 use super::kit::*;
 use super::layout::{is_upright, Layout};
-use super::model::{AluminiumMember, AluminiumSection, MemberAction, SupportCondition};
+use super::model::{En1999Snapshot, AluminiumMember, AluminiumSection, MemberAction, SupportCondition};
 use super::scene::*;
 use super::tracks::{self, Mode};
 use super::{checks, eigen, handles, norm, SceneInput};

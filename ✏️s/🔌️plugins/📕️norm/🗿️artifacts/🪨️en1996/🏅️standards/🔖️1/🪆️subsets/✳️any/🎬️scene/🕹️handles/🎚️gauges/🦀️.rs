@@ -59,9 +59,6 @@ pub const WALLS: &[Gauge<MasonryWall>] = &[
     gauge!("in-plane-shear", "inPlaneShearN", |w| w.in_plane_shear_n, "N", 1000.0, 0.0, FORCE, "In-plane shear", "Scheibenschub"),
     gauge!("in-plane-moment", "inPlaneMomentNm", |w| w.in_plane_moment_nm, "Nm", 1000.0, 0.0, FORCE, "In-plane moment", "Scheibenmoment"),
     gauge!("web-spacing", "webSpacingM", |w| w.web_spacing_m, "m", 0.05, 0.0, 100.0, "Web spacing of the shear wall", "Stegabstand der Schubwand"),
-    gauge!("second-leaf", "secondLeafThicknessM", |w| w.second_leaf_thickness_m, "m", 0.005, 0.0, 1.0, "Thickness of the second leaf", "Dicke der zweiten Schale"),
-    gauge!("cavity-width", "cavityWidthM", |w| w.cavity_width_m, "m", 0.005, 0.0, 1.0, "Cavity width between the leaves", "Schalenabstand der zweischaligen Wand"),
-    gauge!("effective-depth", "effectiveDepthM", |w| w.effective_depth_m, "m", 0.005, 0.0, 1.0, "Effective depth of the vertical reinforcement", "Nutzhöhe der vertikalen Bewehrung"),
 ];
 
 pub const LOAD_CASES: &[Gauge<WallLoadCase>] = &[

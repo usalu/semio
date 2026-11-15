@@ -1,0 +1,10 @@
+import { entryOf, memberBones, memberShapes } from "./volumes-lib.ts";
+const { asset } = entryOf(process.argv[2]!);
+console.log(asset.id, JSON.stringify(asset.dimensions), "default", asset.presentation.defaultPose);
+console.log("materials", asset.materials.map((m: any) => `${m.id}`).join(" "));
+for (const r of asset.thermal.regions) console.log("REGION", r.id, r.kind, r.model, "mat", r.material, "A", r.areaM2, "layers", JSON.stringify(r.layers), r.hidden ? "HIDDEN" : "", r.geometry);
+for (const e of asset.thermal.emitters) console.log("EMITTER", e.id, e.kind, "anchors", JSON.stringify(e.anchors ?? e.anchor), "d", e.diameterM, "dir", e.directionDeg, "region", e.region);
+console.log("SUPPORTS", JSON.stringify(asset.structure.supports));
+for (const a of asset.anchors ?? []) console.log("ANCHOR", JSON.stringify(a));
+for (const b of asset.rig.bones) console.log("BONE", b.id, "parent", b.parent, "L", b.lengthM, "mass", b.massKg, b.section ? JSON.stringify({ a: b.section.areaM2, r: b.section.extremeFibreM, kind: b.section.kind, w: b.section.w, h: b.section.h, d: b.section.d, mat: b.section.material }) : "", JSON.stringify(b.joint ?? b.rotation ?? "").slice(0, 80));
+for (const s of [50, 100, 200, 500]) console.log("MEMBERS", s, memberBones(asset, s).join(","), "shapes", memberShapes(asset, s).map((x: any) => x.id).join(","));

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-pier-base-soil-unit-weight-n-m3",
-  "semanticKind": "change-pier-base-soil-unit-weight-n-m3",
+  "semanticKind": "change-pier-base-soil-unit-weight-nm3",
   "displayName": "Change pier base: soil unit weight",
   "emoji": "📍️",
   "aggregateVariant": "ChangePierBaseSoilUnitWeightNM3",

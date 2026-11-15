@@ -17,12 +17,12 @@ export function scopeImplementationRowsV1(rows:readonly GenerationRowV1[]):Scope
 /** 🪪️ Digest that stamps a generation. */
 export function implementationDigestV1(rows:readonly GenerationRowV1[]):string;
 /** 🧩️ What one partial inference produced, in repository terms. */
-export interface GenerationPartV1{owners:{name:string;root:string;nativeRoot?:string;config?:string;tag?:string;node?:unknown;unavailable?:unknown;nodeRows?:GenerationRowSourceV1;reads?:import("../🧵️edge-reads/🟨️.mjs").EdgeReadsV1}[];edgeOnly:{name:string;streamed?:true}[];reEdge?:(name:string,fragment:{node?:unknown})=>Promise<unknown[]>|unknown[];readsOf?:(name:string)=>import("../🧵️edge-reads/🟨️.mjs").EdgeReadsV1|undefined;carried?:readonly string[];derived?:import("../✂️cutoff/🟨️.mjs").DerivedFactV1[];edges:{source:string;target:string;[key:string]:unknown}[];externalNodes?:Record<string,unknown>;parseUnavailable?:unknown[];rows:GenerationRowV1[];env:{digest:string;rows:GenerationRowV1[];parts?:import("../🧵️edge-reads/🟨️.mjs").EnvironmentPartsV1};replaceTags?:string[];dispose?:()=>void}
+export interface GenerationPartV1{inferred?:number;phases?:Record<string,number>;owners:{name:string;root:string;nativeRoot?:string;config?:string;tag?:string;node?:unknown;unavailable?:unknown;nodeRows?:GenerationRowSourceV1;reads?:import("../🧵️edge-reads/🟨️.mjs").EdgeReadsV1}[];edgeOnly:{name:string;streamed?:true}[];reEdge?:(name:string,fragment:{node?:unknown})=>Promise<unknown[]>|unknown[];readsOf?:(name:string)=>import("../🧵️edge-reads/🟨️.mjs").EdgeReadsV1|undefined;carried?:readonly string[];derived?:import("../✂️cutoff/🟨️.mjs").DerivedFactV1[];edges:{source:string;target:string;[key:string]:unknown}[];externalNodes?:Record<string,unknown>;parseUnavailable?:unknown[];rows:GenerationRowV1[];env:{digest:string;rows:GenerationRowV1[];parts?:import("../🧵️edge-reads/🟨️.mjs").EnvironmentPartsV1};replaceTags?:string[];dispose?:()=>void}
 export function shapeComputeResultV1(input:{workspaceRoot:string;part:GenerationPartV1;stubs:GenerationComputeSpecV1["stubs"];separator?:string;implementation?:ScopedImplementationRowsV1}):GenerationComputeResultV1;
 export function createGenerationProgressV1(clock:{begin(phase:string,total:number):unknown;advance(phase:string,done:number):unknown;end(phase:string):unknown}):(event:{phase:string;done:number;total:number})=>Promise<void>;
 export interface GenerationHostV1{
  workspaceRoot:string;separator?:string;language:"en"|"de";namedInputs:unknown;registryDigest:string;signal?:AbortSignal;verbose?:boolean;waitNoticeMilliseconds?:number;
- release?():Promise<void>;
+ release?(options?:{more?:boolean}):Promise<void>;
  /** ✂️ Drops what the cutoff verification of the plan filled (verified blocks, interned rows, settled reads, string interner) once the owners to infer are known and before the first one starts; optional. */
  releaseCutoff?():Promise<void>;
  identity():Promise<string>;
@@ -33,6 +33,8 @@ export interface GenerationHostV1{
  withBuilder<T>(body:(store:unknown,control:unknown,claim?:import("../🔐️custody/🟨️.mjs").SliceClaimV1)=>Promise<T>,request?:import("../🟨️.mjs").GenerationPendingV1):Promise<T>;
  /** 🤝️ Prepares the stale projects of a pending refresh together with the commands waiting for the same graph before the exclusive build; optional, never fails the command. */
  prefetch?(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;structural:boolean;implementation:string}):Promise<void>;
+ /** 🧲️ Attaches the command to the live builder of its stale projects on this machine (see `attachToBuilderV1`): `recheck` tries to serve the command from the generation published so far; answers what it served, or undefined when no live builder holds the custody against the command; optional. */
+ attach?(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;structural:boolean;implementation:string},recheck:()=>Promise<{graph:unknown;stats:GenerationLoadStatsV1}|undefined>):Promise<{graph:unknown;stats:GenerationLoadStatsV1}|undefined>;
  storeOptions(store:unknown,control:unknown):GenerationStoreOptionsV1;
  membership(previous:{manifest:GenerationManifestV1;frontier:FrontierV1}|undefined,signal?:AbortSignal):Promise<GenerationMembershipV1>;
  discoverPart(spec:GenerationComputeSpecV1,signal:AbortSignal|undefined,control:unknown):Promise<GenerationPartV1>;
@@ -43,8 +45,12 @@ export interface GenerationHostV1{
  clock(control:unknown):Parameters<typeof createGenerationProgressV1>[0];
  say(key:keyof typeof GENERATION_MESSAGES_V1["en"],fields:Readonly<Record<string,string|number>>):void;
  /** 📌️ Told once a load served a graph: the sealed generation, its manifest digest, the owners of that manifest in code point order and the owners (every owner when undefined) the load served from it. */
+ /** 🪞️ Whether the change cursor proves that nothing changed since `live` (the membership a delta plan of this command was made from) was observed; absent or false means the builder plans again. */
+ planUnchanged?(live:GenerationMembershipV1):Promise<boolean>;
  /** 🌐️ The generation exchange with the shared remote cache of the machine group; absent while no remote cache is configured. */
  exchange?:import("../🌐️remote-exchange/🟦️.ts").GenerationExchangeV1;
+ /** 📍️ Told after every wave the build published, with the generation number, so a build that is cut off keeps a cursor for the newest wave and the next read verifies from it instead of the whole tree; optional. */
+ published?(generation:number,info?:{done:number;total:number}):void|Promise<void>;
  sealed?(record:{generation:number;manifest:string;owners:readonly string[];covered:ReadonlySet<string>|undefined;atMs:number}):void;
 }
 export type GenerationLoadStatsV1=Readonly<{staleFacts:number;closuresVerified:number;ownersReinferred:number;ownersCutOff:number;doubtfulFacts:number;verifiedMilliseconds:number}>;

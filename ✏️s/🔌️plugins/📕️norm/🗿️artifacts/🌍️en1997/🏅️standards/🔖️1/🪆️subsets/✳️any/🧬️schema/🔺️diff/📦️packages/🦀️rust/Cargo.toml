@@ -21,6 +21,7 @@ semio-s-artifact-norm-en1997-diff-proto = { workspace = true }
 semio-s-artifact-norm-en1997-diff-json-schema = { workspace = true }
 semio-s-artifact-norm-en1997-diff-graphql = { workspace = true }
 semio-s-artifact-norm-en1997-diff-typescript = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-os-kernel = { workspace = true }

@@ -24,6 +24,8 @@
           "temporary": "w",
           "target": "t",
           "live": "v",
+          "lookups": "y",
+      "compilerTemporaries": "z",
           "metadata": "lane.json",
           "size": "lane.size",
           "destination": "lane.ledger",
@@ -50,7 +52,6 @@
             "CARGO_CRATE_NAME",
             "CARGO_BIN_NAME",
             "CARGO_MANIFEST_DIR",
-            "CARGO_PRIMARY_PACKAGE",
             "CARGO_ENCODED_RUSTFLAGS",
             "RUSTC_BOOTSTRAP",
             "SDKROOT",
@@ -77,6 +78,19 @@
           "maximumDependencyFiles": 65536,
           "outputToken": "@@semio-out@@",
           "laneToken": "@@semio-lane@@"
+        },
+        "seal": {
+          "directory": "sealed",
+          "pointerPrefix": "pointer-",
+          "marker": "sealed.json",
+          "digestCharacters": 16,
+          "attempts": 6,
+          "settleMilliseconds": 250,
+          "keepSnapshots": 4,
+          "retainMilliseconds": 86400000,
+          "maximumFiles": 2000,
+          "maximumBytes": 67108864,
+          "maximumBlockedRows": 5
         },
         "buildScript": {
           "platforms": [
@@ -123,6 +137,16 @@
           "recallAttempts": 20,
           "recallPauseMilliseconds": 50,
           "timeoutMilliseconds": 5000
+        },
+        "evictions": {
+          "file": "evictions.jsonl"
+        },
+        "lookups": {
+          "file": "lookups.jsonl",
+          "maximumFileBytes": 8388608,
+          "digestCharacters": 16,
+          "valueCharacters": 160,
+          "maximumValues": 24
         },
         "gc": {
           "laneShare": 0.234375,
@@ -172,7 +196,7 @@
           ],
           "product": {
             "prefix": "q",
-            "digestDigits": 11,
+            "digestDigits": 6,
             "receipt": "product.json",
             "maximumReceiptBytes": 512
           },
@@ -217,8 +241,8 @@
           "de": "[repo cargo] Der Unit-Cache-Sammler im Hintergrund konnte nicht gestartet werden: {reason}"
         },
         "wrapperUnavailable": {
-          "en": "[repo cargo] the unit cache is off for this Cargo process: no native compiler wrapper could be built ({reason}); compiles run without the shared cache",
-          "de": "[repo cargo] Der Unit-Cache ist für diesen Cargo-Prozess aus: Es konnte kein nativer Compiler-Wrapper gebaut werden ({reason}); Kompilierungen laufen ohne den gemeinsamen Cache"
+          "en": "[repo cargo] the unit cache is off for this Cargo process: no sealed compiler wrapper could be made ({reason}); compiles run without the shared cache",
+          "de": "[repo cargo] Der Unit-Cache ist für diesen Cargo-Prozess aus: Es konnte kein versiegelter Compiler-Wrapper erstellt werden ({reason}); Kompilierungen laufen ohne den gemeinsamen Cache"
         },
         "jobserverClosed": {
           "en": "[repo cargo] the job-token pool named by {variable} cannot be reached by this process ({reason}); the command runs on its own single job slot instead of starting more jobs than were admitted",
@@ -509,6 +533,9 @@
         "key": {
           "$ref": "#/definitions/Digest"
         },
+        "slot": {
+          "$ref": "#/definitions/Digest"
+        },
         "crate": {
           "type": "string",
           "minLength": 1
@@ -613,7 +640,15 @@
             "script-publish",
             "script-bypass",
             "broker-replay",
-            "broker-unreachable"
+            "broker-unreachable",
+            "remote-hit",
+            "remote-miss",
+            "remote-claim",
+            "remote-wait",
+            "remote-publish",
+            "remote-skip",
+            "publish-skip",
+            "incomplete"
           ]
         },
         "crate": {
@@ -639,6 +674,119 @@
         },
         "reason": {
           "type": "string"
+        }
+      }
+    },
+    "Lookup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "atMs",
+        "lane",
+        "pid",
+        "crate",
+        "key",
+        "outcome",
+        "components"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lane": {
+          "$ref": "#/definitions/LaneId"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "crate": {
+          "type": "string"
+        },
+        "key": {
+          "$ref": "#/definitions/Digest"
+        },
+        "remote": {
+          "$ref": "#/definitions/Digest"
+        },
+        "outcome": {
+          "enum": [
+            "local-hit",
+            "fleet-hit",
+            "miss"
+          ]
+        },
+        "components": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^(toolchain|source|platform|roots|extern:.+|env:.+|args\\.[a-z]+)$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{16}$"
+          }
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 160
+          }
+        }
+      }
+    },
+    "Eviction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "atMs",
+        "pid"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lanes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "incremental": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sessions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "units": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "superseded": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "forgotten": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },

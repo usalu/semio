@@ -79,3 +79,15 @@ test("browser system host port resolves executable files from the caller environ
   expect(denied.escalate).toBe(process.platform!=="linux"||denied.root);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test("the Chromium digest pin field is closed: a recorded pin needs sha256, bytes and https url, a pin is unique per host and revision, and today none is recorded",()=>{
+ const ajv=new Ajv({strict:true}),good={platform:"darwin",architecture:"arm64",revision:"1234",url:"https://cdn.playwright.dev/chrome-for-testing-public/chromium-mac-arm64.zip",sha256:"a".repeat(64),bytes:1};
+ expect(ajv.validate(schema,{...policy,chromium:{downloads:[good]}})).toBe(true);expect(validateJsonSchemaSubset(schema,{...policy,chromium:{downloads:[good]}})).toEqual([]);
+ for(const bad of [{...good,sha256:"a".repeat(63)},{...good,url:"http://x"},{...good,bytes:0},{...good,extra:1},{...good,revision:"abc"},{platform:"darwin"}]){
+  expect(ajv.validate(schema,{...policy,chromium:{downloads:[bad]}})).toBe(false);expect(validateJsonSchemaSubset(schema,{...policy,chromium:{downloads:[bad]}}).length).toBeGreaterThan(0);
+ }
+ expect(ajv.validate(schema,{...policy,chromium:undefined})).toBe(false);
+ const keys=(policy.chromium.downloads as readonly {platform:string;architecture:string;revision:string}[]).map(row=>`${row.platform}/${row.architecture}/${row.revision}`);
+ expect(new Set(keys).size,"one pin per OS, architecture and revision").toBe(keys.length);
+ expect(policy.chromium.downloads.length,"no digest is recorded locally: a machine that downloads Chromium fills the field").toBe(0);
+});

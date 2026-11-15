@@ -1,0 +1,41 @@
+refs/old-repo/g1-server/agents/3aa66f6d-c48e-4904-ac79-cb76bf5cef93/checkpoints/turn/0	fa84183387211cb86e54a250a00ff3f5a2bdcc39	absent in live
+refs/old-repo/g1-server/agents/5d79e2b2-068d-4b7e-9a2b-bc778dc0163e/checkpoints/turn/0	3a615a961caf590ea522bc2f8c2ba3c7aea8a7cf	absent in live
+refs/old-repo/g1-server/agents/5da91a2d-0cb0-4a49-93bf-02f8232bf3a5/checkpoints/turn/0	af5a78d29ef7f2e405940105441aaeddbd98c0b5	absent in live
+refs/old-repo/g1-server/codex/turn-diffs/checkpoints/3a5f0fa897daf6b6a436c54de2422ee3/d3738818ebf004e9ad66bfdbe7fbf72c/1793845693836/ded38470-f08c-4f8d-ba54-fa701b55e564	a9019fb42eda6e009f2f38ec0307ce8dd1da4af4	absent in live
+refs/old-repo/g1-server/codex/turn-diffs/checkpoints/7da3cd3b0d9d75037808b227792003b9/2f8cbba1994fcb4808972ad490824a32/1793841713721/d285bd3c-d94c-4de2-a3b8-42d7bf083b91	6d403ab00c2b72707e97e53466d5882832ef100f	absent in live
+refs/old-repo/g1-server/codex/turn-diffs/checkpoints/abbb606170d96f2c1d2bb5787d0719de/587e36a4f4de587c498a059165a1e305/1793378394823/e8a09831-0113-4e01-b4d4-a602ce0c4d58	91732f3281cbb0841b2cf0a43a30d7c5ea0cccb6	absent in live
+refs/old-repo/g1-server/codex/turn-diffs/checkpoints/cb5b286d19851df3632a7620b572bfc0/ad906d1e7bba01246f0179dfc2bb673c/1793809827364/b204d7f0-3a5d-480b-ba9b-4fe004bdb1ff	ba6dbb60a6e010c4e0f85c4e1a0bcb3aab43afaa	absent in live
+refs/old-repo/g1-server/gitkraken/empty-tree	4b825dc642cb6eb9a060e54bf8d69288fbee4904	absent in live
+refs/old-repo/g1-server/heads/2	9a0ad8317f464b476b8bf4ccf402910be08d4027	absent in live
+refs/old-repo/g1-server/heads/b1	da6869def0f7f3e68f44dcec407919205b448791	absent in live
+refs/old-repo/g1-server/heads/b3	e2ad5e8e0d6fb97f56c4020f05d6ffbe1a778e46	absent in live
+refs/old-repo/g1-server/heads/b4	2e09d030f5bb65f68fe0a1cd3b9ddb0edaf54d5a	absent in live
+refs/old-repo/g1-server/heads/backup	96579d6bec9febc90fc90b25831f470e5894a848	absent in live
+refs/old-repo/g1-server/heads/kinan/bericht-diff	bd4d5ecdad6413d922be3902a1e4b9b4c5efd6a9	absent in live
+refs/old-repo/g1-server/heads/worktree-agent-afa905cc164f52ed8	07bcb4a9b3c54a0d616c14ce1f1a12c83d6f2402	absent in live
+refs/old-repo/g1-server/heads/🐳kinan/⛳wip	b2ba75e8db08589c7192a73694a5791f9612c46e	absent in live
+refs/old-repo/g1-server/heads/🦢niloufar/⛳wip	cfe96f15b66e0d5c061f2f6fe20c2b45dfb25e4c	absent in live
+refs/old-repo/g1-server/stash	5f94cd4337ae195d0400b2beebfa7e3bff866faf	live has 4c31562a4c22
+refs/old-repo/g1-server/tags/demo	6954ad9d8c278c5e0ce3ac54e7336ad92f6ef930	absent in live
+refs/old-repo/g1-server/tags/premigration	f8376e848650416f43faa9d6aaa9ef8b90334f65	absent in live
+refs/old-repo/g1-server/tags/🐙ueli🎆26🌙06☀️04🚩	4d17010754182decd30a2dda29b12a86fe7c115b	absent in live
+refs/old-repo/g1-server/worktree/gitkraken/undo	4b825dc642cb6eb9a060e54bf8d69288fbee4904	absent in live
+refs/old-repo/g1-server/HEAD	5ececaa78b9265fd72b4f7e8f411afac3c9e1df1	ref: refs/heads/🐙ueli/⛳wip
+refs/old-repo/g1-server/stash-0	5f94cd4337ae195d0400b2beebfa7e3bff866faf	stash@{0}
+refs/old-repo/g1-server/stash-1	996f9fc16706c9389bd406e1498640ee8c8f21b4	stash@{1}
+refs/old-repo/g1-server/stash-2	4e3f4f62954252ce66d5075d987ee6320f9fcf4a	stash@{2}
+refs/old-repo/g1-server/stash-3	fc0b91cf52dc955cd17ac74dbc045cf294006e6d	stash@{3}
+refs/old-repo/g1-server/stash-4	4287c4f5af320ce2c36e23817adde788b7254697	stash@{4}
+refs/old-repo/g1-server/stash-5	a94903b5938b97a80d9c52686afc9416d602fe48	stash@{5}
+refs/old-repo/g1-server/stash-6	e1635245c15f56e67b7dc78d60888d1185e7df84	stash@{6}
+refs/old-repo/g1-server/stash-7	69fc0b694d61e3257f3dd9b4f87a6ad2a332da48	stash@{7}
+refs/old-repo/g1-server/stash-8	5ad0256aea6ab5af6fcd49a996c23b8650c343f4	stash@{8}
+refs/old-repo/g1-server/stash-9	f614049915e3fe810752b20f38e3b6f79dd02ccf	stash@{9}
+refs/old-repo/g1-server/stash-10	41c28347713d41052c060cb134c1319c8f8cde0f	stash@{10}
+refs/old-repo/g1-server/stash-11	bc796c1b583e7e68a64aa383c3c2450ff07b3a2b	stash@{11}
+refs/old-repo/g1-server/stash-12	f384ae8757f990b7ba781a80376f11222793f483	stash@{12}
+refs/old-repo/g1-server/stash-13	09a28a6bc0085f486e8cffb11f910ca36d51780f	stash@{13}
+refs/old-repo/g1-server/stash-14	ee514f801fabc6f5b7fbbdc64b8307b77d1f0ac8	stash@{14}
+refs/old-repo/g1-server/stash-15	afbe7a360c6b825db00cf24565658ab423364918	stash@{15}
+refs/old-repo/g1-server/stash-16	df5eba2b0304f50a8018d7d3d94c384fb04c4f10	stash@{16}
+refs/old-repo/g1-server/stash-17	99eef5ef98dfce8ef4efeab955eddde97d51e43f	stash@{17}

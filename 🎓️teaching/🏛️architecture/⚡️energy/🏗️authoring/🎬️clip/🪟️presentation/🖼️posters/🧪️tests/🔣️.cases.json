@@ -1,0 +1,115 @@
+{
+  "schema": "semio-teaching-poster-cases/v1",
+  "size": [640, 360],
+  "declarations": [
+    {
+      "id": "last segment ends the chapter",
+      "chapter": {"scene": "A", "segments": [{"script": "s", "scene": "One"}, {"script": "s", "scene": "Two"}]},
+      "expected": {"segment": 1, "animation": null}
+    },
+    {
+      "id": "authored segment",
+      "chapter": {"scene": "A", "segments": [{"script": "s", "scene": "One"}, {"script": "s", "scene": "Two"}], "poster": {"segment": 0}},
+      "expected": {"segment": 0, "animation": null}
+    },
+    {
+      "id": "authored animation on the last segment",
+      "chapter": {"scene": "A", "segments": [{"script": "s", "scene": "One"}], "poster": {"animation": 12}},
+      "expected": {"segment": 0, "animation": 12}
+    },
+    {
+      "id": "partial last segment needs an animation",
+      "chapter": {"scene": "A", "segments": [{"script": "s", "scene": "One", "clauses": {"first": "a", "last": "b"}}]},
+      "error": "partial segment"
+    },
+    {
+      "id": "partial segment with an animation",
+      "chapter": {"scene": "A", "segments": [{"script": "s", "scene": "One", "clauses": {"first": "a", "last": "b"}}], "poster": {"animation": 3}},
+      "expected": {"segment": 0, "animation": 3}
+    },
+    {
+      "id": "segment beyond the chapter",
+      "chapter": {"scene": "A", "segments": [{"script": "s", "scene": "One"}], "poster": {"segment": 4}},
+      "error": "does not exist"
+    }
+  ],
+  "designated": [
+    {"id": "first chapter by default", "video": {"id": "v", "chapters": [{"scene": "A"}, {"scene": "B"}]}, "expected": "A"},
+    {"id": "authored chapter", "video": {"id": "v", "chapters": [{"scene": "A"}, {"scene": "B"}], "poster": {"chapter": "B"}}, "expected": "B"},
+    {"id": "foreign chapter", "video": {"id": "v", "chapters": [{"scene": "A"}], "poster": {"chapter": "Z"}}, "error": "does not belong"}
+  ],
+  "manifest": [
+    {"id": "unknown video key", "video": {"poster": {"chapter": "A"}, "extra": 1}, "error": "Invalid video contract"},
+    {"id": "lesson poster of a foreign chapter", "video": {"poster": {"chapter": "Z"}}, "error": "Invalid lesson poster"},
+    {"id": "lesson poster with an extra key", "video": {"poster": {"chapter": "A", "animation": 1}}, "error": "Invalid lesson poster"},
+    {"id": "chapter poster with an unknown key", "chapter": {"poster": {"time": 1}}, "error": "Invalid chapter poster"},
+    {"id": "chapter poster with a negative animation", "chapter": {"poster": {"animation": -1}}, "error": "Invalid chapter poster"},
+    {"id": "chapter poster with a boolean segment", "chapter": {"poster": {"segment": true}}, "error": "Invalid chapter poster"},
+    {"id": "valid posters", "video": {"poster": {"chapter": "A"}}, "chapter": {"poster": {"segment": 0, "animation": 2}}}
+  ],
+  "coverage": {
+    "background": [0, 10, 15],
+    "minimum": 0.03,
+    "cases": [
+      {"id": "nothing but the background", "boxes": [], "accept": false},
+      {"id": "title chip, reference and caption outside the content area", "boxes": [[0.02, 0.02, 0.4, 0.1], [0.7, 0.02, 0.98, 0.07], [0.2, 0.9, 0.8, 0.97]], "accept": false},
+      {"id": "a faint smudge", "boxes": [[0.4, 0.4, 0.5, 0.45]], "accept": false},
+      {"id": "one key picture", "boxes": [[0.2, 0.3, 0.6, 0.7]], "accept": true},
+      {"id": "small diagram", "boxes": [[0.3, 0.4, 0.5, 0.6]], "accept": true}
+    ]
+  },
+  "references": {
+    "course": "PhysicalFundamentals_FullSection",
+    "topics": {
+      "energy": "PhysicalFundamentals_FullSection",
+      "parametric": null,
+      "bim": "BIM_01_Information",
+      "grasshopper": "Grasshopper_01_Anatomy",
+      "excel": "Excel_01_Anatomy",
+      "optimization": "Optimization_Extrema"
+    },
+    "lessons": {
+      "physical_fundamentals": "PhysicalFundamentals_FullSection",
+      "ventilation": "Ventilation_01_WarumLueften",
+      "heating": "Heating_01_Introduction",
+      "cooling": "Cooling_01_HeatingVsCooling",
+      "energy_balance": "EnergyBalance_05_Primaerenergie"
+    }
+  },
+  "required": [
+    {
+      "branch": ["architecture", "energy", "ventilation", "Ventilation_02_Luftmenge"],
+      "scenes": [
+        "PhysicalFundamentals_FullSection",
+        "BIM_01_Information",
+        "Grasshopper_01_Anatomy",
+        "Excel_01_Anatomy",
+        "Optimization_Extrema",
+        "Ventilation_01_WarumLueften",
+        "Heating_01_Introduction",
+        "Cooling_01_HeatingVsCooling",
+        "EnergyBalance_05_Primaerenergie",
+        "Ventilation_02_Luftmenge",
+        "Ventilation_03_WaermestromLuft",
+        "Ventilation_04_NatuerlicheLueftung",
+        "Ventilation_05_MechanischeLueftung",
+        "Ventilation_06_Uebergabe"
+      ]
+    },
+    {
+      "branch": ["architecture", "optimization", "optimization_sampling", "Optimization_Sampling"],
+      "scenes": [
+        "PhysicalFundamentals_FullSection",
+        "BIM_01_Information",
+        "Grasshopper_01_Anatomy",
+        "Excel_01_Anatomy",
+        "Optimization_Extrema",
+        "Optimization_Sampling",
+        "Optimization_Experiments",
+        "Optimization_Index",
+        "Optimization_Pareto",
+        "Optimization_Algorithms"
+      ]
+    }
+  ]
+}

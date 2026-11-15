@@ -166,6 +166,18 @@
       "en": "Native image size {bytes} must be a multiple of {unit} bytes and at least {minimum} bytes",
       "de": "Die Größe {bytes} des Native-Images muss ein Vielfaches von {unit} Bytes und mindestens {minimum} Bytes sein"
     },
+    "nativeBuild.image-host-free-insufficient": {
+      "en": "The disk of {directory} has {availableGiB} GiB free, but creating the fixed cache image needs {requiredGiB} GiB free (macOS refuses to size an image beyond the free space). Free at least {missingGiB} GiB and run the command again.",
+      "de": "Auf dem Datenträger von {directory} sind {availableGiB} GiB frei, das feste Cache-Image braucht aber {requiredGiB} GiB freien Platz (macOS verweigert eine Image-Größe über dem freien Platz). Geben Sie mindestens {missingGiB} GiB frei und führen Sie den Befehl erneut aus."
+    },
+    "dependencies.installer-stalled": {
+      "en": "The dependency installer of {scope} changed nothing for {seconds} s and was terminated; the lease is released and the next sync resumes from the packages already extracted.",
+      "de": "Der Abhängigkeits-Installer von {scope} hat {seconds} s lang nichts verändert und wurde beendet; die Sperre ist freigegeben und die nächste Synchronisation setzt bei den bereits entpackten Paketen fort."
+    },
+    "dependencies.installer-stalled-http": {
+      "en": "The dependency installer of {scope} changed nothing for {seconds} s and was terminated; its last error was \"{error}\". If the address is a fleet mirror, set SEMIO_FLEET_MIRROR=off to use the registry directly; the lease is released and the next sync resumes from the packages already extracted.",
+      "de": "Der Abhängigkeits-Installer von {scope} hat {seconds} s lang nichts verändert und wurde beendet; sein letzter Fehler war \"{error}\". Ist die Adresse ein Flotten-Spiegel, nutze mit SEMIO_FLEET_MIRROR=off die Registry direkt; die Sperre ist freigegeben und die nächste Synchronisation setzt bei den bereits entpackten Paketen fort."
+    },
     "nativeBuild.namespace-path-unowned": {
       "en": "A Native namespace path nobody owns is still present: {path}",
       "de": "Ein Native-Namensraumpfad ohne Eigentümer ist noch vorhanden: {path}"
@@ -189,6 +201,14 @@
     "execution.timed-out": {
       "en": "{label} exceeded its {milliseconds} ms time limit and was stopped",
       "de": "{label} hat sein Zeitlimit von {milliseconds} ms überschritten und wurde angehalten"
+    },
+    "execution.progress-expired": {
+      "en": "{label} was stopped: {notice}",
+      "de": "{label} wurde angehalten: {notice}"
+    },
+    "execution.deadline-exhausted": {
+      "en": "{label} reached the deadline of its caller and was stopped",
+      "de": "{label} hat die Frist seines Aufrufers erreicht und wurde angehalten"
     },
     "execution.output-limit": {
       "en": "{label} wrote more output than its limit allows and was stopped",

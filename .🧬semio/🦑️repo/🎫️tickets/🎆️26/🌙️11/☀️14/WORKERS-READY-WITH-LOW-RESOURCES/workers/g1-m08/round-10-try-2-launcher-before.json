@@ -1,0 +1,36 @@
+{
+  "at": "2026-11-14T23:45:01Z",
+  "ls_li": "1256211 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:30 /Users/ueli/.local/bin/repo\n1262266 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:00 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo",
+  "paths": {
+    "/Users/ueli/.local/share/semio/launcher/bin/repo": {
+      "exists": true,
+      "is_symlink": true,
+      "inode": 1262266,
+      "mtime_ns": 1794690020886970333,
+      "mtime_utc": "2026-11-14T21:00:20.886970+00:00",
+      "target_inode": 1262265,
+      "target_mtime_ns": 1794690020871943656,
+      "size": 6523360,
+      "readlink": "versions/cf25f2b751f83336/repo"
+    },
+    "/Users/ueli/.local/bin/repo": {
+      "exists": true,
+      "is_symlink": false,
+      "inode": 1256211,
+      "mtime_ns": 1794688211341948235,
+      "mtime_utc": "2026-11-14T20:30:11.341948+00:00",
+      "target_inode": 1256211,
+      "target_mtime_ns": 1794688211341948235,
+      "size": 18657778,
+      "readlink": null
+    }
+  },
+  "codesign_rc": 0,
+  "codesign_lines": [
+    "Identifier=tech.semio.repo",
+    "CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357",
+    "CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a",
+    "CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357",
+    "TeamIdentifier=not set"
+  ]
+}

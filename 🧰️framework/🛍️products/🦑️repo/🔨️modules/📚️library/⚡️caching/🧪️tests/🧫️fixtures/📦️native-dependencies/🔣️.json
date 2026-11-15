@@ -5,17 +5,17 @@
       "uv.lock": "version = 1\nrequires-python = \"==3.14.*\"\n"
     }
   },
+  "pythonOracle": {
+    "files": {
+      "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/pyproject.toml": "[project]\nname = \"probe-oracle\"\nversion = \"0.0.0\"\nrequires-python = \">=3.12,<3.13\"\ndependencies = []\n",
+      "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/uv.lock": "version = 1\nrequires-python = \"==3.12.*\"\n"
+    }
+  },
   "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
   "environments": [
     {
       "kind": "python",
       "commands": [
-        [
-          "uv",
-          "python",
-          "install",
-          "3.14"
-        ],
         [
           "uv",
           "sync",
@@ -31,11 +31,45 @@
       "environment": {
         "UV_NO_CONFIG": "1",
         "UV_PYTHON": "3.14",
-        "UV_PYTHON_DOWNLOADS": "manual",
+        "UV_PYTHON_DOWNLOADS": "never",
         "UV_PYTHON_PREFERENCE": "only-managed"
       },
       "providers": [
-        "uv"
+        "uv",
+        "python"
+      ],
+      "interpreters": [
+        "3.14"
+      ]
+    },
+    {
+      "kind": "python-energy-oracle",
+      "projectFile": "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/📋️project.json",
+      "targetName": "deps",
+      "command": "repo \"../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync python-energy-oracle",
+      "commands": [
+        [
+          "uv",
+          "sync",
+          "--locked",
+          "--project",
+          "✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python",
+          "--group",
+          "test"
+        ]
+      ],
+      "environment": {
+        "UV_NO_CONFIG": "1",
+        "UV_PYTHON": "3.12",
+        "UV_PYTHON_DOWNLOADS": "never",
+        "UV_PYTHON_PREFERENCE": "only-managed"
+      },
+      "providers": [
+        "uv",
+        "python"
+      ],
+      "interpreters": [
+        "3.12"
       ]
     },
     {

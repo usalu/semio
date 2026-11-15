@@ -43,8 +43,8 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 unit_text = _manim_module.unit_text
@@ -73,7 +73,6 @@ moon_glyph = _manim_module.moon_glyph
 thermometer_glyph = _manim_module.thermometer_glyph
 
 # 🗣️ Timing follows German captions (reading floor in hold_for).
-set_vo_language("de")
 
 
 #region Shared numbers
@@ -88,6 +87,9 @@ _PHI_LOSS = _example.PHI_LOSS_W
 #region Annual balance
 _SEASON_DAYS = _example.SEASON_DAYS
 _GT = _example.GT_K_D_PER_A
+_THETA_I = _example.THETA_I_WINTER_C
+_THETA_HG = _example.THETA_HG_C
+_F_GT = 0.024 * _GT
 _Q_LOSS = _example.Q_LOSS_KWH_PER_A
 _Q_LOSS_SHOWN = round(_Q_LOSS, -2)
 _Q_SOL, _Q_INT = _example.Q_SOL_KWH_PER_A, _example.Q_INT_KWH_PER_A
@@ -191,13 +193,9 @@ def _freeze(readout):
     return readout
 
 
-def _gt_profile():
-    """🌡️ Daily θ_i − θ_e over the heating season; its sum is exactly the degree-day total G_t."""
-    rng = np.random.default_rng(18599)
-    days = np.arange(_SEASON_DAYS)
-    noise = np.convolve(rng.normal(0.0, 2.4, days.size), np.ones(5) / 5, mode="same")
-    base = 9.0 * np.sin(np.pi * (days + 0.5) / _SEASON_DAYS) + noise
-    return base + (_GT - base.sum()) / days.size
+def _year_theta_e():
+    """🌡️ Daily mean outdoor temperature θ_e of the example year in °C — its heating days (θ_e below the heating limit) add up to exactly G_{t,20/15} (VDI 3807 Blatt 1)."""
+    return _example.year_outdoor_profile()
 #endregion
 
 
@@ -326,14 +324,14 @@ def _pulses(paths, rt: float, color=PASTEL_YELLOW, *, width: float = 4.0):
 class ReviewingHeatLosses(Scene):
     NARRATION = [
         ("trans",
-         "From module 2: heat flows through walls, roof, windows and floor as Phi T — the sum of U times A times Delta theta, about 2,300 W.",
-         "Aus Modul 2: Wärme fließt durch Wand, Dach, Fenster und Boden als Phi-T — Summe aus U mal A mal Delta-Theta, rund 2 300 W."),
+         r"From module 2: heat flows through the envelope as $\dot{Q}_{\mathrm{T}}$ — the heat flow $\Phi$ as a load: $\Sigma\, U \cdot A \cdot \Delta\theta$, about $2\,300\,\mathrm{W}$.",
+         r"Aus Modul 2: Wärme fließt durch die Hülle als $\dot{Q}_{\mathrm{T}}$ — der Wärmestrom $\Phi$ als Last: $\Sigma\, U \cdot A \cdot \Delta\theta$, rund $2\,300\,\mathrm{W}$."),
         ("vent",
-         "From module 3 and the Ventilation video: the air change carries heat out as Phi V — V times n times c Luft times Delta theta, about 1,500 W.",
-         "Aus Modul 3 und dem Lüftungsvideo: Der Luftwechsel trägt Wärme als Phi-V hinaus — V mal n mal c-Luft mal Delta-Theta, rund 1 500 W."),
+         r"From module 3 and the Ventilation video: the air change carries heat out as $\dot{Q}_{\mathrm{V}}$ — $n \cdot V \cdot \rho c_{\mathrm{p}} \cdot \Delta\theta$, about $1\,500\,\mathrm{W}$.",
+         r"Aus Modul 3 und dem Lüftungsvideo: Der Luftwechsel trägt Wärme als $\dot{Q}_{\mathrm{V}}$ hinaus — $n \cdot V \cdot \rho c_{\mathrm{p}} \cdot \Delta\theta$, rund $1\,500\,\mathrm{W}$."),
         ("total",
-         "Both add up to about 3,800 W, the total heat-loss power Phi Verlust — after DIN V 18599-2.",
-         "Beide zusammen ergeben die Gesamtwärmeverlustleistung Phi-Verlust von rund 3 800 W — nach DIN V 18599-2."),
+         r"Both add up to about $3\,800\,\mathrm{W}$, the total heat-loss power $\dot{Q}_{\mathrm{l}}$ — after DIN V 4108-6.",
+         r"Beide zusammen ergeben die Gesamtverlustleistung $\dot{Q}_{\mathrm{l}}$ von rund $3\,800\,\mathrm{W}$ — nach DIN V 4108-6."),
     ]
 
     def construct(self):
@@ -349,12 +347,12 @@ class ReviewingHeatLosses(Scene):
         WARM = PASTEL_ORANGE
         X0 = -6.3
 
-        trans_formula = math_label(r"\Phi_{\mathrm{T}} = \Sigma\, U_{i} \cdot A_{i} \cdot \Delta\theta",
+        trans_formula = math_label(r"\dot{Q}_{\mathrm{T}} = \Sigma\, U_{i} \cdot A_{i} \cdot \Delta\theta",
                                    np.array([X0, 2.15, 0.0]), size=28, color=ICY_BLUE, edge="left")
         house = _house(np.array([-5.25, 0.8, 0.0]), scale=0.4)
         house_paths = _envelope_paths(house, reach=1.1, inset=0.6)
         phi_t = ValueTracker(0.0)
-        t_read = math_readout(lambda: rf"\Phi_{{\mathrm{{T}}}} \approx {label_number(phi_t.get_value())}\,\mathrm{{W}}",
+        t_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{T}}}} \approx {label_number(phi_t.get_value())}\,\mathrm{{W}}",
                               np.array([-3.65, 0.85, 0.0]), size=26, color=ICY_BLUE)
 
         def leak(rt):
@@ -373,12 +371,12 @@ class ReviewingHeatLosses(Scene):
         hold_for(self, self.NARRATION, "trans", used=0.3 + 2.0 + 3.0, during=leak)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vent"))
-        vent_formula = math_label(r"\Phi_{\mathrm{V}} = V \cdot n \cdot c_{\mathrm{Luft}} \cdot \Delta\theta",
+        vent_formula = math_label(r"\dot{Q}_{\mathrm{V}} = n \cdot V \cdot \rho c_{\mathrm{p}} \cdot \Delta\theta",
                                   np.array([X0, -0.6, 0.0]), size=28, color=DEEP_BLUE, edge="left")
         vent = _window_wall(-5.25, -1.72)
         vent_out, vent_in = _exchange_paths(vent)
         phi_v = ValueTracker(0.0)
-        v_read = math_readout(lambda: rf"\Phi_{{\mathrm{{V}}}} \approx {label_number(phi_v.get_value())}\,\mathrm{{W}}",
+        v_read = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{V}}}} \approx {label_number(phi_v.get_value())}\,\mathrm{{W}}",
                               np.array([-3.65, -1.72, 0.0]), size=26, color=DEEP_BLUE)
 
         def losses(rt):
@@ -395,8 +393,8 @@ class ReviewingHeatLosses(Scene):
         left_side = VGroup(trans_formula, house["group"], vent_formula, vent["group"], t_read, v_read)
         brace = Brace(left_side, RIGHT, color=PASTEL_WHITE, buff=0.35)
         arrow = Arrow(brace.get_right(), brace.get_right() + RIGHT * 0.9, color=PASTEL_WHITE, buff=0.1, stroke_width=3)
-        loss_desc = _label(tr("Total heat loss rate (DIN V 18599-2)", "Gesamtwärmeverlustleistung (DIN V 18599-2)"))
-        loss_title = math_label(r"\Phi_{\mathrm{Verlust}}", size=36).next_to(loss_desc, UP, buff=0.15)
+        loss_desc = _label(tr("Total heat loss rate (DIN V 4108-6:2003-06)", "Gesamtverlustleistung (DIN V 4108-6:2003-06)"))
+        loss_title = math_label(r"\dot{Q}_{\mathrm{l}}", size=36).next_to(loss_desc, UP, buff=0.15)
         loss_slot = math_label(rf"= {label_number(_PHI_LOSS)}\,\mathrm{{W}}", size=32).next_to(loss_desc, DOWN, buff=0.25)
         VGroup(loss_title, loss_desc, loss_slot).next_to(arrow, RIGHT, buff=0.25)
         tot = ValueTracker(0.0)
@@ -418,17 +416,20 @@ class ReviewingHeatLosses(Scene):
 class Scene2(Scene):
     NARRATION = [
         ("phi",
-         "So the loss power is Phi Verlust equals Phi T plus Phi V — watts at one temperature difference.",
-         "Die Verlustleistung ist Phi-Verlust gleich Phi-T plus Phi-V — Watt bei einer Temperaturdifferenz."),
+         r"So the loss power is $\dot{Q}_{\mathrm{l}} = \dot{Q}_{\mathrm{T}} + \dot{Q}_{\mathrm{V}}$ — watts at one temperature difference.",
+         r"Die Verlustleistung ist $\dot{Q}_{\mathrm{l}} = \dot{Q}_{\mathrm{T}} + \dot{Q}_{\mathrm{V}}$ — Watt bei einer Temperaturdifferenz."),
         ("climate",
-         "A design-day wattage is not a yearly kilowatt-hour. Per kelvin the house loses H T and H V watts.",
-         "Eine Auslegungs-Wattzahl ist keine Jahres-Kilowattstunde. Pro Kelvin verliert das Haus H-T und H-V Watt — Phi geteilt durch Delta-Theta."),
+         r"A design-day wattage is not a yearly kilowatt-hour. Per kelvin the house loses $H_{\mathrm{T}}$ and $H_{\mathrm{V}}$ watts, with $H = \dot{Q} / \Delta\theta$.",
+         r"Eine Auslegungs-Wattzahl ist keine Jahres-Kilowattstunde. Pro Kelvin verliert das Haus $H_{\mathrm{T}}$ und $H_{\mathrm{V}}$ Watt, mit $H = \dot{Q} / \Delta\theta$."),
+        ("gt_ref",
+         r"The degree-day number needs an indoor reference: room temperature $\theta_{\mathrm{i}} = 20\,\mathrm{°C}$ and heating limit $15\,\mathrm{°C}$ — together $G_{t,20/15}$.",
+         r"Die Gradtagzahl braucht eine Innentemperatur: Raumtemperatur $\theta_{\mathrm{i}} = 20\,\mathrm{°C}$ und Heizgrenze $15\,\mathrm{°C}$ — zusammen $G_{t,20/15}$."),
         ("gradtag",
-         "The degree-day total G t is the area under the daily indoor-outdoor difference over the heating season, about 3,500 kelvin-days per year.",
-         "Die Gradtagzahl G-t ist die Fläche unter der täglichen Differenz innen minus außen über die Heizperiode: rund 3 500 Kelvintage pro Jahr."),
+         r"On every day with $\theta_{\mathrm{e}} < 15\,\mathrm{°C}$ the difference $\theta_{\mathrm{i}} - \theta_{\mathrm{e}}$ counts: the shaded area is about $3\,500\,\mathrm{Kd/a}$, kelvin-days per year.",
+         r"An jedem Tag mit $\theta_{\mathrm{e}} < 15\,\mathrm{°C}$ zählt die Differenz $\theta_{\mathrm{i}} - \theta_{\mathrm{e}}$: Die gefärbte Fläche beträgt rund $3\,500\,\mathrm{Kd/a}$, Kelvintage pro Jahr."),
         ("annual",
-         "Q Verlust equals H T plus H V, times G t, times 24 hours per day — about 16,000 kilowatt-hours per year, after DIN 4108-6 and DIN V 18599-2.",
-         "Q-Verlust ist H-T plus H-V, mal G-t, mal 24 Stunden pro Tag — rund 16 000 kWh pro Jahr, nach DIN 4108-6 und DIN V 18599-2."),
+         r"$Q_{\mathrm{l}} = (H_{\mathrm{T}} + H_{\mathrm{V}}) \cdot F_{Gt}$ with $F_{Gt} = 0.024\,\mathrm{kKh/(Kd)} \cdot G_{t,20/15}$ — about $16\,000\,\mathrm{kWh/a}$, after DIN V 4108-6.",
+         r"$Q_{\mathrm{l}} = (H_{\mathrm{T}} + H_{\mathrm{V}}) \cdot F_{Gt}$ mit $F_{Gt} = 0{,}024\,\mathrm{kKh/(Kd)} \cdot G_{t,20/15}$ — rund $16\,000\,\mathrm{kWh/a}$, nach DIN V 4108-6."),
     ]
 
     def construct(self):
@@ -447,8 +448,8 @@ class Scene2(Scene):
         WARM = PASTEL_ORANGE
 
         initial_eq, ie = math_row([
-            ("loss", r"\Phi_{\mathrm{Verlust}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE),
-            ("t", r"\Phi_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PASTEL_WHITE), ("v", r"\Phi_{\mathrm{V}}", DEEP_BLUE),
+            ("loss", r"\dot{Q}_{\mathrm{l}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE),
+            ("t", r"\dot{Q}_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PASTEL_WHITE), ("v", r"\dot{Q}_{\mathrm{V}}", DEEP_BLUE),
         ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         initial_eq.move_to(UP * 1.35)
 
@@ -484,10 +485,10 @@ class Scene2(Scene):
         multiplier_group.shift(UP * (initial_eq.base.get_center()[1] - multiplier_group.base.get_center()[1]))
 
         climate_label = math_label(
-            tr(r"H = \Phi / \Delta\theta\;[\mathrm{W/K}] \quad \text{annual energy uses}\; H \cdot G_{\mathrm{t}}"
-               r"\text{, not}\; \Phi_{\mathrm{Auslegung}}",
-               r"H = \Phi / \Delta\theta\;[\mathrm{W/K}] \quad \text{Jahresenergie nutzt}\; H \cdot G_{\mathrm{t}}"
-               r"\text{, nicht}\; \Phi_{\mathrm{Auslegung}}"),
+            tr(r"H = \frac{\dot{Q}}{\Delta\theta} \quad \text{in}\; \frac{\mathrm{W}}{\mathrm{K}} \quad \text{annual energy uses}\; H \cdot G_{t,20/15}"
+               r"\text{, not the design load}",
+               r"H = \frac{\dot{Q}}{\Delta\theta} \quad \text{in}\; \frac{\mathrm{W}}{\mathrm{K}} \quad \text{Jahresenergie nutzt}\; H \cdot G_{t,20/15}"
+               r"\text{, nicht die Auslegungslast}"),
             size=18, color=PURPLE,
         )
         climate_label.next_to(probe, UP, buff=0.45)
@@ -496,11 +497,11 @@ class Scene2(Scene):
         h_v = ValueTracker(0.0)
         ht_read = math_readout(
             lambda: rf"H_{{\mathrm{{T}}}} = \frac{{{label_number(_PHI_T)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
-                    rf"{label_number(h_t.get_value())}\,\mathrm{{W/K}}",
+                    rf"{label_number(h_t.get_value())}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}",
             np.array([wall_icon.get_center()[0], -1.6, 0.0]), size=20, color=ICY_BLUE, edge="center")
         hv_read = math_readout(
             lambda: rf"H_{{\mathrm{{V}}}} = \frac{{{label_number(_PHI_V)}\,\mathrm{{W}}}}{{20\,\mathrm{{K}}}} = "
-                    rf"{label_number(h_v.get_value())}\,\mathrm{{W/K}}",
+                    rf"{label_number(h_v.get_value())}\,\frac{{\mathrm{{W}}}}{{\mathrm{{K}}}}",
             np.array([window_icon.get_center()[0], -1.6, 0.0]), size=20, color=DEEP_BLUE, edge="center")
 
         self.play(
@@ -514,100 +515,107 @@ class Scene2(Scene):
         self.play(h_t.animate.set_value(_H_T), h_v.animate.set_value(_H_V), *losses(2.0), run_time=2.0)
         hold_for(self, self.NARRATION, "climate", during=losses)
 
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gradtag"))
-        profile = _gt_profile()
-        O = np.array([-5.7, -1.75, 0.0])
-        XL, YL, YMAX = 7.4, 2.4, 25.0
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gt_ref"))
+        theta_e = _year_theta_e()
+        heating = theta_e < _THETA_HG
+        O = np.array([-5.7, -2.0, 0.0])
+        XL, YL, T_LO, T_HI = 7.4, 2.6, -8.0, 26.0
 
-        def cp(day, kelvin):
-            return O + RIGHT * (day / _SEASON_DAYS * XL) + UP * (kelvin / YMAX * YL)
+        def cp(day, temp):
+            return O + RIGHT * (day / 365 * XL) + UP * ((temp - T_LO) / (T_HI - T_LO) * YL)
 
         x_axis = Arrow(O, O + RIGHT * (XL + 0.3), buff=0, stroke_width=2.4, color=PASTEL_WHITE,
                        tip_length=0.15, max_tip_length_to_length_ratio=0.05)
         y_axis = Arrow(O, O + UP * (YL + 0.3), buff=0, stroke_width=2.4, color=PASTEL_WHITE,
                        tip_length=0.15, max_tip_length_to_length_ratio=0.08)
-        y_name = math_label(r"\theta_{\mathrm{i}} - \theta_{\mathrm{e}}\;[\mathrm{K}]", size=LABEL_FONT_SIZE)
+        y_name = math_label(r"\theta\;\text{in}\;\mathrm{°C}", size=LABEL_FONT_SIZE)
         y_name.next_to(y_axis.get_end(), RIGHT, buff=0.14)
         y_ticks = VGroup(*[
             VGroup(Line(cp(0, k) + LEFT * 0.06, cp(0, k) + RIGHT * 0.06, color=PASTEL_WHITE, stroke_width=2),
                    math_label(str(k), cp(0, k) + LEFT * 0.14 + DOWN * 0.07, size=15, edge="right"))
-            for k in (10, 20)
+            for k in (0, 10)
         ])
-        months = [tr("Oct", "Okt"), "Nov", tr("Dec", "Dez"), "Jan", "Feb", tr("Mar", "Mär"), "Apr"]
-        starts = [0, 31, 61, 92, 123, 151, 182, _SEASON_DAYS]
-        m_marks = VGroup(*[Line(cp(d, 0) + DOWN * 0.06, cp(d, 0) + UP * 0.06, color=PASTEL_WHITE, stroke_width=2)
+        months = tr("JFMAMJJASOND", "JFMAMJJASOND")
+        starts = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
+        m_marks = VGroup(*[Line(cp(d, T_LO) + DOWN * 0.06, cp(d, T_LO) + UP * 0.06, color=PASTEL_WHITE, stroke_width=2)
                            for d in starts[1:-1]])
-        m_names = VGroup(*[_label(m, size=15, color=PASTEL_WHITE).move_to(cp((a + b) / 2, 0) + DOWN * 0.22)
+        m_names = VGroup(*[_label(m, size=15, color=PASTEL_WHITE).move_to(cp((a + b) / 2, T_LO) + DOWN * 0.22)
                            for m, a, b in zip(months, starts[:-1], starts[1:])])
-        steps = [cp(0, 0)]
-        for d, v in enumerate(profile):
-            steps += [cp(d, v), cp(d + 1, v)]
-        steps.append(cp(_SEASON_DAYS, 0))
-        curve = VMobject(color=PURPLE, stroke_width=2).set_points_as_corners(steps[1:-1])
+        curve = VMobject(color=ICY_BLUE, stroke_width=2.4).set_points_as_corners([cp(d + 0.5, v) for d, v in enumerate(theta_e)])
+        e_name = math_label(r"\theta_{\mathrm{e}}", cp(292, theta_e[292]) + DOWN * 0.38 + RIGHT * 0.25, size=22, color=ICY_BLUE)
+        i_line = Line(cp(0, _THETA_I), cp(365, _THETA_I), color=WARM, stroke_width=3)
+        hg_line = DashedLine(cp(0, _THETA_HG), cp(365, _THETA_HG), color=PASTEL_YELLOW, stroke_width=2.4)
+        i_name = math_label(rf"\theta_{{\mathrm{{i}}}} = {label_number(_THETA_I)}\,\mathrm{{°C}}",
+                            np.array([2.2, cp(0, _THETA_I)[1], 0.0]), size=22, color=WARM, edge="left")
+        i_note = _label(tr("room temperature", "Raumtemperatur"), size=15, color=WARM).next_to(i_name, RIGHT, buff=0.2)
+        hg_name = math_label(tr(rf"\text{{heating limit}}\;{label_number(_THETA_HG)}\,\mathrm{{°C}}", rf"\text{{Heizgrenze}}\;{label_number(_THETA_HG)}\,\mathrm{{°C}}"),
+                             np.array([2.2, cp(0, _THETA_HG)[1], 0.0]), size=22, color=PASTEL_YELLOW, edge="left")
 
         day = ValueTracker(0.0)
-
-        def filled_area():
-            x = max(0.001, day.get_value())
-            n = int(x)
-            pts = [cp(0, 0)]
-            for d in range(min(n, _SEASON_DAYS)):
-                pts += [cp(d, profile[d]), cp(d + 1, profile[d])]
-            if n < _SEASON_DAYS:
-                pts += [cp(n, profile[n]), cp(x, profile[n])]
-            pts.append(cp(x, 0))
-            return Polygon(*pts, stroke_width=0, fill_color=PURPLE, fill_opacity=0.45)
+        heating_days = np.flatnonzero(heating)
+        bars = VGroup(*[
+            Rectangle(width=XL / 365 * 1.2, height=(_THETA_I - theta_e[d]) / (T_HI - T_LO) * YL, stroke_width=0,
+                      fill_color=PURPLE, fill_opacity=0.0).move_to((cp(d + 0.5, _THETA_I) + cp(d + 0.5, theta_e[d])) / 2)
+            for d in heating_days
+        ])
+        bars.add_updater(lambda group: [bar.set_fill(opacity=0.55 if d + 1 <= day.get_value() else 0.0)
+                                        for bar, d in zip(group, heating_days)])
 
         def gt_now():
-            x = day.get_value()
-            n = int(x)
-            return float(profile[:n].sum() + (profile[n] * (x - n) if n < _SEASON_DAYS else 0.0))
+            return float(sum(_THETA_I - theta_e[d] for d in heating_days if d + 1 <= day.get_value()))
 
-        area = always_redraw(filled_area)
-        gt_def = math_label(r"G_{\mathrm{t}} = \Sigma\,(\theta_{\mathrm{i}} - \theta_{\mathrm{e}}) \cdot 1\,\mathrm{d}",
-                            np.array([2.35, 0.35, 0.0]), size=22, color=PURPLE, edge="left")
-        d_read = math_readout(lambda: tr(rf"\mathrm{{Day}}\; {int(day.get_value())}\; \text{{of}}\; {_SEASON_DAYS}", rf"\mathrm{{Tag}}\; {int(day.get_value())}\; \text{{von}}\; {_SEASON_DAYS}"),
-                              np.array([2.35, -0.35, 0.0]), size=20, color=GREY_A)
-        gt_read = math_readout(lambda: rf"G_{{\mathrm{{t}}}} \approx {label_number(round(gt_now(), -1))}\,\mathrm{{K\,d/a}}",
-                               np.array([2.35, -1.05, 0.0]), size=24, color=PURPLE)
-
-        thermo = thermometer_glyph(np.array([6.15, -1.45, 0.0]), height=2.0, color=PURPLE, level=0.0)
-        thermo["column"].add_updater(
-            lambda m: thermo["level"].set_value(profile[min(int(day.get_value()), _SEASON_DAYS - 1)] / YMAX))
+        gt_def = math_label(r"G_{t,20/15} = \Sigma\,(\theta_{\mathrm{i}} - \theta_{\mathrm{e}}) \cdot 1\,\mathrm{d}",
+                            np.array([2.2, -0.95, 0.0]), size=20, color=PURPLE, edge="left")
+        gt_note = math_label(tr(r"\text{only days with}\;\theta_{\mathrm{e}} < 15\,\mathrm{°C}", r"\text{nur Tage mit}\;\theta_{\mathrm{e}} < 15\,\mathrm{°C}"),
+                             np.array([2.2, -1.35, 0.0]), size=18, color=GREY_A, edge="left")
+        d_read = math_readout(lambda: tr(rf"\mathrm{{Day}}\; {int(day.get_value())}\; \text{{of}}\; 365", rf"\mathrm{{Tag}}\; {int(day.get_value())}\; \text{{von}}\; 365"),
+                              np.array([2.2, -1.75, 0.0]), size=20, color=GREY_A)
+        gt_read = math_readout(lambda: rf"G_{{t,20/15}} \approx {label_number(round(gt_now(), -1))}\,\frac{{\mathrm{{Kd}}}}{{\mathrm{{a}}}}",
+                               np.array([2.2, -2.25, 0.0]), size=24, color=PURPLE)
+        mark = always_redraw(lambda: Dot(cp(day.get_value(), theta_e[min(int(day.get_value()), 364)]), radius=0.07, color=PASTEL_WHITE))
+        d0 = 20
+        gap = DoubleArrow(cp(d0 + 0.5, _THETA_I), cp(d0 + 0.5, theta_e[d0]), buff=0, stroke_width=2.2, tip_length=0.12, color=PASTEL_WHITE)
+        gap_name = math_label(r"\theta_{\mathrm{i}} - \theta_{\mathrm{e}}", cp(d0 + 0.5, (_THETA_I + theta_e[d0]) / 2) + RIGHT * 0.9,
+                              size=18, color=PASTEL_WHITE)
 
         self.play(FadeOut(VGroup(wall_icon, window_icon, house["air"], ht_read, hv_read, climate_label)), run_time=0.6)
         self.play(GrowArrow(x_axis), GrowArrow(y_axis), FadeIn(y_name), FadeIn(y_ticks), FadeIn(m_marks),
-                  FadeIn(m_names), Create(curve), FadeIn(gt_def), FadeIn(thermo["group"]), FadeIn(thermo["column"]),
-                  run_time=1.6)
-        self.add(area, d_read, gt_read)
-        self.play(day.animate.set_value(_SEASON_DAYS), run_time=4.0, rate_func=linear)
-        hold_for(self, self.NARRATION, "gradtag")
+                  FadeIn(m_names), Create(curve), FadeIn(e_name), run_time=1.6)
+        self.play(Create(i_line), FadeIn(i_name), FadeIn(i_note), run_time=0.9)
+        self.play(Create(hg_line), FadeIn(hg_name), run_time=0.9)
+        hold_for(self, self.NARRATION, "gt_ref", used=0.6 + 1.6 + 0.9 + 0.9)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gradtag"))
+        self.add(bars, mark, d_read, gt_read)
+        self.play(FadeIn(gt_def), FadeIn(gt_note), GrowFromCenter(gap), FadeIn(gap_name), run_time=1.0)
+        self.play(day.animate.set_value(365), run_time=4.0, rate_func=linear)
+        hold_for(self, self.NARRATION, "gradtag", used=1.0 + 4.0)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "annual"))
         consolidated_eq, ce = math_row([
-            ("q", r"Q_{\mathrm{Verlust}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("lp", "(", PURPLE),
+            ("q", r"Q_{\mathrm{l}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("lp", "(", PURPLE),
             ("ht", r"H_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PASTEL_WHITE), ("hv", r"H_{\mathrm{V}}", DEEP_BLUE),
-            ("rp", ")", PURPLE), ("times", r"\cdot", PURPLE), ("gt", r"G_{\mathrm{t}}", PURPLE),
-            ("times2", r"\cdot", PURPLE), ("hd", r"24\,\mathrm{h/d}", PURPLE),
+            ("rp", ")", PURPLE), ("times", r"\cdot", PURPLE), ("gt", r"G_{t,20/15}", PURPLE),
+            ("times2", r"\cdot", PURPLE), ("hd", r"24\,\frac{\mathrm{h}}{\mathrm{d}}", PURPLE),
         ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         consolidated_eq.move_to(UP * 1.35)
+        wk = r"\,\frac{\mathrm{W}}{\mathrm{K}}"
         values, vi = math_row([
             ("eq", "=", PASTEL_WHITE),
-            ("h", rf"({label_number(_H_T)} + {label_number(_H_V)})\,\mathrm{{W/K}}", PASTEL_WHITE),
-            ("d1", r"\cdot", PASTEL_WHITE), ("gt", rf"{label_number(_GT)}\,\mathrm{{K\,d/a}}", PURPLE),
-            ("d2", r"\cdot", PASTEL_WHITE), ("hd", r"24\,\mathrm{h/d}", PASTEL_WHITE),
+            ("h", rf"({label_number(_H_T)}{wk} + {label_number(_H_V)}{wk})", PASTEL_WHITE),
+            ("d1", r"\cdot", PASTEL_WHITE), ("gt", rf"{label_number(_GT)}\,\frac{{\mathrm{{Kd}}}}{{\mathrm{{a}}}}", PURPLE),
+            ("d2", r"\cdot", PASTEL_WHITE), ("hd", r"24\,\frac{\mathrm{h}}{\mathrm{d}}", PASTEL_WHITE),
         ], font_size=BODY_FONT_SIZE, buff=UI_SPACING)
         values.move_to(UP * 0.35)
         q = ValueTracker(0.0)
         q_read = math_readout(
-            lambda: rf"Q_{{\mathrm{{Verlust}}}} \approx {label_number(round(q.get_value(), -2))}\,\mathrm{{kWh/a}}",
+            lambda: rf"Q_{{\mathrm{{l}}}} \approx {label_number(round(q.get_value(), -2))}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
             np.array([0.0, -0.6, 0.0]), size=34, color=PASTEL_WHITE, edge="center")
 
-        area_static = filled_area()
-        self.remove(area)
-        self.add(area_static)
+        bars.clear_updaters()
+        area_static = bars
+        self.remove(mark)
         _freeze(gt_read)
-        thermo["column"].clear_updaters()
         self.play(
             stage.transition("heating.calculation.balance.loss-equation", source=VGroup(ie["loss"], ie["eq"]), target=VGroup(ce["q"], ce["eq"])),
             stage.transition("heating.calculation.balance.loss-terms", source=VGroup(mg["ht"], mg["plus"], mg["hv"]), target=VGroup(ce["ht"], ce["plus"], ce["hv"])),
@@ -616,8 +624,8 @@ class Scene2(Scene):
             stage.transition("heating.calculation.balance.arrow-to-times", source=mg["arrow"], target=ce["times"]),
             FadeOut(ie["plus"]),
             stage.transition("heating.calculation.balance.degree-day-area-to-symbol", source=area_static, target=ce["gt"]),
-            FadeOut(VGroup(x_axis, y_axis, y_name, y_ticks, m_marks, m_names, curve, gt_def, d_read,
-                           thermo["group"], thermo["column"])),
+            FadeOut(VGroup(x_axis, y_axis, y_name, y_ticks, m_marks, m_names, curve, e_name, i_line, hg_line, i_name, i_note,
+                           hg_name, gt_def, gt_note, d_read, gap, gap_name)),
             run_time=2.5,
         )
         self.remove(initial_eq, multiplier_group)
@@ -627,9 +635,11 @@ class Scene2(Scene):
         self.add(q_read)
         self.play(q.animate.set_value(_Q_LOSS), run_time=2.2)
 
-        unit_text = _label(tr("Annual heat loss in kWh/a  —  degree days per DIN 4108-6 / DIN V 18599-2", "Jahres-Wärmeverlust in kWh/a  —  Gradtagzahl nach DIN 4108-6 / DIN V 18599-2"),
-                           color=GREY_A).move_to(DOWN * 1.45)
-        self.play(FadeIn(unit_text), run_time=1)
+        f_gt = math_label(rf"F_{{Gt}} = {label_number(0.024, 3)}\,\frac{{\mathrm{{kKh}}}}{{\mathrm{{Kd}}}} \cdot G_{{t,20/15}} ={label_number(_F_GT)}\,\frac{{\mathrm{{kKh}}}}{{\mathrm{{a}}}}",
+                          np.array([0.0, -1.3, 0.0]), size=26, color=PURPLE)
+        f_src = _label(_references.cite("!din-v-4108-6") + "\n" + tr("Heating-period method · degree days per ", "Heizperiodenverfahren · Gradtagzahl nach ") + _references.cite("vdi-3807-1"),
+                       size=15, color=GREY_A).move_to(DOWN * 1.8)
+        self.play(FadeIn(f_gt), FadeIn(f_src), run_time=1)
 
         hold_for(self, self.NARRATION, "annual")
         self.play(FadeOut(caption), run_time=0.3)
@@ -642,14 +652,14 @@ class ReviewingHeatGains(Scene):
          "The losses are offset by free heat gains inside the building.",
          "Den Verlusten stehen freie Wärmegewinne im Gebäude gegenüber."),
         ("solar",
-         "From module 5: winter sun through the windows is Phi sol; over the heating season it adds up to Q sol, about 3,000 kWh per year.",
-         "Aus Modul 5: Wintersonne durch die Fenster ist Phi-sol — über die Heizperiode summiert sich das zu Q-sol, rund 3 000 kWh pro Jahr."),
+         r"From module 5: winter sun through the windows is $\dot{Q}_{\mathrm{S}}$; over the heating season it adds up to $Q_{\mathrm{S}}$, about $3\,000\,\mathrm{kWh/a}$.",
+         r"Aus Modul 5: Wintersonne durch die Fenster ist $\dot{Q}_{\mathrm{S}}$ — über die Heizperiode summiert sich das zu $Q_{\mathrm{S}}$, rund $3\,000\,\mathrm{kWh/a}$."),
         ("internal",
-         "From module 4: people, devices and lights are Phi int; over the season they become Q int, about 2,000 kWh per year.",
-         "Aus Modul 4: Personen, Geräte und Licht sind Phi-int — über die Heizperiode werden daraus Q-int, rund 2 000 kWh pro Jahr."),
+         r"From module 4: people, devices and lights are $\dot{Q}_{\mathrm{i}}$; over the season they become $Q_{\mathrm{i}}$, about $2\,000\,\mathrm{kWh/a}$.",
+         r"Aus Modul 4: Personen, Geräte und Licht sind $\dot{Q}_{\mathrm{i}}$ — über die Heizperiode werden daraus $Q_{\mathrm{i}}$, rund $2\,000\,\mathrm{kWh/a}$."),
         ("total",
-         "Together they form the gross heat gain Q Gewinn of about 5,000 kWh per year — free energy we can still use.",
-         "Zusammen bilden sie den Brutto-Wärmegewinn Q-Gewinn von 5 000 kWh pro Jahr — freie Energie, die wir noch nutzen können."),
+         r"Together they form the gross heat gain $Q_{\mathrm{g}} = Q_{\mathrm{S}} + Q_{\mathrm{i}}$ of about $5\,000\,\mathrm{kWh/a}$ — free energy we can still use.",
+         r"Zusammen bilden sie den Brutto-Wärmegewinn $Q_{\mathrm{g}} = Q_{\mathrm{S}} + Q_{\mathrm{i}}$ von $5\,000\,\mathrm{kWh/a}$ — freie Energie, die wir noch nutzen können."),
     ]
 
     def construct(self):
@@ -665,7 +675,7 @@ class ReviewingHeatGains(Scene):
 
         title = _heading(tr("Overview of heat gains", "Übersicht der Wärmegewinne"))
 
-        subtitle = _label(tr("Free heat gains (DIN V 18599)", "Freie Wärmegewinne (DIN V 18599)"), size=18, color=SUBTEXT_GREY)
+        subtitle = _label(tr("Free heat gains (DIN V 4108-6:2003-06)", "Freie Wärmegewinne (DIN V 4108-6:2003-06)"), size=18, color=SUBTEXT_GREY)
         subtitle.next_to(title, DOWN, buff=0.15)
 
         FX, SOL_Y, INT_Y = 1.3, 0.95, -1.15
@@ -678,12 +688,13 @@ class ReviewingHeatGains(Scene):
         ray_paths = [[s, h, p] for s, h, p in zip(rays["starts"], rays["hits"], rays["lands"])]
         sun_icon = VGroup(sun, sol_room["group"], rays["group"])
 
-        solar_text = math_label(
-            r"\Phi_{\mathrm{sol}} = G \cdot A \cdot F_{\mathrm{f}} \cdot g \cdot F_{\mathrm{sh}}",
-            size=24, color=SOLAR_YELLOW)
-        solar_label = _label(tr("Solar heat gain (DIN V 18599-2)", "Solarer Wärmegewinn (DIN V 18599-2)"), size=15, color=SOLAR_YELLOW)
+        solar_text = VGroup(
+            math_label(r"\dot{Q}_{\mathrm{S}} = I_{\mathrm{s}} \cdot A \cdot g_{\perp}", size=24, color=SOLAR_YELLOW),
+            math_label(r"\cdot F_{\mathrm{F}} \cdot F_{\mathrm{W}} \cdot F_{\mathrm{S}} \cdot F_{\mathrm{C}}", size=24, color=SOLAR_YELLOW),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.1)
+        solar_label = _label(tr("Solar heat gain (DIN V 4108-6:2003-06)", "Solarer Wärmegewinn (DIN V 4108-6:2003-06)"), size=15, color=SOLAR_YELLOW)
         solar_label.next_to(solar_text, DOWN, aligned_edge=LEFT, buff=0.1)
-        solar_slot = math_label(rf"Q_{{\mathrm{{sol}}}} \approx {label_number(_Q_SOL)}\,\mathrm{{kWh/a}}", size=24)
+        solar_slot = math_label(rf"Q_{{\mathrm{{S}}}} \approx {label_number(_Q_SOL)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", size=24)
         solar_slot.next_to(solar_label, DOWN, aligned_edge=LEFT, buff=0.18)
         solar_eq_group = VGroup(solar_text, solar_label)
         VGroup(solar_eq_group, solar_slot).move_to(np.array([FX, SOL_Y, 0.0]), aligned_edge=LEFT)
@@ -706,11 +717,11 @@ class ReviewingHeatGains(Scene):
         warm_spots = [person.get_top() + DOWN * 0.12, laptop_top.get_center() + UP * 0.04]
 
         int_text = math_label(
-            r"\Phi_{\mathrm{int}} = \Phi_{\mathrm{p}} + \Phi_{\mathrm{e}} + \Phi_{\mathrm{l}}",
+            r"\dot{Q}_{\mathrm{i}} = \dot{Q}_{\mathrm{i,p}} + \dot{Q}_{\mathrm{i,e}} + \dot{Q}_{\mathrm{i,l}}",
             size=24, color=INT_ORANGE)
-        int_label = _label(tr("Internal heat gain (DIN V 18599-10)", "Interner Wärmegewinn (DIN V 18599-10)"), size=15, color=INT_ORANGE)
+        int_label = _label(tr("Internal heat gain (DIN V 4108-6:2003-06)", "Interner Wärmegewinn (DIN V 4108-6:2003-06)"), size=15, color=INT_ORANGE)
         int_label.next_to(int_text, DOWN, aligned_edge=LEFT, buff=0.1)
-        int_slot = math_label(rf"Q_{{\mathrm{{int}}}} \approx {label_number(_Q_INT)}\,\mathrm{{kWh/a}}", size=24)
+        int_slot = math_label(rf"Q_{{\mathrm{{i}}}} \approx {label_number(_Q_INT)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", size=24)
         int_slot.next_to(int_label, DOWN, aligned_edge=LEFT, buff=0.18)
         int_eq_group = VGroup(int_text, int_label)
         VGroup(int_eq_group, int_slot).move_to(np.array([FX, INT_Y, 0.0]), aligned_edge=LEFT)
@@ -726,20 +737,20 @@ class ReviewingHeatGains(Scene):
         gains_vgroup = VGroup(solar_group, internal_group)
         brace = Brace(gains_vgroup, direction=LEFT, color=TEXT_WHITE, buff=0.3)
 
-        q_gain_main = math_label(r"Q_{\mathrm{Gewinn}}", size=38, color=TEXT_WHITE)
+        q_gain_main = math_label(r"Q_{\mathrm{g}}", size=38, color=TEXT_WHITE)
         q_gain_sub = _label(tr("Total gross heat gain", "Brutto-Gesamtwärmegewinn"), color=SUBTEXT_GREY)
-        q_gain_slot = math_label(rf"= {label_number(_Q_GAIN)}\,\mathrm{{kWh/a}}", size=28)
+        q_gain_slot = math_label(rf"= {label_number(_Q_GAIN)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", size=28)
         q_gain_box = VGroup(q_gain_main, q_gain_sub, q_gain_slot).arrange(DOWN, buff=0.14)
         q_gain_box.next_to(brace, LEFT, buff=0.3)
 
         q_sol = ValueTracker(0.0)
         q_int = ValueTracker(0.0)
         q_tot = ValueTracker(0.0)
-        sol_read = math_readout(lambda: rf"Q_{{\mathrm{{sol}}}} \approx {label_number(q_sol.get_value())}\,\mathrm{{kWh/a}}",
+        sol_read = math_readout(lambda: rf"Q_{{\mathrm{{S}}}} \approx {label_number(q_sol.get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
                                 _slot(solar_slot), size=24, color=SOLAR_YELLOW)
-        int_read = math_readout(lambda: rf"Q_{{\mathrm{{int}}}} \approx {label_number(q_int.get_value())}\,\mathrm{{kWh/a}}",
+        int_read = math_readout(lambda: rf"Q_{{\mathrm{{i}}}} \approx {label_number(q_int.get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
                                 _slot(int_slot), size=24, color=INT_ORANGE)
-        tot_read = math_readout(lambda: rf"= {label_number(q_tot.get_value())}\,\mathrm{{kWh/a}}",
+        tot_read = math_readout(lambda: rf"= {label_number(q_tot.get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
                                 _slot(q_gain_slot), size=28, color=TEXT_WHITE)
 
         self.play(Write(title), FadeIn(subtitle, shift=DOWN * 0.2), FadeIn(sol_room["group"]),
@@ -799,20 +810,20 @@ class Scene4(Scene):
          "Gains below the loss curve replace heating. The part above overheats the room and escapes unused.",
          "Gewinne unter der Verlustkurve ersetzen Heizwärme. Der Teil darüber überhitzt den Raum und entweicht ungenutzt."),
         ("ratio",
-         "Eta h is the green area divided by all gains — here about 0.90.",
-         "Eta-h ist die grüne Fläche geteilt durch alle Gewinne — hier rund 0,90."),
+         r"$\eta$ is the green area divided by all gains — here about $0.90$.",
+         r"$\eta$ ist die grüne Fläche geteilt durch alle Gewinne — hier rund $0{,}90$."),
         ("mass",
-         "Heavier thermal mass stores the surplus and releases it in the evening: the red area shrinks and eta h rises to about 0.97.",
-         "Mehr speicherfähige Masse nimmt den Überschuss auf und gibt ihn abends ab: Die rote Fläche schrumpft, Eta-h steigt auf rund 0,97."),
+         r"Heavier thermal mass stores the surplus and releases it in the evening: the red area shrinks and $\eta$ rises to about $0.97$.",
+         r"Mehr speicherfähige Masse nimmt den Überschuss auf und gibt ihn abends ab: Die rote Fläche schrumpft, $\eta$ steigt auf rund $0{,}97$."),
         ("house",
-         "Our example house is calculated with eta h of about 0.90.",
-         "Unser Beispielhaus rechnen wir mit Eta-h von rund 0,90."),
+         r"Our example house is calculated with $\eta$ of about $0.90$.",
+         r"Unser Beispielhaus rechnen wir mit $\eta$ von rund $0{,}90$."),
         ("formula",
-         "So we keep only the useful share: Q nutz equals eta h times solar plus internal gains, about 4,500 kWh per year.",
-         "Deshalb behalten wir nur den nutzbaren Anteil: Q-nutz ist Eta-h mal solare plus interne Gewinne, also 4 500 kWh pro Jahr."),
+         r"So we keep only the useful share: $\eta \cdot Q_{\mathrm{g}} = \eta \cdot (Q_{\mathrm{S}} + Q_{\mathrm{i}})$, about $4\,500\,\mathrm{kWh/a}$.",
+         r"Deshalb behalten wir nur den nutzbaren Anteil: $\eta \cdot Q_{\mathrm{g}} = \eta \cdot (Q_{\mathrm{S}} + Q_{\mathrm{i}})$, also $4\,500\,\mathrm{kWh/a}$."),
         ("eta",
-         "Eta h is the utilization factor — how much of those free gains actually cuts the heating demand.",
-         "Eta-h ist der Ausnutzungsgrad — wie viel dieser freien Gewinne den Heizwärmebedarf wirklich senkt."),
+         r"$\eta$ is the utilisation factor — how much of those free gains actually cuts the heating demand.",
+         r"$\eta$ ist der Ausnutzungsgrad — wie viel dieser freien Gewinne den Heizwärmebedarf wirklich senkt."),
     ]
 
     def construct(self):
@@ -840,9 +851,9 @@ class Scene4(Scene):
                        tip_length=0.15, max_tip_length_to_length_ratio=0.05)
         y_axis = Arrow(O, O + UP * (YL + 0.3), buff=0, stroke_width=2.4, color=PASTEL_WHITE,
                        tip_length=0.15, max_tip_length_to_length_ratio=0.08)
-        x_name = math_label(r"t\;[\mathrm{h}]", size=LABEL_FONT_SIZE).next_to(x_axis.get_end(), DOWN, buff=0.14)
+        x_name = math_label(r"t\;\text{in}\;\mathrm{h}", size=LABEL_FONT_SIZE).next_to(x_axis.get_end(), DOWN, buff=0.14)
         x_name.align_to(x_axis.get_end(), RIGHT)
-        y_name = math_label(r"P\;[\mathrm{kW}]", size=LABEL_FONT_SIZE).next_to(y_axis.get_end(), RIGHT, buff=0.14)
+        y_name = math_label(r"P\;\text{in}\;\mathrm{kW}", size=LABEL_FONT_SIZE).next_to(y_axis.get_end(), RIGHT, buff=0.14)
         x_ticks = VGroup(*[
             VGroup(Line(cp(h, 0) + DOWN * 0.06, cp(h, 0) + UP * 0.06, color=PASTEL_WHITE, stroke_width=2),
                    math_label(str(h), cp(h, 0) + DOWN * 0.3, size=15))
@@ -930,13 +941,13 @@ class Scene4(Scene):
             return _utilization(_SOLAR_PEAK, mass.get_value(), fill_to.get_value())
 
         a_gain_read = math_readout(
-            lambda: rf"A_{{\mathrm{{Gewinn}}}} = {label_number(util()[1], 1)}\,\mathrm{{kWh}}",
+            lambda: rf"Q_{{\mathrm{{g}}}} = {label_number(util()[1], 1)}\,\mathrm{{kWh}}",
             np.array([LX, -0.3, 0.0]), size=22, color=GAIN_YELLOW)
         a_used_read = math_readout(
-            lambda: rf"A_{{\mathrm{{nutz}}}} = {label_number(util()[0], 1)}\,\mathrm{{kWh}}",
+            lambda: rf"Q_{{\mathrm{{g,n}}}} = {label_number(util()[0], 1)}\,\mathrm{{kWh}}",
             np.array([LX, -0.82, 0.0]), size=22, color=GREEN)
         eta_read = math_readout(
-            lambda: rf"\eta_{{\mathrm{{h}}}} = \frac{{A_{{\mathrm{{nutz}}}}}}{{A_{{\mathrm{{Gewinn}}}}}} = "
+            lambda: rf"\eta = \frac{{Q_{{\mathrm{{g,n}}}}}}{{Q_{{\mathrm{{g}}}}}} = "
                     rf"{label_number(util()[2], 2)}",
             np.array([LX, -1.58, 0.0]), size=26, color=GREEN)
         mass_tag = _label(tr("light construction", "leichte Bauweise"), size=18, color=GREY_A).move_to(np.array([LX, 0.14, 0.0]), aligned_edge=LEFT)
@@ -983,8 +994,8 @@ class Scene4(Scene):
         self.remove(sky_body)
 
         initial_eq, ie = math_row([
-            ("q", r"Q_{\mathrm{Gewinn}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("sol", r"Q_{\mathrm{sol}}", PASTEL_YELLOW),
-            ("plus", "+", PASTEL_WHITE), ("int", r"Q_{\mathrm{int}}", PASTEL_ORANGE),
+            ("q", r"Q_{\mathrm{g}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("sol", r"Q_{\mathrm{S}}", PASTEL_YELLOW),
+            ("plus", "+", PASTEL_WHITE), ("int", r"Q_{\mathrm{i}}", PASTEL_ORANGE),
         ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING * 2)
         initial_eq.move_to(UP * 1.1)
 
@@ -992,9 +1003,10 @@ class Scene4(Scene):
         self.wait(0.6)
 
         target_group, tg = math_row([
-            ("q", r"Q_{\mathrm{nutz}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("eta", r"\eta_{\mathrm{h}}", GREEN),
-            ("dot", r"\cdot", GREEN), ("lp", "(", GREEN), ("sol", r"Q_{\mathrm{sol}}", PASTEL_YELLOW),
-            ("plus", "+", PASTEL_WHITE), ("int", r"Q_{\mathrm{int}}", PASTEL_ORANGE), ("rp", ")", GREEN),
+            ("eta0", r"\eta", GREEN), ("dot0", r"\cdot", GREEN), ("q", r"Q_{\mathrm{g}}", PASTEL_WHITE),
+            ("eq", "=", PASTEL_WHITE), ("eta", r"\eta", GREEN),
+            ("dot", r"\cdot", GREEN), ("lp", "(", GREEN), ("sol", r"Q_{\mathrm{S}}", PASTEL_YELLOW),
+            ("plus", "+", PASTEL_WHITE), ("int", r"Q_{\mathrm{i}}", PASTEL_ORANGE), ("rp", ")", GREEN),
         ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         target_group.move_to(UP * 1.1)
 
@@ -1009,15 +1021,15 @@ class Scene4(Scene):
 
         self.play(
             stage.transition("heating.calculation.use.eta-slot", source=green_static, target=tg["eta"]),
-            FadeIn(tg["dot"]),
+            FadeIn(tg["dot"]), FadeIn(tg["eta0"]), FadeIn(tg["dot0"]),
             FadeIn(tg["lp"], shift=RIGHT * 0.1),
             FadeIn(tg["rp"], shift=LEFT * 0.1),
             run_time=1.6,
         )
         q_use = ValueTracker(0.0)
         use_read = math_readout(
-            lambda: rf"Q_{{\mathrm{{nutz}}}} = {label_number(_ETA, 2)} \cdot {label_number(_Q_GAIN)}\,\mathrm{{kWh/a}} = "
-                    rf"{label_number(q_use.get_value())}\,\mathrm{{kWh/a}}",
+            lambda: rf"\eta \cdot Q_{{\mathrm{{g}}}} = {label_number(_ETA, 2)} \cdot {label_number(_Q_GAIN)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}} = "
+                    rf"{label_number(q_use.get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
             np.array([0.0, 0.05, 0.0]), size=28, color=PASTEL_WHITE, edge="center")
         self.add(use_read)
         self.play(q_use.animate.set_value(_Q_USE), run_time=2.0)
@@ -1027,8 +1039,8 @@ class Scene4(Scene):
         eta_box = SurroundingRectangle(tg["eta"], color=GREEN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=_theme_module.CHROME_BORDER)
 
         eta_title = VGroup(
-            math_label(r"\eta_{\mathrm{h}}\text{:}", size=22, color=GREEN),
-            _label(tr("Utilisation factor of heat gains (DIN V 18599-2)", "Ausnutzungsgrad der Wärmegewinne (DIN V 18599-2)"), size=22, color=GREEN),
+            math_label(r"\eta\text{:}", size=22, color=GREEN),
+            _label(tr("Utilisation factor of heat gains (DIN V 4108-6:2003-06)", "Ausnutzungsgrad der Wärmegewinne (DIN V 4108-6:2003-06)"), size=22, color=GREEN),
         ).arrange(RIGHT, buff=0.12, aligned_edge=DOWN)
         eta_title.move_to(DOWN * 0.8)
 
@@ -1050,11 +1062,11 @@ class UltimateEnergyBalance(Scene):
          "Balance: losses leave the house, useful gains stay — the difference is the heating demand.",
          "Bilanz: Verluste gehen hinaus, nutzbare Gewinne bleiben — die Differenz ist der Heizwärmebedarf."),
         ("master",
-         "Heating demand Q h equals Q Verlust minus eta h times Q Gewinn: 16,000 minus 4,500 is about 11,500 kilowatt-hours per year.",
-         "Heizwärmebedarf Q-h ist Q-Verlust minus Eta-h mal Q-Gewinn: 16 000 minus 4 500 ergibt rund 11 500 kWh pro Jahr."),
+         r"Heating demand $Q_{\mathrm{h}} = Q_{\mathrm{l}} - \eta \cdot Q_{\mathrm{g}}$: $16\,000\,\mathrm{kWh/a}$ minus $4\,500\,\mathrm{kWh/a}$ is about $11\,500\,\mathrm{kWh/a}$.",
+         r"Heizwärmebedarf $Q_{\mathrm{h}} = Q_{\mathrm{l}} - \eta \cdot Q_{\mathrm{g}}$: $16\,000\,\mathrm{kWh/a}$ minus $4\,500\,\mathrm{kWh/a}$ ergibt rund $11\,500\,\mathrm{kWh/a}$."),
         ("expand",
-         "Expanded: transmission energy plus ventilation energy, minus eta h times solar plus internal energy.",
-         "Ausgeschrieben: Transmissionsenergie plus Lüftungsenergie, minus Eta-h mal Solar plus intern."),
+         r"Expanded: transmission $Q_{\mathrm{T}}$ plus ventilation $Q_{\mathrm{V}}$, minus $\eta$ times solar $Q_{\mathrm{S}}$ plus internal $Q_{\mathrm{i}}$.",
+         r"Ausgeschrieben: Transmission $Q_{\mathrm{T}}$ plus Lüftung $Q_{\mathrm{V}}$, minus $\eta$ mal Solar $Q_{\mathrm{S}}$ plus intern $Q_{\mathrm{i}}$."),
     ]
 
     def construct(self):
@@ -1064,7 +1076,7 @@ class UltimateEnergyBalance(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "balance"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        title = section_heading(tr("The main equation of the heating demand (DIN V 18599)", "Die Hauptgleichung des Heizwärmebedarfs (DIN V 18599)"))
+        title = section_heading(tr("The main equation of the heating demand (DIN V 4108-6:2003-06)", "Die Hauptgleichung des Heizwärmebedarfs (DIN V 4108-6:2003-06)"))
 
         LOSS_C, ETA_C, GAIN_C, QH_C = PASTEL_BLUE, PASTEL_GREEN, PASTEL_YELLOW, PASTEL_RED
 
@@ -1105,9 +1117,9 @@ class UltimateEnergyBalance(Scene):
         self.add(house["air"])
         self.play(Write(title), FadeIn(house["group"]), house["air"].animate.set_fill(opacity=0.14), run_time=1.2)
 
-        q_loss_tag = math_label(r"Q_{\mathrm{Verlust}}", size=26, color=LOSS_C).move_to(np.array([3.4, -0.3, 0.0]))
+        q_loss_tag = math_label(r"Q_{\mathrm{l}}", size=26, color=LOSS_C).move_to(np.array([3.4, -0.3, 0.0]))
         loss_v = ValueTracker(0.0)
-        loss_read = math_readout(lambda: rf"{label_number(round(loss_v.get_value(), -1))}\,\mathrm{{kWh/a}}",
+        loss_read = math_readout(lambda: rf"{label_number(round(loss_v.get_value(), -1))}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
                                  lambda: q_loss_tag.get_top() + UP * 0.2, size=22, color=LOSS_C, edge="center")
 
         self.play(FadeIn(q_loss_tag, shift=RIGHT * 0.3), *losses(0.6), run_time=0.6)
@@ -1115,11 +1127,11 @@ class UltimateEnergyBalance(Scene):
         self.play(loss_v.animate.set_value(_Q_LOSS_SHOWN), *losses(1.4), run_time=1.4)
 
         q_gain_tag, gt = math_row([
-            ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", PASTEL_WHITE), ("g", r"Q_{\mathrm{Gewinn}}", GAIN_C),
+            ("eta", r"\eta", ETA_C), ("dot", r"\cdot", PASTEL_WHITE), ("g", r"Q_{\mathrm{g}}", GAIN_C),
         ], font_size=BODY_FONT_SIZE, buff=UI_SPACING)
         q_gain_tag.move_to(np.array([-4.6, -0.6, 0.0]))
         gain_v = ValueTracker(0.0)
-        gain_read = math_readout(lambda: rf"{label_number(round(gain_v.get_value(), -1))}\,\mathrm{{kWh/a}}",
+        gain_read = math_readout(lambda: rf"{label_number(round(gain_v.get_value(), -1))}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
                                  lambda: q_gain_tag.get_top() + UP * 0.2, size=22, color=GAIN_C, edge="center")
 
         self.play(FadeIn(sun, scale=0.7), FadeIn(person), FadeIn(lamp["group"]), *losses(0.6), run_time=0.6)
@@ -1133,20 +1145,22 @@ class UltimateEnergyBalance(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "master"))
         master_eq, me = math_row([
-            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE), ("loss", r"Q_{\mathrm{Verlust}}", LOSS_C),
-            ("minus", "-", PASTEL_WHITE), ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", PASTEL_WHITE),
-            ("gain", r"Q_{\mathrm{Gewinn}}", GAIN_C),
+            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE), ("loss", r"Q_{\mathrm{l}}", LOSS_C),
+            ("minus", "-", PASTEL_WHITE), ("eta", r"\eta", ETA_C), ("dot", r"\cdot", PASTEL_WHITE),
+            ("gain", r"Q_{\mathrm{g}}", GAIN_C),
         ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         master_eq.move_to(UP * 1.2)
 
         numbers, nb = math_row([
-            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE), ("loss", label_number(_Q_LOSS_SHOWN), LOSS_C),
-            ("minus", "-", PASTEL_WHITE), ("gain", label_number(_Q_USE), GAIN_C), ("approx", r"\approx", PASTEL_WHITE),
-            ("slot", rf"{label_number(_Q_H)}\,\mathrm{{kWh/a}}", QH_C),
-        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
+            ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE),
+            ("loss", rf"{label_number(_Q_LOSS_SHOWN)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", LOSS_C),
+            ("minus", "-", PASTEL_WHITE),
+            ("gain", rf"{label_number(_Q_USE)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", GAIN_C), ("approx", r"\approx", PASTEL_WHITE),
+            ("slot", rf"{label_number(_Q_H)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", QH_C),
+        ], font_size=BODY_FONT_SIZE + 8, buff=UI_SPACING)
         numbers.move_to(UP * 0.1)
         q_h = ValueTracker(0.0)
-        qh_read = math_readout(lambda: rf"{label_number(round(q_h.get_value(), -1))}\,\mathrm{{kWh/a}}",
+        qh_read = math_readout(lambda: rf"{label_number(round(q_h.get_value(), -1))}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
                                _slot(nb["slot"]), size=32, color=QH_C)
 
         self.play(
@@ -1167,8 +1181,8 @@ class UltimateEnergyBalance(Scene):
         expanded_eq, ex = math_row([
             ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE),
             ("loss", r"(Q_{\mathrm{T}} + Q_{\mathrm{V}})", LOSS_C), ("minus", "-", PASTEL_WHITE),
-            ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", PASTEL_WHITE),
-            ("gain", r"(Q_{\mathrm{sol}} + Q_{\mathrm{int}})", GAIN_C),
+            ("eta", r"\eta", ETA_C), ("dot", r"\cdot", PASTEL_WHITE),
+            ("gain", r"(Q_{\mathrm{S}} + Q_{\mathrm{i}})", GAIN_C),
         ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         expanded_eq.move_to(DOWN * 1.1)
 
@@ -1279,8 +1293,8 @@ def _plant_house():
 class AnlagenVerluste(Scene):
     NARRATION = [
         ("need",
-         "The heating demand Q h of about 11,500 kilowatt-hours per year is what the rooms need.",
-         "Der Heizwärmebedarf Q-h von rund 11 500 kWh pro Jahr ist das, was die Räume brauchen."),
+         r"The heating demand $Q_{\mathrm{h}}$ of about $11\,500\,\mathrm{kWh/a}$ is what the rooms need.",
+         r"Der Heizwärmebedarf $Q_{\mathrm{h}}$ von rund $11\,500\,\mathrm{kWh/a}$ ist das, was die Räume brauchen."),
         ("chain",
          "The system must deliver more: on the way from the boiler to the room, generator, store, pipes and radiators lose heat.",
          "Die Anlage muss mehr liefern: Auf dem Weg vom Kessel in den Raum verlieren Erzeuger, Speicher, Rohre und Heizkörper Wärme."),
@@ -1297,8 +1311,8 @@ class AnlagenVerluste(Scene):
          "Generation: with an efficiency of 0.95, part of the fuel energy leaves through the flue, about 700 kWh.",
          "Erzeugung: Bei einem Wirkungsgrad von 0,95 geht ein Teil als Abgas durch den Schornstein — rund 700 kWh."),
         ("sum",
-         "Final energy Q E is Q h plus all system losses: about 14,000 kilowatt-hours per year, after DIN V 18599-5.",
-         "Die Endenergie Q-E ist Q-h plus alle Anlagenverluste: rund 14 000 kWh pro Jahr, nach DIN V 18599-5."),
+         r"Final energy $Q_{\mathrm{E}}$ is $Q_{\mathrm{h}}$ plus all system losses: about $14\,000\,\mathrm{kWh/a}$, after DIN/TS 18599-5.",
+         r"Die Endenergie $Q_{\mathrm{E}}$ ist $Q_{\mathrm{h}}$ plus alle Anlagenverluste: rund $14\,000\,\mathrm{kWh/a}$, nach DIN/TS 18599-5."),
         ("tip",
          "So keep pipes and stores inside the heated envelope and insulate the pipes.",
          "Darum gehören Rohre und Speicher in die beheizte Hülle, und die Leitungen werden gedämmt."),
@@ -1378,15 +1392,15 @@ class AnlagenVerluste(Scene):
                      for n, y, c in zip(names, rows_y, row_colors)]
         e_val = ValueTracker(0.0)
         formulas = [
-            lambda: rf"Q_{{\mathrm{{h}}}} \approx {label_number(vals[0].get_value())}\,\mathrm{{kWh/a}}",
-            lambda: rf"Q_{{\mathrm{{h,ce}}}} = 5\,\% \cdot {label_number(_Q_H)} \approx {label_number(vals[1].get_value())}\,\mathrm{{kWh/a}}",
-            lambda: rf"Q_{{\mathrm{{h,d}}}} = {label_number(_PIPE_M)}\,\mathrm{{m}} \cdot {label_number(_PIPE_W_PER_M)}\,\mathrm{{W/m}} \cdot {label_number(_PIPE_H)}\,\mathrm{{h}} = "
-                    rf"{label_number(vals[2].get_value())}\,\mathrm{{kWh/a}}",
-            lambda: rf"Q_{{\mathrm{{h,s}}}} = {label_number(1.8, 1)}\,\mathrm{{kWh/d}} \cdot 200\,\mathrm{{d}} = "
-                    rf"{label_number(vals[3].get_value())}\,\mathrm{{kWh/a}}",
-            lambda: rf"Q_{{\mathrm{{h,g}}}} = {label_number(_Q_BEFORE_G)} \cdot (1/{label_number(0.95, 2)} - 1) \approx "
-                    rf"{label_number(vals[4].get_value())}\,\mathrm{{kWh/a}}",
-            lambda: rf"Q_{{\mathrm{{E}}}} \approx {label_number(round(e_val.get_value(), -2))}\,\mathrm{{kWh/a}}",
+            lambda: rf"Q_{{\mathrm{{h}}}} \approx {label_number(vals[0].get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
+            lambda: rf"Q_{{\mathrm{{h,ce}}}} = 5\,\% \cdot {label_number(_Q_H)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}} \approx {label_number(vals[1].get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
+            lambda: rf"Q_{{\mathrm{{h,d}}}} = {label_number(_PIPE_M)}\,\mathrm{{m}} \cdot {label_number(_PIPE_W_PER_M)}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m}}}} \cdot {label_number(_PIPE_H)}\,\mathrm{{h}} = "
+                    rf"{label_number(vals[2].get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
+            lambda: rf"Q_{{\mathrm{{h,s}}}} = {label_number(1.8, 1)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{d}}}} \cdot 200\,\mathrm{{d}} = "
+                    rf"{label_number(vals[3].get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
+            lambda: rf"Q_{{\mathrm{{h,g}}}} = {label_number(_Q_BEFORE_G)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}} \cdot (1/{label_number(0.95, 2)} - 1) \approx "
+                    rf"{label_number(vals[4].get_value())}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
+            lambda: rf"Q_{{\mathrm{{E}}}} \approx {label_number(round(e_val.get_value(), -2))}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}",
         ]
         readouts = [math_readout(fn, np.array([CX, y - 0.16, 0.0]), size=19, color=c)
                     for fn, y, c in zip(formulas, rows_y, row_colors)]
@@ -1446,7 +1460,7 @@ class AnlagenVerluste(Scene):
             ("ce", r"Q_{\mathrm{h,ce}}", CE_C), (None, "+", PASTEL_WHITE), ("d", r"Q_{\mathrm{h,d}}", D_C),
             (None, "+", PASTEL_WHITE), ("s", r"Q_{\mathrm{h,s}}", S_C), (None, "+", PASTEL_WHITE),
             ("g", r"Q_{\mathrm{h,g}}", G_C), (None, r"\approx", PASTEL_WHITE),
-            ("v", rf"{label_number(round(_Q_E, -2))}\,\mathrm{{kWh/a}}", E_C),
+            ("v", rf"{label_number(round(_Q_E, -2))}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{a}}}}", E_C),
         ], color=P_PRIMARY)
         sources = {
             key: math_label(src, _slot(r), size=21, color=c, edge="left")

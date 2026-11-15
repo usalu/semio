@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph-state:cursor:v1",
+  "title": "Change cursor from the replica manifest (v1)",
+  "description": "📍️ A generation is verified against a state of the shared files, not against a walk of the tree. The state is a snapshot: every shared path the graph walk can enter with the first 128 bits of the SHA-256 of its bytes. The cursor of a generation is the identity of the snapshot it was verified against; the rows a later read has to check again are exactly the paths whose entry differs between that snapshot and the manifest the replica daemon holds now. Everything the manifest cannot see (ignored or generated files, absent paths, paths outside the workspace) is always checked again. A snapshot travels with its generation through the fleet cache. All documents are closed; texts exist in English and German, no language is a default.",
+  "oneOf": [
+    { "$ref": "#/definitions/Cursor" },
+    { "$ref": "#/definitions/SnapshotHeader" },
+    { "$ref": "#/definitions/VerdictsHeader" },
+    { "$ref": "#/definitions/TextCatalogue" }
+  ],
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "domain": "semio-graph-snapshot-v1",
+        "directory": ".cache/f/graph-state/snapshots",
+        "extension": ".snapshot.br",
+        "instanceLength": 16,
+        "shaLength": 32,
+        "maximumSnapshots": 16,
+        "maximumFiles": 4194304,
+        "maximumBytes": 268435456,
+        "maximumRows": 400000,
+        "settleMilliseconds": 1500,
+        "settleMaximumMilliseconds": 1500,
+        "healthMaximumAgeMilliseconds": 30000,
+        "verifyBatch": 4096,
+        "brotliQuality": 5,
+        "brotliWindow": 22,
+        "header": "semio-graph-snapshot\t1"
+      }
+    },
+    "Cursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instance", "seq"],
+      "properties": {
+        "instance": { "type": "string", "pattern": "^[0-9a-f]{16}$", "description": "The first 64 bits of the SHA-256 of the snapshot text: equal states have equal instances on every machine." },
+        "seq": { "type": "integer", "const": 0 }
+      }
+    },
+    "SnapshotHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "instance", "files"],
+      "properties": {
+        "version": { "const": 1 },
+        "instance": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        "files": { "type": "integer", "minimum": 0 }
+      },
+      "description": "The stored document is the brotli compressed text: the header line `semio-graph-snapshot<TAB>1`, then one line `<path><TAB><sha128 hex>` per file sorted by UTF-16 code unit order. Paths hold no TAB and no line break."
+    },
+    "VerdictPolicy": {
+      "const": {
+        "version": 1,
+        "header": "semio-graph-verdicts\t1",
+        "extension": ".verdicts.br",
+        "keyLength": 32,
+        "kept": 2,
+        "saveMinimum": 256,
+        "maximumEntries": 4194304,
+        "maximumBytes": 268435456,
+        "brotliQuality": 5,
+        "brotliWindow": 22
+      }
+    },
+    "VerdictsHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "type": "string", "pattern": "^[0-9a-f]{32}$", "description": "The first 128 bits of the SHA-256 over the header, the text of the ignore rules and the digest of the code that judges a path." }
+      },
+      "description": "The stored document is the brotli compressed text: the header line `semio-graph-verdicts<TAB>1`, the line `key<TAB><key>`, then one line per judged path: `1` (the shared snapshot cannot vouch for it) or `0` (it can) directly followed by the repository relative path. A document of another key, a damaged one or one past its limits is an empty memory."
+    },
+    "TextCatalogue": {
+      "const": {
+        "manifestUnusable": {
+          "en": "graph: the replica manifest cannot vouch for the tree ({reason}); verifying the tree once.",
+          "de": "Graph: das Replikat-Manifest kann den Arbeitsbaum nicht belegen ({reason}); der Baum wird einmal geprüft."
+        },
+        "manifestDaemon": {
+          "en": "the replica daemon is not healthy",
+          "de": "der Replikat-Daemon ist nicht gesund"
+        },
+        "manifestUnread": {
+          "en": "the replica state cannot be read",
+          "de": "der Replikat-Zustand ist nicht lesbar"
+        },
+        "manifestUnsafe": {
+          "en": "a shared path cannot be recorded",
+          "de": "ein geteilter Pfad kann nicht aufgezeichnet werden"
+        },
+        "manifestSnapshot": {
+          "en": "the state this generation was verified against is not stored here",
+          "de": "der Zustand, gegen den diese Generation geprüft wurde, ist hier nicht gespeichert"
+        },
+        "manifestOverflow": {
+          "en": "too many paths changed",
+          "de": "zu viele Pfade haben sich geändert"
+        }
+      }
+    }
+  }
+}

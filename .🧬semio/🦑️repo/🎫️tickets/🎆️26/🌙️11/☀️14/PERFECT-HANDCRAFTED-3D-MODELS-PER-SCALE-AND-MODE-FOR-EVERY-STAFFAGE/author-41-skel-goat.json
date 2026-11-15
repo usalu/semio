@@ -1,0 +1,590 @@
+{
+ "50": {
+  "material": "short-coat",
+  "keep": [
+   "pelvis",
+   "lumbar",
+   "thorax",
+   "head",
+   "scapula-ff",
+   "scapula-fn"
+  ],
+  "members": {
+   "neck": [
+    0.024,
+    0.02
+   ],
+   "jaw": [
+    0.014,
+    0.01
+   ],
+   "ear-n": [
+    0.008,
+    0.006,
+    0.1,
+    0.8
+   ],
+   "ear-f": [
+    0.008,
+    0.006,
+    0.1,
+    0.8
+   ],
+   "tail-1": [
+    0.013,
+    0.011
+   ],
+   "tail-2": [
+    0.011,
+    0.008
+   ],
+   "thigh-hn": [
+    0.016,
+    0.013
+   ],
+   "shank-hn": [
+    0.013,
+    0.01
+   ],
+   "metatarsus-hn": [
+    0.0095,
+    0.008
+   ],
+   "hoof-hn": [
+    0.01,
+    0.008,
+    0,
+    0.85
+   ],
+   "thigh-hf": [
+    0.016,
+    0.013
+   ],
+   "shank-hf": [
+    0.013,
+    0.01
+   ],
+   "metatarsus-hf": [
+    0.0095,
+    0.008
+   ],
+   "hoof-hf": [
+    0.01,
+    0.008,
+    0,
+    0.85
+   ],
+   "humerus-fn": [
+    0.016,
+    0.013
+   ],
+   "forearm-fn": [
+    0.0135,
+    0.0105
+   ],
+   "metacarpus-fn": [
+    0.0095,
+    0.008
+   ],
+   "hoof-fn": [
+    0.01,
+    0.008,
+    0,
+    0.85
+   ],
+   "humerus-ff": [
+    0.016,
+    0.013
+   ],
+   "forearm-ff": [
+    0.0135,
+    0.0105
+   ],
+   "metacarpus-ff": [
+    0.0095,
+    0.008
+   ],
+   "hoof-ff": [
+    0.01,
+    0.008,
+    0,
+    0.85
+   ]
+  },
+  "joints": {
+   "lumbar": 0.03,
+   "thorax": 0.032,
+   "neck": 0.027,
+   "head": 0.028,
+   "jaw": 0.013,
+   "ear-n": 0.009,
+   "ear-f": 0.009,
+   "tail-1": 0.015,
+   "tail-2": 0.012,
+   "thigh-hn": 0.03,
+   "shank-hn": 0.02,
+   "metatarsus-hn": 0.0165,
+   "hoof-hn": 0.012,
+   "thigh-hf": 0.03,
+   "shank-hf": 0.02,
+   "metatarsus-hf": 0.0165,
+   "hoof-hf": 0.012,
+   "scapula-fn": 0.028,
+   "humerus-fn": 0.026,
+   "forearm-fn": 0.02,
+   "metacarpus-fn": 0.0165,
+   "hoof-fn": 0.012,
+   "scapula-ff": 0.028,
+   "humerus-ff": 0.026,
+   "forearm-ff": 0.02,
+   "metacarpus-ff": 0.0165,
+   "hoof-ff": 0.012
+  },
+  "ends": {
+   "ear-n": [
+    [
+     1.075,
+     0.908,
+     -0.055
+    ],
+    [
+     1.135,
+     0.915,
+     -0.115
+    ]
+   ],
+   "ear-f": [
+    [
+     1.075,
+     0.908,
+     0.055
+    ],
+    [
+     1.135,
+     0.915,
+     0.115
+    ]
+   ]
+  }
+ },
+ "100": {
+  "material": "short-coat",
+  "keep": [
+   "pelvis",
+   "lumbar",
+   "thorax",
+   "head",
+   "scapula-ff",
+   "scapula-fn"
+  ],
+  "members": {
+   "neck": [
+    0.024,
+    0.02
+   ],
+   "jaw": [
+    0.014,
+    0.01
+   ],
+   "ear-n": [
+    0.0083,
+    0.0083,
+    0.1,
+    0.8
+   ],
+   "ear-f": [
+    0.0083,
+    0.0083,
+    0.1,
+    0.8
+   ],
+   "tail-1": [
+    0.013,
+    0.011
+   ],
+   "tail-2": [
+    0.011,
+    0.0083
+   ],
+   "thigh-hn": [
+    0.016,
+    0.013
+   ],
+   "shank-hn": [
+    0.013,
+    0.01
+   ],
+   "metatarsus-hn": [
+    0.0095,
+    0.0083
+   ],
+   "hoof-hn": [
+    0.01,
+    0.0083,
+    0,
+    0.85
+   ],
+   "thigh-hf": [
+    0.016,
+    0.013
+   ],
+   "shank-hf": [
+    0.013,
+    0.01
+   ],
+   "metatarsus-hf": [
+    0.0095,
+    0.0083
+   ],
+   "hoof-hf": [
+    0.01,
+    0.0083,
+    0,
+    0.85
+   ],
+   "humerus-fn": [
+    0.016,
+    0.013
+   ],
+   "forearm-fn": [
+    0.0135,
+    0.0105
+   ],
+   "metacarpus-fn": [
+    0.0095,
+    0.0083
+   ],
+   "hoof-fn": [
+    0.01,
+    0.0083,
+    0,
+    0.85
+   ],
+   "humerus-ff": [
+    0.016,
+    0.013
+   ],
+   "forearm-ff": [
+    0.0135,
+    0.0105
+   ],
+   "metacarpus-ff": [
+    0.0095,
+    0.0083
+   ],
+   "hoof-ff": [
+    0.01,
+    0.0083,
+    0,
+    0.85
+   ]
+  },
+  "joints": {
+   "lumbar": 0.03,
+   "thorax": 0.032,
+   "neck": 0.027,
+   "head": 0.028,
+   "jaw": 0.013,
+   "ear-n": 0.009,
+   "ear-f": 0.009,
+   "tail-1": 0.015,
+   "tail-2": 0.012,
+   "thigh-hn": 0.03,
+   "shank-hn": 0.02,
+   "metatarsus-hn": 0.0165,
+   "hoof-hn": 0.012,
+   "thigh-hf": 0.03,
+   "shank-hf": 0.02,
+   "metatarsus-hf": 0.0165,
+   "hoof-hf": 0.012,
+   "scapula-fn": 0.028,
+   "humerus-fn": 0.026,
+   "forearm-fn": 0.02,
+   "metacarpus-fn": 0.0165,
+   "hoof-fn": 0.012,
+   "scapula-ff": 0.028,
+   "humerus-ff": 0.026,
+   "forearm-ff": 0.02,
+   "metacarpus-ff": 0.0165,
+   "hoof-ff": 0.012
+  },
+  "ends": {
+   "ear-n": [
+    [
+     1.075,
+     0.908,
+     -0.055
+    ],
+    [
+     1.135,
+     0.915,
+     -0.115
+    ]
+   ],
+   "ear-f": [
+    [
+     1.075,
+     0.908,
+     0.055
+    ],
+    [
+     1.135,
+     0.915,
+     0.115
+    ]
+   ]
+  }
+ },
+ "200": {
+  "material": "short-coat",
+  "keep": [
+   "pelvis",
+   "lumbar",
+   "thorax",
+   "neck",
+   "head",
+   "jaw",
+   "tail-1",
+   "tail-2",
+   "thigh-hn",
+   "shank-hn",
+   "metatarsus-hn",
+   "hoof-hn",
+   "thigh-hf",
+   "shank-hf",
+   "metatarsus-hf",
+   "hoof-hf",
+   "scapula-fn",
+   "humerus-fn",
+   "forearm-fn",
+   "metacarpus-fn",
+   "hoof-fn",
+   "scapula-ff",
+   "humerus-ff",
+   "forearm-ff",
+   "metacarpus-ff",
+   "hoof-ff"
+  ],
+  "members": {
+   "ear-n": [
+    0.0166,
+    0.0166,
+    0,
+    1
+   ],
+   "ear-f": [
+    0.0166,
+    0.0166,
+    0,
+    1
+   ]
+  },
+  "joints": {},
+  "ends": {
+   "ear-n": [
+    [
+     1.075,
+     0.908,
+     -0.05
+    ],
+    [
+     1.12,
+     0.913,
+     -0.12
+    ]
+   ],
+   "ear-f": [
+    [
+     1.03,
+     0.88,
+     0
+    ],
+    [
+     1.06,
+     0.9,
+     0
+    ]
+   ]
+  },
+  "loft": true
+ },
+ "500": {
+  "material": "short-coat",
+  "keep": [
+   "pelvis",
+   "lumbar",
+   "thorax",
+   "neck",
+   "head",
+   "thigh-hn",
+   "shank-hn",
+   "metatarsus-hn",
+   "thigh-hf",
+   "shank-hf",
+   "metatarsus-hf",
+   "scapula-fn",
+   "humerus-fn",
+   "forearm-fn",
+   "metacarpus-fn",
+   "scapula-ff",
+   "humerus-ff",
+   "forearm-ff",
+   "metacarpus-ff",
+   "jaw"
+  ],
+  "members": {
+   "ear-n": [
+    0.0377,
+    0.0377,
+    0,
+    1
+   ],
+   "tail-1": [
+    0.0377,
+    0.0377,
+    0,
+    1
+   ],
+   "tail-2": [
+    0.0377,
+    0.0377,
+    0,
+    1
+   ],
+   "hoof-hn": [
+    0.0377,
+    0.0377,
+    0,
+    1
+   ],
+   "hoof-hf": [
+    0.0377,
+    0.0377,
+    0,
+    1
+   ],
+   "hoof-fn": [
+    0.0377,
+    0.0377,
+    0,
+    1
+   ],
+   "hoof-ff": [
+    0.0377,
+    0.0377,
+    0,
+    1
+   ],
+   "ear-f": [
+    0.0377,
+    0.0377,
+    0,
+    1
+   ]
+  },
+  "joints": {},
+  "ends": {
+   "ear-n": [
+    [
+     1.08,
+     0.913,
+     -0.08
+    ],
+    [
+     1.08,
+     0.913,
+     0.08
+    ]
+   ],
+   "ear-f": [
+    [
+     1.08,
+     0.913,
+     0.08
+    ],
+    [
+     1.08,
+     0.913,
+     -0.08
+    ]
+   ],
+   "tail-1": [
+    [
+     0.0,
+     0.7,
+     0
+    ],
+    [
+     0.07,
+     0.74,
+     0
+    ]
+   ],
+   "tail-2": [
+    [
+     0.07,
+     0.74,
+     0
+    ],
+    [
+     0.14,
+     0.77,
+     0
+    ]
+   ],
+   "hoof-hn": [
+    [
+     0.0527,
+     0.12,
+     -0.09
+    ],
+    [
+     0.0527,
+     0.04,
+     -0.09
+    ]
+   ],
+   "hoof-hf": [
+    [
+     0.0527,
+     0.12,
+     0.09
+    ],
+    [
+     0.0527,
+     0.04,
+     0.09
+    ]
+   ],
+   "hoof-fn": [
+    [
+     0.6835,
+     0.12,
+     -0.09
+    ],
+    [
+     0.6835,
+     0.04,
+     -0.09
+    ]
+   ],
+   "hoof-ff": [
+    [
+     0.6835,
+     0.12,
+     0.09
+    ],
+    [
+     0.6835,
+     0.04,
+     0.09
+    ]
+   ]
+  },
+  "loft": true,
+  "box": [
+   "ear-n",
+   "ear-f"
+  ]
+ }
+}

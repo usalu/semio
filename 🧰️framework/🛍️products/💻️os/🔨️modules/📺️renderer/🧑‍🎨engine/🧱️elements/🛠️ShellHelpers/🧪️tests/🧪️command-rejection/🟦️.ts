@@ -22,7 +22,7 @@ import { shellLabel, syncShellLabelLocale } from "../../🏷️labels/🟦️.ts
 import corpus from "../🧫️fixtures/🧫️command-rejection/🔣️.json";
 import bandCorpus from "../🧫️fixtures/🧫️time-travel-band/🔣️.json";
 import { storeCommandRejectionFixture as decodeCorpus, syncCommandRejectionSchema as rejectionSchema } from "@semio-tech/framework-os/modules/store/testing/fixtures";
-import { kernelHistoryPatchSchema as historyPatchSchema } from "@semio-tech/framework/kernel/testing/fixtures";
+import { kernelHistoryPatchSchema as historyPatchSchema } from "../../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🧪️Laws

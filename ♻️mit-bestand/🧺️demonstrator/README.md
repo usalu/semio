@@ -6,7 +6,7 @@ The demonstrator of the research project "Entwerfen mit Bestand" (`@semio-tech/m
 |---|---|
 | `📋️project.json` | the neutral manifest: the targets below, their dependencies, ports and cache flags |
 | `📜️script.ts` | the router of `test` (vitest, `🧪️tests/🎚️config/🟦️.ts`) and `runtime-catalog-test` |
-| `🔨️modules/🧩️runtime/` | the pane catalog, `prepare`, `complete`, `activate`, `serve`, `prepare-test` and `serve-test` (`📜️script.ts`) and the activation reader (`♻️activation`) |
+| `🔨️modules/🧩️runtime/` | the pane catalog, `prepare`, `activate`, `serve`, `prepare-test` and `serve-test` (`📜️script.ts`) and the activation reader (`♻️activation`) |
 | `🔨️modules/📦️site/` | `build` (`📜️script.ts`) with the map tile prefetch (`🗺️map-tiles`) |
 | `🔨️modules/🧪️e2e/` | the Playwright runner and its configuration (`🎚️config/🟦️.ts`) |
 | `🏗️builder/🌐️vite/`, `🟦️.tsx`, `🌐️.html`, `🐚️shell` | the Vite configuration, the landing page and the shell |
@@ -40,7 +40,7 @@ The demonstrator needs neither Docker nor a Linux host.
 | `@semio-tech/mit-bestand-demonstrator:activate-prototype` | after `prepare-prototype` and `activate-lanes-prototype`: reads the lane receipts and writes the union receipt `dist/♻️activation/prototype` | yes | |
 | `@semio-tech/mit-bestand-demonstrator:dev`, `serve` | the Vite server over the activated prototype; both need `activate-prototype` | never (continuous) | `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) on `127.0.0.1`, or `0.0.0.0` when `DEVCONTAINER=true` |
 | `@semio-tech/mit-bestand-demonstrator:build` | the static site: after `prepare-release`, the four engine wasm tasks, Flow browser wasm and Canvas runtime-asset staging, prefetches the map tiles and builds the Vite artifact; it declares its store receipt `.🧾️store/build.json` | never | |
-| `@semio-tech/mit-bestand-demonstrator:test` | the unit and law tests; the level is an argument (`-- long`, `exhaustive`; the default is `fundamental`) | never | |
+| `@semio-tech/mit-bestand-demonstrator:test` | the unit and law tests; the level is an argument (`-- long`, `exhaustive`; the default is `quick`) | never | |
 | `@semio-tech/mit-bestand-demonstrator:canonical-architecture`, `test-runtime-catalog` | the shell brand law at level `long`; the runtime catalog test | never | |
 | `@semio-tech/mit-bestand-demonstrator:prepare-e2e` | after `activate-prototype` and `workspace:deps-browsers`: opens an isolated service session | never | |
 | `@semio-tech/mit-bestand-demonstrator:serve-e2e` | after `prepare-e2e`: serves the activated prototype on a free OS port and announces its address through the session | never (continuous) | `0` (OS-selected) |
@@ -104,7 +104,7 @@ Der Demonstrator braucht weder Docker noch einen Linux-Host.
 | `@semio-tech/mit-bestand-demonstrator:activate-prototype` | nach `prepare-prototype` und `activate-lanes-prototype`: liest die Lane-Quittungen und schreibt die Vereinigungsquittung `dist/♻️activation/prototype` | ja | |
 | `@semio-tech/mit-bestand-demonstrator:dev`, `serve` | der Vite-Server über dem aktivierten Prototyp; beide brauchen `activate-prototype` | nie (dauerhaft) | `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) auf `127.0.0.1`, bei `DEVCONTAINER=true` auf `0.0.0.0` |
 | `@semio-tech/mit-bestand-demonstrator:build` | die statische Seite: nach `prepare-release`, den vier Engine-Wasm-Tasks, Flow-Browser-Wasm und dem Bereitstellen der Canvas-Laufzeitdateien lädt es die Kartenkacheln vorab und baut das Vite-Artefakt; es deklariert seine Store-Quittung `.🧾️store/build.json` | nie | |
-| `@semio-tech/mit-bestand-demonstrator:test` | die Unit- und Gesetzestests; die Stufe ist ein Argument (`-- long`, `exhaustive`; Standard ist `fundamental`) | nie | |
+| `@semio-tech/mit-bestand-demonstrator:test` | die Unit- und Gesetzestests; die Stufe ist ein Argument (`-- long`, `exhaustive`; Standard ist `quick`) | nie | |
 | `@semio-tech/mit-bestand-demonstrator:canonical-architecture`, `test-runtime-catalog` | das Shell-Brand-Gesetz auf Stufe `long`; der Test des Laufzeitkatalogs | nie | |
 | `@semio-tech/mit-bestand-demonstrator:prepare-e2e` | nach `activate-prototype` und `workspace:deps-browsers`: öffnet eine isolierte Dienst-Sitzung | nie | |
 | `@semio-tech/mit-bestand-demonstrator:serve-e2e` | nach `prepare-e2e`: bedient den aktivierten Prototyp auf einem freien Port des Betriebssystems und meldet seine Adresse über die Sitzung | nie (dauerhaft) | `0` (vom Betriebssystem gewählt) |

@@ -1,0 +1,8 @@
+# print:fonts:prepare ENOTEMPTY
+
+- Receiver inspected: `.cache/b/p` (not `.cache/b/r`). The failing call is `rmdirSync(nativeImageRootV1(dir))` = `.cache/b/p/m` (ENOTEMPTY path in the log).
+- On disk: `.cache/b/p` contains only `m/` (Nov 10 21:19); no `fixed.dmg`, no `image.json`, no mount (`mount` lists no `.cache/b/p/m`). `m/vite-staffage-react-site-dev/deps/` (18 entries, ~6 MB: `_metadata.json`, `chunk-*.js(.map)`, `react*.js(.map)`, `package.json`) is a Vite dep-optimizer cache written into the unmounted mount point.
+- Root cause: a Vite dev run (staffage-react-site) wrote its cache into `.cache/b/p/m` while the image there was never published/mounted (disk-full / interrupted publication). The receiver is then a shell with neither backing nor receipt, and `inspectPersistentReceiver` blindly `rmdirSync`-ed `m` then the directory; the leftover content made it throw a raw ENOTEMPTY with no diagnosis.
+- Fix: new `removeEmptyNativeReceiverShellV1` in `.../🧹️cleanup/🎛️command/🐚️shell/🟦️.ts`, used in `inspectPersistentReceiver`. Empty shell (optionally empty `m`) is removed as before -> "absent". Anything else (stray siblings, non-empty or non-directory `m`) is refused deterministically with an error naming the path, the entries and the remedy; nothing is deleted or swallowed (unpublished content is never silently destroyed).
+- Tests: `🐚️shell/🧪️tests/🟦️.ts` (3 pass via `repo tools exec --light bun -- test`): empty shell removed, leftover mount content refused and intact, stray sibling refused.
+- To unblock (not done by me): remove `/Users/ueli/Documents/semio/.cache/b/p` (only contains `m/vite-staffage-react-site-dev/deps/*`, a regenerable Vite cache). Then rerun the build; it will recreate the receiver. Nothing under `.cache` was touched.

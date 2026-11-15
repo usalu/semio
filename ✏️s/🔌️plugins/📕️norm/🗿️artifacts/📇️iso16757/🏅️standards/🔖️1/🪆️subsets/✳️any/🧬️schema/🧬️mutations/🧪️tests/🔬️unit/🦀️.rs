@@ -217,16 +217,16 @@ fn create_and_retire_product_class_roundtrip() {
 #[test]
 fn create_and_retire_geometry_object_roundtrip() {
     use semio_s_artifact_norm_iso16757_model::part_2::{GeometryNode, GeometryObject};
-    use std::collections::BTreeMap;
+    use semio_s_artifact_norm_iso16757_model::IdMap;
     let base = semio_s_artifact_norm_iso16757_model::Iso16757Snapshot::default();
     let obj = GeometryObject {
         id: "geom-test".into(),
-        shape: Some(GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 0.1), ("height".into(), 0.1), ("depth".into(), 0.1)]) }),
+        shape: Some(GeometryNode::Primitive { kind: "box".into(), parameters: IdMap::from([("width".into(), 0.1), ("height".into(), 0.1), ("depth".into(), 0.1)]) }),
         symbolic: None,
         spaces: Vec::new(),
         surfaces: Vec::new(),
         ports: Vec::new(),
-        parameter_bindings: BTreeMap::new(),
+        parameter_bindings: IdMap::new(),
     };
     let create = crate::Iso16757Mutation::IntroduceGeometryObject(semio_s_artifact_norm_iso16757_mut_definitions::introduce_geometry_object::mutation::IntroduceGeometryObject { geometry_object: obj });
     let (after, _) = crate::mutation_bridge::apply_iso16757_mutation(&base, &create).expect("create geom");
@@ -245,11 +245,11 @@ async fn a_space_bound_leaf_edit_is_one_atomic_pair_that_changes_exactly_that_le
     let base = Iso16757Snapshot::reference_fixture();
     let edit = semio_s_plugin_norm_app_surface::NormEdit::SetField { path: "geometry.objects.geom-valve-50.spaces[id=installation].bounds.max[0]".into(), value: semio_framework_value::DslValue::float(0.5) };
     let after = applied(&base, &edit);
-    assert_eq!(after.geometry.objects["geom-valve-50"].spaces[0].bounds.max[0], 0.5);
+    assert_eq!(after.geometry.objects.get("geom-valve-50").expect("object").spaces[0].bounds.max[0], 0.5);
     let mut expected = base.clone();
     expected.geometry.objects.get_mut("geom-valve-50").expect("object").spaces[0].bounds.max[0] = 0.5;
     assert_eq!(after, expected);
-    assert!(resolve_edit(&base, &semio_s_plugin_norm_app_surface::NormEdit::SetField { path: "geometry.objects.geom-valve-50.spaces[id=installation].bounds.max[0]".into(), value: semio_framework_value::DslValue::float(base.geometry.objects["geom-valve-50"].spaces[0].bounds.max[0]) }).is_err(), "an unchanged value commits nothing");
+    assert!(resolve_edit(&base, &semio_s_plugin_norm_app_surface::NormEdit::SetField { path: "geometry.objects.geom-valve-50.spaces[id=installation].bounds.max[0]".into(), value: semio_framework_value::DslValue::float(base.geometry.objects.get("geom-valve-50").expect("object").spaces[0].bounds.max[0]) }).is_err(), "an unchanged value commits nothing");
 }
 
 #[semio_framework_async_macros::async_test]

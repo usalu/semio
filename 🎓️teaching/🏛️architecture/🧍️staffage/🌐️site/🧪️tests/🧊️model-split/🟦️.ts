@@ -26,7 +26,7 @@ it("builds the viewer and the encoders into lazy chunks and keeps them out of th
     const entry = /src="\/assets\/([^"]+\.js)"/u.exec(html)![1]!;
     const chunks = Object.fromEntries(readdirSync(join(out, "assets")).filter((name) => name.endsWith(".js") && !name.startsWith("🔣️")).map((name) => [name, readFileSync(join(out, "assets", name), "utf8")]));
     const has = (needle: string): string[] => Object.entries(chunks).filter(([, text]) => text.includes(needle)).map(([name]) => name);
-    for (const marker of ["#version 300 es", "KHR_materials_variants", "FBXHeaderExtension", "semio-stage", "staffage volume/v1", "Removing hidden surfaces", "semio.model/v1"]) {
+    for (const marker of ["#version 300 es", "KHR_materials_variants", "FBXHeaderExtension", "semio-stage", "staffage volume/v2", "Removing hidden surfaces", "semio.model/v1"]) {
       expect(has(marker), marker).not.toContain(entry);
       expect(has(marker).length, marker).toBeGreaterThan(0);
     }

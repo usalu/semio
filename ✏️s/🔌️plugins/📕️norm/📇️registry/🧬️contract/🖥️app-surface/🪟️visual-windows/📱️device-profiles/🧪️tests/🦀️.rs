@@ -50,7 +50,7 @@ fn profile_agrees_with_the_window_layout() {
     assert!(!device_profile(DeviceClass::Desktop).tabbed);
     let mobile = crate::visual_layout("en1993", DeviceClass::Mobile).root;
     assert!(matches!(mobile, WindowLayoutRoot::Stack(_)) && device_profile(DeviceClass::Mobile).tabbed);
-    assert_eq!((windows(&mobile), device_profile(DeviceClass::Mobile).visible_windows), (4, 1));
+    assert_eq!((windows(&mobile), device_profile(DeviceClass::Mobile).visible_windows), (5, 1));
     let tablet = crate::visual_layout("en1993", DeviceClass::Tablet).root;
     let WindowLayoutRoot::Axis(axis) = &tablet else { panic!("row") };
     assert_eq!(axis.children.len(), device_profile(DeviceClass::Tablet).visible_windows as usize);
@@ -251,7 +251,8 @@ fn handles_drag_freely_on_desktop_and_tablet_and_nudge_by_buttons_on_mobile() {
     let drag = Gesture::Drag { fingers: 1, on_handle: true };
     assert_eq!(map_gesture(DeviceClass::Desktop, drag), Intent::HandleDrag);
     assert_eq!(map_gesture(DeviceClass::Tablet, drag), Intent::HandleDrag);
-    assert_eq!(map_gesture(DeviceClass::Mobile, drag), Intent::Orbit, "no accidental edit while orbiting");
+    assert_eq!(map_gesture(DeviceClass::Mobile, drag), Intent::FocusHandle, "a drag on a handle focuses it and never edits on a phone");
+    assert_eq!(map_gesture(DeviceClass::Mobile, Gesture::Drag { fingers: 1, on_handle: false }), Intent::Orbit, "no accidental edit while orbiting");
     for class in PRIORITY {
         assert_eq!(map_gesture(class, Gesture::Tap { on_handle: true }), Intent::FocusHandle);
     }
@@ -308,6 +309,6 @@ fn viewers_keep_only_model_checks_and_diagrams_and_every_device_has_a_named_layo
     }
 }
 
-fn device_profile_windows(class: DeviceClass) -> usize {
-    if class == DeviceClass::Desktop { 5 } else if class == DeviceClass::Mobile { 4 } else { 4 }
+fn device_profile_windows(_: DeviceClass) -> usize {
+    5
 }

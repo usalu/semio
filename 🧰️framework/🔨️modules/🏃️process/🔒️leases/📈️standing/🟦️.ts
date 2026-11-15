@@ -45,8 +45,8 @@ export function parseLeaseProgressV1(resource:string):Readonly<{phase:string;don
  return Object.freeze({phase:resource.slice(0,rules.maximumPhaseCharacters)});
 }
 
-type State={phase?:string;done?:number;total?:number;phaseStartedAtMs?:number;progressAtMs:number;notifiedAtMs:number;probedAtMs?:number;listener?:()=>void;priority?:LeasePriorityV1};
-const state:State={progressAtMs:Date.now(),notifiedAtMs:0};
+type State={starts:Map<string,{atMs:number;done:number}>;phase?:string;done?:number;total?:number;phaseStartedAtMs?:number;progressAtMs:number;notifiedAtMs:number;probedAtMs?:number;listener?:()=>void;priority?:LeasePriorityV1};
+const state:State={starts:new Map(),progressAtMs:Date.now(),notifiedAtMs:0};
 /** 👂️ The registry asks to hear about every published change of the standing. */
 export function observeLeaseStandingV1(listener:()=>void):void{state.listener=listener;}
 
@@ -56,7 +56,10 @@ export function noteLeaseProgressV1(line:LeaseProgressLineV1,nowMs=Date.now()):v
  const parsed=line.activity?parseLeaseProgressV1(line.activity.resource):line.stage&&state.phase===undefined?{phase:line.stage}:undefined;
  let changed=false;
  if(parsed){
-  if(parsed.phase!==state.phase){state.phase=parsed.phase;state.phaseStartedAtMs=nowMs;changed=true;}
+  const key=parsed.phase+"\0"+(parsed.total??""),series=state.starts.get(key);
+  if(series===undefined||(parsed.done??0)<series.done){state.starts.delete(key);state.starts.set(key,{atMs:nowMs,done:parsed.done??0});if(state.starts.size>16)state.starts.delete(state.starts.keys().next().value!);}else series.done=parsed.done??series.done;
+  if(parsed.phase!==state.phase){state.phase=parsed.phase;changed=true;}
+  state.phaseStartedAtMs=state.starts.get(key)!.atMs;
   if(parsed.done!==state.done||parsed.total!==state.total){state.done=parsed.done;state.total=parsed.total;}
  }
  if(state.listener&&(changed||nowMs-state.notifiedAtMs>=policy.progress.publishIntervalMilliseconds)){state.notifiedAtMs=nowMs;state.listener();}

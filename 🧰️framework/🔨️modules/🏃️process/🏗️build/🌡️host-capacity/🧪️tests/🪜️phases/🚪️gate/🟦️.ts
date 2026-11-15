@@ -22,17 +22,17 @@ const grantRow=(directory:string,id:string)=>JSON.parse(readFileSync(join(direct
 test("Phases marked by the process itself and by a child process cut the run into segments, re-size the grant at each boundary and are learned with the run",async()=>{
  const directory=fresh(),runs:HostRunV1[]=[],calls:string[]=[],seen:Record<string,{reservedMegabytes:number;phase?:string;resumedAtMs?:number;rampMilliseconds?:number}>={};
  let level=400;
- await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:5000}),learn:run=>{runs.push(run);},observe:async()=>level,resize:(phase,context)=>{calls.push(`${phase}:${context.reservedMegabytes}`);return phase==="rebuild"?{reservedMegabytes:7000,rampMilliseconds:90000}:phase==="execution"?{reservedMegabytes:1600,rampMilliseconds:60000}:undefined;}}),async handle=>{
+ await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:5000}),learn:run=>{runs.push(run);},observe:async()=>level,resize:(phase,context)=>{calls.push(`${phase}:${context.reservedMegabytes}`);return phase==="rebuild"?{reservedMegabytes:7000,rampMilliseconds:30000}:phase==="execution"?{reservedMegabytes:1600,rampMilliseconds:60000}:undefined;}}),async handle=>{
   const environment={...process.env,...handle.environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory};
   await sleep(120);expect(markHostCapacityPhaseV1(environment,"plan")).toBe(true);await sleep(60);level=900;await sleep(120);
   const child=spawnSync(registeredToolExecutableV1("bun"),["-e",`import {markHostCapacityPhaseV1} from ${JSON.stringify(entry)};process.exit(markHostCapacityPhaseV1(process.env,"rebuild")?0:3);`],{env:environment,encoding:"utf8"});
   expect(child.status,child.stderr).toBe(0);await sleep(60);level=6000;await sleep(200);
   seen.rebuild=grantRow(directory,handle.id);
-  expect(markHostCapacityPhaseV1(environment,"plan")).toBe(true);await sleep(60);level=800;await sleep(120);
+  expect(markHostCapacityPhaseV1(environment,"plan")).toBe(true);await sleep(60);level=800;await sleep(120);seen.afterRebuild=grantRow(directory,handle.id);
   expect(markHostCapacityPhaseV1(environment,"execution")).toBe(true);await sleep(60);level=1500;await sleep(250);
   seen.execution=grantRow(directory,handle.id);
  });
- expect(seen.rebuild).toMatchObject({reservedMegabytes:7000,phase:"rebuild",rampMilliseconds:90000});expect(seen.rebuild!.resumedAtMs).toBeGreaterThan(0);
+ expect(seen.rebuild).toMatchObject({reservedMegabytes:7000,phase:"rebuild",rampMilliseconds:policy.wait.staleMilliseconds});expect(seen.rebuild!.resumedAtMs).toBeGreaterThan(0);expect(seen.afterRebuild).toMatchObject({phase:"plan",rampMilliseconds:policy.memory.rampMilliseconds});
  expect(seen.execution).toMatchObject({reservedMegabytes:1600,phase:"execution",rampMilliseconds:60000});
  expect(calls.map(row=>row.split(":")[0])).toEqual(["plan","rebuild","plan","execution"]);expect(calls[1]).toBe("rebuild:5000");expect(calls[3]).toBe("execution:7000");
  expect(runs.length).toBe(1);

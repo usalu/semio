@@ -1,0 +1,20 @@
+import type {FactIndexV1,GenerationRowV1} from "../🟨️.mjs";
+/** ✂️ The declared constants of the derived fact cutoff. */
+export interface CutoffPolicyV1{readonly version:1;readonly kind:"derived";readonly ownerPrefix:string;readonly nameDigestCharacters:number;readonly deriveConcurrency:number;readonly maximumSuspects:number}
+export const CUTOFF_POLICY_V1:CutoffPolicyV1;
+/** 🧵️ What a computation answers when it is asked again: the digest of the answer and every raw row it read. */
+export interface DerivedAnswerV1{fact:unknown;rows:readonly GenerationRowV1[]}
+/** 🪢️ A derived fact a project record produced: its row and the raw rows that support it. */
+export interface DerivedFactV1{row:GenerationRowV1;support:readonly GenerationRowV1[]}
+export function isDerivedRowV1(row:GenerationRowV1):boolean;
+export function isDerivedOwnerV1(name:string):boolean;
+export function derivedOwnerNameV1(row:GenerationRowV1):string;
+export function derivedRowIdsV1(index:FactIndexV1):ReadonlySet<number>;
+export function verifiableRowIdsV1(index:FactIndexV1,ids:readonly number[]):number[];
+export function scopeWithDerivedV1(index:FactIndexV1,names:ReadonlySet<string>):Set<string>;
+export function splitStaleConsumersV1(index:FactIndexV1,classes:readonly number[],stale:ReadonlySet<number>):{direct:Set<string>;suspects:Set<string>};
+export function holdersOfDerivedV1(index:FactIndexV1,pseudoOwners:Iterable<string>):Map<string,Set<string>>;
+export function settleSuspectsV1(options:{index:FactIndexV1;suspects:ReadonlySet<string>;derive?:(row:GenerationRowV1,signal?:AbortSignal)=>Promise<DerivedAnswerV1>;signal?:AbortSignal;progress?:(event:{phase:"verification";done:number;total:number})=>Promise<void>|void}):Promise<{held:Map<string,GenerationRowV1[]>;changed:Map<string,GenerationRowV1>;failed:number}>;
+export function derivedUpsertsV1(derived:readonly DerivedFactV1[],held?:ReadonlyMap<string,readonly GenerationRowV1[]>):Map<string,GenerationRowV1[]>;
+export function orphanedDerivedOwnersV1(index:FactIndexV1):string[];
+export function unsupportedDerivedV1(index:FactIndexV1):GenerationRowV1[];

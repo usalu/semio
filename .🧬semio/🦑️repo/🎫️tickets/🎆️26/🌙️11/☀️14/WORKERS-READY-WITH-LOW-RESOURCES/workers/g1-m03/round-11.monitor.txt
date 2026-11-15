@@ -1,0 +1,14 @@
+try 1 started pid=21063 2026-11-14T23:53:52Z log=/Users/ueli/native-bootstrap-round-11.log
+try 1 ended 2026-11-15T00:11:59Z native_rc=75 stopped=0 fleet_refusal=1 retry_wording=0 failed=[]
+try 1 refusal: waiting 120 s
+try 2 started pid=31888 2026-11-15T00:13:59Z log=/Users/ueli/native-bootstrap-round-11-try-2.log
+try 2 ended 2026-11-15T00:23:34Z native_rc=75 stopped=0 fleet_refusal=1 retry_wording=0 failed=[]
+try 2 refusal: waiting 120 s
+try 3 started pid=38737 2026-11-15T00:25:34Z log=/Users/ueli/native-bootstrap-round-11-try-3.log
+try 3 no new progress line for 15 minutes (last: > nx run workspace:deps-build-tools:prototype|0 of 1 projects inferred|) 2026-11-15T01:11:58Z; one SIGINT to process group 38737
+runner replaced by hand at 2026-11-15T01:12:14Z: its stall watchdog only looks at owners/nx/fleet lines and would have sent a SIGINT 15 minutes after the last nx line although the log keeps printing other progress; try 3 (process group 38737) goes on untouched, sampling continues with sample-try.sh
+try 3 process ended 2026-11-15T01:12:14Z stopped=0
+correction 2026-11-15T01:13:20Z: the two lines above are wrong in one point. The runner's watchdog HAD already sent the SIGINT at 01:11:58Z, 16 s before the runner was stopped by hand; try 3 ended with native_rc=1 (interrupt). The stall was real: workspace:deps-build-tools printed "Another process holds the dependency store; waiting for it (N s of at most 21600 s)" from 0 s to 920 s and no task finished in that time. The stall facts are in round-11.stall.txt. Per the round the next try follows: try 4 with run-round-11b.sh.
+try 4 started pid=67448 2026-11-15T01:13:40Z log=/Users/ueli/native-bootstrap-round-11-try-4.log
+round 12 (PAUSE) posted: runner stopped and one SIGINT to process group 67448 (try 4) 2026-11-15T01:33:53Z
+wait for round > 12 started 2026-11-15T01:35:15Z

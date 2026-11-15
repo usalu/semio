@@ -1,0 +1,1 @@
+(DESIGN_DT|D_THETA_DESIGN|DESIGN_THETA|THETA_E_DESIGN|THETA_E_DES|θ_\{?e\}?\s*=\s*-|-12\s*°|−12\s*°|-12\\,|−12\\,|-10\s*°|−10\s*°|-5\s*°C|-5\\,|−5\\,|Δθ\s*=\s*32|32\s*K|32\\,\\mathrm\{K\}|Δθ\s*=\s*20\\,\\mathrm\{K\}|DESIGN_DT\s*=|D_THETA_JAN|D_THETA_JUL|D_THETA_WINTER|D_THETA_SUMMER)

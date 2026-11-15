@@ -1,0 +1,14 @@
+\dot{Q}_{\mathrm{i}}
+\dot{Q}_{\mathrm{i,p}}
+\dot{Q}_{\mathrm{i,e}}
+\dot{Q}_{\mathrm{i,l}}
+\dot{Q}_{\mathrm{i,lat}}
+\Phi_{\mathrm{c,si}}
+\Phi_{\mathrm{r,se}}
+\dot{Q}_{\mathrm{C}}=\dot{Q}_{\mathrm{T}}+\dot{Q}_{\mathrm{V}}+\dot{Q}_{\mathrm{S}}+\dot{Q}_{\mathrm{i}}
+Q_{\mathrm{i}}
+\Phi = U \cdot A \cdot \Delta\theta
+\Sigma\,\Phi
+F_{Gt} = 0{,}024 \cdot G_{t,20/15}
+e_{E} = e_{ce} \cdot e_{d} \cdot e_{s} \cdot e_{g}
+e_{P} = e_{E}\cdot f_{P} = Q_{P}/Q_{h}

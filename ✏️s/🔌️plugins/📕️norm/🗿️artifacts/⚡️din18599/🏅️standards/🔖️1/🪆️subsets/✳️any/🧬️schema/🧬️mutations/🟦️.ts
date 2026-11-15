@@ -38,8 +38,8 @@ import { type ChangeZoneAreaM2, parseChangeZoneAreaM2 } from "./🟣change-zone-
 import { type ChangeZoneVolumeM3, parseChangeZoneVolumeM3 } from "./🟤change-zone-volume-m3/🧬️schema/🟦️.ts";
 import { type ChangeZoneThetaICoolC, parseChangeZoneThetaICoolC } from "./🟥change-zone-theta-i-cool-c/🧬️schema/🟦️.ts";
 import { type ChangeElementLabelDe, parseChangeElementLabelDe } from "./🟦change-element-label-de/🧬️schema/🟦️.ts";
-import { type ChangeZoneInternalGainsWM2, parseChangeZoneInternalGainsWM2 } from "./🟧change-zone-internal-gains-w-m2/🧬️schema/🟦️.ts";
-import { type ChangeZoneLightingPowerWM2, parseChangeZoneLightingPowerWM2 } from "./🟨change-zone-lighting-power-w-m2/🧬️schema/🟦️.ts";
+import { type ChangeZoneInternalGainsWM2, parseChangeZoneInternalGainsWM2 } from "./🟧change-zone-internal-gains-wm2/🧬️schema/🟦️.ts";
+import { type ChangeZoneLightingPowerWM2, parseChangeZoneLightingPowerWM2 } from "./🟨change-zone-lighting-power-wm2/🧬️schema/🟦️.ts";
 import { type ChangeElementLabelEn, parseChangeElementLabelEn } from "./🟩change-element-label-en/🧬️schema/🟦️.ts";
 import { type ChangeElementKind, parseChangeElementKind } from "./🟪change-element-kind/🧬️schema/🟦️.ts";
 import { type ChangeElementZoneId, parseChangeElementZoneId } from "./🟫change-element-zone-id/🧬️schema/🟦️.ts";

@@ -364,6 +364,47 @@ class Parser(unittest.TestCase):
         self.assertEqual((a.spans, a.shapes), (b.spans, b.shapes))
 
 
+class FillRule(unittest.TestCase):
+    """🕳️ Manim's Cairo camera fills by the non-zero rule, the staffage by the even-odd rule: the parser re-winds the subpaths of a fill by nesting depth, and the Cairo raster then paints what shapely, MuPDF and PDFium paint for the shared fixture."""
+
+    FIXTURE = json.loads((Path(__file__).resolve().parents[5] / "🧍️staffage/🧫️fixtures/🕳️fill-rule/🔣️.json").read_text(encoding="utf-8"))
+
+    def painted(self, rings):
+        from manim import Camera
+
+        data = "".join("M" + "L".join(f"{x} {y}" for x, y in ring) + "Z" for ring in rings)
+        text = f'<svg xmlns="http://www.w3.org/2000/svg" width="40mm" height="40mm" viewBox="0 0 40 40"><g id="staffage-cast"><path d="{data}" fill="#ff0000"/></g></svg>'
+        frame = S._parse_frame(text, {**CASE["index"], "mmPerMetre": 1, "originMm": [20.0, 20.0]})
+        member = S._Path()
+        member.set_points(np.column_stack((frame.points[:, 0], frame.points[:, 1], np.zeros(len(frame.points)))))
+        S._apply(member, (frame.shapes[0].fill, 1.0, None, 0.0, 0.0))
+        camera = Camera(pixel_width=400, pixel_height=400, frame_width=40.0, frame_height=40.0, background_opacity=1.0, background_color="#FFFFFF")
+        camera.capture_mobject(member)
+        red = (camera.pixel_array[:, :, 0] > 128) & (camera.pixel_array[:, :, 1] < 128) & (camera.pixel_array[:, :, 2] < 128)
+        return red, float(red.sum()) / 100.0
+
+    def test_cairo_paints_the_even_odd_area_of_every_case_whose_rings_nest_or_lie_apart(self):
+        checked = 0
+        for case in self.FIXTURE["cases"]:
+            if case["name"].startswith("two overlapping") or case.get("selfCrossing"):
+                continue
+            red, area = self.painted(case["rings"])
+            self.assertAlmostEqual(area / case["areaMm2"], 1.0, delta=0.015, msg=case["name"])
+            for x, y, inside in case["samples"]:
+                self.assertEqual(bool(red[int(round((40 - y) * 10)) - 1, int(round(x * 10)) - 1]), inside, f"{case['name']} at {x},{y}")
+            checked += 1
+        self.assertEqual(checked, 3)
+
+    def test_a_single_ring_keeps_its_points_and_a_nested_ring_is_wound_against_its_parent(self):
+        ring = np.array([[0, 0], [4, 0], [4, 4], [0, 4]], dtype=float)
+        parts = lambda points: np.concatenate([np.stack((a, (2 * a + b) / 3, (a + 2 * b) / 3, b)) for a, b in zip(points, np.roll(points, -1, axis=0))])
+        outer, inner = parts(ring), parts(ring * 0.5 + 1)
+        np.testing.assert_array_equal(S._even_odd(outer), outer)
+        both = S._even_odd(np.concatenate((outer, inner)))
+        np.testing.assert_array_equal(both[: len(outer)], outer)
+        np.testing.assert_array_equal(both[len(outer):], inner[::-1])
+
+
 class FrameSwap(unittest.TestCase):
     def build(self, root):
         folder = synthetic(Path(root))
@@ -1084,7 +1125,7 @@ class Axonometric(unittest.TestCase):
                     np.testing.assert_allclose(measured, [bounds["minX"] + padding, bounds["minY"] + padding, bounds["maxX"] - padding, bounds["maxY"] - padding], atol=case["toleranceM"])
             width = lambda folder: self.drawn(folder)[2] - self.drawn(folder)[0]
             height = lambda folder: self.drawn(folder)[3] - self.drawn(folder)[1]
-            self.assertGreaterEqual(height(folders["case-axonometric"]), axo["heightM"] - case["toleranceM"])
+            self.assertGreaterEqual(height(folders["case-axonometric"]), axo["logical"]["heightM"] - case["toleranceM"])
             self.assertGreater(width(folders["case-axonometric"]), width(folders["case-elevation"]) + case["toleranceM"])
             self.assertNotEqual((folders["case-axonometric"] / "0000.svg").read_bytes(), (folders["case-elevation"] / "0000.svg").read_bytes())
 

@@ -72,7 +72,6 @@ class BrowserHandoffAssetTest(unittest.TestCase):
         from unittest.mock import patch
 
         self.browser = importlib.import_module(PACKAGE + ".🎬️clip.🪟️presentation.🌐️browser.🐍️")
-        hierarchy = importlib.import_module(PACKAGE + ".🎬️clip.🪟️presentation.🥞️hierarchy.🐍️")
         self.fixture = json.loads((Path(__file__).parent / "🏁️handoff/🔣️.cases.json").read_text(encoding="utf-8"))
         self.directory = self.enterContext(tempfile.TemporaryDirectory(dir=os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]))
         self.work = Path(self.directory)
@@ -83,7 +82,7 @@ class BrowserHandoffAssetTest(unittest.TestCase):
         self.enterContext(patch.object(self.browser,"_HANDOFF_ASSETS",{}))
         frame = {"output":str(self.work/"frame.png"),"canonical_overview":True,"media":[],
                  "hierarchy":deepcopy(self.fixture["hierarchy"]),"cursor":deepcopy(self.fixture["cursor"])}
-        self.batch = {"schema":"semio-presentation-browser/v1","catalog":hierarchy.hierarchy_contract(),
+        self.batch = {"schema":"semio-presentation-browser/v1","catalog":importlib.import_module(PACKAGE + ".🎬️clip.🪟️presentation.🖼️posters.🧪️tests.🧰️synthetic.🐍️").catalog(),
                       "language":"de","viewport":self.fixture["viewport"],"work_directory":str(self.work),"frames":[frame]}
 
     def test_portable_handoff_eligibility_excludes_interaction_and_media(self):
@@ -208,8 +207,7 @@ class LayeredBrowserOracleTest(unittest.TestCase):
         runtime.run_command([browser._repo(), "tools", "exec", "--light", "node", "--", str(script), str(work)], cwd=ROOT, log=work / "run.log")
         fixture = json.loads(script.with_name("🔣️.cases.json").read_text(encoding="utf-8"))
         measured = json.loads((work / "oracle.json").read_text(encoding="utf-8"))
-        hierarchy = importlib.import_module(PACKAGE + ".🎬️clip.🪟️presentation.🥞️hierarchy.🐍️")
-        cls.work, cls.output, cls.fixture, cls.measured, cls.catalog = work, output, fixture, measured, hierarchy.hierarchy_contract()
+        cls.work, cls.output, cls.fixture, cls.measured, cls.catalog = work, output, fixture, measured, importlib.import_module(PACKAGE + ".🎬️clip.🪟️presentation.🖼️posters.🧪️tests.🧰️synthetic.🐍️").catalog()
 
     @classmethod
     def tearDownClass(cls):

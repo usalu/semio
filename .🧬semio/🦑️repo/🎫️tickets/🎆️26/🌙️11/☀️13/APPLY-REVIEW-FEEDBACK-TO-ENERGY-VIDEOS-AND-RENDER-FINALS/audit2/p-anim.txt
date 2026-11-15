@@ -1,0 +1,1 @@
+^(?=.*["']).*(?<![A-Za-z_])(fades?|fading|faded|erscheint|erscheinen|verblasst|verblassen|leuchtet auf|verschwindet|blendet|einblenden|ausblenden|appears?|disappears?|vanish\w*|glows? up|lights? up|Pettenkoferwert|Kühlung)(?![A-Za-z_])

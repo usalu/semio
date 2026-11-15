@@ -1,0 +1,157 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🟦️.ts": {
+  "file": "f000",
+  "before": "4ff91f388bfa1473ee49e863e956327c65762dfdafddc53ec46f421bdeabf543",
+  "after": "b65260616a541cce607bfe97de33fa6d3433e96ae61396691e30282f96b06c02"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🐍️.py": {
+  "file": null,
+  "before": null,
+  "after": "722bff5da7120dbb75d3fde7826e7ed94ebaf1c06b143e9c0d60b89d13de6956"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "24e0337d8a2af40a2397a654aa9fa6640abe6aef91147277f5ab7ed15e6c7ad9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "88817f6838d9f16a80da4b131f624267b959de072903d52f1c6bb2ea4c87c07c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧪️tests/🔑️key-parts/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "21bdfa85c677955a847cc8b564c3daa1c4cbbcb5664c9211ed8cf195d5098a86"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": {
+  "file": "f005",
+  "before": "c31e0d3bea02a7b5b3cae03f7031cb07def0784d048e5d6ab0ed3518efd3b4b6",
+  "after": "578ef2391d2f946c5733539c138ed780989ab87375c5eed57e9adc878b309b68"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧠️file-record-image/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "bf4ac4a43b7129fdf872b12cb4fc07905f495137462216f804a11f982eb23e00"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🟨️.mjs": {
+  "file": "f007",
+  "before": "b4e3b4cefbd6e83b948655177b8c4a53f19b42b767495370f4b7fbe808db1587",
+  "after": "8bdfa2f090b145b1f956ff2bf5871d3b1ed470d041033821c7281a7a9b39e314"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts": {
+  "file": "f008",
+  "before": "8f1b7095c8a39f4be4df6a22ead9134b3ce6b235247878400b6f725670487e22",
+  "after": "e363ce4335fd3d1a0f55873a32790392629a9fad325ba2c3d823e7e42e999ee4"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🟨️.mjs": {
+  "file": "f009",
+  "before": "5bc93ce32f8f104bf3f3d71d4f3435a8e8368ac0edf9ac58a9f6dfc9a26b6be5",
+  "after": "8aa10d7290cd0a545199d5072ab36a62a25d5f278ca73412ce6e135ed0cff230"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🦀️resolution/🟦️.ts": {
+  "file": "f010",
+  "before": "fadccdd048c2da82d26d360690a354daa9da6e5056938a4d67183b76eb040a3b",
+  "after": "f4bfc35240f284c2a9934df0c18a2ea4d9741e88e130b8e6364b4bcf0d1b0341"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🧂️chunk-memo/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "c00888955d0795f45842b5d4e7a682783ed4bd5c9a64e7cc78383c2ffabf2552"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs": {
+  "file": "f012",
+  "before": "fae6cc4597f243aac7c153d16b7b0afc65f202da00756b07935ea0a479b39f89",
+  "after": "6df21960f154f4336e62e8a66a32d64d71b675355e688ed6211a6ce9a7f773f1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🟨️.mjs": {
+  "file": "f013",
+  "before": "fcca186b2dbe282aee323a31e191d37428c81a813e7ab938cc19ac8de66760e5",
+  "after": "4625d58acc5336e0d2c667940246aeb6f185a081afe823a3bd94a7ef3ac41e9b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/🦀️source-inputs-memo/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "536dc427dceaf9d68f4f402e453af8f8bdb9802b811fcb3c3b9725962f101303"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🟨️.mjs": {
+  "file": "f015",
+  "before": "c04fcedd9071eb8baf8d9b15ff42a2e9bb062c28b7fb2904d6c96f94e37291c0",
+  "after": "502507eb2f57bbddb0072e7d2ccc7e0100b75bbfa8cbe543895b65803d85301d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🧪️tests/🦀️rust-literals/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "8bfcf2a429fb158b28a6f8116931c44c68111f3ad4b4a024e06252c2a7ba11b1"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🧪️tests/🦀️rust-literals/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "ca5c5bb7d5de62a09767cfc3b786b837a439f41a7043fa71f4fe746b671a7239"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧬️source-analyses/🧪️tests/🦀️rust-literals/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "bc884ea3331be58a18f875635e8d80b30bfbfa1e1341c7f38065dc3830eacb55"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🟨️.mjs": {
+  "file": "f019",
+  "before": "b3dbe01805741831a7fa5cb092eb4740ab7b7f1df2e2990ac26b67790d17bc0b",
+  "after": "1b0a410a4dd75367f516b6335cc3ff1c9a53153ef54f04a456872729f5e6862d"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs": {
+  "file": "f020",
+  "before": "b35582053ae33b1611102b61253f1a9bc91f27511ec8b60530caa51ca779c63b",
+  "after": "40e04656a4e0d5c1851b62901cbe2493a72989167bec976f9ea099d9e490e1a3"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json": {
+  "file": "f021",
+  "before": "91757eff5b0049efbf8f435a0a5911b7279339941fec6509fcccaa295ec70154",
+  "after": "00739a69ed41ac1276a829e13e4a8292a2bfcd88d8710c3df3d5c1b79190abca"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🟨️.d.mts": {
+  "file": null,
+  "before": null,
+  "after": "cf8f952e2c566c334fe3195002de1eb4efee7b81ff5f71dc5b11849700b08870"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🟨️.mjs": {
+  "file": null,
+  "before": null,
+  "after": "14ae0c670b7bcebe586f2c4fbdb57262da10788e80dd7babeb0e27e7300284b5"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🐍️.py": {
+  "file": null,
+  "before": null,
+  "after": "ce1458dd6e582e94345d848594a2239d0282758cfaef147d9ac3630fa1562ea9"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "4c3526939a8d46bc28778c771d39e49dc133c9d76c4f0a752b38de9799123f82"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "f1a600d6099c022e54ae6b8291e95d7b1c883193c5a92597f8f30711d9a12eab"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧂️text-bytes/🧪️tests/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "281c4b55cbcde471834e0290c4ca1ef88586611bd211a751ed66d346838554d8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧂️hoisted-literals/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "8d0061adfe564dfa1ff1eae6c9ab0d296490d4643d495cc032e8397b9d142c2e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧂️hoisted-literals/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "2b6a3f9ccfdd75b3f9c12d460eec78ed63f45e15d94b184921bb7bac1b0af09b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧂️hoisted-literals/🧬️schema/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "920fbd579fa01728505c0c2d95baf1ce8fd784180b283b483c91d4dfb02acd58"
+ }
+}

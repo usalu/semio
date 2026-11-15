@@ -7,7 +7,7 @@ use crate::retirement::RetireOwned;
 pub use semio_framework_value_testing_effect_bank::{demand_grant,EffectBank,Wallet as BankWallet,Wallet,WorkLoan};
 #[path="driven.rs"]
 mod driven_impl;
-pub use driven_impl::{Authorities,bank_run,bank_run_with_source,driven,session_admit,session_driven,session_nested,session_open,session_run};
+pub use driven_impl::{Authorities,bank_run,bank_run_with_source,driven,session_admit,session_driven,session_nested,session_open,session_run,session_step};
 #[path="🪙️finite/🦀️.rs"]
 mod finite;
 pub use finite::{FiniteWork,finite_work};

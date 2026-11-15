@@ -1,0 +1,70 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-293b476f6b9d.log (lines after 1082)
+-- graph lines
+-- last 30 lines when the try ended
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 920 s
+graph: waiting for the fleet: 143 of 657 projects arrived
+[repository:command] still running after 930 s
+SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest.
+Cancelled (SIGINT); leases released.
+[repository:command] still running after 940 s
+[repo] still working after 950 s; last phase started: source.served
+[repository:command] still running after 950 s
+[repository:command] still running after 960 s
+[repository:command] still running after 970 s
+[repo] still working after 980 s; last phase started: source.served
+[repository:command] still running after 980 s
+[repository:command] still running after 990 s
+[repository:command] still running after 1000 s
+[repo] still working after 1010 s; last phase started: source.served
+[repository:command] still running after 1010 s
+[repository:command] still running after 1020 s
+[repository:command] still running after 1030 s
+[repo] still working after 1040 s; last phase started: source.served
+[repository:command] still running after 1040 s
+[repository:command] still running after 1050 s
+[repository:command] still running after 1060 s
+[repo] still working after 1070 s; last phase started: source.served
+[repository:command] still running after 1070 s
+[repository:command] still running after 1080 s
+[repository:command] still running after 1090 s
+[repo] still working after 1100 s; last phase started: source.served
+2026-11-14T20:11:15.556Z shutdown superseded
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-6f286e53e68a.log (lines after 0)
+-- graph lines
+graph: 658 stale projects, 143 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 515
+graph: waiting for the fleet: 0 of 515 projects arrived
+graph: waiting for the fleet: 8 of 515 projects arrived
+graph: waiting for the fleet: 56 of 515 projects arrived
+-- last 30 lines when the try ended
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1290 s
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1300 s
+[repo] still working after 1310 s; last phase started: source.served
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1310 s
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1320 s
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1330 s
+[repo] still working after 1340 s; last phase started: source.served
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1340 s
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1350 s
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1360 s
+[repo] still working after 1370 s; last phase started: source.served
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1370 s
+graph: waiting for the fleet: 56 of 515 projects arrived
+[repository:command] still running after 1380 s
+graph: waiting for the fleet: 56 of 515 projects arrived
+graph: nothing to wait for any longer: asked the fleet for 515 stale projects and received 56 within 1218 s, 459 remain and this machine can infer only 192; try again when a machine with free memory serves the graph, or read the graph on a larger machine
+2026-11-14T20:33:17.694Z graph-wanted-expired {"wanted":"515","arrived":"56","seconds":"1218","missing":"459","local":"192"}
+[capacity] the memory footprint of running process trees cannot be read on darwin (footprint printed no process); the resident set is used instead, which can overstate what a process holds
+[capacity] Der Speicher-Fußabdruck laufender Prozessbäume kann unter darwin nicht gelesen werden (footprint printed no process); stattdessen gilt der residente Speicher, der überschätzen kann, was ein Prozess hält
+[repository:command] still running after 1390 s
+[repo] still working after 1400 s; last phase started: source.served

@@ -273,7 +273,7 @@ impl semio_framework_job::InteractiveJob for MountedLayoutJob {
         semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result:Ok::<_,semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(step.progress())),work:performed})?;
         Ok(step)
     }
-    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if self.fault_payload.terminal_is_empty(){Ok(0)}else{self.fault_payload.retirement_demands().map(|demand|demand.copy_bytes)}}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{if !self.fault_payload.terminal_is_empty(){return self.fault_payload.retirement_demands().map(|demand|demand.copy_bytes)}if self.results.is_some()||self.lines.is_some()||self.glyph_previews.is_some()||self.glyphs.is_some()||self.runs.is_some()||self.walk.is_some()||self.nodes.is_some(){return Ok(0)}self.flex.next_close_copy_byte_demand()}
     fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{if self.fault_payload.terminal_is_empty(){Ok(0)}else{self.fault_payload.retirement_demands().map(|demand|demand.capacity_bytes)}}
     fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.next_close_release_bytes()}
     fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.next_close_depth()}

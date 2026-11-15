@@ -29,7 +29,7 @@ semio_plugin::view_commands! {
     }
 }
 
-semio_s_plugin_norm_app_surface::norm_viewer_commands!(Din4108Snapshot);
+semio_s_plugin_norm_app_surface::norm_viewer_commands!(semio_s_artifact_norm_din4108_model::Din4108Snapshot);
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(Din4108ViewBoundedCommandJobFactory, Din4108Viewer);
 

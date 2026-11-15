@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "Opaque wall area",
+      "expression": "2*(8+3)*2.8-2.4*2.2-2*2.2",
+      "expected": 51.92
+    },
+    {
+      "name": "Transmission coefficient",
+      "expression": "51.92*0.22+24*0.18+24*0.25+9.68*1.3",
+      "expected": 34.3264
+    },
+    {
+      "name": "Ventilation coefficient",
+      "expression": "0.34*0.5*67.2",
+      "expected": 11.424
+    },
+    {
+      "name": "Annual teaching heat balance",
+      "expression": "(34.3264+11.424)*72000/1000",
+      "expected": 3294.0288
+    },
+    {
+      "name": "Heat pump electricity",
+      "expression": "3294.0288/3",
+      "expected": 1098.0096
+    },
+    {
+      "name": "Annual electricity cost",
+      "expression": "1098.0096*0.37",
+      "expected": 406.263552
+    },
+    {
+      "name": "Solar design load",
+      "expression": "(2.4*2.2+2*2.2)*0.6*600",
+      "expected": 3484.8
+    },
+    {
+      "name": "Supply air volume flow",
+      "expression": "3484.8/(1.2*1005*(26-18))",
+      "expected": 0.3611940298507463
+    },
+    {
+      "name": "Minimum duct diameter",
+      "expression": "sqrt(4*0.3611940298507463/(pi*2.5))",
+      "expected": 0.42889929919654707
+    },
+    {
+      "name": "Selected 450 mm duct velocity",
+      "expression": "0.3611940298507463/(pi*0.45^2/4)",
+      "expected": 2.2710445537196193
+    },
+    {
+      "name": "Shaded minimum duct diameter",
+      "expression": "sqrt(4*(0.3611940298507463/2)/(pi*2.5))",
+      "expected": 0.3032776029080364
+    },
+    {
+      "name": "Selected shaded 315 mm duct velocity",
+      "expression": "(0.3611940298507463/2)/(pi*0.315^2/4)",
+      "expected": 2.317392401754714
+    },
+    {
+      "name": "Seasonal factor four cost",
+      "expression": "3294.0288/4*0.37",
+      "expected": 304.697664
+    }
+  ],
+  "required": [
+    "Hannover",
+    "Grasshopper",
+    "3.0",
+    "0.37",
+    "18",
+    "2.5",
+    "CSV",
+    "72000",
+    "600",
+    "1005"
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "decimal": {
+    "en": ".",
+    "de": "{,}"
+  },
+  "performance": {
+    "en": "SPF",
+    "de": "JAZ"
+  }
+}

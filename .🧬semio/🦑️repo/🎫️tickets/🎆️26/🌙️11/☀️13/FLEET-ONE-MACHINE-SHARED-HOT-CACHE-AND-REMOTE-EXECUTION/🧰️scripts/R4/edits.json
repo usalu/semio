@@ -1,0 +1,156 @@
+[
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 🍎️ Parses macOS `vm_stat`, `sysctl vm.swapusage`, `sysctl kern.memorystatus_vm_pressure_level`, `sysctl kern.num_files kern.maxfiles` and `hdiutil info` text; available is what the kernel can hand out without compressing or swapping anything: free, file-backed and purgeable pages (Activity Monitor's \"memory used\" is everything else, the compressor included), never more than free, inactive and speculative pages; the compressor's physical pages are reported on their own, and the attached images are the `images` count of `hdiutil info`, or its `image-path` records. */\n",
+  "new": "/** 🍎️ Parses macOS `vm_stat`, `sysctl vm.swapusage`, `sysctl kern.memorystatus_vm_pressure_level`, `sysctl kern.num_files kern.maxfiles` and `hdiutil info` text; available is what the kernel can hand out without swapping, the notion of Linux `MemAvailable`: free pages plus the larger of the inactive and speculative pages and the file-backed and purgeable pages (the cache and the purgeable memory the kernel takes back first; the pages stored in the compressor are not counted), so an idle 16 GB Mac with a warm cache is not read as starved by its free pages (the former reading of free, file-backed and purgeable pages alone could stay under 5.8 GB and gave a worker a grant of 0 MB per project); the compressor's physical pages are reported on their own, and the attached images are the `images` count of `hdiutil info`, or its `image-path` records. */\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+  "kind": "literal",
+  "old": " const settled=pages(\"Pages free\")+pages(\"Pages inactive\")+pages(\"Pages speculative\"),reclaimable=/^File-backed pages:/mu.test(vmStat)?pages(\"Pages free\")+pages(\"File-backed pages\")+pages(\"Pages purgeable\"):settled,compressed=/^Pages occupied by compressor:/mu.test(vmStat)?pages(\"Pages occupied by compressor\")*page:null;\n return Object.freeze({availableBytes:Math.min(settled,reclaimable)*page,compressedBytes:compressed,constrainedBytes:null,swapUsedBytes:used?Math.round(Number(used[1])*SCALE[used[2]!]!*MEGABYTE):null,swappedOutBytes:(pages(\"Swapouts\")+pages(\"Swapins\"))*page,pressureLevel:level===4?\"critical\":level===2?\"warn\":level===1?\"normal\":null,stallPercent:null,...darwinFilesV1(filesTable),attachedImages:darwinImagesV1(imageInfo)});\n",
+  "new": " const cooling=pages(\"Pages inactive\")+pages(\"Pages speculative\"),cache=/^File-backed pages:/mu.test(vmStat)?pages(\"File-backed pages\")+pages(\"Pages purgeable\"):0,available=pages(\"Pages free\")+Math.max(cooling,cache),compressed=/^Pages occupied by compressor:/mu.test(vmStat)?pages(\"Pages occupied by compressor\")*page:null;\n return Object.freeze({availableBytes:available*page,compressedBytes:compressed,constrainedBytes:null,swapUsedBytes:used?Math.round(Number(used[1])*SCALE[used[2]!]!*MEGABYTE):null,swappedOutBytes:(pages(\"Swapouts\")+pages(\"Swapins\"))*page,pressureLevel:level===4?\"critical\":level===2?\"warn\":level===1?\"normal\":null,stallPercent:null,...darwinFilesV1(filesTable),attachedImages:darwinImagesV1(imageInfo)});\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 🌡️ Makes the one reader of the memory this host can still give out in bytes, the single answer every build-system memory decision starts from (the capacity gate samples the same counters with `readHostCountersV1`): macOS parses `vm_stat` (free, file-backed and purgeable pages, never more than free, inactive and speculative pages: `os.freemem()` counts the free pages alone, 100 to 300 MB on a healthy 16 GB Mac that has 7 GB to give), Linux `MemAvailable` of `/proc/meminfo`, Windows the operating system's available physical memory (`os.freemem()` there), any other platform the same; a simulated host (`SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES`) never has more available than its total; an answer is reused for `Limits.availableAgeMilliseconds` and a source that cannot be read answers undefined (said once in every language), never a wrong number.\n",
+  "new": "/** 🌡️ Makes the one reader of the memory this host can still give out in bytes, the single answer every build-system memory decision starts from (the capacity gate samples the same counters with `readHostCountersV1`): macOS parses `vm_stat` (free pages plus the larger of the inactive and speculative pages and the file-backed and purgeable pages: `os.freemem()` counts the free pages alone, 100 to 300 MB on a healthy 16 GB Mac that has 7 GB to give), Linux `MemAvailable` of `/proc/meminfo`, Windows the operating system's available physical memory (`os.freemem()` there), any other platform the same; a simulated host (`SEMIO_HOST_CAPACITY_TOTAL_MEGABYTES`) never has more available than its total; an answer is reused for `Limits.availableAgeMilliseconds` and a source that cannot be read answers undefined (said once in every language), never a wrong number.\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🧫️fixtures/🔣️.json",
+  "kind": "literal",
+  "old": "    \"availableBytes\": 6746013696,\n",
+  "new": "    \"availableBytes\": 13119062016,\n",
+  "count": 3
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔋️available/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 🔋️ Contract: the one reader of the memory a host can still give out answers what the kernel can hand out (macOS: free, file-backed and purgeable pages, never more than free, inactive and speculative pages; Linux: `MemAvailable`; Windows: the operating system's available physical memory), never the free pages alone that `os.freemem()` counts on a Mac (100 to 300 MB on a healthy 16 GB machine with 6 GB to give), never more than a simulated host owns, reuses an answer within its age and says in English and German once that a source cannot be read. The hand-written fixtures are real `vm_stat` and `/proc/meminfo` outputs of 16 GB machines under load; the expected macOS bytes are recomputed by an independent Python parser.\n",
+  "new": "/** 🔋️ Contract: the one reader of the memory a host can still give out answers what the kernel can hand out (macOS: free pages plus the larger of the inactive and speculative pages and the file-backed and purgeable pages; Linux: `MemAvailable`; Windows: the operating system's available physical memory), never the free pages alone that `os.freemem()` counts on a Mac (100 to 300 MB on a healthy 16 GB machine with 6 GB to give), never more than a simulated host owns, reuses an answer within its age and says in English and German once that a source cannot be read. The hand-written fixtures are real `vm_stat` and `/proc/meminfo` outputs of 16 GB machines under load; the expected macOS bytes are recomputed by an independent Python parser.\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔋️available/🟦️.ts",
+  "kind": "literal",
+  "old": "const independent=(text:string):number=>{const run=spawnSync(python!,[\"-I\",\"-c\",\"import re,sys\\nt=sys.stdin.read()\\np=lambda n:int(re.search(r'^'+n+r':\\\\s+(\\\\d+)\\\\.',t,re.M).group(1))\\nsize=int(re.search(r'page size of (\\\\d+) bytes',t).group(1))\\nprint(size*min(p('Pages free')+p('Pages inactive')+p('Pages speculative'),p('Pages free')+p('File-backed pages')+p('Pages purgeable')))\"],{input:text,encoding:\"utf8\"});expect(run.status,run.stderr).toBe(0);return Number(run.stdout.trim());};\n",
+  "new": "const independent=(text:string):number=>{const run=spawnSync(python!,[\"-I\",\"-c\",\"import re,sys\\nt=sys.stdin.read()\\np=lambda n:int(re.search(r'^'+n+r':\\\\s+(\\\\d+)\\\\.',t,re.M).group(1))\\nsize=int(re.search(r'page size of (\\\\d+) bytes',t).group(1))\\nprint(size*(p('Pages free')+max(p('Pages inactive')+p('Pages speculative'),(p('File-backed pages')+p('Pages purgeable')) if re.search(r'^File-backed pages:',t,re.M) else 0)))\"],{input:text,encoding:\"utf8\"});expect(run.status,run.stderr).toBe(0);return Number(run.stdout.trim());};\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔋️available/🟦️.ts",
+  "kind": "literal",
+  "old": "test(\"the healthy loaded 16 GB Mac is not starved by its free pages: 186 MB free pages, 6.5 GB available\",()=>{\n",
+  "new": "test(\"the healthy loaded 16 GB Mac is not starved by its free pages: 186 MB free pages, 7.0 GB available\",()=>{\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔋️available/🟦️.ts",
+  "kind": "literal",
+  "old": " expect(Math.round(darwin(row.vmStat)!/MiB)).toBeGreaterThan(6000);\n",
+  "new": " expect(Math.round(darwin(row.vmStat)!/MiB)).toBeGreaterThan(6900);\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔋️available/🔣️.json",
+  "kind": "literal",
+  "old": "   \"name\": \"a 16 GB Mac mini under a graph run: 186 MB of free pages, 6.5 GB to give\",\n",
+  "new": "   \"name\": \"a 16 GB Mac mini under a graph run: 186 MB of free pages, 7.0 GB to give\",\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔋️available/🔣️.json",
+  "kind": "literal",
+  "old": "   \"name\": \"a 16 GB Mac mini with the plan of two agents running: 0.9 GB to give\",\n",
+  "new": "   \"name\": \"a 16 GB Mac mini with the plan of two agents running: 1.0 GB to give\",\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔋️available/🔣️.json",
+  "kind": "literal",
+  "old": "   \"name\": \"a 16 GB Mac mini that is really out of memory: 107 MB to give\",\n",
+  "new": "   \"name\": \"a 16 GB Mac mini that is really out of memory: 155 MB to give\",\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🌡️pressure/🟦️.ts",
+  "kind": "literal",
+  "old": "const independent=(text:string)=>Number(Bun.spawnSync([python!,\"-I\",\"-c\",\"import re,sys\\nt=sys.stdin.read()\\np=lambda n:int(re.search(r'^'+n+r':\\\\s+(\\\\d+)\\\\.',t,re.M).group(1))\\nprint(min(p('Pages free')+p('Pages inactive')+p('Pages speculative'),p('Pages free')+p('File-backed pages')+p('Pages purgeable')))\"],{stdin:new TextEncoder().encode(text)}).stdout.toString().trim());\n",
+  "new": "const independent=(text:string)=>Number(Bun.spawnSync([python!,\"-I\",\"-c\",\"import re,sys\\nt=sys.stdin.read()\\np=lambda n:int(re.search(r'^'+n+r':\\\\s+(\\\\d+)\\\\.',t,re.M).group(1))\\nprint(p('Pages free')+max(p('Pages inactive')+p('Pages speculative'),p('File-backed pages')+p('Pages purgeable')))\"],{stdin:new TextEncoder().encode(text)}).stdout.toString().trim());\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🌡️pressure/🔣️.json",
+  "kind": "literal",
+  "old": "   \"availablePages\": 259861\n",
+  "new": "   \"availablePages\": 434737\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🌡️pressure/🔣️.json",
+  "kind": "literal",
+  "old": "   \"availablePages\": 256000\n",
+  "new": "   \"availablePages\": 304100\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🧪️tests/🌡️pressure/🔣️.json",
+  "kind": "literal",
+  "old": "   \"availablePages\": 5100\n",
+  "new": "   \"availablePages\": 7010\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 🎚️ The memory a machine can give to inferring projects: half of its memory, less when less is available now (less the floor the others keep), and never what the small first booking of the process that asks says: the inference itself is admitted by the capacity gate later (measured: a 16 GB worker asked with 2048 MB, had a grant of 0 MB per project and a wave of 0 projects, so every project was refused), and a project that outgrows its grant is stopped by the memory governor. Swap is neither added nor subtracted: the available memory of a Linux host is `MemAvailable`, which has no swap in it. */\n",
+  "new": "/** 🎚️ The memory a machine can run inferences in right now (the waves): half of its memory, less when less is available now (less the floor the others keep), and never what the small first booking of the process that asks says: the inference itself is admitted by the capacity gate later (measured: a 16 GB worker asked with 2048 MB, had a grant of 0 MB per project and a wave of 0 projects, so every project was refused), and a project that outgrows its grant is stopped by the memory governor. Swap is neither added nor subtracted: the available memory of a Linux host is `MemAvailable`, which has no swap in it. */\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/🟦️.ts",
+  "kind": "literal",
+  "old": " return input.availableMegabytes===undefined||!Number.isFinite(input.availableMegabytes)?half:Math.max(0,Math.min(half,Math.floor(input.availableMegabytes-policy.availableFloorMegabytes)));\n",
+  "new": " return input.availableMegabytes===undefined||!Number.isFinite(input.availableMegabytes)?half:Math.max(0,Math.min(half,Math.floor(input.availableMegabytes-policy.availableFloorMegabytes)));\n}\n\n/** 🎁️ The memory the per-project grant is judged by: the share of the machine (half of its memory, never a serving machine's headroom) as long as the machine can run a wave at all right now. A busy moment lowers the number of parallel inferences (`inferableProjectsV1` of {@link fleetAdmittedMegabytesV1}) before it lowers the grant, and only a machine that cannot run the smallest wave has a grant of what it is admitted (0 MB per project): measured on a 16 GB Mac worker whose momentary reading was below 5.8 GB, the grant fell from 3 512 MB to 0 MB, 226 projects were called too heavy and the worker inferred nothing itself. */\nexport function fleetGrantMegabytesV1(input:Readonly<{hostMegabytes:number;availableMegabytes?:number}>,policy:WantedPolicyV1=wantedPolicyV1):number{\n const admitted=fleetAdmittedMegabytesV1(input,policy);\n return inferableProjectsV1(admitted,policy).waveProjects>0?Math.min(Math.floor(input.hostMegabytes/2),policy.serveHeadroomMegabytes-1):admitted;\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 📖️ The fleet-first decision of a graph read that found `stale` projects (names): decide by the admitted memory, then take what the fleet already served, publish the rest as a request, wait with progress, a bound and cancellation, and answer which projects remain for this machine. Refuses with {@link wantedRefusalV1} when more remain than it can infer. The decision is made by MEMORY, owner by owner: with `estimate` (the cost of one project in managed megabytes) every project whose cost does not fit what this machine can give one project is heavy, is never inferred here and is asked from the fleet and waited for however few of them remain, so \"2 projects left\" never turns into a local inference of the workspace root; the light ones fill the grant by count as before. A machine admitted at least `serveHeadroomMegabytes` is a serving machine and always infers itself. The reader reserves nothing for inference before this has answered; the caller restores the newest fleet generation afterwards, which carries every served project. */\nexport async function fleetReadV1(input:Readonly<{stale:readonly string[];admittedMegabytes:number;client:GraphFleetClientV1|undefined;requester:string;platform:string;graphKey:string;language:\"en\"|\"de\";estimate?:(name:string)=>OwnerEstimateV1;say(line:string):void;signal?:AbortSignal;sleep?(milliseconds:number):Promise<void>;now?:()=>number;policy?:WantedPolicyV1}>):Promise<FleetReadV1>{\n",
+  "new": "/** 📖️ The fleet-first decision of a graph read that found `stale` projects (names): decide by the admitted memory, then take what the fleet already served, publish the rest as a request, wait with progress, a bound and cancellation, and answer which projects remain for this machine. Refuses with {@link wantedRefusalV1} when more remain than it can infer. The decision is made by MEMORY, owner by owner: with `estimate` (the cost of one project in managed megabytes) every project whose cost does not fit what this machine can give one project is heavy, is never inferred here and is asked from the fleet and waited for however few of them remain, so \"2 projects left\" never turns into a local inference of the workspace root; the light ones fill the grant by count as before. The grant is judged by `grantMegabytes` (the share of the machine, which a busy moment does not lower while a wave still fits) and the waves by `admittedMegabytes`. A machine admitted at least `serveHeadroomMegabytes` is a serving machine and always infers itself. The reader reserves nothing for inference before this has answered; the caller restores the newest fleet generation afterwards, which carries every served project. */\nexport async function fleetReadV1(input:Readonly<{stale:readonly string[];admittedMegabytes:number;grantMegabytes?:number;client:GraphFleetClientV1|undefined;requester:string;platform:string;graphKey:string;language:\"en\"|\"de\";estimate?:(name:string)=>OwnerEstimateV1;say(line:string):void;signal?:AbortSignal;sleep?(milliseconds:number):Promise<void>;now?:()=>number;policy?:WantedPolicyV1}>):Promise<FleetReadV1>{\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🙋️wanted/📖️read/🟦️.ts",
+  "kind": "literal",
+  "old": " const grant=ownerGrantV1(input.admittedMegabytes,policy),classes=input.estimate===undefined?{heavy:[] as HeavyOwnerV1[],light:input.stale}:classifyOwnersV1(input.stale,input.estimate,grant),heavyNames=new Map(classes.heavy.map(row=>[row.name,row])),heavyRest=classes.heavy.filter(row=>!have.has(row.name));\n",
+  "new": " const grant=ownerGrantV1(input.grantMegabytes??input.admittedMegabytes,policy),classes=input.estimate===undefined?{heavy:[] as HeavyOwnerV1[],light:input.stale}:classifyOwnersV1(input.stale,input.estimate,grant),heavyNames=new Map(classes.heavy.map(row=>[row.name,row])),heavyRest=classes.heavy.filter(row=>!have.has(row.name));\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🤝️prefetch/🟦️.ts",
+  "kind": "literal",
+  "old": "/** 📖️ The fleet-first decision of a graph read with stale projects, taken before any memory is reserved for inference, by the memory of each project: the costs recorded on this machine and published by the serving machines (`🪪️graph-state/🙋️wanted/💰️cost`) say which projects are too heavy for it, and those are asked from the fleet and waited for however few they are. The admitted memory is half of what the host has (a declared smaller machine counts as declared), lowered to what is available now less a floor (`fleetAdmittedMegabytesV1`), never to the grant of the slice pool load that asks (a 2048 MB booking left a 16 GB worker a grant of 0 MB per project and a wave of 0 projects): a machine admitted less than a serving machine's headroom publishes the projects it cannot infer, waits (progress, bound, cancellation) for the fleet's answer and refuses with the designed `timeout` class (exit status 75) when more remain than it can infer; the generation restore that follows carries every served project. `SEMIO_GRAPH_FLEET_READ=off`, `SEMIO_GRAPH_FLEET_WAIT_MILLISECONDS=<n>` (a shorter bound than the policy's, for proofs) and every fault of the fleet itself end in the local read. See `🪪️graph-state/🙋️wanted/📖️read`. */\n",
+  "new": "/** 📖️ The fleet-first decision of a graph read with stale projects, taken before any memory is reserved for inference, by the memory of each project: the costs recorded on this machine and published by the serving machines (`🪪️graph-state/🙋️wanted/💰️cost`) say which projects are too heavy for it, and those are asked from the fleet and waited for however few they are. The admitted memory is half of what the host has (a declared smaller machine counts as declared), lowered to what is available now less a floor (`fleetAdmittedMegabytesV1`), never to the grant of the slice pool load that asks (a 2048 MB booking left a 16 GB worker a grant of 0 MB per project and a wave of 0 projects); it sets the size of a wave, while the grant per project stays the share of the machine until not even the smallest wave fits (`fleetGrantMegabytesV1`; a Mac whose momentary reading was low had a grant of 0 MB and inferred nothing): a machine admitted less than a serving machine's headroom publishes the projects it cannot infer, waits (progress, bound, cancellation) for the fleet's answer and refuses with the designed `timeout` class (exit status 75) when more remain than it can infer; the generation restore that follows carries every served project. `SEMIO_GRAPH_FLEET_READ=off`, `SEMIO_GRAPH_FLEET_WAIT_MILLISECONDS=<n>` (a shorter bound than the policy's, for proofs) and every fault of the fleet itself end in the local read. See `🪪️graph-state/🙋️wanted/📖️read`. */\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🤝️prefetch/🟦️.ts",
+  "kind": "literal",
+  "old": "    const{fleetAdmittedMegabytesV1}=await import(\"../../🪪️graph-state/🙋️wanted/🟦️.ts\"),{hostAvailableBytesV1}=await import(\"../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts\"),available=(input.available??hostAvailableBytesV1)(),admittedMegabytes=fleetAdmittedMegabytesV1({hostMegabytes:memory.hostMemoryMegabytesV1(),...available===undefined?{}:{availableMegabytes:Math.floor(available/1048576)}});\n",
+  "new": "    const{fleetAdmittedMegabytesV1,fleetGrantMegabytesV1}=await import(\"../../🪪️graph-state/🙋️wanted/🟦️.ts\"),{hostAvailableBytesV1}=await import(\"../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts\"),available=(input.available??hostAvailableBytesV1)(),reading={hostMegabytes:memory.hostMemoryMegabytesV1(),...available===undefined?{}:{availableMegabytes:Math.floor(available/1048576)}},admittedMegabytes=fleetAdmittedMegabytesV1(reading),grantMegabytes=fleetGrantMegabytesV1(reading);\n",
+  "count": 1
+ },
+ {
+  "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🤝️prefetch/🟦️.ts",
+  "kind": "literal",
+  "old": "    await fleetReadV1({stale:input.request.dirty,admittedMegabytes,client,estimate:name=>cost.estimateOwnerCostV1(table,name,input.request.roots[name]===\".\"?\"root:language:cargo\":undefined),requester:remoteExecutionOriginV1(input.root,environment),platform:graphPlatformV1(),graphKey:input.request.implementation,language:input.language,say:line=>{process.stderr.write(line+\"\\n\");},signal:input.invocation.control.signal,...bound===undefined?{}:{policy:{...wantedPolicyV1,waitMilliseconds:bound}}});\n",
+  "new": "    await fleetReadV1({stale:input.request.dirty,admittedMegabytes,grantMegabytes,client,estimate:name=>cost.estimateOwnerCostV1(table,name,input.request.roots[name]===\".\"?\"root:language:cargo\":undefined),requester:remoteExecutionOriginV1(input.root,environment),platform:graphPlatformV1(),graphKey:input.request.implementation,language:input.language,say:line=>{process.stderr.write(line+\"\\n\");},signal:input.invocation.control.signal,...bound===undefined?{}:{policy:{...wantedPolicyV1,waitMilliseconds:bound}}});\n",
+  "count": 1
+ }
+]

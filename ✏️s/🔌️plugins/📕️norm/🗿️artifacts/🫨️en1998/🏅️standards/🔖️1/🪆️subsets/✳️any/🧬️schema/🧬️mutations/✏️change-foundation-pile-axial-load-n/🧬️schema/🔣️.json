@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-pile-axial-load-n/schema.json",
+  "title": "ChangeFoundationPileAxialLoadN",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newPileAxialLoadN"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFoundationPileAxialLoadN"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Foundation",
+          "de": "Gründung"
+        },
+        "description": {
+          "en": "The foundation this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gründung), per Kennung."
+        },
+        "ref": {
+          "kind": "foundation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPileAxialLoadN": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Pile axial load N_Ed",
+          "de": "Pfahlnormalkraft N_Ed"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000
+      }
+    }
+  }
+}

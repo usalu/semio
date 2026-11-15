@@ -23,4 +23,4 @@ pub mod change_stud_row_count;
 pub mod change_stud_row_spacing_first;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_en1992_mut_geometry_tendons_studs_more::{change_stud_row_spacing_radial, change_stud_row_diameter, change_opening_x, change_opening_y, change_opening_width, change_opening_depth};
+pub use semio_s_artifact_norm_en1992_mut_tendons_studs_more::{change_stud_row_spacing_radial, change_stud_row_diameter, change_opening_x, change_opening_y, change_opening_width, change_opening_depth};

@@ -1,0 +1,2550 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "frame-base",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.5,
+      0.02,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "frame-top",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.25,
+       -0.25
+      ],
+      [
+       -0.25,
+       0.25
+      ],
+      [
+       0.25,
+       0.25
+      ],
+      [
+       0.25,
+       -0.25
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.2,
+        -0.2
+       ],
+       [
+        -0.2,
+        0.2
+       ],
+       [
+        0.2,
+        0.2
+       ],
+       [
+        0.2,
+        -0.2
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.58,
+     "to": 0.6
+    },
+    {
+     "id": "frame-post-rear-left",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.05,
+      0.56,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       -0.225,
+       0.3,
+       -0.225
+      ]
+     }
+    },
+    {
+     "id": "frame-post-rear-right",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.05,
+      0.56,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.225,
+       0.3,
+       -0.225
+      ]
+     }
+    },
+    {
+     "id": "frame-post-front-left",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.05,
+      0.56,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       -0.225,
+       0.3,
+       0.225
+      ]
+     }
+    },
+    {
+     "id": "frame-post-front-right",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.05,
+      0.56,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.225,
+       0.3,
+       0.225
+      ]
+     }
+    },
+    {
+     "id": "end-wall-left",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       -0.2
+      ],
+      [
+       0.58,
+       -0.2
+      ],
+      [
+       0.58,
+       0.2
+      ],
+      [
+       0.02,
+       0.2
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.41,
+        -0.14
+       ],
+       [
+        0.54,
+        -0.14
+       ],
+       [
+        0.54,
+        0.14
+       ],
+       [
+        0.41,
+        0.14
+       ]
+      ],
+      [
+       [
+        0.07,
+        -0.14
+       ],
+       [
+        0.2,
+        -0.14
+       ],
+       [
+        0.2,
+        0.14
+       ],
+       [
+        0.07,
+        0.14
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.25,
+     "to": -0.22
+    },
+    {
+     "id": "end-wall-right",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       -0.2
+      ],
+      [
+       0.58,
+       -0.2
+      ],
+      [
+       0.58,
+       0.2
+      ],
+      [
+       0.02,
+       0.2
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.41,
+        -0.14
+       ],
+       [
+        0.54,
+        -0.14
+       ],
+       [
+        0.54,
+        0.14
+       ],
+       [
+        0.41,
+        0.14
+       ]
+      ],
+      [
+       [
+        0.07,
+        -0.14
+       ],
+       [
+        0.2,
+        -0.14
+       ],
+       [
+        0.2,
+        0.14
+       ],
+       [
+        0.07,
+        0.14
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.22,
+     "to": 0.25
+    },
+    {
+     "id": "pack-end-plate-bottom",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.44,
+      0.01,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.025,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "pack-end-plate-top",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.44,
+      0.01,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.575,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "plate-pack",
+     "kind": "box",
+     "bone": "plates",
+     "material": "aluminium-plate",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.44,
+      0.045,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0225,
+       0.0
+      ]
+     },
+     "repeat": {
+      "count": 6,
+      "translation": [
+       0.0,
+       0.09,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "plate-pack-channels",
+     "kind": "box",
+     "bone": "plates",
+     "material": "aluminium-plate",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.44,
+      0.045,
+      0.38
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0675,
+       0.0
+      ]
+     },
+     "repeat": {
+      "count": 6,
+      "translation": [
+       0.0,
+       0.09,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "collar-upper-left",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.1,
+       -0.15
+      ],
+      [
+       0.25,
+       -0.15
+      ],
+      [
+       0.25,
+       0.15
+      ],
+      [
+       0.1,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.11,
+        -0.14
+       ],
+       [
+        0.24,
+        -0.14
+       ],
+       [
+        0.24,
+        0.14
+       ],
+       [
+        0.11,
+        0.14
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.31,
+     "to": -0.25
+    },
+    {
+     "id": "collar-lower-left",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.24,
+       -0.15
+      ],
+      [
+       -0.09,
+       -0.15
+      ],
+      [
+       -0.09,
+       0.15
+      ],
+      [
+       -0.24,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.23,
+        -0.14
+       ],
+       [
+        -0.1,
+        -0.14
+       ],
+       [
+        -0.1,
+        0.14
+       ],
+       [
+        -0.23,
+        0.14
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.31,
+     "to": -0.25
+    },
+    {
+     "id": "collar-upper-right",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.1,
+       -0.15
+      ],
+      [
+       0.25,
+       -0.15
+      ],
+      [
+       0.25,
+       0.15
+      ],
+      [
+       0.1,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.11,
+        -0.14
+       ],
+       [
+        0.24,
+        -0.14
+       ],
+       [
+        0.24,
+        0.14
+       ],
+       [
+        0.11,
+        0.14
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.25,
+     "to": 0.31
+    },
+    {
+     "id": "collar-lower-right",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.24,
+       -0.15
+      ],
+      [
+       -0.09,
+       -0.15
+      ],
+      [
+       -0.09,
+       0.15
+      ],
+      [
+       -0.24,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.23,
+        -0.14
+       ],
+       [
+        -0.1,
+        -0.14
+       ],
+       [
+        -0.1,
+        0.14
+       ],
+       [
+        -0.23,
+        0.14
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.25,
+     "to": 0.31
+    },
+    {
+     "id": "damper",
+     "kind": "box",
+     "bone": "damper",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.4,
+      0.014,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.2,
+       -0.013,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "damper-hinge",
+     "kind": "capsule",
+     "bone": "damper",
+     "material": "galvanised-steel",
+     "role": "detail",
+     "tone": 0.1,
+     "slender": true,
+     "p0": [
+      -0.01,
+      -0.01,
+      -0.2
+     ],
+     "p1": [
+      -0.01,
+      -0.01,
+      0.2
+     ],
+     "r0": 0.01,
+     "r1": 0.01
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-frame-base",
+     "of": "frame-base",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-top",
+     "of": "frame-top",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-post-rear-left",
+     "of": "frame-post-rear-left",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-post-rear-right",
+     "of": "frame-post-rear-right",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-post-front-left",
+     "of": "frame-post-front-left",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-post-front-right",
+     "of": "frame-post-front-right",
+     "region": "frame"
+    },
+    {
+     "id": "th-end-wall-left",
+     "of": "end-wall-left",
+     "region": "frame"
+    },
+    {
+     "id": "th-end-wall-right",
+     "of": "end-wall-right",
+     "region": "frame"
+    },
+    {
+     "id": "th-pack-end-plate-bottom",
+     "of": "pack-end-plate-bottom",
+     "region": "frame"
+    },
+    {
+     "id": "th-pack-end-plate-top",
+     "of": "pack-end-plate-top",
+     "region": "frame"
+    },
+    {
+     "id": "th-plate-pack",
+     "of": "plate-pack",
+     "region": "plates"
+    },
+    {
+     "id": "th-plate-pack-channels",
+     "of": "plate-pack-channels",
+     "region": "plates"
+    },
+    {
+     "id": "th-collar-upper-left",
+     "of": "collar-upper-left",
+     "region": "ports"
+    },
+    {
+     "id": "th-collar-lower-left",
+     "of": "collar-lower-left",
+     "region": "ports"
+    },
+    {
+     "id": "th-collar-upper-right",
+     "of": "collar-upper-right",
+     "region": "ports"
+    },
+    {
+     "id": "th-collar-lower-right",
+     "of": "collar-lower-right",
+     "region": "ports"
+    },
+    {
+     "id": "th-damper",
+     "of": "damper",
+     "region": "damper"
+    },
+    {
+     "id": "th-damper-hinge",
+     "of": "damper-hinge",
+     "region": "damper"
+    },
+    {
+     "id": "th-supply-air-outlet",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.9,
+     "region": "ports",
+     "tags": [
+      "supply-air"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "profile": [
+      [
+       0.11,
+       -0.14
+      ],
+      [
+       0.24,
+       -0.14
+      ],
+      [
+       0.24,
+       0.14
+      ],
+      [
+       0.11,
+       0.14
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.30249,
+     "to": 0.31
+    },
+    {
+     "id": "th-exhaust-air-outlet",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.9,
+     "region": "ports",
+     "tags": [
+      "exhaust-air"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "profile": [
+      [
+       -0.23,
+       -0.14
+      ],
+      [
+       -0.1,
+       -0.14
+      ],
+      [
+       -0.1,
+       0.14
+      ],
+      [
+       -0.23,
+       0.14
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.31,
+     "to": -0.30249
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-frame-base",
+     "of": "frame-base",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-top",
+     "of": "frame-top",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-post-rear-left",
+     "of": "frame-post-rear-left",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-post-rear-right",
+     "of": "frame-post-rear-right",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-post-front-left",
+     "of": "frame-post-front-left",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-post-front-right",
+     "of": "frame-post-front-right",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-end-wall-left",
+     "of": "end-wall-left",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-end-wall-right",
+     "of": "end-wall-right",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-plate-pack",
+     "of": "plate-pack",
+     "member": "plates",
+     "part": "member"
+    },
+    {
+     "id": "st-plate-pack-channels",
+     "of": "plate-pack-channels",
+     "member": "plates",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-upper-left",
+     "of": "collar-upper-left",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-lower-left",
+     "of": "collar-lower-left",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-upper-right",
+     "of": "collar-upper-right",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-lower-right",
+     "of": "collar-lower-right",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-damper",
+     "of": "damper",
+     "member": "damper",
+     "part": "member"
+    },
+    {
+     "id": "st-joint-damper-hinge",
+     "of": "damper-hinge",
+     "member": "damper",
+     "part": "joint"
+    },
+    {
+     "id": "st-joint-pack-end-plate-bottom",
+     "of": "pack-end-plate-bottom",
+     "member": "plates",
+     "part": "joint"
+    },
+    {
+     "id": "st-joint-pack-end-plate-top",
+     "of": "pack-end-plate-top",
+     "member": "plates",
+     "part": "joint"
+    },
+    {
+     "id": "mass-plates",
+     "kind": "box",
+     "bone": "plates",
+     "material": "aluminium-plate",
+     "role": "body",
+     "tone": 0.7,
+     "member": "plates",
+     "part": "mass",
+     "size": [
+      0.3,
+      0.38,
+      0.28
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.27,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "mass-frame",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "member": "frame",
+     "part": "mass",
+     "size": [
+      0.1,
+      0.1,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.3,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "base-contact-pad",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "member": "frame",
+     "part": "support",
+     "anchor": "base-contact",
+     "size": [
+      0.485,
+      0.0075,
+      0.485
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.00375,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Detailed model: a galvanised casing of base slab (20 mm), top ring (20 mm, opening 0.4 m by 0.4 m), four 50 mm corner posts and two 30 mm end walls whose 0.28 m by 0.13 m openings line up with the four 60 mm duct collars (rectangular stubs with 10 mm walls); the pack is closed by a 10 mm bottom and a 10 mm top end plate (0.44 m by 0.4 m) that bridge it to base slab and top ring, so nothing floats and the frame interior has no gap. The plate pack is twelve aluminium sub-stacks of 45 mm (each stands for about 17 of the 200 real plates of 0.3 mm at 2.5 mm pitch, far below the 7.5 mm smallest feature), alternately 0.40 m and 0.38 m deep so that the front and back plate edges read as the alternating open and closed channel ends of a cross-flow pack, open between the posts; the bypass flap is a 14 mm plate on a 20 mm hinge barrel along the left edge.",
+     "de": "Detailliertes Modell: Ein verzinktes Geh\u00e4use aus Bodenplatte (20 mm), Deckring (20 mm, \u00d6ffnung 0,4 m mal 0,4 m), vier 50-mm-Eckpfosten und zwei 30-mm-Stirnw\u00e4nden, deren \u00d6ffnungen von 0,28 m mal 0,13 m auf die vier 60 mm langen Kanalstutzen (Rechteckstutzen mit 10 mm Wand) fluchten; das Paket wird von einer 10 mm dicken unteren und oberen Endplatte (0,44 m mal 0,4 m) abgeschlossen, die es mit Bodenplatte und Deckring verbinden, nichts schwebt und im Geh\u00e4use bleibt keine L\u00fccke. Das Plattenpaket besteht aus zw\u00f6lf Aluminium-Teilstapeln zu 45 mm (jeder steht f\u00fcr etwa 17 der 200 echten Platten von 0,3 mm im Abstand von 2,5 mm, weit unter der kleinsten Einzelheit von 7,5 mm), abwechselnd 0,40 m und 0,38 m tief, sodass die Plattenkanten vorn und hinten wie die wechselnd offenen und geschlossenen Kanalenden eines Kreuzstrompakets lesbar sind und zwischen den Pfosten offen liegen; die Bypass-Klappe ist eine 14-mm-Platte auf einer 20-mm-Scharniertrommel am linken Rand."
+    },
+    {
+     "en": "Thermal: every region is a set of references to the body solids that carry its surface (frame: casing parts and the two end plates; plates: the pack; ports: the four collars; damper: flap and hinge); each region has one layer, so each is a single surface and no nested shell exists. The two vent emitters are 7.5 mm outlet plates inside the mouth of the upper-right and lower-left collars (their faces are declared section faces: an air outlet plane carries no surface). Structure: posts, base, ring and end walls are the frame members, the pack, the collars and the flap are the members of their bones, hinge and the two end plates are joints, the 12 kg pack and the 5 kg casing are compact mass boxes at their centres, the 0.5 m contact pad (anchor base-contact) is the support.",
+     "de": "Thermik: Jede Region ist eine Menge von Verweisen auf die K\u00f6rper, die ihre Oberfl\u00e4che tragen (frame: Geh\u00e4useteile und die beiden Endplatten; plates: das Paket; ports: die vier Stutzen; damper: Klappe und Scharnier); jede Region hat eine Schicht, also eine einfache Fl\u00e4che ohne verschachtelte Schalen. Die beiden L\u00fcftungsemitter sind 7,5-mm-Austrittsplatten im Mund des Stutzens oben rechts und unten links (ihre Fl\u00e4chen sind als Schnittfl\u00e4chen erkl\u00e4rt: eine Austrittsebene tr\u00e4gt keine Oberfl\u00e4che). Tragwerk: Pfosten, Boden, Ring und Stirnw\u00e4nde sind die Rahmenst\u00e4be, Paket, Stutzen und Klappe die St\u00e4be ihrer Knochen, Scharnier und die beiden Endplatten sind Gelenke, das 12-kg-Paket und das 5-kg-Geh\u00e4use sind kompakte Massenquader in ihren Schwerpunkten, die 0,5 m gro\u00dfe Kontaktplatte (Anker base-contact) ist das Auflager."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "frame-base",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.5,
+      0.02,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.01,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "frame-top",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.25,
+       -0.25
+      ],
+      [
+       -0.25,
+       0.25
+      ],
+      [
+       0.25,
+       0.25
+      ],
+      [
+       0.25,
+       -0.25
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.2,
+        -0.2
+       ],
+       [
+        -0.2,
+        0.2
+       ],
+       [
+        0.2,
+        0.2
+       ],
+       [
+        0.2,
+        -0.2
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.58,
+     "to": 0.6
+    },
+    {
+     "id": "frame-post-rear-left",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.05,
+      0.56,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       -0.225,
+       0.3,
+       -0.225
+      ]
+     }
+    },
+    {
+     "id": "frame-post-rear-right",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.05,
+      0.56,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.225,
+       0.3,
+       -0.225
+      ]
+     }
+    },
+    {
+     "id": "frame-post-front-left",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.05,
+      0.56,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       -0.225,
+       0.3,
+       0.225
+      ]
+     }
+    },
+    {
+     "id": "frame-post-front-right",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.05,
+      0.56,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.225,
+       0.3,
+       0.225
+      ]
+     }
+    },
+    {
+     "id": "end-wall-left",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       -0.2
+      ],
+      [
+       0.58,
+       -0.2
+      ],
+      [
+       0.58,
+       0.2
+      ],
+      [
+       0.02,
+       0.2
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.415,
+        -0.135
+       ],
+       [
+        0.535,
+        -0.135
+       ],
+       [
+        0.535,
+        0.135
+       ],
+       [
+        0.415,
+        0.135
+       ]
+      ],
+      [
+       [
+        0.075,
+        -0.135
+       ],
+       [
+        0.195,
+        -0.135
+       ],
+       [
+        0.195,
+        0.135
+       ],
+       [
+        0.075,
+        0.135
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.25,
+     "to": -0.22
+    },
+    {
+     "id": "end-wall-right",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.02,
+       -0.2
+      ],
+      [
+       0.58,
+       -0.2
+      ],
+      [
+       0.58,
+       0.2
+      ],
+      [
+       0.02,
+       0.2
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.415,
+        -0.135
+       ],
+       [
+        0.535,
+        -0.135
+       ],
+       [
+        0.535,
+        0.135
+       ],
+       [
+        0.415,
+        0.135
+       ]
+      ],
+      [
+       [
+        0.075,
+        -0.135
+       ],
+       [
+        0.195,
+        -0.135
+       ],
+       [
+        0.195,
+        0.135
+       ],
+       [
+        0.075,
+        0.135
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.22,
+     "to": 0.25
+    },
+    {
+     "id": "plate-pack",
+     "kind": "box",
+     "bone": "plates",
+     "material": "aluminium-plate",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.44,
+      0.56,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.27,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "collar-upper-left",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.1,
+       -0.15
+      ],
+      [
+       0.25,
+       -0.15
+      ],
+      [
+       0.25,
+       0.15
+      ],
+      [
+       0.1,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.115,
+        -0.135
+       ],
+       [
+        0.235,
+        -0.135
+       ],
+       [
+        0.235,
+        0.135
+       ],
+       [
+        0.115,
+        0.135
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.31,
+     "to": -0.25
+    },
+    {
+     "id": "collar-lower-left",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.24,
+       -0.15
+      ],
+      [
+       -0.09,
+       -0.15
+      ],
+      [
+       -0.09,
+       0.15
+      ],
+      [
+       -0.24,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.225,
+        -0.135
+       ],
+       [
+        -0.105,
+        -0.135
+       ],
+       [
+        -0.105,
+        0.135
+       ],
+       [
+        -0.225,
+        0.135
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.31,
+     "to": -0.25
+    },
+    {
+     "id": "collar-upper-right",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.1,
+       -0.15
+      ],
+      [
+       0.25,
+       -0.15
+      ],
+      [
+       0.25,
+       0.15
+      ],
+      [
+       0.1,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.115,
+        -0.135
+       ],
+       [
+        0.235,
+        -0.135
+       ],
+       [
+        0.235,
+        0.135
+       ],
+       [
+        0.115,
+        0.135
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.25,
+     "to": 0.31
+    },
+    {
+     "id": "collar-lower-right",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.24,
+       -0.15
+      ],
+      [
+       -0.09,
+       -0.15
+      ],
+      [
+       -0.09,
+       0.15
+      ],
+      [
+       -0.24,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.225,
+        -0.135
+       ],
+       [
+        -0.105,
+        -0.135
+       ],
+       [
+        -0.105,
+        0.135
+       ],
+       [
+        -0.225,
+        0.135
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.25,
+     "to": 0.31
+    },
+    {
+     "id": "damper",
+     "kind": "box",
+     "bone": "damper",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.4,
+      0.02,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.2,
+       -0.01,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-frame-base",
+     "of": "frame-base",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-top",
+     "of": "frame-top",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-post-rear-left",
+     "of": "frame-post-rear-left",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-post-rear-right",
+     "of": "frame-post-rear-right",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-post-front-left",
+     "of": "frame-post-front-left",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-post-front-right",
+     "of": "frame-post-front-right",
+     "region": "frame"
+    },
+    {
+     "id": "th-end-wall-left",
+     "of": "end-wall-left",
+     "region": "frame"
+    },
+    {
+     "id": "th-end-wall-right",
+     "of": "end-wall-right",
+     "region": "frame"
+    },
+    {
+     "id": "th-plate-pack",
+     "of": "plate-pack",
+     "region": "plates"
+    },
+    {
+     "id": "th-collar-upper-left",
+     "of": "collar-upper-left",
+     "region": "ports"
+    },
+    {
+     "id": "th-collar-lower-left",
+     "of": "collar-lower-left",
+     "region": "ports"
+    },
+    {
+     "id": "th-collar-upper-right",
+     "of": "collar-upper-right",
+     "region": "ports"
+    },
+    {
+     "id": "th-collar-lower-right",
+     "of": "collar-lower-right",
+     "region": "ports"
+    },
+    {
+     "id": "th-damper",
+     "of": "damper",
+     "region": "damper"
+    },
+    {
+     "id": "th-supply-air-outlet",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.9,
+     "region": "ports",
+     "tags": [
+      "supply-air"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "profile": [
+      [
+       0.115,
+       -0.135
+      ],
+      [
+       0.235,
+       -0.135
+      ],
+      [
+       0.235,
+       0.135
+      ],
+      [
+       0.115,
+       0.135
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.29498,
+     "to": 0.31
+    },
+    {
+     "id": "th-exhaust-air-outlet",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.9,
+     "region": "ports",
+     "tags": [
+      "exhaust-air"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "profile": [
+      [
+       -0.225,
+       -0.135
+      ],
+      [
+       -0.105,
+       -0.135
+      ],
+      [
+       -0.105,
+       0.135
+      ],
+      [
+       -0.225,
+       0.135
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.31,
+     "to": -0.29498
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-frame-base",
+     "of": "frame-base",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-top",
+     "of": "frame-top",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-post-rear-left",
+     "of": "frame-post-rear-left",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-post-rear-right",
+     "of": "frame-post-rear-right",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-post-front-left",
+     "of": "frame-post-front-left",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-post-front-right",
+     "of": "frame-post-front-right",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-end-wall-left",
+     "of": "end-wall-left",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-end-wall-right",
+     "of": "end-wall-right",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-plate-pack",
+     "of": "plate-pack",
+     "member": "plates",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-upper-left",
+     "of": "collar-upper-left",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-lower-left",
+     "of": "collar-lower-left",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-upper-right",
+     "of": "collar-upper-right",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-lower-right",
+     "of": "collar-lower-right",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-damper",
+     "of": "damper",
+     "member": "damper",
+     "part": "member"
+    },
+    {
+     "id": "mass-plates",
+     "kind": "box",
+     "bone": "plates",
+     "material": "aluminium-plate",
+     "role": "body",
+     "tone": 0.7,
+     "member": "plates",
+     "part": "mass",
+     "size": [
+      0.3,
+      0.4,
+      0.26
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.27,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "mass-frame",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "member": "frame",
+     "part": "mass",
+     "size": [
+      0.09,
+      0.09,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.3,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "base-contact-pad",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "member": "frame",
+     "part": "support",
+     "anchor": "base-contact",
+     "size": [
+      0.47,
+      0.015,
+      0.47
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.0075,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "joint-damper-hinge",
+     "kind": "capsule",
+     "bone": "damper",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.1,
+     "member": "damper",
+     "part": "joint",
+     "slender": true,
+     "p0": [
+      -0.01,
+      -0.01,
+      -0.2
+     ],
+     "p1": [
+      -0.01,
+      -0.01,
+      0.2
+     ],
+     "r0": 0.01,
+     "r1": 0.01
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Redrawn against the 1:100 shapes: the plate pack is one 0.44 m by 0.56 m by 0.4 m aluminium block that fills the casing between base slab and top ring (the 10 mm end plates of 1:50 are below the 15 mm smallest feature and merge into it), the collars are 60 mm stubs with 15 mm walls, the damper is a single 20 mm flap whose hinge barrel is merged into it; casing, posts and end walls keep their 1:50 sizes because they are already above 15 mm.",
+     "de": "Neu gezeichnet gegen die Formen 1:100: Das Plattenpaket ist ein einziger Aluminiumblock von 0,44 m mal 0,56 m mal 0,4 m, der das Geh\u00e4use zwischen Bodenplatte und Deckring ausf\u00fcllt (die 10-mm-Endplatten von 1:50 liegen unter der kleinsten Einzelheit von 15 mm und gehen darin auf), die Stutzen sind 60-mm-Stutzen mit 15 mm Wand, die Klappe ist eine einzige 20-mm-Platte, deren Scharniertrommel in ihr aufgeht; Geh\u00e4use, Pfosten und Stirnw\u00e4nde behalten ihre Ma\u00dfe von 1:50, da sie schon \u00fcber 15 mm liegen."
+    },
+    {
+     "en": "Thermal: references to the body solids of each region, vent emitters as 15 mm outlet plates in the collar mouths. Structure: the same frame, pack, collar and flap members as references, one hinge joint, a pack mass ellipsoid and a casing mass ellipsoid, a 15 mm contact pad as support.",
+     "de": "Thermik: Verweise auf die K\u00f6rper jeder Region, L\u00fcftungsemitter als 15-mm-Austrittsplatten im Stutzenmund. Tragwerk: dieselben Rahmen-, Paket-, Stutzen- und Klappenst\u00e4be als Verweise, ein Scharniergelenk, ein Massenellipsoid f\u00fcr das Paket und eines f\u00fcr das Geh\u00e4use, eine 15 mm dicke Kontaktplatte als Auflager."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "frame-base",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "size": [
+      0.5,
+      0.03,
+      0.5
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.015,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "frame-top",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       -0.25,
+       -0.25
+      ],
+      [
+       -0.25,
+       0.25
+      ],
+      [
+       0.25,
+       0.25
+      ],
+      [
+       0.25,
+       -0.25
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.2,
+        -0.2
+       ],
+       [
+        -0.2,
+        0.2
+       ],
+       [
+        0.2,
+        0.2
+       ],
+       [
+        0.2,
+        -0.2
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.57,
+     "to": 0.6
+    },
+    {
+     "id": "end-wall-left",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.03,
+       -0.25
+      ],
+      [
+       0.57,
+       -0.25
+      ],
+      [
+       0.57,
+       0.25
+      ],
+      [
+       0.03,
+       0.25
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.43,
+        -0.12
+       ],
+       [
+        0.52,
+        -0.12
+       ],
+       [
+        0.52,
+        0.12
+       ],
+       [
+        0.43,
+        0.12
+       ]
+      ],
+      [
+       [
+        0.09,
+        -0.12
+       ],
+       [
+        0.18,
+        -0.12
+       ],
+       [
+        0.18,
+        0.12
+       ],
+       [
+        0.09,
+        0.12
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.25,
+     "to": -0.2
+    },
+    {
+     "id": "end-wall-right",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0.03,
+       -0.25
+      ],
+      [
+       0.57,
+       -0.25
+      ],
+      [
+       0.57,
+       0.25
+      ],
+      [
+       0.03,
+       0.25
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.43,
+        -0.12
+       ],
+       [
+        0.52,
+        -0.12
+       ],
+       [
+        0.52,
+        0.12
+       ],
+       [
+        0.43,
+        0.12
+       ]
+      ],
+      [
+       [
+        0.09,
+        -0.12
+       ],
+       [
+        0.18,
+        -0.12
+       ],
+       [
+        0.18,
+        0.12
+       ],
+       [
+        0.09,
+        0.12
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.2,
+     "to": 0.25
+    },
+    {
+     "id": "plate-pack",
+     "kind": "box",
+     "bone": "plates",
+     "material": "aluminium-plate",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.4,
+      0.54,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.27,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "collar-upper-left",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.1,
+       -0.15
+      ],
+      [
+       0.25,
+       -0.15
+      ],
+      [
+       0.25,
+       0.15
+      ],
+      [
+       0.1,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.13,
+        -0.12
+       ],
+       [
+        0.22,
+        -0.12
+       ],
+       [
+        0.22,
+        0.12
+       ],
+       [
+        0.13,
+        0.12
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.31,
+     "to": -0.25
+    },
+    {
+     "id": "collar-lower-left",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.24,
+       -0.15
+      ],
+      [
+       -0.09,
+       -0.15
+      ],
+      [
+       -0.09,
+       0.15
+      ],
+      [
+       -0.24,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.21,
+        -0.12
+       ],
+       [
+        -0.12,
+        -0.12
+       ],
+       [
+        -0.12,
+        0.12
+       ],
+       [
+        -0.21,
+        0.12
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.31,
+     "to": -0.25
+    },
+    {
+     "id": "collar-upper-right",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.1,
+       -0.15
+      ],
+      [
+       0.25,
+       -0.15
+      ],
+      [
+       0.25,
+       0.15
+      ],
+      [
+       0.1,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        0.13,
+        -0.12
+       ],
+       [
+        0.22,
+        -0.12
+       ],
+       [
+        0.22,
+        0.12
+       ],
+       [
+        0.13,
+        0.12
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.25,
+     "to": 0.31
+    },
+    {
+     "id": "collar-lower-right",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       -0.24,
+       -0.15
+      ],
+      [
+       -0.09,
+       -0.15
+      ],
+      [
+       -0.09,
+       0.15
+      ],
+      [
+       -0.24,
+       0.15
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.21,
+        -0.12
+       ],
+       [
+        -0.12,
+        -0.12
+       ],
+       [
+        -0.12,
+        0.12
+       ],
+       [
+        -0.21,
+        0.12
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.25,
+     "to": 0.31
+    },
+    {
+     "id": "damper",
+     "kind": "box",
+     "bone": "damper",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.4,
+      0.04,
+      0.4
+     ],
+     "transform": {
+      "translation": [
+       0.2,
+       0.0,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-frame-base",
+     "of": "frame-base",
+     "region": "frame"
+    },
+    {
+     "id": "th-frame-top",
+     "of": "frame-top",
+     "region": "frame"
+    },
+    {
+     "id": "th-end-wall-left",
+     "of": "end-wall-left",
+     "region": "frame"
+    },
+    {
+     "id": "th-end-wall-right",
+     "of": "end-wall-right",
+     "region": "frame"
+    },
+    {
+     "id": "th-plate-pack",
+     "of": "plate-pack",
+     "region": "plates"
+    },
+    {
+     "id": "th-collar-upper-left",
+     "of": "collar-upper-left",
+     "region": "ports"
+    },
+    {
+     "id": "th-collar-lower-left",
+     "of": "collar-lower-left",
+     "region": "ports"
+    },
+    {
+     "id": "th-collar-upper-right",
+     "of": "collar-upper-right",
+     "region": "ports"
+    },
+    {
+     "id": "th-collar-lower-right",
+     "of": "collar-lower-right",
+     "region": "ports"
+    },
+    {
+     "id": "th-damper",
+     "of": "damper",
+     "region": "damper"
+    },
+    {
+     "id": "th-supply-air-outlet",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.9,
+     "region": "ports",
+     "tags": [
+      "supply-air"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "profile": [
+      [
+       0.13,
+       -0.12
+      ],
+      [
+       0.22,
+       -0.12
+      ],
+      [
+       0.22,
+       0.12
+      ],
+      [
+       0.13,
+       0.12
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.27997,
+     "to": 0.31
+    },
+    {
+     "id": "th-exhaust-air-outlet",
+     "kind": "extrude",
+     "bone": "ports",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.9,
+     "region": "ports",
+     "tags": [
+      "exhaust-air"
+     ],
+     "sectionFaces": [
+      "-u",
+      "+u"
+     ],
+     "profile": [
+      [
+       -0.21,
+       -0.12
+      ],
+      [
+       -0.12,
+       -0.12
+      ],
+      [
+       -0.12,
+       0.12
+      ],
+      [
+       -0.21,
+       0.12
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.31,
+     "to": -0.27997
+    }
+   ],
+   "structure": [
+    {
+     "id": "st-frame-base",
+     "of": "frame-base",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-frame-top",
+     "of": "frame-top",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-end-wall-left",
+     "of": "end-wall-left",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-end-wall-right",
+     "of": "end-wall-right",
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "st-plate-pack",
+     "of": "plate-pack",
+     "member": "plates",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-upper-left",
+     "of": "collar-upper-left",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-lower-left",
+     "of": "collar-lower-left",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-upper-right",
+     "of": "collar-upper-right",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-collar-lower-right",
+     "of": "collar-lower-right",
+     "member": "ports",
+     "part": "member"
+    },
+    {
+     "id": "st-damper",
+     "of": "damper",
+     "member": "damper",
+     "part": "member"
+    },
+    {
+     "id": "mass-plates",
+     "kind": "box",
+     "bone": "plates",
+     "material": "aluminium-plate",
+     "role": "body",
+     "tone": 0.7,
+     "member": "plates",
+     "part": "mass",
+     "size": [
+      0.32,
+      0.4,
+      0.3
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.27,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "mass-frame",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.35,
+     "member": "frame",
+     "part": "mass",
+     "size": [
+      0.08,
+      0.08,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.3,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "base-contact-pad",
+     "kind": "box",
+     "bone": "frame",
+     "material": "galvanised-steel",
+     "role": "body",
+     "tone": 0.4,
+     "member": "frame",
+     "part": "support",
+     "anchor": "base-contact",
+     "size": [
+      0.44,
+      0.03,
+      0.44
+     ],
+     "transform": {
+      "translation": [
+       0.0,
+       0.015,
+       0.0
+      ]
+     }
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Five masses against the 1:200 shapes: the casing (30 mm base slab and top ring, two 50 mm end panels that take over the corner posts), the single aluminium block of the pack, four 60 mm collar stubs with 30 mm walls, and one 40 mm flap (the drawn thickness) whose hinge is merged into it; the 30 mm smallest feature leaves no end plates, posts or barrel.",
+     "de": "F\u00fcnf Massen gegen die Formen 1:200: das Geh\u00e4use (30-mm-Bodenplatte und Deckring, zwei 50-mm-Stirnw\u00e4nde, die die Eckpfosten \u00fcbernehmen), der einzelne Aluminiumblock des Pakets, vier 60 mm lange Stutzen mit 30 mm Wand und eine 40-mm-Klappe (die gezeichnete Dicke), deren Scharnier in ihr aufgeht; die kleinste Einzelheit von 30 mm l\u00e4sst keine Endplatten, Pfosten und keine Trommel zu."
+    },
+    {
+     "en": "Thermal: references to the body solids, vent emitters as 30 mm plates in the collar mouths. Structure: the frame, pack, collar and flap members, no separate joints (merged into the members), two mass boxes and a 30 mm contact pad.",
+     "de": "Thermik: Verweise auf die K\u00f6rper, L\u00fcftungsemitter als 30-mm-Platten im Stutzenmund. Tragwerk: Rahmen-, Paket-, Stutzen- und Klappenst\u00e4be, keine eigenen Gelenke (in den St\u00e4ben zusammengefasst), zwei Massenquader und eine 30 mm dicke Kontaktplatte."
+    }
+   ]
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

@@ -1,8 +1,8 @@
 """🌬️ Ventilation Chapter 1 — Warum lüften?
 
-Three beats open the Lüftung video: what ventilation has to remove from a room with people (CO₂, moisture,
-odours), the path heat takes with the air through a house in winter and in summer, and the roadmap of the
-video. Heating and Cooling both build on it, so the need and the air path are told season-neutral.
+Two beats follow the roadmap (``../🗺️roadmap``) that opens the Lüftung video: what ventilation has to remove from a
+room with people (CO₂, moisture, odours), and the path heat takes with the air through a house in winter and in
+summer. Heating and Cooling both build on it, so the need and the air path are told season-neutral.
 https://www.umweltbundesamt.de/themen/gesundheit/umwelteinfluesse-auf-den-menschen/innenraumluft
 """
 
@@ -57,8 +57,8 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
@@ -78,8 +78,7 @@ thermometer_glyph = _manim_module.thermometer_glyph
 droplets = _manim_module.droplets
 ripples = _manim_module.ripples
 
-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
-set_vo_language("de")
+# 🗣️ Measured clause durations live in vo_timing.json.
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -171,12 +170,6 @@ def _gauge(x: float, y_c: float, color: str, tracker, *, length: float = 2.4, th
     return bind_meter(gauge, tracker)
 
 
-def _handover(src: str, color: str):
-    """🔖 Typeset hand-over chip naming the quantity the next video takes over."""
-    label = math_label(src, size=BODY_FONT_SIZE, color=color)
-    return VGroup(SurroundingRectangle(label, color=color, corner_radius=0, buff=_theme_module.UI_SPACING, stroke_width=_theme_module.CHROME_BORDER), label)
-
-
 def _snap(mob):
     """📸 Static copy of a live readout — safe to fly into a formula slot."""
     snap = mob.copy()
@@ -213,7 +206,9 @@ def _hide(scene, *mobs, run_time: float = 0.8):
 class Beat1_Lueftungsbedarf(Scene):
     """🫁 A room with four people: CO₂, moisture and odours build up until fresh air replaces the used air.
 
-    https://de.wikipedia.org/wiki/Pettenkofer-Zahl
+    Pettenkofer limit: M. v. Pettenkofer, Ueber den Luftwechsel in Wohngebäuden, München 1858; Ad-hoc-Arbeitsgruppe
+    Innenraumrichtwerte, Gesundheitliche Bewertung von Kohlendioxid in der Innenraumluft, Bundesgesundheitsblatt 51 (2008) 1358-1369
+    (Leitwert 1000 ppm), https://www.umweltbundesamt.de/system/files/medien/pdfs/kohlendioxid_2008.pdf
     """
 
     NARRATION = [
@@ -221,14 +216,14 @@ class Beat1_Lueftungsbedarf(Scene):
          "Four people are in a room. They breathe, sweat and give off heat.",
          "Vier Personen halten sich im Raum auf. Sie atmen, schwitzen und geben Wärme ab."),
         ("co2",
-         "Every breath adds carbon dioxide. Outdoors the air holds about 420 ppm.",
-         "Jeder Atemzug erhöht den CO₂-Gehalt. Draußen sind es etwa 420 ppm."),
+         r"Every breath adds carbon dioxide. Outdoors the air holds about $420\,\mathrm{ppm}$.",
+         r"Jeder Atemzug erhöht den CO₂-Gehalt. Draußen sind es etwa $420\,\mathrm{ppm}$."),
         ("pettenkofer",
-         "At about 1000 ppm the air counts as used up: the Pettenkofer value.",
-         "Bei rund 1000 ppm gilt die Luft als verbraucht: der Pettenkoferwert."),
+         r"At about $1000\,\mathrm{ppm}$ the air counts as used up: the Pettenkofer limit.",
+         r"Bei rund $1000\,\mathrm{ppm}$ gilt die Luft als verbraucht: der Grenzwert nach Pettenkofer."),
         ("feuchte",
-         "Moisture adds up as well: a resting person gives off about 30 watts latent.",
-         "Dazu kommt Feuchte: Ein ruhender Mensch gibt rund 30 W latent ab."),
+         r"Moisture adds up as well: a resting person gives off about $30\,\mathrm{W}$ latent heat.",
+         r"Dazu kommt Feuchte: Ein ruhender Mensch gibt rund $30\,\mathrm{W}$ latent ab."),
         ("geruch",
          "Odours and pollutants collect in the room too.",
          "Auch Gerüche und Schadstoffe sammeln sich im Raum an."),
@@ -236,11 +231,11 @@ class Beat1_Lueftungsbedarf(Scene):
          "Fresh air replaces the used air, and all three loads fall again.",
          "Frischluft ersetzt die verbrauchte Luft: Alle drei Werte sinken wieder."),
         ("personen",
-         "More people need more air: about 30 cubic metres per hour and person is the planning order of magnitude.",
-         "Mehr Personen brauchen mehr Luft: etwa 30 m³/h je Person."),
+         r"More people need more air: about $30\,\mathrm{m^3/h}$ per person is the planning order of magnitude.",
+         r"Mehr Personen brauchen mehr Luft: etwa $30\,\mathrm{m^3/h}$ je Person."),
         ("jahreszeit",
-         "This need exists in winter as much as in summer, so ventilation comes before heating and cooling.",
-         "Diesen Bedarf gibt es im Winter wie im Sommer, darum steht die Lüftung vor Heizung und Kühlung."),
+         "This need exists in winter as much as in summer, so ventilation is always needed alongside heating and cooling.",
+         "Diesen Bedarf gibt es im Winter wie im Sommer, darum bedarf es immer der Lüftung neben Heizung und Kühlung."),
     ]
 
     def construct(self):
@@ -249,7 +244,7 @@ class Beat1_Lueftungsbedarf(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("What ventilation has to achieve", "Was Lüftung leisten muss"))
-        din = _din_ref("DIN EN 16798-1 · DIN 1946-6")
+        din = _din_ref(_references.cite("pettenkofer-1858", "adhoc-ag-2008"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -286,10 +281,10 @@ class Beat1_Lueftungsbedarf(Scene):
             return lines.move_to(np.array([gx["co2"] + 0.45 + lines.width / 2, y, 0.0]))
 
         tag_out = tag(tr("Outdoor air", "Außenluft"), r"420\,\mathrm{ppm}", tick_out.get_y())
-        tag_pk = tag(tr("Pettenkofer limit", "Pettenkoferwert"), r"1000\,\mathrm{ppm}", tick_pk.get_y())
+        tag_pk = tag(tr("Limit after Pettenkofer (1858)", "Grenzwert nach Pettenkofer (1858)"), r"1000\,\mathrm{ppm}", tick_pk.get_y())
         read_co2 = math_readout(lambda: rf"c = {label_number(co2.get_value() * 1000)}\,\mathrm{{ppm}}", np.array([gx["co2"], -1.35, 0.0]),
                                 color=CO2_COLOR, edge="center")
-        read_lat = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{lat}}}} = {label_number(moist.get_value() * PEOPLE * LATENT_PER_PERSON_W)}\,\mathrm{{W}}",
+        read_lat = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{i,lat}}}} = {label_number(moist.get_value() * PEOPLE * LATENT_PER_PERSON_W)}\,\mathrm{{W}}",
                                 np.array([gx["moist"], -1.35, 0.0]), color=MOISTURE_COLOR, edge="center")
         co2_col = VGroup(g_co2["group"], cap_co2, tick_out, tick_pk, tag_out, tag_pk, read_co2)
         moist_col = VGroup(g_moist["group"], cap_moist, read_lat)
@@ -363,11 +358,11 @@ class Beat1_Lueftungsbedarf(Scene):
         for x in xs:
             blocks.add(Rectangle(width=1.1, height=0.44, color=AIR_COLOR, stroke_width=2, fill_color=AIR_COLOR,
                                  fill_opacity=0.22).move_to(np.array([x, -1.22, 0.0])))
-            texts.add(math_label(rf"{label_number(PER_PERSON_M3H)}\,\mathrm{{m^{{3}}/h}}", np.array([x, -1.29, 0.0]),
+            texts.add(math_label(rf"{label_number(PER_PERSON_M3H)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", np.array([x, -1.29, 0.0]),
                                  size=LABEL_FONT_SIZE, color=AIR_COLOR))
         n_tag = math_label(rf"{PEOPLE}\,\times", np.array([-5.75, -1.29, 0.0]), color=P_ORANGE, edge="center")
         k = ValueTracker(0.0)
-        v_total = math_readout(lambda: rf"= {label_number(PER_PERSON_M3H * k.get_value())}\,\mathrm{{m^{{3}}/h}}",
+        v_total = math_readout(lambda: rf"= {label_number(PER_PERSON_M3H * k.get_value())}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
                                np.array([-0.2, -1.29, 0.0]), color=P_WHITE, edge="left")
         self.play(FadeIn(n_tag), run_time=0.6)
         self.add(v_total)
@@ -376,8 +371,8 @@ class Beat1_Lueftungsbedarf(Scene):
                       run_time=3.2 / PEOPLE)
         panel = math_panel([
             (None, r"\dot{V}_{\mathrm{Pers}}", AIR_COLOR), (None, "=", P_WHITE), ("n", f"{PEOPLE}", P_ORANGE),
-            (None, r"\cdot", P_WHITE), ("blk", rf"{label_number(PER_PERSON_M3H)}\,\mathrm{{m^{{3}}/h}}", AIR_COLOR),
-            (None, "=", P_WHITE), ("tot", rf"{label_number(PER_PERSON_M3H * PEOPLE)}\,\mathrm{{m^{{3}}/h}}", P_WHITE),
+            (None, r"\cdot", P_WHITE), ("blk", rf"{label_number(PER_PERSON_M3H)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", AIR_COLOR),
+            (None, "=", P_WHITE), ("tot", rf"{label_number(PER_PERSON_M3H * PEOPLE)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}", P_WHITE),
         ], color=AIR_COLOR)
         _fill_panel(self, stage, panel, {"n": n_tag, "blk": texts[0], "tot": v_total})
         hold_for(self, N, "personen")
@@ -387,7 +382,7 @@ class Beat1_Lueftungsbedarf(Scene):
         def season_card(name: str, color: str, theta: float, icon, at):
             lines = VGroup(body_text(name, font_size=BODY_FONT_SIZE, color=color),
                            math_label(rf"\theta_{{\mathrm{{e}}}} = {label_number(theta)}\,°\mathrm{{C}}", size=LABEL_FONT_SIZE, color=color),
-                           math_label(rf"\dot{{V}}_{{\mathrm{{Pers}}}} = {label_number(PER_PERSON_M3H * PEOPLE)}\,\mathrm{{m^{{3}}/h}}",
+                           math_label(rf"\dot{{V}}_{{\mathrm{{Pers}}}} = {label_number(PER_PERSON_M3H * PEOPLE)}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
                                       size=LABEL_FONT_SIZE, color=P_WHITE)).arrange(DOWN, buff=0.14, aligned_edge=LEFT)
             frame = RoundedRectangle(width=3.7, height=1.4, corner_radius=0, color=color, stroke_width=2).move_to(at)
             lines.move_to(at + RIGHT * 0.35)
@@ -421,14 +416,14 @@ class Beat2_Lueftungsweg(Scene):
          "In winter, warm room air leaves at the top and cold outdoor air enters at the bottom.",
          "Im Winter verlässt warme Raumluft das Haus oben, kalte Außenluft strömt unten nach."),
         ("waerme_winter",
-         "Heat leaves with the air: the temperature difference is 20 kelvin.",
-         "Mit der Luft geht Wärme verloren: Der Unterschied beträgt 20 K."),
+         r"Heat leaves with the air. This heat flow $\Phi$ is the load $\dot{Q}_{\mathrm{V}}$ at the room, V for ventilation. The temperature difference $\Delta\theta$ is $20\,\mathrm{K}$.",
+         r"Mit der Luft geht Wärme verloren. Dieser Wärmestrom $\Phi$ ist als Last am Raum $\dot{Q}_{\mathrm{V}}$, V für Lüftung. Die Temperaturdifferenz $\Delta\theta$ beträgt $20\,\mathrm{K}$."),
         ("sommer",
          "In summer the flow reverses: hot outdoor air enters at the top, cooled room air leaves at the bottom.",
          "Im Sommer kehrt sich die Strömung um: Heiße Außenluft tritt oben ein, gekühlte Raumluft unten aus."),
         ("waerme_sommer",
-         "Now heat enters with the air. The difference is only 6 kelvin.",
-         "Jetzt gelangt Wärme mit der Luft hinein. Der Unterschied beträgt nur 6 K."),
+         r"Now heat enters with the air. The temperature difference $\Delta\theta$ is only $6\,\mathrm{K}$.",
+         r"Jetzt gelangt Wärme mit der Luft hinein. Die Temperaturdifferenz $\Delta\theta$ beträgt nur $6\,\mathrm{K}$."),
         ("beide",
          "Same openings, opposite direction: heat travels with the air both ways.",
          "Gleiche Öffnungen, umgekehrte Richtung: Wärme wandert in beiden Fällen mit der Luft."),
@@ -440,7 +435,7 @@ class Beat2_Lueftungsweg(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("The ventilation path through the house", "Der Lüftungsweg durchs Haus"))
-        din = _din_ref("DIN EN 12831-1")
+        din = _din_ref(_references.cite("din-en-12831-1"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -572,126 +567,6 @@ class Beat2_Lueftungsweg(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "beide"))
         self.play(Indicate(q_summer, color=P_RED, scale_factor=1.12), *breeze(1.6), run_time=1.6)
         hold_for(self, N, "beide", during=lambda rt: breeze(rt, 4))
-        self.play(FadeOut(caption), run_time=0.3)
-        self.wait(0.5)
-#endregion
-
-
-#region Beat3 – Roadmap of the video
-class Beat3_Fahrplan(Scene):
-    """🗺️ Roadmap of the video as five cards that light up in order, ending on the hand-over chips for Heizung and Kühlung."""
-
-    NARRATION = [
-        ("intro",
-         "This video follows five steps.",
-         "Dieses Video folgt fünf Schritten."),
-        ("menge",
-         "First, how much air: volume, air change rate and volume flow.",
-         "Zuerst die Luftmenge: Volumen, Luftwechselrate und Volumenstrom."),
-        ("waerme",
-         "Then, what the air carries: temperature difference, heat capacity and humidity.",
-         "Dann, was die Luft trägt: Temperaturdifferenz, Wärmekapazität und Feuchte."),
-        ("natuerlich",
-         "Third, natural ventilation through windows.",
-         "Drittens die natürliche Lüftung durch Fenster."),
-        ("mechanisch",
-         "Fourth, mechanical ventilation with heat recovery.",
-         "Viertens die mechanische Lüftung mit Wärmerückgewinnung."),
-        ("uebergabe",
-         "Last, the hand-over: heating takes the winter value, cooling the summer value.",
-         "Zuletzt die Übergabe: Die Heizung übernimmt den Winterwert, die Kühlung den Sommerwert."),
-    ]
-
-    def construct(self):
-        apply_scene_style(self)
-        N = self.NARRATION
-
-        subtitle = section_heading(tr("The roadmap of this video", "Der Fahrplan des Videos"))
-        din = _din_ref("DIN EN 12831-1 · DIN 1946-6")
-        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
-
-        caption = caption_bar(subtitle_text(N, "intro"))
-        self.play(FadeIn(caption), run_time=0.3)
-
-        card_w, card_h, gap, y_c = 2.25, 2.7, 0.4, 0.6
-        xs = [(i - 2) * (card_w + gap) for i in range(5)]
-        colors = [AIR_COLOR, P_YELLOW, P_GREEN, P_TEAL, P_ORANGE]
-        names = [tr("Air volume", "Luftmenge"), tr("Heat flow", "Wärmestrom"), tr("natural", "natürlich"), tr("mechanical", "mechanisch"), tr("Handover", "Übergabe")]
-        symbols = [r"V,\;n,\;\dot{V}", r"\Delta\theta,\;c_{\mathrm{Luft}},\;\Delta x", r"A_{\mathrm{eff}}",
-                   r"\eta_{\mathrm{WRG}}", r"\Phi_{\mathrm{V}},\;\dot{Q}_{\mathrm{L}}"]
-
-        def icon(i: int, color: str, at):
-            if i == 1:
-                therm = thermometer_glyph(at + DOWN * 0.34, height=0.8, color=color, level=0.65)
-                return VGroup(therm["group"], therm["column"])
-            if i == 0:
-                room = _room(ORIGIN, 1.0, 0.62, color=color, t=0.07)
-                path = smooth_path([np.array([-0.62, 0.05, 0.0]), np.array([0.0, 0.12, 0.0]), np.array([0.62, 0.05, 0.0])])
-                return VGroup(room, flow_guides([path], color, opacity=0.9, width=2.4))
-            if i == 2:
-                window = window_glyph(-0.15, -0.4, 0.4, depth=0.55, color=color)
-                window["sash"].become(_manim_module.window_opening(window))
-                return window["group"]
-            if i == 3:
-                return fitted_staffage("shared-mvhr-normal", width=0.9, height=0.78)
-            return house_section(scale=0.24)["group"].set_color(color)
-
-        cards, shades = [], []
-        for i, (x, color) in enumerate(zip(xs, colors)):
-            frame = RoundedRectangle(width=card_w, height=card_h, corner_radius=0, color=color, stroke_width=_theme_module.CHROME_BORDER)
-            frame.move_to(np.array([x, y_c, 0.0]))
-            badge = VGroup(Circle(radius=0.19, color=color, stroke_width=2, fill_color=color, fill_opacity=1.0),
-                           body_text(str(i + 1), font_size=LABEL_FONT_SIZE, color=P_DEEP_DARK))
-            badge[1].move_to(badge[0].get_center())
-            name = body_text(names[i], font_size=BODY_FONT_SIZE, color=color)
-            sym = math_label(symbols[i], size=BODY_FONT_SIZE, color=P_WHITE)
-            at = np.array([x, y_c - 0.12, 0.0])
-            pic = icon(i, color, at)
-            badge.move_to(np.array([x, y_c + card_h / 2 - 0.4, 0.0]))
-            name.move_to(np.array([x, y_c + card_h / 2 - 0.85, 0.0]))
-            if i != 1:
-                pic.move_to(at)
-            sym.move_to(np.array([x, y_c - card_h / 2 + 0.3, 0.0]), coor_mask=np.array([1, 0, 0]))
-            sym.shift(UP * (y_c - card_h / 2 + 0.3 - sym.base.get_center()[1]))
-            cards.append(VGroup(frame, badge, name, pic, sym))
-            shades.append(RoundedRectangle(width=card_w + 0.04, height=card_h + 0.04, corner_radius=0, stroke_width=0,
-                                           fill_color=_theme_module.CHROME_FILL, fill_opacity=0.74).move_to(frame))
-        links = [Arrow(np.array([x + card_w / 2 + 0.03, y_c, 0.0]), np.array([x + card_w / 2 + gap - 0.03, y_c, 0.0]), buff=0,
-                       color=P_WHITE, stroke_width=3, max_tip_length_to_length_ratio=0.5) for x in xs[:-1]]
-
-        span_y = y_c - card_h / 2 - 0.25
-        bracket = VGroup(Line(np.array([xs[0] - card_w / 2, span_y, 0.0]), np.array([xs[3] + card_w / 2, span_y, 0.0]), color=P_PRIMARY, stroke_width=2),
-                         *[Line(np.array([x, span_y, 0.0]), np.array([x, span_y + 0.12, 0.0]), color=P_PRIMARY, stroke_width=2)
-                           for x in (xs[0] - card_w / 2, xs[3] + card_w / 2)])
-        bracket_tag = body_text(tr("applies in winter and summer alike", "gilt im Winter wie im Sommer"), font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(
-            np.array([0.5 * (xs[0] + xs[3]) - 0.4, span_y - 0.32, 0.0]))
-        chip_h = _handover(tr(r"\to\;\text{Heating:}\;\Phi_{\mathrm{V}}", r"\to\;\text{Heizung:}\;\Phi_{\mathrm{V}}"), P_ORANGE)
-        chip_k = _handover(tr(r"\to\;\text{Cooling:}\;\dot{Q}_{\mathrm{L}}", r"\to\;\text{Kühlung:}\;\dot{Q}_{\mathrm{L}}"), P_CYAN)
-        chips = VGroup(chip_h, chip_k).arrange(DOWN, buff=0.1, aligned_edge=RIGHT)
-        chips.move_to(np.array([xs[4] + card_w / 2 - chips.width / 2, span_y - 0.78, 0.0]))
-        chip_h.set_x(chips.get_x())
-        chip_k.set_x(chips.get_x())
-
-        self.play(LaggedStart(*[FadeIn(c) for c in cards], lag_ratio=0.12), *[FadeIn(s) for s in shades], run_time=1.6)
-        hold_for(self, N, "intro", used=0.3 + 1.6)
-
-        def light(i: int, key: str):
-            nonlocal caption
-            caption = swap_caption(self, caption, subtitle_text(N, key))
-            anims = [FadeOut(shades[i])]
-            if i > 0:
-                anims.append(GrowArrow(links[i - 1]))
-            self.play(*anims, run_time=1.0)
-            self.play(Indicate(cards[i][0], color=colors[i], scale_factor=1.05), run_time=1.0)
-            hold_for(self, N, key)
-
-        for i, key in enumerate(("menge", "waerme", "natuerlich", "mechanisch")):
-            light(i, key)
-            if i == 3:
-                self.play(Create(bracket), FadeIn(bracket_tag), run_time=1.0)
-        light(4, "uebergabe")
-        self.play(FadeIn(chip_h, shift=UP * 0.15), FadeIn(chip_k, shift=UP * 0.15), run_time=1.0)
-        hold_for(self, N, "uebergabe", min_wait=1.0)
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)
 #endregion

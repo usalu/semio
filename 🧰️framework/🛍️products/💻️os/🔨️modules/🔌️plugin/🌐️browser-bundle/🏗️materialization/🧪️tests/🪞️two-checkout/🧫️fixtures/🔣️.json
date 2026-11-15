@@ -1,0 +1,22 @@
+{
+  "description": "A hand-written two-crate workspace whose cdylib is a wasm32-wasip2 component: panic locations, file!/line!/module_path! and std formatting put every path rustc can embed into the bytes.",
+  "package": "fixture-plugin",
+  "files": {
+    "Cargo.toml": "cargo-features = [\"trim-paths\"]\n[workspace]\nresolver = \"2\"\nmembers = [\"core\", \"plugin\"]\n",
+    "core/Cargo.toml": "[package]\nname = \"fixture-core\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "core/src/lib.rs": "use std::collections::BTreeMap;\npub fn site() -> String { format!(\"{}:{}:{}\", file!(), line!(), module_path!()) }\npub fn table(n: u32) -> BTreeMap<u32, String> { (0..n).map(|i| (i, format!(\"v{i}\"))).collect() }\npub fn risky(v: &[u32], i: usize) -> u32 { v.get(i).copied().unwrap() }\n",
+    "plugin/Cargo.toml": "[package]\nname = \"fixture-plugin\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[lib]\ncrate-type = [\"cdylib\"]\n[dependencies]\nfixture-core = { path = \"../core\" }\n",
+    "plugin/src/lib.rs": "#[no_mangle]\npub extern \"C\" fn probe(n: u32) -> u32 { fixture_core::table(n).len() as u32 + fixture_core::risky(&[1, 2, 3], n as usize) + fixture_core::site().len() as u32 }\n"
+  },
+  "control": {
+    "description": "The negative control: the same plugin with one dependency from a directory source. Cargo hashes the absolute path of such a source into the crate's metadata, so the component's bytes depend on the checkout path and the comparison of the proof must see it.",
+    "config": "[source.crates-io]\nreplace-with = \"vendored\"\n[source.vendored]\ndirectory = \"{vendor}\"\n",
+    "files": {
+      "plugin/Cargo.toml": "[package]\nname = \"fixture-plugin\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[lib]\ncrate-type = [\"cdylib\"]\n[dependencies]\nfixture-core = { path = \"../core\" }\nfixture-vendored = \"1\"\n",
+      "plugin/src/lib.rs": "#[no_mangle]\npub extern \"C\" fn probe(n: u32) -> u32 { fixture_core::table(n).len() as u32 + fixture_core::risky(&[1, 2, 3], n as usize) + fixture_core::site().len() as u32 + fixture_vendored::here().len() as u32 + fixture_vendored::boom(Some(n)) }\n",
+      "vendor/fixture-vendored/Cargo.toml": "[package]\nname = \"fixture-vendored\"\nversion = \"1.0.0\"\nedition = \"2021\"\n",
+      "vendor/fixture-vendored/src/lib.rs": "pub fn here() -> &'static str { file!() }\npub fn boom(v: Option<u32>) -> u32 { v.expect(\"vendored\") }\n",
+      "vendor/fixture-vendored/.cargo-checksum.json": "{\"files\":{},\"package\":null}"
+    }
+  }
+}

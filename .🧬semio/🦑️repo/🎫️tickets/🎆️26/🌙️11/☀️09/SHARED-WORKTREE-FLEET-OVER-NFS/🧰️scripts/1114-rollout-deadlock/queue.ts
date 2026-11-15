@@ -1,0 +1,11 @@
+import {readFile} from "node:fs/promises";
+const M="/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree";
+const {openReplicaV1}=await import(`${M}/🔁️replica/🟦️.ts`);
+const S=process.argv[2]!;
+const machine=JSON.parse(await readFile(`${S}/mir/.cache/f/machine.json`,"utf8"));
+const replica=await openReplicaV1({worktree:`${S}/mir`,storeRoot:machine.storeRoot,originId:machine.originId,groupId:machine.groupId,lock:false});
+const ids=replica.queue.snapshot();
+console.log("queue",ids.length);
+const rows=Array.from(ids).map((id:number)=>{const e=replica.manifest.entryAt(id);return `${replica.manifest.operationAt(id)} ${replica.book.name(id).slice(-80)} origin=${replica.book.origins[replica.manifest.origin[id]!]} bytes=${e.bytes} hlc=${e.hlc.slice(0,13)}`});
+console.log(rows.join("\n"));
+process.exit(0);

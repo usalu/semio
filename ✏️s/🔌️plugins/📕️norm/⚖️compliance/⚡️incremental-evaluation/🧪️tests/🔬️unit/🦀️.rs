@@ -45,7 +45,7 @@ impl UnitSource for Mock {
         for (index, member) in document.members.iter().enumerate() {
             let id = member.id.clone();
             let section_index = document.sections.iter().position(|section| section.id == member.section);
-            let mut reads = ReadSet::new([format!("members.{index}"), "gamma".to_owned()]);
+            let mut reads = ReadSet::new([format!("members.{index}"), "gamma".to_owned(), "sections.*.id".to_owned()]);
             if let Some(section_index) = section_index {
                 reads = reads.with(format!("sections.{section_index}.capacity"));
             }

@@ -9,6 +9,7 @@ import type {VizChartSnapshot} from "../../🧬️schema/📸️snapshot/🟦️
 import { scaleLinear } from "d3-scale";
 import { renderVizScene } from "@semio-tech/print-viz-inference/render";
 import Ajv2020 from "ajv/dist/2020.js";
+import draft07 from "ajv/dist/refs/json-schema-draft-07.json";
 import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import schema from "../../🚪️io/📝️text/💡️inferences/🔣️.json";
@@ -18,7 +19,7 @@ export function chartInferenceResultChecks() { const validate = new Ajv2020({ st
  const input=structuredClone(ownership.snapshot),semantic=await inferVizChartSnapshot(input as VizChartSnapshot),output=await inferVizChart(input as VizChartSnapshot),native={tikz:output.tikz,diagnostics:output.diagnostics,complete:output.complete};
  input.chart.width=999;
  return [Object.keys(semantic).sort(),Object.keys(native).sort(),semantic.complete&&semantic.chart?.chart.width===ownership.snapshot.chart.width,validateVizChartInference(semantic).length===0,validateVizChartTextOutput(native).length===0,validateVizChartInference(native).length>0,validateVizChartTextOutput(semantic).length>0];
- },oracle:()=>{const semantic={chart:ownership.snapshot,complete:true,diagnostics:[]},native={tikz:"\\begin{VizFigure}\\end{VizFigure}",complete:true,diagnostics:[]};const ajv=new Ajv2020({strict:false}),validateSemantic=ajv.compile(semanticSchema),validateNative=ajv.compile(schema);
+ },oracle:()=>{const semantic={chart:ownership.snapshot,complete:true,diagnostics:[]},native={tikz:"\\begin{VizFigure}\\end{VizFigure}",complete:true,diagnostics:[]};const ajv=new Ajv2020({strict:false});ajv.addMetaSchema(draft07);const validateSemantic=ajv.compile(semanticSchema),validateNative=ajv.compile(schema);
  return [ownership.semanticKeys,ownership.nativeKeys,true,validateSemantic(semantic),validateNative(native),!validateSemantic(native),!validateNative(semantic)];
  }}]; }
 export default defineTestAdapter({ implementation: "typescript", scenarios: { "result-admission": { subject: () => ({ projection: { results: chartInferenceResultChecks()[1]!.subject() } }), oracle: () => ({ projection: { results: chartInferenceResultChecks()[2]!.oracle() } }) } } });

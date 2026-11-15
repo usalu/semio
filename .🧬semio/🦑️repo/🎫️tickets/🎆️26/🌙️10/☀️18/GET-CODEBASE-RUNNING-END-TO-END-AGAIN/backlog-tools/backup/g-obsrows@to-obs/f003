@@ -1,0 +1,331 @@
+{
+  "schemaVersion": 1,
+  "semantic": {
+    "provider": {
+      "id": "observation:imports:v1",
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "nextRevision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "before": "import './dependency.js'; export function value() { return 1; }\n",
+    "bodyChanged": "import './dependency.js'; export function value() { return 2; }\n",
+    "importsChanged": "import './other.js'; export function value() { return 2; }\n",
+    "expected": [
+      "./dependency.js"
+    ],
+    "changedExpected": [
+      "./other.js"
+    ],
+    "cacheMaximumBytes": 16777216,
+    "oversizedCharacters": 16777217,
+    "nested": {
+      "path": "configuration.json",
+      "before": "{\"enabled\":true}",
+      "after": "{\"enabled\":false}",
+      "missing": "optional.json"
+    },
+    "replayError": "semantic parser refused",
+    "malformedFactPatches": [
+      [
+        {
+          "op": "replace",
+          "path": "/provider",
+          "value": ""
+        }
+      ],
+      [
+        {
+          "op": "replace",
+          "path": "/revision",
+          "value": "invalid"
+        }
+      ],
+      [
+        {
+          "op": "replace",
+          "path": "/resultSha256",
+          "value": "invalid"
+        }
+      ],
+      [
+        {
+          "op": "remove",
+          "path": "/source/size"
+        }
+      ]
+    ],
+    "parentValidation": {
+      "projects": 2,
+      "expectedReads": 2
+    },
+    "evaluations": {
+      "source": "import './leaf.ts'; export const value=1;",
+      "leaf": "export const leaf=true;",
+      "ownerBefore": "export const owner=1;",
+      "ownerAfter": "export const owner=2;",
+      "expectedImports": [
+        "./leaf.ts"
+      ],
+      "expectedFiles": [
+        "leaf.ts",
+        "source.ts"
+      ],
+      "providerMaximumCharacters": 256,
+      "owners": [
+        {
+          "url": "file:///workspace/build/inference.mjs",
+          "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "url": "file:///workspace/build/inference.mjs",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        {
+          "url": "file:///C:/workspace/build/inference.mjs",
+          "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    },
+    "declarationExports": [
+      "adoptVerifiedBlockV1",
+      "canonicalResolutionV1",
+      "captureObservedSourceInputsV1",
+      "captureSourcePreparationV1",
+      "inferenceAuthorityDigestV1",
+      "inferenceCacheSizesV1",
+      "inferenceHeaderLine",
+      "inferenceObservationBlockPathV1",
+      "inferenceRecordIdentityV1",
+      "memoizedFileRecord",
+      "memoizedFileRecordAsyncV1",
+      "memoizedObservedAsyncComputationV1",
+      "memoizedObservedComputationV1",
+      "memoizedRecord",
+      "observationBlockBudgetAdmitsV1",
+      "observationLayerHoldsV1",
+      "observationRoundV1",
+      "observationRowsHoldV1",
+      "observationsHold",
+      "observeDependencies",
+      "observeDetachedV1",
+      "observeInference",
+      "observeInferenceSnapshotV1",
+      "observeProjectInferenceV1",
+      "observedExactSourceFileV1",
+      "observedFs",
+      "observedInferenceStampsV1",
+      "observedRequireResolve",
+      "observedSourceAnalysisAsyncV1",
+      "observedSourceAnalysisV1",
+      "observedTypeScriptHost",
+      "projectInferenceCountsV1",
+      "projectInferenceObservationsV1",
+      "readInferenceHeaderV1",
+      "receiveSourcePreparationV1",
+      "recordClosureFactV1",
+      "recordRegistryOwnerV1",
+      "registerClosureProviderV1",
+      "registerInferenceStampsV1",
+      "registerSourceAnalysisV1",
+      "releaseInferenceMemoryV1",
+      "requireCurrentObservationV1",
+      "settleClosureRowsV1",
+      "settleObservedComputationV1",
+      "sourceObservationStatsV1",
+      "sweepSupersededObservationBlocksV1"
+    ],
+    "settlement": {
+      "before": "original source\n",
+      "after": "changed source\n",
+      "cases": [
+        {
+          "id": "abort during successful compute",
+          "phase": "compute",
+          "reason": "Original settlement compute canceled"
+        },
+        {
+          "id": "abort during last onRound",
+          "phase": "round",
+          "reason": "Original settlement round canceled"
+        }
+      ]
+    }
+  },
+  "corruption": {
+    "value": "corrupted",
+    "computations": 2
+  },
+  "races": {
+    "before": "before",
+    "after": "after",
+    "entry": "later.txt",
+    "directory": "later",
+    "conflict": "Conflicting inference observations",
+    "text": "Grüße",
+    "ports": [
+      "readFile",
+      "fileExists",
+      "directoryExists",
+      "realpath",
+      "getDirectories"
+    ]
+  },
+  "files": {
+    "a/one.txt": "1",
+    "a/two.txt": "2",
+    "b/three.txt": "3"
+  },
+  "scenarios": [
+    {
+      "id": "unchanged",
+      "mutation": {
+        "op": "none"
+      },
+      "expected": "hit"
+    },
+    {
+      "id": "identical-rewrite",
+      "mutation": {
+        "op": "write",
+        "path": "a/one.txt",
+        "content": "1"
+      },
+      "expected": "hit"
+    },
+    {
+      "id": "content-change",
+      "mutation": {
+        "op": "write",
+        "path": "a/one.txt",
+        "content": "one"
+      },
+      "expected": "miss"
+    },
+    {
+      "id": "same-size-content-change",
+      "mutation": {
+        "op": "write",
+        "path": "a/one.txt",
+        "content": "9"
+      },
+      "expected": "miss"
+    },
+    {
+      "id": "probed-absence-created",
+      "mutation": {
+        "op": "write",
+        "path": "c/missing.txt",
+        "content": "x"
+      },
+      "expected": "miss"
+    },
+    {
+      "id": "listing-change",
+      "mutation": {
+        "op": "write",
+        "path": "a/new.txt",
+        "content": "n"
+      },
+      "expected": "miss"
+    },
+    {
+      "id": "unobserved-change",
+      "mutation": {
+        "op": "write",
+        "path": "b/three.txt",
+        "content": "333"
+      },
+      "expected": "hit"
+    },
+    {
+      "id": "type-change",
+      "mutation": {
+        "op": "replace-directory-with-file",
+        "path": "b"
+      },
+      "expected": "miss"
+    }
+  ],
+  "invocationMemo": {
+    "path": "memo.json",
+    "before": "{\"value\":1}",
+    "after": "{\"value\":2}",
+    "expectedCalls": [
+      1,
+      1,
+      2
+    ],
+    "projectResult": {
+      "value": 42
+    }
+  },
+  "closureReplay": {
+    "files": {
+      "src/lib.rs": "mod leaf;\n",
+      "src/leaf.rs": "pub fn value() -> u8 { 1 }\n",
+      "Cargo.toml": "[workspace]\nmembers=[\"a\",\"b\",\"c\"]\n",
+      "a/Cargo.toml": "[package]\nname=\"a\"\nversion=\"0.1.0\"\n[dependencies]\nb={path=\"../b\"}\n",
+      "b/Cargo.toml": "[package]\nname=\"b\"\nversion=\"0.1.0\"\n",
+      "c/Cargo.toml": "[package]\nname=\"c\"\nversion=\"0.1.0\"\n"
+    },
+    "entries": [
+      "src/lib.rs"
+    ],
+    "leafEntries": [
+      "src/leaf.rs"
+    ],
+    "rustExpected": [
+      "src/leaf.rs",
+      "src/lib.rs"
+    ],
+    "nativeExpected": [
+      "a",
+      "b"
+    ],
+    "nativeChanged": [
+      "a",
+      "b",
+      "c"
+    ],
+    "manifest": "b/Cargo.toml",
+    "mutation": "[package]\nname=\"b\"\nversion=\"0.1.0\"\n[dependencies]\nc={path=\"../c\"}\n"
+  },
+  "tomlReceiving": {
+    "cases": [
+      {
+        "name": "literal astral path",
+        "source": "[package]\nname=\"probe\"\n[lib]\npath=\"🧩️module/🦀️.rs\"\n",
+        "accepted": true,
+        "path": "🧩️module/🦀️.rs",
+        "smolAccepted": true
+      },
+      {
+        "name": "scalar astral escape",
+        "source": "[package]\nname=\"probe\"\n[lib]\npath=\"\\U0001F9E9module.rs\"\n",
+        "accepted": true,
+        "path": "🧩module.rs",
+        "smolAccepted": true
+      },
+      {
+        "name": "surrogate JSON pair refuses",
+        "source": "[package]\nname=\"probe\"\n[lib]\npath=\"\\uD83E\\uDDE9module.rs\"\n",
+        "accepted": false,
+        "smolAccepted": true
+      },
+      {
+        "name": "unpaired surrogate refuses",
+        "source": "[package]\nname=\"probe\"\n[lib]\npath=\"\\uD800module.rs\"\n",
+        "accepted": false,
+        "smolAccepted": true
+      },
+      {
+        "name": "literal slash-u text",
+        "source": "[package]\nname='probe'\n[lib]\npath='\\uD83E\\uDDE9module.rs'\n",
+        "accepted": true,
+        "path": "\\uD83E\\uDDE9module.rs",
+        "smolAccepted": true
+      }
+    ],
+    "boundaryOwner": "@iarna/toml",
+    "version": 1
+  }
+}

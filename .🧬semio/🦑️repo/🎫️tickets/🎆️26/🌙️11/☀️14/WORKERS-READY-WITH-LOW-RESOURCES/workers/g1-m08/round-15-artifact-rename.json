@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-15T03:00:19.565596+00:00",
+  "old_name": "round-13-try-1-p12-samples.txt.sample-2026-11-15T01:46:41Z.txt",
+  "new_name": "round-13-try-1-p12-samples.txt.sample-2026-11-15T014641Z.txt",
+  "before_sha256": "7bf119855e7ab835a5f3172d50f70f810df451fd536b50d31181ae59310e1df1",
+  "after_sha256": "7bf119855e7ab835a5f3172d50f70f810df451fd536b50d31181ae59310e1df1",
+  "same_content": true,
+  "scope": "Own worker report artifact only; no build source or external file changed.",
+  "reason": "Current stored views differed only by this P12 sample path; colons are removed for portability. Whether this clears agreement is not yet measured."
+}

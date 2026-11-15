@@ -51,7 +51,7 @@ fn port(id: &str, port: &PortDefinition, pose: &Pose) -> (Spec, Vec<Vec3>) {
 
 /// 🎬️ Every geometry object of the document as scene entities.
 pub(crate) fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
-    for (id, object) in &input.document.geometry.objects {
+    for (id, object) in input.document.geometry.objects.iter() {
         let Some(pose) = layout.pose(id) else { continue };
         if let Some((spec, points)) = body(input, id, object, pose) {
             out.push(spec, &points);

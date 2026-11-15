@@ -20,6 +20,8 @@ export type ModelFigureProps = {
   readonly language: Language;
   readonly preset: CameraPresetName;
   readonly onPreset?: (preset: CameraPresetName) => void;
+  readonly onScale?: (scale: number) => void;
+  readonly onView?: (view: View) => void;
   readonly onState?: (state: StageState) => void;
   readonly environment?: Environment;
   readonly thermalQuantity?: ThermalQuantity;
@@ -34,8 +36,8 @@ export type ModelFigureProps = {
   readonly className?: string;
 };
 
-const optionsOf = (props: ModelFigureProps, callbacks: Pick<StageOptions, "onPreset" | "onState">): StageOptions => {
-  const { className: _className, onPreset: _onPreset, onState: _onState, ...rest } = props;
+const optionsOf = (props: ModelFigureProps, callbacks: Pick<StageOptions, "onPreset" | "onScale" | "onView" | "onState">): StageOptions => {
+  const { className: _className, onPreset: _onPreset, onScale: _onScale, onView: _onView, onState: _onState, ...rest } = props;
   return { ...rest, ...callbacks };
 };
 
@@ -45,7 +47,7 @@ export function ModelFigure(props: ModelFigureProps): ReactElement {
   const stage = useRef<ModelStage | null>(null);
   const latest = useRef(props);
   latest.current = props;
-  const callbacks: Pick<StageOptions, "onPreset" | "onState"> = { onPreset: (preset) => latest.current.onPreset?.(preset), onState: (state) => latest.current.onState?.(state) };
+  const callbacks: Pick<StageOptions, "onPreset" | "onScale" | "onView" | "onState"> = { onPreset: (preset) => latest.current.onPreset?.(preset), onScale: (scale) => latest.current.onScale?.(scale), onView: (view) => latest.current.onView?.(view), onState: (state) => latest.current.onState?.(state) };
   useEffect(() => {
     if (host.current === null) return;
     const mounted = new ModelStage(host.current, optionsOf(latest.current, callbacks));

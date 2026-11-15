@@ -6,7 +6,7 @@ use super::sheet_attributes::{NativeRecord, SheetAttributes};
 use super::record_families::RecordFamilyId;
 use super::sheet_registry::SheetId;
 use semio_s_plugin_norm_compliance::LocalizedText;
-use std::collections::BTreeMap;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 
 /// ⚙️ Product configuration block.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -116,7 +116,7 @@ pub struct ParametricGeometry {
     pub bbox: BoundingBox,
     #[dsl(table)]
     pub connections: Vec<ConnectionPoint>,
-    pub parameters: BTreeMap<String, f64>,
+    pub parameters: RetainedOrderedMap<String, f64>,
 }
 
 impl ParametricGeometry {

@@ -29,6 +29,8 @@ _ARCHITECTURE_DIMENSIONS = _ARCHITECTURE["dimensions"]
 _ICONS = json.loads((Path(__file__).parent / "🔣️icons/🔣️.json").read_text(encoding="utf-8"))["outlines"]
 
 _theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+_narration = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📝️narration.🐍️")
+_lexicon = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔊️speech.🗣️lexicon.🐍️")
 color = _theme.color
 UI_SPACING = _theme.UI_SPACING
 UI_PIXEL = _theme.UI_PIXEL
@@ -1497,14 +1499,7 @@ def highlight_param(items: dict, key: str, *, color: str = P_PRIMARY):
 # ``{,}`` for a decimal comma, and the symbols in ``_MATH_SYMBOLS``.
 _MATH_SCRIPT_SCALE = 0.66
 _MATH_FRAC_SCALE = 0.86
-_MATH_SYMBOLS = {
-    "cdot": "·", "approx": "≈", "times": "×", "to": "→", "Rightarrow": "⇒", "uparrow": "↑",
-    "pm": "±", "le": "≤", "ge": "≥",
-    "Delta": "Δ", "Sigma": "Σ", "eta": "η", "varphi": "φ", "phi": "φ", "rho": "ρ",
-    "lambda": "λ", "theta": "θ", "vartheta": "ϑ", "mu": "μ", "infty": "∞", "%": "%",
-    "Phi": "Φ", "Psi": "Ψ", "psi": "ψ", "chi": "χ", "ldots": "…", "oint": "∮",
-    "pi": "π",
-}
+_MATH_SYMBOLS = {name: entry["char"] for name, entry in _narration.SYMBOLS.items()}
 _MATH_SPACES = {",": 0.17, ";": 0.28, "quad": 1.0, "!": -0.08}
 _MATH_RELATIONS = frozenset("=≈+−·×→⇒≤≥±<>")
 _MATH_METRICS: dict[float, dict[str, float]] = {}
@@ -1601,6 +1596,8 @@ def _math_parse(src: str):
                 elif cmd == "textcolor":
                     new_color = read_group_src()
                     items.append(("group", sub(read_group_src(), upright=upright, color=new_color, keep_spaces=keep_spaces)))
+                elif cmd in ("left", "right"):
+                    pos += src[pos:pos + 1] == "."
                 elif cmd in _MATH_SPACES:
                     items.append(("space", _MATH_SPACES[cmd]))
                 elif cmd in _MATH_SYMBOLS:
@@ -1884,34 +1881,104 @@ CAPTION_LINE_BUFF = UI_SPACING
 CAPTION_MAX_LINES = 2
 
 
+@lru_cache(maxsize=4096)
+def _caption_text_width(text: str, size: float, face: str) -> float:
+    """📏 Width of one caption text run per face and size, measured once."""
+    fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    return fonts.body_text(text, font_size=size, color=P_WHITE).width
+
+
+@lru_cache(maxsize=64)
+def _caption_space_width(size: float, face: str) -> float:
+    """␣ Width of one word space in the caption face."""
+    fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    return fonts.body_text("H H", font_size=size, color=P_WHITE).width - fonts.body_text("HH", font_size=size, color=P_WHITE).width
+
+
+def _caption_text_box(text: str, size: float, color_value: str):
+    """🆎 A caption text run carrying its own baseline marker, like every math fragment."""
+    fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    probe = fonts.body_text("H" + text, font_size=size, color=color_value)
+    base_y = probe[0].get_bottom()[1]
+    probe.remove(probe[0])
+    probe.text = text
+    return _math_box([probe], [probe.get_left()[0], base_y, 0.0])
+
+
+def _caption_label(text: str, plain: str, size: float, color_value: str):
+    """🪧 Caption body and its line count: plain prose keeps the shared text path, ``$…$`` mixes math on one baseline.
+
+    Every formula is typeset by ``math_text`` in the caption size and colour, so it matches the scenes; words
+    and formulas of a line sit on one shared baseline, and a formula never splits across lines.
+    """
+    from manim import DOWN, VGroup
+    fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    if not _narration.has_math(text):
+        label = fonts.centered_body_text(plain, font_size=size, color=color_value, line_buff=CAPTION_LINE_BUFF, max_width=CAPTION_MAX_WIDTH)
+        return label, len(label.submobjects) if isinstance(label, VGroup) else 1
+    size = float(size)
+    face = fonts.BODY_FONT
+    space = _caption_space_width(size, face)
+    math_boxes: dict[str, object] = {}
+
+    def math_box(src: str):
+        if src not in math_boxes:
+            math_boxes[src] = _math_readout_text(src, size=size, color=color_value)
+        return math_boxes[src]
+
+    def chunk_width(chunk) -> float:
+        kind, content, gap = chunk
+        return (space if gap else 0.0) + (_caption_text_width(content, size, face) if kind == "text" else math_box(content).width)
+
+    def line_width(line) -> float:
+        chunks = _narration.line_chunks(line)
+        return sum(chunk_width(chunk) for chunk in chunks) - (space if chunks and chunks[0][2] else 0.0)
+
+    lines = _narration.wrap(_narration.clusters(text), line_width, CAPTION_MAX_WIDTH)
+    rows = []
+    for line in lines:
+        boxes, cursor = [], 0.0
+        for kind, content, gap in _narration.line_chunks(line):
+            box = _caption_text_box(content, size, color_value) if kind == "text" else math_box(content).copy()
+            left = cursor + (space if gap and boxes else 0.0)
+            box.shift(np.array([left - box.get_left()[0], -_math_baseline(box), 0.0]))
+            cursor = box.get_right()[0]
+            boxes.append(box)
+        rows.append(_math_box(boxes or [VGroup()], [0.0, 0.0, 0.0]))
+    if len(rows) == 1:
+        return rows[0], 1
+    pitch = fonts.body_text("Hg", font_size=size, color=color_value).height + CAPTION_LINE_BUFF
+    baseline = 0.0
+    for position, row in enumerate(rows):
+        if position:
+            above, below = row.get_top()[1], baseline - rows[position - 1].get_bottom()[1]
+            baseline -= max(pitch, above + below + CAPTION_LINE_BUFF)
+        row.shift(np.array([-row.get_center()[0], baseline, 0.0]))
+    return VGroup(*rows), len(rows)
+
+
 def caption_bar(text_de: str, *, font_size: int | None = None, color: str = P_WHITE):
     """💬 German subtitle line, fixed at the very bottom, boxed for legibility against any backdrop.
+
+    ``$…$`` segments of the clause are typeset as math on the text baseline; the same clause text is
+    spoken through the lexicon in ``🔊️speech/🗣️lexicon``.
 
     Always ``CAPTION_FONT_SIZE`` — never shrink. Word-wraps to ``CAPTION_MAX_WIDTH``
     (and honours hand ``\\n``) so long clauses stay on-screen, center-aligned, with
     a fixed vertical gap between lines.
     """
     from manim import DOWN, VGroup, VectorizedPoint
+    plain = _narration.plain_text(text_de)
     audience = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.👥️audience.🐍️")
     if not audience.subtitles_visible():
         return VGroup(VectorizedPoint([0, -4 + CAPTION_EDGE_BUFF, 0]))
     _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
     CAPTION_FONT_SIZE = _manim_module.CAPTION_FONT_SIZE
-    centered_body_text = _manim_module.centered_body_text
 
     if font_size is None:
         font_size = CAPTION_FONT_SIZE
 
-    label = centered_body_text(
-        text_de,
-        font_size=font_size,
-        color=color,
-        line_buff=CAPTION_LINE_BUFF,
-        max_width=CAPTION_MAX_WIDTH,
-    )
-    from manim import VGroup as _VGroup
-
-    n_lines = len(label.submobjects) if isinstance(label, _VGroup) else 1
+    label, n_lines = _caption_label(text_de, plain, font_size, color)
     if n_lines > CAPTION_MAX_LINES:
         raise ValueError(
             f"caption_bar wrapped to {n_lines} lines (max {CAPTION_MAX_LINES}); "
@@ -1970,16 +2037,7 @@ SUBTITLE_READING_WPS: float = 1.6
 SUBTITLE_MIN_SECONDS: float = 1.5  # floor for any non-empty caption
 
 Clause = tuple[str, str, str]  # (section_key, narration_en, subtitle_de)
-_VO_LANGUAGE: str = "en"  # "en" | "de" — which clause field estimates timing when no manifest
 _VO_TIMING: dict[str, dict[str, float]] = {}
-
-
-def set_vo_language(lang: str) -> None:
-    """🌍 Switch timing estimates to German subtitles (``de``) or English narration (``en``)."""
-    global _VO_LANGUAGE
-    if lang not in {"en", "de"}:
-        raise ValueError(f"unsupported vo language: {lang!r}")
-    _VO_LANGUAGE = lang
 
 
 def load_vo_timing(manifest_path) -> None:
@@ -2008,32 +2066,40 @@ def load_vo_timing(manifest_path) -> None:
 
 
 def narration_seconds(narration: list[Clause], key: str | None = None) -> float:
-    """⏱️ Estimated spoken seconds for one clause (``key``) or the whole narration."""
-    if _VO_LANGUAGE == "de":
+    """⏱️ Estimated spoken seconds for one clause (``key``) or the whole narration, in the runtime language (``SEMIO_TEACHING_LANGUAGE``)."""
+    if language() == "de":
         words = sum(
-            len(text_de.split()) for section, _, text_de in narration
+            _spoken_word_count(text_de, "de", section) for section, _, text_de in narration
             if text_de.strip() and (key is None or section == key)
         )
         return round(words / SUBTITLE_WPS, 2)
-    words = sum(len(text_en.split()) for section, text_en, _ in narration if key is None or section == key)
+    words = sum(_spoken_word_count(text_en, "en", section) for section, text_en, _ in narration if key is None or section == key)
     return round(words / NARRATION_WPS, 2)
+
+
+def _spoken_word_count(text: str, language: str, key: str) -> int:
+    """🗨️ Words the voice speaks for one clause, formulas included as spoken; failures name the clause."""
+    try:
+        return len(_lexicon.spoken_text(text, language).split())
+    except _lexicon.SpeechError as error:
+        raise ValueError(f"clause {key!r} ({language}): {error}") from None
 
 
 def narration_text(narration: list[Clause], key: str | None = None) -> str:
     """📝 Join clauses' English text — legacy English VO string."""
-    return " ".join(text_en for section, text_en, _ in narration if key is None or section == key)
+    return " ".join(_narration.plain_text(text_en) for section, text_en, _ in narration if key is None or section == key)
 
 
 def subtitle_narration_text(narration: list[Clause], key: str | None = None) -> str:
-    """🎤 Join clauses' German subtitles — default VO when subtitles are on screen."""
+    """🎤 Join clauses' German subtitles as plain text (formulas as Unicode) — what the viewer reads."""
     return " ".join(
-        text_de for section, _, text_de in narration
+        _narration.plain_text(text_de) for section, _, text_de in narration
         if text_de.strip() and (key is None or section == key)
     )
 
 
 def subtitle_text(narration: list[Clause], key: str) -> str:
-    """📄 The selected display language for one caption clause."""
+    """📄 The selected display language for one caption clause; ``$…$`` TeX stays in the string for ``caption_bar``."""
     for section, text_en, text_de in narration:
         if section == key:
             return tr(text_en, text_de)
@@ -2043,7 +2109,7 @@ def subtitle_text(narration: list[Clause], key: str) -> str:
 def subtitle_read_seconds(narration: list[Clause], key: str | None = None) -> float:
     """📖 Minimum on-screen seconds to comfortably read the selected captions."""
     words = sum(
-        len(tr(text_en, text_de).split()) for section, text_en, text_de in narration
+        _narration.caption_words(tr(text_en, text_de)) for section, text_en, text_de in narration
         if key is None or section == key
     )
     if words <= 0:

@@ -1,0 +1,57 @@
+import{refuseBuildV1}from"../../../../🏗️build/📖️texts/🟦️.ts";
+import{buildSchedulingNativePrefixesV1,buildSchedulingPrefixesV1}from"../../../../🏗️build/📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import schema from"./🧬️schema/🔣️.json" with { type: "json" };
+import table from"./🔣️.json" with { type: "json" };
+
+/** 🧊️ One domain of Nx engine code that never computes the bytes of an Nx task: directory prefixes and its contract in English and German. See `./🔣️.json` (the policy) and `./🧪️tests/🟦️.ts` (the law). */
+export interface NxEngineDomainV1{readonly id:string;readonly contract:{readonly en:string;readonly de:string};readonly prefixes:readonly string[];readonly keyedFor?:readonly NxEngineFamilyV1[]}
+
+/** 🌱️ One file reference a module only uses to start a program, not to load its code. */
+export interface NxEngineSpawnV1{readonly owner:string;readonly reference:string;readonly contract:{readonly en:string;readonly de:string}}
+
+/** 📚️ The closed policy of all domains that stay out of the Nx engine digest beside the scheduling domains, and the references the engine closure does not follow. */
+export interface NxEnginePolicyV1{readonly version:1;readonly spawnOnly?:readonly NxEngineSpawnV1[];readonly domains:readonly NxEngineDomainV1[]}
+
+/** 🧬️ The two engine families: `generic` keys every Nx command, `native` keys the commands that compile Rust and therefore also the scheduling prefixes that build Cargo arguments. */
+export type NxEngineFamilyV1="generic"|"native";
+
+/** 🏷️ The engine families in the order their named inputs and digests are produced. */
+export const nxEngineFamiliesV1:readonly NxEngineFamilyV1[]=Object.freeze(["generic","native"]);
+
+let declared:NxEnginePolicyV1|undefined;
+
+/** 🔐️ Admits a policy: closed by its schema, unique domain ids, clean directory prefixes no other prefix contains; any other table is refused so nothing leaves the digest by accident. */
+export function nxEnginePolicyV1(candidate:unknown=table):NxEnginePolicyV1{
+ if(candidate===table&&declared)return declared;
+ if(validateJsonSchemaSubset(schema,candidate).length)throw refuseBuildV1("invalid","nx-engine.table-required");
+ const value=candidate as NxEnginePolicyV1,ids=new Set<string>(),prefixes:string[]=[];
+ for(const domain of value.domains){
+  if(ids.has(domain.id))throw refuseBuildV1("invalid","nx-engine.table-required");ids.add(domain.id);
+  for(const prefix of domain.prefixes){if(prefix.split("/").slice(0,-1).some(part=>part===""||part==="."||part===".."))throw refuseBuildV1("invalid","nx-engine.table-required");prefixes.push(prefix);}
+ }
+ for(const [index,prefix] of prefixes.entries())if(prefixes.some((other,at)=>at!==index&&other.startsWith(prefix)))throw refuseBuildV1("invalid","nx-engine.table-required");
+ const frozen=Object.freeze(value);if(candidate===table)declared=frozen;return frozen;
+}
+
+/** 🌱️ True when the reference as written in the owner module (workspace-relative) only starts a program, so the engine closure leaves it out. */
+export function nxEngineSpawnOnlyV1(owner:string,reference:string,value:NxEnginePolicyV1=nxEnginePolicyV1()):boolean{return (value.spawnOnly??[]).some(row=>row.owner===owner&&row.reference===reference);}
+
+/** 🚧️ Refuses a family name the engine does not know. */
+export function nxEngineFamilyV1(name:unknown):NxEngineFamilyV1{
+ if(name===undefined)return "generic";
+ if(name==="generic"||name==="native")return name;
+ throw refuseBuildV1("invalid","nx-engine.family-required",{family:String(name)});
+}
+
+/** 📏️ The sorted directory prefixes that stay out of the digest of a family: the domains of this policy that are not keyed for it and the scheduling prefixes, those of the `native` family without the ones that build Cargo arguments. */
+export function nxEngineUnkeyedPrefixesV1(family:NxEngineFamilyV1="generic",value:NxEnginePolicyV1=nxEnginePolicyV1()):readonly string[]{
+ return [...new Set([...value.domains.filter(domain=>!domain.keyedFor?.includes(family)).flatMap(domain=>domain.prefixes),...(family==="native"?buildSchedulingNativePrefixesV1():buildSchedulingPrefixesV1())])].sort();
+}
+
+/** ✂️ Splits workspace-relative engine files into the keyed ones, which the digest covers, and the unkeyed ones its prefixes name. */
+export function splitNxEngineFilesV1(files:readonly string[],family:NxEngineFamilyV1="generic",value:NxEnginePolicyV1=nxEnginePolicyV1()):{readonly keyed:readonly string[];readonly unkeyed:readonly string[]}{
+ const prefixes=nxEngineUnkeyedPrefixesV1(family,value),keyed:string[]=[],unkeyed:string[]=[];
+ for(const file of files)(prefixes.some(prefix=>file.startsWith(prefix))?unkeyed:keyed).push(file);
+ return {keyed,unkeyed};
+}

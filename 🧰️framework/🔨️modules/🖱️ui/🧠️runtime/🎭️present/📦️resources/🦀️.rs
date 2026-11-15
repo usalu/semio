@@ -68,7 +68,7 @@ impl UiNativeResources {
             if !row.owner.terminal_is_empty() { return row.owner.close_demands(work).map_err(UiNativeResourceFailure::Mesh); }
             return Ok(RetirementDemand { depth: self.rows.next_pop_depth_demand().map_err(UiNativeResourceFailure::Storage)?, ..Default::default() });
         }
-        Ok(RetirementDemand { release_bytes: self.rows.next_release_allocation_bytes().map_err(UiNativeResourceFailure::Storage)?, depth: self.rows.next_release_depth_demand().map_err(UiNativeResourceFailure::Storage)?, ..Default::default() })
+        Ok(RetirementDemand { copy_bytes:self.rows.next_release_copy_byte_demand().map_err(UiNativeResourceFailure::Storage)?,release_bytes:self.rows.next_release_allocation_bytes().map_err(UiNativeResourceFailure::Storage)?, depth: self.rows.next_release_depth_demand().map_err(UiNativeResourceFailure::Storage)?, ..Default::default() })
     }
 
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<Mesh3dOwnershipStep, UiNativeResourceFailure> {

@@ -50,6 +50,7 @@ semio-s-plugin-norm-app-surface-live-core = { path = "../../../🧲️live-core/
 semio-s-plugin-norm-app-surface-panels = { path = "../../../🧾️panels/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-ui-contract-values = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }

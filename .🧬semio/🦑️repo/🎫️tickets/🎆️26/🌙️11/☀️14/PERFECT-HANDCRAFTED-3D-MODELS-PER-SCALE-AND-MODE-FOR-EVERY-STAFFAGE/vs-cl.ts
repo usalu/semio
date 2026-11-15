@@ -1,0 +1,15 @@
+import { assetPathsFromFiles, readStreamedAsset } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/📥️files/🟦️.ts";
+import { evaluate } from "../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+const dir = "🧊️volumes-next-b";
+const S = await import(`../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/${dir}/🌓️silhouette/🟦️.ts`);
+const C = await import(`../../../../../../../🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/${dir}/🧵️centreline/🟦️.ts`);
+const [slug, scale, id] = [process.argv[2]!, Number(process.argv[3]), process.argv[4]!];
+const entry = (await assetPathsFromFiles()).find((e) => e.folder === slug)!;
+const { asset } = await readStreamedAsset(entry) as any;
+const state = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "scale", scale: { denominator: scale } });
+const w = S.worldSolids(asset, state.bones, scale, "body").find((x: any) => x.id === id);
+const per = w.copyVertices ?? w.positions.length / 3;
+const t = Date.now();
+const cl = C.centreLineOf(w.positions, w.positions.subarray(0, per * 3), w.indices.subarray(0, w.indices.length / (w.positions.length / 3 / per)));
+console.log(Date.now() - t, "ms verts", per, "thickness", cl?.thickness, "length", cl?.length, "clusters", cl?.clusters.length, "edges", cl?.edges.length);
+if (cl) console.log(C.clusterPoints(cl, w.positions, 0).map((p: any) => p.map((x: number) => +x.toFixed(3)).join(",")).join(" | "));

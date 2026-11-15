@@ -247,6 +247,24 @@ export const VIEWS = ["dark-line", "dark-solid", "light-line", "light-solid", "t
 /** 🔎️ One of {@link VIEWS}. */
 export type View = (typeof VIEWS)[number];
 
+/** 🎛️ The three modes of a scale of the 3D model, each drawn from its own list of solids (`body`, `thermal`, `structure`): the unit of a scene. */
+export type Mode = "body" | "thermal" | "structure";
+
+/** 🧭️ The modes in scene order. */
+export const MODES: readonly Mode[] = ["body", "thermal", "structure"];
+
+/** 🗺️ The views each mode carries as variants of its geometry: the tone views of `body`, `thermal` of `thermal`, `forces` and `moments` of `structure`. */
+export const VIEWS_OF: Readonly<Record<Mode, readonly View[]>> = { body: ["dark-line", "dark-solid", "light-line", "light-solid"], thermal: ["thermal"], structure: ["forces", "moments"] };
+
+/** 🔎️ The mode (list of solids) a view is drawn from. */
+export const modeOf = (view: View): Mode => (view === "thermal" ? "thermal" : view === "forces" || view === "moments" ? "structure" : "body");
+
+/** 🏷️ The id of the kernel scene of a scale and mode: `s<scale>-<mode>`. */
+export const sceneIdOf = (scale: number, mode: Mode): Slug => `s${scale}-${mode}`;
+
+/** 📚️ The authored scales of `asset.volumes`, finest first, as denominators; no preset scale is authored when `volumes` is absent. */
+export const authoredScales = (volumes: Readonly<Record<string, { readonly status: string; readonly denominator: number }>> | undefined): readonly number[] => (["50", "100", "200", "500"] as const).filter((key) => volumes?.[key]?.status === "authored").map(Number);
+
 /** 🏗️ The quantity the force view paints on members. */
 export const FORCE_QUANTITIES = ["axial", "shear", "stress", "contact-pressure"] as const;
 

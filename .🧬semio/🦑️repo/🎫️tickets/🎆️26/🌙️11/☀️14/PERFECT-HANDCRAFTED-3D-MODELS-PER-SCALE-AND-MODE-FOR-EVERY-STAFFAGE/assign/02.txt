@@ -1,0 +1,8 @@
+🌳️vegetation/japanese-maple
+🌳️vegetation/lombardy-poplar
+🌳️vegetation/london-plane-pollarded
+🌳️vegetation/miscanthus-grass
+🌳️vegetation/multi-stem-birch
+🌳️vegetation/scots-pine
+🌳️vegetation/small-leaved-lime
+🌳️vegetation/weeping-willow

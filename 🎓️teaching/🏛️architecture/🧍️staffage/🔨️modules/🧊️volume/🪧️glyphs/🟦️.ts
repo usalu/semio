@@ -1,7 +1,6 @@
 /** 🪧️ The glyph solids of the analytic views: arrows for loads and reactions, arcs for moments, a sphere for the centre of mass and cones for emitters.
  *
- * Glyphs are procedural solids on their own nodes (no parent: they live in the world, not on a bone), tagged `glyph`, shown by the variant of their view and hidden by every other (their base material is fully transparent). Every size is a paper size of the 2D view multiplied by the metres per paper millimetre of the requested scale (`denominator / 1000`),
- * so a glyph is as large in the model at 1:50 as it is on paper at 1:50. An arrow lies along local `+Y` with its tip at the node origin (the application point, the head on the point as in the 2D view) and has three nodes: the root (position, direction, visibility), the head (uniform scale, shortening on short arrows) and the shaft (length);
+ * Glyphs are procedural solids on their own nodes (no parent: they live in the world, not on a bone), tagged `glyph`, shown by the variant of their view and hidden by every other (their base material is fully transparent). A drawing keeps the pure paper size of the 2D view times the metres per paper millimetre of the scale (`denominator / 1000`, {@link paperSizing}); a 3D model caps it at a share of the largest extent of the asset (amendment D1, {@link modelSizing}), so glyphs never dwarf the body at 1:200 and 1:500. An arrow lies along local `+Y` with its tip at the node origin (the application point, the head on the point as in the 2D view) and has three nodes: the root (position, direction, visibility), the head (uniform scale, shortening on short arrows) and the shaft (length);
  * an arc is a 270 degree torus sector about local `+Y` in the right-handed sense with a cone as arrow head, the node scale its radius; a cone lies along `+Y` from the origin. A glyph that is absent at an instant is scaled to a hair, never removed, so animated clips keep a fixed node set.
  *
  * @see ../../🎨️depiction/🏗️structural-view/🟦️.ts — the paper sizes (`longestArrowMm`, `arrowLengthMm`, `momentRadiusMm`)
@@ -14,11 +13,29 @@ import * as portable from "../../../../../../🧰️framework/🔨️modules/�
 /** 🔬️ A glyph that is not there at an instant. */
 export const HIDDEN: Triple = [1e-5, 1e-5, 1e-5];
 
+/** 📐️ How big the glyph solids are in model space: `mm` the metres per paper millimetre of the scale, `unit` the metres per paper millimetre of the thickness of arrows, `arrowCapM` the longest an arrow may be, `arcCapM` the largest arc radius, `massRadiusM` the radius of the centre-of-mass sphere and `plumeM` the length of an emitter cone. */
+export type GlyphSizing = { readonly mm: number; readonly unit: number; readonly arrowCapM: number; readonly arcCapM: number; readonly massRadiusM: number; readonly plumeM: number };
+
+/** 📄️ Pure paper sizes (a drawing is paper): every glyph is as large as its paper size at the scale, nothing is capped. */
+export const paperSizing = (mm: number): GlyphSizing => ({ mm, unit: mm, arrowCapM: Number.POSITIVE_INFINITY, arcCapM: Number.POSITIVE_INFINITY, massRadiusM: 1.3 * mm, plumeM: 5 * mm });
+
+/** 🧊️ The sizes of the glyphs of a 3D model: the paper size, but at most `ARROW_SHARE` (arrows, plumes; moment arcs half of it as radius) and `MASS_SHARE` (the centre-of-mass sphere, as radius) of the largest extent `extentM` of the asset, so that at 1:200 and 1:500 the body still fills the frame; the thickness of an arrow follows the capped longest arrow (`longestMm` paper millimetres). */
+export function modelSizing(mm: number, extentM: number, longestMm: number): GlyphSizing {
+  const arrowCapM = ARROW_SHARE * extentM;
+  return { mm, unit: Math.min(mm, arrowCapM / longestMm), arrowCapM, arcCapM: arrowCapM / 2, massRadiusM: Math.min(1.3 * mm, MASS_SHARE * extentM), plumeM: Math.min(5 * mm, arrowCapM) };
+}
+
 /** 🏹️ The paper sizes of the arrow in millimetres (the 2D arrow outline: shaft width 0.3, head width 1.3, head length at most 1.8). */
 export const ARROW = { shaftMm: 0.3, headWidthMm: 1.3, headLengthMm: 1.8 } as const;
 
 /** ⭕️ The proportions of a moment arc of radius 1: tube radius and arrow head. */
 export const ARC = { tube: 0.06, headLength: 0.35, headRadius: 0.16, sweepRad: 1.5 * Math.PI } as const;
+
+/** 🔢️ The share of the largest extent of the asset that an arrow or a plume may be long in a 3D model. */
+export const ARROW_SHARE = 0.35;
+
+/** 🔢️ The share of the largest extent of the asset that the radius of the centre-of-mass sphere may be in a 3D model. */
+export const MASS_SHARE = 0.06;
 
 const identity: TransformPatch = { translation: [0, 0, 0], rotation: [0, 0, 0, 1], scale: [1, 1, 1] };
 
@@ -47,7 +64,7 @@ export function edgeMaterialOf(document: ModelDocument): (source: Primitive) => 
   return (source) => (glyphs.has(source.material) ? glyphEdgeOf(source.material) : "edge");
 }
 
-/** 📏️ The nodes and solids of one arrow glyph `id` with the base material `material`; `mm` is the metres per paper millimetre. */
+/** 📏️ The nodes and solids of one arrow glyph `id` with the base material `material`; `mm` is the metres per paper millimetre of its thickness (the `unit` of its sizing). */
 export function arrowGlyph(id: Slug, material: Slug, mm: number, at: TransformPatch = identity): { readonly nodes: Node[]; readonly solids: Solid[] } {
   const root = `arrow-${id}`;
   const headLength = ARROW.headLengthMm * mm;
@@ -60,11 +77,11 @@ export function arrowGlyph(id: Slug, material: Slug, mm: number, at: TransformPa
   };
 }
 
-/** 🧮️ The patches of the three nodes of arrow `id` for an arrow with its tip at `at` (neutral frame) pointing along `direction` with paper length `lengthMm`; `null` hides it. */
-export function arrowPatch(id: Slug, at: Triple | null, direction: Triple, lengthMm: number, mm: number): Record<Slug, TransformPatch> {
+/** 🧮️ The patches of the three nodes of arrow `id` for an arrow with its tip at `at` (neutral frame) pointing along `direction` with the length `lengthM` in metres and the thickness unit `mm`; `null` hides it. */
+export function arrowPatch(id: Slug, at: Triple | null, direction: Triple, lengthM: number, mm: number): Record<Slug, TransformPatch> {
   const root = `arrow-${id}`;
-  if (at === null || !(lengthMm > 0)) return { [root]: { scale: HIDDEN }, [`${root}-head`]: { scale: [1, 1, 1] }, [`${root}-shaft`]: { translation: [0, -ARROW.headLengthMm * mm, 0], scale: [1, 1e-5, 1] } };
-  const length = lengthMm * mm;
+  if (at === null || !(lengthM > 0)) return { [root]: { scale: HIDDEN }, [`${root}-head`]: { scale: [1, 1, 1] }, [`${root}-shaft`]: { translation: [0, -ARROW.headLengthMm * mm, 0], scale: [1, 1e-5, 1] } };
+  const length = lengthM;
   const head = Math.min(ARROW.headLengthMm * mm, 0.6 * length);
   const n = portable.hypot(...direction) || 1;
   return {
@@ -97,15 +114,15 @@ export function arcPatch(id: Slug, at: Triple | null, axis: Triple, radiusM: num
   return { [root]: { translation: at, rotation: quaternionOf(basisAlongY([axis[0] / n, axis[1] / n, axis[2] / n])), scale: [radiusM, radiusM, radiusM] } };
 }
 
-/** ⚖️ The node and solid of the centre-of-mass sphere of paper radius 1.3 mm. */
-export function massGlyph(material: Slug, mm: number, at: TransformPatch = identity): { readonly nodes: Node[]; readonly solids: Solid[] } {
-  return { nodes: [glyphNode("centre-of-mass", null, at)], solids: [{ id: "centre-of-mass", node: "centre-of-mass", material, tags: ["glyph"], kind: "ellipsoid", radii: [1.3 * mm, 1.3 * mm, 1.3 * mm] }] };
+/** ⚖️ The node and solid of the centre-of-mass sphere of radius `radiusM` (paper 1.3 mm at the scale unless capped). */
+export function massGlyph(material: Slug, radiusM: number, at: TransformPatch = identity): { readonly nodes: Node[]; readonly solids: Solid[] } {
+  return { nodes: [glyphNode("centre-of-mass", null, at)], solids: [{ id: "centre-of-mass", node: "centre-of-mass", material, tags: ["glyph"], kind: "ellipsoid", radii: [radiusM, radiusM, radiusM] }] };
 }
 
-/** 🔥️ The node and cone of one emitter marker glyph `id`: paper length 5 mm along the outflow, base radius 0.2 of the length. */
-export function emitterGlyph(id: Slug, material: Slug, mm: number, at: TransformPatch = identity): { readonly nodes: Node[]; readonly solids: Solid[] } {
+/** 🔥️ The node and cone of one emitter marker glyph `id`: length `lengthM` (paper 5 mm at the scale unless capped) along the outflow, base radius 0.2 of the length. */
+export function emitterGlyph(id: Slug, material: Slug, lengthM: number, at: TransformPatch = identity): { readonly nodes: Node[]; readonly solids: Solid[] } {
   const root = `emitter-${id}`;
-  return { nodes: [glyphNode(root, null, at)], solids: [cone(root, root, material, 5 * mm, 1 * mm, 1)] };
+  return { nodes: [glyphNode(root, null, at)], solids: [cone(root, root, material, lengthM, 0.2 * lengthM, 1)] };
 }
 
 /** 📤️ The patch of emitter marker `id` at `at` along `direction`; `null` (not flowing) hides it. */

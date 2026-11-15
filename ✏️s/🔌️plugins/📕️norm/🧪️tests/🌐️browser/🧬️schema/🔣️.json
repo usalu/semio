@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "s.norm.browser-journey.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "example", "regions", "member", "edit", "utilisation", "chrome", "checks", "viewerRegions"],
+  "definitions": {
+    "names": { "type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } } },
+    "role": { "enum": ["outliner", "viewport", "properties", "checks", "diagrams"] }
+  },
+  "properties": {
+    "schema": { "const": "s.norm.browser-journey.v1" },
+    "example": { "type": "object", "additionalProperties": false, "required": ["picker", "id"], "properties": { "picker": { "type": "string", "minLength": 1 }, "id": { "type": "string", "minLength": 1 } } },
+    "regions": { "type": "array", "minItems": 5, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["role", "names"], "properties": { "role": { "$ref": "#/definitions/role" }, "names": { "$ref": "#/definitions/names" } } } },
+    "viewerRegions": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": { "$ref": "#/definitions/role" } },
+    "member": { "type": "object", "additionalProperties": false, "required": ["idSuffix", "title"], "properties": { "idSuffix": { "type": "string", "minLength": 1 }, "title": { "type": "string", "minLength": 1 } } },
+    "edit": { "type": "object", "additionalProperties": false, "required": ["field", "key", "times", "commit"], "properties": { "field": { "$ref": "#/definitions/names" }, "key": { "type": "string", "minLength": 1 }, "times": { "type": "integer", "minimum": 1 }, "commit": { "type": "string", "minLength": 1 } } },
+    "utilisation": { "type": "object", "additionalProperties": false, "required": ["pattern", "settleMs"], "properties": { "pattern": { "type": "string", "minLength": 1 }, "settleMs": { "type": "integer", "minimum": 1000 } } },
+    "chrome": { "type": "object", "additionalProperties": false, "required": ["settings", "language"], "properties": { "settings": { "type": "string", "minLength": 1 }, "language": { "type": "string", "minLength": 1 } } },
+    "checks": { "type": "array", "minItems": 6, "uniqueItems": true, "items": { "type": "object", "additionalProperties": false, "required": ["id", "phase", "description"], "properties": { "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }, "phase": { "enum": ["editor", "viewer"] }, "description": { "type": "string", "minLength": 1 } } } }
+  }
+}

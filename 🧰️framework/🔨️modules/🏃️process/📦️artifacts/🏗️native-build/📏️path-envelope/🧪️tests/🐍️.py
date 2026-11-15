@@ -1,4 +1,4 @@
-"""📏️ Independent pathlib witness of selected Cargo output path extents."""
+"""📏️ Independent pathlib witness of selected Cargo output path extents, with the codegen temporaries in the lane temporary directory."""
 import json
 import pathlib
 import sys
@@ -22,7 +22,11 @@ for row in fixture["cases"]:
         for extension in policy["extensions"]:
             paths.add(str(out / ("lib" + name + "-" + fingerprint + "." + extension)))
             paths.add(str(recipe / ("lib" + name + "." + extension)))
-        paths.add(str(out / (name + "-" + fingerprint + "." + "0" * policy["codegenUnitCharacters"] + "." + "0" * policy["codegenDisambiguatorCharacters"] + ".rcgu.o")))
+        stem = name + "-" + fingerprint
+        session = "s-" + "0" * policy["incrementalTimestampCharacters"] + "-" + "0" * policy["codegenDisambiguatorCharacters"] + "-" + "0" * policy["incrementalSessionCharacters"]
+        paths.add(str(path(row["buildDirectory"]) / target / profile / "incremental" / (name + "-" + "0" * policy["incrementalCrateCharacters"]) / session / ("0" * policy["codegenUnitCharacters"] + ".o")))
+        for value in (stem + "." + "0" * policy["codegenUnitCharacters"] + "." + "0" * policy["codegenDisambiguatorCharacters"] + ".rcgu.no-opt.bc", "0" * 16 + "-" + stem + "." + name + "." + "0" * policy["wholeCodegenHashCharacters"] + "-cgu." + "0" * policy["wholeCodegenIndexCharacters"] + ".rcgu.thin-lto-after-rename.bc"):
+            paths.add(str(path(row["buildDirectory"]) / policy["temporaryDirectory"] / value[: policy["temporaryFileCharacters"]]))
         for extension in ("", "exe", "pdb"):
             paths.add(str(recipe / (unit["name"] + ("." + extension if extension else ""))))
     ordered = sorted(paths)

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:remote-execution:sidecar:restart:v1",
+  "title": "When and how a build sidecar restarts for new code",
+  "description": "A sidecar restarts only when a byte of the files it actually loads (its import closure) differs from the closure it started with. Fleet machines receive edits of the build module continuously, so the restart waits until the closure was quiet for quietMilliseconds (a closure that is edited without a pause restarts after maximumDeferralMilliseconds at the latest), stops taking new work (drain), lets the work in flight finish for up to graceMilliseconds and then exits with status 75 so that its launcher starts it again with the new code. An edit that is reverted before the restart cancels it. The closure is looked at every watchMilliseconds. The restart is logged with the changed files and the time it was deferred.",
+  "definitions": {
+    "Restart": {
+      "const": {
+        "watchMilliseconds": 30000,
+        "quietMilliseconds": 90000,
+        "maximumDeferralMilliseconds": 600000,
+        "graceMilliseconds": 300000
+      }
+    },
+    "Texts": {
+      "const": {
+        "en": {
+          "deferred": "{role}: code of the sidecar edited ({files}); restarting after {quiet} s without a further change, after {maximum} s at the latest",
+          "restarting": "{role} code changed, restarting (deferred {deferred} s, {reason}; changed: {files})",
+          "draining": "{role}: finishing the work in flight for up to {grace} s before the restart",
+          "reasonQuiet": "quiet period over",
+          "reasonMaximum": "maximum deferral reached"
+        },
+        "de": {
+          "deferred": "{role}: Code des Sidecars geändert ({files}); Neustart nach {quiet} s ohne weitere Änderung, spätestens nach {maximum} s",
+          "restarting": "{role}: Code geändert, Neustart (verzögert um {deferred} s, {reason}; geändert: {files})",
+          "draining": "{role}: beende die laufende Arbeit (bis zu {grace} s) vor dem Neustart",
+          "reasonQuiet": "Ruhezeit vorbei",
+          "reasonMaximum": "maximale Verzögerung erreicht"
+        }
+      }
+    }
+  }
+}

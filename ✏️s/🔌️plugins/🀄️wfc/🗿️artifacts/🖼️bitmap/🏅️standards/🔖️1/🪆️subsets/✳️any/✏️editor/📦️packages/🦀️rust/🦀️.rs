@@ -23,7 +23,7 @@ pub mod schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 pub use semio_s_artifact_wfc_bitmap_snapshot::{bitmap_layers_json};
-pub use semio_s_artifact_wfc_bitmap_tests_shrinks_the_output_and_cascades_a_pin::{WFC_BITMAP_DIALECT};
+pub use semio_s_artifact_wfc_bitmap_tests_shrinks_output_pin::{WFC_BITMAP_DIALECT};
 pub use crate::standards::v1::artifact_items_2::{artifact_kind};
 pub use crate::standards::v1::artifact_items_4::{ArtifactApps, artifact, definition, pilot_languages};
 

@@ -2,7 +2,7 @@
 //!
 //! 📏️ Wall length, height, thickness and held sides; opening width, height and sill; floor bearing depth and span; load eccentricities at top and bottom; concentrated bearing length; chase position, length and depth; movement joint position and panel spacing; the diaphragm stiffness on a logarithmic law; concentrated load position, lintel bearing length and flange thickness; and one gauge ([`gauges`]) for every other numeric field of the walls, load cases, concentrated loads, ties, tendons, confining columns and bars.
 
-use super::scene::projection_kit::{base_id, loc, binding_of_subjects as binding};
+use super::scene::projection_kit::{base_id, loc};
 use super::kit::*;
 use super::layout::{openings, Layout, WallPose, EPS};
 use super::model::{En1996Snapshot, MasonryWall};

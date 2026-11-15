@@ -41,13 +41,13 @@ fn check_geometry_objects(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     let mut binding_fail = 0u32;
     let mut objects_ok = 0u32;
 
-    for (id, obj) in &geometry.objects {
+    for (id, obj) in geometry.objects.iter() {
         check_geometry_graph_validity(geometry, id, obj, report, &mut graph_fail);
         check_geometry_shape_and_volume(geometry, id, obj, report, &mut graph_fail, &mut volume_fail, &mut space_fail, &mut objects_ok);
-        check_geometry_ports_and_bindings(id, obj, report, &mut port_fail, &mut binding_fail);
+        check_geometry_ports_and_bindings(doc, id, obj, report, &mut port_fail, &mut binding_fail);
     }
 
-    for (id, obj) in &geometry.objects {
+    for (id, obj) in geometry.objects.iter() {
         for surface in &obj.surfaces {
             let dx = surface.bounds.max[0] - surface.bounds.min[0];
             let dy = surface.bounds.max[1] - surface.bounds.min[1];
@@ -93,7 +93,7 @@ fn check_geometry_objects(doc: &Iso16757Snapshot, report: &mut CheckReport) {
         }
     }
 
-    for (id, obj) in &geometry.objects {
+    for (id, obj) in geometry.objects.iter() {
         if let Some(shape) = &obj.shape {
             let values: std::collections::HashMap<String, f64> = obj
                 .parameter_bindings
@@ -395,6 +395,7 @@ fn check_geometry_shape_and_volume(
 
 /// 🔩️ Checks the ports and the parameter bindings of one geometry object.
 fn check_geometry_ports_and_bindings(
+    doc: &Iso16757Snapshot,
     id: &str,
     obj: &semio_s_artifact_norm_iso16757_model::part_2::GeometryObject,
     report: &mut CheckReport,
@@ -458,7 +459,7 @@ fn check_geometry_ports_and_bindings(
         }
     }
 
-    for (param, binding) in &obj.parameter_bindings {
+    for (param, binding) in obj.parameter_bindings.iter() {
         if binding.trim().is_empty() {
             *binding_fail += 1;
             report.push(fail(
@@ -538,7 +539,7 @@ fn check_ports_primitives_and_spaces(doc: &Iso16757Snapshot, report: &mut CheckR
         ("cylinder", &["radius", "height"]),
         ("sphere", &["radius"]),
     ];
-    for (id, obj) in &doc.geometry.objects {
+    for (id, obj) in doc.geometry.objects.iter() {
         check_object_id_and_spaces(report, id, obj);
         check_object_ports(report, id, obj);
     }

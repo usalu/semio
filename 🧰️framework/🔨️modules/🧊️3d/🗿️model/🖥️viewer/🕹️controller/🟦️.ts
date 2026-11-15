@@ -34,6 +34,7 @@ export type ViewerStatus =
   | { kind: "playing" }
   | { kind: "paused" }
   | { kind: "variant"; variant: Slug | null }
+  | { kind: "scene"; scene: Slug }
   | { kind: "animation"; animation: Slug | null }
   | { kind: "pose"; pose: Slug | null }
   | { kind: "orbit" | "pan" | "zoom" };
@@ -64,6 +65,7 @@ export type ModelViewerOptions = {
   readonly followSmoothingS?: number;
   readonly rootMotion?: RootMotion;
   readonly rootNode?: Slug;
+  readonly scene?: Slug;
 };
 
 /** 📣️ Events by name. */
@@ -75,6 +77,7 @@ export type ViewerEvents = {
   preset: { preset: CameraPreset | null };
   follow: { follow: ViewerFollow };
   rootMotion: { rootMotion: RootMotion };
+  scene: { scene: Slug };
   time: { animation: Slug; timeS: number };
   playing: { playing: boolean };
   pick: { hit: Hit | null; clientX: number; clientY: number };
@@ -106,6 +109,7 @@ export class ModelViewer {
   private loopOverride: boolean | null = null;
   private playing = false;
   private variant: Slug | null = null;
+  private sceneId: Slug | null = null;
   private dirty = false;
   private frameRequest = 0;
   private lastNow = -1;
@@ -282,6 +286,7 @@ export class ModelViewer {
       this.timeS = 0;
       this.playing = false;
       this.variant = null;
+      this.sceneId = this.options.scene !== undefined && scene.scenes.some((set) => set.id === this.options.scene) ? this.options.scene : null;
       this.followState.ready = false;
       this.backend?.load(scene);
       this.fit(false);
@@ -374,6 +379,27 @@ export class ModelViewer {
     this.variant = id;
     this.announce({ kind: "variant", variant: id });
     this.requestRender();
+  }
+
+  /** 🎞️ The scenes of the loaded model: id and bilingual title; empty before a document is set. */
+  get scenes(): readonly { readonly id: Slug; readonly title: { readonly en: string; readonly de: string } }[] {
+    return this.scene?.scenes.map((set) => ({ id: set.id, title: set.title })) ?? [];
+  }
+
+  /** 🎞️ The active scene id (the first scene while none was chosen). */
+  get activeScene(): Slug | null {
+    return this.sceneId ?? this.scene?.scenes[0]?.id ?? null;
+  }
+
+  /** 🎞️ Selects the active scene (null: the first); only the draw list changes, the shared buffers stay uploaded. The camera is refitted to the scene. */
+  setScene(id: Slug | null): void {
+    const scene = this.requireScene();
+    if (id !== null && !scene.scenes.some((set) => set.id === id)) throw new Error(`unknown scene ${id}`);
+    this.sceneId = id;
+    this.followState.ready = false;
+    this.fit(false);
+    this.emit("scene", { scene: this.activeScene! });
+    this.announce({ kind: "scene", scene: this.activeScene! });
   }
 
   /** 📷️ Moves the camera into a preset direction and frames the model. */
@@ -483,7 +509,7 @@ export class ModelViewer {
     const a = this.animation;
     const wraps = a ? (this.loopOverride ?? a.loop) : false;
     const pose = a ? { animation: a.id, timeS: !wraps && a.loop ? Math.min(this.timeS, a.durationS * (1 - 1e-12)) : this.timeS } : this.poseId;
-    const frame = frameOf(this.scene!, { pose, variant: this.variant, camera: this.camera, aspect: this.aspect, lighting: this.options.lighting, rootMotion: this.motion, rootNode: this.options.rootNode, follow: { mode: this.followMode, state: this.followState, dtS: this.dtS, smoothingS: this.options.followSmoothingS ?? 0.25 } }, this.frame!);
+    const frame = frameOf(this.scene!, { pose, variant: this.variant, scene: this.sceneId ?? undefined, camera: this.camera, aspect: this.aspect, lighting: this.options.lighting, rootMotion: this.motion, rootNode: this.options.rootNode, follow: { mode: this.followMode, state: this.followState, dtS: this.dtS, smoothingS: this.options.followSmoothingS ?? 0.25 } }, this.frame!);
     if (this.followMode !== "off" && this.followState.ready) {
       const t = this.followState.target;
       if (this.camera.target !== t) this.camera = { ...this.camera, target: t };

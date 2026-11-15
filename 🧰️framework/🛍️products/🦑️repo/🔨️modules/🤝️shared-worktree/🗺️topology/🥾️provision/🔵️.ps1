@@ -2,12 +2,14 @@
 #
 # Specs: Zero-touch Windows worker provisioning of the shared worktree fleet, from an empty disk. Idempotent: every step probes before it changes anything and prints what it does. Operators run it once per fleet machine from an elevated PowerShell; it changes machine settings (optional features, registry, machine environment, scheduled tasks), so the build never runs it.
 #
-# Summary: `powershell -NoProfile -ExecutionPolicy Bypass -File "<this file>" <GroupId> <OriginId> [-ArchivePath <directory>] [-FirstMachine | -Server] [-User <DOMAIN\account>]`
+# Summary: `powershell -NoProfile -ExecutionPolicy Bypass -File "<this file>" <GroupId> <OriginId> [-ArchivePath <directory>] [-FirstMachine | -Server] [-User <DOMAIN\account>] [-Plan] [-Force] [-RelocateFrom <worktree>]`
 # The script needs the topology file next to it (..\🔣️.json): the early steps run before the repo launcher exists and read the worktree path and the NFS export from it; the topology command re-derives the same values later and the script refuses any difference. -User must be the account that runs this elevated shell, because the repository's native bootstrap installs the tools per account.
 # Steps: LongPathsEnabled, canonical worktree directory, the attribute and name cache of the store client (SMB: Set-SmbClientConfiguration, NFS: registry values of Client for NFS), Client for NFS and the store mount, the Windows Time service, bootstrap archive (sha256 verified against manifest.json, extracted with the system tar.exe, which is bsdtar and reads the pax UTF-8 names), the standalone `repo` launcher (built from the checkout by the launcher installer, needs neither winget nor a compiler), the remount task, the cache environment (Machine scope), the replica and daily compact scheduled tasks, `bootstrap-settle`, `join`, task start, and only then, as the last step, the repository's native bootstrap (winget packages, the C++ Build Tools, Node.js, Rust, .NET, uv, `repo-mcp:install`, `workspace:setup`).
 # Joining the fleet never depends on the native build: a fix for a broken build arrives through the shared worktree itself, so the machine must already be syncing when the native bootstrap runs. The native bootstrap runs last with its output in .cache\f\native-bootstrap.log (ignored local state); the completion marker .cache\f\native-bootstrap.done is written only after it succeeded. When it fails (or winget is missing), the script prints in English the failing command and the log, leaves the marker absent so that the next run retries it, and exits with code 3; the fleet setup stays as it is. `preflight` shows the same state as the warning `native-build`.
-# Exit codes: 0 fleet ready and native build complete; 1 error (the script threw, nothing after the failing step ran); 3 fleet ready, native build pending (the machine syncs; run the script again after the cause is fixed or the fix has arrived).
-# -ArchivePath is a directory with worktree.tar and manifest.json (default: <drive>\v1\bootstrap of the group store). A worktree that already holds a checkout skips the archive; one that is neither empty nor a checkout is refused. -FirstMachine is for the first machine of the fleet, which has no archive: a checkout is at the canonical path and the store is empty, and `seed` publishes it instead of `join` (refused when the store already has origins; never use it twice).
+# Exit codes: 0 fleet ready and native build complete; 1 error (the script threw, nothing after the failing step ran); 3 fleet ready, native build pending (the machine syncs; run the script again after the cause is fixed or the fix has arrived). 5 the fleet code of the checkout is older than this script and the store offers no newer sealed code (a fleet command failed on an unknown option or a missing module; the message names the checkout; nothing after that step ran).
+# Fleet code is never older than this script: before its first Invoke-Fleet or Invoke-Replica call on a checkout that has not joined yet (an old checkout to adopt, a tree just extracted from the bootstrap archive, a relocation target) the script reads the digest that the group server attests from the store, verifies the sealed code snapshot of that digest (v1\bootstrap\code\<digest>\sealed.json: size and sha256 of every file) and copies each sealed file into the worktree; every replaced file that differs is kept under .cache\f\lost\provision-code-<stamp>\<path>, nothing is deleted, and the counts replaced / added / identical are printed. -Plan does the same (the plan cannot run on older code). A joined machine, a server and the first machine are skipped: their replica keeps the code current. The kit this script comes from is published by the group server from the same sealed files (v1\bootstrap\kit, receipt published).
+# A worktree that already holds the account's own repository is adopted into the fleet, not refused (`join --adopt`: identical files are adopted, missing ones come from the store, a differing one is decided by its content against the fleet's history and the repository's base (an old version loses, local work is published, a change on both sides is a conflict that keeps both versions in .cache\f\lost and in the report) and never by a modification time; ignored files and nested repositories stay). -Plan mounts the store, prints the dry run (`join --adopt --dry-run`, or `relocate --dry-run`) and stops before it registers tasks or changes the worktree, and on an empty worktree before the archive is copied, so it extracts nothing; a tree that this script extracted itself is marked in .cache\f\bootstrap-extract (`started` while tar.exe runs, `complete` after it, removed after `join`) and, until the machine has joined, is settled by a later run and never adopted, or extracted again when the extraction was interrupted; -Force adopts a repository without a common commit; -RelocateFrom (or the working directory of the installed replica task when it differs) moves an already joined machine to C:\semio: the tasks stop, `relocate` takes the identity (the origin id never changes) and adopts the store in the new tree, the tasks start there, `relocate --phase finish` verifies and retires the old tree, which is never deleted.
+# -ArchivePath is a directory with manifest.json and the archive it names (worktree-<16 hex>.tar) (default: <drive>\v1\bootstrap of the group store). A worktree that already holds a checkout skips the archive; one that is neither empty nor a checkout is refused. -FirstMachine is for the first machine of the fleet, which has no archive: a checkout is at the canonical path and the store is empty, and `seed` publishes it instead of `join` (refused when the store already has origins; never use it twice).
 # Re-running is safe: when .cache\f\machine.json exists, its origin and group must equal the arguments (otherwise the script stops before it changes anything); `join` is then skipped, while the mounts, tasks and services are installed again.
 # -Server marks the Windows group server (the topology names the platform and the protocol in its one file): no store mount; the script shares the store folder (Server for NFS `New-NfsShare` on Windows Server, or an SMB share when the topology says `smb`: Windows Server for NFS does not exist on Windows 10/11), opens the firewall for the group network and the peer servers, registers the remote cache and relay tasks next to the replica task, and its daily compaction passes --collect-blobs. It needs -ArchivePath (a peer group's bootstrap directory, a UNC path) when the worktree is empty, and the cache tokens file (never written here).
 # Cache server tokens are not written here: the runbook says how to give the account SEMIO_REMOTE_CACHE_TOKEN.
@@ -26,7 +28,10 @@ param(
     [string]$ArchivePath = '',
     [switch]$FirstMachine,
     [switch]$Server,
-    [string]$User = "$env:USERDOMAIN\$env:USERNAME"
+    [string]$User = [Security.Principal.WindowsIdentity]::GetCurrent().Name,
+    [switch]$Plan,
+    [switch]$Force,
+    [string]$RelocateFrom = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -38,13 +43,16 @@ $NativeBootstrap = "$Modules\🔩️native\🥾️bootstrap\🔵️.ps1"
 $LauncherInstall = "$Modules\🚀️launcher\📥️install\🔵️.ps1"
 $LauncherBin = "$env:LOCALAPPDATA\semio\launcher\bin"
 $ExitNativePending = 3
+$ExitFleetCodeOld = 5
 $TopologyRelative = "$Modules\🤝️shared-worktree\🗺️topology"
 
 function Say([string]$Message) { Write-Host "[fleet-provision] $Message" }
 
+if (-not [Environment]::Is64BitProcess) { throw 'Run this script from a 64-bit PowerShell: the 32-bit one sees System32 as SysWOW64, which has no tar.exe.' }
 $principal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+$CurrentUser = [Security.Principal.WindowsIdentity]::GetCurrent().Name
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Run this script from an elevated PowerShell.' }
-if ($User -ine "$env:USERDOMAIN\$env:USERNAME") { throw "-User must be the account of this elevated shell ($env:USERDOMAIN\$env:USERNAME): the repository bootstrap installs the tools for it." }
+if ($User -ine $CurrentUser) { throw "-User must be the account of this elevated shell ($CurrentUser): the repository bootstrap installs the tools for it." }
 
 $topologyFiles = @(Get-ChildItem -LiteralPath (Split-Path -Parent $PSScriptRoot) -Filter '*.json' -File)
 if ($topologyFiles.Count -ne 1) { throw "The topology file was not found next to this script: $(Split-Path -Parent $PSScriptRoot)" }
@@ -53,7 +61,8 @@ $Worktree = $topology.worktree.windows
 $Drive = $topology.storeMount.windows.Substring(0, 2)
 $group = @($topology.groups | Where-Object { $_.id -eq $GroupId })
 if ($group.Count -ne 1 -or -not $Worktree) { throw "The topology has no worktree for windows or no group ${GroupId}." }
-$NfsSource = "\\$($group[0].nfs.host)$($group[0].nfs.export.Replace('/', '\'))"
+$NfsHost = if ($env:SEMIO_FLEET_GROUP -eq $GroupId -and $env:SEMIO_FLEET_NFS_HOST) { $env:SEMIO_FLEET_NFS_HOST } else { $group[0].nfs.host }
+$NfsSource = "\\$NfsHost$($group[0].nfs.export.Replace('/', '\'))"
 $ServerPlatform = $group[0].server.platform
 $ServerProtocol = $group[0].server.protocol
 $Smb = $ServerProtocol -eq 'smb'
@@ -71,6 +80,7 @@ $BootstrapMarker = Join-Path $Worktree '.cache\f\native-bootstrap.done'
 $BootstrapLog = Join-Path $Worktree '.cache\f\native-bootstrap.log'
 $machine = Join-Path $Worktree '.cache\f\machine.json'
 $joined = $false
+$relocate = $false
 if (Test-Path -LiteralPath $machine) {
     $identity = Get-Content -Raw -LiteralPath $machine | ConvertFrom-Json
     if (-not $identity.originId -or -not $identity.groupId) { throw "$machine has no originId and groupId: remove the worktree state first." }
@@ -84,6 +94,22 @@ function Sync-ProcessPath {
 }
 
 function Test-BootstrapNeeded { return (-not (Test-Path -LiteralPath $BootstrapMarker)) -or (-not (Get-Command repo -ErrorAction SilentlyContinue)) }
+
+function Get-InstalledWorktree {
+    $installed = try { Get-ScheduledTask -TaskName 'semio-fleet-replica' -ErrorAction Stop } catch { $null }
+    if (-not $installed) { return '' }
+    $directory = [string]$installed.Actions[0].WorkingDirectory
+    $suffix = "\$Modules\🤝️shared-worktree\🔁️replica"
+    if ($directory.EndsWith($suffix)) { return $directory.Substring(0, $directory.Length - $suffix.Length) }
+    return ''
+}
+if (-not $RelocateFrom -and -not $joined) { $RelocateFrom = Get-InstalledWorktree }
+if ($RelocateFrom -and $RelocateFrom -ine $Worktree -and -not $joined -and (Test-Path -LiteralPath (Join-Path $RelocateFrom '.cache\f\machine.json'))) {
+    $oldMachine = Get-Content -Raw -LiteralPath (Join-Path $RelocateFrom '.cache\f\machine.json') | ConvertFrom-Json
+    if ($oldMachine.originId -ne $OriginId) { throw "$RelocateFrom belongs to origin $($oldMachine.originId), not ${OriginId}: origin ids never change and are never reused, pass that origin." }
+    if ($oldMachine.groupId -ne $GroupId) { throw "$RelocateFrom belongs to group $($oldMachine.groupId), not ${GroupId}: pass that group." }
+    $relocate = $true
+}
 
 function ConvertTo-List($Table) { return (@($Table.Keys | ForEach-Object { "$_=$($Table[$_])" })) -join ',' }
 
@@ -116,25 +142,113 @@ function Set-ClientCache {
     }
 }
 
+function Stop-FleetCodeOld {
+    [Console]::Error.WriteLine("[fleet-provision] ERROR: the checkout's fleet code is older than this script and the store offers no newer sealed code: $Worktree / der Fleet-Code des Checkouts ist älter als dieses Skript und der Store bietet keinen neueren versiegelten Code: $Worktree")
+    [Console]::Error.WriteLine("[fleet-provision] exit code ${ExitFleetCodeOld}: update the checkout to the current fleet revision, or run this script again once the group server has sealed the current code / Checkout auf die aktuelle Fleet-Revision bringen oder das Skript erneut starten, sobald der Gruppenserver den aktuellen Code versiegelt hat")
+    exit $ExitFleetCodeOld
+}
+
+function Invoke-Guarded([string]$Script, [string[]]$Arguments) {
+    $ErrorActionPreference = 'Continue'
+    $errorText = New-Object System.Collections.Generic.List[string]
+    $output = & repo $Script @Arguments 2>&1 | ForEach-Object {
+        if ($_ -is [System.Management.Automation.ErrorRecord]) { $errorText.Add($_.ToString()); [Console]::Error.WriteLine($_.ToString()) } else { $_ }
+    }
+    $code = $LASTEXITCODE
+    if ($code -ne 0 -and ($errorText -join "`n") -match 'Unknown option|unknown option|Cannot find module|Cannot find package|Module not found|ERR_MODULE_NOT_FOUND|Could not resolve') { Stop-FleetCodeOld }
+    if ($code -ne 0) { throw "repo $Script $($Arguments -join ' ') failed with exit code $code" }
+    return $output
+}
+
 function Invoke-Fleet([string[]]$Arguments) {
     $env:SEMIO_WORKSPACE_ROOT = $Worktree
     $script = Join-Path (Join-Path $Worktree $TopologyRelative) '📜️script.ts'
     Push-Location $Worktree
-    try {
-        $lines = & repo $script @Arguments
-        if ($LASTEXITCODE -ne 0) { throw "repo $script $($Arguments -join ' ') failed with exit code $LASTEXITCODE" }
-        return $lines
-    } finally { Pop-Location }
+    try { return Invoke-Guarded $script $Arguments } finally { Pop-Location }
 }
 
 function Invoke-Replica([string[]]$Arguments) {
     $env:SEMIO_WORKSPACE_ROOT = $Worktree
     $script = Join-Path $FLEET_REPLICA_DIRECTORY '📜️script.ts'
     Push-Location $Worktree
+    try { Invoke-Guarded $script $Arguments } finally { Pop-Location }
+}
+
+function Test-OverlayPath([string]$Path) {
+    if ($Path -eq '' -or $Path.StartsWith('/') -or $Path.Contains('\')) { return $false }
+    foreach ($part in ($Path -split '/')) { if ($part -eq '' -or $part -eq '.' -or $part -eq '..') { return $false } }
+    return $true
+}
+
+function Set-OverlayBit([string]$Path, [bool]$Executable) {
+    $unix = (Get-Variable -Name IsWindows -ValueOnly -ErrorAction SilentlyContinue) -eq $false
+    if (-not $unix) { return }
+    & chmod $(if ($Executable) { '755' } else { '644' }) -- $Path
+    if ($LASTEXITCODE -ne 0) { throw "chmod failed for $Path / chmod fehlgeschlagen für $Path" }
+}
+
+function Get-OverlayDigest([string]$V1) {
+    $attest = Join-Path $V1 "origins\$GroupId-server\attest.json"
+    if (Test-Path -LiteralPath $attest) {
+        $attested = try { [string](Get-Content -Raw -LiteralPath $attest | ConvertFrom-Json).code } catch { '' }
+        if ($attested -match '^[0-9a-f]{64}$' -and (Test-Path -LiteralPath "$V1\bootstrap\code\$attested\sealed.json")) { return $attested }
+    }
+    $best = ''
+    $newest = [int64]-1
+    foreach ($directory in @(Get-ChildItem -LiteralPath "$V1\bootstrap\code" -Directory -ErrorAction SilentlyContinue)) {
+        if ($directory.Name -notmatch '^[0-9a-f]{64}$') { continue }
+        $seal = try { Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $directory.FullName 'sealed.json') | ConvertFrom-Json } catch { $null }
+        if ($seal -and $seal.digest -eq $directory.Name -and [int64]$seal.createdMs -gt $newest) { $newest = [int64]$seal.createdMs; $best = $directory.Name }
+    }
+    return $best
+}
+
+function Invoke-FleetCodeOverlay {
+    if ($joined -or $Server -or $FirstMachine) {
+        Say 'fleet code: not overlaid, the replica of this machine keeps it current (joined machine, group server or first machine) / Fleet-Code: nicht überlagert, das Replikat dieser Maschine hält ihn aktuell (beigetretene Maschine, Gruppenserver oder erste Maschine)'
+        return
+    }
+    $planNote = if ($Plan) { ' (also with -Plan: the plan cannot run on older code) / (auch mit -Plan: der Plan läuft nicht auf älterem Code)' } else { '' }
+    Say "step 4b: fleet code of the checkout brought to the sealed code of the fleet / Fleet-Code des Checkouts auf den versiegelten Code der Flotte gebracht$planNote"
+    $v1 = if ($ArchivePath -and (Test-Path -LiteralPath "$ArchivePath\code")) { Split-Path -Parent $ArchivePath } else { Join-Path $StoreRoot 'v1' }
+    $digest = try { Get-OverlayDigest $v1 } catch { '' }
+    if (-not $digest) { Say 'WARNING: the store holds no readable sealed code, the fleet code of the checkout stays as it is / Der Store enthält keinen lesbaren versiegelten Code, der Fleet-Code des Checkouts bleibt unverändert'; return }
+    $code = "$v1\bootstrap\code\$digest"
+    $problem = ''
+    $files = @()
     try {
-        & repo $script @Arguments
-        if ($LASTEXITCODE -ne 0) { throw "repo $script $($Arguments -join ' ') failed with exit code $LASTEXITCODE" }
-    } finally { Pop-Location }
+        $seal = Get-Content -Raw -Encoding UTF8 -LiteralPath "$code\sealed.json" | ConvertFrom-Json
+        if ($seal.version -ne 1 -or $seal.digest -ne $digest -or @($seal.files).Count -eq 0) { throw 'the seal is not a version 1 seal of this digest / das Siegel ist kein Version-1-Siegel dieses Digests' }
+        foreach ($file in @($seal.files)) {
+            $path = [string]$file.path
+            if (-not (Test-OverlayPath $path)) { throw "unsafe path in the seal: $path / unsicherer Pfad im Siegel: $path" }
+            $source = Join-Path $code ('files\' + $path.Replace('/', '\'))
+            if (-not (Test-Path -LiteralPath $source)) { throw "missing $path / fehlt $path" }
+            if ((Get-Item -LiteralPath $source).Length -ne [int64]$file.bytes -or (Get-FileHash -Algorithm SHA256 -LiteralPath $source).Hash.ToLowerInvariant() -ne [string]$file.sha256) { throw "changed $path / geändert $path" }
+            if ($file.executable -isnot [bool]) { throw "the seal lacks the execute bit of ${path}: seal it again on the group server / dem Siegel fehlt das Ausführungsbit von ${path}: auf dem Gruppenserver erneut versiegeln" }
+            $files += [pscustomobject]@{ Path = $path.Replace('/', '\'); Source = $source; Hash = [string]$file.sha256; Executable = [bool]$file.executable }
+        }
+    } catch { $problem = $_.Exception.Message }
+    if ($problem) { Say "WARNING: the sealed code $digest is not intact ($problem), the fleet code of the checkout stays as it is / Der versiegelte Code $digest ist nicht intakt, der Fleet-Code des Checkouts bleibt unverändert"; return }
+    $keep = Join-Path $Worktree ('.cache\f\lost\provision-code-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+    $replaced = 0; $added = 0; $identical = 0
+    foreach ($item in $files) {
+        $target = Join-Path $Worktree $item.Path
+        if ((Test-Path -LiteralPath $target -PathType Leaf) -and (Get-FileHash -Algorithm SHA256 -LiteralPath $target).Hash.ToLowerInvariant() -eq $item.Hash) { Set-OverlayBit $target $item.Executable; $identical++; continue }
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $target) | Out-Null
+        if (Test-Path -LiteralPath $target) {
+            $kept = Join-Path $keep $item.Path
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $kept) | Out-Null
+            Copy-Item -LiteralPath $target -Destination $kept -Force
+            $replaced++
+        } else { $added++ }
+        $temporary = "$target.provision-code.tmp"
+        Copy-Item -LiteralPath $item.Source -Destination $temporary -Force
+        Set-OverlayBit $temporary $item.Executable
+        Move-Item -LiteralPath $temporary -Destination $target -Force
+    }
+    Say "fleet code ${digest}: replaced $replaced, added $added, identical $identical / Fleet-Code ${digest}: ersetzt $replaced, hinzugefügt $added, identisch $identical"
+    if ($replaced -gt 0) { Say "the replaced files are kept in $keep / die ersetzten Dateien liegen in $keep" }
 }
 
 Say "group $GroupId, origin $OriginId, account $User, platform windows"
@@ -177,7 +291,8 @@ if ($Server) {
         }
     }
     if (Test-Path -LiteralPath "$Drive\") { Say "already mounted $Drive" } else {
-        & mount.exe -o $MountOptions $NfsSource $Drive
+        $mountFlags = @($MountOptions -split ',' | ForEach-Object { '-o'; $_ })
+        & mount.exe @mountFlags $NfsSource $Drive
         if ($LASTEXITCODE -ne 0) { throw "mount.exe failed with exit code $LASTEXITCODE" }
         Say "mounted $Drive"
     }
@@ -193,13 +308,31 @@ if (-not $time) { Say 'WARNING: the Windows Time service (w32time) is missing: a
 
 Say 'step 4: bootstrap archive into the empty worktree'
 $nativeScript = Join-Path $Worktree $NativeBootstrap
-if (Test-Path -LiteralPath $nativeScript) {
-    Say 'the worktree already holds a checkout: the archive is skipped'
-} elseif (@(Get-ChildItem -LiteralPath $Worktree -Force).Count -gt 0) {
-    throw "$Worktree is neither empty nor a checkout: empty it, or put a complete checkout there."
+$adopt = $false
+$extract = $false
+$extractMarker = Join-Path $Worktree '.cache\f\bootstrap-extract'
+$extractState = if (-not $joined -and (Test-Path -LiteralPath $extractMarker)) { "$(Get-Content -Raw -LiteralPath $extractMarker)".Trim() } else { '' }
+if ($extractState -eq 'complete') {
+    Say 'the worktree holds the tree that an earlier run of this script extracted: it is settled, not adopted, the archive is skipped'
+} elseif ($extractState) {
+    $extract = $true
+    Say 'an earlier run stopped while it extracted the bootstrap archive: the archive is extracted again over it'
+} elseif (Test-Path -LiteralPath $nativeScript) {
+    if (-not $joined -and -not $relocate -and @(Get-ChildItem -LiteralPath $Worktree -Force | Where-Object { $_.Name -ne '.cache' }).Count -gt 0) {
+        $adopt = $true
+        Say 'the worktree already holds a repository: it is adopted into the fleet (nothing is refused, every difference is kept in .cache\f\lost and reported), the archive is skipped'
+    } else { Say 'the worktree already holds a checkout: the archive is skipped' }
+} elseif (@(Get-ChildItem -LiteralPath $Worktree -Force | Where-Object { $_.Name -ne '.git' }).Count -gt 0) {
+    throw "$Worktree holds files but no fleet module ($NativeBootstrap is missing): update that repository to a revision that contains the fleet module, or move it away. The bootstrap archive is only for a machine without any checkout."
 } elseif ($FirstMachine) {
     throw "-FirstMachine needs a complete checkout at ${Worktree}: the first machine has no archive to extract."
-} else {
+} else { $extract = $true }
+if ($extract -and $Plan) {
+    if ($extractState) { Say 'plan: an earlier run stopped while it extracted the bootstrap archive: nothing was extracted now, a plain provisioning extracts it again, settles the tree and joins' }
+    else { Say 'plan: the worktree is empty: nothing was extracted, a plain provisioning extracts the bootstrap archive, settles the tree and joins' }
+    exit 0
+}
+if ($extract) {
     if ($Server -and -not $ArchivePath) { throw 'A group server takes the archive of a peer group: pass -ArchivePath <peer share>\v1\bootstrap.' }
     $source = if ($ArchivePath) { $ArchivePath } else { "$Drive\v1\bootstrap" }
     $tar = Join-Path $env:SystemRoot 'System32\tar.exe'
@@ -210,9 +343,10 @@ if (Test-Path -LiteralPath $nativeScript) {
         $local = Join-Path $work 'worktree.tar'
         $verified = $false
         foreach ($attempt in 1..5) {
-            if (-not ((Test-Path -LiteralPath "$source\manifest.json") -and (Test-Path -LiteralPath "$source\worktree.tar"))) { throw "No bootstrap archive in ${source}: run bootstrap-archive on the group server (its relay refreshes it on a schedule) or pass -ArchivePath <directory>." }
+            if (-not (Test-Path -LiteralPath "$source\manifest.json")) { throw "No bootstrap archive in ${source}: run bootstrap-archive on the group server (its relay refreshes it on a schedule) or pass -ArchivePath <directory>." }
             $manifest = Get-Content -Raw -LiteralPath "$source\manifest.json" | ConvertFrom-Json
-            Copy-Item -LiteralPath "$source\worktree.tar" -Destination $local -Force
+            if (($manifest.archive -notmatch '^worktree-[0-9a-f]{16}\.tar$') -or -not (Test-Path -LiteralPath "$source\$($manifest.archive)")) { throw "The bootstrap manifest in ${source} names no archive that exists: run bootstrap-archive on the group server (its relay refreshes it on a schedule) or pass -ArchivePath <directory>." }
+            Copy-Item -LiteralPath "$source\$($manifest.archive)" -Destination $local -Force
             $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $local).Hash.ToLowerInvariant()
             if ($actual -eq $manifest.sha256) { $verified = $true; Say "archive verified: sha256 $actual, $($manifest.files) files"; break }
             Say "the archive differs from manifest.json (refreshed while it was copied?), attempt $attempt of 5"
@@ -222,19 +356,28 @@ if (Test-Path -LiteralPath $nativeScript) {
         $entries = (& $tar -tf $local | Measure-Object -Line).Lines
         if ($LASTEXITCODE -ne 0 -or $entries -ne $manifest.files) { throw "The archive lists $entries entries, manifest.json says $($manifest.files)." }
         Say "extracting with tar.exe into $Worktree"
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $extractMarker) | Out-Null
+        Set-Content -LiteralPath $extractMarker -Value 'started'
         & $tar -xf $local -C $Worktree
         if ($LASTEXITCODE -ne 0) { throw "tar.exe failed with exit code $LASTEXITCODE" }
+        Set-Content -LiteralPath $extractMarker -Value 'complete'
         $nativeNeeded = $true
     } finally { Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue }
 }
+
+Invoke-FleetCodeOverlay
 
 Say 'step 5: standalone repo launcher (built from the checkout; the native bootstrap comes last)'
 Sync-ProcessPath
 if (Get-Command repo -ErrorAction SilentlyContinue) { Say 'repo launcher present' } else {
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Worktree $LauncherInstall) -Destination $LauncherBin
     if ($LASTEXITCODE -ne 0) { throw "The repo launcher could not be built (exit code ${LASTEXITCODE}): the machine cannot join without it, fix the cause and run again." }
-    $userPath = @(([Environment]::GetEnvironmentVariable('Path', 'User')) -split ';' | Where-Object { $_ })
-    if ($userPath -notcontains $LauncherBin) { [Environment]::SetEnvironmentVariable('Path', (@($LauncherBin) + $userPath) -join ';', 'User') }
+    $rawPath = @(& reg.exe query 'HKCU\Environment' /v Path 2>$null | Where-Object { $_ -match 'REG_(EXPAND_)?SZ' } | ForEach-Object { ($_ -split 'REG_(?:EXPAND_)?SZ\s*', 2)[1].Trim() })
+    $userPath = @(($rawPath | Select-Object -First 1) -split ';' | Where-Object { $_ })
+    if (@($userPath | ForEach-Object { [Environment]::ExpandEnvironmentVariables($_) }) -notcontains $LauncherBin) {
+        & reg.exe add 'HKCU\Environment' /v Path /t REG_EXPAND_SZ /d ((@($LauncherBin) + $userPath) -join ';') /f | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "reg.exe could not put $LauncherBin on the user PATH (exit code $LASTEXITCODE): the user PATH is written as REG_EXPAND_SZ so that its %VARIABLE% entries keep expanding." }
+    }
     Sync-ProcessPath
     if (-not (Get-Command repo -ErrorAction SilentlyContinue)) { throw "The launcher installer did not put repo on PATH ($LauncherBin)." }
     Say "installed the launcher in $LauncherBin and put it on the user PATH"
@@ -250,30 +393,38 @@ foreach ($fact in $facts) {
 if ($FLEET_WORKTREE -ne $Worktree -or $FLEET_NFS_SOURCE -ne $NfsSource -or $FLEET_DRIVE -ne $Drive -or $FLEET_MOUNT_OPTIONS -ne $MountOptions -or $FLEET_SERVER_PLATFORM -ne $ServerPlatform -or $FLEET_SERVER_PROTOCOL -ne $ServerProtocol -or $FLEET_SMB_CACHE -ne (ConvertTo-List $SmbCache) -or $FLEET_NFS_CACHE -ne (ConvertTo-List $NfsCache) -or $FLEET_NFS_CACHE_KEY -ne $NfsCacheKey) { throw "The topology file next to this script differs from the one in the worktree ($FLEET_WORKTREE, $FLEET_NFS_SOURCE, $FLEET_DRIVE, $FLEET_MOUNT_OPTIONS, $FLEET_SERVER_PLATFORM, $FLEET_SERVER_PROTOCOL): copy the topology directory from the worktree and run again." }
 Say "canonical worktree $FLEET_WORKTREE, store $FLEET_NFS_SOURCE at $FLEET_DRIVE, cache $FLEET_CACHE_ENDPOINT"
 
-Say 'step 6: remount task'
+if ($Plan) {
+    Say 'plan: nothing below this line is registered or changed'
+    if ($relocate) { Invoke-Replica @('relocate', '--dry-run', '--worktree', $RelocateFrom, '--to', $Worktree) }
+    elseif ($adopt) { Invoke-Replica @('join', '--adopt', '--dry-run', '--group', $GroupId, '--origin', $OriginId, '--store', $StoreRoot) }
+    else { Say 'the worktree holds no repository to adopt: a plain provisioning extracts the bootstrap archive and joins, or refreshes the tasks of the joined machine' }
+    exit 0
+}
+Say 'step 6: store mount task'
 if ($Server) { Say 'group server: no remount task' } else {
-    $mountAction = if ($Smb) { New-ScheduledTaskAction -Execute 'net.exe' -Argument "use $FLEET_DRIVE $FLEET_NFS_SOURCE /persistent:yes" } else { New-ScheduledTaskAction -Execute 'mount.exe' -Argument "-o $FLEET_MOUNT_OPTIONS $FLEET_NFS_SOURCE $FLEET_DRIVE" }
-    Register-ScheduledTask -TaskName 'semio-fleet-store-mount' -Action $mountAction -Trigger (New-ScheduledTaskTrigger -AtLogOn -User $User) -User $User -Force | Out-Null
-    Say 'registered task semio-fleet-store-mount (remounts at logon)'
+    $mountName = (Invoke-Fleet @('worker-service', '--group', $GroupId, '--platform', 'windows', '--part', 'mount-target') | Select-Object -First 1)
+    $mountDefinition = (Invoke-Fleet @('worker-service', '--group', $GroupId, '--platform', 'windows', '--part', 'mount-definition')) -join "`n"
+    Register-ScheduledTask -TaskName $mountName -Xml $mountDefinition -User $User -Force | Out-Null
+    Say "registered task $mountName (maps $FLEET_DRIVE in the logon session at every logon and again every minute while the drive is missing)"
 }
 
-Say 'step 7: cache environment'
-$environment = @(Invoke-Fleet @('env', '--group', $GroupId, '--shell', 'powershell') | Where-Object { $_ -match '^\$env:[A-Z0-9_]+=".*"$' })
-if ($environment.Count -eq 0) { throw 'The topology command printed no environment.' }
-foreach ($line in $environment) {
-    $match = [regex]::Match($line, '^\$env:([A-Z0-9_]+)="(.*)"$')
-    $name = $match.Groups[1].Value
-    $value = $match.Groups[2].Value
-    if ([Environment]::GetEnvironmentVariable($name, 'Machine') -eq $value) { Say "unchanged $name" } else {
-        [Environment]::SetEnvironmentVariable($name, $value, 'Machine')
-        Say "set $name (Machine)"
-    }
-    Set-Item -Path "Env:$name" -Value $value
-}
+Say 'step 7b: the boot program outside the worktree (the service entry never depends on replicated code)'
+$accountName = ($User -split '\\')[-1]
+$accountHome = (Get-CimInstance Win32_UserProfile -ErrorAction SilentlyContinue | Where-Object { $_.LocalPath -like "*\$accountName" } | Select-Object -First 1).LocalPath
+if (-not $accountHome) { $accountHome = $env:USERPROFILE }
+$entryDirectory = Join-Path $accountHome 'AppData\Local\semio\fleet\entry'
+$entryProgram = (Get-ChildItem -LiteralPath (Join-Path $FLEET_REPLICA_DIRECTORY '🥾️entry') -Filter '*.mjs' -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+if (-not $entryProgram) { Stop-FleetCodeOld }
+$env:SEMIO_WORKSPACE_ROOT = $Worktree
+$env:SEMIO_FLEET_ENTRY_DIR = $entryDirectory
+Push-Location $Worktree
+try { $entryResult = (& repo $entryProgram install --worktree $Worktree --store $StoreRoot --take-over | Select-Object -Last 1) } finally { Pop-Location; Remove-Item Env:SEMIO_FLEET_ENTRY_DIR -ErrorAction SilentlyContinue }
+Say "boot program: $entryResult"
+if (-not (Test-Path -LiteralPath (Join-Path $entryDirectory 'entry.json'))) { throw "The boot program could not be installed into ${entryDirectory}: $entryResult" }
 
 Say 'step 8: replica and compact tasks (registered, started after join)'
 $taskName = (Invoke-Fleet @('worker-service', '--group', $GroupId, '--platform', 'windows', '--part', 'target') | Select-Object -First 1)
-$definition = (Invoke-Fleet @('worker-service', '--group', $GroupId, '--platform', 'windows')) -join "`n"
+$definition = ((Invoke-Fleet @('worker-service', '--group', $GroupId, '--platform', 'windows')) -join "`n").Replace('__WORKER_HOME__', $accountHome)
 Register-ScheduledTask -TaskName $taskName -Xml $definition -User $User -Force | Out-Null
 Say "registered task $taskName"
 $compactName = (Invoke-Fleet @('worker-service', '--group', $GroupId, '--platform', 'windows', '--part', 'compact-target') | Select-Object -First 1)
@@ -320,6 +471,15 @@ if ($joined) {
 } elseif ($FirstMachine) {
     if (@(Get-ChildItem -LiteralPath (Join-Path $StoreRoot 'v1\origins') -ErrorAction SilentlyContinue).Count -gt 0) { throw 'The store already has origins: this is not the first machine of the fleet, run without -FirstMachine.' }
     Invoke-Replica @('seed', '--group', $GroupId, '--origin', $OriginId, '--store', $StoreRoot)
+} elseif ($relocate) {
+    Say "relocating $OriginId from $RelocateFrom to ${Worktree}: the tasks stop, the identity moves (the origin id stays), the store is adopted in the new tree"
+    foreach ($stopTask in @('semio-fleet-replica', 'semio-fleet-compact', 'semio-fleet-relay', 'semio-fleet-cache')) { Stop-ScheduledTask -TaskName $stopTask -ErrorAction SilentlyContinue }
+    $forceArgument = if ($Force) { @('--force') } else { @() }
+    Invoke-Replica @('relocate', '--worktree', $RelocateFrom, '--to', $Worktree, '--phase', 'prepare')
+    Invoke-Replica (@('relocate', '--worktree', $RelocateFrom, '--to', $Worktree, '--phase', 'move', '--wait', '60') + $forceArgument)
+} elseif ($adopt) {
+    $forceArgument = if ($Force) { @('--force') } else { @() }
+    Invoke-Replica (@('join', '--adopt', '--group', $GroupId, '--origin', $OriginId, '--store', $StoreRoot) + $forceArgument)
 } else {
     if ($Server) {
         $relayPeers = (Get-ServerPart 'relay-peers').Trim()
@@ -327,17 +487,22 @@ if ($joined) {
     }
     Invoke-Replica @('bootstrap-settle', '--store', $StoreRoot)
     Invoke-Replica @('join', '--group', $GroupId, '--origin', $OriginId, '--store', $StoreRoot)
+    Remove-Item -LiteralPath $extractMarker -Force -ErrorAction SilentlyContinue
 }
 
 Say 'step 10: start the tasks'
 $startTasks = @($taskName)
-if (-not $Server) { $startTasks = @('semio-fleet-store-mount') + $startTasks }
+if (-not $Server) { $startTasks = @($mountName) + $startTasks }
 if ($Server) { $startTasks += 'semio-fleet-cache'; $startTasks += 'semio-fleet-relay' }
 foreach ($startTask in $startTasks) {
     if ((Get-ScheduledTask -TaskName $startTask).State -eq 'Running') { Say "already running $startTask" } else {
         Start-ScheduledTask -TaskName $startTask
         Say "started $startTask"
     }
+}
+if ($relocate) {
+    Invoke-Replica @('relocate', '--worktree', $RelocateFrom, '--to', $Worktree, '--phase', 'finish', '--wait', '120')
+    Say "the old worktree $RelocateFrom is retired (marker .cache\f\relocated.json) and not deleted: delete it yourself when you are sure"
 }
 Say "fleet ready: $OriginId is a member of group $GroupId and syncs"
 

@@ -96,7 +96,7 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod shooting {
-        pub use semio_s_artifact_shooting_shooting_shooting::editor::shooting::*;
+        pub use semio_s_artifact_shooting_shooting_config::editor::shooting::*;
         #[path = "."]
         pub mod config {
             #[path = "../../../../../✏️editor/🎚️config/🚪️io/🦀️.rs"]
@@ -109,7 +109,6 @@ pub mod editor {
         pub mod example;
         #[path = "."]
         pub mod presence {
-            pub use semio_s_artifact_shooting_shooting_config::editor::shooting::presence::*;
             pub use semio_s_artifact_shooting_shooting_config::editor::shooting::presence::*;
             #[cfg(test)]
             #[path = "../../../../../✏️editor/👥️presence/🧪️tests/🔬️contract-vectors/🦀️.rs"]

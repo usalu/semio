@@ -418,7 +418,7 @@ fn the_viewport_publishes_the_scene_list_an_option_per_entity_and_a_slider_per_h
     assert_eq!((nodes[1].node.selected, nodes[2].node.selected), (Some(false), Some(true)));
     let slider = &nodes[3].node;
     assert_eq!(slider.name, "Trägerlänge");
-    assert!(slider.value_text.as_deref().is_some_and(|text| text.starts_with('3') && text.ends_with(" m")));
+    assert!(slider.value_text.as_deref().is_some_and(|text| text.starts_with('3') && text.contains(" m, Ausnutzung 64 %") && text.ends_with("besteht")), "{:?}", slider.value_text);
     assert_eq!(slider.range.map(|range| range.now), Some(3.0));
     assert!(nodes.iter().all(|n| n.node.missing_required().is_empty()));
 }

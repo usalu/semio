@@ -101,6 +101,16 @@ def f_rsi_vectors():
     return out, crit
 
 
+def f_rsi_minimum_vectors():
+    """DIN 4108-2 6.2 minimum temperature factor of a room climate: theta_si,min where the room air reaches 80 % at the surface (brentq on the ISO 13788 curve), rounded to 0.1 K, f = (theta_si,min - theta_e)/(theta_i - theta_e) rounded to 0.01."""
+    out = []
+    for name, t_int, rh_int in [("reference", 20.0, 0.5), ("warm-humid", 22.0, 0.6), ("cool-dry", 18.0, 0.45), ("hot-wet", 24.0, 0.7)]:
+        theta = optimize.brentq(lambda t: psat_iso13788(t) - rh_int * psat_iso13788(t_int) / 0.8, 0.0, t_int)
+        f_min = math.floor((math.floor(theta * 10 + 0.5) / 10 + 5.0) / (t_int + 5.0) * 100 + 0.5) / 100
+        out.append({"id": name, "tIntC": t_int, "rhInt": rh_int, "tExtC": -5.0, "thetaSiMinC": theta, "fRsiMinimum": f_min})
+    return out
+
+
 def solve_profile(sd, t_c, p_i, p_e, psat, floor):
     """ISO 13788 condensation iteration: the interface with the largest excess becomes a condensation plane (pressure = saturation), repeat; planes with negative flux are dropped."""
     n = len(sd) - 1
@@ -187,7 +197,7 @@ def glaser_vectors():
 def vectors(fixture_path):
     fixture = json.load(open(fixture_path, encoding="utf8"))
     f_rows, crit = f_rsi_vectors()
-    return {"oracle": "scipy brentq, IAPWS-IF97 region 4 + R14-08, ISO 13788 curves, exact Fractions (ISO 6946 6.7.2), ISO 13788 condensation-plane iteration; masses over 90 d = 7776000 s", "toleranceRelative": 1e-9, "uValues": u_vectors(fixture), "fRsi": f_rows, "fRsiCritical": crit, "glaser": glaser_vectors(), "saturation": [{"tC": t, "iapws": psat_iapws(t), "iso13788": psat_iso13788(t)} for t in (-10, -5, 0, 5, 12, 20, 25, 30)]}
+    return {"oracle": "scipy brentq, IAPWS-IF97 region 4 + R14-08, ISO 13788 curves, exact Fractions (ISO 6946 6.7.2), ISO 13788 condensation-plane iteration; masses over 90 d = 7776000 s", "toleranceRelative": 1e-9, "uValues": u_vectors(fixture), "fRsi": f_rows, "fRsiCritical": crit, "fRsiMinimum": f_rsi_minimum_vectors(), "glaser": glaser_vectors(), "saturation": [{"tC": t, "iapws": psat_iapws(t), "iso13788": psat_iso13788(t)} for t in (-10, -5, 0, 5, 12, 20, 25, 30)]}
 
 
 import pathlib

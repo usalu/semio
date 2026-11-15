@@ -13,7 +13,7 @@ export type FleetHolderFactV1=Readonly<{pid:number;resource:string;mode:FleetMod
 export type FleetWaiterFactV1=Readonly<{pid:number;resource:string;mode:FleetModeV1;class:string;waitedSeconds:number;blockers:readonly string[];position?:number;command?:string;session?:string;agent?:string;priority?:FleetPriorityV1;historyKey?:string}>;
 export type FleetGrantFactV1=Readonly<{id:string;operation:string;pid:number;jobs:number;reservedMegabytes:number;observedMegabytes:number|null;heldSeconds:number;phase?:string;lent?:boolean;session?:string;agent?:string}>;
 export type FleetCapacityWaiterFactV1=Readonly<{id:string;operation:string;pid:number;needMegabytes:number;waitedSeconds:number;reason:string;reasonText:string;position:number;session?:string;agent?:string}>;
-export type FleetSourceV1=Readonly<{id:"leases"|"capacity"|"bazel"|"storage"|"sealed"|"generation"|"scheduler";ok:boolean;milliseconds:number;error?:string}>;
+export type FleetSourceV1=Readonly<{id:"leases"|"capacity"|"bazel"|"storage"|"sealed"|"generation"|"scheduler"|"fleet";ok:boolean;milliseconds:number;error?:string}>;
 export type FleetImageFactV1=Readonly<{id:string;kind:"partition"|"control";state:"mounted"|"detached"|"directory"|"absent";usedBytes:number|null;capacityBytes:number|null;budgetBytes:number|null;source:"statfs"|"recorded"|"walked"|"unknown"}>;
 export type FleetMachineV1=Readonly<{totalBytes:number;effectiveTotalBytes:number;usedBytes:number;footprintBytes:number;overBytes:number;evictBytes:number;blockedBytes:number;source:"argument"|"environment"|"file"|"default"}>;
 export type FleetSealedEntryFactV1=Readonly<{entry:string;digest:string;files:number;bytes:number;promotedAtMs:number;fresh:boolean|null;changed:number;blocked?:Readonly<{atMs:number;rows:number;first?:string}>;last?:Readonly<{atMs:number;added:number;removed:number;changed:number}>}>;
@@ -31,12 +31,15 @@ export type FleetFactsV1=Readonly<{
  sealed?:Readonly<{mode:"sealed"|"live"|"promote";entries:readonly FleetSealedEntryFactV1[]}>;
  generation?:Readonly<{number:number;built:Readonly<{kind:"cold"|"delta"|"refresh";dirty:number}>;owners:number;implementation:string;publishedAtMs:number|null;verified:Readonly<{atMs:number;covered:number;count:number}>|null}>;
  scheduler?:FleetSchedulerFactV1;
+ fleet?:FleetLoadFactV1;
  sources:readonly FleetSourceV1[];
 }>;
 export type FleetSchedulerJobFactV1=Readonly<{key:string;class:string;priority:string;depth:number;agents:readonly string[];tickets:number;reserveMegabytes:number;waitedSeconds:number;position?:number;runSeconds?:number;progress?:Readonly<{phase:string;done:number;total:number}>;stopping?:boolean}>;
 export type FleetSchedulerFactV1=Readonly<{budgetMegabytes:number;reservedMegabytes:number;running:readonly FleetSchedulerJobFactV1[];queued:readonly FleetSchedulerJobFactV1[];agents:readonly Readonly<{agent:string;running:number;queued:number;served:number;percent:number}>[]}>;
+/** 🌍️ The machines of the fleet as the scheduler of remote execution sees them (load, pressure, queue, worker, offload and unit cache counters) and what the cache server counts. */
+export type FleetLoadFactV1=Readonly<{scheduler:string;expireSeconds:number;machines:readonly Readonly<{origin:string;platform:string;pressure:"normal"|"warn"|"critical";load:number|null;cores:number;running:number;queued:number;headroom:boolean;ageSeconds:number;worker:"absent"|"idle"|"busy"|"refusing";why?:Readonly<{code:string;en:string;de:string}>;offloadedIn:number;offloadedOut:number;refused:number;cacheHit:number;cacheMiss:number;cacheSkipped?:number}>[];queued:number;executing:number;offloadRejected:number;refused:number;retried:number;cache?:Readonly<{hits:number;misses:number;puts:number}>;claims?:Readonly<{active:number;waiting:number;oldestSeconds:number}>}>;
 export type FleetFindingV1=Readonly<{id:string;severity:"alert"|"warn"|"info";subject:string;values:Readonly<Record<string,string|number>>;text:string}>;
-export type FleetReportV1=Readonly<{version:1;atMs:number;workspace:string;summary:Row;memory:Row;runs:readonly Row[];queues:Row;bazel:Row;storage:Row;sealed:Row;generation:Row|null;scheduler?:Row;findings:readonly FleetFindingV1[];sources:readonly FleetSourceV1[]}>;
+export type FleetReportV1=Readonly<{version:1;atMs:number;workspace:string;summary:Row;memory:Row;runs:readonly Row[];queues:Row;bazel:Row;storage:Row;sealed:Row;generation:Row|null;scheduler?:Row;fleet?:Row;findings:readonly FleetFindingV1[];sources:readonly FleetSourceV1[]}>;
 type Row=Record<string,any>;
 
 const policy=schema.definitions.Policy.const,messages=schema.definitions.Messages.const as Readonly<Record<string,Readonly<Record<FleetLanguageV1,string>>>>,fill=(template:string,values:Readonly<Record<string,string|number>>):string=>template.replace(/\{([A-Za-z]+)\}/gu,(match,key:string)=>key in values?String(values[key]):match);
@@ -154,6 +157,8 @@ function buildGraph(facts:FleetFactsV1,leaseWait:Map<string,number|null>):Row{
  };
 }
 
+const fleetSection=(fact:FleetLoadFactV1):Row=>({scheduler:fact.scheduler,machines:[...fact.machines].sort((left,right)=>compare(left.origin,right.origin)),queued:fact.queued,executing:fact.executing,offloadedIn:fact.machines.reduce((sum,row)=>sum+row.offloadedIn,0),offloadedOut:fact.machines.reduce((sum,row)=>sum+row.offloadedOut,0),refused:fact.refused,declined:fact.offloadRejected,retried:fact.retried,cacheHit:fact.machines.reduce((sum,row)=>sum+row.cacheHit,0),cacheMiss:fact.machines.reduce((sum,row)=>sum+row.cacheMiss,0),...fact.cache===undefined?{}:{cache:fact.cache},...fact.claims===undefined?{}:{claims:fact.claims}});
+
 const natural=(left:string,right:string):number=>{const a=/^([a-z]*)(\d+)$/u.exec(left),b=/^([a-z]*)(\d+)$/u.exec(right);return a&&b?compare(a[1]!,b[1]!)||Number(a[2])-Number(b[2]):compare(left,right);};
 
 const schedulerSection=(fact:FleetSchedulerFactV1):Row=>({budgetMegabytes:fact.budgetMegabytes,reservedMegabytes:fact.reservedMegabytes,running:fact.running.length,queued:fact.queued.length,waiting:fact.queued.length,longestWaitSeconds:Math.max(0,...fact.queued.map(row=>row.waitedSeconds)),sharedTickets:[...fact.running,...fact.queued].reduce((sum,row)=>sum+row.tickets-1,0),jobs:[...fact.running,...fact.queued].slice(0,policy.runs.maximumRows),agents:[...fact.agents]});
@@ -211,7 +216,7 @@ export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):Fl
   bazel:{slots:servers.length,live:servers.filter(row=>row.live).length,held:servers.filter(row=>row.held).length,rssMegabytes:servers.reduce((sum,row)=>sum+(row.treeMegabytes??0),0),servers},
   storage:{hostFreeBytes:storage?.hostFreeBytes??null,hostFreeFloorBytes:storage?.hostFreeFloorBytes??0,machine:storage?.machine??{totalBytes:0,effectiveTotalBytes:0,usedBytes:0,footprintBytes:0,overBytes:0,evictBytes:0,blockedBytes:0,source:"default"},overAreas:[...storage?.overAreas??[]].sort(compare),images},
   sealed:{mode:facts.sealed?.mode??"live",drifted:sealedEntries.filter(row=>row.fresh===false).length,blocked:sealedEntries.filter(row=>row.blocked!==undefined).length,entries:sealedEntries},
-  generation,...facts.scheduler===undefined?{}:{scheduler:schedulerSection(facts.scheduler)},findings:kept,sources:facts.sources,
+  generation,...facts.scheduler===undefined?{}:{scheduler:schedulerSection(facts.scheduler)},...facts.fleet===undefined?{}:{fleet:fleetSection(facts.fleet)},findings:kept,sources:facts.sources,
  }) as FleetReportV1;
 }
 
@@ -261,6 +266,18 @@ export function formatFleetReportV1(language:FleetLanguageV1,report:FleetReportV
   for(const job of(scheduler.jobs as Row[]).filter(row=>row.position===undefined).slice(0,shown))lines.push(say("scheduler.run",{key:job.key,agents:job.agents.join(","),reserve:job.reserveMegabytes,run:duration(job.runSeconds??0),progress:job.progress?say("scheduler.progress",job.progress):"",stopping:job.stopping?say("scheduler.stopping"):""}));
   for(const job of(scheduler.jobs as Row[]).filter(row=>row.position!==undefined).slice(0,shown))lines.push(say("scheduler.queued",{position:job.position,key:job.key,agents:job.agents.join(","),reserve:job.reserveMegabytes,priority:job.priority,depth:job.depth,waited:duration(job.waitedSeconds)}));
   for(const agent of(scheduler.agents as Row[]).slice(0,shown))lines.push(say("scheduler.agent",agent));
+ }
+ const fleet=report.fleet;
+ if(fleet!==undefined){
+  lines.push(say("fleet",{machines:fleet.machines.length,queued:fleet.queued,executing:fleet.executing,offloadedIn:fleet.offloadedIn,offloadedOut:fleet.offloadedOut,refused:fleet.refused,declined:fleet.declined,retried:fleet.retried}));
+  for(const machine of fleet.machines as Row[])lines.push(say("fleet.machine",{origin:machine.origin,platform:machine.platform,pressure:machine.pressure,load:machine.load===null?"?":machine.load,cores:machine.cores,running:machine.running,queued:machine.queued,worker:machine.worker,headroom:machine.headroom?"":say("fleet.noheadroom"),offloadedIn:machine.offloadedIn,offloadedOut:machine.offloadedOut,refused:machine.refused,cacheHit:machine.cacheHit,cacheMiss:machine.cacheMiss,cacheSkipped:machine.cacheSkipped??0,age:duration(machine.ageSeconds)}));
+  for(const machine of fleet.machines as Row[])if(machine.why!==undefined)lines.push(say("fleet.why",{origin:machine.origin,worker:machine.worker,reason:machine.why[language]}));
+  if(fleet.machines.length>1)for(const machine of fleet.machines as Row[]){
+   if(/-none$/u.test(machine.platform))lines.push(say("fleet.norustc",{origin:machine.origin,platform:machine.platform}));
+   else if(!(fleet.machines as Row[]).some(other=>other.origin!==machine.origin&&other.platform===machine.platform))lines.push(say("fleet.apart",{origin:machine.origin,others:[...new Set((fleet.machines as Row[]).filter(other=>other.origin!==machine.origin).map(other=>other.platform))].sort().join(", ")}));
+  }
+  if(fleet.cache!==undefined)lines.push(say("fleet.cache",fleet.cache));
+  if(fleet.claims!==undefined)lines.push(say("fleet.claims",{active:fleet.claims.active,waiting:fleet.claims.waiting,oldest:duration(fleet.claims.oldestSeconds)}));
  }
  const bazel=report.bazel;
  lines.push(say("bazel",{live:bazel.live,rss:bazel.rssMegabytes,held:bazel.held,slots:bazel.slots}));

@@ -1,5 +1,5 @@
 /** 🔸️ The plugin source phase of registerPlaygroundActionAndPluginSourceTests. */
-import { loadKernelSourceWatchFixture, loadKernelSchema } from "@semio-tech/framework-kernel/testing/fixtures";
+import { loadKernelSourceWatchFixture, loadKernelSchema } from "../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
 import type { PluginCatalog, PluginRegistryEntry, PluginSourceEvent } from "@semio-tech/framework";
 import type { registerPlaygroundResolutionTests } from "../🔶️playground-resolution/🟦️.ts";
 

@@ -1,5 +1,7 @@
 import {readTypeScriptPackageProducerV1,typeScriptPackagePublicDirectoryV1} from "./../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🏭️producer/🟦️.ts";
 import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
+import { creditOwnerSharedV1, throwIfOwnerExceededV1 } from "../../../🧠️memory/🎯️owner-scope/🟨️.mjs";
+import { footprintPulseV1, releaseIfGrownV1, footprintGateV1, decideFootprintV1, noteSlowV1 } from "../../../🧠️memory/🦶️footprint/🟨️.mjs";
 import { createClosureStoreV1 } from "./💾️entries/🟨️.mjs";
 import { rowKeyV1 } from "../../🕰️generations/🧮️fact-rows/🟨️.mjs";
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
@@ -16,8 +18,8 @@ import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/�
 import { createHash } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { activeTypeScriptProgramReuseV1 } from "./♨️reuse/🟨️.mjs";
-import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, shareObservationRowsV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1, observedFieldV1, registerFieldExtractorV1, retainObservedRowsV1, observeDetachedSyncV1, withObservationPassRoundV1 , observationLayerHoldsAsyncV1, observationRowsHoldAsyncV1, OBSERVATION_LIMITS_V1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { activeTypeScriptProgramReuseV1, sharedSourceFilesV1 } from "./♨️reuse/🟨️.mjs";
+import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, shareObservationRowsV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1, observedFieldV1, registerFieldExtractorV1, retainObservedRowsV1, observeDetachedSyncV1, withObservationPassRoundV1 , registerProjectClosureTravelV1, observationLayerHoldsAsyncV1, observationRowsHoldAsyncV1, OBSERVATION_LIMITS_V1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { REVISION_POLICY_V1 } from "../../../📥️inputs/🔏️revision/🟨️.mjs";
 import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
@@ -98,8 +100,14 @@ function providerProjectV1(cache) {
   const designation = cache.providerDesignation ?? join(LIBRARY_ROOT, SCRIPT_PROVIDER_DESIGNATION), config = join(dirname(designation), PROVIDER_CLOSURE_POLICY_V1.project.basename);
   return memoizedObservedComputationV1(cache.declared, memoDigestV1("provider-project", config), () => {
     if (!existsSync(config)) throw refuseBuildV1("invalid", "closure.provider-project-required", { designation: String(designation) });
-    return providerProjectNameV1(JSON.parse(readPhysicalSource(config).toString("utf8")), basename(designation));
+    return providerProjectOfConfigV1(config, basename(designation));
   });
+}
+
+/** 🪪️ The name of the providers project read as two fields of its configuration (its name and the designation it declares), so an edit of any other line of the configuration moves no walk of any project. */
+export function providerProjectOfConfigV1(config, designation) {
+  const key = PROVIDER_CLOSURE_POLICY_V1.project.metadata, field = (pointer) => { try { return observedFieldV1(config, "json", pointer); } catch (error) { if (String(error?.message).startsWith("Field absent")) return undefined; throw error; } };
+  return providerProjectNameV1({ name: field("/name"), metadata: { semio: { [key]: field("/metadata/semio/" + key) } } }, designation);
 }
 
 /** 🔗️ The references a command closure read through `view` holds for the providers of `ports`: one named input of the providers project per port, never the provider's files. */
@@ -257,7 +265,7 @@ export function declaredModuleGlobsV1(inputs, workspaceRoot, projectRoot, enviro
 /** 🪁️ Runs the compiler's own program over the TypeScript projects a target declares (with `environment.reuse`, a long-lived deriver's store of parsed files and previous programs, see `./♨️reuse/🟨️.mjs`), so the typecheck closure is exactly what `tsc -p` reads: the include set, every resolved import (path mappings, `.d.ts` siblings, type-only imports, JSON), the configuration chain and the ambient type packages.
  * @returns {{files:string[],packages:string[],configs:string[]}} workspace-absolute files, installed package names, and the declared configuration files */
 export function declaredTypeScriptProjectsV1(inputs, workspaceRoot, projectRoot, environment) {
-  const { compiler, host, readdir, join, dirname, isAbsolute, reuse } = environment;
+  const { compiler, host, readdir, join, dirname, isAbsolute, reuse, release = releaseIfGrownV1 } = environment;
   const configs = [...new Set(inputs.flatMap(input => DECLARED_TSCONFIG_V1.test(input) ? [declaredInputPatternV1(input, projectRoot)] : []))].filter(Boolean).sort();
   if (!configs.length) return { files: [], packages: [], configs: [] };
   if (typeof compiler.matchFiles !== "function") throw Error("TypeScript project closure requires the compiler's file matcher");
@@ -267,11 +275,12 @@ export function declaredTypeScriptProjectsV1(inputs, workspaceRoot, projectRoot,
   const root = workspaceRoot.replaceAll("\\", "/");
   const inside = (path) => path.startsWith(`${root}/`) && !path.slice(root.length + 1).startsWith(".cache/");
   for (const relative of configs) {
+    if (!reuse || reuse.shared) release();
     const config = join(workspaceRoot, relative), source = compiler.readJsonConfigFile(config, host.readFile);
     const parsed = compiler.parseJsonSourceFileConfigFileContent(source, parseHost, dirname(config), undefined, config);
     const options = { ...parsed.options, noEmit: true, incremental: false, composite: false, tsBuildInfoFile: undefined };
     const compilerHost = Object.assign(compiler.createCompilerHost(options, true), { fileExists: host.fileExists, readFile: host.readFile, directoryExists: host.directoryExists, getDirectories: host.getDirectories, realpath: host.realpath });
-    if (reuse) compilerHost.getSourceFile = reuse.sourceFile(config, compilerHost.getSourceFile, host.readFile, JSON.stringify(options));
+    if (reuse) compilerHost.getSourceFile = reuse.sourceFile(config, compilerHost.getSourceFile, host.readFile, reuse.shared ? JSON.stringify(options, (key, value) => key === "configFilePath" || key === "pathsBasePath" || key === "configFile" ? undefined : value) : JSON.stringify(options));
     const oldProgram = reuse?.oldProgram(config);
     const program = compiler.createProgram({ rootNames: parsed.fileNames, options, projectReferences: parsed.projectReferences, host: compilerHost, ...(oldProgram ? { oldProgram } : {}) });
     reuse?.keep(config, program);
@@ -283,6 +292,7 @@ export function declaredTypeScriptProjectsV1(inputs, workspaceRoot, projectRoot,
       else if (inside(path)) files.add(path);
     }
   }
+  if (!reuse || reuse.shared) release();
   return { files: [...files].sort(), packages: [...packages].sort(), configs: declared };
 }
 
@@ -295,13 +305,14 @@ function declaredDirectoryV1(directory) {
 /** 📂️ The module files the target's `metadata.semio.closure.modules` globs match, which join the target's command closure as entries. */
 function declaredModuleGlobEntriesV1(globs, workspaceRoot, projectRoot, cache) {
   if (!Array.isArray(globs) || !globs.length) return [];
-  return memoizedObservedComputationV1(cache.declared, memoDigestV1("module-globs", workspaceRoot, projectRoot, globs), () => declaredModuleGlobsV1(globs, workspaceRoot, projectRoot, { readdir: declaredDirectoryV1, Glob: GlobV1, join }).map(path => resolve(workspaceRoot, path)));
+  return memoizedObservedComputationV1(cache.declared, memoDigestV1("module-globs", workspaceRoot, projectRoot, globs), () => { const startedAt = Date.now(); try { return declaredModuleGlobsV1(globs, workspaceRoot, projectRoot, { readdir: declaredDirectoryV1, Glob: GlobV1, join }).map(path => resolve(workspaceRoot, path)); } finally { noteSlowV1("module-globs " + projectRoot, startedAt); } });
 }
 
 /** 🏃️ Runs the compiler's own program over the TypeScript projects a target declares, reading the live files through the observed host. */
 function typescriptProgramV1(projects, workspaceRoot, projectRoot) {
-  const compiler = parserTypescriptV1();
-  return declaredTypeScriptProjectsV1(projects, workspaceRoot, projectRoot, { compiler, host: observedTypeScriptHost(compiler.sys), readdir: declaredDirectoryV1, join, dirname, isAbsolute, reuse: activeTypeScriptProgramReuseV1() });
+  const compiler = parserTypescriptV1(), startedAt = Date.now();
+  try { return declaredTypeScriptProjectsV1(projects, workspaceRoot, projectRoot, { compiler, host: observedTypeScriptHost(compiler.sys), readdir: declaredDirectoryV1, join, dirname, isAbsolute, reuse: activeTypeScriptProgramReuseV1() ?? sharedSourceFilesV1 }); }
+  finally { noteSlowV1("typescript-program " + projectRoot + " " + JSON.stringify(projects).slice(0, 160), startedAt); }
 }
 
 /** ❓️ The canonical question one TypeScript program answers: the workspace, the project root and the declared project files; the files themselves are what the program reads. */
@@ -609,6 +620,16 @@ async function reachPassV1(env, state) {
   if (stale.size) state.sets.retain(new Set(state.reaches.values()));
 }
 
+/** 🤝️ Runs a walk that may build the module graph and reach sets every owner after it reads, and credits what that build kept to the cache (`sharedBytes`) and the running owner scope instead of the owner: a warm-up rebuilt after a release is shared memory, never the growth of the project that happened to pay it first. */
+export async function chargedToSharedV1(cache, work) {
+  const before = cache.reachState?.graph.size ?? 0, bytes = managedBytesV1();
+  try { return await work(); } finally {
+    if ((cache.reachState?.graph.size ?? 0) > before) { const credit = Math.max(0, managedBytesV1() - bytes); cache.sharedBytes = (cache.sharedBytes ?? 0) + credit; creditOwnerSharedV1(credit); }
+  }
+}
+
+const managedBytesV1 = () => { const usage = process.memoryUsage(); return usage.heapUsed + usage.external; };
+
 /** 🧮️ The files a command walk reaches from `entries` as a union of per-node reach sets (see `reachStateV1`). The sets are built without router selectors, so every walk shares them; a router named by a selector keeps only the imports its commands need, so the walk expands exactly the nodes that can reach such a router (their own edges, the router through its selected node) and takes every other subtree as one set. The answer, the compiled modules, the ports and the support parts are those of the walk over the same nodes (`reachWalkV1`); a differential law holds them equal.
  * @returns {Promise<{result:string[];compiled:Set<string>;defined:Set<string>;parts:Set<readonly unknown[]>}>} */
 async function reachClosureV1({ roots, workspaceRoot, cache, requiredSources, resources, selectors, checkpoint, compiler, host }) {
@@ -790,7 +811,7 @@ async function deriveClosureFactInRoundV1(row, cache) {
   if (cache.pass?.transient === true) {
     const compiler = parserTypescriptV1(), host = observedTypeScriptHost(compiler.sys), resources = new Set(question.resources.map((path) => resolve(path))), selectors = new Map(question.selectors.map(([path, words]) => [resolve(path), [...new Set(words)].sort()])), roots = [...new Set(question.roots.map((entry) => resolve(entry)))].sort();
     let steps = 0;
-    const walk = await reachClosureV1({ roots, workspaceRoot: question.workspaceRoot, cache, requiredSources: Boolean(question.requiredSources), resources, selectors, checkpoint: (force = false) => yieldInferenceV1(cache.context, "build:command-source-imports", ++steps, force), compiler, host });
+    const walk = await chargedToSharedV1(cache, () => reachClosureV1({ roots, workspaceRoot: question.workspaceRoot, cache, requiredSources: Boolean(question.requiredSources), resources, selectors, checkpoint: (force = false) => yieldInferenceV1(cache.context, "build:command-source-imports", ++steps, force), compiler, host }));
     cache.compiledNames.set(walk.result, walk.compiled);
     cache.walkPorts.set(walk.result, [...walk.defined].sort());
     const reached = { fact: walkAnswerV1(cache, question.workspaceRoot, walk.result, question.view), parts: [...walk.parts] };
@@ -828,7 +849,7 @@ export function ownerCommandChildV1(options, bound) {
 }
 
 /** 📸️ Captures outer scripts and explicitly declared child scripts in their own working directories. */
-export async function targetScriptSources(target, workspaceRoot, scripts, projectRoot = ".",nativeManifest) {
+export async function targetScriptEntriesV1(target, workspaceRoot, projectRoot = ".", nativeManifest) {
   const resources=readBuildSourceResourceEntriesV1(target.metadata?.semio?.closure?.resources).map(input=>{const path=resolve(workspaceRoot,input.replace("{projectRoot}",projectRoot).replace("{workspaceRoot}",".")),local=relative(workspaceRoot,path);if(path.length>REVISION_POLICY_V1.maximumPathUnits||local===".."||local.startsWith(".."+sep)||isAbsolute(local))throw Error("Bounded physical Source resource required");return path;});if(new Set(resources).size!==resources.length)throw Error("Unique physical Source resource entries required");
   const entries=new Set();let fallback=false;
  const words=new Map(),retain=bound=>{if(bound.script){requirePhysicalSourceV1(bound.script);entries.add(bound.script);const word=routerCommandWordV1(bound),known=words.get(bound.script);if(word===undefined)words.set(bound.script,null);else if(known===undefined)words.set(bound.script,new Set([word]));else if(known)known.add(word);}else fallback=true;};
@@ -846,15 +867,88 @@ export async function targetScriptSources(target, workspaceRoot, scripts, projec
    const child=selectedOperation.continuation,childBound=bindBuildCommandV1([child.program,...child.arguments].map(value=>JSON.stringify(value)).join(" "),workspaceRoot,child.cwd,projectRoot,[]);if(!childBound.script)throw Error("Declared Cargo continuation requires an explicit script Source");retain(childBound);
   }
  }
+ return {resources,entries,words,fallback};
+}
+
+const toolTablesV1 = new WeakMap();
+/** 🛞️ The declared tool commands of the providers project by the absolute path of each entry module and by name: where a command's script entry is one of them, the command closure names the tool's group instead of walking the script again.
+ * @see ./🔌️provider-closures/🔣️.json */
+function toolTableV1(scripts) {
+  let table = toolTablesV1.get(scripts);
+  if (table !== undefined) return table;
+  const base = dirname(providerDesignationV1(scripts).path), entries = new Map(), resources = new Map();
+  for (const [name, tool] of Object.entries(PROVIDER_CLOSURE_POLICY_V1.tools.closures).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)) {
+    resources.set(name, new Set(tool.resources.map(path => resolve(base, path))));
+    for (const entry of tool.entries) { const path = resolve(base, entry); if (!entries.has(path)) entries.set(path, name); }
+  }
+  toolTablesV1.set(scripts, table = { entries, resources });
+  return table;
+}
+
+/** 🪝️ The script entries of one target that a declared tool command already covers, and the references to name instead of walking them. A tool covers an entry when its entry module is the entry and the command selects no router words (or the tool states that its closure is the whole router); a target that declares module globs, module inputs, runtime entries or a TypeScript project, or a resource no covering tool carries, keeps its whole walk. `packages` asks for tools whose view carries the external packages (a generic command keys on them).
+ * @see ./🔌️provider-closures/🟨️.mjs */
+function toolCoverV1(scripts, target, entries, words, resources, packages) {
+  const none = { covered: [], references: [] }, semio = target.metadata?.semio;
+  if (semio?.closure?.modules !== undefined || semio?.closure?.typescript !== undefined || semio?.runtimeSourceEntries !== undefined) return none;
+  if (Array.isArray(target.inputs) && target.inputs.some(declaredModuleLiteralV1)) return none;
+  const table = toolTableV1(scripts), covered = [], names = new Set();
+  for (const entry of entries) {
+    const name = table.entries.get(entry);
+    if (name === undefined) continue;
+    const tool = PROVIDER_CLOSURE_POLICY_V1.tools.closures[name];
+    if (packages && !PROVIDER_CLOSURE_POLICY_V1.views[tool.view].packages) continue;
+    if (words.get(entry) && tool.selection !== "included") continue;
+    covered.push(entry); names.add(name);
+  }
+  if (!covered.length) return none;
+  if (resources.some(path => ![...names].some(name => table.resources.get(name).has(path)))) return none;
+  const project = providerProjectV1(scripts);
+  return { covered, references: [...names].sort().map(name => toolReferenceV1(project, name)) };
+}
+
+const byNameV1 = ([left], [right]) => left < right ? -1 : left > right ? 1 : 0;
+/** 🫙️ The files of the group of one declared tool command, once per script input cache.
+ * @see ./🔌️provider-closures/🟨️.mjs */
+async function toolGroupFilesV1(workspaceRoot, scripts, name) {
+  const groups = scripts.toolGroups ??= new Map();
+  let files = groups.get(name);
+  if (files === undefined) groups.set(name, files = new Set((await toolClosureGroupV1(workspaceRoot, scripts, name)).filter(item => typeof item === "string")));
+  return files;
+}
+
+/** 🪚️ The command closure of a target with the declared tools named: the references of the entries a tool covers, and for every declared tool whose entry module the walk reached the references to that tool and the closure without the files of the tool's group (the group is keyed through the reference, so the closure never keys on fewer files than the walk). `mode` is the consumer ("native", "generic" or "queries"); undefined keeps the closure as it is.
+ * @see ./🔌️provider-closures/🟨️.mjs */
+async function toolFinishV1(scripts, workspaceRoot, own, entryCover, mode) {
+  if (mode === undefined) return { list: own, covered: [] };
+  const references = new Map(entryCover.references.map(row => [JSON.stringify(row), row]));
+  let list = own, left = [];
+  if (own !== undefined) {
+    const present = new Set(own.filter(item => typeof item === "string")), base = dirname(providerDesignationV1(scripts).path), covered = new Set();
+    for (const [name, tool] of Object.entries(PROVIDER_CLOSURE_POLICY_V1.tools.closures).sort(byNameV1)) {
+      if (!tool.entries.some(entry => present.has(closurePathNameV1(scripts, workspaceRoot, resolve(base, entry))))) continue;
+      for (const file of await toolGroupFilesV1(workspaceRoot, scripts, name)) covered.add(file);
+      const row = toolReferenceV1(providerProjectV1(scripts), name);
+      references.set(JSON.stringify(row), row);
+    }
+    if (covered.size) list = own.filter(item => typeof item !== "string" || !covered.has(item));
+    if (covered.size) left = own.filter(item => typeof item === "string" && covered.has(item));
+  }
+  return { list: references.size ? [...(list ?? []), ...references.values()] : list, covered: left };
+}
+
+/** 📽️ Captures outer scripts and explicitly declared child scripts in their own working directories; with `cover` ("native", "generic" or "queries") the entries a declared tool command covers are named by reference to the tool group and not walked. */
+export async function targetScriptSources(target, workspaceRoot, scripts, projectRoot = ".",nativeManifest, cover) {
+ const {resources,entries,words,fallback}=await targetScriptEntriesV1(target,workspaceRoot,projectRoot,nativeManifest),tools=cover===undefined?{covered:[],references:[]}:toolCoverV1(scripts,target,entries,words,resources,cover==="generic");
+ for(const entry of tools.covered)entries.delete(entry);
  const commands=new Map([...words].filter(([,known])=>known).map(([script,known])=>[script,[...known]])),baseSize=entries.size,base=baseSize?await boundedScriptInputsV1([...entries],workspaceRoot,scripts,true,resources,commands):undefined;
  if(buildInputSourceRoleV1(true,false,[target.metadata?.semio?.sourceInputObservation])==="compile")for(const declared of declaredModuleInputsV1(target.inputs,workspaceRoot,projectRoot,scripts,base&&scripts.compiledNames.get(base)))entries.add(declared);
  for(const declared of declaredModuleGlobEntriesV1(target.metadata?.semio?.closure?.modules,workspaceRoot,projectRoot,scripts))entries.add(declared);
  for(const input of readBuildRuntimeSourceEntriesV1(target.metadata?.semio?.runtimeSourceEntries)){const path=resolve(workspaceRoot,input.replace("{projectRoot}",projectRoot).replace("{workspaceRoot}","."));if(path.length>REVISION_POLICY_V1.maximumPathUnits)throw Error("Bounded physical runtime Source entry required");const entry=declaredModuleInputV1(input,workspaceRoot,projectRoot);if(!entry)throw Error("Bounded physical runtime Source entry required");entries.add(entry);}
  let closure=entries.size===baseSize?base:entries.size?await boundedScriptInputsV1([...entries],workspaceRoot,scripts,true,resources,commands):undefined,generatedDependencies=scripts.generatedImports.size&&closure?generatedTargetsV1(scripts,closure,workspaceRoot):[];const walked=closure,project=closure?declaredProjectClosureV1(target.metadata?.semio?.closure?.typescript,workspaceRoot,projectRoot,scripts,closure):undefined;
  if(project){closure=project.closure;generatedDependencies=[...new Set([...(scripts.generatedImports.size?generatedTargetsV1(scripts,closure,workspaceRoot):[]),...project.generatedDependencies])].sort();}
- const references=walked?providerReferencesV1(scripts,scripts.walkPorts.get(walked)??[],"scheduling"):[],pruned=closure&&withoutSchedulingV1(closure),kept=pruned&&references.length?[...pruned,...references]:pruned;
+ const references=walked?providerReferencesV1(scripts,scripts.walkPorts.get(walked)??[],"scheduling"):[],pruned=closure&&withoutSchedulingV1(closure),own=pruned&&references.length?[...pruned,...references]:pruned,finished=await toolFinishV1(scripts,workspaceRoot,own,tools,cover),kept=finished.list;
  if(kept&&kept!==closure){const compiled=scripts.compiledNames.get(closure);if(compiled){const present=new Set(kept);scripts.compiledNames.set(kept,new Set([...compiled].filter(name=>present.has(name))));}}
- return {closure:kept,fallback,...(generatedDependencies.length?{generatedDependencies}:{}),...(project?.packages.length?{packages:project.packages,projectConfig:project.config}:{})};
+ return {closure:kept,fallback,...(finished.covered.length?{covered:finished.covered}:{}),...(generatedDependencies.length?{generatedDependencies}:{}),...(project?.packages.length?{packages:project.packages,projectConfig:project.config}:{})};
 }
 
 /** ⚙️ Keeps configured recipe inheritance identical for command and lock source discovery. */
@@ -863,8 +957,8 @@ function targetCommandRecipes(target) {
 }
 
 /** 🧳️ Keeps configured executable imports in the target's invariant source closure. */
-export async function targetScriptClosure(target, workspaceRoot, scripts, projectRoot = ".") {
-  return (await targetScriptSources(target,workspaceRoot,scripts,projectRoot)).closure;
+export async function targetScriptClosure(target, workspaceRoot, scripts, projectRoot = ".", cover) {
+  return (await targetScriptSources(target,workspaceRoot,scripts,projectRoot,undefined,cover)).closure;
 }
 
 /** 🔐️ `cargo metadata --locked` validates the shared lock against every workspace manifest, so its replay must hash all of them. */
@@ -876,18 +970,18 @@ export function nativeLockInputs(command) {
 /** ⚖️ Adds the selected native target's local router and executable import closure. */
 export async function nativeTargetCommandInputs(target, workspaceRoot, fallback, scripts = createScriptInputCache(), projectRoot = ".") {
   fallback??=await nativeCommandInputs(workspaceRoot,scripts);
-  const closure = await targetScriptClosure(target, workspaceRoot, scripts, projectRoot);
+  const closure = await targetScriptClosure(target, workspaceRoot, scripts, projectRoot, "native");
   return closure ? joinWithProviderViewV1([closure, fallback], "native") : fallback;
 }
 
 /** 🎯️ Hashes any script-backed target's own command closure, exactly, instead of the whole router. */
 export async function genericTargetCommandInputs(target, workspaceRoot, fallback, scripts = createScriptInputCache(), projectRoot = ".") {
-  const sources = await targetScriptSources(target, workspaceRoot, scripts, projectRoot),closure=sources.closure;
+  const sources = await targetScriptSources(target, workspaceRoot, scripts, projectRoot, undefined, "generic"),closure=sources.closure;
   if (!closure) return [...fallback, "{workspaceRoot}/package.json", `{workspaceRoot}/${javascriptManagerV1.primaryLockName}`];
-  const key=memoDigestV1(closure,sources.fallback?fallback:null,sources.packages??[]);
+  const key=memoDigestV1(closure,sources.fallback?fallback:null,sources.packages??[],sources.covered??[]);
   let index=0;const checkpoint=(force=false)=>yieldInferenceV1(scripts.context,"build:command-source-packages",++index,force);
   return memoizedObservedAsyncComputationV1(scripts.commandDependencies,key,async()=>{
-  const graph = existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName)) ? readBunLockGraph(workspaceRoot) : undefined, packages = await closurePackagesV1(closure, workspaceRoot, graph, checkpoint);
+  const graph = existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName)) ? readBunLockGraph(workspaceRoot) : undefined, packages = await closurePackagesV1([...closure, ...(sources.covered ?? [])], workspaceRoot, graph, checkpoint);
   for (const name of sources.packages ?? []) {
     if (!graph) { packages.add(name); continue; }
     const key = graph.resolveImport(sources.projectConfig.slice("{workspaceRoot}/".length), name);
@@ -946,15 +1040,19 @@ async function scriptProviderGroupV1(workspaceRoot, scripts, port, view) {
 async function toolClosureGroupV1(workspaceRoot, scripts, name) {
   const tool = PROVIDER_CLOSURE_POLICY_V1.tools.closures[name];
   if (!tool) throw refuseBuildV1("invalid", "closure.tool-unknown", { name: String(name) });
-  const designation = providerDesignationV1(scripts), base = dirname(designation.path), walk = await boundedScriptInputsV1(tool.entries.map(entry => resolve(base, entry)), workspaceRoot, scripts), ports = scripts.walkPorts.get(walk) ?? [], files = new Set();
+  const designation = providerDesignationV1(scripts), base = dirname(designation.path), inside = path => !closurePathNameV1(scripts, workspaceRoot, path).startsWith("{workspaceRoot}/../"), walk = await boundedScriptInputsV1(tool.entries.map(entry => resolve(base, entry)).filter(inside), workspaceRoot, scripts), ports = scripts.walkPorts.get(walk) ?? [], files = new Set();
   for (const each of [walk, ...await providerWalksV1(scripts, workspaceRoot, ports, designation)]) {
     const generated = scripts.generatedImports.size ? generatedTargetsV1(scripts, each, workspaceRoot) : [];
     if (generated.length) throw refuseBuildV1("invalid", "closure.provider-generated-import", { port: String(name), targets: generated.join(", ") });
     for (const file of withoutSchedulingV1(each, walkViewPrefixesV1(tool.view))) files.add(file);
   }
-  for (const resource of tool.resources) { const path = resolve(base, resource); requirePhysicalSourceV1(path); files.add(closurePathNameV1(scripts, workspaceRoot, path)); }
+  for (const resource of tool.resources) { const path = resolve(base, resource); if (!inside(path)) continue; requirePhysicalSourceV1(path); files.add(closurePathNameV1(scripts, workspaceRoot, path)); }
   if (ports.length) for (const path of [designation.path, designation.schema]) files.add(closurePathNameV1(scripts, workspaceRoot, path));
-  return [...files].sort();
+  const roster = [...files].sort();
+  if (!PROVIDER_CLOSURE_POLICY_V1.views[tool.view].packages) return roster;
+  const graph = existsSync(join(workspaceRoot, javascriptManagerV1.primaryLockName)) ? readBunLockGraph(workspaceRoot) : undefined;
+  let index = 0;
+  return [...roster, { externalDependencies: [...await closurePackagesV1(roster, workspaceRoot, graph, (force = false) => yieldInferenceV1(scripts.context, "build:command-source-packages", ++index, force))].sort() }];
 }
 
 /** 🌀️ The previous blanket router contract, kept only as a correctness fallback for a command naming no script. */
@@ -1006,7 +1104,9 @@ const CLOSURE_QUERIES_V1 = new Map([
 /** 🌂️ Registers a pure query over the closure a recipe produces (the inferrer that owns the question, such as the whole-workspace key check, registers it). */
 export function registerClosureQueryV1(name, query) { CLOSURE_QUERIES_V1.set(name, query); }
 
-const closureEntryCacheV1 = maxBytes => createBoundedCacheV1({ name: "inference:closure-entries", maxEntries: INFERENCE_LIMITS_V1.closureEntryCacheEntries, maxBytes, sizeOf: entry => INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryRowBytes * entry.rows.length + INFERENCE_LIMITS_V1.closureEntryValueItemBytes * closureValueItemsV1(entry.value) });
+/** 🔢️ The bytes the parsed layers of a derived entry are charged: `closureLayerRowBytes` per row, nothing once the entry keeps only the digests of its stored layers. */
+const closureLayerChargeV1 = layers => layers ? INFERENCE_LIMITS_V1.closureLayerRowBytes * layers.reduce((sum, layer) => sum + layer.length, 0) : 0;
+const closureEntryCacheV1 = maxBytes => createBoundedCacheV1({ name: "inference:closure-entries", maxEntries: INFERENCE_LIMITS_V1.closureEntryCacheEntries, maxBytes, sizeOf: entry => INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryRowBytes * entry.rows.length + INFERENCE_LIMITS_V1.closureEntryValueItemBytes * closureValueItemsV1(entry.value) + closureLayerChargeV1(entry.layers) });
 /** 🔢️ How many items one closure value holds: the files of a list, or the files and the other lists of a closure record, without serialising it. */
 const closureValueItemsV1 = value => Array.isArray(value) ? value.length : Object.values(value ?? {}).reduce((sum, part) => sum + (Array.isArray(part) ? part.length : 1), 1);
 let closureEntriesV1 = closureEntryCacheV1(INFERENCE_LIMITS_V1.closureEntryCacheBytes);
@@ -1020,9 +1120,17 @@ const closureCountsV1 = { derived: 0, loaded: 0, stale: 0, checked: 0 };
 /** 🔢️ How many closure entries this process derived, loaded from the durable store, found stale there and verified row by row (once per discovery pass, however many owners ask) since the last reset. */
 export function closureEntryCountsV1() { return { ...closureCountsV1 }; }
 
-const closureEntryBytesV1 = entry => JSON.stringify([entry.value, entry.rows]).length + 8 * entry.layers.length;
+/** 🔢️ How many in-process closure entries still hold their parsed layers: only derived entries that no durable store saved. */
+export function closureEntriesWithLayersV1() { return closureEntriesV1.keys().filter(key => closureEntriesV1.peek(key)?.layers !== undefined).length; }
+const closureEntryBytesV1 = entry => JSON.stringify([entry.value, entry.rows]).length + closureLayerChargeV1(entry.layers);
 const closureSidecarV1 = layers => ({ facts: layers.map(layer => walkFactsV1.get(layer) ?? null), members: layers.map(layer => { const walks = walkMembersV1.get(layer); return walks ? [...walks] : null; }) });
-const walkFactsByDigestV1 = new Map(), walkMembersByDigestV1 = new Map(), layerListsV1 = new WeakMap();
+const walkFactsByDigestV1 = createBoundedCacheV1({ name: "inference:closure-walk-facts", maxEntries: 65536, maxBytes: 65536 }), walkMembersByDigestV1 = createBoundedCacheV1({ name: "inference:closure-walk-members", maxEntries: 65536, maxBytes: 65536 }), layerListsV1 = new WeakMap();
+/** 🌱️ Hands the walk facts and members of a derived entry's layers to the digest tables before the entry drops its parsed arrays, so the stored shape answers the same questions. */
+const seedLayerDigestsV1 = entry => entry.layers.forEach((layer, at) => {
+  const digest = entry.digests[at], fact = walkFactsV1.get(layer), members = walkMembersV1.get(layer);
+  if (fact && !walkFactsByDigestV1.has(digest)) walkFactsByDigestV1.set(digest, fact);
+  if (members) { let walks = walkMembersByDigestV1.get(digest); if (!walks) walkMembersByDigestV1.set(digest, walks = new Set()); for (const walk of members) walks.add(walk); }
+});
 /** 🧱️ The shared layers of an entry as views: a derived entry names its parsed arrays, a stored entry only the digests of its layers (read from the store when a view is consumed, never cached parsed) with the walk facts and members its sidecar and every other stored entry of the process recorded for them. */
 const closureLayerViewsV1 = entry => {
   if (entry.layers) return entry.layers.map(layer => ({ key: layer, rows: layer, fact: walkFactsV1.get(layer), members: walkMembersV1.get(layer) }));
@@ -1048,7 +1156,7 @@ function closureLayerListV1(log, view) {
   if (list === undefined) { const builder = log.builder(); for (const batch of closureLayerBatchesV1(view)) builder.add(batch); list = builder.finish(); table.set(view.key, list); }
   return list;
 }
-const closureStoreBindingsV1 = new Map();
+const closureStoreBindingsV1 = createBoundedCacheV1({ name: "inference:closure-store-bindings", maxEntries: 256, maxBytes: 256 });
 /** 📁️ The directory of the durable closure entries of a workspace: the graph's inference data directory of the running writer, or undefined where no graph writer is running (the entries then live in this process only). */
 export function closureStoreDirectoryV1(workspaceRoot) { try { return join(workspaceDataDirectory(workspaceRoot), "ce"); } catch { return undefined; } }
 /** 🔗️ Binds the directory a worker process reads the closure entries of its parent from; a worker never writes there, its parent persists the entries it derives itself. */
@@ -1063,11 +1171,54 @@ const closureStoreOfV1 = workspaceRoot => {
   return store;
 };
 
+/** 🚚️ The closure entries of a project record as portable bundles and back: `export` walks the recipes a record names and the shared entries their values refer to and answers the bundles the durable store holds (an entry the store lacks is simply not exported), `import` stores the bundles of another machine in the durable store of this workspace, unless an entry of that recipe is already there; a bundle whose recipe does not hash to its key is refused. Every consumer verifies an entry's rows against its own tree, so a wrong bundle costs a derivation and never a wrong graph. */
+const closureBundlesV1 = createBoundedCacheV1({ name: "inference:closure-bundles", maxEntries: 512, maxBytes: INFERENCE_LIMITS_V1.closureBundleCacheBytes, sizeOf: row => INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryRowBytes * row.bundle.rows.length + INFERENCE_LIMITS_V1.closureLayerRowBytes * row.bundle.layers.reduce((sum, layer) => sum + layer.length, 0) });
+export const closureTravelV1 = Object.freeze({
+  async export(workspaceRoot, image) {
+    const store = closureStoreOfV1(workspaceRoot);
+    if (!store) return [];
+    let table;
+    try { table = JSON.parse(image)?.closureRecipes; } catch { return []; }
+    const seen = new Map();
+    const visit = async recipe => {
+      const key = closureRecipeKeyV1(recipe);
+      if (seen.has(key)) return;
+      seen.set(key, undefined);
+      const id = workspaceRoot + "\0" + key, stamp = await store.stamp(id);
+      if (stamp === undefined) return;
+      let bundle = closureBundlesV1.get(id)?.stamp === stamp ? closureBundlesV1.get(id).bundle : undefined;
+      if (!bundle) { bundle = await store.bundle(id); if (bundle) closureBundlesV1.set(id, { stamp, bundle }); }
+      if (!bundle) return;
+      seen.set(key, bundle);
+      for (const reference of sharedReferencesOfV1(bundle.value)) await visit(reference.recipe);
+    };
+    for (const recipe of Object.values(table ?? {})) await visit(recipe);
+    return [...seen].filter(([, bundle]) => bundle !== undefined).map(([recipeKey, bundle]) => ({ recipeKey, bundle }));
+  },
+  async import(workspaceRoot, bundles) {
+    const directory = closureStoreBindingsV1.get(workspaceRoot)?.directory ?? closureStoreDirectoryV1(workspaceRoot);
+    if (directory === undefined) return 0;
+    const store = createClosureStoreV1({ directory });
+    let taken = 0;
+    for (const { recipeKey, bundle } of bundles) {
+      try {
+        if (closureRecipeKeyV1(bundle?.recipe) !== recipeKey) continue;
+        const id = workspaceRoot + "\0" + recipeKey;
+        if (await store.load(id) !== undefined) continue;
+        await store.adopt(id, bundle);
+        taken++;
+      } catch { continue; }
+    }
+    return taken;
+  },
+});
+registerProjectClosureTravelV1(closureTravelV1);
+
 /** 🧊️ Binds the script input cache that computes the closure entries of one workspace (the inference binds its own, a verifier binds one of its own). */
 export function bindClosureScriptsV1(workspaceRoot, scripts) { closureScriptsV1.set(workspaceRoot, scripts); }
 
 /** 🧽️ Forgets every in-process entry, as a process that starts later has none; `entryBytes` sets the byte budget of the in-process entries for the new process (the declared limit by default). */
-export function resetClosureEntriesV1(entryBytes = INFERENCE_LIMITS_V1.closureEntryCacheBytes) { closureScriptsV1.clear(); closureEntriesV1.clear(); closureEntriesV1 = closureEntryCacheV1(entryBytes); closureInflightV1.clear(); closureFailuresV1.clear(); knownClosureRecipesV1.clear(); knownClosureInputsV1.clear(); closureStoresV1.clear(); closureCountsV1.derived = closureCountsV1.loaded = closureCountsV1.stale = closureCountsV1.checked = 0; }
+export function resetClosureEntriesV1(entryBytes = INFERENCE_LIMITS_V1.closureEntryCacheBytes) { closureScriptsV1.clear(); closureEntriesV1.clear(); closureEntriesV1 = closureEntryCacheV1(entryBytes); closureInflightV1.clear(); closureFailuresV1.clear(); knownClosureRecipesV1.clear(); knownClosureInputsV1.clear(); closureStoresV1.clear(); walkFactsByDigestV1.clear(); walkMembersByDigestV1.clear(); closureCountsV1.derived = closureCountsV1.loaded = closureCountsV1.stale = closureCountsV1.checked = 0; }
 
 /** 🌃️ Produces what one recipe stands for, with the same functions the direct inference calls. */
 async function produceClosureRecipeV1(recipe, workspaceRoot, scripts) {
@@ -1079,7 +1230,7 @@ async function produceClosureRecipeV1(recipe, workspaceRoot, scripts) {
     case "closure-of": return closureOfV1(recipe.entries.map(entry => resolve(workspaceRoot, entry)), workspaceRoot, scripts, recipe.extras, recipe.role);
     case "script-provider": return scriptProviderGroupV1(workspaceRoot, scripts, recipe.port, recipe.view);
     case "tool-closure": return toolClosureGroupV1(workspaceRoot, scripts, recipe.name);
-    case "target-sources": return targetScriptSources(target, workspaceRoot, scripts, recipe.projectRoot, recipe.nativeManifest);
+    case "target-sources": return targetScriptSources(target, workspaceRoot, scripts, recipe.projectRoot, recipe.nativeManifest, "queries");
     case "crate-index": case "source-roots": return derivedWalkV1(workspaceRoot, readDerivedWalkV1(recipe), scripts);
     default: throw refuseBuildV1("invalid", "closure.recipe-unknown", { recipe: String(recipe.fn) });
   }
@@ -1089,8 +1240,8 @@ let closurePassV1;
 /** 🧭️ Runs one inference pass during which a shared closure entry is verified once, however many projects ask for it: the files do not change inside a pass, and a pass that nests another shares its token. */
 export async function withClosurePassV1(compute) {
   const outer = closurePassV1;
-  closurePassV1 = outer ?? {};
-  try { return await compute(); } finally { closurePassV1 = outer; }
+  closurePassV1 = outer ?? observationRoundV1() ?? new Map();
+  try { return await withObservationPassRoundV1(closurePassV1, compute); } finally { closurePassV1 = outer; }
 }
 
 /** 🫧️ One cooperative step of a long loop: every `yieldMilliseconds` it gives the event loop one turn, reports through the inference checkpoint (`phase`) and stops at cancellation. */
@@ -1162,16 +1313,31 @@ async function produceClosureEntryV1(workspaceRoot, recipe) {
   if (!flight) {
     const scripts = closureScriptsV1.get(workspaceRoot);
     if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
-    const store = closureStoreOfV1(workspaceRoot), derive = () => observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)).then(async ({ value, rows, layers }) => { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; });
+    const store = closureStoreOfV1(workspaceRoot), derive = () => observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)).then(async ({ value, rows, layers }) => { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; if (saved?.digests) { entry.sidecar = closureSidecarV1(layers); seedLayerDigestsV1(entry); entry.layers = undefined; } } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; });
     flight = (store ? store.load(id) : Promise.resolve(undefined)).then(async stored => { const entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null }; if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) { closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; } if (entry) closureCountsV1.stale++; return derive(); }).then(entry => entry, error => { const facts = error?.code === "BUILD_SOURCE_UNPARSEABLE" ? detachedFailureV1(error) : undefined; if (facts) closureFailuresV1.set(id, { error, rows: facts.rows, layers: facts.layers, checked: null }); throw error; }).finally(() => closureInflightV1.delete(id));
     closureInflightV1.set(id, flight);
   }
   return flight;
 }
 
-/** 🫧️ Releases what one finished owner left behind in the cache shared by the owners, so the memory of the owner phase is flat per owner: the source reads, closure walks, command dependency memos, declared module and TypeScript program memos and workspace path names of the call, which a later owner reads or derives again, and, when `shrink` (the host is short of memory), half of the in-process closure entries, which a later owner reads again from the durable store; the shared provider designation and the generated imports stay. */
-export function releaseOwnerStateV1(scripts, { shrink = true } = {}) {
-  scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.declared.clear(); scripts.paths.clear(); scripts.walkNodes?.clear();
+/** 🔢️ How many finished owners share the walks of the command closures before the cache they fill is released: the walk of a closure of hundreds of modules costs more than the rest of an owner, so releasing it after every owner made each crate cost five times its own work, while the cache grows by a few megabytes per owner. */
+const OWNERS_PER_RELEASE_V1 = 32;
+
+/** 🔢️ How many finished owners keep the walk state they share while the host is short of memory: the module graph and its reach sets cost more than the owners that read them, so dropping them after every owner under a lasting shortage made each owner rebuild them (every project of a plan grew by the same several gigabytes); the per-owner state is dropped after every owner meanwhile. */
+const OWNERS_PER_SHRINK_RELEASE_V1 = 8;
+const FINISHED_OWNERS_V1 = new WeakMap();
+
+/** 🫧️ Releases what finished owners left behind in the cache shared by the owners, so the memory of the owner phase stays bounded: every `OWNERS_PER_RELEASE_V1` owners, or after every owner while `shrink` (the host is short of memory), the source reads, the reach sets of the module graph (rebuilt by the next walk), closure walks, command dependency memos, declared module and TypeScript program memos and workspace path names are dropped and, when `shrink`, half of the in-process closure entries, which a later owner reads again from the durable store; the shared provider designation and the generated imports stay. Shrinking after every owner under a lasting shortage unpacked and parsed the stored entries again for each owner (two thirds of the time of a refresh in a profile). */
+export function releaseOwnerStateV1(scripts, { shrink = false, gate = footprintGateV1() } = {}) {
+  const grant = gate?.grantBytes(), share = grant > 0 ? decideFootprintV1({ footprintBytes: gate.footprintBytes(), grantBytes: grant }) : undefined;
+  if (share !== undefined) shrink = share === "wait";
+  const finished = (FINISHED_OWNERS_V1.get(scripts) ?? 0) + 1;
+  if (share === "run") { FINISHED_OWNERS_V1.set(scripts, 0); return; }
+  if (shrink) { scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); }
+  if (finished < (shrink ? OWNERS_PER_SHRINK_RELEASE_V1 : OWNERS_PER_RELEASE_V1)) { FINISHED_OWNERS_V1.set(scripts, finished); return; }
+  FINISHED_OWNERS_V1.set(scripts, 0);
+  scripts.reachState = undefined; scripts.sharedBytes = 0;
+  scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.declared.clear(); scripts.paths.clear(); scripts.walkNodes?.clear(); scripts.toolGroups?.clear(); sharedSourceFilesV1.clear();
   if (shrink) closureEntriesV1.shrink(0.5);
 }
 
@@ -1215,6 +1381,16 @@ function expandedEntryValueV1(workspaceRoot, entry, providers) {
   return expandClosureValueV1(entry.value, files);
 }
 
+/** 🔁️ Answers a query over a closure again, after `refresh` brought its shared provider entries up to date, while the answer is undefined (a provider file changed between the check that admitted the entry and the check that expanded it: the files of the hot tool directories change while peers work), at most `attempts` times; undefined when the last answer is still undefined. A pure function of its arguments.
+ * @see ../🧬️schema/🔣️.json */
+export async function answeredAgainstFreshProvidersV1(answer, refresh, attempts = INFERENCE_LIMITS_V1.closureAnswerAttempts) {
+  for (let attempt = 0; ; attempt++) {
+    const value = answer();
+    if (value !== undefined || attempt >= attempts) return value;
+    await refresh();
+  }
+}
+
 /** ❔️ One query answered over the closure an entry stands for, provider closures expanded; undefined while a provider entry does not hold. An entry without provider references keeps its answers. */
 const closureAnswerV1 = (workspaceRoot, entry, query, providers) => {
   const key = JSON.stringify(query), stable = !sharedReferencesOfV1(entry.value).length;
@@ -1251,7 +1427,7 @@ registerClosureProviderV1({
 export function closureApiV1(scripts, workspaceRoot) {
   const late = scripts.lateClosures === true;
   if (late) bindClosureScriptsV1(workspaceRoot, scripts);
-  const used = new Map(), fact = async (recipe, query) => { const key = closureRecipeKeyV1(recipe); knownClosureRecipesV1.set(key, recipe); used.set(key, recipe); const entry = await ensureClosureEntryV1(workspaceRoot, recipe), providers = await ensureProviderEntriesV1(workspaceRoot, entry), answer = closureAnswerV1(workspaceRoot, entry, query, providers); if (answer === undefined) throw refuseBuildV1("invalid", "closure.provider-entry-stale", { port: sharedReferencesOfV1(entry.value).map(row => row.recipe.port ?? row.recipe.name).join(", ") }); recordClosureFactV1(JSON.stringify([workspaceRoot, key, query]), JSON.stringify(answer)); return answer; };
+  const used = new Map(), fact = async (recipe, query) => { const key = closureRecipeKeyV1(recipe); knownClosureRecipesV1.set(key, recipe); used.set(key, recipe); let entry = await ensureClosureEntryV1(workspaceRoot, recipe), providers = await ensureProviderEntriesV1(workspaceRoot, entry); const answer = await answeredAgainstFreshProvidersV1(() => closureAnswerV1(workspaceRoot, entry, query, providers), async () => { entry = await ensureClosureEntryV1(workspaceRoot, recipe); providers = await ensureProviderEntriesV1(workspaceRoot, entry); }); if (answer === undefined) throw refuseBuildV1("invalid", "closure.provider-entry-stale", { port: sharedReferencesOfV1(entry.value).map(row => row.recipe.port ?? row.recipe.name).join(", ") }); recordClosureFactV1(JSON.stringify([workspaceRoot, key, query]), JSON.stringify(answer)); return answer; };
   const expanded = value => expandedCommandInputsV1(value, workspaceRoot, scripts);
   const relativeEntries = entries => entries.map(entry => relative(workspaceRoot, entry).split(sep).join("/"));
   return Object.freeze({
@@ -1304,7 +1480,10 @@ export function closureApiV1(scripts, workspaceRoot) {
     async resolve(recipes, log) {
       const values = new Map(), derived = new Map(), walked = new Set(), layers = new Map(), seen = new Set(), rows = [], take = row => { const key = rowKeyV1(row); if (!seen.has(key)) { seen.add(key); rows.push(row); } };
       const builder = log?.builder(), addRows = items => { if (builder) builder.add(items); else for (const row of items) take(row); }, addLayer = view => { if (builder) builder.addList(closureLayerListV1(log, view)); else for (const batch of closureLayerBatchesV1(view)) addRows(batch); }, supportOf = view => log ? closureLayerListV1(log, view) : view.rows ?? [...closureLayerBatchesV1(view)].flat();
-      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); addRows(entry.rows); for (const layer of closureLayerViewsV1(entry)) { layers.set(layer.key, layer); if (layer.fact) { const row = view === undefined ? layer.fact.row : layer.fact.views?.[view] ?? layer.fact.row; derived.set(row.path, { row, support: supportOf(layer) }); walked.add(layer.fact.row.path); } } }
+      const entries = [];
+      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); entries.push(entry); for (const layer of closureLayerViewsV1(entry)) { layers.set(layer.key, layer); if (layer.fact) { const row = view === undefined ? layer.fact.row : layer.fact.views?.[view] ?? layer.fact.row; derived.set(row.path, { row, support: supportOf(layer) }); walked.add(layer.fact.row.path); } } }
+      for (const { row, support } of derived.values()) { if (row.path.startsWith('{"program":')) continue; if (builder) builder.exclude(support); else for (const supported of support) seen.add(rowKeyV1(supported)); }
+      for (const entry of entries) addRows(entry.rows);
       for (const layer of layers.values()) { if (layer.fact) continue; if (!layer.members || ![...layer.members].some(question => walked.has(question))) addLayer(layer); }
       return { values, rows: builder ? builder.finish() : rows, derived: [...derived.values()] };
     },
@@ -1343,8 +1522,10 @@ function closureTargetOfV1({ inputsDigest, ...rest }) {
   return { ...rest, inputs };
 }
 
-/** ⏳️ Delegates bounded inference work to the caller's original progress and continuation control; durable progress is published at most every 200 ms so its cost never scales with the number of inferred facts. */
+/** ⏳️ Delegates bounded inference work to the caller's original progress and continuation control, and is the point where the inference of an owner that grew past what the machine can give one project stops (`throwIfOwnerExceededV1`, set by the memory governor); durable progress is published at most every 200 ms so its cost never scales with the number of inferred facts. */
 export async function yieldInferenceV1(context,phase,index,force=false){
+ footprintPulseV1();releaseIfGrownV1({every:16});
+ throwIfOwnerExceededV1();
  if(!context.invocation)return;
  const last=yieldInferenceV1.last??=new WeakMap(),now=performance.now();
  if(!force&&now-(last.get(context)??-Infinity)<INFERENCE_LIMITS_V1.advanceThrottleMilliseconds){context.invocation.control.signal.throwIfAborted();return;}

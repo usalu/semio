@@ -19,9 +19,9 @@ const here = import.meta.dir, posix = (path: string) => path.replaceAll("\\", "/
 const python = testPythonV1();
 const oracle = (extra: Record<string, unknown> = {}) => {
   if (python === null) throw new Error("A Python 3 interpreter is required for the independent implementation");
-  const run = spawnSync(python, ["-I", join(here, "🐍️oracle/🐍️.py")], {input: JSON.stringify({policy, environments: fixture.environments, identities: fixture.identities, tools: fixture.tools, links: fixture.links, ...extra}), encoding: "utf8", maxBuffer: 1 << 26});
+  const run = spawnSync(python, ["-I", join(here, "🐍️oracle/🐍️.py")], {input: JSON.stringify({policy, environments: fixture.environments, identities: fixture.identities, tools: fixture.tools, interpreters: fixture.interpreters, links: fixture.links, ...extra}), encoding: "utf8", maxBuffer: 1 << 26});
   if (run.status !== 0) throw new Error(run.stderr);
-  return JSON.parse(run.stdout) as {environments: any[]; identities: any[]; tools: any[]; links: boolean[]; files: {globalJson: string; artifacts: string}; props: any};
+  return JSON.parse(run.stdout) as {environments: any[]; identities: any[]; tools: any[]; interpreters: any[]; links: boolean[]; files: {globalJson: string; artifacts: string}; props: any};
 };
 const props = toolchains.dotnetDirectoryBuildPropsV1();
 const expected = oracle({props});
@@ -48,6 +48,9 @@ describe("the policy", () => {
       "foreign release host": copy => { copy.cmake.cmake.release = "https://example.com/cmake/releases/download/v4.4.4"; },
       "missing German text": copy => { delete copy.messages.texts.missing.de; },
       "extra key": copy => { copy.python.surprise = true; },
+      "foreign cpython release": copy => { copy.python.cpython.release = "https://example.com/python-build-standalone/releases/download/20260408"; },
+      "cpython without a uv directory": copy => { delete copy.python.cpython.series["3.12"].distributions[0].directory; },
+      "cpython directory outside the uv scheme": copy => { copy.python.cpython.series["3.12"].distributions[0].directory = "../outside"; },
       "wild sdk": copy => { copy.dotnet.sdk = "8.0"; },
       "roll forward": copy => { copy.dotnet.rollForward = "latestMajor"; },
     };
@@ -76,10 +79,25 @@ describe("the policy", () => {
     expect(Object.values(policy.python.interpreters).map(row => row.series).sort()).toEqual(["3.12", "3.14"]);
   });
 
+  test("pins one CPython build per interpreter series and host, downloads never happen implicitly and every pin names its uv installation directory", () => {
+    expect(Object.keys(policy.python.cpython.series).sort()).toEqual([...new Set(Object.values(policy.python.interpreters).map(row => row.series))].sort());
+    for (const [series, entry] of Object.entries(policy.python.cpython.series)) {
+      expect(entry.version.startsWith(series + ".")).toBe(true);
+      expect(entry.distributions.map(row => row.host)).toEqual([...policy.hosts]);
+      for (const row of entry.distributions) {
+        expect(row.archive.startsWith("cpython-" + entry.version + "+")).toBe(true);
+        expect(row.directory.startsWith("cpython-" + entry.version + "-")).toBe(true);
+        expect(row.binaries).toEqual([row.host.startsWith("win32") ? "python.exe" : "python" + series]);
+      }
+    }
+    expect(policy.python.variables.UV_PYTHON_DOWNLOADS).toBe("never");
+  });
+
   test("agrees with the publishers' own checksum listings", () => {
     const rows = new Map(Object.values(fixture.publisher).flatMap(listing => listing.lines.map(line => [line.split("  ")[1]!, line.split("  ")[0]!] as const)));
     const specs = {cmake: policy.cmake.cmake, ninja: policy.cmake.ninja, go: policy.go.tool, uv: policy.python.tool};
     for (const tool of ["cmake", "ninja", "go", "uv"] as const) for (const row of specs[tool].distributions) expect({tool, archive: row.archive, sha256: rows.get(row.archive)}).toEqual({tool, archive: row.archive, sha256: row.sha256});
+    for (const [series, entry] of Object.entries(policy.python.cpython.series)) for (const row of entry.distributions) expect({series, archive: row.archive, sha256: rows.get(row.archive)}).toEqual({series, archive: row.archive, sha256: row.sha256});
     expect(Object.values(fixture.publisher).reduce((sum, listing) => sum + listing.lines.length, 0)).toBe(rows.size);
   });
 
@@ -106,7 +124,6 @@ describe("the Python environments", () => {
       expect({name: row.name, key: plan.key, directory: posix(plan.directory), interpreters: posix(plan.interpreters), cache: posix(plan.cache), series: plan.series}, row.name).toEqual({name: row.name, key: want.key, directory: want.directory, interpreters: want.interpreters, cache: want.cache, series: want.series});
       const paths = new Set(["UV_PROJECT_ENVIRONMENT", "UV_PYTHON_INSTALL_DIR", "UV_CACHE_DIR"]);
       expect(Object.fromEntries(Object.entries(plan.variables).map(([name, value]) => [name, paths.has(name) ? posix(value) : value])), row.name).toEqual(want.variables);
-      expect([...plan.installArguments], row.name).toEqual(want.installArguments);
       expect([...plan.syncArguments], row.name).toEqual(want.syncArguments);
       expect([...plan.runArguments], row.name).toEqual(want.runArguments);
     }
@@ -139,6 +156,32 @@ describe("the Python environments", () => {
     expect(toolchains.pythonProjectForRootV1("./")?.id).toBe("workspace");
     expect(toolchains.pythonProjectForRootV1(policy.python.projects[1]!.root + "/")?.id).toBe("ui-styling");
     expect(toolchains.pythonProjectForRootV1("elsewhere")).toBeUndefined();
+  });
+});
+
+describe("the provisioned Python interpreter", () => {
+  test("is the environment interpreter once synchronized, follows every lock change and is absent before", () => {
+    const workspace = mkdtempSync(join(tmpdir(), "semio-provisioned-python-"));
+    try {
+      writeFileSync(join(workspace, "pyproject.toml"), "[project]\nname = \"a\"\n");
+      writeFileSync(join(workspace, "uv.lock"), "version = 1\n");
+      expect(toolchains.provisionedPythonV1(workspace)).toBeNull();
+      const plan = toolchains.pythonEnvironmentOfProjectV1(workspace, "workspace"), interpreter = toolchains.pythonEnvironmentInterpreterV1(plan);
+      expect(interpreter).toBe(join(plan.directory, process.platform === "win32" ? "Scripts" : "bin", process.platform === "win32" ? "python.exe" : "python"));
+      mkdirSync(dirname(interpreter), {recursive: true});
+      writeFileSync(interpreter, "");
+      expect(toolchains.provisionedPythonV1(workspace)).toBe(interpreter);
+      const nested = join(workspace, "crates", "norm");
+      mkdirSync(nested, {recursive: true});
+      expect(toolchains.provisionedPythonV1(nested)).toBe(interpreter);
+      expect(toolchains.withProvisionedPythonV1({A: "1"}, nested)).toEqual({A: "1", SEMIO_PYTHON: interpreter});
+      expect(toolchains.withProvisionedPythonV1({SEMIO_PYTHON: "x"}, nested)).toEqual({SEMIO_PYTHON: "x"});
+      writeFileSync(join(workspace, "uv.lock"), "version = 2\n");
+      expect(toolchains.provisionedPythonV1(workspace)).toBeNull();
+      expect(toolchains.pythonEnvironmentInterpreterV1({directory: "e"}, "win32")).toBe(join("e", "Scripts", "python.exe"));
+    } finally {
+      rmSync(workspace, {recursive: true, force: true});
+    }
   });
 });
 
@@ -184,6 +227,24 @@ describe("the pinned archive tools", () => {
       expect({host: url.hostname, https: url.protocol}).toEqual({host: row.tool === "go" ? "dl.google.com" : "github.com", https: "https:"});
       expect(toolchains.nativeToolIdentityV1(toolOf(row.tool), hostOf(row.host))).not.toContain("/");
     }
+  });
+});
+
+describe("the pinned CPython interpreters", () => {
+  test("equal the independent implementation for every series and host", () => {
+    expect(expected.interpreters.length).toBe(fixture.interpreters.length);
+    for (const [index, row] of fixture.interpreters.entries()) {
+      const host = hostOf(row.host), want = expected.interpreters[index];
+      expect({name: row.name, home: posix(toolchains.pythonInterpreterHomeV1(row.series, host, row.root)), binary: posix(toolchains.pythonInterpreterBinaryV1(row.series, host, row.root)), url: toolchains.pythonInterpreterUrlV1(row.series, host), version: toolchains.pythonInterpreterV1(row.series, host).version, identity: toolchains.pythonInterpreterIdentityV1(row.series, host)}, row.name).toEqual({name: row.name, home: want.home, binary: want.binary, url: want.url, version: want.version, identity: want.identity});
+    }
+  });
+
+  test("download only from the publisher's release address and refuse a series the policy does not pin", () => {
+    for (const row of fixture.interpreters) {
+      const url = new URL(toolchains.pythonInterpreterUrlV1(row.series, hostOf(row.host)));
+      expect({host: url.hostname, https: url.protocol, plus: url.pathname.includes("+")}).toEqual({host: "github.com", https: "https:", plus: false});
+    }
+    expect(() => toolchains.pythonInterpreterV1("3.9", hostOf("linux-x64"))).toThrow();
   });
 });
 

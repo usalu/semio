@@ -25,7 +25,8 @@
           "import": "./dist/🟦️.js"
         }
       },
-      "accepted": false
+      "accepted": false,
+      "unresolved": true
     },
     {
       "name": "removed export",
@@ -33,7 +34,8 @@
       "exports": {
         "./other": "./dist/🟦️.js"
       },
-      "accepted": false
+      "accepted": false,
+      "unresolved": true
     },
     {
       "name": "undeclared compiled output",
@@ -41,7 +43,8 @@
       "exports": {
         ".": "./dist/other.js"
       },
-      "accepted": false
+      "accepted": false,
+      "unresolved": true
     },
     {
       "name": "warm compiled module remains a producer fact",

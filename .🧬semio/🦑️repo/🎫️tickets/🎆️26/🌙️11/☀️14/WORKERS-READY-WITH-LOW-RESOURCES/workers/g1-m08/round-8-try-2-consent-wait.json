@@ -1,0 +1,7 @@
+{
+  "start": "2026-11-14T21:34:34Z",
+  "end": "2026-11-14T22:00:38Z",
+  "wait_s": 1564.155,
+  "reason": "coordinator superseded round",
+  "polls": 27
+}

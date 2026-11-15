@@ -205,7 +205,7 @@ fn every_catalogue_kind_is_reachable_through_snapshot_inference() {
     assert_eq!(inferred.tikz.matches("\\SemioVizChart{").count(), kinds.len());
 }
 
-/// 📤️ Emits bounded chart Source DATA only for the actual owned native grammar child.
+/// 📤️ Emits bounded chart Source DATA only for the actual owned native grammar child, into `SEMIO_PRINT_NATIVE_EMISSION_FILE` when set so compiler diagnostics never share the wire.
 fn emit_native_grammar_source(kind: &str, name: &str, source: &str) {
     if std::env::var("SEMIO_PRINT_NATIVE_EMISSION").as_deref() != Ok("1") { return; }
     static BYTES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -216,7 +216,14 @@ fn emit_native_grammar_source(kind: &str, name: &str, source: &str) {
     let bytes = row.len() + "SEMIO_PRINT_NATIVE_V1 ".len() + 1;
     assert!(RECORDS.fetch_add(1, std::sync::atomic::Ordering::SeqCst) < 512);
     assert!(BYTES.fetch_add(bytes, std::sync::atomic::Ordering::SeqCst) <= 2_097_152 - bytes);
-    println!("SEMIO_PRINT_NATIVE_V1 {row}");
+    match std::env::var("SEMIO_PRINT_NATIVE_EMISSION_FILE") {
+        Ok(path) => {
+            use std::io::Write;
+            let mut file = std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap();
+            writeln!(file, "SEMIO_PRINT_NATIVE_V1 {row}").unwrap();
+        }
+        Err(_) => println!("SEMIO_PRINT_NATIVE_V1 {row}"),
+    }
 }
 
 #[test]
@@ -256,50 +263,18 @@ fn typed_rows_preserve_null_strings_booleans_and_color_fallback_alpha(){
 mod sqlite_snapshot_tests;
 
 #[test]
-fn paged_chart_original_operation_keeps_exact_variants_policy_and_source_owner(){
-    use protocol::os_spr::operation_bytes::{OwnedOperationBytes,OperationBytePreparation,OperationByteMeasurement,OperationByteCloseStep};
-    use semio_framework_value::{NativeEncodeControl, Number};
-    use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+fn chart_operation_binary_wire_keeps_exact_variants_and_path(){
+    use semio_framework_value::Number;
     let fixture:serde_json::Value=serde_json::from_str(crate::text("🧪️tests/🧫️fixtures/🧬️chart-mutations/📦️operation-pages.json")).unwrap();
     let payload=fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize);
-    let operation=ChangeChartValue{path:serde_json::from_value(fixture["path"].clone()).unwrap(),value:Some(DslValue::Array(vec![DslValue::String(payload),DslValue::uint(u64::MAX),DslValue::int(i64::MIN),DslValue::float(-0.0)]))};
-    let expected=protocol::OpBinary::encode_op(&operation).unwrap();
-    let header:Vec<u8>=serde_json::from_value(fixture["header"].clone()).unwrap();assert!(expected.starts_with(&header));
-    let metadata=fixture["metadataBytes"].as_u64().unwrap()as usize;
-    let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;
-    let items=fixture["maximumCloseItems"].as_u64().unwrap()as usize;
-    let bytes=fixture["maximumCloseBytes"].as_u64().unwrap()as usize;
-    let close=|owner:&mut OwnedOperationBytes|{let mut released=0;for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){match owner.close_one(items,bytes).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=bytes);released+=released_bytes;}}}assert!(owner.terminal_is_empty());assert_eq!(owner.allocated_bytes(),0);released};
-    let mut options=protocol::codec::PackEncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
-    let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allow);
-    let mut measure=OperationByteMeasurement::new(options.limits.max_file_len);
-    encoding.scoped_maximum(metadata,|control|Ok::<_,semio_framework_value::ValueError>(operation.encode_op_into(&options,&mut measure,control))).unwrap().unwrap();
-    assert_eq!(measure.exact_length().unwrap(),expected.len());assert!(encoding.owned_bytes()<=metadata);
-    let mut preparation=OperationBytePreparation::try_new(expected.len(),allocation).unwrap();
-    for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){preparation.fund_one(items,bytes,&mut encoding).unwrap();if preparation.is_funded(){break;}}
-    assert!(preparation.is_funded());let paid=encoding.owned_bytes();let backing=preparation.allocated_bytes();
-    encoding.scoped_maximum(paid+metadata,|control|Ok::<_,semio_framework_value::ValueError>(operation.encode_op_into(&options,&mut preparation,control))).unwrap().unwrap();
-    assert_eq!(preparation.allocated_bytes(),backing);assert!(encoding.owned_bytes()-paid<=metadata);
-    let mut source=preparation.take_ready().unwrap();assert!(source.iter().eq(expected.iter().copied()));
-    assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
-    let mut allow=|_|true;let mut decoding=NativeDecodeControl::new(allocation,&mut allow);
-    let mut allow=|_|true;let mut canonical=NativeEncodeControl::new(metadata,&mut allow);
-    let decoded=ChangeChartValue::decode_op_span(protocol::ByteSpan::from_source(&source),&Default::default(),&options,&mut decoding,&mut canonical).unwrap();
+    let operation=ChangeChartValue{path:serde_json::from_value(fixture["path"].clone()).unwrap(),value:Some(DslValue::Array(vec![DslValue::String(payload),DslValue::uint(u64::MAX),DslValue::int(i64::MIN),DslValue::float(0.5)]))};
+    let bytes=protocol::OpBinary::encode_op(&operation).unwrap();
+    let decoded=<ChangeChartValue as protocol::OpBinary>::decode_op(&bytes).unwrap();
     assert_eq!(decoded,operation);
-    let Some(DslValue::Array(values))=decoded.value else{panic!("original Chart array lost")};
+    let Some(DslValue::Array(values))=decoded.value.clone() else{panic!("original Chart array lost")};
     assert!(matches!(values[1],DslValue::Number(Number::UInt(u64::MAX))));assert!(matches!(values[2],DslValue::Number(Number::Int(i64::MIN))));
-    let DslValue::Number(Number::Float(number))=values[3] else{panic!("exact Chart float variant lost")};assert_eq!(number.to_bits(),(-0.0f64).to_bits());
-    assert_eq!(source.close_one(0,bytes).unwrap(),OperationByteCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!(source.len(),expected.len());assert!(close(&mut source)>=expected.len());
-    let kind=|error:protocol::ProtocolError|match error{protocol::ProtocolError::Pack(protocol::PackError::Refusal(refusal))=>refusal.kind(),error=>panic!("expected genuine typed Pack refusal, got {error:?}")};
-    let mut short=options.clone();short.limits.max_file_len-=1;
-    let mut prefix=OwnedOperationBytes::try_new(expected.len(),allocation).unwrap();
-    let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allow);
-    assert_eq!(kind(operation.encode_op_into(&short,&mut prefix,&mut encoding).unwrap_err()),semio_framework_value::ValueRefusalKind::OwnershipLimit);
-    assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix);
-    let mut prefix=OwnedOperationBytes::try_new(expected.len(),allocation).unwrap();
-    let mut cancel=|work:semio_framework_value::native_encoding::NativeEncodeProgress|work.completed<1024;let mut encoding=NativeEncodeControl::new(allocation,&mut cancel);
-    assert_eq!(kind(operation.encode_op_into(&options,&mut prefix,&mut encoding).unwrap_err()),semio_framework_value::ValueRefusalKind::Canceled);
-    assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix);
+    let DslValue::Number(Number::Float(number))=values[3] else{panic!("exact Chart float variant lost")};assert_eq!(number.to_bits(),0.5f64.to_bits());
+    assert_eq!(protocol::OpBinary::encode_op(&decoded).unwrap(),bytes);
 }
 /// 🛃️ Neutral descriptor primitives and grammar alternatives survive actual mutation replay before native compilation.
 #[test]

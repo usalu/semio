@@ -50,7 +50,8 @@
         "unsettled": "exact-projected-relist-before-and-after-continuation",
         "finalFence": "synchronous-states-stamps-policy-and-manifest-bytes",
         "uncertainty": "complete-original-derivation",
-        "progressBatchPaths": 64
+        "progressBatchPaths": 64,
+        "maximumRederivations": 3
       }
     },
     "FrontierReplayCase": {

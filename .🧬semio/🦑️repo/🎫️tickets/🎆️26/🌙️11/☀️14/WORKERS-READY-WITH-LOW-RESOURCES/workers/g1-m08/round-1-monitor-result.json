@@ -1,0 +1,20 @@
+{
+  "at": "2026-11-14T12:17:13Z",
+  "segment_elapsed_s": 1171.744,
+  "sample_count": 144,
+  "peak_rss_kib": 6477936,
+  "wrapper_rc": 130,
+  "native_rc_from_log": 1,
+  "hard_stop": {
+    "at": "2026-11-14T12:16:12Z",
+    "reason": "system memory pressure level 2",
+    "line": null,
+    "signal": "SIGINT",
+    "signal_sent": true
+  },
+  "marker_exists": false,
+  "buffered_segment": {
+    "started_at": "2026-11-14T11:57:41Z",
+    "new_samples": 39
+  }
+}

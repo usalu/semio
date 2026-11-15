@@ -42,11 +42,11 @@ export async function environmentRowHoldsV1(row,{read,stat}){
  * 🌍️ Derives the environment under which edges are valid: the owner table (name, root, native root), the package and Go module names, the workspace manifests, the lock file and the taxonomy. The digest changes exactly when an edge of an unrelated owner may change; the rows let a reader prove it unchanged without recomputing it.
  * `projects` are `{name, root, nativeRoot?, config?}`; `workspaceManifests` lists every `Cargo.toml` of the workspace, `lock` and `taxonomy` name single files.
  */
-export async function deriveEnvironmentV1({projects,workspaceManifests,lock,taxonomy,read,stat}){
+export async function deriveEnvironmentV1({projects,workspaceManifests,lock,taxonomy,read,stat,operation=()=>undefined}){
  const rows=[],owners=[],packages=[],modules=[];
  const field=async(path,extract)=>({row:{kind:"field",path,fact:{extract,value:extractEnvironmentFieldV1(extract,await read(path))}}});
  const FIELD_CONCURRENCY_V1=64,found=new Array(projects.length);
- for(let from=0;from<projects.length;from+=FIELD_CONCURRENCY_V1)await Promise.all(projects.slice(from,from+FIELD_CONCURRENCY_V1).map(async(project,at)=>{
+ for(let from=0;from<projects.length;from+=FIELD_CONCURRENCY_V1)await operation("fields"),await Promise.all(projects.slice(from,from+FIELD_CONCURRENCY_V1).map(async(project,at)=>{
   found[from+at]=await Promise.all([project.config?field(project.config,project.config.endsWith("Cargo.toml")?"cargo-package":"project-json"):undefined,field(project.root+"/package.json","package-json"),field(project.root+"/go.mod","go-mod")]);
  }));
  projects.forEach((project,at)=>{
@@ -57,8 +57,8 @@ export async function deriveEnvironmentV1({projects,workspaceManifests,lock,taxo
   rows.push(go.row);if(go.row.fact.value?.module)modules.push([go.row.fact.value.module,project.name]);
  });
  const digests=[],digest=async path=>{const status=await stat(path),text=status?await read(path):undefined;const fact=text===undefined?{sha256:null}:{sha256:sha256(text),size:status.size,mtimeMs:status.mtimeMs};rows.push({kind:"digest",path,fact});return fact.sha256;};
- for(const path of[...workspaceManifests].sort()){const text=await read(path);if(text!==undefined&&text.includes("[workspace"))digests.push([path,await digest(path)]);}
- const lockDigest=lock?await digest(lock):null,taxonomyDigest=taxonomy?await digest(taxonomy):null;
+ for(const path of[...workspaceManifests].sort()){await operation("manifests");const text=await read(path);if(text!==undefined&&text.includes("[workspace"))digests.push([path,await digest(path)]);}
+ await operation("lock");const lockDigest=lock?await digest(lock):null;await operation("taxonomy");const taxonomyDigest=taxonomy?await digest(taxonomy):null;
  const parts=environmentPartsV1({owners,packages,modules,workspaces:digests,lock:lockDigest,taxonomy:taxonomyDigest});
  return{digest:environmentDigestV1(parts),rows,parts};
 }

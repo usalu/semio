@@ -1,16 +1,16 @@
 import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { join } from "node:path";
-import { fontAssetPublicationRootV1 } from "@semio-tech/framework-canvas-ts/fonts/publication";
-import { repositoryCachePartitionRootDataV1 } from "@semio-tech/repo-lib/storage";
-import { canvasRuntimeAssetSources } from "@semio-tech/framework-canvas-ts/runtime-assets/staging";
-import { parseInstallationDirectoryV1 } from "@semio-tech/framework/identity/installation";
-import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "@semio-tech/plugin-registry/deployment";
-import { PREVIEW2_VENDOR_RELATIVE } from "@semio-tech/framework-plugin/browser-bundle/imports";
+import { fontAssetPublicationRootV1 } from "../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/📦️publication/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { canvasRuntimeAssetSources } from "../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🚚️staging/🟦️.ts";
+import { parseInstallationDirectoryV1 } from "../../../../../../📦️packages/🟦️typescript/🪪️identity/📁️installation/🟦️.ts";
+import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import type { BrowserArtifactSource } from "@semio-tech/framework-plugin/browser-bundle/distribution";
-import { browserArtifactVitePlugin } from "@semio-tech/framework-plugin/browser-bundle/distribution/vite";
+import { browserArtifactVitePlugin } from "../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../♻️activation/🟦️.ts";
-import { componentModuleOwnerV1 } from "@semio-tech/plugin-registry/deployment";
-import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { componentModuleOwnerV1 } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "../../../🔌️plugin/📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 export type ProductionBrowserComponents = {

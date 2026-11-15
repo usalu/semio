@@ -1,0 +1,18 @@
+step 0 of round 16: repo tools setup all, started 2026-11-15T03:25:18Z from /Users/ueli/Documents/semio (environment as in W/native-bootstrap.sh: SEMIO_LANGUAGE=en, SEMIO_WORKSPACE_ROOT, fleet variables, remote cache variables unset, PATH with ~/.local/bin first)
+ended 2026-11-15T03:52:06Z, exit code 1, wall time 1607 s, SIGINT sent: 0
+-- last 15 lines of ~/tools-setup-round-16.log (without JSON progress lines)
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[script] repository:command · Checking declared package providers: 7748 edges
+[repository:command] still running after 1590 s
+Internal error: Complete acquired dependency retirement plan required
+repository:command failed with exit code 1

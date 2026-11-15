@@ -1,0 +1,6 @@
+{
+  "extends": "../../../../../../../🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+  "compilerOptions": {"noEmit": true, "incremental": false, "tsBuildInfoFile": null, "composite": false},
+  "files": ["../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🧲️adopt/🟦️.ts", "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🥾️bootstrap/🟦️.ts", "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/⌨️command/🟦️.ts", "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/📍️relocate/🟦️.ts", "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🧲️adopt/🧪️tests/🟦️.ts", "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🧲️adopt/🧪️tests/⌨️command.ts", "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🗺️topology/🧪️tests/🟦️.ts"],
+  "include": []
+}

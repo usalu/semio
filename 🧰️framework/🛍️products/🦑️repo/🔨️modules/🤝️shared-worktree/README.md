@@ -20,12 +20,55 @@ Run day 0 first with one group of two machines before you roll it out to all fiv
 
 | Directory | Role |
 |---|---|
-| `📒️journal` | Store format: events, hybrid logical clock, segments, blobs, snapshots. |
+| `📒️journal` | Store format: events, hybrid logical clock, segments, blobs, flat heads, snapshots; single-pass blob copy; hand-written event validators. |
+| `🗜️compaction` | Store-wide compaction: where the newest snapshot is and what it covers, the retirement plan for journal segments, the reclaim of unreferenced blobs, the compaction lock and record, the size report of `status`. |
 | `🚧️boundary` | What is shared: root `.gitignore` matcher, path policy, scanner, hashing. |
-| `🔁️replica` | The commands `seed`, `join`, `run`, `status`, `snapshot`, `relay`, `compact`, `verify`, `bootstrap-archive`, `bootstrap-settle`. |
+| `🌿️git` | The only place that starts `git`: plumbing interface, the stage as a register in the store, per-machine `.git/config` normalisation, git executable lookup. |
+| `🎣️tiers` | How changes are found without operating-system file events: the hint drop directory and the Claude Code hook payload reader, the hot set, the table of directory modification times, the passive latency percentiles. |
+| `🚦️canary` | Who may switch to new code and in which order (`decideCanaryV1`, the canary tracker, the refusal records `origins/<origin>/refused.json`); see "Boot that cannot be bricked". |
+| `🔏️trust` | What the daemon states about whether its manifest currently reflects the tree (`trust` in `.cache/f/health.json`), which failures can make it wrong (`classifyFailureV1`) and the tier a reader gives it (`decideTrustV1`: `unusable`, `verify`, `trusted`); see "Trust of the manifest". |
+| `🩺️attest` | What a worker states about itself (`origins/<origin>/attest.json`), the manifest and code digests, the fleet verdict behind `fleet`. |
+| `🔁️replica` | The commands `seed`, `join`, `run`, `status`, `snapshot`, `relay`, `compact`, `compaction`, `verify`, `fleet`, `retire`, `touch`, `bootstrap-archive`, `bootstrap-settle`. |
 | `🔁️replica/🥾️bootstrap` | The tar writer, the archive refresh of the relay and the settle step of the bootstrap flow. |
 | `🗺️topology` | The topology file and the commands `env`, `mount-plan`, `server-plan`, `worker-service`, `facts`, `validate` (`validate --reachable` also probes the hosts) and `preflight` (checks a provisioned machine). |
 | `🗺️topology/🥾️provision` | `🐚️.sh` (macOS, Linux) and `🔵️.ps1` (Windows): provision one worker or one group server from an empty disk. |
+
+## Existing repository, adopt and relocate
+
+The worktree of a machine is the account's existing repository. `join --adopt [--dry-run] [--force] [--sample N]` joins a
+non-empty repository whose files differ from the fleet, loss-free and resumable (`.cache/f/adopt.json` names the last finished step):
+
+- names that are not NFC are renamed to NFC before anything is compared, by the code `bootstrap-settle` uses (`normaliseNamesV1` in `🔁️replica/🥾️bootstrap`): macOS `tar` extracts decomposed (NFD) names, the path policy shares NFC paths only, and a tree compared under NFD names would have its files refused, counted as missing and published a second time. Parents are renamed before their children; a name whose NFC spelling already exists beside it stays and remains refused. The plan and the report list the new paths (`renamed`);
+- identical files are adopted, files missing here come from the store. Identical means equal bytes and, on a volume that has it, an equal executable bit: equal bytes whose bit differs from the fleet's are a difference and follow the same rule as any other (history, base and git modes are compared with the bit), so the fleet's bit wins where the fleet had the local one before (`stale`), a bit set here on an unchanged fleet version is published (`edit`) and anything else is a `conflict`; such a path is marked "only the executable bit differs". A machine that cannot represent the bit (Windows, `modeless`) compares bytes only;
+- a path that differs is decided by content and never by a modification time, because an old version of a fleet file with a fresh modification time (checkout, copy, tool touch) must not overwrite newer fleet work and a file the fleet deleted must not come back. Per path the adoption knows the fleet's history of the path (every content hash an event of any origin ever left there, read from the journals, plus the blobs the path had in the commits of the fleet's history that this repository holds) and the repository's own base (the content at the fork point of its HEAD from the fleet's history, which is HEAD itself when it has no commits of its own). Classes: `same`; `stale` (the content equals one the fleet path had earlier, or the repository's unchanged base while the fleet moved on, or a file the fleet deleted since: the fleet wins, nothing is published, the local bytes go to `.cache/f/lost/adopt-<stamp>/stale/`); `edit` (content never seen in the fleet, the fleet's state equals the base: published as a new edit); `publish` (a path the fleet does not hold, or deleted while the base never had it: published as new work); `conflict` (never seen, and the fleet's state moved since the base, or there is no base to tell: the fleet's version stays at the path and the local version is kept in `.cache/f/lost/adopt-<stamp>/conflict/<path>` and listed with both hashes in the report, never written beside the path because a sibling would be published to every machine). A local deletion is not local work: the fleet's file comes back;
+- ignored files (the local and the fleet's `.gitignore`) and nested repositories are never touched by the adoption;
+- git: the objects are united first; a repository that shares no commit with the fleet is refused unless `--force`; branch refs follow the linearisation of concurrent commits (every commit kept, one linear history); the old index is copied to `.cache/f/lost/adopt-<stamp>/index`, the fleet's stage replaces it (rebuilt on the new HEAD when HEAD moved); `.git/config` stays local; refs other than loose branch heads (`packed-refs`, `refs/stash`, tags) are not merged: a differing one is decided like a file by the fleet-ahead rule of the apply and the local copy stays in `lost/`, so lift the local stashes and packed-only branches into loose `refs/old-repo/*` refs before adopting;
+- only an explicit list is published (files the store fold lacks, edits, refs, unseen objects), never the whole tree; a worktree with missing state rebuilds from the store fold;
+- `--dry-run` prints the names it would rename to NFC (it reads them under their NFC names and renames nothing), the counts per class, sample paths, every conflict with its reason (and the first stale files and edits), the evidence read (journal events, commits searched), the git relation, and changes nothing; the stop thresholds it prints are more than 50 conflicts or more than 1000 paths of new work; `lost/adopt-<stamp>.json` and `.md` report every difference of a real run (conflicts first).
+
+`relocate --to <path> [--worktree <old>] --phase prepare|move|finish|all [--dry-run] [--force] [--wait S]` moves an already
+joined machine: `prepare` stops publishing in the old tree, `move` (the old services must be stopped) carries `machine.json`, the cursors and the clock to the new
+tree (the origin id never changes and is never reused) and adopts the store there, `finish` verifies the new tree (and the fleet with `--wait`) and only then writes
+`.cache/f/relocated.json` and turns synchronisation off in the old tree, which is never deleted. Markers in both trees make every step re-runnable.
+The provision script does this by itself when the installed replica service points to another worktree (`--plan` prints the dry run first, `--relocate-from` names the old tree).
+
+### macOS privacy
+
+A launchd job cannot read `~/Documents` without a consent, and a LaunchDaemon has no session to ask in. Measured on macOS 27: the process that launchd starts stays the
+responsible binary after it execs the runtime, so one consent for the launcher (`repo`) covers the runtime of every version; a shell parent does not become responsible, and a runtime started directly is
+its own responsible path. Therefore every macOS service that runs `repo` (replica, compact, relay, cache) is a per-user LaunchAgent in the `gui/<uid>` domain; the store mounts stay LaunchDaemons.
+One measured exception, the cache server of a group server whose worktree lies outside the protected folders (for example `/Users/Shared/semio`): it needs no consent, so it may run as a system LaunchDaemon with `UserName` set to the server account and `WorkingDirectory` at the worktree (`tech.semio.fleet.cache` on the first group server is installed that way, and starts at boot without a login). The generator renders the LaunchAgent because the committed worktree `~/Documents/semio` is a protected folder; `server-plan --part cache-unit` is the reference for a default layout and the installed job is the variant for a worktree outside Documents, Desktop and Downloads. Both read `/etc/semio/remote-cache.env` and run the same command.
+The first start asks once ("repo would like to access files in your Documents folder"); the consent is lost only when the launcher binary is rebuilt. A machine needs a logged-in session (auto-login on the group server).
+While the folder cannot be read the daemon waits, writes `origins/<origin>/access.json`, and `status`, `fleet` and `preflight` report `worktree-access-denied` with the switch to flip.
+
+**One identity, every long-lived role (resident graph service, foreground command).** macOS attributes a file access to the *responsible process* of the accessing process, which a child inherits when it is spawned (re-parenting to `launchd` after a detach changes nothing) and which a runtime started directly makes its own path; the consent is stored per identity (the path of the launcher, an ad-hoc signed `a.out`) and per code signature, so it is lost when the launcher is rebuilt to other bytes. The design therefore has one identity, the launcher `repo` at `${XDG_DATA_HOME:-~/.local/share}/semio/launcher/bin/repo`:
+- the service definitions run `/usr/local/bin/repo`, which the provision script links on macOS to the launcher itself (it used to point at `~/.local/bin/repo`, which `repo run repo-mcp:install` replaces by the native command whenever that is rebuilt, a new identity with every build);
+- the **proof** that the launcher holds the consent is a marker (`launcher.json` with the sha-256 of the launcher file, next to the receipts) written by a probe job that runs the launcher itself (`tech.semio.repo.probe.<hash>`, a launchd job whose program is the launcher; the dialog "repo would like to access files in your Documents folder" appears once, now); the replica daemon starts that probe at start and every hour (`ensureLauncherConsentV1`, the receipt role `launcher` is `waiting` until the click, which `preflight` shows); a rebuilt launcher has other bytes, so the marker no longer fits and the probe asks again;
+- the entry shim of the replica runs a worktree below Documents, Desktop or Downloads with the launcher by absolute path (root from `SEMIO_WORKSPACE_ROOT`, no `cd`, no fall-through to a runtime of another path) **once the marker fits**, and keeps the former order of runtimes before, so that no dialog ever stops the replica; the boot program restarts a daemon that was killed or crashed in place (only the deliberate ends 0 and 75 end it), so the service manager sees no exit; `bootVersionV1` 6;
+- the resident graph service of such a worktree is started as a launchd job (`tech.semio.repo.service.<hash of runtime directory and implementation>`, program = the launcher, property list in `~/Library/Application Support/semio/service-jobs`, **allow-listed environment only**, no RunAtLoad: a demand `kickstart` follows the bootstrap and launchd must report a pid or a run within 6 s, because launchd defers non-demand spawns, `pended nondemand spawn = speculative|inefficient`); when the marker does not fit yet the client is refused at once with the consent text (exit 4), when launchd does not run the job it is removed and the service is spawned directly (one line says so); stale jobs of earlier implementations and plists of no job are removed at the next start, `service host stop` removes all; `SEMIO_SERVICE_LAUNCHD=off` spawns directly;
+- a foreground `repo` command probes the worktree (8 s, never blocking) before it starts or asks a service and ends with exit status 4 and the click to make, in English and German; the service probes before it binds anything and ends with exit status 4, a typed exit row (`access-denied`, read by the waiting client) and a receipt; a request that macOS refuses mid-run is answered with the typed refusal `consent` and the service closes itself;
+- receipts (`<role>.json` below `~/Library/Application Support/semio/access/<hash of the worktree>`, schema `📚️library/🏗️build/🏡️resident/🔐️consent/🧬️schema`) let `preflight` name the role that lacks the consent (`worktree-access-denied: these macOS roles cannot read …: service`).
+The provision script ends with exit code 4 when the native bootstrap ends with 4. The consent is asked once per machine; it is asked again only when the launcher is rebuilt to other bytes (a change of the launcher sources) or when a role is started by an identity other than the launcher.
 
 ## Commands
 
@@ -39,13 +82,18 @@ replica commands print their messages in English and German, `--lang en|de` pick
 |---|---|---|
 | `seed` | `--group --origin` `[--worktree --store]` | First machine only: publish the whole shared tree and write `.cache/f/machine.json`. |
 | `join` | `--group --origin` `[--worktree --store]` | Materialise the tree from the newest snapshot plus the journal. A non-empty tree must hold only shared files that match the store by hash, otherwise it is refused; matching files are adopted. |
-| `run` | `[--worktree --store --poll --scan --debounce]` | The replica daemon. Needs `machine.json`. NDJSON progress on stdout. |
-| `status` | `[--worktree --store --json --deep]` | Daemon, store reachability, queues (`--deep` scans the tree for the outgoing count and for the number of refused paths), overwritten files kept in `.cache/f/lost`, lag per origin. Needs `machine.json`. |
+| `run` | `[--worktree --store --poll --scan --debounce]` | The replica daemon. Needs `machine.json`. `--scan` is the floor of the interval of the file sweep in seconds (jittered, 90 by default, see "Finding changes"). NDJSON progress on stdout. Writes its attestation and restarts itself when its code changed (see "Attestation, fleet and self-restart"). |
+| `status` | `[--worktree --store --json --deep]` | Daemon, store reachability, queues (`--deep` scans the tree for the outgoing count and for the number of refused paths), overwritten files kept in `.cache/f/lost`, lag per origin and, when the store is reachable, the fleet table of `fleet`. Needs `machine.json`. |
+| `fleet` | `[--worktree --store --wait <seconds> --json --diff]` | Whether every worker with sync on holds the same state: one row per origin (the column `view` is `modified/deleted/untracked` of its working tree), exit 0 on agreement, exit 1 naming origin and field otherwise. `--wait` polls once a second with progress lines until agreement or timeout; cancel with a signal (exit 130). `--json` writes one report. `--diff` (not with `--json` or `--wait`) reads the `view.txt` of every origin and prints, per origin whose working tree differs from this machine, the lines only there and the lines only here (40 per side, then `+N more`); exit 1 when any differs or an attested view is unavailable. Needs `machine.json`. |
+| `retire` | `<origin> [--reason <text>] [--force] [--worktree --store]`, or `<origin> --undo` | Takes a machine that left the fleet for good out of the `fleet` verdict: writes `origins/<origin>/retired.json` (see "Retiring an origin"). Refused for the own origin, an origin that is not in the store, and an origin that attested within the last 60 seconds unless `--force`. `--undo` re-admits it. Needs `machine.json`. |
+| `touch` | `<path>…` or `--stdin` or `--hook` `[--worktree]` | Tells the running daemon of this machine which paths changed, so it publishes them within about a second instead of waiting for a sweep (see "Finding changes"). Paths are absolute or relative to the worktree, outside paths are ignored; `--stdin` reads paths separated by newlines or NUL; `--hook` reads a Claude Code `PostToolUse` payload and always exits 0. Exit 1 only when no path was left to hand over. |
 | `snapshot` | `[--worktree --store]` | Write a full manifest to the store. |
 | `relay` | `[--group --store --worktree --peers --poll --bootstrap-minutes --concurrency --once]` | Group server: copy the other groups' origins into the own store, `--concurrency` origins and blobs at a time (default 8, 1 to 64); unless `--once`, also rebuild the bootstrap archive. |
 | `compact` | `[--worktree --store --retention-days --collect-blobs]` | Snapshot, then drop this origin's old sealed segments and snapshots older than the retention. With `--collect-blobs` (group servers only) also the blobs that the folded manifest does not reference and that are older than the retention, streamed directory by directory (memory follows the live tree, not the garbage; progress per directory, cancellable). Every compaction also removes staging files in `<store>/v1/tmp` older than 6 hours. |
+| `compaction` | `--plan` or `--apply` `[--worktree --store --no-blobs]` | Store-wide compaction (see Compaction): `--plan` measures against the newest snapshot and writes nothing; `--apply` takes the compaction lock, writes a snapshot, removes the journal segments and the blobs that the rules allow, prunes old snapshots and writes `compaction.json`. Works whether or not `replica.compaction.automatic` is on. |
 | `verify` | `[--worktree --store --json]` | Rehash the tree and compare it with state and store; exit 1 on drift. Also lists the paths that the path policy refuses (`refused`, `refusedTotal`; not drift). |
-| `bootstrap-archive` | `[--worktree --store]` | Write the bootstrap archive now (needs `machine.json`). |
+| `bootstrap-archive` | `[--worktree --store] [--force]` | Write the bootstrap archive now (needs `machine.json`); skipped while little changed unless `--force`. |
+| `consolidate` | `[--worktree --store] [--apply]` | Plan (default) or run the pack consolidation of the worktree's `.git` (run it on the group server only). |
 | `bootstrap-settle` | `[--worktree --store]` | Prepare an extracted tree for `join` (needs no identity, refuses a joined tree). |
 
 `--worktree` defaults to the repository root, `--store` to the store of `machine.json`, else to the `storeMount` of
@@ -54,13 +102,218 @@ the topology for this OS. `relay --peers <group>=<directory>[,<group>=<directory
 
 | Topology command | Options | Prints |
 |---|---|---|
-| `env` | `--group [--shell sh\|powershell]` | `SEMIO_REMOTE_CACHE_ENDPOINT`, `SEMIO_REMOTE_CACHE_ACCESS=read-write`, `SEMIO_REMOTE_CACHE_INSTANCE`. |
 | `mount-plan` | `--group [--platform --part]` | Mount of the group store for the OS, by the protocol of the group server (NFS, or SMB for a Windows server without Server for NFS). On Linux also the sysctl.d file with the inotify limits (parts `sysctl-path`, `sysctl`); on Windows the `cache` part that switches off the attribute and name caches of the SMB or NFS client. |
 | `server-plan` | `--group [--part]` | Setup of the group server on the platform that the topology names for it (Linux, macOS or Windows). Every platform has `prepare`, `provision`, `start`, `relay-peers`, `cache-environment-target`, `cache-environment`, `cache-target`, `cache-unit`, `replica-unit`, `relay-target`, `relay-unit`; Linux adds `exports-target`, `exports`, `sysctl-target`, `sysctl`, `fstab`; macOS `exports-target`, `exports`, `nfs-conf-target`, `nfs-conf`, `peer-mount-target`, `peer-mount-unit`; Windows `feature`, `share`, `firewall`. |
 | `worker-service` | `--group [--platform --part --role worker\|server]` | Service definitions; parts `target`, `definition` (replica daemon), `compact-target`, `compact-definition` and, on Linux, `timer-target`, `timer-definition`. `--role server` renders the group server's compaction with `--collect-blobs` (on the server's own platform). |
 | `facts` | `--group [--platform --shell]` | Paths, protocol, mount values and server facts for the provisioning scripts. |
 | `preflight` | `[--group] [--worktree --store --timeout <ms> --lang en\|de]` | Run on any machine after provisioning: checks without changing anything, see "Preflight" under Day 0. Progress per finished check on stderr, the report on stdout in English and German (`--lang` picks one), exit 1 when a check failed or Ctrl+C cancelled it. |
 | `validate` | `[--file] [--reachable [--timeout <ms>]]` | Validate the topology offline. With `--reachable` it then resolves the store host and the cache host of every group and opens a TCP connection to the store port (2049, or 445 for an SMB group) and to the cache port (6090), each limited by `--timeout` (default 3000 ms, 100 to 60000). Progress lines (one per finished probe) go to stderr, the report per group to stdout, the exit code is 1 when a probe fails. Ctrl+C cancels the probes and reports `reachability cancelled`. It does not check mountd/rpcbind (111, 1048, 892) of NFSv3 servers. |
+
+## Attestation, fleet and self-restart
+
+Every replica daemon writes `origins/<origin>/attest.json` into the store of its group (own origin directory only,
+through a temporary file, fsync and rename like `head.json`). It writes when a value changed (at most once a second)
+and otherwise every 5 seconds, also while `sync` is off, and never while the store is unreachable. The relay copies the
+file and `view.txt` with `head.json`, so `fleet` sees the origins of all groups from any store. Compaction never touches them, and names
+in `origins/` that are not origin ids (`._name` AppleDouble files, `.DS_Store`) are ignored.
+
+| Field | Meaning |
+|---|---|
+| `originId`, `groupId`, `platform`, `wallMs`, `hlc` | Who wrote it, on which OS (`linux`, `macos` or `windows`, like the topology), and when (wall clock of the writer). |
+| `sync` | `false` while `.cache/f/sync.json` turns synchronization off. |
+| `code` | sha256 over the sorted relative path, length and bytes of every `🟦️.ts` and `📜️script.ts` below `🤝️shared-worktree/`, `🧪️tests` excluded. |
+| `cursors` | The replication cursor of this worker per origin (segment and bytes). |
+| `files`, `manifest` | Number of shared files and the order-independent digest of the shared-file state: the XOR of `sha256(path \0 operation \0 value)` with the content hash of a put or the target of a link as the value. A delete contributes nothing, so a tombstone equals an unknown path; the executable bit and the index realm (`.cache/f/index-base`, `.cache/f/index/**`) are not part of it. The replica keeps it incrementally with every change of its state and restores it when it loads the state. |
+| `head`, `indexTree` | The checked-out commit (`ref`, `commit`) and the tree of the shared index from `gitStateV1`, or `null` without a root `.git`. Git is asked at most once per heartbeat, in the background. |
+| `view` | What a git GUI shows: `{staged, modified, deleted, untracked, digest}` from `git --no-optional-locks status --porcelain=v1 -z --untracked-files=all --no-renames` (never takes `index.lock`), or `null` without git. `digest` is the sha256 over the sorted (UTF-8 bytes, NFC paths) `XY path` lines of everything that is not purely staged (worktree column not blank, or `??`), joined by `\n`; the counts are the entries with a staged change, a worktree modification, a worktree deletion and untracked ones. The full lines are in `origins/<origin>/view.txt` (written like `attest.json`, own origin directory, only when the digest changed; its sha256 is the digest). The daemon reads the whole view once at start. Afterwards it updates it incrementally: the paths its own publishes and applies changed (at most 1500 distinct, else a complete pass) are classified again by `git status` with literal pathspecs (about 0.3 s for one path, 3 s for 260 on 270 000 files, instead of 25 to 35 s), and a moved stage or `HEAD` adds the paths whose entry differs between the two stage trees and whose staged status changed; the result equals a complete pass (tested against `git status` after every kind of change). The update starts once the changes have been quiet for 1 s (at the latest after 5 s) and keeps a duty cycle of 10 %. A `.gitignore` among the paths, an overflow or a failed update ask for a complete pass (once quiet for 5 s, 25 % duty). A complete verification pass, which also finds changes the replica did not publish (a refused local symlink), runs only after other activity and at most 5 % of the time (a pass of 33 s is followed by a pause of at least 627 s). While the daemon knows of changes that the view does not reflect yet (named paths, a moved stage, a pass for them in flight) the attested view is `stale: true`, and a stale origin is `lagging`, never `diverged`: `fleet --wait` waits. Never concurrently with itself, cancellable, in the background. |
+| `latency` | The passive latency of this daemon over its newest 100 samples: `publishMs` (from the modification time of an edited file to the moment its event was written) and `applyMs` (from the wall clock inside a remote event to its application here) as `p50` and `p95` (nearest rank, whole milliseconds, `null` without samples), `samples:{publish,apply}` and `tiers`, the last pass of each background tier (`hot`, `sweep`, `file`, `walk`, `view`) as `{passes, lastMs, dutyPercent}`. Edits and events older than ten minutes are not samples, so a checkout or a catch-up does not count, and a sample leaves the report one hour after it was taken, so one slow sample of a blocked period does not stay in `p95` of a machine that has been quiet since. It refreshes with the 5-second heartbeat, not with every sample. `status` prints it, `fleet` shows `publish p50/p95 \| apply p50/p95`. `applyMs` compares two machines' clocks, so it is only as good as NTP. |
+| `guards` | What this machine measures about the inputs of its own view, or `null` (exempt) until the first measurement: `version`, `pins`, `volume`, `infoExclude`, `caseIgnore`, `caseMismatch`, `trackedIgnored`, `trackedRefused`, `links`, `overBudget`, `modeMismatch` (see "The same view on every operating system"). |
+| `queue.incoming` | Store winners the tree does not hold yet. |
+| `pending`, `failures`, `fallback` | Only when present: a refused or reverted code (`pending`), the counted recurring failures, and a daemon that runs fallback code (`fallback`). |
+
+The attestation of code that predates the guards (older still: the latency report) is read as present with `guards: null` and the warning `guards-unknown`; `fleet` compares it on code, manifest, head, stage tree and view like any other and never calls it `missing`.
+
+`fleet` reads all attestations and heads. An origin is **fresh** when its attestation is at most 60 seconds old and
+**settled** when its cursors equal every head of the store and its incoming queue is empty. Among the origins with sync
+on that are fresh and settled, `manifest`, `head.commit`, `indexTree` and `view.digest` must agree (an origin whose `view` is `null` has no git and is left out of the last); the value most of them hold is the
+expected one (on a tie the smaller). The verdict per row is `ok`, `off` (sync off, left out), `missing` (an origin has a
+head but no attestation), `retired` (left out, see below), `stale`, `lagging` (not settled: behind a head, a queue, or a stale view) or `diverged` with the differing fields. The command exits 0
+when no origin is `missing`, `stale`, `lagging` or `diverged` and at least one is `ok`, otherwise 1; a busy fleet is
+rarely settled, so use `--wait` after the edits stopped (this holds for origins of older code only, see the next paragraphs). The report shape is `Report` in `🩺️attest/🧬️schema/🔣️.json`.
+
+**Agreement on a moving tree (checkpoints).** The real tree is edited all the time on every machine, so there is never a moment at which every origin is idle and identical. Agreement is therefore judged at points of the *event history*, not at one wall-clock moment. The fold of the journal events below a cursor vector (a *cut*: one `segment/bytes` per origin) is deterministic, so two machines that hold the same events hold the same shared files, and two machines that hold different sets of events agree outside the paths those events touch. Each daemon attests, besides its current state, `checkpoints` with one entry per component:
+
+- `manifest`: taken on every tick at which the incoming queue is empty and no apply is in flight, i.e. the files table holds exactly what the cursors name. It carries the cut, the digest and the same digest split into 256 buckets by path (FNV-1a of the NFC path, the low eight bits; two bytes of every term fold into its bucket, maintained incrementally next to the digest in `CompactTableV1`, so a checkpoint costs a copy of 1024 hex characters and no hashing).
+- `git` (`HEAD` commit, stage tree) and `view` (digest, 256 buckets over the `XY path` lines, and a mask of the buckets with a change that the daemon knows of and the view does not yet show: paths from the watcher, hints and applies, or everything after a restage). They are read from the disk while events keep arriving, so a reading carries a *span*: the last fully applied cut before it started (`cursors`) and the cut after it ended (`until`). The view checkpoint is also refreshed whenever the incremental view is current (nothing pending) at an empty-queue tick.
+
+`fleet` compares two checkpointed origins over the events between their spans (read from the journals, at most 50 000 events and 8 segments per origin; `readGapWindowsV1`): per origin those after the lowest `from` up to the highest `to`. Everything outside the buckets those events touch (and outside the pending buckets of the view) must be equal. A difference in a bucket that an event between the cuts touches is not a difference; an event on the git state (`.git/HEAD`, `.git/refs/heads/**`, `packed-refs`, `shallow`, the stage realm, `.gitignore`, `.gitattributes`, `.gitmodules`) leaves `HEAD`, the stage tree and the view undecided between those cuts (git objects, remote-tracking refs and tags do not: an auto-fetch writes them all the time). The same paths, and `.git/index`, that the watcher or a hint names and the daemon has not published yet keep the git and view readings from being taken. The working-tree view is local disk state: it is compared at its checkpoint, never as it is now, because the view is only comparable for the paths that did not change after the cut.
+
+- `ok`: a checkpoint of the shared files at most 60 s old, no event older than 60 s missing from the cut (so a machine that stopped following is `lagging`, however fresh its attestation), and every component that could be decided against another origin is equal. The origin need not be at the head, idle or settled.
+- `lagging`: not wrong, not yet comparable: no checkpoint within 60 s, an event older than 60 s missing, a component with no decided comparison against any other origin (events on the git state in between, a view with everything pending, journals compacted away), or a disagreement that the other origins cannot arbitrate (a tie among three or more origins).
+- `diverged`: different values at the same position in the history, outside everything the events in between touch. The row names the field (`manifest`, `head.commit`, `indexTree`, `view.digest`) and the buckets (`#n=hex`). The origin that disagrees with most others goes first (per bucket, an origin that equals others there counts for it); with two origins the larger id is named. A `manifest` divergence feeds the existing silent-drift repair of the daemon.
+
+An origin of older code attests no `checkpoints`; it is shown with the basis `now`, compared the old way (settled and equal as it is now, among its own kind only) and flagged by the warning `no-checkpoints`. The table column `basis` is `cp:<s>` (checkpoint taken s seconds ago) or `now`. `fleet --diff` also lists the not-ok rows and the checkpoint differences; its exit code follows the checkpoint verdict when origins attest checkpoints (the working-tree lines of a moving tree always differ a little) and the line comparison otherwise. Tests: `🔁️replica/🧪️tests/🧭️agree.ts` (four replicas under edits on every machine, a tampered disk file, one dropped event, commits and stage changes among the edits), `🩺️attest/🧪️tests` (language-agnostic `bucketing` and `agreements` vectors of `🧫️fixtures/🔣️.json`, re-judged by `🐍️.py` and `🐍️agreement.py` with hashlib).
+
+**Retiring an origin.** Origin ids are never reused and a journal is history, so a machine that left the fleet for good
+cannot be deleted; it is retired instead. `retire <origin> [--reason <text>]` writes `origins/<origin>/retired.json`
+(`{version:1, originId, by, hlc, wallMs, reason, retired}`; `by` is the origin of the machine that ran the command,
+`retired` is `true`) through a temporary file, fsync and rename like `attest.json`. This is the one deliberate exception
+to "own origin directory only": the retired machine is silent and cannot write it itself. `retire <origin> --undo`
+writes a newer record with `retired: false`, so a retirement and its undo both spread through the relay (the record
+with the newer `hlc` wins). The command refuses the own origin, an origin that is not in the store, and an origin whose
+attestation is at most 60 seconds old unless `--force`; `--undo` is never refused for that reason.
+
+- `fleet` lists a retired origin with the verdict `retired`. It is not compared, does not have to be fresh or settled,
+  and the other origins do not have to hold its head: cursors are judged against the heads of the other origins only.
+  The replicas keep following its journal as before, because its events stay history. A store with only retired origins
+  is not `ok`.
+- `status` marks the origin as retired in the lag list and, on the retired machine itself, says who retired it.
+- The relay copies `retired.json` of every origin of the peer store, also for origins homed elsewhere, and a compaction
+  keeps it.
+- A daemon whose own origin is retired reports one `retired` event, publishes and applies nothing, keeps attesting with
+  `sync` false and keeps checking the record; a retired machine that comes back therefore cannot write silently. After
+  `retire --undo` it resumes with a full scan.
+
+**Self-restart.** The daemon records its code digest at start and compares it with the sources on disk every 5 seconds.
+When the digest differs and has stayed the same for 5 seconds, the daemon persists its state, reports `restarting` and
+`run` returns with exit code 0. The service manager must start the process again after exit 0: systemd `Restart=always`,
+launchd `KeepAlive`, and on Windows the logon trigger plus a repeating time trigger every minute (the task ignores a new
+instance while one runs). The Windows task keeps the interactive logon of the worker account because the Client for NFS
+and SMB drives exist only inside that session; a task without the session (`S4U`, `SYSTEM`) would not see the store.
+Only a daemon that already contains this code restarts itself: an older daemon is stopped once by hand
+(`kill <pid in .cache/f/daemon.lock>`) and the service manager starts the new code.
+
+## Local state and warm restart
+
+The replica keeps its local state in `.cache/f/` as binary files (`🔁️replica/💾️state`, layout in `🧬️schema/🔣️.json`, independent reader `🧪️tests/🐍️.py`):
+
+- `state.ckp` is a checkpoint of the typed tables (path book, local files, queued store winners, case-fold index, directory table, named memos): a 96-byte header with magic, format version, generation, counts and the sha256 of the payload, a directory of parts and the raw columns. It is written to a temporary file in 4 MiB chunks (the event loop runs between chunks, nothing is copied), fsynced and renamed, so a kill leaves the previous checkpoint. It is read once, straight into the final arrays; 272 000 entries load in about 0.1 s instead of 2.5 to 5 s of JSON parsing, and the file is 75 MiB instead of 106 MiB.
+- `state.wal` is the delta log: a 16-byte header naming the checkpoint generation, then frames of records (each frame carries its length, the complement of the length and the first 8 bytes of its sha256). A persist appends one fsynced frame batch per round. A checkpoint is written only when the log has outgrown `max(8 MiB, an eighth of the checkpoint)` or more than 50 000 entries changed since the last persist; a clean stop appends the pending delta and never rewrites the checkpoint. A frame cut short or failing its checksum at the end of the log is a torn write and is cut off at the next start; a log of an older generation is stale and ignored.
+- Anything else the daemon wants to survive a restart is a named memo of the state: the working-tree view of the last `git status` (so that the first attestation of a restarted daemon carries it with `stale: true` and does not wait for git; the fresh view replaces it, and an origin with a stale view is `lagging`), the hot set (re-checked within a second of a restart) and the directory table (the directory sweep is cheap from the first round on).
+
+Cursors and the clock live in the same files as memos (`cursors`, `clock`), written in the same frames after the state rows they belong to, so a cursor is never ahead of its state; `cursor.json` and `clock.json` are written only by daemons of the earlier format. Which state is used when old and new files meet (a daemon of the earlier format ran in between, as after a code revert):
+
+- both formats exist: the checkpoint (complete) is loaded, the old-format rows are folded on top only where their hlc is newer, then the store fold is taken over (`repair` semantics: every register the store holds that the state does not, or holds older, is queued, so the follow adopts it when the disk content matches and nothing is published for it), then a new checkpoint is written;
+- only an old-format state exists (possibly a partial rebuild): it is loaded and reconciled against the store fold the same way, then written as a checkpoint;
+- the old files are never modified or removed by this daemon during a window of seven days, so a machine that goes old, new, old, new again finds consistent files at every step; the state used is always the one whose files are newer, but never at the price of dropping the complete checkpoint.
+
+A checkpoint that is truncated, flipped or missing while the machine is joined (`machine.json` exists), or a log frame that fails its checksum before the end, is detected; the replica reports `state-rebuilt`, folds the store (newest snapshot plus journal), takes the cursors from the fold and queues every winner. Hard invariants of the publish path: a joined replica whose state is empty rebuilds before it publishes anything, and refuses to publish (`state-missing`) while the store cannot be folded; a walk that finds more than 1 000 paths unknown to the state takes the store fold over first and, when the fold holds more than 1 000 of them, reports `state-missing` (reason `republish-storm`) and publishes none of those. A daemon never publishes its tree as new.
+
+**Start.** After the state is loaded (about 0.1 s) the daemon follows the store, attests and serves hints and the hot set within a second or two. The first full sweep of the tree is no longer a blocking publish: it runs in the background like every later one and its result is published by the loop. The code digest and the git state are read in parallel with the first follow, the `git status` view in the background (stale view first), and the git configuration is normalised after the first round.
+
+## Finding changes
+
+Publishing starts with noticing a change, and nothing in the daemon depends on operating-system file events: on a loaded macOS
+host `fseventsd` drops most of them and delivers the rest seconds late, on Linux the inotify limits are a provisioning concern,
+and a network share raises none. The recursive native watch (`fs.watch`) stays as an accelerator; four tiers find every change
+without it, and they all hand their paths to one publish step per round, so a path that two tiers find at once is published
+once (the publish compares size, modification time and hash with the recorded state).
+
+| Tier | What it covers | Interval | Cost |
+|---|---|---|---|
+| Hint | A path someone named: `touch <path>…`, `touch --stdin`, `touch --hook`, or any process that drops a file into `.cache/f/hints/` | polled every 50 ms; published in the next loop round, not debounced | one `readdir` of a tiny local directory per poll (about 60 µs, 0.12 % of a core) |
+| Hot set | The paths this daemon published, applied, was hinted about or saw from the watcher in the last 10 minutes (newest 20 000), the directories that contain them, the directories that recent sweeps found changed, **the root and every directory up to three levels deep (654 on the semio tree, so a create in the worktree root is found within a pass)** and the stat signature of `.git/index` | one pass about every 300 ms | one `lstat` per hot path and directory, in slices of 6 ms; the next pass starts after the larger of 300 ms and eleven times the CPU time of the last one (at most 8 % of a core) |
+| Directory sweep | A create, a delete, an atomic-rename save, a directory rename or a removed tree anywhere in the shared tree: every known shared directory is `lstat`ed, only a directory whose modification time moved is listed again (not its subdirectories that did not move) | a pass starts at the earliest 2 s after the previous one ended and after nine times the CPU time it used (at most 10 % of a core) | on the 155 000 directories of the semio tree 0.4 s of CPU per pass with warm kernel caches (a pass every 4 s), up to twice that with cold caches on a loaded host (a pass every 8 s); at most 10 % of a core, in slices of 10 ms |
+| File sweep | An in-place edit of a cold file that no event, hint or directory change announces: every path of the state is `lstat`ed (sizes, times, link targets compared with the record; new files are the directory sweep's job) | starts after the larger of `--scan` seconds (90 by default, jittered to 75 to 125 %) and nineteen times the CPU time of the last pass (at most 5 % of a core) | on the semio tree 4.6 to 6.5 s of CPU per pass (11 to 16 s wall at load 15), so a pass about every 2 minutes |
+| Tree walk | Everything the others cannot see (refused paths, a changed ignore matcher, a lost state): the whole tree is walked and compared | at start only when no directory table was restored from the saved state, then every 30 minutes (`walkSeconds`, jittered) or twenty times the CPU time of the last walk, whichever is longer (at most 5 %); an outage, a `.gitignore` change or a repair asks for one and gets it when that gate opens | 42 s of CPU alone on the semio tree (272 000 files, 160 000 directories, 14 to 17 s wall in 16 parallel workers) and 240 s of process CPU in the first live walk under load 20, which is why it is rare |
+
+The tiers work in slices of a few milliseconds, never run concurrently with themselves, and never make follow and apply wait
+for them. Every background tier starts its next pass after the larger of its interval and the time that keeps its duty cycle: `wait = max(interval, cost × (100 / duty − 1))` with the CPU time of its own last pass as `cost` (hot 8 %, directory sweep 10 %, file sweep 5 %, tree walk 5 %, `git status` view 5 % of its wall time), so no tier can exceed its share however slow the host is. The last cost and duty cycle of each tier are attested (`latency.tiers`) and printed by `status`. The table of directory modification times lives in memory and is rebuilt by the first walk after start.
+
+**Hints.** A hint is a file in `.cache/f/hints/` (a sealed, local directory, created with mode 1777 so that every local account
+can drop one): paths separated by NUL or newline, each absolute or relative to the worktree. A writer creates it under a name
+that starts with a dot and renames it inside the directory, which is atomic; the daemon consumes the finished files, never
+reads one above 1 MiB, removes unfinished ones after a minute, and takes at most 5000 paths per poll. A path outside the
+worktree, below `.cache/f`, or empty is dropped; an absolute path is also matched through the real path of the worktree
+(symbolic links, case on macOS). A hinted directory is listed recursively. Hints that arrive while sync is off or the store is
+unreachable wait in memory; more than 20 000 of them turn into a full sweep.
+
+**The agent hook.** `.claude/settings.json` registers a `PostToolUse` hook for `Write|Edit|MultiEdit|NotebookEdit` that runs a
+four-process shell one-liner in the background (`async`, bash, timeout 10 s; `hookCommandV1` in `🎣️tiers`): it copies the hook
+payload from standard input into `.cache/f/hints/` under a dot name and renames it to `h<pid>-<time>.hook`, and does nothing
+without that directory. There is no launcher and no JSON parser in the hook, because a `repo` start took 7.9 s under load. The
+daemon parses `*.hook` files (up to 32 MiB, a `Write` carries its content): `tool_input.file_path` and `tool_input.notebook_path`,
+everything else ignored, malformed payloads dropped. The hook always exits 0, so it can never block or fail an agent. On
+Windows Git Bash runs the same line; without Git Bash set `shell: powershell` with `hookPowerShellCommandV1` in a per-machine
+`.claude/settings.local.json`. `repo ./📜️script.ts touch --hook` stays available for clients that cannot run the one-liner. An agent edit is therefore
+published within about a second on every machine whose daemon runs. No other client configuration of the repository has a post-edit hook (`.codex/config.toml` configures MCP servers only), so none is wired; a script or editor that wants
+the same speed calls `repo ./📜️script.ts touch <path>` (or drops a hint file) after saving.
+
+**Passive latency.** The daemon samples `publishMs` for every event that a hint, the hot set, the directory sweep or the watcher
+found (now minus the modification time of the file; events found by the start-up walk, the tree walk or the file sweep are not
+samples, their wait is the interval itself) and `applyMs` for every event published after this daemon started (now minus the wall
+clock inside the event; the backlog that a restart applies is not a sample), and attests the percentiles of the newest 100
+samples with the timings of the tiers, see the attestation fields below. `applyMs` also contains the other machine's relay,
+store and poll delay (the follow round is 250 ms) and every wait for an object or an `index.lock`.
+
+**Cost of the attestation.** The git state (`HEAD`, stage tree) is read from a stamp of `.git/HEAD`, the ref it names,
+`packed-refs` and `.git/index`, and git is only started when the stamp moved (and at the latest every 5 minutes). The
+working-tree view is updated for the changed paths only, and a complete `git status` runs only as a verification at most 5 % of the time (a view that took 20 s is followed by a pause of at least 380 s), see the field `view`. Per round the daemon reads the sync
+switch, the store root, the retirement record and the repair request at most about once a second, and the list of origins about
+every two seconds; each round still reads the head of every other origin. `core.untrackedCache=true` and `index.version=4` are
+set for plain `git status` on this machine; the view uses `--untracked-files=all`, for which git builds no untracked cache.
+
+## The same view on every operating system
+
+The fleet shares files, not file systems. A path set must be valid on the most restrictive member (APFS and NTFS are
+case-insensitive, APFS also normalisation-insensitive, NTFS has reserved names and `MAX_PATH`), and what a machine attests as `view` must
+not depend on that machine. The rules, each with its test:
+
+- **Pinned git** (`🌿️git`, `GIT_PINS_V1`, `GIT_VIEW_PINS_V1`, `gitPinsHashV1`). Every git process of the replica runs with `GIT_CONFIG_NOSYSTEM=1`,
+  `GIT_ATTR_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL` and `XDG_CONFIG_HOME` pointing at an empty file and an empty directory below `.git/semio-pin/`
+  (the account's `~/.gitconfig`, `$XDG_CONFIG_HOME/git/ignore` and the system configuration never count; `GIT_CONFIG_PARAMETERS`,
+  `GIT_CONFIG_COUNT` and `GIT_CONFIG_KEY_*` are removed) and with `-c` pins: no excludes and no attributes file, `core.quotepath=false`,
+  `core.precomposeunicode=true`, `core.autocrlf=false`, `core.safecrlf=false`, `core.eol=lf`, `core.longpaths=true`, `core.protectNTFS=true`,
+  `core.protectHFS=true`, `core.fsmonitor=false`, `gc.auto=0` (the same list on every operating system, so the pins hash is one value).
+  This needs git 2.32 or newer (`GIT_CONFIG_GLOBAL`); `preflight` fails below it. The attested view adds `core.ignorecase=false` (the
+  `.gitignore` match is case-sensitive everywhere, like the replica's own matcher and like Linux), `core.filemode=false` (the executable
+  bit is not part of the view; `guards.modeMismatch` counts it instead) and `core.symlinks=true`. Each spawn has a timeout (10 s for `--version`, 10 min otherwise).
+  `.git/config` is still normalised for the human tools of the machine (`core.safecrlf`, `core.eol`, `core.protectNTFS`, `core.protectHFS`,
+  and on Windows `core.longpaths=true`).
+- **Case and normalisation in the view.** git on APFS or NTFS cannot see that the index spells a name differently than the disk
+  (`Foo.txt` against `foo.txt`, a renamed directory, NFC against NFD): `lstat` finds the file, so no flag makes it print what Linux
+  prints (` D Foo.txt` and `?? foo.txt`). On such a volume (probed once: a probe file looked up under another case and another
+  normalisation) the view lists every tracked directory once and adds ` D <index path>` for each tracked path whose exact spelling is absent
+  and `?? <path>` for an NFD-only spelling, so the lines equal Linux's for the same disk state (tested on APFS and ext4 with one expectation).
+  A case-only rename of a tracked path stays a staging action: `git add` records the new spelling.
+- **`.git/info/exclude`** is per machine, never replicated, and no flag removes it from git's view. `guards.infoExclude` counts its rules
+  and the fleet verdict fails on a difference; `preflight` fails when the count is not 0. Use `.gitignore`, which is shared.
+- **Names** (`🚧️boundary`, `foldNameV1`). The case fold is NFC plus a table of every code point (`🔤️fold/🔣️.json`, generated by `🔤️fold/📜️script.ts`
+  from the case mapping of ICU: the fixpoint of upper case then lower case per character), the union of APFS (full case folding,
+  normalisation-insensitive), NTFS (upper-case table) and Linux with a casefold directory: `ß`, `ẞ` and `SS` meet at `ss`, the final and the medial sigma
+  meet, `ı` and `ſ` meet `i` and `s`, ligatures expand, `İ` folds to `i` plus a combining dot. Two paths that fold to one name are
+  `case-collision` on every machine, so a path set that is valid here is valid on all member systems. The emoji variation selector `U+FE0F` is a code point
+  of its own on APFS and NTFS (verified on APFS: `a.txt` and `a\uFE0F.txt` are two files) and stays significant. The replica, the scanner and
+  `ReplicaFoldsV1` use this one function. Verified: the pairs of `🧪️tests/🧫️fixtures` are stored as one file by APFS (this Mac) exactly where the fold says "one name", ext4 stores none of them as one, and
+  Python's `str.casefold` over every assigned code point agrees with the table (`🐍️.py`). `ı`/`i` is merged although APFS keeps them apart
+  (NTFS' table is the source; unconfirmed on Windows).
+- **Path length.** The policy counts UTF-16 units of the worktree-relative path (`PATH_LIMIT_UNITS_V1` = 256, the unit of Windows paths), not code points.
+  The real limit differs per operating system and includes the worktree prefix: `pathBudgetV1` gives 259 UTF-16 units on Windows
+  without `LongPathsEnabled` (`MAX_PATH` less the terminating NUL; with the prefix `C:\semio\` a relative path of more than 250 units does not fit), 32,766 with it,
+  1,023 UTF-8 bytes on macOS and 4,095 on Linux. `preflight` (`path length`) and the attestation count the tracked paths over that budget
+  (`guards.overBudget`; a failure on Windows without long paths, otherwise a warning). The provisioning script sets and reads back `LongPathsEnabled`.
+- **Executable bit: one source of truth per kind of volume.** On POSIX the disk bit is the truth: a `chmod` publishes an event. A replica that
+  cannot represent the bit (`modeless`, Windows; an option so that tests can simulate it) never reads it from disk, keeps the bit of the
+  manifest entry when a file changes, takes the bit from the staged index entry (`100755`) for a file it creates, defaults to `false` for an unstaged new file (a POSIX machine
+  `chmod`s it and publishes the bit), and never writes it. Such a replica publishes its stage before its files, so a new file that is staged
+  with `--chmod=+x` is published executable. The view ignores the bit; `guards.modeMismatch` counts tracked files whose bit differs from the index mode
+  (a warning in `preflight`, compared among the machines that can read it).
+- **Guards** (`gitGuardsV1`, attestation field `guards`, `preflight` checks `guards.*`): git version and pins hash; the volume (case, normalisation, links, long paths);
+  `.git/info/exclude` rules; rules of the root `.gitignore` whose verdict depends on case for paths that exist (the `Backup/` class: a
+  case-insensitive git hides `backup/x`, the replica shares it); tracked paths spelled differently on this disk; tracked paths a rule ignores;
+  tracked paths or links the path policy refuses (illegal or reserved name, too long, unsafe link target, case collision); tracked links on a volume that cannot create them;
+  paths over the budget; executable-bit mismatches. They are measured in the background (every 5 minutes, and 10 s after the view changed at the earliest);
+  the attestation says `guards: null` (exempt) until the first measurement arrives. The fleet verdict is `diverged` on a difference in
+  `guards.pins`, `guards.infoExclude`, `guards.caseIgnore`, `guards.caseMismatch`, `guards.trackedIgnored`, `guards.trackedRefused` and `guards.modeMismatch`
+  (the last among the machines that can read it), and only lists `warnings` (`fleet` prints them, `--json` carries them) for capability differences: another git version, another volume behaviour, paths over the budget, links without link support.
+- **Windows services.** The scheduled task XML of the fleet is validated in the tests against the published Task Scheduler schema
+  (`xmllint` with `🧪️tests/🧫️fixtures/🪟️task-schema.xsd`, and an own copy of the rules): trigger children are a sequence (`Enabled`, `StartBoundary`, `EndBoundary`,
+  `Repetition`, `ExecutionTimeLimit`, then the trigger's own), the other groups are unordered. The replica task starts at logon and again every minute (restart after a clean exit),
+  runs when the machine was off at the start time (`StartWhenAvailable`) and so also after sleep. The store is mapped by its own task `semio-fleet-store-mount`
+  (`worker-service --part mount-definition`: `cmd.exe /d /c if not exist S:\ mount.exe ...`) at logon and every minute while the drive is missing, in the same logon session
+  that runs the replica; a drive mapped by the elevated provisioning shell is not visible there. The replica retries an unreachable store, so the order of the two tasks does not matter.
+  `preflight` reads the task state through `Get-ScheduledTask` (an enum, not localised text), time synchronisation through `sc.exe query` (the state number) and the `W32Time` registry type,
+  and the store mount through `mount.exe` (Client for NFS) and `net use` (SMB). The user `PATH` is extended as `REG_EXPAND_SZ`, the task principal is `WindowsIdentity.Name`, and the script refuses a 32-bit PowerShell.
 
 ## Two writers of one file
 
@@ -77,9 +330,23 @@ time against the wall-clock time inside the remote event, which is the moment th
   time is later than that publish time.
 
 The honest limit: the clock inside an event is the time of publication, not the time the key was pressed. Writes to the
-same file on two machines within the publish latency (about half a second) are ordered by who published first, and an
+same file on two machines within the publish latency (a second or less with a hint or a hot path, a few seconds otherwise; `status` shows the measured value) are ordered by who published first, and an
 edit made offline is ordered by when it was published. Every machine converges to the same version either way. The
 comparison reads one machine's file clock against another's event clock, so keep NTP running.
+
+## Structural conflicts
+
+The register model is per path, so two live entries can be valid one by one and impossible together: `b.txt` and `B.txt` on a
+case-insensitive volume, or a file `dir` next to `dir/c.txt`. One rule, a pure function of the folded manifest, decides every such
+pair identically on every machine, so no machine waits for another and the queue drains.
+
+- Two live entries (`put` or `link`) **clash** when their folded paths (`foldNameV1` of the boundary, which is also what the case-collision refusal uses) are equal, or when the folded path of one is a directory prefix of the other (a file or link with entries below it). Sibling directories that differ only in case do not clash.
+- The live entries are taken **newest hlc first**; an entry is kept unless it clashes with an entry that was kept already, otherwise it is **retired**. A file newer than every live descendant retires the descendants; a file older than some descendant is retired itself (the older descendants then survive, they only clash with kept entries). Equal times are ordered by the origin in the hlc.
+- Nothing is published for this. Retirement is a local reading of the manifest: every machine that folds the same manifest retires the same paths, the manifest keeps both entries, snapshots and compaction need no change. Publishing an explicit delete from one machine would race with a legitimate re-creation of the retired path and would need an election; the derived rule needs neither. An entry that becomes valid again (its winner is deleted or replaced by something that no longer clashes) is applied again, also after a restart: a retired entry stays in the persisted queue as a parked row (not pending, not counted in `queue`), its register is a delete carrying the hlc of the retired entry.
+- A retired entry that was materialised here leaves the tree first (before the winner is written, so a case-insensitive volume never sees both) and its bytes go to `.cache/f/lost/<hlc of the winner>/<path>` (`overwritten`); `superseded` names the loser, the winner and the reason (`case-collision`, `directory-replaces-file`, `file-replaces-directory`). The blob of a retired entry stays in the store as long as the manifest references it.
+- Apply never writes through a symbolic link: every ancestor directory of a path is inspected with `lstat` before anything is written. A link the fleet knows is an ordinary non-directory entry of the rule above. A link that stays local (an unsafe target, an ignored path) blocks the entries below it with a visible `blocked` event (`symlink-in-the-way`; `parent-is-a-file` for a file); nothing is written, and a symlink cycle produces no error event. The publisher applies the same inspection: a path reached through a symlinked directory is neither published nor read as a file of the tree.
+- The apply pool removes before it creates (deletes and their `prune` of emptied directories finish before the first `put` or `link` of the batch), and the link branch retries `mkdir`/`symlink` on `ENOENT`/`EEXIST` as the file branch does, so a delete that empties a directory and a link that refills it never meet.
+- A `put` that republishes content the path already had earlier is a **stale republish** when its `base` is not the content it replaces (a replica that lost its state republishes its old tree with fresh clocks and `base` null). The decision is a pure function of the events of the path (`staleRepublishV1` in `🔁️replica/⚖️clash`, fixture vectors replayed by TypeScript and by the Python oracle): the event is stale when it leaves content, differs from its predecessor (the event with the greatest smaller hlc), was not written on top of that predecessor (`base` differs) and leaves content that an earlier event left already. A deliberate revert by a machine that held the newest content has `base` equal to the predecessor and is an edit. A machine whose register still equals the predecessor's content does not take a stale event, reports `stale-republish` and publishes the newer content again as an ordinary change, so the fleet converges to the newer content even though the stale event has the greater hlc; the manifest itself is never changed by the rule. The events come from the batch being read, from the manifest entry the path held, and from a cache of the last 6 events of the last 20 000 changed paths that is kept with the local state (memo `stale.history`, the newest 1000 paths, written at most every 30 s and at close), so a restarted machine decides the same. A machine that joins later with only a snapshot has no older content to compare and applies the stale content, then takes the re-publication of the others.
 
 ## Network layout
 
@@ -122,7 +389,7 @@ How the three servers differ:
 - **macOS.** The export must lie below `/Users` or `/Volumes` (the root volume is read-only; the topology refuses other
   paths). `/etc/exports` gets two lines (workers read-write by `-network/-mask`, peers `-ro`), `/etc/nfs.conf` pins the mount
   daemon to port 892. The server has no mount of its own store: its replica, relay and compaction use the exported folder itself
-  (`--store`, recorded in `machine.json`). Cache and relay are LaunchDaemons; the cache reads
+  (`--store`, recorded in `machine.json`). Cache and relay are LaunchAgents of the account (see "macOS privacy"); the cache reads
   `/etc/semio/remote-cache.env` (mode 0600, owner = the server account) through `sh`.
 - **Windows.** `nfs.export` is the single-segment share name (`/semio-store`) and `server.directory` the local folder
   (`C:\semio-store`). Server for NFS (`FS-NFS-Service`, Windows Server only) shares it with `New-NfsShare` (anonymous
@@ -142,7 +409,7 @@ How the three servers differ:
 timings. The machine's own host, worker network and cache endpoint are not written into this file. Set `SEMIO_FLEET_GROUP`,
 `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` together (and `SEMIO_FLEET_CACHE_ENDPOINT` when the cache URL is not
 `http://<that host>:<the port already in the file>`). The commands and the provisioning script apply them for that run and leave the file as it is. Everything else is derived from it and never edited by hand: the mount lines, exports, fstab blocks, units,
-LaunchDaemons, Scheduled Task XML, firewall rules, the cache environment of every machine, the scripts' checks (they
+LaunchDaemons, Scheduled Task XML, firewall rules, the scripts' checks (they
 refuse a topology file that differs from the one in the worktree) and the Python oracle in `🧪️tests`. After the
 edit run `validate` (offline, checks shape and the server rules), then `validate --reachable` from a machine of each
 group network: it reports per group whether the hosts resolve and the store and cache ports answer. Re-provision the
@@ -153,13 +420,13 @@ machines whose group changed; the scripts are safe to repeat.
 A brand-new machine has an empty disk, so it has no worktree, no `repo` launcher and no Bun, yet `join` lives in the
 worktree. The group server closes the gap with an archive of its own worktree.
 
-**The archive.** `<storeRoot>/v1/bootstrap/worktree.tar` is a POSIX pax tar written by our own code (only `node:`
+**The archive.** `<storeRoot>/v1/bootstrap/worktree-<16 hex>.tar` (the first 16 hex digits of its own sha256) is a POSIX pax tar written by our own code (only `node:`
 built-ins) with one regular-file entry per shared file of the folded store manifest, read from the group server's local
 worktree. Pax extended headers carry the long UTF-8 emoji paths and, from 8 GiB, the file size. Links are not in the
 tar: `join` creates them. A file whose hash differs from the manifest (not yet replicated to the server, being
-written, vanished) is skipped. `manifest.json` next to it is `{"version":1,"hlc":…,"files":n,"bytes":n,"sha256":…}`:
+written, vanished) is skipped. `manifest.json` next to it is `{"version":1,"hlc":…,"files":n,"bytes":n,"sha256":…,"archive":"worktree-<16 hex>.tar"}`:
 `files` and `bytes` count the entries and their content, `sha256` is the hash of the whole tar. The tar is staged in
-`<storeRoot>/v1/tmp` and renamed, then the manifest the same way, so a reader that sees a mismatch retries. The writer
+`<storeRoot>/v1/tmp` and renamed to its content name, where no reader looks for it, and then the manifest that names it is renamed: that one rename is the only step a reader can observe, so a manifest and the archive it names never disagree (the archive of the previous manifest stays for an hour after its replacement for readers that are copying it, then a later round removes it). A reader still verifies the sha256 and retries, which only matters for a damaged copy. The writer
 streams in 1 MiB chunks (bounded memory), reports progress as NDJSON and stops cleanly on cancellation. All names in
 the store stay ASCII.
 
@@ -171,6 +438,12 @@ most two minutes (so a store that is still empty gets its archive soon after the
 crashed build older than six hours are removed by the next build. A relay started with `--group` but without `machine.json`
 does not build it.
 
+**Pack gate (2026-11-14).** Full repacks by git clients on workers (a GUI opened on a worker, `git gc`) sent 4 GB packs to every machine and to the store and coincided with watchdog kills. The rule now lives in the replica boundary (`FleetIgnoreV1.local`, set by `guarded` from `🔁️replica/🧷️packgate`): a file of `.git/objects/pack` is shared only when the fleet register already holds its `.pack` or the consolidator authorised its stem (`.git/semio-packs.json`, written by `consolidate` before it places a pack; the very first machine seeds its packs while the fleet holds none); `multi-pack-index`, unknown names and everything below `.git/objects/info` (pack list, commit graphs) never leave a machine. A delete under `.git/objects` is published only for stems the consolidator authorised to retire; any other delete (a client `repack -ad` removing the fleet's packs, `prune-packed` removing loose objects) is not published and the heal brings the file back. Applying a deletion never removes `.git/refs`, `.git/refs/heads`, `.git/refs/tags`, `.git/objects`, `.git/objects/pack` or `.git/objects/info` (a `git gc` that packs the refs empties them and git then does not recognise the repository). Every 60 s (`rescueMilliseconds`) the daemon examines the complete packs this machine holds and the fleet does not: each object that no fleet pack holds and no loose file exists for is written as a loose object (the replica publishes it like any file), then the local pack is deleted (`rescueLocalPacksV1`); dead fragments older than an hour go too. The consolidator writes `<stem>.keep` (`semio-consolidated`) next to its pack, so `git repack -a -d` and `git gc` on any machine leave the fleet's pack alone. Tests (`🔁️replica/🧪️tests/🧷️packgate.ts`, real git, two daemons): `git repack -a -d` and `git gc --aggressive --prune=now` on a worker publish no event under `.git/objects/pack` or `.git/objects/info`, publish no pack delete, a commit made before the repack still reaches the server (through the rescue), both repositories pass `git fsck --full` and only the fleet's pack remains; the consolidator's pack arrives with its keep marker and a worker `repack -a -d` leaves it.
+
+**Pack consolidation (`consolidate`, 2026-11-14).** Repacks by git clients (GitKraken opens, `git gc`) leave the same objects in many overlapping packs, and every pack is journaled to the store and copied to every machine (26.5 GiB of packs for 2.25 M distinct objects, 5.6 GiB). `consolidate --apply` (the relay of the group server runs it every `--consolidate-minutes`, default 1440, 0 = off, only when the plan shows at least 1 GiB of waste or a tmp file; the other machines never run it) works in this order, and a re-run converges from an interruption at any point: (1) one run per worktree (`.git/semio-consolidate.lock`, taken over from a dead pid), enough free space (largest kept pack × 1.5 and 3 % + 2 GiB reserve) else `space`; (2) every object (`cat-file --batch-all-objects`, loose and packed, reachable or not) is written by `pack-objects` as one new pack under a `tmp_consolidate_` staging name in `.git/objects/pack` (not shared; a crash leaves a file that the next start and the hourly tmp sweep remove) and checked with `git verify-pack`; (3) `.pack`, `.rev`, then `.idx` are renamed into place; (4) the run waits (30 min) until the store holds `.pack` and `.idx` of the new pack with their sizes (the replica publishes `.pack` first), else `unpublished` and nothing is retired; (5) the index files are compared again with the new pack first (`planPacksV1`): only packs whose every object is in it are retired, and orphans (a `.pack` without `.idx` or the reverse) older than an hour; `multi-pack-index` goes first, then per pack the `.idx` first (the pack disappears for readers atomically), then the rest; read-only files (git writes packs 0444) are made writable first where needed. The workers receive the deletes through the replica; they apply deletes only after all creations and only when every fleet index has its pack, so every object is present on every machine at every moment. The command prints one of `nothing`, `planned`, `consolidated`, `locked`, `space`, `unpublished`, `failed`; schema `🔁️replica/🧱️consolidate/🧬️schema/🔣️.json`.
+
+**What the archive carries, when it is rebuilt, and the disk guard (2026-11-14).** The archive holds no dead or redundant git files: no `tmp_*` or lock file, no `gc.log`, no `multi-pack-index`, of `.git/objects/pack` one new pack of the objects reachable from the refs and `HEAD` (`git pack-objects --revs --all`, deltas reused, staged in `<store>/v1/tmp` and removed after the build; a joiner fetches anything else from the store), or, when git is missing or fails (`reachable` off), only the packs `planPacksV1` keeps (`🔁️replica/🥾️bootstrap/🧺️packs`: the index files are compared, packs from the largest down; a pack whose objects all lie in a larger kept pack, a pack without index and an index without pack are left out). The extracted tree is a complete repository, `git fsck --full` passes. Next to the tar lies `worktree-<16 hex>.entries` (path, sha256, bytes, executable bit per archived file). A round rebuilds only when the content that differs from it reaches the drift limit (the larger of 1 GiB and a tenth of the archive) or the archive is 24 h old; otherwise it reports `skipped` with reason `unchanged` and writes nothing (`bootstrap-archive --force` rebuilds). Before it writes it estimates the archive, and refuses with `error.bootstrap.space` (event `skipped`, reason `space`, retried after ten minutes) when the volume of the store would keep less than 3 % of the volume plus 2 GiB free (the disk guard is at 97 %); when only the archive that is being replaced stands in the way and it is older than an hour it is retired first (event `retired`, reason `single-slot`), so at most one archive stays. After a rebuild the previous archive stays for an hour (its modification time is set to the replacement time), then the next round removes it. Every round also removes staging files in `<store>/v1/tmp` that no writer has touched for two hours.
+
 **Provision one machine.** `🗺️topology/🥾️provision/🐚️.sh <group> <origin> [--user <account>] [--archive <directory>]`
 (macOS, Linux, as root or through sudo) and `🔵️.ps1 <GroupId> <OriginId> [-ArchivePath <directory>] [-User <account>]`
 (Windows, elevated) take the machine from an empty disk to a running replica. Copy the `🗺️topology` directory of
@@ -179,18 +452,26 @@ them, before any tool exists, and refuse to continue when the topology command l
 worktree. Steps, in this order:
 
 1. Create the canonical worktree directory. A directory that already holds a checkout skips
-   the archive; one that is neither empty nor a checkout is refused. **Windows: the script first sets
+   the archive; when it holds the account's own repository (not joined yet) it is **adopted** (see "Existing repository"
+   above), never refused; a tree that the script extracted itself in an earlier run is not the account's own repository: it carries
+   the marker `.cache/f/bootstrap-extract` and is settled (step 5), never adopted; one with files but without the fleet module is refused with the instruction to update that
+   repository first. **Windows: the script first sets
    `HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled = 1` and reads it back** (the tree has deep emoji paths;
-   the path policy allows 256 characters below the root, and `MAX_PATH` is 260), and keeps the worktree root short:
+   the path policy allows 256 UTF-16 units below the root, and `MAX_PATH` is 260 units including the drive and the terminating NUL), and keeps the worktree root short:
    the schema accepts only a drive and one directory of at most 12 characters (`C:\semio`), the script refuses a longer one.
-   The setting reaches processes that start afterwards; a shell that was open before needs a restart. Git for Windows is
-   not involved (`.git/` is not replicated), but any other tool that opens these paths must be long-path aware.
+   The setting reaches processes that start afterwards; a shell that was open before needs a restart. Git for Windows
+   is needed only for the shared stage and commit state (the replica starts `git` itself), and any other tool that opens these paths must be long-path aware.
 2. Windows mounts the store first (Client for NFS); macOS and Linux mount the export read-only at a temporary
-   directory. Copy `worktree.tar` and `manifest.json` to local disk (the `--archive` directory instead, if given),
+   directory. Copy `manifest.json` and the archive it names to local disk (the `--archive` directory instead, if given),
    verify the sha256 of the tar against `manifest.json` (five attempts, 20 s apart, because the archive may be rebuilt
    while it is copied) and extract it into the empty worktree with the OS tar: `tar -xf` as the worker account on
    macOS and Linux (with a UTF-8 locale), `tar.exe` (bsdtar, reads pax UTF-8 names) on Windows 10 1803 or later. macOS and
    Linux then compare the number of extracted files with `manifest.json`, Windows the number of entries in the tar.
+   The script writes `started` into `.cache/f/bootstrap-extract` before tar runs and `complete` after it, and removes the
+   marker after `join`. Until the machine has joined, a later run reads it: `complete` skips the archive and settles the
+   tree, `started` (the extraction was interrupted) extracts again over it. `--plan` (`-Plan`) on an empty worktree stops
+   before the archive is fetched and extracts nothing; it used to extract and stop, and the next run then took the tree for
+   the account's own repository and adopted it.
 3. Build the standalone `repo` launcher for the account (`🚀️launcher/📥️install/🐚️.sh` or `🔵️.ps1`, from the checkout, into the account's
    home; it fetches its pinned Go itself and needs no compiler and no package manager, only `curl` or Python 3 and `tar`) and
    link it as `~/.local/bin/repo` (Windows: the launcher directory goes on the user `PATH`). On macOS and Linux the script then
@@ -221,7 +502,7 @@ worktree. Steps, in this order:
    bootstrap, so one that failed half way is redone by the next run. The Windows script requires `-User` to be the account of the
    elevated shell, because the bootstrap installs per account.
    On Linux the native bootstrap runs through `sudo` without a login shell, so the profile files of step 5 do not reach it: the script
-   hands it the `SEMIO_REMOTE_CACHE_*` variables of `env` and the write token of the account (`SEMIO_REMOTE_CACHE_TOKEN` from the
+   hands it the write token of the account (`SEMIO_REMOTE_CACHE_TOKEN` from the
    environment of the script or the `export` line of `~/.profile` or `~/.zprofile`) through a `0600` file in `.cache/f` that it removes
    afterwards, never as an argument. That is how a fresh machine takes the project graph of its group from the cache server instead of
    inferring all projects cold (a cold graph needs a 7 to 8 GB heap and hours); the server's own native bootstrap is the warm-up that
@@ -240,6 +521,8 @@ worktree. Steps, in this order:
    | 1 | error: the failing step is named, nothing after it ran (Windows: the script threw) |
    | 2 | usage error (shell script) |
    | 3 | **fleet ready, native build pending**: joined, services running, native bootstrap failed or not possible, marker absent |
+| 4 | fleet ready, the macOS agents wait for the consent to read the worktree folder (shell script) |
+| 5 | **the fleet code of the checkout is older than the script** and the store offers no newer sealed code: a fleet command failed on an unknown option or a missing module, the message names the checkout (see "Provisioning never runs fleet code older than itself") |
 
 **Linux inotify limits.** The replica daemon watches the tree recursively, one inotify watch per directory, and the tree has
 about 122,000 directories (121,884 measured in the rehearsal); the kernel default of 8,192 watches would drop events
@@ -258,8 +541,9 @@ both are equal, `join` (or `seed`) is skipped, but the mounts, limits, environme
 and restarted when a definition changed. A machine that was provisioned with another group must be reset by hand, never
 silently rejoined.
 
-Every step probes first, so a failed run can simply be repeated; a worktree from an interrupted extraction must be
-emptied by hand (the script says so).
+Every step probes first, so a failed run can simply be repeated, also one that stopped during or after the extraction
+(the marker of step 2). A tree that an older version of the script extracted carries no marker and is adopted; `join --adopt`
+renames its NFD names and decides its executable bits like `bootstrap-settle` does, so it ends in the same state.
 
 **Language.** The launcher refuses a start that chooses no language, and a fresh Ubuntu has `LANG=C.UTF-8`, which names none. The
 script therefore runs every `repo` call with `SEMIO_LANGUAGE` (default `en`, override it in the environment of the script), and the
@@ -272,8 +556,8 @@ script warns; stop the replica services, `umount` and `mount` the store to apply
 `lookupcache`). The macOS script warns the same way when its mount LaunchDaemon changed while the store is mounted; the Windows
 script restarts the Client for NFS service (`nfsadmin client stop`, `nfsadmin client start`) after it changed a cache value, before it mounts.
 
-**Client caches (what is measured and what is reasoning).** The replica `stat`s `head.json` every 250 ms and the file is replaced by a
-rename, so a client that answers a lookup from a cached name or from cached directory attributes shows the old head. Every store
+**Client caches (what is measured and what is reasoning).** The replica `stat`s `v1/heads` every 250 ms (and the `head.json` of origins without a flat head, and of all origins every 10 s); heads are replaced by a
+rename or by a new name, so a client that answers a lookup from a cached name or from cached directory attributes shows the old head. Every store
 client is therefore set to revalidate; the settings differ because the clients do:
 
 | Client | Setting (mount plan and provisioning script) | Status |
@@ -318,8 +602,11 @@ the `relay-peers` part to copy the other groups into its still empty store.
    path and store mount per OS, and the replica timings. Leave the placeholder host, network and cache name in the file, and set `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST` and `SEMIO_FLEET_NETWORK` on the machine. Run `validate`, then `validate --reachable`. The topology is a shared source file, so after the first machine has seeded, edits to it propagate
    like any other file; change it on one machine and let it replicate.
 2. **Canonical path.** Cache hits across machines need identical checkout paths, so every replica lives at the
-   worktree path that the topology fixes for its OS (default `/srv/semio`, `/Users/Shared/semio`, `C:\semio`). Do
-   not pick another path, not even a symlink to it.
+   worktree path that the topology fixes for its OS: a template below the home folder of the account that edits
+   (macOS `~/Documents/semio`, Linux `~/semio`) or the fixed short root `C:\semio` on Windows. The provisioning resolves
+   the tilde against the real home of that account (`dscl` or `getent`, never the `HOME` of root under `sudo`); homes with
+   spaces or non-ASCII characters work. Do not pick another path, not even a symlink to it. There is exactly one
+   repository per machine: the existing one, turned collaborative.
 3. **Cache tokens.** Create two tokens of the characters `A-Za-z0-9._~+/=-`, for example `openssl rand -hex 32`:
    a read token and a write token. Keep them in your password manager.
 4. **First machine: the server of the first group (say `g1`).** This is the only machine that starts from a checkout.
@@ -331,12 +618,12 @@ the `relay-peers` part to copy the other groups into its still empty store.
    2. Write `/etc/semio/remote-cache.env` (owner root, group `semio`, mode 0640) with the two lines of
       `server-plan --part cache-environment` and the real tokens. The cache server refuses a non-loopback
       address without a token, and the unit binds `0.0.0.0`.
-   3. Copy a complete checkout (`.git/` not needed) to the worktree path and `chown -R semio:semio` it. Put the
+   3. Copy a complete checkout (a root `.git` may be included; only its allow-listed part replicates) to the worktree path and `chown -R semio:semio` it. Put the
       `🗺️topology` directory somewhere the script can read it.
    4. Run `bash 🥾️provision/🐚️.sh g1 g1-server --user semio --first-machine --server`. It builds the launcher, mounts the store, seeds it (about 270k
       files, 5 GB, as long as it takes to hash and copy 5 GB to NFS), installs the replica and compact units and starts them, and runs the native bootstrap last
       (give `semio` sudo rights for the packages until it has finished, or install the toolchain first; exit code 3 means that the server is ready and only the native build is pending).
-   5. The script already installed the cache and relay services (Linux units, macOS LaunchDaemons, Windows tasks) and started them after the join;
+   5. The script already installed the cache and relay services (Linux units, macOS LaunchAgents, Windows tasks) and started them after the join;
       `--part start` prints the equivalent commands. The relay builds the first bootstrap archive. Run `snapshot` once so that
       later machines join from a snapshot instead of replaying the journal. Check `http://<cache host>:6090/healthz`.
    6. Never run `seed` or `--first-machine` on a second machine. It would publish a second, competing copy of every file.
@@ -365,41 +652,148 @@ the `relay-peers` part to copy the other groups into its still empty store.
    | Check | Passes when |
    |---|---|
    | identity | `machine.json` exists and names this group; the origin `<group>-server` is the group server |
-   | store mount | the store is mounted from the source of the topology (Linux and macOS: `mountinfo`/`mount`; Windows: `net use`); on a Linux group server it is a local bind mount, on macOS and Windows servers the folder exists |
+   | store mount | the store is mounted from the source of the topology (Linux and macOS: `mountinfo`/`mount`; Windows: `mount.exe`, then `net use`); on a Linux group server it is a local bind mount, on macOS and Windows servers the folder exists |
    | mount options | Linux: `hard`, `lookupcache=none` and the one-second attribute caches are in effect; macOS: `acdirmin=0`, `acdirmax=0`, `nonegnamecache` (a warning when `nfsstat -m` does not show them); skipped on Windows (see client caches) |
    | store writable | a probe file in `v1/tmp` is written, read back and removed |
    | cache endpoint | `<endpoint>/healthz` answers 200 with `status: ok` |
    | clock skew | the clock differs from the group server by at most 2 s (warning above, failure from 30 s). It uses the `Date` header of the server's cache endpoint (one-second resolution, round trip subtracted), so it is a measurement to about 0.5 s; 30 s is half of the 60 s after which a receiver holds an event back, so that two machines that are each below it still differ by less than 60 s. The group server itself is the reference and skips this check |
-   | time synchronisation | the OS reports a synchronised clock (`timedatectl` NTPSynchronized, `systemsetup -getusingnetworktime`, `w32tm /query /status` with a real source); a warning otherwise (the provisioning scripts enable it: `timedatectl set-ntp true`, `systemsetup -setusingnetworktime on`, the `w32time` service; chrony is the recommendation on Linux) |
+   | time synchronisation | the OS reports a synchronised clock (`timedatectl` NTPSynchronized, `systemsetup -getusingnetworktime`, `sc.exe query w32time` running and a `W32Time` type other than `NoSync`); a warning otherwise (the provisioning scripts enable it: `timedatectl set-ntp true`, `systemsetup -setusingnetworktime on`, the `w32time` service; chrony is the recommendation on Linux) |
    | inotify limits (Linux) | `max_user_watches >= 1048576` and `max_user_instances >= 1024`, the values of the sysctl file |
    | long paths (Windows) | `LongPathsEnabled` is 1 |
    | client caches (Windows) | the SMB lifetimes or the NFS registry values are 0 for the protocols this machine reads |
+   | git version and pins | git 2.32 or newer (it honours `GIT_CONFIG_GLOBAL`); the pins hash is attested, the fleet verdict compares it |
+   | private exclude rules | `.git/info/exclude` has no rules (failure otherwise: no flag removes them from git's view) |
+   | case and normalisation | no tracked path is spelled differently on this disk (warning) and no rule of the root `.gitignore` hides an existing path only under a case-insensitive match (warning); the volume's behaviour is shown |
+   | tracked paths | no tracked path or link is refused by the path policy (failure), none is ignored by a rule (warning), no executable bit differs from the index mode (warning) |
+   | path length | every tracked path fits this operating system below this worktree (`pathBudgetV1`): a failure on Windows without long paths, a warning elsewhere |
+   | symbolic links | links can be created on the worktree volume (a warning; a failure when the repository tracks links) |
    | free disk | the worktree volume has at least 10 GiB (warning below 30 GiB: tree 4.5 GiB, bootstrap copy 5 GiB, caches); on a server the store volume at least 50 GiB (warning below 300 GiB) |
    | native build | the completion marker `.cache/f/native-bootstrap.done` of the provisioning exists; **pending** (a warning, never a failure) while the native bootstrap has not completed, with the log `.cache/f/native-bootstrap.log` and the way to retry it (run the provisioning script again) |
-   | services | the replica daemon runs (systemd instance, LaunchDaemon `state = running`, scheduled task `Running`), the daily compaction is scheduled (a warning otherwise), and on a server the cache and the relay run |
+   | services | the replica daemon runs (systemd instance, LaunchAgent `state = running` in the `gui/<uid>` domain, scheduled task state `Running` through `Get-ScheduledTask`), the `access` check names `worktree-access-denied` with the exact consent to give, the daily compaction is scheduled (a warning otherwise), and on a server the cache and the relay run |
    | replica status | `status` reaches the store, the daemon runs, no origin needs a new `join`; a warning when an origin is more than 1,000 events behind |
 
    The exit code is 1 when a check failed or Ctrl+C cancelled the run. Progress lines (`[n/total] mark name: detail`) go to stderr as each check finishes.
    Its probes (mount tables, registry, `schtasks`, `timedatectl`) are tested only with injected outputs and, on macOS, with the real
    system calls; the parsing of the real `mount` and `nfsstat -m` output of macOS 27 is verified (`mount options: ok` for the plan, `FAIL ... acregmin=1 (found acregmin=5), acregmax=1 (found acregmax=60), ...` for the defaults);
-   `net use` and `reg query` are unverified.
+   `mount.exe`, `net use`, `reg query`, `sc.exe` and `Get-ScheduledTask` output are unverified on a real Windows host; their parsers read untranslated tokens only (drive letters, `REG_*`, enum names, state numbers).
 
-7. **Archivist (optional).** Designate one machine for history. It is an ordinary fleet machine that also has
-   git and a `.git/` of its own, which is not replicated. It commits its replica on a timer and pushes `main`.
-   The skills `commit`, `micro-commit` and `merging` in `.agents/skills/` apply only there. Keep it in one group
-   and never run git mutations anywhere else.
+7. **Archivist (optional).** Designate one machine for history. It is an ordinary fleet machine that commits its
+   replica on a timer and pushes `main`. A commit on any machine replicates (see "Git state"), so one archivist
+   keeps the history linear: the skills `commit`, `micro-commit` and `merging` in `.agents/skills/` apply only there.
+
+## Git state
+
+The root `.git` is shared by an allow-list: `HEAD`, `packed-refs`, `shallow`, everything below `refs`, and everything below `objects`
+except names starting `tmp_`, `objects/info/alternates` and every name ending `.lock`. Everything else in `.git` (index, config,
+logs, hooks, info, `FETCH_HEAD`, `ORIG_HEAD`, in-progress operation files, IDE files) stays on the machine that wrote it. A path that
+becomes private is forgotten locally and never published as a delete; incoming events for a private path are dropped.
+
+**The stage.** `.git/index` holds per-machine stat data, so it never travels. The stage is a register per path plus one base register in
+a virtual realm under the sealed `.cache/f`, carried by ordinary `link` and `delete` events: `.cache/f/index-base` (`tree <oid>`) and
+`.cache/f/index/<worktree path>` (`<mode> <oid>`, or `delete` when the path is absent from the stage). Effective stage = the base tree
+overlaid by every entry whose hlc is greater than the base's; per register the greater hlc wins. The realm is never written to disk.
+
+- Publish: when the stat signature of `.git/index` moved (checked with every hot pass, about every 300 ms, and by the watcher) and on every full sweep, `git write-tree`; an unchanged tree publishes nothing (a `git status`
+  that only refreshes stat data is a no-op), otherwise `git diff-tree -r -z` against the last synchronised tree gives one entry per path.
+  The last synchronised tree is the fold of the registers this machine has published or applied (`held`), computed as `verify`
+  computes its fold and kept in memory afterwards, so it survives a lost `.cache/f/git-index.json`, a crash between a publish and
+  the bookkeeping, and a restart. However many paths differ (30 000 were measured), they become entries, appended in batches of
+  5000; a base is never published for a large change, so a bulk `git add` cannot void what another machine staged earlier. The only
+  bases are the first one, published automatically by the group server (`<group>-server`) when the manifest has none (workers wait
+  for it and `status` says `waiting-for-base`), and the one an explicit `rebase` publishes. `rebase` lists in its `published` event
+  (`reason` `rebase`, `count`) and in `.cache/f/lost/rebase-*.tsv` (`path`, origin of the register, `<mode> <oid>` or `absent`) every
+  register of any machine whose value differs from the stage it publishes, because the base voids exactly those.
+- Apply: the local stage is published first, so it is never attributed to the remote; entries go into one `git update-index -z --replace
+  --index-info` batch, a new base replaces the stage (the delta from the last synchronised tree while the stage still equals it, else
+  `git read-tree`). When the stage has no proof of where it came from (nothing of the registers was applied yet, a lost state, a
+  crash during a base replace), the shared fold wins: the old `.git/index` is copied to `.cache/f/lost/index-*`, an `overwritten`
+  event (`reason` `local-stage-replaced`, `count` = replaced entries, `lost`) names the copy, and
+  `GIT_INDEX_FILE=<copy> git ls-files -s` lists what was there. The paths an apply is writing are recorded in `.cache/f/git-index.json`
+  before the write and cleared after the registers are settled, so a crash in between never republishes them as local edits.
+  A missing `.git/index` is restored from the registers (`repaired`, `reason` `index-missing`) and no delete is published for it.
+- Waiting and degraded states are never silent. The record `.cache/f/git-index.json` (atomic, fsync) holds `state` (`shared`,
+  `waiting`, `degraded`) and `reason`; each change emits one `blocked` event and `status` prints it as `Git state: ...`; `fleet` shows
+  the disagreement and the attested `queue.incoming` stays above zero. Reasons: `waiting-for-base`, `objects-missing` (an object
+  has not arrived; the stage is untouched meanwhile), `unmerged` (a merge or rebase left unmerged entries: nothing is published, the stage is
+  never reset, the registers stay queued until the conflict is resolved), `write-tree-failed`, `git-failed`, `index-busy` (`index.lock`
+  held: retries back off from 1 s to 30 s), `index-lock-stale` (held for more than ten minutes: close the program or remove the file
+  when no git runs) and `backup-failed` (the old stage could not be copied, so it is not replaced). The temporary indexes of the
+  register fold run with `core.splitIndex=false` and `index.sparse=false`, so `index.version=4`, `core.untrackedCache`, split and
+  sparse indexes of the real stage need no special case.
+- A commit changes no register: it replicates as objects plus the ref file. Concurrent commits are linearised, see below.
+- `verify` folds base and entries in a temporary index and compares the tree with `git write-tree`; a difference is reported as drift on `.git/index`.
+- Without `git` or without a root `.git` the realm is skipped and files keep syncing. `status` prints `Git state: ...` with the reason
+  (`no-git`, `no-repository`, `waiting-for-base`, `shared`); `preflight` warns when no git executable is found
+  (`SEMIO_GIT`, `PATH`, Homebrew, Command Line Tools, distribution paths, Git for Windows below `Program Files`).
+- A ref whose objects have not arrived stays queued (`blocked`, `objects-missing`, back-off up to 30 s) and is reported again as
+  `objects-missing-timeout` with the waited seconds after five minutes; the queue count shows it in the attestation. New branches,
+  tags and the `HEAD` file of a detached worktree replicate as plain last writer wins; concurrent commits on a detached `HEAD` are
+  linearised like branch commits.
+
+**Concurrent commits.** A branch ref (`.git/refs/heads/**`, and `.git/HEAD` while detached) is last writer wins per file, so two commits
+from one parent would leave one of them unreferenced. The machine that authored the losing commit repairs it when the winning ref value
+reaches it, with plumbing only (no worktree, no stage, no checkout):
+
+- Trigger: applying a remote `put` of a branch ref while the local ref value was written on this machine (published by this origin, or
+  changed since the last published value) and is neither equal to nor an ancestor of the incoming commit. An ancestor local value is a
+  plain fast-forward; an incoming value that is an ancestor of the local one keeps the local ref, which is published again. A local value
+  that was itself applied from another origin, every ref outside `refs/heads/` (remotes, tags) and `packed-refs` stay last writer wins.
+- Rewrite: every local commit not in the incoming history, oldest first, is re-created (a commit whose author line and message are already in the incoming history is dropped, whatever its tree: it is the earlier rewrite of the same commit, and re-creating it would put it into the history twice) with `git commit-tree` on top of the incoming
+  commit (one parent, merges flattened), keeping author, author date, committer and message. Its tree is the per-path three-way merge of
+  the original parent tree (base), the new tip (ours) and the original tree (theirs), with `diff-tree`, a temporary index and
+  `update-index --index-info` only: a path only the loser changed is taken from the loser, a path only the tip changed stays, a path
+  both changed identically stays, and a path both changed differently (also a file against a directory) takes the side whose committer
+  time is later, a tie keeping the tip. The winner's unrelated changes are never reverted and there is no fallback to a whole tree; the
+  `linearised` event carries the number of such conflicting paths in `count`, the unreferenced original commit keeps the dropped
+  version. `git update-ref` then moves the ref from the old
+  local value to the result, and the next scan publishes it as an ordinary ref change with a greater hlc than the winner.
+- Duplicates: a commit that adds nothing to the new tip (equal tree) and repeats the tip's message, or repeats an author line and message
+  of a commit in the incoming history, is dropped. When all are dropped the ref simply takes the incoming commit.
+- Only the origin of the losing value rewrites, so exactly one machine publishes the result; all others apply it as a fast-forward. If
+  another commit wins meanwhile (three machines, a third commit during the rewrite), the same rule runs again for the then-losing
+  value: every round has one hlc winner that is never rewritten, the losers re-create themselves on it, so with n concurrent commits there are
+  at most n-1 rounds and the chain holds each message once (a replaced rewrite stays unreferenced). A missing object, a moved ref
+  or a held lock keeps the event queued and retries it with the usual back-off. Each rewrite emits a `linearised` event naming winner,
+  loser and result (`reason` `duplicate` when nothing was re-created).
+
+**Configuration.** At daemon start, at join and when a base is first applied, `.git/config` is normalised through git: `core.autocrlf=false`,
+`core.safecrlf=false`, `core.eol=lf`, `core.protectNTFS=true`, `core.protectHFS=true`, `core.longpaths=true` on Windows, `core.filemode` (false on Windows), `core.symlinks` and `core.ignorecase` from probes of the volume, `core.precomposeunicode=true` on macOS,
+`core.fsmonitor=false`, `gc.auto=0`, `gc.autoPackLimit=0`, `gc.autoDetach=false`, `gc.writeCommitGraph=false`, `fetch.writeCommitGraph=false`, `receive.autogc=false`, `maintenance.auto=false`, `core.logallrefupdates=true` (no git client repacks on its own under the replica; an explicit `git gc` of a client still can, see `consolidate`); remotes, branches and user keys stay, a
+`commit.template` outside the worktree is removed. A joiner builds its stage from the base register and gets its own config; the bootstrap
+archive carries only allow-listed `.git` paths.
+
+**Repacks and the `git-broken` guard (2026-11-14).** A `git repack` or `gc` on one machine replaces packs: it writes a new `.pack`, `.idx`, `.rev`, `multi-pack-index` and deletes the old packs. The publisher never sends the `.idx`/`.rev`/`.mtimes`/`.bitmap` of a pack or the `multi-pack-index` before the `.pack` itself is published, and never sends a delete under `.git/objects` while a `.pack` of the directory is not yet published (the paths are retried). A receiver applies deletes under `.git/objects` only after every queued object put is applied and every pack index of the fleet has its `.pack` here (`blocked` with reason `pack-incomplete` otherwise). Every daemon checks every 30 s (`gitCheckMilliseconds`), starting with its first round, whether `HEAD` resolves to a readable commit while the fleet holds a `.git/HEAD` (`gitBrokenV1`: `head-unreadable`, `config-unreadable`, `head-unresolvable`, `tip-missing`, `index-missing`); a finding is a failure `git-broken-<reason>` in `attest.json`, `fleet` calls the origin `diverged` in `head.commit` and warns `git-broken` (also for an origin that attests `head: null` while another fresh origin has a head, even when that origin is not settled). Every 10 minutes (`gitHealMilliseconds`) and at every finding the daemon compares disk and registers for `HEAD`, `packed-refs`, `shallow`, `refs/**` and `objects/**` (existence; size for `objects/pack/**`; content of the small ref files while the disk still equals what it applied) and queues what differs, and a missing `.git/index` is rebuilt from the stage registers; replaced files stay in `lost/` as for every apply.
 
 ## Cache tokens and the worker environment
 
-Provisioning writes the machine environment of `env` (`SEMIO_REMOTE_CACHE_ENDPOINT` = the cache of the machine's own
-group, `SEMIO_REMOTE_CACHE_ACCESS=read-write`, `SEMIO_REMOTE_CACHE_INSTANCE`): to `/etc/profile.d/semio-fleet.sh` on
-Linux, `launchctl setenv` plus `/etc/zshenv` and `/etc/profile` on macOS, the Machine environment on Windows. The
-build tooling resolves its remote cache contract from exactly these variables
-(`📚️library/🏗️build/🌐️remote-cache`): the endpoint switches the cache on, `read-write` lets it upload local results, and the bearer
-token is read from the variable named by `SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT`, default `SEMIO_REMOTE_CACHE_TOKEN`.
+Provisioning no longer writes any cache pointer (the former `env` operation is gone): `SEMIO_REMOTE_CACHE_ENDPOINT`, `_ACCESS` and
+`_INSTANCE` come from the fleet facts in the group store (`<store>/v1/fleet/cache.json`), which the build tooling reads on every
+machine (`📚️library/🏗️build/🌐️remote-cache`). A leftover pointer in `/etc/zshenv`, `/etc/profile`, `/etc/profile.d/semio-fleet.sh` or the
+Windows Machine environment, written by an earlier version of the scripts, is ignored whenever healthy facts name another endpoint,
+unless `SEMIO_REMOTE_CACHE_ENDPOINT_OVERRIDE` is set; running the script again rewrites the block without it. The provisioning scripts
+write only the fleet address variables (`SEMIO_FLEET_GROUP`, `SEMIO_FLEET_NFS_HOST`, `SEMIO_FLEET_NETWORK`). The bearer token, where an
+operator still uses one, is read from the variable named by `SEMIO_REMOTE_CACHE_TOKEN_ENVIRONMENT`, default `SEMIO_REMOTE_CACHE_TOKEN`.
 
-The scripts never write a token, because those profile files are readable by every local user. The operator gives
-each worker account the **write token** in `SEMIO_REMOTE_CACHE_TOKEN` (a read token would make every upload fail with 403):
+**Zero-touch: the fleet facts.** No machine needs a token step. The cache server of a group (the machine whose origin in
+`.cache/f/machine.json` is `<group>-server`) writes a dedicated fleet credential (`<cache directory>/fleet/credential.json`,
+mode 0600, not an administrative secret and not a token of `/etc/semio/remote-cache.env`) and publishes
+`<store>/v1/fleet/cache.json` in the group store (mode 0600: the export maps every client to the store owner, and the store is
+the trust boundary of the fleet already, whoever mounts it changes the code of every machine): the endpoints that reach the
+server (the addresses of the server machine, the topology host last), the cache instance, the protocol versions, the credential
+and the reserved `execution` fact of the remote execution scheduler. The server writes it at start and checks it every minute.
+The build tools resolve the cache from the environment first, field by field, and from these facts second; they read the facts
+through the store root that `.cache/f/machine.json` names into `.cache/f/cache-facts.json` (mode 0600, never replicated) with a
+1.5 second timeout and a 30 second TTL, keep the last known value while the store stalls and stay local when nothing is known. The
+fleet credential is only paired with an endpoint the facts name. A 401 forces one refresh, so a rotation reaches every machine
+without a step: `repo remote-cache rotate --directory /var/lib/semio-remote-cache` on the cache server writes a new credential,
+keeps the previous one valid for 15 minutes and republishes the facts. `repo remote-cache status` shows where the endpoint and
+the token came from (`resolution`), whether the server accepts the token and the entries and bytes the server counts (`remote`).
+The facts live in `v1/fleet`, beside the journal directories and outside what the relay copies and the compaction removes (read
+from their code, not yet observed on a fleet), so every group serves its own. Nothing in the facts file is logged or printed.
+
+The profile variables below remain valid and win over the facts, field by field (a CI job with a read token, a machine of a
+foreign group). The scripts never write a token into them, because those profile files are readable by every local user. The
+operator may give a worker account the **write token** in `SEMIO_REMOTE_CACHE_TOKEN` (a read token would make every upload fail with 403):
 
 - Linux: a line `export SEMIO_REMOTE_CACHE_TOKEN=<write-token>` in the account's `~/.profile`, file mode 0600.
 - macOS: the same line in `~/.zprofile` of the account, mode 0600.
@@ -408,8 +802,7 @@ each worker account the **write token** in `SEMIO_REMOTE_CACHE_TOKEN` (a read to
 Only the build tools need the token; the replica daemons do not. Whether every way an agent starts a build
 (ssh, IDE terminal, service) inherits the variable has not been checked: run `repo remote-cache status` as the
 agent's own user, it prints whether the token variable is set (never its value). For a consumer that must not
-upload (a CI job), give it the read token and `SEMIO_REMOTE_CACHE_ACCESS=read-only`. To rotate, change
-`/etc/semio/remote-cache.env`, restart `semio-fleet-cache.service` and replace the variable in the accounts.
+upload (a CI job), give it the read token and `SEMIO_REMOTE_CACHE_ACCESS=read-only`. The tokens of `/etc/semio/remote-cache.env` stay the server's own read and write tokens; to rotate those, change the file and restart the cache service.
 
 ## Day 2
 
@@ -417,7 +810,7 @@ upload (a CI job), give it the read token and `SEMIO_REMOTE_CACHE_ACCESS=read-on
 origin; `--deep` also scans the tree to count the unpublished local changes. The output of `run` (the service log) reports `refused` paths,
 `overwritten` files (a local edit that lost, kept in `lost/`) and `kept` paths (a local edit that was newer than the remote one and was published), and the output of `relay` shows whether the relay is current. A refused path is a developer
 problem (a name that is not NFC, a Windows-illegal name, a case collision, an absolute symlink, a path longer than 256
-characters); the file stays local until it is renamed. The 88 absolute symlinks inside ticket `mirror/` and `basetree`
+UTF-16 units); the file stays local until it is renamed. The 88 absolute symlinks inside ticket `mirror/` and `basetree`
 trees are refused this way on purpose. Every refused path is visible in four places: a `refused` event with its reason
 (`too-long`, `not-nfc`, ...) when a scan or a file event meets it, once per daemon run; `status --deep` counts them
 (`refused`); `verify` lists them (`refused`, `refusedTotal`, at most 1,000 paths; they do not make `verify` fail); and
@@ -452,7 +845,8 @@ collected only with `--collect-blobs`, and only the group server does that: `pro
 wait in memory, and the references published since the fold are added before every deletion batch), the jobs of workers never delete a blob, because a worker's
 view of the other origins may lag and a blob that looks unreferenced to it can still be needed. The server's own
 replica sees the whole group store, including the origins that the relay copied in. A machine that has been offline for
-longer than the retention cannot follow the journal any more: `join` it again.
+longer than the retention resumes from the newest snapshot that is ahead of its cursor (see Compaction); only when no snapshot is ahead
+it reports `rejoin-required` and has to `join` again.
 
 **Staging files after `kill -9`.** Writers stage into `<store>/v1/tmp` (names `<origin>-<pid>-<hex>`; the relay uses
 `relay-<hex>`) and `.cache/f/tmp`. Opening a replica (`run`, `seed`, `join`) removes the whole local `tmp` and the
@@ -504,6 +898,54 @@ then arrive by themselves.
 **Store unreachable.** Workers keep editing and building locally and queue their publishes. They need no action when
 the server returns. Check `status` afterwards.
 
+## Compaction
+
+The journals grow with every publish, a republish storm multiplies them, and a machine that is behind, new or rebuilding reads all of it.
+Compaction makes that cost follow the live paths. Everything automatic is **off** (`replica.compaction.automatic` is `false` in the
+topology); the explicit command works regardless.
+
+**Snapshot.** A snapshot is the fold of the whole store (all realms, stage registers included) plus the cursors it covers, one JSON file
+`snapshots/<writer>/<hlc>.json` written through tmp, fsync and rename by any one machine (`compaction --apply`, the daily `compact`, the
+group server when automatic). Two machines writing at once is safe: each file is a complete fold at its own cursors, readers take the newest by hlc
+and then follow the journals from the cursors in the file, and since a fold is last-writer-wins per path by hlc, snapshot plus tail equals the
+full fold (property-tested against an independent fold and `🗜️compaction/🧪️tests/🐍️.py`). A joining, rebuilding (`state-rebuilt`) or `verify`ing
+machine loads the newest snapshot; a replica that is behind jumps to it (below).
+
+**Catch-up.** With `automatic` on, a replica that is at least `catchUpEvents` (20,000) events behind (estimated from the heads) and finds a
+snapshot that saves at least that many reads the snapshot instead (event `progress`, stage `jump`), applies its entries by the usual
+rules (local edits that are newer are kept, older ones go to `lost/`) and follows the journals from the snapshot's cursors. Independent of the setting, a replica
+whose cursor points into a segment that was removed resumes from the newest snapshot that is ahead of it (stage `rejoin`); only if there is none it reports
+`rejoin-required`.
+
+**Segment retirement.** A journal segment of any origin may be removed when all of these hold: it lies wholly below the snapshot's cursor for that origin and below the
+head segment; every origin that attested within `staleHours` (12) with synchronisation on has attested a cursor past it (so a live machine is never forced to jump); it is
+at least `safetyHours` (3) old; and it belongs to the prefix of that origin's segments that satisfy this (no holes). Origins that are silent for longer than `staleHours`,
+have `sync` off, are retired (`retire`) or never attested do not hold segments back: they resume from the snapshot when they return. Only `wallMs`, `sync` and `cursors` of
+`attest.json` are read, so a change of the rest of the attestation cannot make a machine invisible; an attestation that cannot be read holds back with no cursors until
+its file is `staleHours` old. The plan is reported by `compaction --plan` (and `status`) and the Python oracle computes the same segments. Removal goes oldest first, one `unlink` at a time.
+
+**Blob reclaim.** A blob is removed when no entry of the newest snapshot and no event after the snapshot's cursors names it and it is at least `safetyHours` old (mtime).
+To be safe against a publish that is in flight, the blob is first renamed into `v1/trash`, the events appended meanwhile are read, and it is put back if it is named now or if
+its mtime changed since the scan; a publisher that finds its blob already stored touches it (`utimes`) before it appends the event, and stores the blob again if the touch finds
+it gone (`touchBlobV1`; the relay does the same for blobs it already holds). A blob written before its event is young and stays. A file that goes back to the content of a
+reclaimed blob simply publishes that blob again. Blobs that only an event before the snapshot names (a superseded version) are reclaimable: a replica that still reads that old
+event sees one `blob-missing` for a version that is superseded in a later slice. `.cache/f/lost` is local to a machine and is not a reference; nothing in it needs the store blobs.
+A reclaim whose snapshot was overtaken by another compaction (a segment it needs vanished) puts everything back and stops (`aborted`).
+
+**Crash safety.** One compaction at a time per store (`v1/compaction.lock`, `mkdir`, refreshed every minute, taken over after two hours; `locked` is reported). A kill at any
+filesystem mutation leaves a store that folds to the same manifest; set-aside blobs of a dead run are put back by the next one (`recoverTrashV1`); the next run finishes the work
+(`🗜️compaction/🧪️tests/💥️killpoints.ts` kills a full compaction before and after every mutation).
+
+**Visibility.** `status` shows the journal (bytes, segments, origins), the newest snapshot and its age, what the retirement rule would remove right now, and what the last applied
+compaction removed and left; `status --deep` also lists the blob directory and measures the blobs a reclaim would remove now (about 30 seconds for 240,000 blobs; `compaction --plan` reports the same). All texts exist in English and German.
+
+**Litter.** macOS clients leave AppleDouble sidecars (`._<name>`) and `.DS_Store` files in the store (about 230,000 of them next to the blobs on the live store, one per blob); no name of the store begins with a dot, so `compaction --apply` removes every such entry older than `safetyHours` from the blob, head, snapshot, origin and segment directories and reports it as a `litter` progress count. The cause is the extended attribute `com.apple.provenance` that the kernel adds to every file a process writes: an NFS client without named attributes stores it as a 4096-byte `._<name>` next to the file, so no mount option or `COPYFILE_DISABLE` avoids it (a 4096-byte `._` file of the live store carries exactly that attribute). Readers ignore them (`listOriginsV1` takes directories with an origin-id name, the flat heads and the segment lists match patterns, the attestation readers open exact names; tested), and the sweep also covers `v1/fleet` and `v1/bootstrap` at any depth and the root `v1` (there only a `._<name>` whose `<name>` exists next to it counts); it runs inside `compaction --apply`, so it does nothing while automatic compaction is off (3411 files on 2026-11-14, 1998 of them under `blobs`).
+
+**Enable it.** In the topology file set `replica.compaction.automatic` to `true` (thresholds: `snapshotEvents` 100,000, `safetyHours` 3, `staleHours` 12, `catchUpEvents` 20,000).
+The group server (`<group>-server`) then checks every ten minutes whether the newest snapshot is missing, `snapshotEvents` events behind or, with anything behind, `safetyHours`
+old, and runs the compaction in its daemon; every replica enables the jump. First try `repo ./📜️script.ts compaction --plan` on the group server, then `compaction --apply` once by hand.
+The daily `compact` job stays as it is (snapshot and the retention-based cleanup of the own origin); it is no longer needed for retirement.
+
 ## Capacity
 
 Stated hardware: machines with 4 to 16 cores, 8 to 128 GB RAM and 128 GB to 2 TB of NVMe.
@@ -544,17 +986,27 @@ Stated hardware: machines with 4 to 16 cores, 8 to 128 GB RAM and 128 GB to 2 TB
     server's daily job is `compact --collect-blobs`. Daily is a limit, not a taste: the blob collector keeps every doomed file in memory
     while it runs, which the rehearsal extrapolates to 0.6 to 1.7 GB for one day of garbage and 4 GB for a week. A worker compaction
     takes 2 to 7 s on the real tree (peak 460 MB), a collection a few minutes to 30 minutes on a day of garbage.
-- **Poll load.** Each daemon reads the `head.json` of every origin every 250 ms. With 50 origins that is 200
-  reads per second of a file of about 100 bytes per machine, and 2000 per second for a group of ten. That is
-  trivial for a server with NFSv4 and the page cache, but the NFS caches matter. Measured on Linux (kernel 6.8, NFS 4.2):
-  `head.json` is replaced by a rename; with the mount defaults a `stat` of the new head came late (only 46 of 100 versions were
-  ever seen, up to 2.3 s late), with `actimeo=1,lookupcache=positive` after 505 ms median and 960 ms p95, and with
-  `lookupcache=none` after 10 ms. The Linux mount options therefore use `actimeo=1,lookupcache=none`; end to end a save on the
-  server appears on a worker in 305 ms median (p95 424 ms), against 696 ms (p95 1,173 ms) with `lookupcache=positive`. The price
-  is about four `LOOKUP` calls per head per poll (32 RPC/s for two origins polled every 250 ms, so about 800 RPC/s for a machine
-  that follows 50 origins). On macOS the same poll costs 65 NFS calls per second for four origins, so about 800 per second for 50 origins
-  (measured, table "Client caches"). Windows is not measured: confirm that a save appears elsewhere within about a second before you rely on it. The Windows
-  settings of the table "Client caches" are by reasoning, not measured.
+- **Poll load.** An idle follow round costs two `stat`s (`v1/origins` and `v1/heads`) whatever the number of origins. Every origin that
+  publishes leaves, after `head.json`, an empty file `v1/heads/<origin>_<segment>_<bytes>_<events>_<hlc>` whose name is its head; it is
+  created before the previous name of that origin is removed, so a reader sees both or the new one and takes the later. Each create and
+  remove changes the mtime of that one directory. A follower lists the directory with one `readdir` only when its signature (inode, mtime,
+  size, link count) changed, once more after 30 ms and after 1.1 s without a further change (a coarse file system timestamp can hide a second
+  change inside one tick), and every 10 s (a client whose attribute cache is stale), and reads the heads from the names without opening a file.
+  The flat head is a hint, never the truth about the journal bytes: every 10 s the follower polls the `head.json` of all origins as before
+  and takes the later head, and an origin without a flat head (code that does not write it, a failed write, a store that has no `v1/heads`)
+  is polled through its `head.json` every round, so a fleet that is half upgraded works and a lost hint costs at most ten seconds. Code
+  that does not know the directory ignores it. The relay reads the flat heads of the peer store the same way and writes them for the
+  origins it carries. Measured on this Mac with a synthetic store on local APFS (`🧰️scripts/1113-bench-store.ts`, not NFS): store operations
+  per idle round 5.2 to 2.3 at 5 origins and 52 to 4.1 at 50 (2 between the 10 s audits), so 208 to 17 per second at 50 origins. What an
+  NFS client does is not measured: the table "Client caches" measured how fast a replaced `head.json` shows, and the directory mtime
+  has to be re-measured on a worker (Linux `actimeo=1`, macOS `acdirmin=0`) before the 10 s audit is lowered or raised. The figures
+  of the table (65 NFS calls per second for four heads on macOS, 32 RPC/s for two heads on Linux) describe the old per-head poll, which
+  now only runs for origins without a flat head and every 10 s.
+- **Catch-up.** A replica that is far behind reads at most one segment and 1,024 events per origin and slice, applies them, and goes on
+  with the next slice only while less than half a second has passed, so the loop publishes its own changes and attests at least that
+  often whatever the backlog (100,000 events behind: one round of 30 s before, rounds of at most about one second now). Journal lines are validated by a
+  hand-written twin of the schema (`isEventV1`, `isManifestEntryV1`, `isHeadV1`, `isPathV1`) whose verdict is tested against the generic
+  validator, Ajv and the Python oracle on fuzzed values; reading 272,000 events takes 0.18 s instead of 1.1 s.
 - **Latency (measured).** A save appears on another machine of the same group after about 0.3 to 0.5 s (Linux NFS 4.2 with the mount
   options above: median 305 to 388 ms, p95 424 to 535 ms; macOS rehearsal with 50 daemons on local stores: median 343 ms, p95 696 ms; **macOS 27 against a Linux server over real NFS 4.0, 200 saves each way
   (`mixed-os-report.md`): Linux to macOS median 324 ms (p95 436 ms), macOS to Linux median 347 ms (p95 477 ms), none overtaken**) and on a machine of another group
@@ -563,7 +1015,22 @@ Stated hardware: machines with 4 to 16 cores, 8 to 128 GB RAM and 128 GB to 2 TB
   up to 3 s late, the median was 889 ms, p95 2,944 ms and 91 of 200 saves were overtaken before they were copied).
   Files of 14 to 48 MB take 0.7 s in the group and 1.1 s across groups at the median. A host at load or a store that was away shows up in the tail first
   (p95 of 5 s while a daemon catches up, up to 30 s after a 30 s store outage).
-- **Writes.** A save writes a blob, appends to one segment and replaces one `head.json`. Large bursts (a
+- **Writes.** A save writes one blob, appends to one segment, replaces `head.json` and swaps the flat head name. The file is read once:
+  it is hashed while it is copied into `v1/tmp`, so the blob is named by the bytes that were written (a file of the same size as its
+  recorded version is hashed first, because an unchanged file then needs no copy at all; a blob that already exists is dropped after the copy,
+  or not copied when the hash is known). Durability order, which nothing weakens: the blob is fsynced before its rename (a blob name never
+  exists without durable bytes; on NFS the close of the file commits as well), the events are fsynced (one write and one fsync per
+  segment and batch of up to 256 events), `head.json` is fsynced before its rename, the flat head is a hint and is not synced. A file
+  that changed while it was read is not published (`unstable`, retried). Applying copies from the store into `.cache/f/tmp` while hashing
+  (one read, no read back, no fsync: the tree is a cache and a rescan restores the state) and compares with the name before the rename,
+  so a blob whose content does not match its name is never applied (`blob-corrupt`, the path stays queued); the relay copies and verifies
+  each blob the same way and fsyncs it before it appends the events that name it. From 64 MiB a copy first tries a copy-on-write clone
+  (where source and target share a volume, as on the group server) and otherwise streams in 1 MiB chunks through two buffers, so memory does
+  not follow the file; progress events (`publish-blob`, `apply-blob`, `relay-blob`, `done` of `total` bytes) and cancellation work
+  between chunks, and a cancelled copy leaves nothing in `v1/tmp`. A file that was applied is recorded as seen two seconds after its own
+  timestamp (when that has sub-second precision), so the next full sweep does not hash it again. Measured on this Mac, local APFS: 1,000 small
+  files 380 ms to 308 ms and 5.0 to 3.3 store operations per file (1 fsync per file as before); one 1 GiB file published in 5.3 s before and
+  0.7 s now (a clone and one read), 1.25 s by stream; applied in 1.0 s before and 0.6 s now. Large bursts (a
   generated tree committed by a tool, a dependency update) are many small files; expect the burst to take
   seconds to minutes, not milliseconds.
 - **Relay traffic.** Every blob crosses the links between groups once per other group. Peak traffic is the
@@ -582,7 +1049,7 @@ Stated hardware: machines with 4 to 16 cores, 8 to 128 GB RAM and 128 GB to 2 TB
 - A worker at a non-canonical path builds, but never gets cache hits from other machines.
 - A path ignored too late: a new generated or machine-local file that the root `.gitignore` does not ignore is
   replicated to everyone. Fix the rule first; then delete the file, which also replicates.
-- Git mutations on a worker. `.git/` is not shared, so a worker's git state is meaningless to the fleet.
+- Two machines amending or rebasing the same branch at once, or force-moving a branch ref: such a ref change is an ordinary last-writer-wins write, only plain commits are linearised.
 - Reusing an origin id with a new journal, or running `seed` twice.
 - A clock more than 60 s ahead of the others.
 - Expecting the keystroke order across machines: two writes to one file within the publish latency are ordered by
@@ -622,3 +1089,102 @@ Still unverified: a macOS group server and NFS 3 for a macOS or Windows server, 
 `noresvport` against an export with `insecure`), the other distributions' package managers, the figures under the production load, the tar writer against bsdtar on
 Windows with the real tree, the native bootstrap as a service account on macOS, the scheduled tasks and their XML on Windows, the Windows NFS and SMB client settings,
 and `compact` that removes segments or blobs while a daemon runs (on Linux it ran next to the daemons and found nothing to remove).
+
+## Resilience (self-restart, store stalls, recurring failures)
+
+- **Self-restart is proven first.** When the code digest on disk (module sources plus every file they import: shared libraries, JSON schemas, text catalogues) differs from the running digest for 5 s, the daemon starts a fresh process (`<runtime> 🔁️replica/📜️script.ts self-check`). It loads every module, compiles every schema definition, checks the text catalogues in all languages and dry-opens the current local state read-only. Only on exit 0 with the same digest does it restart, after a per-origin delay of 0 to 60 s (sha256 of origin and digest), at least 30 s after its own start and while the incoming queue is empty (given up after 5 minutes). A failing check keeps the old code running: event `restart-refused`, `pending:{code,ok:false,reason}` in the attestation, `status` line; it is repeated only when the digest changes again.
+- **Reverts are not adopted.** `.cache/f/code/history.json` records the digests this machine ran and the digests it refused. Code on disk that was refused, or that ran before and was superseded, is not checked and not restarted into: event `code-reverted`, `pending` in the attestation, the daemon keeps its code. To roll back on purpose, delete that file.
+- **Last known good.** After every passed check, and at every start, the checked closure is sealed into `.cache/f/code/<digest>/` (mirror of the repository paths, `sealed.json` written last, the newest two kept). The service entry `📜️script.ts` imports nothing but Node built-ins: it loads the worktree code, self-checks it, and runs the newest sealed snapshot that loads instead when the worktree code fails or is a revert (`self-check` itself never falls back). The fix then arrives through the replica and the next restart picks it up. No re-provisioning is needed: the entry file is replicated like any other.
+- **A stalled store does not freeze the daemon.** A filesystem call blocked by a hard NFS mount cannot be cancelled. The daemon probes the store with one outstanding probe; when it has not answered for `storeDeadlineMilliseconds` (10 s) the round is abandoned and aborted, `store-unreachable` (reason `stalled`) is reported, no further store call is issued, and the loop, hints, state persistence and the health file keep running. When the store answers again it resumes with a full walk, no restart. Calls already in flight stay blocked until the kernel returns. `status` shows `health` (store state, refused code, recurring failures).
+- **Recurring failures stay visible.** Each failure key is counted; the first occurrence is announced, a repeat at most once a minute with `count`. Counts and last time per kind are in `status`, `.cache/f/health.json` and the attestation (`failures`). Failing rounds back off from 250 ms to 30 s.
+- **One machine per origin.** `machine.json` carries a random key; the first publish records it in `origins/<origin>/home.json` by exclusive create. A machine with another key is refused (`OriginTakenV1`) at open, join and publish. The daemon lock carries the boot time and a 5 s heartbeat; steals are serialised by `daemon.lock.steal`.
+- **Silent drift heals itself.** Every two minutes (`driftMilliseconds`) the daemon reads the attestations of the fleet; when its own origin is `diverged` in the manifest against the settled origins it reports `drift` (fields, check number) and runs the repair: it takes over the store registers it lacks or holds older, drops manifest rows the complete store fold does not have, queues every manifest entry whose applied row is missing or carries another hlc, and forgets applied rows without a manifest entry (the next walk publishes the file if it still exists). Repeated findings back off from two minutes to one hour, and after three repairs that did not end the difference (a machine that ignores a path the others share differs by design) the daemon stops repairing until the difference has gone, so a by-design divergence never costs a store fold every hour. Differences in code, git state or view are never repaired automatically.
+- **Clocks.** Stamps more than 60 s ahead of the wall clock are refused (`ClockAheadV1`, event `clock-refused` at open) instead of freezing the origin; the fleet verdict votes `code` and treats an attestation more than 30 s in the reader's future as stale.
+- **Journal.** A segment shorter than its head is sealed at its last complete line and the append continues in the next segment; snapshots are refused while a fold needs a rejoin; an event of an unsupported version stalls its origin visibly (`unsupported`) instead of being skipped; existing blobs are rehashed once per process before they are trusted.
+- **A damaged or missing blob is put back by the fleet.** Reading a blob is verified against its name; a blob that does not hash to its name is never materialised (the copy is removed), and a blob that a live entry references and the store lacks is not an error of the file. Either way the machine keeps the path queued with a back-off, reports `blob-missing` (reason `blob-corrupt` or the hash), counts the failure kind `blob-wanted` (in `status`, `health.json` and the attestation; `fleet` warns `blobs` while it is recent) and announces the hash (at most 64) in `origins/<origin>/wants.json` (`🔁️replica/🩹️blobs`, closed schema, rewritten when the set changes, empty when nothing is wanted; the relay copies it like `attest.json`). Every 20 s each daemon reads the wants of the other origins; a machine that holds a live, applied file for that hash re-hashes it while it copies it to a staged file and replaces the store blob by rename (`repairBlobV1`), event `blob-repaired`. A holder whose file changed writes nothing (the copy must hash to the name), the hash is paid once per blob and five minutes, and a blob nobody can supply stays wanted and visible. A machine that re-saves the same content repairs the blob too: an existing blob is hashed afresh before it is trusted. `bootstrap-settle` stages its blobs verified and stops with `error.bootstrap.blob` on a damaged one, leaving the file where it is.
+- **Delete tombstones expire after 90 days.** A tombstone is what makes an older put lose; a snapshot written at hlc `S` leaves out the deletes older than `S` minus 90 days (`tombstoneLifetimeMillisecondsV1`), and a follower that rejoins from such a snapshot treats a live entry older than that horizon which the snapshot lacks as deleted (`adoptSnapshot`: the delete wins over a local copy that is older than the snapshot hlc, a newer local edit is kept by the conflict rule). This is safe because the lifetime is far longer than the segment retention: a journal segment holding an older put is retired long before, so no reader can see the put without the delete, and a follower older than the retention has to rejoin from a snapshot anyway. Machines that follow the journal keep their in-memory tombstones until they rebuild. A fresh `join --adopt` still publishes a local file that the store does not know as new work, whatever its age.
+- **Capabilities that a volume lacks are switches, not guesses.** `symlinks` (default: probed once at open by creating a link in `.cache/f/tmp`) and `caseInsensitive` (default: probed the same way) are options of the replica. A machine that cannot hold symbolic links keeps the link entries in its manifest and applied state (event `skipped`, reason `symlink-unsupported`), never publishes a delete for a link that is missing from its disk, ignores such links in `repair` and `verify`, and shows the difference through `guards.volume.symlinks`, `guards.links` and the fleet warning `symlinks`. On a volume that ignores case, `repair` queues a file whose spelling on disk differs only by case from its manifest entry and the apply renames it (a file written over an existing one keeps the old spelling on APFS and NTFS); a case-only rename made on any machine converges everywhere in either order of its put and delete, because the structural conflict rule retires the old spelling first.
+- **Preflight lines for the runtime.** `watcher` reads the failure kind `watch` of the running daemon (the recursive watcher stopped, only the scans remain), `visibility` reads the passive apply latency of the replica (p50 and p95 over its samples, warn above 5 s, skip below 5 samples: the same measurement on every operating system, taken where the client caches act), and on Windows `logon` warns when automatic logon is not configured, because the replica task starts only after a logon. A daemon that starts before its store is mounted reports one `store-unreachable` with reason `waiting-for-mount` and starts when the store appears. The Windows entry shim appends everything the boot program prints to `run.log` beside it (cut to its last 20000 lines above 8 MiB).
+- **Bounds.** `.cache/f/lost/` is pruned by age and to 2000 entries, the service log and the native bootstrap log are rotated in place at 64 MiB (4 MiB kept in `.1`), caches of notes are capped.
+- **Tests.** `🛡️resilience/🧪️tests` (unit, Python oracle with hashlib and jsonschema), `🔁️replica/🧪️tests/🛡️resilience.ts` (daemon), `🔁️replica/🧪️tests/💥️killpoints.ts` (aborts at every filesystem mutation of publish, follow, close and journal append, reopens, checks convergence).
+
+## Boot that cannot be bricked (supervised start, fallback code, admission, watchdog)
+
+The 2026-11-13 08:41 incident (new files plus two stale ones, `tables.dirs.adopt is not a function`, a service manager restarting a crashing daemon forever) is the case this section closes. Nothing in the worktree can keep a machine from running working code, and no machine switches to code that nobody has proven.
+
+- **The supervisor** (`🔁️replica/🛟️supervisor/🟦️.ts`, formerly `📜️script.ts`, Node built-ins only; `📜️script.ts` is now the trampoline of the next section). For `run` without an installed boot program it starts the daemon as a child process (`<runtime> 📜️script.ts --boot-child run …`) of the worktree code. Any exit other than 0 before the child reported `started` (a syntax error, an import that does not fit, a throw while opening the state, a crash, a hang), or within `earlyMs` (60 s) of its start, is an early failure and the next code is tried: (a) the newest intact sealed snapshot in `.cache/f/code/` that `history.json` does not list as `refused`; (b) a snapshot in `<store>/v1/bootstrap/code/<digest>/` (see below), preferring one that a fresh attestation reports, fetched file by file against its `sealed.json`, hash-verified and sealed locally; (c) the worktree code that was set aside as a revert, as a last resort. A snapshot that fails early is added to `refused`. A daemon that was ready and fails later is not replaced: its exit code is final and the service manager restarts the whole sequence. Exit code 75 (another daemon holds the lock, the origin belongs to another machine) is final as well and never starts a fallback, and a daemon that waits for the consent to read the worktree (macOS) is not killed for being slow to start; a daemon that is neither ready nor waiting after `readyMs` (15 min) is killed and counts as an early failure. Failing everything, the stage waits 5 s and exits 1 (`No replica code starts`).
+- **A machine on a fallback keeps working and says so.** The child gets `SEMIO_FLEET_CODE_WATCH` (the worktree module), so the daemon keeps syncing and watches the worktree code; it reports `fallback:{guard:"code-fallback",source,reason}` in its attestation (fleet warning `code-fallback`), `status` prints the source and phase of the code, and `.cache/f/boot/beat.json` carries `source`. When the code on disk passes the admission and the self-check the daemon restarts (exit 0) and the next start runs the worktree code again. When the worktree code is byte-identical to the fallback code (the fix was made on disk without a new digest) the daemon still returns, but not before 5 minutes of uptime (`returnMilliseconds`), so a worktree that can start only in theory does not cause a restart loop.
+- **Store snapshots.** A healthy daemon (running for `publishCodeMilliseconds`, 10 min, with no failure younger than that and the store reachable) copies its sealed snapshot to `<store>/v1/bootstrap/code/<digest>/{sealed.json,files/…}` through a private `.tmp-` directory and a rename, so a snapshot is complete or absent; `sealed.json` is the schema `SealedCode` of `🛡️resilience` (per-file `sha256` and `bytes`, sorted bytewise), the same document as a local seal. A damaged published snapshot is replaced. The newest four stay, plus every digest that a live origin attests; unfinished directories older than an hour go. A hand-made example without a manifest does not load and is replaced by the first real publish.
+- **The stage outlives the worktree.** `join` and `seed` copy the supervisor file to `.cache/f/boot/stage.ts` with `stage.json` (its sha256, written last); a healthy daemon refreshes that copy from the code it runs, so a machine that joined before the stage existed gets it from the next healthy daemon. The worktree entry runs the copy when its hash matches the signature and the copy imports, otherwise itself. The supervisor still lives in the worktree; the boot program of the next section does not.
+- **A new code is admitted before it is checked, and the fleet can never wait on itself (`🚦️canary`).** The rule is the pure function `decideCanaryV1` (schema `🚦️canary/🧬️schema/🔣️.json`, language-agnostic fixture with 42 decisions and 7 tracker sequences, independent Python oracle `🐍️.py`); `admitCodeV1` feeds it the attestations, the refusals, the store snapshots and the retirements of the store. In this order: (1) the code that runs is admitted; (2) a digest that any origin **refused** (`origins/<origin>/refused.json`, schema `Refusals`, newest 64) never passes; (3) a digest with a healthy **store snapshot** passes; (4) a digest that another origin runs (fresh attestation, sync on, no fallback) passes for a **follower** only after that canary has stayed healthy for 60 s as seen by this daemon (`createCanaryTrackerV1`: the time starts at the first reading and is kept while readings follow each other within 60 s), until then `waiting: X runs this code and has to stay healthy for N s more`; (5) a digest whose changed files were all published by this origin (**author**, `authoredCodeV1`, asked again after 5, 10, … 60 s while false) passes; (6) otherwise nobody has proven it and the candidates go **in turn**: the candidates are this origin and every other fresh (60 s), syncing, non-fallback, non-retired origin of the group, the group server `<group>-server` first and the rest by ascending id; after **2 minutes** (counted from the first time this daemon was asked about the digest, a new digest starts again) the first candidate goes, each further one **5 minutes** later (a canary needs jitter, self-check and boot), and only if no earlier candidate made the code run in between; a silent server drops out of the order by itself. The waiting text says who goes first and in how many seconds, in English and German. Every candidate still runs its own self-check before it switches, and a canary that fails stops the fleet: a failed self-check (not a timeout or cancellation of the check, which say something about the machine) publishes a refusal of the digest, so does a daemon that runs a fallback code because the worktree code did not start (it refuses the worktree digest, for itself in `history.json` and for the fleet), and so does a daemon whose predecessor of the same code was ended by the watchdog within 30 minutes of that code's first run (it records the refusal and steps aside; the boot stage then starts the last sealed code, because a refused digest is a rejected start). Nobody switches to a refused digest again; a changed file is a new digest. This replaces the old rule "go first only if every file was written here, else wait until another origin runs it", which deadlocked as soon as the files of a change set were written on several machines (2026-11-14: all eight origins waiting for 4.5 hours). The self-check now also dry-opens the real state on a private mirror with `openReplicaV1` (not only the load of the checkpoint) and boots the checked daemon once in a scratch worktree and store (seed, open, close, then `runV1` until its first attestation), so a mixed module fails before any restart; its limit is 180 s.
+- **A blocked apply pass backs off, and a lost pack event cannot stall the fleet.** Deletions under `.git/objects` wait until every pack index of the manifest has its pack (so a repack never leaves old packs gone and the new one missing). An index whose pack the manifest does not hold as a put and that is older than ten minutes is an orphan and holds nothing back; before, one lost pack event (2026-11-14: `pack-afe8…idx` published at 02:03, its pack never) kept 52 deletions queued on every origin, which kept the incoming queue non-empty and with it every **checkpoint** (checkpoints are taken only with an empty queue, so the common checkpoint was 3.6 hours old). While a pass is blocked on this and the queue has not changed, the next pass waits 0.5 s, then twice as long up to 30 s (`pack-incomplete` was counted 6 times a second as the failure kind `blocked`); a change of the queue (an event arrives, a file is applied) runs it at once.
+- **A blocked event loop is visible and bounded.** The child starts a watchdog thread that writes `.cache/f/boot/beat.json` every second with the lag of the event loop; `status` prints `Daemon: busy, the event loop has not answered for N s` instead of `not running` (the lock is not taken over while the beat of its pid is fresh), a lag of 60 s is recorded as the failure `loop-blocked` in `health.json` and in the attestation, the supervisor kills a child blocked for 15 min, forwards `SIGTERM` and kills a child that does not stop within 20 s, and the child ends itself when its supervisor dies. Whole-queue loops (clash settling, event parsing) yield every 8 ms (`yieldingV1`).
+- **Service definitions bound crash loops and stops.** The systemd units (replica, cache, relay) set `StartLimitIntervalSec=0`, so systemd's default start limit (5 starts in 10 s) can never leave a crash-looping unit `failed` and dead; with `RestartSec=2` the default sat exactly on that boundary. The replica unit sets `KillMode=mixed` and `TimeoutStopSec=30`: `SIGTERM` reaches the supervisor only (it forwards it and kills a blocked child after 20 s), `SIGKILL` follows for everything at 30 s instead of the default 90 s. The LaunchDaemon plist keeps `KeepAlive` and `ThrottleInterval` 5 (launchd has no start limit) and sets `ExitTimeOut` 30 (default 20 s equals the supervisor grace). The Windows task restarts on failure (every minute, 255 times, `ExecutionTimeLimit` `PT0S`) and is started again by the minute trigger when the count is used up. Verified on Debian 13 (systemd 257): a `/bin/false` unit with `RestartSec=100ms` stays `failed` after 5 restarts with the old text and keeps restarting with the new one; a TERM-ignoring supervisor is killed at 30 s.
+- **Limits** are environment variables of the entry: `SEMIO_FLEET_BOOT_EARLY_MS`, `_READY_MS`, `_BLOCK_MS`, `_KILL_MS`, `_GRACE_MS`, `_BEAT_MS`, `_STORE_MS`.
+- **Tests.** `🔁️replica/🧪️tests/🛟️boot.ts` (stage, store fetch, watchdog, admission, status, publication, the incident with a real module copy), `🛡️resilience/🧪️tests` (store snapshots with the Python oracle, beat, yield).
+
+## Service entry outside the worktree (installed boot program, trampoline, guard)
+
+Replicated code is written by other machines, so a service definition that runs a file of the worktree can be bricked by any of them: a syntax error in the entry script, a broken static import, a launcher that cannot resolve the workspace, a missing worktree. The service entry therefore does not live in the worktree.
+
+- **The installed boot program** (`🔁️replica/🥾️entry/`: `🟨️.mjs`, `🐚️.sh`, `🔵️.ps1`, schema `🧬️schema/🔣️.json`) is installed as `boot.mjs`, `boot.sh` and `boot.ps1` in a per-account directory that needs no privileges and lies outside every worktree: `~/Library/Application Support/semio/fleet/entry` on macOS (not Documents, so no consent prompt and it survives a relocation), `$XDG_DATA_HOME/semio/fleet/entry` (default `~/.local/share/semio/fleet/entry`) on Linux, `%LOCALAPPDATA%\semio\fleet\entry` on Windows. Next to the three files: `worktree` (one line), `entry.json` (schema `EntryManifest`: version, sha256 and bytes of every file, worktree, module, store; written last), `boot.prev.mjs`, `state.json`, `refused.json`, `code/<digest>/` (hash-verified snapshots fetched from the store).
+- **The service runs the shim.** The systemd unit (`/bin/sh <home>/.local/share/semio/fleet/entry/boot.sh run`), the macOS agent (`/bin/sh <home>/Library/Application Support/semio/fleet/entry/boot.sh run`) and the Windows task (`powershell.exe -File <home>\AppData\Local\semio\fleet\entry\boot.ps1 run`) have no working directory. The shim looks for a runtime in the order `repo` launcher inside the worktree (the macOS consent of the launcher stays valid), the newest cached bun below the user cache, `bun` on the path, runs `boot.mjs` and then `boot.prev.mjs`, ends only when the program ends with 0 or 75, after 20 s of running, or on a stop signal, and otherwise waits (2 s doubling to 60 s) and tries again.
+- **The boot program never exits permanently.** (It does stop on a stop signal and when its parent, the shim, dies; its daemon stops with it.) It tries, in this order: the worktree supervisor (as the child process `--boot-child`, with the readiness, early-failure, watchdog and kill rules of the supervisor), the newest intact sealed snapshot of `<worktree>/.cache/f/code` or `<entry>/code` that is not refused, a snapshot of `<store>/v1/bootstrap/code/<digest>/` (ranked by fresh attestations, fetched file by file against `sealed.json` and its sha256 and sealed into `<entry>/code`; a snapshot whose hashes differ is skipped), and last the worktree code once more when it was refused only as a revert. A failing snapshot is refused for an hour. With nothing runnable it writes `state.json` (schema `EntryState`: `phase` `starting`, `running`, `waiting` for a missing worktree or `exhausted`, source, digest, reason, the last attempts, the time of the next try), logs in English and German, and polls again after a doubling backoff (5 s up to 5 min); a worktree that appears later is started. Snapshots sealed before the supervisor split lack `🛟️supervisor` and are not used. Limits: `SEMIO_FLEET_ENTRY_EARLY_MS`, `_READY_MS`, `_SILENT_MS`, `_KILL_MS`, `_GRACE_MS`, `_POLL_MS`, `_BACKOFF_MS`, `_BACKOFF_MAX_MS`, `_STORE_MS`, `_REFUSE_MS`; `SEMIO_FLEET_ENTRY_DIR` moves the directory (tests).
+- **A healthy daemon keeps it current.** At start (after the self-check passed and the code is the worktree code) and every hour the daemon runs `maintainEntryV1`: the source `bootVersionV1` is compared with `entry.json`; a higher version is proven first by `selfTestV1` (a throwaway worktree whose supervisor starts, and one whose supervisor fails and a sealed snapshot takes over, each found ready and stopped by an abort), installed through temporary files and renames (previous program kept as `boot.prev.mjs`, manifest last) and hash-verified; a lower version is refused, the same version with other bytes is refused (raise the version), a damaged installation is repaired, a program installed for another worktree that still holds a machine identity is not taken over (`refused-foreign`; only provisioning and relocation pass `--take-over`, so a scratch worktree of a test never redirects the service of the machine), and a program that fails its self-test is refused: installed files and manifest stay byte for byte, the daemon records the failure kind `entry-boot` (health, attestation) and retries on the next round. Provisioning (`step 6a` of the shell script, `step 7b` of the PowerShell script) installs the program with the same command (`repo <🟨️.mjs> install --worktree <path> --store <path>`) before it renders the service.
+- **Machines that already joined** still run `repo ./📜️script.ts run` from their service definition, which needs root (system LaunchDaemon, systemd unit) to change. Without privileges the daemon does what it can: `📜️script.ts` is now a trampoline of 56 lines (Node built-ins only, under 16 KiB) that, for `run`, hands over to the installed shim when `entry.json` names this worktree and the shim and the program match their manifest hashes (and falls back to the supervisor when the shim fails within 10 s), and otherwise behaves as the supervisor did (including its verified stage copy). The first healthy start of the new code installs the boot program, the next service restart takes it. A macOS account that owns its LaunchAgent (relocated machines) additionally gets the plist rewritten by its own daemon (`migrateAgentV1`: only the rendered shape, `plutil -lint`, previous file kept as `<entry>/agent.plist.previous`; launchd reads it at the next login). What remains is one privileged step per machine that still has the old definition: `sudo bash provision.sh <group> <origin> --user <account>` again (`1113-entry-prompts.md` in the ticket) or the equivalent unit change; Windows needs no elevation for it.
+- **The trampoline is guarded.** A daemon refuses an incoming change to `🔁️replica/📜️script.ts` (`entryGuardedV1`) that does not pass `admitEntryScriptV1`: at most 16 KiB, static imports only from `node:`, lazy `./` imports allowed, and in a throwaway directory next to a stub supervisor it must print `trampoline-ok` for `--trampoline-self-test`, hand a command and `run` without a boot program to the supervisor. A refused change is not applied, the previous content stays, the event `refused` (`entry-guard: …`) and the failure kind `entry-guard` show it, and a later good change is applied.
+- **Tests.** `🔁️replica/🥾️entry/🧪️tests/🟦️.ts` (all in temporary directories, no live service): garbage `📜️script.ts`, broken static import, missing worktree, store unreachable, hash-mismatching store snapshot, snapshot refusal, refused update after a failed self-test, the decision table, the trampoline hand-over, the guard, the agent rewrite, and the real module end to end; `🐍️.py` (Python oracle: directories, sha256 vectors with hashlib, the decision rules, the static import rule, the manifest, `jsonschema` when installed) over the language-agnostic fixture `🧫️fixtures/🔣️.json`; the provisioning scripts are covered by `🗺️topology/🧪️tests`.
+
+## Supervised sidecars (build agent on every machine, scheduler on the group server)
+
+The daemon runs children beside itself, declared in `🗺️topology/🔣️.json` under `sidecars` (shape: `SidecarChild` and `Sidecars` of `🗺️topology/🧬️schema/🔣️.json`, mechanism: `🔁️replica/🧷️sidecars/🟦️.ts`). The mechanism knows nothing about builds; the two children shipped are `build-agent` (the build worker and the load reporter in one process, `argument agent`) and `build-scheduler` (the scheduler of remote execution, `argument scheduler`, group server only), both scripts of `📚️library/🏗️build/🌐️remote-execution/🛰️sidecar`. `build-agent` has `requires: "none"` (2026-11-14): every machine runs it and reports its load, also the only machine of its platform (a Linux or Windows worker without a same-platform peer used to report nothing and was not shown); whether work may be offloaded to a machine stays a per-platform decision of the build scheduler, not of the sidecar mechanism. `requires: "platform-peer"` remains available to children that need a peer.
+
+- **Switch.** `sidecars.enabled` is the master switch, every child has its own `enabled`; `SEMIO_FLEET_SIDECARS=off` (or a comma list of child names) overrides it for one machine. A child with `requires: "platform-peer"` runs only while at least one other machine of the same platform has attested within ten minutes (read from `<store>/v1/origins/*/attest.json` once a minute; it stops after three reads without a peer); `roles` says whether it runs on every machine (`member`) or on the group server (`server`, origin `<group>-server`).
+- **Start.** Only after the daemon is healthy (store `ok`, running code attested, not retired) and `startAfterSeconds` (30) after its own start; a child that is running is not stopped when the daemon turns unhealthy.
+- **Isolation.** Each child is a process of its own (`process.execPath`, the script below the worktree, output in `.cache/f/sidecars/<name>.log`, rotated at 2 MiB). A crash, a refused start or a hang of a child never reaches the daemon: the child restarts after `initialMilliseconds` doubled per failure up to `maximumMilliseconds` (1 s to 60 s), a run longer than `stableMilliseconds` (60 s) starts the count again. A child runs detached and is owned by a lease file (`.cache/f/sidecars/<name>.lease`, renewed by the daemon every 5 s): it outlives the daemon and ends itself only when nobody renews the lease for 10 minutes.
+- **Stop and adoption.** A daemon that stops for good stops its children: SIGTERM, SIGKILL after `graceSeconds` (10). A daemon that restarts onto new code lets go of them (`release`), and a daemon that is killed by its watchdog or crashes leaves them running. The next daemon *adopts* a child instead of starting another: its launcher keeps `.cache/f/sidecars/<name>.json` (name, process id, start, last write, sha256 of the entry script) fresh every 2 s; the record is adopted when the process lives, the last write is at most 15 s old and the entry script still has the recorded hash. A living child with another hash is ended (SIGTERM, SIGKILL after the grace) and started again. A change of the code a child runs restarts only that child, by its own launcher.
+- **Visible.** `.cache/f/health.json` carries `sidecars` (state `off`, `waiting`, `running`, `backoff`, `stopped`, process id, restarts, last exit, next start) and `status` prints one line per child.
+- **Environment of a child.** `SEMIO_FLEET_ROOT`, `SEMIO_WORKSPACE_ROOT`, `SEMIO_FLEET_ORIGIN`, `SEMIO_FLEET_GROUP`, `SEMIO_FLEET_STORE_ROOT`, `SEMIO_FLEET_SIDECAR`, `SEMIO_FLEET_SIDECAR_RECORD`, `SEMIO_FLEET_SIDECAR_LEASE`, `SEMIO_FLEET_SIDECAR_LEASE_MS`.
+- **Tests.** `🔁️replica/🧷️sidecars/🧪️tests/🟦️.ts` (supervisor against real child processes, python oracle for the back-off and the choice of children) and `🔁️replica/🧪️tests/🧷️sidecars.ts` (the daemon with children: health, status in both languages, restart, stop).
+
+## Trust of the manifest (2026-11-14)
+
+The build system uses the replica manifest instead of a file walk only at the tier that `.cache/f/health.json` grants. The rule is `decideTrustV1` (member `🔏️trust`, schema `🔏️trust/🧬️schema/🔣️.json`, fixture and Python oracle `🔏️trust/🧪️tests`), the reader is `manifestTrustV1` / `replicaHealthyV1` in `📚️library/🏗️build/🪪️graph-state` and both sides compare the same `Trust` object (a test of the graph-state suite diffs the two schemas).
+
+- **`unusable`**: the health file is older than 30 s, its store is not `ok` or its process is gone. **`trusted`**: the `trust` statement holds a verification that began after the last loss and is not older than ten minutes. **`verify`**: everything else (no verification yet, a loss after the last verification, an old verification, no statement): every manifest entry is checked against the tree before it is believed.
+- **The statement.** `trust.verifiedMs` is the start of the oldest of the file sweep (every file of the manifest against the tree) and the directory sweep (every known directory against its listing), or of a complete tree walk, that found the manifest equal to the tree for the scope `shared-source` (every shared path except `.git/`, `.cache/`, the ticket tree and AppleDouble `._*`). A file sweep or walk finding a file that differs, is older than 30 s when the sweep began and is not in the hot set, or a path the manifest holds and the tree lacks, is drift: `lostKind` `sweep-drift`. `trust.lostMs` is the last time a failure was noted that can make the manifest wrong for the scope: a failed apply or blocked journal append, an unstable read, a refusal, a lost blob or entry guard for a source path, state loss, and every unknown kind. Failures that cannot (git objects and packs, paths outside the scope, attestation, skipped names, clock skew, a peer's journal read error, a failed scan) never touch it. The lifetime counters in `failures` stay for `status` and play no part in the tier.
+- **Caveat.** The health file is written every heartbeat (a few seconds), so a loss is visible to a reader after that delay; the reader also waits for the delta log to settle before it believes the manifest.
+
+## Uploads that move bytes are alive (2026-11-14)
+
+`storeBlobV1` flushes a blob it stages every 32 MiB (`storeFlushBytesV1`) and calls `alive` at every chunk it copies, flushes or verifies; the replica passes `replica.beat`, which calls `guard.beat()` of the store guard. `guard.turn` abandons a turn when a probe has been outstanding for the deadline **and** the work has not beaten within the deadline. Before, a multi-gigabyte pack upload saturated the mount, the single `stat` of the probe waited behind it, the guard aborted the turn, the staged copy was removed and the next round started from zero, in a loop (suspected cause of the 1.5-3 GB `g1-m07-*` files in `tmp`, see `1114-result-trust-tier-and-stragglers.md`). The upload still runs inside the publish turn, so the attestation of a machine is as old as the upload is long; a resumable upload outside the turn is not built.
+
+## Local git config repair, AppleDouble hourly (2026-11-14)
+
+`.git/config` is machine-local (not in `gitSharedV1`), so the store cannot heal it. When `gitBrokenV1` says `config-unreadable` and git names a parse failure (`bad config`, `bad boolean`, `unable to read config`), `repairGitConfigV1` keeps the file in `.cache/f/lost/<ms>-git-config/config`, writes a minimal valid config and lets `normaliseGitConfigV1` pin the fleet keys; a git that cannot start and a dubious-ownership refusal are left alone. The hourly bootstrap round (`writeBootstrapArchiveV1`, also when it ends without an archive) now runs `reclaimLitterV1` (one hour) over the whole store, so AppleDouble `._*` files no longer wait for `compaction --apply`.
+
+## Provisioning never runs fleet code older than itself, and the kit publishes itself (2026-11-14)
+
+**The incident.** A new Mac with an old checkout in `~/Documents/semio` could not join: the provision script (the kit, copied outside the worktree) runs `fleet` and `replica` from the machine's own checkout, whose code did not know `--home` (`Unknown option for facts: --home`). The same skew hits the PowerShell script and every machine whose checkout is days old, which is the case the adopt path exists for.
+
+**The overlay (step 2b of `🐚️.sh`, step 4b of `🔵️.ps1`).** Before its first `fleet` or `replica` call on a checkout that has not joined yet (an old repository to adopt, a tree just extracted from the bootstrap archive, a relocation target) the script brings the checkout's fleet code to the sealed code of the fleet:
+
+1. It reads the digest that `<group>-server` attests (`v1/origins/<group>-server/attest.json`, field `code`). The store is mounted read-only for this (or `--archive` / `-ArchivePath` names the bootstrap directory of the group). If the store has no snapshot of that digest (the server publishes its snapshot after ten healthy minutes), the newest intact snapshot is used; with none, the script warns and goes on.
+2. It verifies `v1/bootstrap/code/<digest>/sealed.json` against the files: version 1, the digest equals the folder name, every path is relative and has no `..`, every file has the sealed size and sha256. This is the check of `verifyCodeSnapshotV1` and of the boot program, written again in shell and PowerShell because neither a launcher nor any fleet code exists yet at this point; the Python oracle (`🗺️topology/🥾️provision/🧪️tests/🐍️.py`) and the TypeScript verifier decide the same fixtures. One damaged file means nothing is copied.
+3. It copies each sealed file into the worktree as the worker account (stage as root, apply as the account, each file through a temporary name and a rename, so a script that runs from the worktree keeps its old file open). A file that differs keeps its old bytes under `.cache/f/lost/provision-code-<stamp>/<path>`; nothing is deleted. It prints `replaced / added / identical` and the folder. `--plan` / `-Plan` does the same and says so, because the plan cannot run on older code. A joined machine, a group server and the first machine are skipped: their replica keeps the code current (and a newer local file must never be replaced by a sealed older one).
+
+A fresh machine runs the same overlay right after the archive is extracted: the archive is from an earlier hour than the sealed code and is not assumed to equal it.
+
+**What is sealed.** The seal of the replica daemon holds the module sources, everything they import and, since this landing, the *companions*: the two provision scripts and the three files of the boot program (`🔁️replica/🥾️entry/🟨️.mjs`, `🐚️.sh`, `🔵️.ps1`), which no module imports (`sealCompanionsV1`). They are in the seal and its hashes but not in the code digest; a companion that changes without a new digest makes the next kit round seal again. The test `every command that the provisioning scripts run lies in the sealed set` walks the imports of the topology script, the replica script and the boot program and fails when one lies outside the published set.
+
+**The version guard.** `fleet` and `replica` run behind `skew_guard` (`Invoke-Guarded`): when a command fails with `Unknown option`, `Cannot find module`, `Cannot find package`, `Module not found`, `ERR_MODULE_NOT_FOUND` or `Could not resolve`, or the checkout has no boot program, the script prints *the checkout's fleet code is older than this script and the store offers no newer sealed code: <path>* (and the German text) and exits with code **5**. Other failures keep their own message and code 1.
+
+**The kit publishes itself.** On the group server the replica daemon (after it has sealed the code it runs) and the relay (every minute it compares the attested digest with the receipt; every `--bootstrap-minutes` it also re-verifies the kit and the companions) call `maintainKitV1`: the kit is built from the local sealed snapshot of the attested digest. `v1/bootstrap/kit` holds `topology/` (exactly the sealed files below `🗺️topology`, which includes both provision scripts), `SHA256SUMS` (`sha256sum -c` / `shasum -a 256 -c`) and the receipt `published` (JSON: `publishedAt`, `code`, `moduleRoot`, `files`, `sums`; schema `KitPublished` in `🗺️topology/🥾️provision/🧬️schema/🔣️.json`). The new kit is written into `.tmp-kit-<origin>-<token>`, verified against the snapshot, `published` is written last, and it is swapped in by two renames (old kit aside, new kit in, old kit removed), so a reader sees the old kit or the new one and no second copy stays; an unchanged kit is not touched; litter of a dead writer older than an hour is removed. Kit, sealed code and running digest cannot disagree: `verifyKitV1(kit, snapshot)` compares the kit with the sealed files of the digest named in `published` (test `the kit is exactly the sealed topology files`). Nobody copies the topology folder by hand any more.
+
+## The execute bit travels with the sealed code; cross-group traffic is sealed; the operator is told what is missing (2026-11-15)
+
+**The execute bit.** Every file of a seal carries `executable` (`sealed.json`, `SealedFile` of `🛡️resilience/🧬️schema`): the bit of the file on the machine that sealed it, always `false` where there is none. The seal copy and the copy in the store are written with that mode; a `chmod` alone, which changes no code digest, makes the seal stale (`companionsCurrentV1`) so that the next seal records it. The kit (`<store>/v1/bootstrap/kit`) carries the bit on its files (`SHA256SUMS` stays the plain `sha256sum -c` format) and `verifyKitV1(kit, snapshot)` names a file whose bit differs (`execute bit differs at topology/...`). The overlay (step 2b of `🐚️.sh`) reads the bit of every entry (`"executable":true|false`, a seal without it is "not intact" and the checkout stays as it is), restores it on added and replaced files and on byte-identical files whose bit is wrong, in both directions. `🔵️.ps1` reads and validates the field and restores it where the operating system has a bit (PowerShell 7 on Linux or macOS); on Windows the bit lives in the manifest and in the staged git mode, which the replica already takes.
+
+**Cross-group traffic is sealed.** A request of an origin of another group reaches a group server only inside the sealed exchange (`POST /v1/fleet/sealed`, schema `📚️library/🏗️build/🌐️remote-cache/🔐️sealed/🧬️schema`): X25519 with a one-time key of the asker and the identity key of the server (the Ed25519 `origin` key of `<group>-server`, converted; nothing new is published), HKDF-SHA256, AES-256-GCM. Method, path, credentials and body are inside; the reply is encrypted under keys that need the one-time keys of both sides, so a later theft of the identity key opens no past reply. Messages are authenticated (a changed byte is refused), tied to the group, within 60 s of the server's clock and answered once (replay table). The inside request still carries the usual signature, so roles are unchanged (`cache-read` and `submit` only). A plain request of a foreign origin is refused with 403 `sealed transport required`. The key of the peer server is the pin `links.<peer>.serverKey` or, without a pin, its registration in a mounted or relayed store. `access.transport` of a topology row chooses for the machines of the own group: `inGroup` is `sealed` (the default when absent: every client seals, the facts `cache.transport` tell them) or `trusted-lan` (plain signed HTTP, the value of the committed rows); `crossGroup` is always `sealed`. `GET /status` shows `fleet.transport`. Not covered: the sizes and times of messages, the relayed route (a trusted mount) and the gRPC scheduler (a foreign submit is refused until a sealed client exists).
+
+**What `fleet` and `status` say.** An origin that has a registration (`origins/<id>/fleet-auth.json`) but no head, no attestation and no retirement is named by a `never-attested` warning (one line, English and German: start the replica there or `retire <origin>`); it does not change the verdict. On the group server `fleet` and `status` also name every peer store that is not reachable, and the relay says the same once per outage (and when the store is back): mount it read-only at that path (`server-plan --group <own> --part relay-peers`).

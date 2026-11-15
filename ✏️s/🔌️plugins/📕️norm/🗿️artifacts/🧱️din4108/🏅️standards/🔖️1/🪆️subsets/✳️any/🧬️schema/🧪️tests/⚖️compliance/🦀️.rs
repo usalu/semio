@@ -38,7 +38,7 @@ async fn table3_r_min_and_f_rsi_for_wall() {
     let wall = snap.elements.iter().find(|e| e.id == "wall-north").unwrap();
     let check = part_2::check_minimum_r(wall, &snap.usage, snap.t_int_c);
     assert_eq!(check.status, CheckStatus::Pass);
-    let frsi = part_2::check_f_rsi(wall);
+    let frsi = part_2::check_f_rsi(wall, snap.t_int_c, snap.rh_int);
     assert!(frsi.computed.value >= F_RSI_MINIMUM - 1e-9);
     assert_eq!(frsi.status, CheckStatus::Pass);
 }
@@ -51,7 +51,7 @@ async fn thin_insulation_fails_table3_and_frsi() {
     assert_eq!(check.status, CheckStatus::Fail);
     assert!(!check.remedies.is_empty());
     assert!(check.remedies[0].applicable);
-    let frsi = part_2::check_f_rsi(wall);
+    let frsi = part_2::check_f_rsi(wall, snap.t_int_c, snap.rh_int);
     assert_eq!(
         frsi.status,
         CheckStatus::Fail,
@@ -435,6 +435,32 @@ fn check_signature(report: &semio_s_plugin_norm_compliance::CheckReport) -> Vec<
     rows
 }
 
+/// 🌫️ A layer's vapour resistance moves a check only once the stack condenses: this snapshot opens the first layer of every element and seals the last.
+fn vapour_stressed(snap: &Din4108Snapshot) -> Din4108Snapshot {
+    let mut stressed = snap.clone();
+    for element in stressed.elements.iter_mut() {
+        if let Some(first) = element.layers.first_mut() {
+            first.mu = 1.0;
+        }
+        if let Some(last) = element.layers.last_mut() {
+            last.mu = 1.0e5;
+        }
+    }
+    stressed
+}
+
+fn is_layer_mu_leaf(path: &str) -> bool {
+    path.contains(".layers[") && path.ends_with(".mu") && !path.contains(".segments[")
+}
+
+/// 🧭️ The azimuth of an opaque element places it in the 3D scene only; DIN 4108-2 reads it for transparent elements (solar entry).
+fn is_opaque_orientation_leaf(snap: &Din4108Snapshot, path: &str) -> bool {
+    let Some(id) = path.strip_prefix("elements[id=").and_then(|rest| rest.split_once("].orientationDeg")).map(|(id, _)| id) else {
+        return false;
+    };
+    snap.elements.iter().find(|element| element.id == id).is_some_and(|element| element.kind != "window" && element.kind != "door")
+}
+
 fn is_exempt_entity_id_leaf(path: &str) -> bool {
     let leaf = path.rsplit('.').next().unwrap_or(path);
     leaf == "id" || leaf.starts_with("id]")
@@ -499,21 +525,23 @@ async fn every_editable_leaf_perturbation_changes_some_check_on_default_snapshot
         ("default", Din4108Snapshot::compliant_etics_dwelling()),
         ("timber", Din4108Snapshot::compliant_etics_dwelling().with_timber_frame_wall()),
     ] {
-        let baseline = evaluate(&snap);
-        let baseline_sig = check_signature(&baseline);
+        let baseline_sig = check_signature(&evaluate(&snap));
+        let stressed = vapour_stressed(&snap);
+        let stressed_sig = check_signature(&evaluate(&stressed));
         let root = semio_framework_value::ToValue::to_value(&snap);
         let mut paths = Vec::new();
         collect_leaf_paths(&root, "", &mut paths);
         let mut failures = Vec::new();
         for path in &paths {
-            if is_exempt_entity_id_leaf(path) {
+            if is_exempt_entity_id_leaf(path) || is_opaque_orientation_leaf(&snap, path) {
                 continue;
             }
+            let (base, base_sig) = if is_layer_mu_leaf(path) { (&stressed, &stressed_sig) } else { (&snap, &baseline_sig) };
             let wild = meta_path_for_leaf(path);
             if din4108_field_meta(&wild).is_none() && din4108_field_meta(path).is_none() {
                 continue;
             }
-            let mut json = serde_json::to_value(&snap).expect("json");
+            let mut json = serde_json::to_value(base).expect("json");
             if !perturb_json_leaf(&mut json, path) {
                 continue;
             }
@@ -521,7 +549,7 @@ async fn every_editable_leaf_perturbation_changes_some_check_on_default_snapshot
                 continue;
             };
             let report = evaluate(&clone);
-            if check_signature(&report) == baseline_sig {
+            if check_signature(&report) == *base_sig {
                 failures.push(path.clone());
             }
         }

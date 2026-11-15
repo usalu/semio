@@ -1,0 +1,4068 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "arm-l",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.2,
+      0.52,
+      0.9
+     ],
+     "cornerRadius": 0.09,
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0
+      ]
+     }
+    },
+    {
+     "id": "arm-r",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.2,
+      0.52,
+      0.9
+     ],
+     "cornerRadius": 0.09,
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0
+      ]
+     }
+    },
+    {
+     "id": "seat-1",
+     "kind": "box",
+     "bone": "seat-1",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5433,
+      0.23,
+      0.62
+     ],
+     "cornerRadius": 0.04,
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "back-1",
+     "kind": "extrude",
+     "bone": "back-1",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0,
+       0.19
+      ],
+      [
+       0,
+       0.44
+      ],
+      [
+       0.6,
+       0.45
+      ],
+      [
+       0.62187,
+       0.44688
+      ],
+      [
+       0.6375,
+       0.4375
+      ],
+      [
+       0.64687,
+       0.42188
+      ],
+      [
+       0.65,
+       0.4
+      ],
+      [
+       0.65,
+       0.34
+      ],
+      [
+       0.64688,
+       0.3225
+      ],
+      [
+       0.6375,
+       0.31
+      ],
+      [
+       0.62187,
+       0.3025
+      ],
+      [
+       0.6,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 0,
+     "to": 0.5433
+    },
+    {
+     "id": "seat-2",
+     "kind": "box",
+     "bone": "seat-2",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5334,
+      0.23,
+      0.62
+     ],
+     "cornerRadius": 0.04,
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "back-2",
+     "kind": "extrude",
+     "bone": "back-2",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0,
+       0.19
+      ],
+      [
+       0,
+       0.44
+      ],
+      [
+       0.6,
+       0.45
+      ],
+      [
+       0.62187,
+       0.44688
+      ],
+      [
+       0.6375,
+       0.4375
+      ],
+      [
+       0.64687,
+       0.42188
+      ],
+      [
+       0.65,
+       0.4
+      ],
+      [
+       0.65,
+       0.34
+      ],
+      [
+       0.64688,
+       0.3225
+      ],
+      [
+       0.6375,
+       0.31
+      ],
+      [
+       0.62187,
+       0.3025
+      ],
+      [
+       0.6,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 0,
+     "to": 0.5334
+    },
+    {
+     "id": "seat-3",
+     "kind": "box",
+     "bone": "seat-3",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5433,
+      0.23,
+      0.62
+     ],
+     "cornerRadius": 0.04,
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "back-3",
+     "kind": "extrude",
+     "bone": "back-3",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0,
+       0.19
+      ],
+      [
+       0,
+       0.44
+      ],
+      [
+       0.6,
+       0.45
+      ],
+      [
+       0.62187,
+       0.44688
+      ],
+      [
+       0.6375,
+       0.4375
+      ],
+      [
+       0.64687,
+       0.42188
+      ],
+      [
+       0.65,
+       0.4
+      ],
+      [
+       0.65,
+       0.34
+      ],
+      [
+       0.64688,
+       0.3225
+      ],
+      [
+       0.6375,
+       0.31
+      ],
+      [
+       0.62187,
+       0.3025
+      ],
+      [
+       0.6,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 0,
+     "to": 0.5433
+    },
+    {
+     "id": "skirt",
+     "kind": "box",
+     "bone": "frame",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      1.7,
+      0.14,
+      0.86
+     ],
+     "cornerRadius": 0.01,
+     "transform": {
+      "translation": [
+       1,
+       0.17,
+       0
+      ]
+     }
+    },
+    {
+     "id": "foot-l",
+     "kind": "loft",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.4,
+     "sections": [
+      {
+       "at": [
+        0.12,
+        0,
+        0.36
+       ],
+       "rx": 0.025,
+       "ry": 0.025,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        0.12,
+        0.12,
+        0.36
+       ],
+       "rx": 0.035,
+       "ry": 0.035,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.72
+      ]
+     }
+    },
+    {
+     "id": "foot-r",
+     "kind": "loft",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.4,
+     "sections": [
+      {
+       "at": [
+        1.88,
+        0,
+        0.36
+       ],
+       "rx": 0.025,
+       "ry": 0.025,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      },
+      {
+       "at": [
+        1.88,
+        0.12,
+        0.36
+       ],
+       "rx": 0.035,
+       "ry": 0.035,
+       "exponent": 2,
+       "rotation": [
+        0.5,
+        0.5,
+        0.5,
+        -0.5
+       ]
+      }
+     ],
+     "capStart": true,
+     "capEnd": true,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       -0.72
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-arm-l",
+     "of": "arm-l",
+     "region": "arm-pads",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-arm-l-core",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.198,
+      0.518,
+      0.898
+     ],
+     "cornerRadius": 0.089,
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0
+      ]
+     },
+     "region": "arm-pads",
+     "layer": "batting-arm"
+    },
+    {
+     "id": "th-arm-r",
+     "of": "arm-r",
+     "region": "arm-pads",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-arm-r-core",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.198,
+      0.518,
+      0.898
+     ],
+     "cornerRadius": 0.089,
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0
+      ]
+     },
+     "region": "arm-pads",
+     "layer": "batting-arm"
+    },
+    {
+     "id": "th-seat-1",
+     "of": "seat-1",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-seat-1-core",
+     "kind": "box",
+     "bone": "seat-1",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5413,
+      0.228,
+      0.618
+     ],
+     "cornerRadius": 0.039,
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "region": "seat-cushions",
+     "layer": "foam-seat"
+    },
+    {
+     "id": "th-back-1",
+     "of": "back-1",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-1-core",
+     "kind": "extrude",
+     "bone": "back-1",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.00162,
+       0.19133
+      ],
+      [
+       0.00162,
+       0.43941
+      ],
+      [
+       0.59977,
+       0.44933
+      ],
+      [
+       0.62158,
+       0.44624
+      ],
+      [
+       0.63716,
+       0.43693
+      ],
+      [
+       0.6465,
+       0.42143
+      ],
+      [
+       0.64962,
+       0.39972
+      ],
+      [
+       0.64962,
+       0.34018
+      ],
+      [
+       0.64651,
+       0.32281
+      ],
+      [
+       0.63716,
+       0.31041
+      ],
+      [
+       0.62158,
+       0.30297
+      ],
+      [
+       0.59977,
+       0.30049
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.001,
+     "to": 0.5423,
+     "region": "back-cushions",
+     "layer": "foam-back"
+    },
+    {
+     "id": "th-seat-2",
+     "of": "seat-2",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-seat-2-core",
+     "kind": "box",
+     "bone": "seat-2",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5314,
+      0.228,
+      0.618
+     ],
+     "cornerRadius": 0.039,
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     },
+     "region": "seat-cushions",
+     "layer": "foam-seat"
+    },
+    {
+     "id": "th-back-2",
+     "of": "back-2",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-2-core",
+     "kind": "extrude",
+     "bone": "back-2",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.00162,
+       0.19133
+      ],
+      [
+       0.00162,
+       0.43941
+      ],
+      [
+       0.59977,
+       0.44933
+      ],
+      [
+       0.62158,
+       0.44624
+      ],
+      [
+       0.63716,
+       0.43693
+      ],
+      [
+       0.6465,
+       0.42143
+      ],
+      [
+       0.64962,
+       0.39972
+      ],
+      [
+       0.64962,
+       0.34018
+      ],
+      [
+       0.64651,
+       0.32281
+      ],
+      [
+       0.63716,
+       0.31041
+      ],
+      [
+       0.62158,
+       0.30297
+      ],
+      [
+       0.59977,
+       0.30049
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.001,
+     "to": 0.5324,
+     "region": "back-cushions",
+     "layer": "foam-back"
+    },
+    {
+     "id": "th-seat-3",
+     "of": "seat-3",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-seat-3-core",
+     "kind": "box",
+     "bone": "seat-3",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5413,
+      0.228,
+      0.618
+     ],
+     "cornerRadius": 0.039,
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "region": "seat-cushions",
+     "layer": "foam-seat"
+    },
+    {
+     "id": "th-back-3",
+     "of": "back-3",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-3-core",
+     "kind": "extrude",
+     "bone": "back-3",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.00162,
+       0.19133
+      ],
+      [
+       0.00162,
+       0.43941
+      ],
+      [
+       0.59977,
+       0.44933
+      ],
+      [
+       0.62158,
+       0.44624
+      ],
+      [
+       0.63716,
+       0.43693
+      ],
+      [
+       0.6465,
+       0.42143
+      ],
+      [
+       0.64962,
+       0.39972
+      ],
+      [
+       0.64962,
+       0.34018
+      ],
+      [
+       0.64651,
+       0.32281
+      ],
+      [
+       0.63716,
+       0.31041
+      ],
+      [
+       0.62158,
+       0.30297
+      ],
+      [
+       0.59977,
+       0.30049
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.001,
+     "to": 0.5423,
+     "region": "back-cushions",
+     "layer": "foam-back"
+    },
+    {
+     "id": "th-skirt",
+     "of": "skirt",
+     "region": "base-rail",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-skirt-core",
+     "kind": "box",
+     "bone": "frame",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      1.698,
+      0.138,
+      0.858
+     ],
+     "cornerRadius": 0.009,
+     "transform": {
+      "translation": [
+       1,
+       0.17,
+       0
+      ]
+     },
+     "region": "base-rail",
+     "layer": "ply-skirt"
+    },
+    {
+     "id": "th-foot-l",
+     "of": "foot-l",
+     "region": "feet",
+     "layer": "beech-foot"
+    },
+    {
+     "id": "th-foot-r",
+     "of": "foot-r",
+     "region": "feet",
+     "layer": "beech-foot"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-rails",
+     "kind": "box",
+     "bone": "ground",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      1.62,
+      0.06,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.15,
+       -0.33
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       0.66
+      ]
+     },
+     "member": "ground",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-deck",
+     "kind": "box",
+     "bone": "frame",
+     "material": "birch-plywood",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      1.62,
+      0.02,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.205,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-arm-l",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.14,
+      0.44,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-left",
+     "part": "member"
+    },
+    {
+     "id": "member-arm-r",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.14,
+      0.44,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-right",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-1",
+     "kind": "box",
+     "bone": "seat-1",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.5033,
+      0.19,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-1",
+     "part": "member"
+    },
+    {
+     "id": "member-back-1",
+     "kind": "box",
+     "bone": "back-1",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.5033,
+      0.5,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-1",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-2",
+     "kind": "box",
+     "bone": "seat-2",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4934,
+      0.19,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-2",
+     "part": "member"
+    },
+    {
+     "id": "member-back-2",
+     "kind": "box",
+     "bone": "back-2",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4934,
+      0.5,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-2",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-3",
+     "kind": "box",
+     "bone": "seat-3",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.5033,
+      0.19,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-3",
+     "part": "member"
+    },
+    {
+     "id": "member-back-3",
+     "kind": "box",
+     "bone": "back-3",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.5033,
+      0.5,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-3",
+     "part": "member"
+    },
+    {
+     "id": "joint-seat-1",
+     "kind": "revolve",
+     "bone": "seat-1",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.04,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.27165,
+      -0.01,
+      -0.11
+     ],
+     "member": "seat-1",
+     "part": "joint"
+    },
+    {
+     "id": "joint-back-1",
+     "kind": "revolve",
+     "bone": "back-1",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.04,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.27165,
+      0.01,
+      0.32
+     ],
+     "member": "back-1",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-2",
+     "kind": "revolve",
+     "bone": "seat-2",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.04,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.2667,
+      -0.01,
+      -0.11
+     ],
+     "member": "seat-2",
+     "part": "joint"
+    },
+    {
+     "id": "joint-back-2",
+     "kind": "revolve",
+     "bone": "back-2",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.04,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.2667,
+      0.01,
+      0.32
+     ],
+     "member": "back-2",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-3",
+     "kind": "revolve",
+     "bone": "seat-3",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.04,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.27165,
+      -0.01,
+      -0.11
+     ],
+     "member": "seat-3",
+     "part": "joint"
+    },
+    {
+     "id": "joint-back-3",
+     "kind": "revolve",
+     "bone": "back-3",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.03
+      ],
+      [
+       0.04,
+       0.03
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.27165,
+      0.01,
+      0.32
+     ],
+     "member": "back-3",
+     "part": "joint"
+    },
+    {
+     "id": "support-foot-left-l",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.05,
+      0.008,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       0.004,
+       0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-l"
+    },
+    {
+     "id": "support-foot-left-r",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.05,
+      0.008,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       0.004,
+       -0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-r"
+    },
+    {
+     "id": "support-foot-right-l",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.05,
+      0.008,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       1.88,
+       0.004,
+       0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-l"
+    },
+    {
+     "id": "support-foot-right-r",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.05,
+      0.008,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       1.88,
+       0.004,
+       -0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-r"
+    },
+    {
+     "id": "mass-arm-l",
+     "kind": "ellipsoid",
+     "bone": "arm-left",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.07,
+      0.15,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-arm-r",
+     "kind": "ellipsoid",
+     "bone": "arm-right",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.07,
+      0.15,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-1",
+     "kind": "ellipsoid",
+     "bone": "seat-1",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.05,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-1",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-1",
+     "kind": "ellipsoid",
+     "bone": "back-1",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.15,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-1",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-2",
+     "kind": "ellipsoid",
+     "bone": "seat-2",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.05,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-2",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-2",
+     "kind": "ellipsoid",
+     "bone": "back-2",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.15,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-2",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-3",
+     "kind": "ellipsoid",
+     "bone": "seat-3",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.05,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-3",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-3",
+     "kind": "ellipsoid",
+     "bone": "back-3",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.15,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-3",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Detailed model from the seed: rounded armrests, three crowned-edge seat cushions, three leaning back cushions extruded from the drawn profile, a plywood-faced skirt and four tapered beech feet. Every drawn bone has its own solid.",
+     "de": "Detailmodell aus dem Startmodell: gerundete Armlehnen, drei Sitzpolster mit gerundeter Kante, drei geneigte R\u00fcckenpolster aus dem gezeichneten Profil, eine Zarge und vier konische Buchenf\u00fc\u00dfe. Jeder gezeichnete Knochen hat einen eigenen K\u00f6rper."
+    },
+    {
+     "en": "Thermal: references by region; every upholstered region has two nested shells (1 mm fabric = body solid, core inside it: foam, batting or plywood); feet are a single timber layer. Structure: hidden timber rails, plywood deck, arm frames, foam cores of seats and backs as members, prismatic joint pins, four floor pads at the support anchors, masses in arms, seats and backs.",
+     "de": "Thermik: Verweise je Region; jede gepolsterte Region hat zwei verschachtelte Schalen (1 mm Stoff = K\u00f6rper, darin der Kern aus Schaum, Vlies oder Sperrholz); F\u00fc\u00dfe sind eine einzige Holzschicht. Tragwerk: verdeckte Holzschienen, Sperrholzdeck, Armrahmen, Schaumkerne von Sitzen und Lehnen als St\u00e4be, prismatische Gelenkstifte, vier Bodenplatten an den Auflagern, Massen in Armen, Sitzen und Lehnen."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "arm-l",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.2,
+      0.52,
+      0.9
+     ],
+     "cornerRadius": 0.09,
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "arm-r",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.2,
+      0.52,
+      0.9
+     ],
+     "cornerRadius": 0.09,
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "seat-1",
+     "kind": "box",
+     "bone": "seat-1",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5433,
+      0.23,
+      0.62
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "seat-2",
+     "kind": "box",
+     "bone": "seat-2",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5334,
+      0.23,
+      0.62
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "seat-3",
+     "kind": "box",
+     "bone": "seat-3",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5433,
+      0.23,
+      0.62
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "back-1",
+     "kind": "extrude",
+     "bone": "back-1",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.0,
+       0.19
+      ],
+      [
+       0.0,
+       0.44
+      ],
+      [
+       0.6,
+       0.45
+      ],
+      [
+       0.645,
+       0.42
+      ],
+      [
+       0.65,
+       0.37
+      ],
+      [
+       0.645,
+       0.32
+      ],
+      [
+       0.6,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 0.5433
+    },
+    {
+     "id": "back-2",
+     "kind": "extrude",
+     "bone": "back-2",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.0,
+       0.19
+      ],
+      [
+       0.0,
+       0.44
+      ],
+      [
+       0.6,
+       0.45
+      ],
+      [
+       0.645,
+       0.42
+      ],
+      [
+       0.65,
+       0.37
+      ],
+      [
+       0.645,
+       0.32
+      ],
+      [
+       0.6,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 0.5334
+    },
+    {
+     "id": "back-3",
+     "kind": "extrude",
+     "bone": "back-3",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.0,
+       0.19
+      ],
+      [
+       0.0,
+       0.44
+      ],
+      [
+       0.6,
+       0.45
+      ],
+      [
+       0.645,
+       0.42
+      ],
+      [
+       0.65,
+       0.37
+      ],
+      [
+       0.645,
+       0.32
+      ],
+      [
+       0.6,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 0.5433
+    },
+    {
+     "id": "skirt",
+     "kind": "box",
+     "bone": "frame",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      1.7,
+      0.14,
+      0.86
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.17,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "foot-l",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       0.025
+      ],
+      [
+       0.12,
+       0.035
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.12,
+      0.0,
+      0.36
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.72
+      ]
+     }
+    },
+    {
+     "id": "foot-r",
+     "kind": "revolve",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.0,
+       0.025
+      ],
+      [
+       0.12,
+       0.035
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      1.88,
+      0.0,
+      0.36
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.72
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-arm-l",
+     "of": "arm-l",
+     "region": "arm-pads",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-arm-r",
+     "of": "arm-r",
+     "region": "arm-pads",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-seat-1",
+     "of": "seat-1",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-seat-2",
+     "of": "seat-2",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-seat-3",
+     "of": "seat-3",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-1",
+     "of": "back-1",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-2",
+     "of": "back-2",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-3",
+     "of": "back-3",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-skirt",
+     "of": "skirt",
+     "region": "base-rail",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-foot-l",
+     "of": "foot-l",
+     "region": "feet",
+     "layer": "beech-foot"
+    },
+    {
+     "id": "th-foot-r",
+     "of": "foot-r",
+     "region": "feet",
+     "layer": "beech-foot"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-rails",
+     "kind": "box",
+     "bone": "ground",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      1.62,
+      0.06,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.15,
+       -0.33
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       0.66
+      ]
+     },
+     "member": "ground",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-deck",
+     "kind": "box",
+     "bone": "frame",
+     "material": "birch-plywood",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      1.62,
+      0.02,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.205,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-arm-l",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.14,
+      0.44,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-left",
+     "part": "member"
+    },
+    {
+     "id": "member-arm-r",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.14,
+      0.44,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-right",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-1",
+     "kind": "box",
+     "bone": "seat-1",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.5033,
+      0.19,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-1",
+     "part": "member"
+    },
+    {
+     "id": "member-back-1",
+     "kind": "box",
+     "bone": "back-1",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.5033,
+      0.5,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-1",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-2",
+     "kind": "box",
+     "bone": "seat-2",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4934,
+      0.19,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-2",
+     "part": "member"
+    },
+    {
+     "id": "member-back-2",
+     "kind": "box",
+     "bone": "back-2",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4934,
+      0.5,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-2",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-3",
+     "kind": "box",
+     "bone": "seat-3",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.5033,
+      0.19,
+      0.58
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-3",
+     "part": "member"
+    },
+    {
+     "id": "member-back-3",
+     "kind": "box",
+     "bone": "back-3",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.5033,
+      0.5,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-3",
+     "part": "member"
+    },
+    {
+     "id": "joint-seat-1",
+     "kind": "revolve",
+     "bone": "seat-1",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0305
+      ],
+      [
+       0.04,
+       0.0305
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.27165,
+      -0.01,
+      -0.11
+     ],
+     "member": "seat-1",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-2",
+     "kind": "revolve",
+     "bone": "seat-2",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0305
+      ],
+      [
+       0.04,
+       0.0305
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.2667,
+      -0.01,
+      -0.11
+     ],
+     "member": "seat-2",
+     "part": "joint"
+    },
+    {
+     "id": "joint-seat-3",
+     "kind": "revolve",
+     "bone": "seat-3",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0305
+      ],
+      [
+       0.04,
+       0.0305
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.27165,
+      -0.01,
+      -0.11
+     ],
+     "member": "seat-3",
+     "part": "joint"
+    },
+    {
+     "id": "support-foot-left-l",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.05,
+      0.016,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       0.008,
+       0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-l"
+    },
+    {
+     "id": "support-foot-left-r",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.05,
+      0.016,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       0.008,
+       -0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-r"
+    },
+    {
+     "id": "support-foot-right-l",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.05,
+      0.016,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       1.88,
+       0.008,
+       0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-l"
+    },
+    {
+     "id": "support-foot-right-r",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.05,
+      0.016,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       1.88,
+       0.008,
+       -0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-r"
+    },
+    {
+     "id": "mass-arm-l",
+     "kind": "ellipsoid",
+     "bone": "arm-left",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.07,
+      0.15,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-arm-r",
+     "kind": "ellipsoid",
+     "bone": "arm-right",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.07,
+      0.15,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-1",
+     "kind": "ellipsoid",
+     "bone": "seat-1",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.05,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-1",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-1",
+     "kind": "ellipsoid",
+     "bone": "back-1",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.15,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-1",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-2",
+     "kind": "ellipsoid",
+     "bone": "seat-2",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.05,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-2",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-2",
+     "kind": "ellipsoid",
+     "bone": "back-2",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.15,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-2",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-3",
+     "kind": "ellipsoid",
+     "bone": "seat-3",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.05,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-3",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-3",
+     "kind": "ellipsoid",
+     "bone": "back-3",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.15,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-3",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Modelled anew against the 1:100 drawings: smaller corner radii, back profile reduced to seven points, feet as plain tapered revolves; piping and welts are not modelled.",
+     "de": "Neu gegen die Zeichnungen 1:100 modelliert: kleinere Eckenradien, R\u00fcckenprofil auf sieben Punkte reduziert, F\u00fc\u00dfe als schlichte konische Drehk\u00f6rper; Keder und N\u00e4hte sind nicht modelliert."
+    },
+    {
+     "en": "Thermal and structure follow the 1:100 body; cores are thinner, pins simplified.",
+     "de": "Thermik und Tragwerk folgen dem K\u00f6rper 1:100; die Kerne sind d\u00fcnner, die Stifte vereinfacht."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "arm-l",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.2,
+      0.52,
+      0.9
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "arm-r",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.2,
+      0.52,
+      0.9
+     ],
+     "cornerRadius": 0.03,
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "arm-foot-l",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.06,
+      0.1,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       -0.05,
+       0.36
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.72
+      ]
+     }
+    },
+    {
+     "id": "arm-foot-r",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.06,
+      0.1,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.08,
+       -0.05,
+       0.36
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.72
+      ]
+     }
+    },
+    {
+     "id": "seat-1",
+     "kind": "box",
+     "bone": "seat-1",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5433,
+      0.23,
+      0.62
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "seat-2",
+     "kind": "box",
+     "bone": "seat-2",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5334,
+      0.23,
+      0.62
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "seat-3",
+     "kind": "box",
+     "bone": "seat-3",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      0.5433,
+      0.23,
+      0.62
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "back-2",
+     "kind": "extrude",
+     "bone": "back-2",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.0,
+       0.19
+      ],
+      [
+       0.0,
+       0.44
+      ],
+      [
+       0.62,
+       0.45
+      ],
+      [
+       0.65,
+       0.35
+      ],
+      [
+       0.6,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 0.5334
+    },
+    {
+     "id": "back-end-l",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.2,
+       0.19
+      ],
+      [
+       0.2,
+       0.44
+      ],
+      [
+       0.82,
+       0.45
+      ],
+      [
+       0.85,
+       0.35
+      ],
+      [
+       0.8,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.19,
+     "to": 0.7333
+    },
+    {
+     "id": "back-end-r",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.2,
+       0.19
+      ],
+      [
+       0.2,
+       0.44
+      ],
+      [
+       0.82,
+       0.45
+      ],
+      [
+       0.85,
+       0.35
+      ],
+      [
+       0.8,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 1.2667,
+     "to": 1.81
+    },
+    {
+     "id": "skirt",
+     "kind": "box",
+     "bone": "frame",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      1.7,
+      0.14,
+      0.86
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.17,
+       0.0
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-arm-l",
+     "of": "arm-l",
+     "region": "arm-pads",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-arm-r",
+     "of": "arm-r",
+     "region": "arm-pads",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-arm-foot-l",
+     "of": "arm-foot-l",
+     "region": "feet",
+     "layer": "beech-foot"
+    },
+    {
+     "id": "th-arm-foot-r",
+     "of": "arm-foot-r",
+     "region": "feet",
+     "layer": "beech-foot"
+    },
+    {
+     "id": "th-seat-1",
+     "of": "seat-1",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-seat-2",
+     "of": "seat-2",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-seat-3",
+     "of": "seat-3",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-2",
+     "of": "back-2",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-end-l",
+     "of": "back-end-l",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-end-r",
+     "of": "back-end-r",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-skirt",
+     "of": "skirt",
+     "region": "base-rail",
+     "layer": "fabric"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-rails",
+     "kind": "box",
+     "bone": "ground",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      1.62,
+      0.06,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.15,
+       -0.33
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       0.66
+      ]
+     },
+     "member": "ground",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-deck",
+     "kind": "box",
+     "bone": "frame",
+     "material": "birch-plywood",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      1.62,
+      0.03,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.205,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-arm-l",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.14,
+      0.44,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-left",
+     "part": "member"
+    },
+    {
+     "id": "member-arm-r",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.14,
+      0.44,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-right",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-1",
+     "kind": "box",
+     "bone": "seat-1",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4833,
+      0.17,
+      0.56
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-1",
+     "part": "member"
+    },
+    {
+     "id": "member-back-1",
+     "kind": "box",
+     "bone": "back-1",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4833,
+      0.5,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-1",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-2",
+     "kind": "box",
+     "bone": "seat-2",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4734,
+      0.17,
+      0.56
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-2",
+     "part": "member"
+    },
+    {
+     "id": "member-back-2",
+     "kind": "box",
+     "bone": "back-2",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4734,
+      0.5,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-2",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-3",
+     "kind": "box",
+     "bone": "seat-3",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4833,
+      0.17,
+      0.56
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-3",
+     "part": "member"
+    },
+    {
+     "id": "member-back-3",
+     "kind": "box",
+     "bone": "back-3",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4833,
+      0.5,
+      0.12
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-3",
+     "part": "member"
+    },
+    {
+     "id": "joint-seat-2",
+     "kind": "revolve",
+     "bone": "seat-2",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0305
+      ],
+      [
+       0.04,
+       0.0305
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.2667,
+      -0.01,
+      -0.11
+     ],
+     "member": "seat-2",
+     "part": "joint"
+    },
+    {
+     "id": "joint-back-2",
+     "kind": "revolve",
+     "bone": "back-2",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.0305
+      ],
+      [
+       0.04,
+       0.0305
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.2667,
+      0.01,
+      0.32
+     ],
+     "member": "back-2",
+     "part": "joint"
+    },
+    {
+     "id": "support-foot-left-l",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.06,
+      0.031,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       0.0155,
+       0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-l"
+    },
+    {
+     "id": "support-foot-left-r",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.06,
+      0.031,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       0.0155,
+       -0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-r"
+    },
+    {
+     "id": "support-foot-right-l",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.06,
+      0.031,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       1.88,
+       0.0155,
+       0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-l"
+    },
+    {
+     "id": "support-foot-right-r",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.06,
+      0.031,
+      0.06
+     ],
+     "transform": {
+      "translation": [
+       1.88,
+       0.0155,
+       -0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-r"
+    },
+    {
+     "id": "mass-arm-l",
+     "kind": "ellipsoid",
+     "bone": "arm-left",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.07,
+      0.15,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-arm-r",
+     "kind": "ellipsoid",
+     "bone": "arm-right",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.07,
+      0.15,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-1",
+     "kind": "ellipsoid",
+     "bone": "seat-1",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.05,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-1",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-1",
+     "kind": "ellipsoid",
+     "bone": "back-1",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.15,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-1",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-2",
+     "kind": "ellipsoid",
+     "bone": "seat-2",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.05,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-2",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-2",
+     "kind": "ellipsoid",
+     "bone": "back-2",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.15,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-2",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-3",
+     "kind": "ellipsoid",
+     "bone": "seat-3",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.05,
+      0.15
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-3",
+     "part": "mass"
+    },
+    {
+     "id": "mass-back-3",
+     "kind": "ellipsoid",
+     "bone": "back-3",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.15,
+      0.15,
+      0.04
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-3",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Modelled anew: sharp seat blocks, the back as three extrusions (centre cushion on its bone, the two ends merged into the frame bone as the drawing does), arms with feet merged into blocks 0.2 m wide.",
+     "de": "Neu modelliert: scharfkantige Sitzbl\u00f6cke, die Lehne als drei Strangk\u00f6rper (Mittelkissen auf seinem Knochen, die zwei Enden im Rahmenknochen zusammengefasst wie in der Zeichnung), Arme mit F\u00fc\u00dfen zu 0,2 m breiten Bl\u00f6cken zusammengefasst."
+    },
+    {
+     "en": "Thermal and structure follow the 1:200 body; seat joints only (the back cores are merged into the frame body).",
+     "de": "Thermik und Tragwerk folgen dem K\u00f6rper 1:200; nur Sitzgelenke (die Lehnenkerne sind im Rahmenk\u00f6rper aufgegangen)."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "arm-l",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.2,
+      0.52,
+      0.9
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "arm-r",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.5,
+     "size": [
+      0.2,
+      0.52,
+      0.9
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "seat-block",
+     "kind": "box",
+     "bone": "seat-2",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.72,
+     "size": [
+      1.62,
+      0.23,
+      0.62
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     }
+    },
+    {
+     "id": "back-block",
+     "kind": "extrude",
+     "bone": "frame",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.62,
+     "profile": [
+      [
+       0.2,
+       0.19
+      ],
+      [
+       0.2,
+       0.44
+      ],
+      [
+       0.82,
+       0.45
+      ],
+      [
+       0.85,
+       0.35
+      ],
+      [
+       0.8,
+       0.3
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.19,
+     "to": 1.81
+    },
+    {
+     "id": "skirt",
+     "kind": "box",
+     "bone": "frame",
+     "material": "upholstery-fabric",
+     "role": "body",
+     "tone": 0.45,
+     "size": [
+      1.7,
+      0.14,
+      0.86
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.17,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "foot-l",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.08,
+      0.1,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       0.05,
+       0.36
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.72
+      ]
+     }
+    },
+    {
+     "id": "foot-r",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.08,
+      0.1,
+      0.08
+     ],
+     "transform": {
+      "translation": [
+       1.88,
+       0.05,
+       0.36
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       -0.72
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-arm-l",
+     "of": "arm-l",
+     "region": "arm-pads",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-arm-r",
+     "of": "arm-r",
+     "region": "arm-pads",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-seat-block",
+     "of": "seat-block",
+     "region": "seat-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-back-block",
+     "of": "back-block",
+     "region": "back-cushions",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-skirt",
+     "of": "skirt",
+     "region": "base-rail",
+     "layer": "fabric"
+    },
+    {
+     "id": "th-foot-l",
+     "of": "foot-l",
+     "region": "feet",
+     "layer": "beech-foot"
+    },
+    {
+     "id": "th-foot-r",
+     "of": "foot-r",
+     "region": "feet",
+     "layer": "beech-foot"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-rails",
+     "kind": "box",
+     "bone": "ground",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      1.62,
+      0.06,
+      0.05
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.15,
+       -0.33
+      ]
+     },
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0.0,
+       0.0,
+       0.66
+      ]
+     },
+     "member": "ground",
+     "part": "member",
+     "slender": true
+    },
+    {
+     "id": "member-deck",
+     "kind": "box",
+     "bone": "frame",
+     "material": "birch-plywood",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      1.62,
+      0.075,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       1.0,
+       0.205,
+       0.0
+      ]
+     },
+     "member": "frame",
+     "part": "member"
+    },
+    {
+     "id": "member-arm-l",
+     "kind": "box",
+     "bone": "arm-left",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.14,
+      0.44,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-left",
+     "part": "member"
+    },
+    {
+     "id": "member-arm-r",
+     "kind": "box",
+     "bone": "arm-right",
+     "material": "beech-timber",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.14,
+      0.44,
+      0.8
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-right",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-1",
+     "kind": "box",
+     "bone": "seat-1",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4633,
+      0.15,
+      0.54
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-1",
+     "part": "member"
+    },
+    {
+     "id": "member-back-1",
+     "kind": "box",
+     "bone": "back-1",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4633,
+      0.5,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-1",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-2",
+     "kind": "box",
+     "bone": "seat-2",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4534,
+      0.15,
+      0.54
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-2",
+     "part": "member"
+    },
+    {
+     "id": "member-back-2",
+     "kind": "box",
+     "bone": "back-2",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4534,
+      0.5,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-2",
+     "part": "member"
+    },
+    {
+     "id": "member-seat-3",
+     "kind": "box",
+     "bone": "seat-3",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4633,
+      0.15,
+      0.54
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-3",
+     "part": "member"
+    },
+    {
+     "id": "member-back-3",
+     "kind": "box",
+     "bone": "back-3",
+     "material": "hr-foam",
+     "role": "body",
+     "tone": 0.4,
+     "size": [
+      0.4633,
+      0.5,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       0.27165,
+       0.35,
+       0.36
+      ]
+     },
+     "member": "back-3",
+     "part": "member"
+    },
+    {
+     "id": "joint-seat-2",
+     "kind": "revolve",
+     "bone": "seat-2",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0.0,
+       0.04
+      ],
+      [
+       0.08,
+       0.04
+      ]
+     ],
+     "axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "origin": [
+      0.2667,
+      -0.02,
+      -0.11
+     ],
+     "member": "seat-2",
+     "part": "joint"
+    },
+    {
+     "id": "support-foot-left-l",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.076,
+      0.076,
+      0.076
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       0.038,
+       0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-l"
+    },
+    {
+     "id": "support-foot-left-r",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.076,
+      0.076,
+      0.076
+     ],
+     "transform": {
+      "translation": [
+       0.12,
+       0.038,
+       -0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-left-r"
+    },
+    {
+     "id": "support-foot-right-l",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.076,
+      0.076,
+      0.076
+     ],
+     "transform": {
+      "translation": [
+       1.88,
+       0.038,
+       0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-l"
+    },
+    {
+     "id": "support-foot-right-r",
+     "kind": "box",
+     "bone": "frame",
+     "material": "beech-timber",
+     "role": "detail",
+     "tone": 0.15,
+     "size": [
+      0.076,
+      0.076,
+      0.076
+     ],
+     "transform": {
+      "translation": [
+       1.88,
+       0.038,
+       -0.36
+      ]
+     },
+     "member": "frame",
+     "part": "support",
+     "anchor": "foot-right-r"
+    },
+    {
+     "id": "mass-arm-l",
+     "kind": "ellipsoid",
+     "bone": "arm-left",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.07,
+      0.15,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-left",
+     "part": "mass"
+    },
+    {
+     "id": "mass-arm-r",
+     "kind": "ellipsoid",
+     "bone": "arm-right",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.07,
+      0.15,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       0.1,
+       0.26,
+       0.0
+      ]
+     },
+     "member": "arm-right",
+     "part": "mass"
+    },
+    {
+     "id": "mass-seat-2",
+     "kind": "ellipsoid",
+     "bone": "seat-2",
+     "material": "upholstery-fabric",
+     "role": "detail",
+     "tone": 0.15,
+     "radii": [
+      0.4,
+      0.0385,
+      0.25
+     ],
+     "transform": {
+      "translation": [
+       0.2667,
+       0.095,
+       -0.11
+      ]
+     },
+     "member": "seat-2",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Modelled anew: one seat block on the centre seat bone, one back block, two arm blocks, the skirt and four 0.1 m feet; every part is above the 75 mm feature.",
+     "de": "Neu modelliert: ein Sitzblock auf dem mittleren Sitzknochen, ein R\u00fcckenblock, zwei Armbl\u00f6cke, die Zarge und vier 0,1 m breite F\u00fc\u00dfe; jedes Teil liegt \u00fcber dem Merkmal von 75 mm."
+    },
+    {
+     "en": "Thermal and structure follow the merged 1:500 body; one joint and 0.1 m pads.",
+     "de": "Thermik und Tragwerk folgen dem zusammengefassten K\u00f6rper 1:500; ein Gelenk und 0,1 m gro\u00dfe Platten."
+    }
+   ]
+  }
+ }
+}

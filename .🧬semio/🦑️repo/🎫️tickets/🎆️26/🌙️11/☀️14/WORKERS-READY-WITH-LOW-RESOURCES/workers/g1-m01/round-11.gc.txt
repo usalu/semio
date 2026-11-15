@@ -1,0 +1,330 @@
+[script] {"owner":"repository:build","command":"repo","stage":"loading"}
+[script] {"owner":"repository:build","command":"repo","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] build:implementation-source · Reading the sources of the build implementation
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:graph","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:dependencies","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:products","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:diagnostics","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:nx","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:leases","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:rust","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:control","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:nx-artifacts","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:compile-cache-rust","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:nx-tooling","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:nx-tmp","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:compile-cache-products","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:cargo-home","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:unit-cache","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:test-runs","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:graph-inference","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:graph-closures","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:graph-derived-nodes","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:graph-stat-index","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:graph-lock-closures","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:bazel-actions","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:bazel-workspaces","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:bazel-outputs","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:bazel-pool","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:semio-actions","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:cargo-store","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:boot-recovery","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:command-store","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:typescript-project","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:test-sandbox","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:scratch","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:go","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:playwright","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:bin","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:vite","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:vitest","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:agents","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:taxonomy","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:cmake","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:dotnet","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tectonic","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:print-fonts","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:trunk","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:breaches","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:bench","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:acceptance","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:build","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:implementation","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:stages","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:generated","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:renderer-modules","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:browser-actor-containment","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:elan","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:diff","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:cargo-protected","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tests","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:evidence","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:oracles","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:dashboard","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:generator-inputs","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:query-index","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:remote-cache","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:remote-execution","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:build-lock-closures","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:nx-lock-closures","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:cargo-preparation","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:leases","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/nx-tooling","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/nx","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/sdk","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/nx-downloads","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/bazel","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/bazel-modules","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/native-executables","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/binaryen","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/dashboard-cli","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:tools/tectonic","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:framework","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:held-javascript","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:bazel","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:k0","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:ldta","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:f","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:b/g-full-2026-11-14","stage":"running"}
+[script] {"owner":"repository:build","command":"cache:status:b/staffage-dwg","stage":"running"}
+[repo] still working after 5 s; last phase started: source.served
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"build:implementation-source","stage":"running"}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"node","mode":"shared","elapsedMs":1001.9214579999998}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"node","mode":"shared","elapsedMs":2003.2588329999999}}
+[repo] still working after 10 s; last phase started: source.served
+[repository:command] still running after 10 s
+[repo] still working after 20 s; last phase started: source.served
+[repository:command] still running after 20 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"node","mode":"shared","elapsedMs":1002.0493749999987}}
+[repository:command] still running after 30 s
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"node","mode":"shared","elapsedMs":2004.2511669999985}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"node","mode":"shared","elapsedMs":3006.4400829999977}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"node","mode":"shared","elapsedMs":4008.582624999999}}
+[script] {"owner":"repository:build","command":"repository:command","stage":"running","activity":{"resource":"node","mode":"shared","elapsedMs":1002.0570000000007}}
+[repository:command] still running after 40 s
+[repo] still working after 50 s; last phase started: source.served
+[repository:command] still running after 50 s
+[repository:command] still running after 60 s
+[repository:command] still running after 70 s
+[repo] still working after 80 s; last phase started: source.served
+[repository:command] still running after 80 s
+[repository:command] still running after 90 s
+[repository:command] still running after 100 s
+[repo] still working after 110 s; last phase started: source.served
+[repository:command] still running after 110 s
+[repository:command] still running after 120 s
+[repository:command] still running after 130 s
+[repo] still working after 140 s; last phase started: source.served
+[repository:command] still running after 140 s
+[repository:command] still running after 150 s
+[repository:command] still running after 160 s
+[repo] still working after 170 s; last phase started: source.served
+[repository:command] still running after 170 s
+[repository:command] still running after 180 s
+[repository:command] still running after 190 s
+[repo] still working after 200 s; last phase started: source.served
+[repository:command] still running after 200 s
+[repository:command] still running after 210 s
+[repository:command] still running after 220 s
+[repo] still working after 230 s; last phase started: source.served
+[repository:command] still running after 230 s
+[repository:command] still running after 240 s
+[repository:command] still running after 250 s
+[repo] still working after 260 s; last phase started: source.served
+[repository:command] still running after 260 s
+[repository:command] still running after 270 s
+[repository:command] still running after 280 s
+[repo] still working after 290 s; last phase started: source.served
+[repository:command] still running after 290 s
+[repository:command] still running after 300 s
+[repository:command] still running after 310 s
+[repo] still working after 320 s; last phase started: source.served
+[repository:command] still running after 320 s
+[repository:command] still running after 330 s
+[repository:command] still running after 340 s
+[repo] still working after 350 s; last phase started: source.served
+[repository:command] still running after 350 s
+[repository:command] still running after 360 s
+[repository:command] still running after 370 s
+[repo] still working after 380 s; last phase started: source.served
+[repository:command] still running after 380 s
+[repository:command] still running after 390 s
+[repository:command] still running after 400 s
+[repo] still working after 410 s; last phase started: source.served
+[repository:command] still running after 410 s
+[repository:command] still running after 420 s
+[repository:command] still running after 430 s
+[repo] still working after 440 s; last phase started: source.served
+[repository:command] still running after 440 s
+[repository:command] still running after 450 s
+[repository:command] still running after 460 s
+[repo] still working after 470 s; last phase started: source.served
+[repository:command] still running after 470 s
+[repository:command] still running after 480 s
+[repository:command] still running after 490 s
+[repo] still working after 500 s; last phase started: source.served
+[repository:command] still running after 500 s
+[repository:command] still running after 510 s
+[repository:command] still running after 520 s
+[repo] still working after 530 s; last phase started: source.served
+[repository:command] still running after 530 s
+[repository:command] still running after 540 s
+[repository:command] still running after 550 s
+[repo] still working after 560 s; last phase started: source.served
+[repository:command] still running after 560 s
+[repository:command] still running after 570 s
+[repository:command] still running after 580 s
+[repo] still working after 590 s; last phase started: source.served
+[repository:command] still running after 590 s
+[repository:command] still running after 600 s
+[repository:command] still running after 610 s
+[repo] still working after 620 s; last phase started: source.served
+[repository:command] still running after 620 s
+[repository:command] still running after 630 s
+[repository:command] still running after 640 s
+[repo] still working after 650 s; last phase started: source.served
+[repository:command] still running after 650 s
+[repository:command] still running after 660 s
+[repository:command] still running after 670 s
+[repo] still working after 680 s; last phase started: source.served
+[repository:command] still running after 680 s
+[repository:command] still running after 690 s
+[repository:command] still running after 700 s
+[repo] still working after 710 s; last phase started: source.served
+[repository:command] still running after 710 s
+This process (repository:build) made no progress for 10 min and has no live child: it exits now so that the leases it holds are released.
+repository:command failed with exit code 124

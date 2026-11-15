@@ -252,6 +252,7 @@ fn glyphs_never_rely_on_colour_alone() {
 //#region 🪟️Inspector
 #[test]
 fn the_inspector_commits_every_control_through_set_field_with_unit_scaling_and_labels() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = render(Locale::En, &CheckReport::default(), &InspectorOptions::new(UnitSystem::Engineering, Tier::Expert));
     assert!(json.contains("setField") && json.contains("Length (mm)") && json.contains("Force (kN)"), "{json}");
     assert!(json.contains("displayFactor") && json.contains("1000"), "{json}");
@@ -263,6 +264,7 @@ fn the_inspector_commits_every_control_through_set_field_with_unit_scaling_and_l
 
 #[test]
 fn the_inspector_is_bilingual() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let report = failing_report();
     let en = render(Locale::En, &report, &InspectorOptions::new(UnitSystem::Engineering, Tier::Expert));
     let de = render(Locale::De, &report, &InspectorOptions::new(UnitSystem::Engineering, Tier::Expert));
@@ -273,6 +275,7 @@ fn the_inspector_is_bilingual() {
 
 #[test]
 fn inline_feedback_shows_the_bar_and_a_one_click_remedy_next_to_the_field() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = render(Locale::En, &failing_report(), &InspectorOptions::new(UnitSystem::Engineering, Tier::Expert));
     assert!(json.contains("norm-inputs.members[id=b1].length.utilisation") && json.contains("✗ 112 %"), "{json}");
     assert!(json.contains("applyRemedy") && json.contains("b1.bending") && json.contains("22.0 mm"), "{json}");
@@ -282,12 +285,14 @@ fn inline_feedback_shows_the_bar_and_a_one_click_remedy_next_to_the_field() {
 
 #[test]
 fn the_si_preset_keeps_units_unscaled() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let json = render(Locale::En, &CheckReport::default(), &InspectorOptions { preset: UnitSystem::Si, ..InspectorOptions::new(UnitSystem::Engineering, Tier::Expert) });
     assert!(json.contains("Length (m)") && json.contains("Force (N)") && !json.contains("Length (mm)"), "{json}");
 }
 
 #[test]
 fn the_annex_parameters_section_lists_both_annex_values_with_the_verification_badge() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let options = InspectorOptions { annex_parameters: Some(AnnexParametersView { prefix: "ndp.en1993.".into(), annex: AnnexChoice::De }), ..InspectorOptions::new(UnitSystem::Engineering, Tier::Expert) };
     let json = render(Locale::En, &CheckReport::default(), &options);
     assert!(json.contains("Annex parameters") && json.contains("norm-inputs.annex-parameters.ndp.en1993.gamma-m1"), "{json}");
@@ -300,6 +305,7 @@ fn the_annex_parameters_section_lists_both_annex_values_with_the_verification_ba
 
 #[test]
 fn no_json_text_is_ever_visible() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     fn strings(value: &serde_json::Value, out: &mut Vec<String>) {
         match value {
             serde_json::Value::String(raw) => out.push(raw.clone()),
@@ -322,6 +328,7 @@ fn no_json_text_is_ever_visible() {
 
 #[test]
 fn spec_help_clause_and_annex_parameter_render_in_both_languages() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let de = render(Locale::De, &CheckReport::default(), &InspectorOptions::new(UnitSystem::Engineering, Tier::Expert));
     assert!(de.contains("Stützweite zwischen den Auflagern") && de.contains("EN 1993-1-1 6 Abschn. 6.2.5"), "{de}");
     assert!(de.contains("[NDP γ_M0]") && de.contains("Auf Anhangswert zurücksetzen") && de.contains("100000"), "{de}");
@@ -332,12 +339,14 @@ fn spec_help_clause_and_annex_parameter_render_in_both_languages() {
 
 #[test]
 fn the_tier_hides_advanced_fields_in_the_rendered_inspector() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let basic = render(Locale::En, &CheckReport::default(), &InspectorOptions { tier: Tier::Basic, ..InspectorOptions::new(UnitSystem::Engineering, Tier::Expert) });
     assert!(!basic.contains("norm-inputs.members[id=b1].advanced"), "{basic}");
 }
 
 #[test]
 fn the_unit_picker_marks_the_chosen_system_and_writes_the_view_lane_in_live_editors_only() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let view = open_everything();
     let draw = |controller: &'static str, system| project(render_inspector_value(&document(), &CheckReport::default(), Locale::De, controller, Some(member_meta), &TreeWindows::for_body(&view, BODY), &InspectorOptions { preset: system, unit_picker: true, ..InspectorOptions::new(UnitSystem::Engineering, Tier::Expert) }).expect("inspector"));
     let live = draw("s.norm.en1990@1/*#editor", UnitSystem::Si);
@@ -347,6 +356,7 @@ fn the_unit_picker_marks_the_chosen_system_and_writes_the_view_lane_in_live_edit
 
 #[test]
 fn a_multi_selection_shows_the_common_value_or_mixed_and_its_controls_raise_one_bulk_set() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     fn admitted_metadata(path: &str) -> Option<FieldSpec> {
         admit_field_meta(None, !path.ends_with(".id"))
     }
@@ -364,6 +374,7 @@ fn a_multi_selection_shows_the_common_value_or_mixed_and_its_controls_raise_one_
     let mixed_kind = ["b2".to_string(), "b3".to_string()];
     assert_eq!(bulk_rows(&tree, "beams", &mixed_kind, false).iter().filter(|line| line.mixed).count(), 2);
     assert!(render_selection_inspector(&tree, &["b1".to_string()], Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).unwrap().is_none(), "one row keeps the single-row inspector");
-    assert!(render_selection_inspector(&tree, &both, Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).unwrap().is_some());
+    let shown = render_selection_inspector(&tree, &both, Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).unwrap().expect("two rows open the bulk inspector");
+    assert!(semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_plugin::ComponentTree::new(shown)).is_ok());
     assert!(render_bulk_inspector(&tree, "nope", &both, Locale::En, "norm.mock", Some(admitted_metadata), UnitSystem::Engineering).is_err());
 }

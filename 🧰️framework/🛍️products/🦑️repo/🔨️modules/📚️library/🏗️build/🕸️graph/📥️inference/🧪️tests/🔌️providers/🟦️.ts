@@ -7,13 +7,18 @@ import Ajv from "ajv";
 import { build } from "esbuild";
 import ts from "typescript";
 import { findWorkspaceRoot } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { privateRepositoryWorkspaceV1 } from "../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import { declareLibraryBuildTestEnvelopeV1 } from "../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
 import { cacheInternals, createScriptInputCache } from "../../🟨️.mjs";
 import { closureApiV1, closureHandleOfV1, resetClosureEntriesV1 } from "../../🧭️script-inputs/🟨️.mjs";
 import repositoryDesignation from "../../../../../🏃️process/🔌️providers/🔣️.json" with { type: "json" };
 import corpus from "./🔣️.json" with { type: "json" };
 import { buildSchedulingPrefixesV1 } from "../../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 
+await privateRepositoryWorkspaceV1("graph");
+declareLibraryBuildTestEnvelopeV1({ suite: "build-inference", scratch: "checkout" });
 const workspace = findWorkspaceRoot(import.meta.dir);
+const artifactDirectory = () => { const directory = process.env.SEMIO_TEST_ARTIFACT_DIR; if (!directory) throw Error("Provider input fixtures require owned test artifacts"); mkdirSync(directory, { recursive: true }); return directory; };
 const library = resolve(import.meta.dir, "../../../../..");
 const designationPath = join(library, "🏃️process/🔌️providers/🔣️.json");
 const schemaPath = join(library, "🏃️process/🔌️providers/🧬️schema/🔣️.json");
@@ -59,7 +64,7 @@ test("provider input examples use the actual provider designation authority", ()
 });
 
 test("editing a designated provider module changes the input hash of exactly the commands that load providers", async () => {
-  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Provider input fixtures require owned test artifacts");
+  const artifacts=artifactDirectory();
   const base=resolve(artifacts),placement=relative(workspace,base);
   if(!placement||placement===".."||placement.startsWith(".."+sep)||isAbsolute(placement))throw Error("Provider input fixtures require checkout-scoped test artifacts");
   const root = mkdtempSync(join(base, "provider-inputs-")), relativeRoot = relative(workspace, root);
@@ -98,7 +103,7 @@ test("editing a designated provider module changes the input hash of exactly the
 }, 120_000);
 
 test("an evicted closure entry is answered again, never refused as stale: the inputs under a closure entry budget that holds no entry equal the inputs under the declared budget", async () => {
-  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Provider input fixtures require owned test artifacts");
+  const artifacts=artifactDirectory();
   const root = mkdtempSync(join(resolve(artifacts), "provider-evicted-"));
   const write = (name: string, content: string) => { mkdirSync(dirname(join(root, name)), { recursive: true }); writeFileSync(join(root, name), content); };
   try {

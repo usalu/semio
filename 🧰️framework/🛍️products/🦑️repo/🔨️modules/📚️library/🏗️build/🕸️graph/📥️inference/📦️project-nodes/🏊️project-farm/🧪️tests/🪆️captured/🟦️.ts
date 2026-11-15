@@ -1,18 +1,19 @@
-/** 🪆️ Contract: a farm that runs from a captured snapshot starts its workers from that same snapshot (read as descriptor 3, the channel moves to descriptor 4), so a worker reports the captured implementation of its parent and is adopted; a worker of another implementation or another record identity is refused; the shared verb kernel entry serves the worker role without an invocation; a worker recycled right after its job leaves its staged leaves for the parent. Independent oracles: the digest Python computes from the snapshot file, and the process ids and replies of real worker processes. */
+/** 🪆️ Contract: a farm that runs from a captured snapshot starts its workers from that same snapshot (a private file their environment names, the channel stays the standard one), so a worker reports the captured implementation of its parent and is adopted; a worker of another implementation or another record identity is refused; the shared verb kernel entry serves the worker role without an invocation; a worker recycled right after its job leaves its staged leaves for the parent. Independent oracles: the digest Python computes from the snapshot file, and the process ids and replies of real worker processes. */
 import{afterAll,expect,test}from"bun:test";
 import{EventEmitter}from"node:events";
 import{createHash}from"node:crypto";
-import{existsSync,fstatSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync}from"node:fs";
+import{existsSync,statSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{basename,dirname,join,relative,sep}from"node:path";
 import{fileURLToPath,pathToFileURL}from"node:url";
 import{deserialize,serialize}from"node:v8";
-import{testPythonV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
+import{testPythonV1}from"/Users/Shared/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import{GRAPH_FARM_WORKER_ROLE_V1,graphFarmIdentityDifferenceV1,graphFarmIdentityV1,sameGraphFarmIdentityV1}from"../../🪆️captured/🟨️.mjs";
 import{createFarmV1,GRAPH_FARM_POLICY_V1}from"../../🏊️pool/🟨️.mjs";
-import{openProjectFarmV1}from"../../🟨️.mjs";
-import{inferenceRecordIdentityV1}from"../../../../../../👁️observation/🟨️.mjs";
-import{buildSourceClosureStreamLoaderV1}from"../../../../../../📥️source/🔏️closure/🟦️.ts";
+import{farmGrantEnvironmentV1}from"../🧫️fixtures/🎟️grant/🟨️.mjs";
+import{closeProjectFarmsV1,openProjectFarmV1}from"../../🟨️.mjs";
+import{inferenceRecordIdentityV1}from"/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs";
+import{buildSourceClosureStreamLoaderV1}from"/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🟦️.ts";
 
 const here=dirname(fileURLToPath(import.meta.url)),farmDirectory=join(here,"..",".."),fixtures=join(here,"..","🧫️fixtures"),python=testPythonV1();
 const root=(()=>{let at=here;while(basename(at)!=="🧰️framework")at=dirname(at);return dirname(at);})(),rel=(file:string)=>relative(root,file).split(sep).join("/");
@@ -64,35 +65,34 @@ test("a worker of another implementation or another record identity is refused, 
 /** 🧪️ A scripted child that announces the identity it is given and answers every job with an empty reply. */
 class ScriptedChild extends EventEmitter{
  connected=true;exitCode:number|null=null;signalCode:string|null=null;
- constructor(readonly identity:unknown){super();}
+ constructor(readonly identity:unknown){super();setImmediate(()=>this.emit("message",{type:"ready",pid:1,identity:this.identity}));}
  send(message:{type:string;id?:number}){
-  if(message.type==="init")setImmediate(()=>this.emit("message",{type:"ready",pid:1,identity:this.identity}));
-  else if(message.type==="run")setImmediate(()=>this.emit("message",{type:"result",id:message.id,reply:{names:[],cpuMilliseconds:1},rssMegabytes:1}));
+  if(message.type==="run")setImmediate(()=>this.emit("message",{type:"result",id:message.id,reply:{names:[],cpuMilliseconds:1},rssMegabytes:1}));
   else if(message.type==="shutdown"){this.exitCode=0;setImmediate(()=>this.emit("exit"));}
   return true;
  }
  kill(){this.exitCode=0;setImmediate(()=>this.emit("exit"));return true;}
 }
 
-test("a farm in a captured process starts every worker with the snapshot as descriptor 3, the channel as descriptor 4 and the worker role, adopts its implementation, refuses a worker from files and leaves no snapshot behind",async()=>{
+test("a farm in a captured process starts every worker with the snapshot file its environment names, the standard channel and the worker role, adopts its implementation, refuses a worker from files and leaves no snapshot behind",async()=>{
  const implementation="d".repeat(64),launch=Object.freeze({command:"/semio-law/runtime",arguments:Object.freeze(["--eval","loader","--",implementation]),environment:Object.freeze({SEMIO_LAW_CAPTURED:"1"}),implementation,text:()=>"captured snapshot text"});
- const plan=JSON.stringify({version:1,id:"x",jobs:1,cpu:1,memoryMegabytes:2048,fixedMegabytes:1536}),job=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)});
+ const job=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)});
  const images=()=>new Set(readdirSync(realpathSync(tmpdir())).filter(name=>name.startsWith("semio-graph-farm-image-"))),before=images();
  for(const[offered,adopted]of[[graphFarmIdentityV1(inferenceRecordIdentityV1(),implementation),true],[graphFarmIdentityV1(inferenceRecordIdentityV1(),null),false]] as const){
   const spawned:{command:string;args:readonly string[];stdio:unknown[];env:Record<string,string>;text:string;mode:number}[]=[],lines:string[]=[];
-  const farm=openProjectFarmV1({workspaceRoot:area(),context:{registry:null},contracts:{},projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_PLAN:plan},processed:()=>24,cores:10,write:(line:string)=>lines.push(line),launch,
-   spawnProcess:((command:string,args:readonly string[],options:{stdio:unknown[];env:Record<string,string>})=>{const descriptor=options.stdio[3] as number;spawned.push({command,args,stdio:options.stdio,env:options.env,text:readFileSync(descriptor,"utf8"),mode:fstatSync(descriptor).mode&0o777});return new ScriptedChild(offered);}) as never,
+  const area1=area(),farm=openProjectFarmV1({workspaceRoot:area1,context:{registry:null},contracts:{},projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:farmGrantEnvironmentV1(area1,"farm_image_0001"),processed:()=>24,cores:10,write:(line:string)=>lines.push(line),launch,
+   spawnProcess:((command:string,args:readonly string[],options:{stdio:unknown[];env:Record<string,string>})=>{const file=options.env.SEMIO_GRAPH_WORKER_SNAPSHOT!;spawned.push({command,args,stdio:options.stdio,env:options.env,text:readFileSync(file,"utf8"),mode:statSync(file).mode&0o777});return new ScriptedChild(offered);}) as never,
    request:(()=>({granted:Promise.resolve(undefined),release:()=>undefined})) as never})!;
   for(let index=0;index<GRAPH_FARM_POLICY_V1.minimumProjects;index++)await farm.prepare(job("miss"+index));
   expect(spawned).toHaveLength(1);
   const[start]=spawned;
   expect(start!.command).toBe(launch.command);expect(start!.args).toEqual([...launch.arguments,GRAPH_FARM_WORKER_ROLE_V1]);
-  expect(typeof start!.stdio[3]).toBe("number");expect(start!.stdio[4]).toBe("ipc");expect(start!.stdio).toHaveLength(5);
+  expect(start!.stdio).toEqual(["ignore","inherit","inherit","ipc"]);
   expect(start!.text).toBe("captured snapshot text");if(process.platform!=="win32")expect(start!.mode).toBe(0o600);
   expect(start!.env.SEMIO_LAW_CAPTURED).toBe("1");expect(start!.env.SEMIO_GRAPH_WORKER).toBe("1");
   if(adopted){expect(await new Promise<number>(done=>farm.onReady(done))).toBe(GRAPH_FARM_POLICY_V1.loopsPerWorker);expect(await farm.prepare(job("first"))).toBe(false);}
   else{await Bun.sleep(50);expect(lines.some(line=>line.includes("(identity differs: implementation)"))).toBe(true);expect(await farm.prepare(job("refused"))).toBe(false);}
-  await farm.close();
+  await farm.close();await closeProjectFarmsV1();
  }
  expect([...images()].filter(name=>!before.has(name))).toEqual([]);
 },60000);
@@ -109,9 +109,9 @@ test("a worker that exits right after its job leaves its staged leaves to the pa
 
 test("the shared verb kernel entry serves the graph farm worker role without an invocation and the worker answers over its channel",async()=>{
  const digest="e".repeat(64),messages:unknown[]=[],environment:Record<string,string|undefined>={...process.env};delete environment.SEMIO_SCRIPT_PROCESS_INVOCATION;
- const child=Bun.spawn([process.execPath,kernelRole,root,digest],{stdio:["ignore","inherit","inherit"],env:environment,ipc:message=>{messages.push(message);}});
  const session=join(area(),"session.bin");writeFileSync(session,serialize({identity:"kernel-role"}));
- child.send({type:"init",service:plainService,sessionFile:session,slot:0,generation:1});
+ environment.SEMIO_GRAPH_WORKER_INIT=JSON.stringify({service:plainService,sessionFile:session,slot:0,generation:1});
+ const child=Bun.spawn([process.execPath,kernelRole,root,digest],{stdio:["ignore","inherit","inherit"],env:environment,ipc:message=>{messages.push(message);}});
  const started=Date.now();while(!messages.length&&Date.now()-started<60000&&child.exitCode===null)await Bun.sleep(50);
  expect(messages[0]).toEqual({type:"ready",pid:child.pid,identity:"kernel-role"});
  child.send({type:"shutdown"});
@@ -136,13 +136,12 @@ test("a worker infers with the generator contracts its parent keyed the job with
 },120000);
 
 test("the farm hands every worker the generator contracts its parent read once, in the session it starts the worker with",async()=>{
- const plan=JSON.stringify({version:1,id:"x",jobs:1,cpu:1,memoryMegabytes:2048,fixedMegabytes:1536}),job=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)}),sessions:unknown[]=[];
- class SessionChild extends ScriptedChild{override send(message:{type:string;id?:number;sessionFile?:string}){if(message.type==="init")sessions.push(deserialize(readFileSync(message.sessionFile!)));return super.send(message);}}
- const farm=openProjectFarmV1({workspaceRoot:area(),context:{registry:null},contracts:parentContracts,launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:{LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_PLAN:plan},processed:()=>24,cores:10,write:()=>undefined,
-  spawnProcess:(()=>new SessionChild(graphFarmIdentityV1(inferenceRecordIdentityV1(),null))) as never,request:(()=>({granted:Promise.resolve(undefined),release:()=>undefined})) as never} as never)!;
+ const job=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)}),sessions:unknown[]=[],area2=area();
+ const farm=openProjectFarmV1({workspaceRoot:area2,context:{registry:null},contracts:parentContracts,launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment:farmGrantEnvironmentV1(area2,"farm_session_001"),processed:()=>24,cores:10,write:()=>undefined,
+  spawnProcess:((_command:string,_args:readonly string[],options:{env:Record<string,string>})=>{sessions.push(deserialize(readFileSync(JSON.parse(options.env.SEMIO_GRAPH_WORKER_INIT!).sessionFile)));return new ScriptedChild(graphFarmIdentityV1(inferenceRecordIdentityV1(),null));}) as never,request:(()=>({granted:Promise.resolve(undefined),release:()=>undefined})) as never} as never)!;
  for(let index=0;index<GRAPH_FARM_POLICY_V1.minimumProjects;index++)await farm.prepare(job("miss"+index));
  await new Promise<number>(done=>farm.onReady(done));
- await farm.close();
+ await farm.close();await closeProjectFarmsV1();
  expect(sessions).toHaveLength(1);
  expect((sessions[0] as {contracts:unknown}).contracts).toEqual(parentContracts);
 },60000);

@@ -170,6 +170,19 @@
         "generationResourcePrefix": "rustup:generation-shard:",
         "pathOrder": "utf8-unsigned",
         "bootstrapVersion": "1.29.0",
+        "bootstrapSha256": {
+          "aarch64-apple-darwin": "aeb4105778ca1bd3c6b0e75768f581c656633cd51368fa61289b6a71696ac7e1",
+          "x86_64-apple-darwin": "33cf85df9142bc6d29cbc62fa5ca1d4c29622cddb55213a4c1a43c457fb9b2d7",
+          "aarch64-unknown-linux-gnu": "9732d6c5e2a098d3521fca8145d826ae0aaa067ef2385ead08e6feac88fa5792",
+          "x86_64-unknown-linux-gnu": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
+          "aarch64-unknown-linux-musl": "88761caacddb92cd79b0b1f939f3990ba1997d701a38b3e8dd6746a562f2a759",
+          "x86_64-unknown-linux-musl": "9cd3fda5fd293890e36ab271af6a786ee22084b5f6c2b83fd8323cec6f0992c1",
+          "x86_64-pc-windows-msvc": "86478e53f769379d7f0ebfa7c9aa97cb76ca92233f79aa2cc0dbee2efaac73c7",
+          "aarch64-pc-windows-msvc": "3af309e6c3062aa11df0e932954f69d13b734d8a431e593812f3ecd9ff9e6ef6"
+        },
+        "distributionManifestSha256": {
+          "2026-07-20": "1bf70a4f1406732dd79957ccc0d0afc78bdc69cdfa3b5f57857ab56727e05d56"
+        },
         "downloadProgressBytes": 4194304,
         "maximumArchiveBytes": 536870912,
         "maximumArchiveListBytes": 16777216,

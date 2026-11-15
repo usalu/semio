@@ -1,4 +1,5 @@
 import {createHash} from "node:crypto";
+import{fleetMirrorTransportEnvironmentV1}from"../../🛰️fleet-fetch/🪞️mirror/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policy from "./🔣️policy.json" with {type:"json"};
 import{createRequire}from"node:module";
@@ -149,7 +150,7 @@ export function createPackageManagerV1(descriptor:ManagerDescriptorV1,reader:Loc
     const [kind,rest]=[spec.slice(0,spec.indexOf(":")),spec.slice(spec.indexOf(":")+1)];
     output[name]=kind==="role"?root+separator+roleV1(recipe,rest):expandV1(rest,scalars);
    }
-   return Object.freeze({...output,...overrides});
+   return Object.freeze({...output,...fleetMirrorTransportEnvironmentV1(descriptor.id,output,ambient),...overrides});
   },
   runtimeIdentity(host){
    const key=descriptor.runtime.hostVersionKey,embedded=key===null?undefined:host.versions[key];
@@ -284,6 +285,8 @@ export async function walkProvidersV1(manager:PackageManagerV1,graph:LockGraphV1
 export interface RunnerPortV1{run(invocation:ManagerInvocationV1,environment:Readonly<Record<string,string>>,signal?:AbortSignal):Promise<Readonly<{code:number}>>}
 /** 🗄️ Stores sealed receipts by name. */
 export interface ReceiptPortV1{read(name:string):Promise<string|null>;write(name:string,text:string):Promise<void>}
+/** 🌱️ The fleet seam of a sync: `before` may fill the manager's cache from the fleet (so the sync downloads nothing), `after` may publish what the sync left in it; both are best effort and may never fail the sync. */
+export interface FleetPortV1{before(environment:Readonly<Record<string,string>>):Promise<void>;after(environment:Readonly<Record<string,string>>):Promise<void>}
 /** 🟢️ Reports whether an ensure installed anything. */
 export type EnsureOutcomeV1=Readonly<{status:"current"|"synced";key:string;receipt:GenerationReceiptV1}>;
 
@@ -291,13 +294,16 @@ function currentReceiptV1(text:string,key:string,lockSha:string):GenerationRecei
  try{const receipt=JSON.parse(text) as GenerationReceiptV1;openSealedV1(receipt);return receipt.generation.key===key&&receipt.lock.sha256===lockSha?receipt:undefined;}catch{return undefined;}
 }
 /** 🎯️ Brings one scope to the locked state through any manager: a current receipt ends it, otherwise sync, walk the providers, seal. */
-export async function ensureGenerationV1(manager:PackageManagerV1,input:Readonly<{scope:string;root:string;host:HostPortV1;mode:string;members:readonly unknown[];material:readonly Readonly<{path:string;bytes:Uint8Array}>[];lock:Uint8Array;request:ManagerRequestV1;ambient:Readonly<Record<string,string|undefined>>}>,ports:Readonly<{runner:RunnerPortV1;receipts:ReceiptPortV1;providers:ProviderPortV1}>,control:ManagerControlV1={}):Promise<EnsureOutcomeV1>{
+export async function ensureGenerationV1(manager:PackageManagerV1,input:Readonly<{scope:string;root:string;host:HostPortV1;mode:string;members:readonly unknown[];material:readonly Readonly<{path:string;bytes:Uint8Array}>[];lock:Uint8Array;request:ManagerRequestV1;ambient:Readonly<Record<string,string|undefined>>}>,ports:Readonly<{runner:RunnerPortV1;receipts:ReceiptPortV1;providers:ProviderPortV1;fleet?:FleetPortV1}>,control:ManagerControlV1={}):Promise<EnsureOutcomeV1>{
  const key=generationKeyV1(manager,input),name=generationLocationV1(manager,key).replace("/","-")+".json",existing=await ports.receipts.read(name);
  const lockSha=sha256HexV1(input.lock),receipt=existing===null?undefined:currentReceiptV1(existing,key,lockSha);
  if(receipt)return Object.freeze({status:"current" as const,key,receipt});
  control.signal?.throwIfAborted();
- const graph=manager.parseLock(input.lock),invocation=manager.render("sync",input.request),result=await ports.runner.run(invocation,manager.environment(input.root,input.ambient),control.signal);
+ const graph=manager.parseLock(input.lock),invocation=manager.render("sync",input.request),environment=manager.environment(input.root,input.ambient);
+ await ports.fleet?.before(environment).catch(()=>undefined);
+ const result=await ports.runner.run(invocation,environment,control.signal);
  if(result.code!==0)throw Error("Successful package manager sync required: "+manager.id+" exit "+result.code);
+ await ports.fleet?.after(environment).catch(()=>undefined);
  control.signal?.throwIfAborted();
  const walk=await walkProvidersV1(manager,graph,ports.providers,control);
  if(walk.status!=="match")throw Error("Complete locked providers required: "+walk.missing.map(row=>row.name+"@"+row.version).slice(0,8).join(", "));

@@ -13,7 +13,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/**/*"
     ],
     "default": [
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/**/*",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated\"" }, "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎚️config/🟦️.ts",
@@ -669,7 +669,7 @@
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "repo ./📜️script.ts cold-boot-check s react dev"
+        "command": "repo ./📜️script.ts cold-boot-check s react prototype"
       },
       "outputs": [],
       "metadata": {

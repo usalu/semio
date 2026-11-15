@@ -6981,7 +6981,8 @@
   "toleranceMm":0.04,
   "points":[[0,0],[4,0],[4,4],[0,4],[1,1],[3,1],[3,3],[1,3]],
   "concave":[0,4,5,1,2,6,7,3],
-  "concavity":20
+  "concavity":20,
+  "stock":{"points":[[1,4],[2,7],[3,3],[4,8],[5,5]]}
 },
 "nativeListSeatingControlEffects": {
   "toleranceMm":0.04,

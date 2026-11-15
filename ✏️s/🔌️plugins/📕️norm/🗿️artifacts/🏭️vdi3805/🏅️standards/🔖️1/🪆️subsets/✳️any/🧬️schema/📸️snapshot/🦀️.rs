@@ -9,7 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use framework_schema::ArtifactSchema;
-use std::collections::BTreeMap;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
@@ -21,7 +21,7 @@ pub struct Vdi3805Snapshot {
     #[state(artifact)]
     pub catalog: ManufacturerCatalog,
     #[state(artifact)]
-    pub edition_profile: BTreeMap<String, EditionProfileChoice>,
+    pub edition_profile: RetainedOrderedMap<String, EditionProfileChoice>,
     #[state(artifact)]
     pub correction_as_of: EditionId,
     #[state(artifact)]
@@ -29,9 +29,9 @@ pub struct Vdi3805Snapshot {
     #[state(artifact)]
     pub index: CatalogIndex,
     #[state(artifact)]
-    pub geometry: BTreeMap<String, ParametricGeometry>,
+    pub geometry: RetainedOrderedMap<String, ParametricGeometry>,
     #[state(artifact)]
-    pub curves: BTreeMap<String, CharacteristicCurve>,
+    pub curves: RetainedOrderedMap<String, CharacteristicCurve>,
     #[state(artifact)]
     pub limits: SecurityLimits,
 }
@@ -108,3 +108,9 @@ pub fn artifact_kind() -> semio_plugin::ArtifactKindSpec {
 pub const VDI3805_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.norm.vdi3805", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 pub const VDI3805_DOCUMENT_SCHEMA: &str = "semio.norm.vdi3805/v1";
+
+#[path = "../../🚪️io/🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+#[path = "../../🚪️io/🪞️records/🦀️.rs"]
+mod records;

@@ -1,0 +1,863 @@
+{
+ "version": 1,
+ "scopes": [
+  {
+   "path": "src/a.rs",
+   "inScope": true
+  },
+  {
+   "path": "README.md",
+   "inScope": true
+  },
+  {
+   "path": ".git/objects/pack/pack-1.idx",
+   "inScope": false
+  },
+  {
+   "path": ".git",
+   "inScope": false
+  },
+  {
+   "path": ".git/HEAD",
+   "inScope": false
+  },
+  {
+   "path": ".cache/f/health.json",
+   "inScope": false
+  },
+  {
+   "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/X/a.md",
+   "inScope": false
+  },
+  {
+   "path": "dir/._a.rs",
+   "inScope": false
+  },
+  {
+   "path": "._a",
+   "inScope": false
+  },
+  {
+   "path": ".gitignore",
+   "inScope": true
+  },
+  {
+   "path": ".github/x.yml",
+   "inScope": true
+  },
+  {
+   "path": "a/.git/config",
+   "inScope": true
+  }
+ ],
+ "failures": [
+  {
+   "name": "stuck git pack apply",
+   "key": "blocked:objects:pack-incomplete",
+   "class": "neutral"
+  },
+  {
+   "name": "git pack file EACCES",
+   "key": "blocked:.git/objects/pack/pack-1.idx:EACCES",
+   "class": "neutral"
+  },
+  {
+   "name": "git pack unpublished",
+   "key": "blocked:.git/objects/pack/x.pack:pack-unpublished",
+   "class": "neutral"
+  },
+  {
+   "name": "objects missing",
+   "key": "blocked:.git/objects/ab/cdef:objects-missing",
+   "class": "neutral"
+  },
+  {
+   "name": "git head broken",
+   "key": "git-broken-detached-head",
+   "class": "neutral"
+  },
+  {
+   "name": "git stage error",
+   "key": "error:git:index locked",
+   "class": "neutral"
+  },
+  {
+   "name": "refused ticket path",
+   "key": "refused:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/X/a.md:ticket-boundary",
+   "class": "neutral"
+  },
+  {
+   "name": "refused source path",
+   "key": "refused:src/a.rs:case-collision",
+   "class": "manifest"
+  },
+  {
+   "name": "refused not-nfc source",
+   "key": "refused:docs/é.md:not-nfc",
+   "class": "manifest"
+  },
+  {
+   "name": "blocked source apply",
+   "key": "blocked:src/a.rs:EACCES",
+   "class": "manifest"
+  },
+  {
+   "name": "sharing violation",
+   "key": "blocked:src/b.rs",
+   "class": "manifest"
+  },
+  {
+   "name": "journal blocked",
+   "key": "blocked:journal:EIO",
+   "class": "manifest"
+  },
+  {
+   "name": "unstable source read",
+   "key": "unstable:src/a.rs",
+   "class": "manifest"
+  },
+  {
+   "name": "unstable ticket read",
+   "key": "unstable:.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️13/X/a.md",
+   "class": "neutral"
+  },
+  {
+   "name": "blob lost source",
+   "key": "blob-wanted:src/a.rs",
+   "class": "manifest"
+  },
+  {
+   "name": "blob lost git",
+   "key": "blob-wanted:.git/objects/pack/p.pack",
+   "class": "neutral"
+  },
+  {
+   "name": "entry guard",
+   "key": "entry-guard:src/a.rs",
+   "class": "manifest"
+  },
+  {
+   "name": "long wait",
+   "key": "blocked-long:src/a.rs",
+   "class": "manifest"
+  },
+  {
+   "name": "apply error source",
+   "key": "error:src/a.rs:disk full",
+   "class": "manifest"
+  },
+  {
+   "name": "apply error git",
+   "key": "error:.git/x:oops",
+   "class": "neutral"
+  },
+  {
+   "name": "follow error of a peer",
+   "key": "error:g1-m03:EIO",
+   "class": "neutral"
+  },
+  {
+   "name": "clash error",
+   "key": "error:clash:boom",
+   "class": "manifest"
+  },
+  {
+   "name": "attest",
+   "key": "attest:store stalled",
+   "class": "neutral"
+  },
+  {
+   "name": "skipped name",
+   "key": "skipped:src/very/long:too-long",
+   "class": "neutral"
+  },
+  {
+   "name": "clock skew",
+   "key": "skew:g1-m02",
+   "class": "neutral"
+  },
+  {
+   "name": "watch disabled",
+   "key": "watch:disabled",
+   "class": "neutral"
+  },
+  {
+   "name": "scan failed",
+   "key": "scan:EMFILE",
+   "class": "neutral"
+  },
+  {
+   "name": "state missing",
+   "key": "state-missing",
+   "class": "manifest"
+  },
+  {
+   "name": "round error",
+   "key": "round:boom",
+   "class": "manifest"
+  },
+  {
+   "name": "rejoin",
+   "key": "rejoin:g1-m03",
+   "class": "manifest"
+  },
+  {
+   "name": "unknown kind",
+   "key": "brand-new:thing",
+   "class": "manifest"
+  },
+  {
+   "name": "seal",
+   "key": "seal:digest",
+   "class": "neutral"
+  },
+  {
+   "name": "appledouble blocked",
+   "key": "blocked:src/._a.rs:EACCES",
+   "class": "neutral"
+  }
+ ],
+ "tiers": [
+  {
+   "name": "quiet daemon verified after start",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "trusted"
+  },
+  {
+   "name": "lifetime counters are ignored",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": null,
+     "lostKind": null
+    },
+    "failures": [
+     {
+      "kind": "blocked",
+      "count": 126360,
+      "lastMs": 999996400000
+     },
+     {
+      "kind": "refused",
+      "count": 9,
+      "lastMs": 999992800000
+     },
+     {
+      "kind": "attest",
+      "count": 4,
+      "lastMs": 999999910000
+     }
+    ]
+   },
+   "expected": "trusted"
+  },
+  {
+   "name": "nothing verified yet",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": null,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "verify"
+  },
+  {
+   "name": "no trust statement",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok"
+   },
+   "expected": "verify"
+  },
+  {
+   "name": "loss after verification",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": 999999998000,
+     "lostKind": "unstable"
+    }
+   },
+   "expected": "verify"
+  },
+  {
+   "name": "loss at the very start of the verification",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": 999999995000,
+     "lostKind": "blocked"
+    }
+   },
+   "expected": "verify"
+  },
+  {
+   "name": "verification after the loss",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": 999999991000,
+     "lostKind": "blocked"
+    }
+   },
+   "expected": "trusted"
+  },
+  {
+   "name": "verification older than ten minutes",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999399999,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "verify"
+  },
+  {
+   "name": "verification exactly ten minutes old",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999400000,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "trusted"
+  },
+  {
+   "name": "health stale",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999969999,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "unusable"
+  },
+  {
+   "name": "health exactly 30 s old",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999970000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999965000,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "trusted"
+  },
+  {
+   "name": "health from the future",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 1000000030001,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "unusable"
+  },
+  {
+   "name": "store stalled",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "stalled",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "unusable"
+  },
+  {
+   "name": "store unreachable",
+   "now": 1000000000000,
+   "alive": true,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "unreachable",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "unusable"
+  },
+  {
+   "name": "process dead",
+   "now": 1000000000000,
+   "alive": false,
+   "health": {
+    "wallMs": 999999999000,
+    "pid": 7,
+    "store": "ok",
+    "trust": {
+     "scope": "shared-source",
+     "verifiedMs": 999999995000,
+     "lostMs": null,
+     "lostKind": null
+    }
+   },
+   "expected": "unusable"
+  }
+ ],
+ "trackers": [
+  {
+   "name": "fresh daemon verifies after a file sweep and a directory sweep",
+   "steps": [
+    {
+     "at": 1000000000000,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": null,
+      "lostMs": null,
+      "lostKind": null
+     },
+     "tier": "verify"
+    },
+    {
+     "at": 1000000000010,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000010,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": null,
+      "lostMs": null,
+      "lostKind": null
+     },
+     "tier": "verify"
+    },
+    {
+     "at": 1000000000020,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000005
+    },
+    {
+     "at": 1000000000020,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000000,
+      "lostMs": null,
+      "lostKind": null
+     },
+     "tier": "trusted"
+    }
+   ]
+  },
+  {
+   "name": "stale counters from neutral failures do not withhold trust",
+   "steps": [
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000001,
+     "do": "failure",
+     "key": "blocked:objects:pack-incomplete"
+    },
+    {
+     "at": 1000000000002,
+     "do": "failure",
+     "key": "refused:.🧬semio/🦑️repo/🎫️tickets/x/y.md:ticket-boundary"
+    },
+    {
+     "at": 1000000000003,
+     "do": "failure",
+     "key": "attest:boom"
+    },
+    {
+     "at": 1000000000004,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000000,
+      "lostMs": null,
+      "lostKind": null
+     },
+     "tier": "trusted"
+    }
+   ]
+  },
+  {
+   "name": "a failure on a source path loses trust until both sweeps start after it",
+   "steps": [
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000100,
+     "do": "failure",
+     "key": "blocked:src/a.rs:EACCES"
+    },
+    {
+     "at": 1000000000101,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000000,
+      "lostMs": 1000000000100,
+      "lostKind": "blocked"
+     },
+     "tier": "verify"
+    },
+    {
+     "at": 1000000000200,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000150
+    },
+    {
+     "at": 1000000000201,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000000,
+      "lostMs": 1000000000100,
+      "lostKind": "blocked"
+     },
+     "tier": "verify"
+    },
+    {
+     "at": 1000000000300,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000250
+    },
+    {
+     "at": 1000000000301,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000150,
+      "lostMs": 1000000000100,
+      "lostKind": "blocked"
+     },
+     "tier": "trusted"
+    }
+   ]
+  },
+  {
+   "name": "a sweep that began before the loss does not return trust",
+   "steps": [
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000100,
+     "do": "failure",
+     "key": "unstable:src/a.rs"
+    },
+    {
+     "at": 1000000000200,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000050
+    },
+    {
+     "at": 1000000000200,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000060
+    },
+    {
+     "at": 1000000000201,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000050,
+      "lostMs": 1000000000100,
+      "lostKind": "unstable"
+     },
+     "tier": "verify"
+    }
+   ]
+  },
+  {
+   "name": "drift found by a sweep loses trust and a clean sweep returns it",
+   "steps": [
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000500,
+     "do": "lost",
+     "kind": "sweep-drift"
+    },
+    {
+     "at": 1000000000501,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000000,
+      "lostMs": 1000000000500,
+      "lostKind": "sweep-drift"
+     },
+     "tier": "verify"
+    },
+    {
+     "at": 1000000000900,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000600
+    },
+    {
+     "at": 1000000000900,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000700
+    },
+    {
+     "at": 1000000000901,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000600,
+      "lostMs": 1000000000500,
+      "lostKind": "sweep-drift"
+     },
+     "tier": "trusted"
+    }
+   ]
+  },
+  {
+   "name": "a complete tree walk verifies both parts at once and an older one does not lower it",
+   "steps": [
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "walk",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000001,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000000,
+      "lostMs": null,
+      "lostKind": null
+     },
+     "tier": "trusted"
+    },
+    {
+     "at": 1000000000002,
+     "do": "verified",
+     "part": "walk",
+     "startedMs": 999999999500
+    },
+    {
+     "at": 1000000000003,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000000,
+      "lostMs": null,
+      "lostKind": null
+     },
+     "tier": "trusted"
+    },
+    {
+     "at": 1000000000004,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000001
+    },
+    {
+     "at": 1000000000004,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000002
+    },
+    {
+     "at": 1000000000005,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000001,
+      "lostMs": null,
+      "lostKind": null
+     },
+     "tier": "trusted"
+    }
+   ]
+  },
+  {
+   "name": "a stuck loss that keeps recurring never returns trust",
+   "steps": [
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000000,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000000
+    },
+    {
+     "at": 1000000000010,
+     "do": "failure",
+     "key": "blocked:src/a.rs:EACCES"
+    },
+    {
+     "at": 1000000000020,
+     "do": "verified",
+     "part": "file",
+     "startedMs": 1000000000015
+    },
+    {
+     "at": 1000000000020,
+     "do": "verified",
+     "part": "directory",
+     "startedMs": 1000000000015
+    },
+    {
+     "at": 1000000000030,
+     "do": "failure",
+     "key": "blocked:src/a.rs:EACCES"
+    },
+    {
+     "at": 1000000000031,
+     "do": "expect",
+     "trust": {
+      "scope": "shared-source",
+      "verifiedMs": 1000000000015,
+      "lostMs": 1000000000030,
+      "lostKind": "blocked"
+     },
+     "tier": "verify"
+    }
+   ]
+  }
+ ]
+}

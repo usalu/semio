@@ -1,0 +1,22 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🍞️bun/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "8de08a38b3053baba5e2b499106552a3a2fd74e8973dfc1931010d58ded2e70f"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.d.mts": {
+  "file": "f001",
+  "before": "7d94bb39bab844305b98ffa9f3e50df3636e7b2bfe08a7b5c9ae74608adec0fb",
+  "after": "5c8a1e56b770f742fc64a2ca321d02a2a83beb6f5abf0f103b371423933dbf65"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🟨️.mjs": {
+  "file": "f002",
+  "before": "5c8da390695a620b82c855d12e5a9df4d3b30e291b84d7f662db39c5a82ea22e",
+  "after": "fc04f921b18927b8da2c97582bb845a5acf02762a532f19003977d8a2eba17a0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔭️witness/🧬️schema/🔣️.json": {
+  "file": "f003",
+  "before": "1ec7cdb347f3653fefd8e4cba322d07b8ed593abe8c1b4fc9ee14199fda042c5",
+  "after": "a1a4e90107dc2a0dfc55969f0764149fba96746cd80fc94d296e04ce50606aef"
+ }
+}

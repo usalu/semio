@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-15T02:27:38.027154+00:00",
+  "pid": 18986,
+  "process": "501 18986 19:16 721120 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun ./\ud83d\udcdc\ufe0fscript.ts status --lang en",
+  "action": "SIGTERM to own read-only status command only",
+  "reason": "No fleet verdict for over 17 minutes; retry with a current observation; no native bootstrap active",
+  "sent": true,
+  "force_end": {
+    "at": "2026-11-15T02:28:59.999406+00:00",
+    "reason": "Own read-only status did not exit after SIGTERM plus 60 seconds",
+    "pid": 18986,
+    "signal": "SIGKILL"
+  }
+}

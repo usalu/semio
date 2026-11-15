@@ -1,0 +1,4 @@
+started pid=92351 2026-11-14T10:48:09Z
+hard stop 2026-11-14T11:26:49Z: memory pressure level 2; one SIGINT to process group 92351
+ended 2026-11-14T11:27:19Z wrapper_rc=0 stopped=1
+wait for round > 1 started 2026-11-14T11:28:04Z

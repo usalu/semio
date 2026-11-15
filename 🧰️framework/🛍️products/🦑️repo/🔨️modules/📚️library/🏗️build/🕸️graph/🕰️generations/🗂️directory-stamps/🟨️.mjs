@@ -33,11 +33,16 @@ export function createDirectoryStampsV1({file,racyMilliseconds=2000,concurrency=
    }));
    return{unchanged,measured,links,missing};
   },
-  /** 💾️ Keeps the stamps of the directories this pass measured, except those named in `exclude` (directories of rows found stale), and replaces the file atomically; losing the write only costs the next pass a precise check. */
+  /** 💾️ Keeps the stamps of the directories this pass measured, except those named in `exclude` (directories of rows found stale), and replaces the file atomically only when a stamp changed (an unchanged table is not written again); losing the write only costs the next pass a precise check. */
   async save(measured,exclude=new Set()){
-   const known=await load();
-   for(const[path,row]of measured)if(!exclude.has(path))known.set(path,row);else known.delete(path);
-   while(known.size>maximumDirectories)known.delete(known.keys().next().value);
+   const known=await load();let changed=false;
+   for(const[path,row]of measured){
+    if(exclude.has(path)){if(known.delete(path))changed=true;continue;}
+    const old=known.get(path);
+    if(old!==row&&!(old&&old[0]===row[0]&&old[1]===row[1]&&old[2]===row[2]&&old[3].length===row[3].length&&old[3].every((name,at)=>name===row[3][at]))){known.set(path,row);changed=true;}
+   }
+   while(known.size>maximumDirectories){known.delete(known.keys().next().value);changed=true;}
+   if(!changed&&await stat(file).then(()=>true,()=>false))return true;
    const temporary=file+"."+process.pid+".tmp";
    try{await writeFile(temporary,JSON.stringify({version:2,directories:[...known].map(([path,row])=>[path,row[0],row[1],row[2],row[3]])}));await rename(temporary,file);return true;}catch{return false;}
   },

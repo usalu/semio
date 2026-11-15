@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Graph memory settling / Speicher-Beruhigung des Graphen",
+  "description": "EN: After the service has answered a plan and nothing else runs, the memory the plan needed is given back: the service collects garbage, asks the runtime to shrink its heap and logs ONE line with the managed and resident megabytes and what the operating system got back. Between two waves of one read, the process logs which bounded caches still hold memory, so the next round can name what a wave leaves behind. Both run only on a machine that has a plan limit (or with SEMIO_GRAPH_PHASES=1); a serving machine keeps its graph and stays quiet. DE: Hat der Dienst einen Plan beantwortet und läuft sonst nichts, wird der Speicher, den der Plan brauchte, zurückgegeben: der Dienst sammelt Müll, bittet die Laufzeit, ihren Heap zu verkleinern, und schreibt EINE Zeile mit den verwalteten und residenten Megabyte und dem, was das Betriebssystem zurückbekam. Zwischen zwei Wellen eines Lesens schreibt der Prozess, welche begrenzten Zwischenspeicher noch Speicher halten, damit die nächste Runde benennen kann, was eine Welle zurücklässt. Beides läuft nur auf einer Maschine mit Plan-Grenze (oder mit SEMIO_GRAPH_PHASES=1); eine bedienende Maschine behält ihren Graphen und bleibt still.",
+  "definitions": {
+    "Policy": {
+      "description": "EN: censusCaches is the number of the largest bounded caches named in the retained line. DE: censusCaches ist die Anzahl der größten begrenzten Zwischenspeicher, die die Zeile retained nennt.",
+      "const": { "version": 1, "censusCaches": 5 }
+    },
+    "Messages": {
+      "description": "EN: The lines, one per language of the environment (English first, German second, no default language). DE: Die Zeilen, eine je Sprache der Umgebung (zuerst Englisch, dann Deutsch, keine Standardsprache).",
+      "const": {
+        "en": {
+          "answered": "graph: plan answered, managed {managed} MB, resident {resident} MB (released {released} MB)",
+          "retained": "graph: after the wave managed {managed} MB, resident {resident} MB; largest bounded caches: {caches}"
+        },
+        "de": {
+          "answered": "Graph: Plan beantwortet, verwaltet {managed} MB, resident {resident} MB ({released} MB freigegeben)",
+          "retained": "Graph: nach der Welle verwaltet {managed} MB, resident {resident} MB; größte begrenzte Zwischenspeicher: {caches}"
+        }
+      }
+    },
+    "Result": {
+      "description": "EN: What settleGraphMemoryV1 answers. DE: Was settleGraphMemoryV1 antwortet.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["managedBeforeMegabytes", "managedMegabytes", "residentBeforeMegabytes", "residentMegabytes", "releasedMegabytes"],
+      "properties": {
+        "managedBeforeMegabytes": { "type": "integer", "minimum": 0 },
+        "managedMegabytes": { "type": "integer", "minimum": 0 },
+        "residentBeforeMegabytes": { "type": "integer", "minimum": 0 },
+        "residentMegabytes": { "type": "integer", "minimum": 0 },
+        "releasedMegabytes": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

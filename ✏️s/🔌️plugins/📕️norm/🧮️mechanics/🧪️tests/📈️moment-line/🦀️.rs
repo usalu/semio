@@ -1,4 +1,4 @@
-use crate::moment_line::*;
+use semio_s_plugin_norm_mechanics::moment_line::*;
 use semio_s_plugin_norm_compliance::python_oracle;
 use std::collections::BTreeMap;
 use std::fmt::Write;

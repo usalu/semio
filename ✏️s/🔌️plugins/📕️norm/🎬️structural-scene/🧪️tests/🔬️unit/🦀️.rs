@@ -1,4 +1,7 @@
-use crate::*;
+extern crate semio_framework_value as value;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_structural_scene::*;
 use value::{FromValue, ToValue};
 
 fn copy(s: &str) -> LocalizedCopy {
@@ -110,12 +113,12 @@ fn variant_wire_shape_is_kind_and_data_with_camel_case() {
     assert_eq!(scene["entities"][0]["accessibleName"]["en"], "Member B1");
     assert_eq!(scene["entities"][0]["geometry"]["kind"], "member");
     assert_eq!(scene["entities"][0]["geometry"]["data"]["startRelease"], "rigid");
-    assert_eq!(scene["entities"][1]["geometry"]["data"]["profile"]["kind"], "uniform");
+    assert_eq!(scene["entities"][1]["geometry"]["data"]["data"]["profile"]["kind"], "uniform");
 }
 
 #[test]
 fn golden_scene_matches_committed_bytes() {
-    crate::projection_kit::test_support::assert_golden(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/🏛️scene/🔣️.json"), &canonical_json(&scene()));
+    semio_s_plugin_norm_structural_scene::projection_kit::test_support::assert_golden(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/🏛️scene/🔣️.json"), &canonical_json(&scene()));
 }
 
 #[test]
@@ -255,7 +258,7 @@ fn delta_validates_and_round_trips() {
     bad.entities.push(EntityPatch::Remove { id: "b1".into() });
     bad.revision = SceneRevision { document_seq: 1, report_seq: 2 };
     assert_eq!(rules(bad.validate()), ["$.revision:revision-not-before-base", "$.entities:one-patch-per-entity"]);
-    assert!(SceneDelta { entities: vec![], annotations: vec![], ..delta }.is_empty() == false);
+    assert!(SceneDelta { entities: vec![], annotations: vec![], ..delta }.is_empty());
 }
 
 #[test]

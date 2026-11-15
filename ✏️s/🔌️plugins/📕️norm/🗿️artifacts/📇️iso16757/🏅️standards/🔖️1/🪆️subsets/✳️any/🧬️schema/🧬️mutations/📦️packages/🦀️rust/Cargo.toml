@@ -25,6 +25,10 @@ semio-os-command = { path = "../../../../../../../../../../../../../🧰️frame
 semio-os-kernel = { workspace = true }
 semio-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-norm-contract = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
@@ -38,6 +42,7 @@ semio-s-artifact-norm-iso16757-mut-definitions = { workspace = true }
 semio-s-artifact-norm-iso16757-mut-products = { workspace = true }
 semio-s-artifact-norm-iso16757-mut-selection = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
 
 [features]
 test-support = ["dep:serde", "semio-s-artifact-norm-iso16757-diff/test-support", "semio-s-artifact-norm-iso16757-model/test-support", "semio-s-artifact-norm-iso16757-mut-catalogue/test-support", "semio-s-artifact-norm-iso16757-mut-definitions/test-support", "semio-s-artifact-norm-iso16757-mut-products/test-support", "semio-s-artifact-norm-iso16757-mut-selection/test-support"]
@@ -47,6 +52,5 @@ semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
-semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-mutation-vectors = { workspace = true }
 serde = { workspace = true }

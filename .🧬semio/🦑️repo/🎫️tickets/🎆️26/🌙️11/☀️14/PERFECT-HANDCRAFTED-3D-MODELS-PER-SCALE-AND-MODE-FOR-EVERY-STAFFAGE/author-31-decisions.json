@@ -1,0 +1,140 @@
+{
+ "london-plane-pollarded": {
+  "50": [
+   [
+    "Detailed model: the trunk, the pollard head, the five knuckles and the ten shoot segments are round lofts along their drawn elevation outlines (stations from the outline by tolerance, so the root flare and the head waist are kept), with the lateral depth read from the front outline of the same bone; the twenty drawn foliage lobes (core, top, eight outer, six middle, four low) are one loft each: the exact plan outline fitted as an oriented superellipse, swept over the height with the front outline's width profile, then fitted to all three drawings and oversized by a small offset so that the scalloped outlines lie inside the soft mass (soft-mass limit, ruling C8b). One flat fill lobe carries the plan crown fill.",
+    "Detailliertes Modell: Stamm, Kopfbereich der Schneitelung, die fünf Knoten und die zehn Triebsegmente sind runde Lofts entlang ihrer gezeichneten Ansichtsumrisse (Stützstellen aus dem Umriss mit Toleranz, damit Wurzelanlauf und Kopftaille erhalten bleiben), die seitliche Tiefe stammt aus dem Frontumriss desselben Knochens; die zwanzig gezeichneten Laublappen (Kern, Spitze, acht äussere, sechs mittlere, vier untere) sind je ein Loft: der exakte Grundrissumriss als orientierte Superellipse, über die Höhe mit dem Breitenprofil des Frontumrisses gezogen, dann an alle drei Zeichnungen angepasst und leicht übergrösst, damit die Girlandenumrisse innerhalb der weichen Masse liegen (Weichmassen-Grenze, Entscheid C8b). Ein flacher Füllappen trägt die Kronenfüllung im Grundriss."
+   ],
+   [
+    "Thermal: bark regions reference the exposed trunk, root plate, head, knuckle and shoot solids by `of`; both leaf regions reference the lobes (leaf-shade the core, leaf-sun all others); the twelve transpiration emitters are thin discs at their anchors inside the crown. Leaf areas are exchange areas and are not compared (C16). trunk-bark areaM2 was corrected 7.53 to 9.80 m2 (factor 1.30); pollard-bark (6.30 m2 exposed against 4.13) and shoot-bark (2.18 against 3.67, shoots lie buried in the crown) are listed in area-review.md and not applied.",
+    "Thermik: Rindenregionen verweisen per `of` auf die freiliegenden Stamm-, Wurzelteller-, Kopf-, Knoten- und Triebkörper; beide Blattregionen verweisen auf die Laublappen (Schattenlaub auf den Kern, Sonnenlaub auf alle übrigen); die zwölf Transpirations-Emitter sind dünne Scheiben an ihren Ankern im Kroneninneren. Blattflächen sind Austauschflächen und werden nicht verglichen (C16). trunk-bark wurde von 7,53 auf 9,80 m2 korrigiert (Faktor 1,30); pollard-bark (6,30 m2 frei gegenüber 4,13) und shoot-bark (2,18 gegenüber 3,67, die Triebe liegen in der Krone vergraben) stehen in area-review.md und sind nicht übernommen."
+   ],
+   [
+    "Structure: one member per load-bearing bone (root plate, trunk, head, five knuckles, ten shoot segments) as a loft with 0.62 of the body section along the same path as the limb loft, joints at the bone origins, one mass ellipsoid per foliage bone at its largest lobe, and the fixed support block with its anchor at the root plate. Everything lies inside the body silhouette.",
+    "Tragwerk: ein Stab je tragendem Knochen (Wurzelteller, Stamm, Kopf, fünf Knoten, zehn Triebsegmente) als Loft mit 0,62 des Körperquerschnitts entlang desselben Pfades wie der Astloft, Gelenke an den Knochenursprüngen, je Laubknochen ein Massenellipsoid im grössten Lappen und der eingespannte Auflagerblock mit Anker am Wurzelteller. Alles liegt innerhalb der Körpersilhouette."
+   ]
+  ],
+  "100": [
+   [
+    "1:100 is modelled anew from its own drawings: sixteen lobes (the middle ring has six lobes at 1:50 and the drawing at 1:100 draws the same six, the low ring four), five knuckles and eight shoot segments, each with fewer loft stations (outline tolerance of two features); the three plan fills of this scale carry the crown fill. Lobes are fitted to the 1:100 drawings and oversized so that the drawn scallops lie within the soft mass.",
+    "1:100 ist neu aus den eigenen Zeichnungen modelliert: sechzehn Laublappen, fünf Knoten und acht Triebsegmente, jeweils mit weniger Loftstationen (Umrisstoleranz zwei Merkmale); die drei Grundrissfüllungen dieses Massstabs tragen die Kronenfüllung. Die Lappen sind an die 1:100-Zeichnungen angepasst und übergrösst, damit die gezeichneten Girlanden innerhalb der weichen Masse liegen."
+   ],
+   [
+    "Thermal: references as at 1:50 to the solids of this scale; emitters as discs. Structure: members with 0.62 of the section along the limb paths, joints, masses and the fixed support with its anchor.",
+    "Thermik: Verweise wie bei 1:50 auf die Körper dieses Massstabs; Emitter als Scheiben. Tragwerk: Stäbe mit 0,62 des Querschnitts entlang der Astpfade, Gelenke, Massen und das eingespannte Auflager mit Anker."
+   ]
+  ],
+  "200": [
+   [
+    "1:200: ten lobes drawn at this scale (core, top, four outer, two middle, two low), the head with five knuckles, the two near shoots and the trunk; the plan crown fills of this scale are four flat lobes. The lobe stack is generalised: five loft stations each, oversized for the soft-mass limit.",
+    "1:200: zehn in diesem Massstab gezeichnete Laublappen (Kern, Spitze, vier äussere, zwei mittlere, zwei untere), der Kopf mit fünf Knoten, die beiden vorderen Triebe und der Stamm; die Grundrissfüllungen dieses Massstabs sind vier flache Lappen. Der Lappenstapel ist generalisiert: je fünf Loftstationen, übergrösst für die Weichmassen-Grenze."
+   ],
+   [
+    "Thermal: references to the solids of this scale, shoot-bark covered by the two drawn shoots; emitters as discs. Structure: members, masses, support; joints omitted at this scale.",
+    "Thermik: Verweise auf die Körper dieses Massstabs, shoot-bark durch die beiden gezeichneten Triebe abgedeckt; Emitter als Scheiben. Tragwerk: Stäbe, Massen, Auflager; Gelenke entfallen in diesem Massstab."
+   ]
+  ],
+  "500": [
+   [
+    "1:500: the crown is one visual-hull loft from the three drawn crown silhouettes (elevation, front, plan) with sections every 0.22 m; head and trunk are lofts from their outlines. Nothing else is drawn at this scale.",
+    "1:500: die Krone ist ein einziger Visual-Hull-Loft aus den drei gezeichneten Kronensilhouetten (Ansicht, Front, Grundriss) mit Schnitten alle 0,22 m; Kopf und Stamm sind Lofts aus ihren Umrissen. Mehr wird in diesem Massstab nicht gezeichnet."
+   ],
+   [
+    "Thermal: crown, head and trunk by reference, the shoot-bark region by five capsules of 80 mm inside the crown (shoots are below the feature at this scale and buried); emitters as discs. Structure: members clipped to the part that lies in the crown or trunk silhouette, one mass, the support.",
+    "Thermik: Krone, Kopf und Stamm per Verweis, die Region shoot-bark durch fünf Kapseln von 80 mm in der Krone (Triebe liegen in diesem Massstab unter dem Merkmal und sind vergraben); Emitter als Scheiben. Tragwerk: Stäbe auf den Teil in Kronen- oder Stammsilhouette beschnitten, eine Masse, das Auflager."
+   ]
+  ]
+ },
+ "multi-stem-birch": {
+  "50": [
+   [
+    "Detailed model: the stool, the three two-segment stems (lofts along the drawn elevation outlines with stations by tolerance and the lateral lean read from the front outline of each stem), the six branches (round lofts along their drawn outlines) and the twenty drawn foliage lobes (46 loft solids, because a visual-hull lobe becomes one loft per connected piece). The drawings place a lobe in each of two directions (along the view and towards the viewer) per foliage bone, and elevation, front and plan only agree after intersection, so every lobe is a visual-hull loft of its own plan outline, its own front outline and the elevation mass of its bone (a lobe that points towards the viewer is cut to the width the elevation draws); the lobes are then fitted to all three drawings.",
+    "Detailliertes Modell: Wurzelstock, die drei zweigliedrigen Stämme (Lofts entlang der gezeichneten Ansichtsumrisse mit Stützstellen nach Toleranz und der seitlichen Neigung aus dem Frontumriss jedes Stammes), die sechs Äste (runde Lofts entlang ihrer gezeichneten Umrisse) und die zwanzig gezeichneten Laublappen (46 Loftkörper, weil ein Visual-Hull-Lappen je zusammenhängendem Stück ein Loft wird). Die Zeichnungen setzen je Laubknochen einen Lappen in zwei Richtungen (entlang der Ansicht und zum Betrachter), und Ansicht, Front und Grundriss stimmen erst nach Schnittbildung überein; jeder Lappen ist deshalb ein Visual-Hull-Loft aus seinem eigenen Grundriss, seinem eigenen Frontumriss und der Ansichtsmasse seines Knochens (ein zum Betrachter zeigender Lappen wird auf die in der Ansicht gezeichnete Breite beschnitten); danach sind die Lappen an alle drei Zeichnungen angepasst."
+   ],
+   [
+    "Thermal: stem-bark by reference to the stool and stems (areaM2 corrected 14 to 18.78 m2, factor 1.34, from this model), branch-bark by reference to the six branches (their exposed area is 2.5 m2 against 4 m2 declared because the drawings draw the branches inside the foliage masses; areaM2 lowered to 2.67 m2, the limit of a factor 1.5, listed in area-review.md), leaf-crown by reference to all lobes (exchange area, not compared, C16); nine transpiration emitter discs at their anchors.",
+    "Thermik: stem-bark per Verweis auf Wurzelstock und Stämme (areaM2 aus diesem Modell von 14 auf 18,78 m2 korrigiert, Faktor 1,34), branch-bark per Verweis auf die sechs Äste (freiliegend 2,5 m2 gegenüber 4 m2 deklariert, weil die Zeichnungen die Äste innerhalb der Laubmassen zeigen; areaM2 auf 2,67 m2 gesenkt, Grenze des Faktors 1,5, in area-review.md aufgeführt), leaf-crown per Verweis auf alle Laubkörper (Austauschfläche, nicht verglichen, C16); neun Transpirations-Emitterscheiben an ihren Ankern."
+   ],
+   [
+    "Structure: one member per load-bearing bone (root plate, six stem segments, six branches, nine foliage bones) with 0.62 of the body section along the limb paths, or along the bone axis clipped to the part inside the drawn silhouette for foliage bones, joints at the stem and branch origins, one mass ellipsoid per foliage bone group and the fixed support block with its anchor.",
+    "Tragwerk: ein Stab je tragendem Knochen (Wurzelstock, sechs Stammsegmente, sechs Äste, neun Laubknochen) mit 0,62 des Körperquerschnitts entlang der Astpfade, bei Laubknochen entlang der auf die gezeichnete Silhouette beschnittenen Knochenachse, Gelenke an den Stamm- und Astursprüngen, ein Massenellipsoid je Laubknochengruppe und der eingespannte Auflagerblock mit Anker."
+   ]
+  ],
+  "100": [
+   [
+    "1:100 is modelled from its own drawings: the three stems are one elevation loft each (the 1:100 elevation draws each stem as one shape, split at the fork bone so that both stem bones keep a solid), six branches, the stool and twenty lobes (27 solids) as visual-hull lofts with coarser stations (0.45 m); fewer lobes per bone than at 1:50 because the 1:100 drawing merges the small side lobes.",
+    "1:100 ist aus den eigenen Zeichnungen modelliert: die drei Stämme je ein Ansichts-Loft (die 1:100-Ansicht zeichnet jeden Stamm als eine Form, an der Gabelungsknochen geteilt, damit beide Stammknochen einen Körper behalten), sechs Äste, der Wurzelstock und zwanzig Lappen (27 Körper) als Visual-Hull-Lofts mit gröberen Stationen (0,45 m); weniger Lappen je Knochen als bei 1:50, weil die 1:100-Zeichnung die kleinen Seitenlappen zusammenfasst."
+   ],
+   [
+    "Thermal and structure derived as at 1:50 from the solids of this scale; joints kept at the stem forks.",
+    "Thermik und Tragwerk wie bei 1:50 aus den Körpern dieses Massstabs abgeleitet; Gelenke an den Stammgabelungen bleiben erhalten."
+   ]
+  ],
+  "200": [
+   [
+    "1:200: stems as merged shapes split at the fork bones, six branches, the stool and the crown as eighteen lobe solids with 0.6 m stations; no joints.",
+    "1:200: Stämme als zusammengefasste Formen an den Gabelungsknochen geteilt, sechs Äste, der Wurzelstock und die Krone als achtzehn Lappenkörper mit 0,6 m Stationen; keine Gelenke."
+   ],
+   [
+    "Thermal by reference to the solids of this scale; structure members and masses clipped to the drawn silhouette; fixed support.",
+    "Thermik per Verweis auf die Körper dieses Massstabs; Stäbe und Massen der Tragstruktur auf die gezeichnete Silhouette beschnitten; eingespanntes Auflager."
+   ]
+  ],
+  "500": [
+   [
+    "1:500: the stems are one visual-hull loft of the drawn stem silhouette (elevation and front), the crown one visual-hull loft of the three crown silhouettes with 0.45 m sections; the stool is the stem hull's foot. The plan draws only the crown and the stem dot.",
+    "1:500: die Stämme sind ein Visual-Hull-Loft aus der gezeichneten Stammsilhouette (Ansicht und Front), die Krone ein Visual-Hull-Loft aus den drei Kronensilhouetten mit 0,45 m Schnitten; der Wurzelstock ist der Fuss des Stammhulls. Der Grundriss zeichnet nur Krone und Stammpunkt."
+   ],
+   [
+    "Thermal: stems and crown by reference, branch-bark by two 80 mm capsules inside the crown (the branches are below the feature and buried at this scale); emitters as discs. Structure: members clipped to the part inside the drawn silhouette, one mass, support.",
+    "Thermik: Stämme und Krone per Verweis, branch-bark durch zwei Kapseln von 80 mm in der Krone (die Äste liegen in diesem Massstab unter dem Merkmal und sind vergraben); Emitter als Scheiben. Tragwerk: Stäbe auf den Teil innerhalb der gezeichneten Silhouette beschnitten, eine Masse, Auflager."
+   ]
+  ]
+ },
+ "scots-pine": {
+  "50": [
+   [
+    "Detailed model: the root flare disc, the round trunk lofts (trunk-1 to trunk-3 and leader, radius from the drawn elevation outline with stations by tolerance), two stubs, six limbs (round lofts along their elevation outline whose lateral position follows the plan strip drawn for the limb, so the limbs leave the trunk diagonally) and the needle pads: 7 pads with 17 lobes (41 loft solids, because a visual-hull lobe becomes one loft per connected piece). A lobe whose plan and front outline lie inside the elevation mass is one plan-by-front loft; a lobe that points towards the viewer where the elevation draws a gap is a visual hull cut to the elevation union. Lobes are fitted to the three drawings and the outer ring is oversized slightly so that the drawn width and depth (12.15 m by 8 m) are reached. The front and plan drawings of the lower bole (a 0.9 m flare to a 0.4 m shaft, plan circle of 0.7 m) contradicted the elevation (0.3 m shaft) at every scale; the drawings of the bole were corrected at the root to the elevation widths (0.32 m, 0.22 m, plan 0.3 m).",
+    "Detailliertes Modell: Wurzelanlauf als Scheibe, runde Stammlofts (trunk-1 bis trunk-3 und Leittrieb, Radius aus dem gezeichneten Ansichtsumriss mit Stützstellen nach Toleranz), zwei Stummel, sechs Äste (runde Lofts entlang ihres Ansichtsumrisses, deren seitliche Lage dem für den Ast gezeichneten Grundrissstreifen folgt, die Äste verlassen den Stamm also diagonal) und die Nadelpolster: 7 Polster mit 17 Lappen (41 Loftkörper, weil ein Visual-Hull-Lappen je zusammenhängendem Stück ein Loft wird). Ein Lappen, dessen Grundriss- und Frontumriss innerhalb der Ansichtsmasse liegen, ist ein Grundriss-mal-Front-Loft; ein zum Betrachter zeigender Lappen, wo die Ansicht eine Lücke zeichnet, ist eine auf die Ansichtsvereinigung beschnittene Visual Hull. Die Lappen sind an die drei Zeichnungen angepasst, der äussere Ring ist leicht übergrösst, damit die gezeichnete Breite und Tiefe (12,15 m mal 8 m) erreicht wird. Front und Grundriss des unteren Schaftes (Anlauf 0,9 m auf Schaft 0,4 m, Grundrisskreis 0,7 m) widersprachen in jedem Massstab der Ansicht (Schaft 0,3 m); die Schaftzeichnungen wurden an der Wurzel auf die Ansichtsbreiten korrigiert (0,32 m, 0,22 m, Grundriss 0,3 m)."
+   ],
+   [
+    "Thermal: bark regions and needle regions by reference to the solids of this scale (needles-shade: the lower pads, needles-sun: the upper pads); the eleven transpiration emitter discs at their anchors. areaM2 corrected from this model: bark-lower 12 to 14.42, bark-upper 14 to 11.38, limb-bark 8 to 11.23 (all within a factor 1.5); needle areas are exchange areas and untouched (C16).",
+    "Thermik: Rinden- und Nadelregionen per Verweis auf die Körper dieses Massstabs (needles-shade: untere Polster, needles-sun: obere Polster); die elf Transpirations-Emitterscheiben an ihren Ankern. areaM2 aus diesem Modell korrigiert: bark-lower 12 auf 14,42, bark-upper 14 auf 11,38, limb-bark 8 auf 11,23 (alle innerhalb Faktor 1,5); Nadelflächen sind Austauschflächen und unverändert (C16)."
+   ],
+   [
+    "Structure: members for every load-bearing bone (root plate, four trunk segments, two stubs, six limbs, seven pad bones: the pad members are the bone axes clipped to the drawn silhouette), with 0.62 of the body section along the limb paths, joints at trunk and limb origins, seven mass ellipsoids and the fixed support.",
+    "Tragwerk: Stäbe für jeden tragenden Knochen (Wurzelteller, vier Stammsegmente, zwei Stummel, sechs Äste, sieben Polsterknochen: die Polsterstäbe sind die auf die gezeichnete Silhouette beschnittenen Knochenachsen) mit 0,62 des Körperquerschnitts entlang der Astpfade, Gelenke an Stamm- und Astursprüngen, sieben Massenellipsoide und das eingespannte Auflager."
+   ]
+  ],
+  "100": [
+   [
+    "1:100 from its own drawings: root disc, a trunk loft per drawn bole shape (the 1:100 drawing draws the bole in two pieces, lower and upper), two stubs, six limbs and 17 pad lobes (18 solids) with fewer loft stations; the three plan fills are flat lobes under the pads.",
+    "1:100 aus den eigenen Zeichnungen: Wurzelscheibe, je ein Stammloft pro gezeichneter Schaftform (die 1:100-Zeichnung zeichnet den Schaft in zwei Stücken, unten und oben), zwei Stummel, sechs Äste und 17 Polsterlappen (18 Körper) mit weniger Loftstationen; die drei Grundrissfüllungen sind flache Lappen unter den Polstern."
+   ],
+   [
+    "Thermal and structure as at 1:50 from this scale's solids; joints kept.",
+    "Thermik und Tragwerk wie bei 1:50 aus den Körpern dieses Massstabs; Gelenke bleiben."
+   ]
+  ],
+  "200": [
+   [
+    "1:200: the bole as two lofts, six limbs and 12 pad lobe solids (no fills at this scale: the plan fills would show beyond the elevation), generalised to five stations per lobe and slightly oversized so that the union volume stays within the band of 1:100.",
+    "1:200: der Schaft als zwei Lofts, sechs Äste und 12 Polsterlappenkörper (keine Füllungen in diesem Massstab: sie würden in der Ansicht überstehen), auf fünf Stationen je Lappen generalisiert und leicht übergrösst, damit das Vereinigungsvolumen im Band von 1:100 bleibt."
+   ],
+   [
+    "Thermal by reference; structure members clipped to the drawn silhouette, masses, no joints, support.",
+    "Thermik per Verweis; Stäbe auf die gezeichnete Silhouette beschnitten, Massen, keine Gelenke, Auflager."
+   ]
+  ],
+  "500": [
+   [
+    "1:500: lower and upper bole as lofts and the crown as one visual-hull loft of the three drawn crown silhouettes (0.45 m sections); the crown is far fuller than the lobe stacks of finer scales because the drawing at this scale is a filled silhouette.",
+    "1:500: unterer und oberer Schaft als Lofts und die Krone als ein einziger Visual-Hull-Loft aus den drei gezeichneten Kronensilhouetten (Schnitte 0,45 m); die Krone ist viel voller als die Lappenstapel der feineren Massstäbe, weil die Zeichnung dieses Massstabs eine gefüllte Silhouette ist."
+   ],
+   [
+    "Thermal: bole and crown by reference, limb-bark by two capsules of 120 mm inside the crown (limbs are buried at this scale), needles-shade by an ellipsoid inside the crown; emitters as discs. Structure: clipped members, one mass, support.",
+    "Thermik: Schaft und Krone per Verweis, limb-bark durch zwei Kapseln von 120 mm in der Krone (die Äste sind in diesem Massstab vergraben), needles-shade durch ein Ellipsoid in der Krone; Emitter als Scheiben. Tragwerk: beschnittene Stäbe, eine Masse, Auflager."
+   ]
+  ]
+ }
+}

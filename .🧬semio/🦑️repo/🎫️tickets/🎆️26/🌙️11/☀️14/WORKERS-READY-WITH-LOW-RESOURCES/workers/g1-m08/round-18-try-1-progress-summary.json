@@ -1,0 +1,409 @@
+{
+  "at": "2026-11-15T04:13:44Z",
+  "last_progress_gap_s": 6.41,
+  "unique_progress_lines": 1687,
+  "recent": [
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:76:609:1:0:%40semio-tech%2Fframework-plugin-mounted-owner-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:77:609:1:0:%40semio-tech%2Fframework-plugin-mounted-owner-rs|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:28:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] build:projects · Inferring projects: 28 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:78:609:1:0:%40semio-tech%2Fframework-plugin-ownership|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:29:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] build:projects · Inferring projects: 29 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "graph: headroom of 740 MB again (628 MB taken), resuming"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:30:48:2:0:%40semio-tech%2Fframework-plugin|language%3Acargo|0|0,%40semio-tech%2Fframework-plugin-host-guest-runtime-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] build:projects · Inferring projects: 30 of 48 projects · 2 running, longest 0 s: @semio-tech/framework-plugin (language:cargo, 0 s, 0 rows), @semio-tech/framework-plugin-host-guest-runtime-rs (language:rust, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:78:609:2:0:%40semio-tech%2Fframework-plugin|language%3Acargo|0|0,%40semio-tech%2Fframework-plugin-host-guest-runtime-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "Reading the project graph slice (1018 s): owners 76 of 609."
+    },
+    {
+      "at": "2026-11-15T04:12:42Z",
+      "line": "Reading the project graph slice (1020 s): owners 78 of 609."
+    },
+    {
+      "at": "2026-11-15T04:12:47Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:79:609:2:0:%40semio-tech%2Fframework-plugin|language%3Acargo|0|0,%40semio-tech%2Fframework-plugin-host-guest-runtime-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:47Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:30:48:1:0:%40semio-tech%2Fframework-plugin|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:47Z",
+      "line": "[script] build:projects · Inferring projects: 30 of 48 projects · 1 running, longest 0 s: @semio-tech/framework-plugin (language:cargo, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T04:12:47Z",
+      "line": "Reading the project graph slice (1022 s): owners 78 of 609; running (name, kind, seconds, rows): @semio-tech/framework-plugin (language:cargo, 3, 0), @semio-tech/framework-plugin-host-guest-runtime-rs (language:rust, 0, 0)."
+    },
+    {
+      "at": "2026-11-15T04:12:52Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:31:48:1:5:%40semio-tech%2Fframework-plugin|language%3Acargo|5|0:waiting|1163|1033|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:52Z",
+      "line": "[script] build:projects · Inferring projects: 31 of 48 projects · 1 running, longest 5 s: @semio-tech/framework-plugin (language:cargo, 5 s, 0 rows) · waiting for memory headroom (1163 of 1033 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T04:12:52Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:79:609:1:5:%40semio-tech%2Fframework-plugin|language%3Acargo|5|0:waiting|1163|1033|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:12:52Z",
+      "line": "Reading the project graph slice (1028 s): owners 79 of 609; running (name, kind, seconds, rows): @semio-tech/framework-plugin (language:cargo, 8, 0); waiting for memory headroom (1163 of 1033 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T04:13:07Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:80:609:1:20:%40semio-tech%2Fframework-plugin|language%3Acargo|20|0:waiting|1163|998|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:07Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:31:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:07Z",
+      "line": "[script] build:projects · Inferring projects: 31 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:07Z",
+      "line": "graph: headroom of 107 MB is below one project (1163 MB), inferring one project at a time"
+    },
+    {
+      "at": "2026-11-15T04:13:07Z",
+      "line": "Reading the project graph slice (1046 s): owners 80 of 609."
+    },
+    {
+      "at": "2026-11-15T04:13:12Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:32:48:1:0:%40semio-tech%2Fframework-plugin-host|language%3Acargo|0|0:waiting|1163|107|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:12Z",
+      "line": "[script] build:projects · Inferring projects: 32 of 48 projects · 1 running, longest 0 s: @semio-tech/framework-plugin-host (language:cargo, 0 s, 0 rows) · waiting for memory headroom (1163 of 107 MB reserved)"
+    },
+    {
+      "at": "2026-11-15T04:13:12Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:80:609:1:0:%40semio-tech%2Fframework-plugin-host|language%3Acargo|0|0:waiting|1163|107|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:12Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:81:609:1:0:%40semio-tech%2Fframework-plugin-host|language%3Acargo|0|0:waiting|1163|107|\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:12Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:32:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:12Z",
+      "line": "[script] build:projects · Inferring projects: 32 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:12Z",
+      "line": "Reading the project graph slice (1048 s): owners 80 of 609; running (name, kind, seconds, rows): @semio-tech/framework-plugin-host (language:cargo, 3, 0); waiting for memory headroom (1163 of 107 MB reserved)."
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:82:609:1:0:%40semio-tech%2Fframework-plugin-host-post-turn-relay-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:33:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] build:projects · Inferring projects: 33 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:36:48:1:0:%40semio-tech%2Fframework-plugin-host-wit-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] build:projects · Inferring projects: 36 of 48 projects · 1 running, longest 0 s: @semio-tech/framework-plugin-host-wit-rs (language:rust, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:84:609:1:0:%40semio-tech%2Fframework-plugin-host-wit-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:86:609:1:0:%40semio-tech%2Fframework-plugin-host-engine-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:37:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] build:projects · Inferring projects: 37 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:88:609:1:0:%40semio-tech%2Fframework-plugin-host-routers-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:39:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] build:projects · Inferring projects: 39 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:91:609:1:0:%40semio-tech%2Fframework-plugin-host-shard-executor-rs|language%3Arust|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:42:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] build:projects · Inferring projects: 42 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:92:609:1:0:%40semio-tech%2Fframework-plugin-interpreter-runtime|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:43:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] build:projects · Inferring projects: 43 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:93:609:1:0:%40semio-tech%2Fframework-plugin-interpreter|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:44:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "[script] build:projects · Inferring projects: 44 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "Reading the project graph slice (1052 s): owners 81 of 609."
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "Reading the project graph slice (1054 s): owners 85 of 609; running (name, kind, seconds, rows): @semio-tech/framework-plugin-host-engine-rs (language:rust, 0, 0)."
+    },
+    {
+      "at": "2026-11-15T04:13:18Z",
+      "line": "Reading the project graph slice (1056 s): owners 92 of 609."
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:94:609:1:0:%40semio-tech%2Fframework-plugin-interpreter-imports|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:45:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] build:projects · Inferring projects: 45 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:47:48:1:0:%40semio-tech%2Fframework-plugin-guest-contract|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] build:projects · Inferring projects: 47 of 48 projects · 1 running, longest 0 s: @semio-tech/framework-plugin-guest-contract (language:cargo, 0 s, 0 rows)"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:95:609:1:0:%40semio-tech%2Fframework-plugin-guest-contract|language%3Acargo|0|0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:47:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] build:projects · Inferring projects: 47 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:95:609\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"build:projects\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:inference:48:48\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[script] build:projects · Inferring projects: 48 of 48 projects"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "[fleet] projects from the fleet: 2 taken, 0 stored, 1 offered, 0 waited for another machine, 0 computed here | Projekte aus der Flotte: 2 übernommen, 0 gespeichert, 1 angeboten, 0 auf eine andere Maschine gewartet, 0 hier berechnet"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "graph: plan stage inference took 145.9 s (managed 3242 MB, 1195 MB more than at its start, resident 3082 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "graph: plan stage environment starts (managed 3242 MB, resident 3082 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "Reading the project graph slice (1058 s): owners 93 of 609."
+    },
+    {
+      "at": "2026-11-15T04:13:23Z",
+      "line": "Reading the project graph slice (1060 s): owners 95 of 609; running (name, kind, seconds, rows): ."
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage environment took 2.9 s (managed 3264 MB, 23 MB more than at its start, resident 3079 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage tests starts (managed 3264 MB, resident 3079 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage tests took 0.5 s (managed 3266 MB, 2 MB more than at its start, resident 3061 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage policies starts (managed 3266 MB, resident 3061 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage policies took 0.1 s (managed 3266 MB, 0 MB more than at its start, resident 3056 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage dangling starts (managed 3266 MB, resident 3056 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage dangling took 0 s (managed 3266 MB, 0 MB more than at its start, resident 3057 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage files starts (managed 3266 MB, resident 3057 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage files took 0 s (managed 3266 MB, 0 MB more than at its start, resident 3059 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage test-edges starts (managed 3266 MB, resident 3059 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage test-edges took 0 s (managed 3266 MB, 0 MB more than at its start, resident 3060 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage edges starts (managed 3266 MB, resident 3060 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage edges took 1.6 s (managed 3330 MB, 65 MB more than at its start, resident 3111 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage metadata starts (managed 3330 MB, resident 3111 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage metadata took 0 s (managed 3330 MB, 0 MB more than at its start, resident 3103 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage result starts (managed 3330 MB, resident 3103 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: plan stage result took 0 s (managed 3330 MB, 0 MB more than at its start, resident 3104 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:owners:96:609\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "graph: after the wave managed 3170 MB, resident 3148 MB; largest bounded caches: inference:closure-entries 1926 entries 42 MB, inference:closure-recipes 8053 entries 5 MB, inference:closure-values 64 entries 1 MB, inference:closure-inputs 22 entries 0 MB, inference:closure-walk-members 8469 entries 0 MB"
+    },
+    {
+      "at": "2026-11-15T04:13:28Z",
+      "line": "Reading the project graph slice (1066 s): owners 96 of 609."
+    },
+    {
+      "at": "2026-11-15T04:13:38Z",
+      "line": "2026-11-15T04:13:34.125Z graph-plan-too-heavy {\"stage\":\"result\",\"operation\":\"result\",\"megabytes\":6558,\"limit\":6553,\"worker\":{\"heapMb\":2057.5,\"extraMb\":1226.7,\"objectCount\":8437766,\"objectTypes\":[{\"type\":\"string\",\"count\":3984104},{\"type\":\"Array\",\"count\":1277320},{\"type\":\"Object\",\"count\":1130394},{\"type\":\"WeakRef\",\"count\":254794},{\"type\":\"Set\",\"count\":155485},{\"type\":\"Structure\",\"count\":49949},{\"type\":\"Cell Butterfly\",\"count\":45216},{\"type\":\"Function\",\"count\":27240}],\"at\":1794716002666}}"
+    },
+    {
+      "at": "2026-11-15T04:13:38Z",
+      "line": "graph: plan answered, managed 105 MB, resident 265 MB (released 0 MB)"
+    },
+    {
+      "at": "2026-11-15T04:13:38Z",
+      "line": "graph: a worker process was lost (exited); its project is inferred again"
+    },
+    {
+      "at": "2026-11-15T04:13:38Z",
+      "line": "SIGINT received: the running work is cancelled and its leases are released; this process exits after 10 s at the latest."
+    },
+    {
+      "at": "2026-11-15T04:13:38Z",
+      "line": "The project graph could not be read on this machine yet: the plan stage result (during result) grew to 6558 MB, more than the 6553 MB this machine gives a plan. It was stopped before the host ran short of memory. Nothing is wrong with your tree; run the command again when a machine with free memory serves the graph, or read the graph on a larger machine."
+    },
+    {
+      "at": "2026-11-15T04:13:38Z",
+      "line": "end 2026-11-15T04:13:34Z"
+    },
+    {
+      "at": "2026-11-15T04:13:38Z",
+      "line": "native_rc=75"
+    }
+  ],
+  "stall": false,
+  "writer_failure": false
+}

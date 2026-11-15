@@ -6,7 +6,8 @@ import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️
 import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️.ts";
 import { PrintTokenPreviewScript } from "../../🔨️modules/🎨print-design-token-paints/📜️script.ts";
 import { generateVizArtifacts } from "../../🔨️modules/📊️visualization-gallery/🏭️artifact-generation/🟦️.ts";
-import { runArtifactTypeScriptPackageMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { checkArtifactTypeScriptSourceV1 } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🟦️.ts";
+import { resolve } from "node:path";
 
 //#region 🖨️RouterAdapters
 export class FontsScript extends BundleScript {
@@ -66,5 +67,5 @@ export class TestScript extends BundleScript {
   }
 }
 export class CheckScript extends BundleScript{
- async run():Promise<void>{await runArtifactTypeScriptPackageMain(this.root,"@semio-tech/print",{suites:["🔨️modules/🎨print-design-token-paints/🧪️tests/🟦️.ts","🧪️tests/🎓️thesis/📤️publication/🎨️paint/🧪️tests/🟦️.ts","📦️artifacts/📖️pdf/📜️script.ts","📦️artifacts/📖️pdf/🧪️tests/🟦️.ts","🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts","🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts","🎮️commands/🧪️print-pipeline-verification/🟦️.ts"]});}
+ async run():Promise<void>{for(const suite of ["🔨️modules/🎨print-design-token-paints/🧪️tests/🟦️.ts","🧪️tests/🎓️thesis/📤️publication/🎨️paint/🧪️tests/🟦️.ts","📦️artifacts/📖️pdf/📜️script.ts","📦️artifacts/📖️pdf/🧪️tests/🟦️.ts","🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts","🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts","🎮️commands/🧪️print-pipeline-verification/🟦️.ts"])await checkArtifactTypeScriptSourceV1(resolve(this.root,"../..",suite),this.invocation);}
 }

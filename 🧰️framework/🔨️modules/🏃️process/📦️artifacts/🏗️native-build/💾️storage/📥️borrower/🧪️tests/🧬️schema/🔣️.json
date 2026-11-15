@@ -3,7 +3,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "cases"
+    "cases",
+    "admission"
   ],
   "properties": {
     "cases": {
@@ -53,6 +54,33 @@
               }
             }
           }
+        }
+      }
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operations",
+        "maximumPendingOperations",
+        "expectedCompleted",
+        "closedRefuses"
+      ],
+      "properties": {
+        "operations": {
+          "type": "integer",
+          "minimum": 33
+        },
+        "maximumPendingOperations": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expectedCompleted": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "closedRefuses": {
+          "type": "boolean"
         }
       }
     }

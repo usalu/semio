@@ -24,7 +24,6 @@ def environment_row(policy, row):
     variables.update({"UV_PROJECT_ENVIRONMENT": directory, "UV_PYTHON_INSTALL_DIR": interpreters, "UV_PYTHON": series, "UV_CACHE_DIR": cache})
     groups = [argument for group in project["groups"] for argument in ("--group", group)]
     return {"key": key, "directory": directory, "interpreters": interpreters, "cache": cache, "series": series, "variables": variables,
-            "installArguments": ["python", "install", series],
             "syncArguments": ["sync", "--locked", "--project", project["root"]] + groups,
             "runArguments": ["run", "--locked", "--no-sync", "--project", project["root"]]}
 
@@ -34,6 +33,14 @@ def tool_row(policy, tool, host, root):
     directory = posixpath.join(root, "native", tool, spec["version"], host + "-" + dist["sha256"][:16])
     binary = directory if dist["binaryDirectory"] == "." else posixpath.join(directory, dist["binaryDirectory"])
     return {"directory": directory, "binaryDirectory": binary, "url": spec["release"] + "/" + dist["archive"], "identity": "%s:%s:%s:%s" % (tool, spec["version"], host, dist["sha256"])}
+
+def interpreter_row(policy, series, host, root):
+    spec = policy["python"]["cpython"]
+    entry = spec["series"][series]
+    dist = next(row for row in entry["distributions"] if row["host"] == host)
+    home = posixpath.join(root, policy["python"]["layout"]["interpreters"], dist["directory"])
+    binary = home if dist["binaryDirectory"] == "." else posixpath.join(home, dist["binaryDirectory"])
+    return {"home": home, "binary": posixpath.join(binary, dist["binaries"][0]), "url": spec["release"] + "/" + dist["archive"].replace("+", "%2B"), "version": entry["version"], "identity": "cpython:%s:%s:%s" % (entry["version"], host, dist["sha256"])}
 
 def identity_row(policy, row):
     kind, host = row["kind"], row["host"]
@@ -85,6 +92,7 @@ def main():
         "environments": [environment_row(policy, row) for row in data["environments"]],
         "identities": [identity_row(policy, row) for row in data["identities"]],
         "tools": [dict(row, **tool_row(policy, row["tool"], row["host"], row["root"])) for row in data["tools"]],
+        "interpreters": [dict(row, **interpreter_row(policy, row["series"], row["host"], row["root"])) for row in data["interpreters"]],
         "links": [escapes(row["path"], row["target"]) for row in data["links"]],
         "files": files(policy),
         "props": props_facts(data["props"]) if "props" in data else None,

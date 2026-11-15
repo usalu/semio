@@ -1,0 +1,1096 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "body",
+     "kind": "revolve",
+     "bone": "body",
+     "material": "brass",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.075,
+       0.0085
+      ],
+      [
+       -0.052,
+       0.0085
+      ],
+      [
+       -0.052,
+       0.012
+      ],
+      [
+       -0.042,
+       0.012
+      ],
+      [
+       -0.042,
+       0.019
+      ],
+      [
+       0,
+       0.019
+      ],
+      [
+       0,
+       0.017
+      ],
+      [
+       0.012,
+       0.017
+      ],
+      [
+       0.012,
+       0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "collar",
+     "kind": "revolve",
+     "bone": "head",
+     "material": "abs-plastic",
+     "role": "body",
+     "tone": 0.8,
+     "profile": [
+      [
+       0.019,
+       0.027
+      ],
+      [
+       0.0175,
+       0.0295
+      ],
+      [
+       0.0155,
+       0.03
+      ],
+      [
+       -0.0485,
+       0.03
+      ],
+      [
+       -0.0515,
+       0.0285
+      ],
+      [
+       -0.052,
+       0.026
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "index",
+     "kind": "box",
+     "bone": "head",
+     "material": "abs-plastic",
+     "role": "texture",
+     "tone": 0.95,
+     "size": [
+      0.011,
+      0.0085,
+      0.0075
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0.02475,
+       -0.0488
+      ]
+     }
+    },
+    {
+     "id": "knob",
+     "kind": "revolve",
+     "bone": "knob",
+     "material": "abs-plastic",
+     "role": "body",
+     "tone": 0.95,
+     "profile": [
+      [
+       -0.052,
+       0.0195
+      ],
+      [
+       -0.0535,
+       0.02
+      ],
+      [
+       -0.0715,
+       0.02
+      ],
+      [
+       -0.0735,
+       0.0185
+      ],
+      [
+       -0.0745,
+       0.0155
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "pointer",
+     "kind": "box",
+     "bone": "knob",
+     "material": "abs-plastic",
+     "role": "texture",
+     "tone": 0.95,
+     "size": [
+      0.011,
+      0.0045,
+      0.0075
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0.00575,
+       -0.0715
+      ]
+     }
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-body",
+     "of": "body",
+     "region": "body",
+     "layer": "wall"
+    },
+    {
+     "id": "th-head",
+     "of": "collar",
+     "region": "head",
+     "layer": "shell"
+    },
+    {
+     "id": "th-knob",
+     "of": "knob",
+     "region": "knob",
+     "layer": "shell"
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-body",
+     "kind": "extrude",
+     "bone": "body",
+     "material": "brass",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0085,
+       0.0
+      ],
+      [
+       0.008084,
+       0.002627
+      ],
+      [
+       0.006877,
+       0.004996
+      ],
+      [
+       0.004996,
+       0.006877
+      ],
+      [
+       0.002627,
+       0.008084
+      ],
+      [
+       0.0,
+       0.0085
+      ],
+      [
+       -0.002627,
+       0.008084
+      ],
+      [
+       -0.004996,
+       0.006877
+      ],
+      [
+       -0.006877,
+       0.004996
+      ],
+      [
+       -0.008084,
+       0.002627
+      ],
+      [
+       -0.0085,
+       0.0
+      ],
+      [
+       -0.008084,
+       -0.002627
+      ],
+      [
+       -0.006877,
+       -0.004996
+      ],
+      [
+       -0.004996,
+       -0.006877
+      ],
+      [
+       -0.002627,
+       -0.008084
+      ],
+      [
+       -0.0,
+       -0.0085
+      ],
+      [
+       0.002627,
+       -0.008084
+      ],
+      [
+       0.004996,
+       -0.006877
+      ],
+      [
+       0.006877,
+       -0.004996
+      ],
+      [
+       0.008084,
+       -0.002627
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.075,
+     "to": 0.012,
+     "holes": [
+      [
+       [
+        0.0065,
+        0.0
+       ],
+       [
+        0.006182,
+        0.002009
+       ],
+       [
+        0.005259,
+        0.003821
+       ],
+       [
+        0.003821,
+        0.005259
+       ],
+       [
+        0.002009,
+        0.006182
+       ],
+       [
+        0.0,
+        0.0065
+       ],
+       [
+        -0.002009,
+        0.006182
+       ],
+       [
+        -0.003821,
+        0.005259
+       ],
+       [
+        -0.005259,
+        0.003821
+       ],
+       [
+        -0.006182,
+        0.002009
+       ],
+       [
+        -0.0065,
+        0.0
+       ],
+       [
+        -0.006182,
+        -0.002009
+       ],
+       [
+        -0.005259,
+        -0.003821
+       ],
+       [
+        -0.003821,
+        -0.005259
+       ],
+       [
+        -0.002009,
+        -0.006182
+       ],
+       [
+        -0.0,
+        -0.0065
+       ],
+       [
+        0.002009,
+        -0.006182
+       ],
+       [
+        0.003821,
+        -0.005259
+       ],
+       [
+        0.005259,
+        -0.003821
+       ],
+       [
+        0.006182,
+        -0.002009
+       ]
+      ]
+     ],
+     "member": "body",
+     "part": "member"
+    },
+    {
+     "id": "member-head",
+     "kind": "revolve",
+     "bone": "head",
+     "material": "abs-plastic",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.05,
+       0
+      ],
+      [
+       -0.05,
+       0.012
+      ],
+      [
+       0.0,
+       0.012
+      ],
+      [
+       0.0,
+       0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "head",
+     "part": "member"
+    },
+    {
+     "id": "member-knob",
+     "kind": "capsule",
+     "bone": "knob",
+     "material": "abs-plastic",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0,
+      0,
+      -0.07
+     ],
+     "p1": [
+      0,
+      0,
+      -0.03
+     ],
+     "r0": 0.006,
+     "r1": 0.006,
+     "member": "knob",
+     "part": "member"
+    },
+    {
+     "id": "joint-knob",
+     "kind": "ellipsoid",
+     "bone": "knob",
+     "material": "abs-plastic",
+     "role": "detail",
+     "tone": 0.4,
+     "radii": [
+      0.01,
+      0.01,
+      0.01
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.05
+      ]
+     },
+     "member": "knob",
+     "part": "joint"
+    },
+    {
+     "id": "support-pipe-joint-upper",
+     "kind": "box",
+     "bone": "body",
+     "material": "brass",
+     "role": "ground",
+     "tone": 0.3,
+     "size": [
+      0.026,
+      0.012,
+      0.026
+     ],
+     "transform": {
+      "translation": [
+       0,
+       -0.048,
+       0
+      ]
+     },
+     "member": "body",
+     "part": "support",
+     "anchor": "pipe-joint-upper"
+    },
+    {
+     "id": "support-pipe-joint-lower",
+     "kind": "box",
+     "bone": "body",
+     "material": "brass",
+     "role": "ground",
+     "tone": 0.3,
+     "size": [
+      0.026,
+      0.012,
+      0.026
+     ],
+     "transform": {
+      "translation": [
+       0,
+       -0.07,
+       0
+      ]
+     },
+     "member": "body",
+     "part": "support",
+     "anchor": "pipe-joint-lower"
+    },
+    {
+     "id": "mass-body",
+     "kind": "ellipsoid",
+     "bone": "body",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.012,
+      0.03,
+      0.012
+     ],
+     "transform": {
+      "translation": [
+       0,
+       -0.02,
+       0
+      ]
+     },
+     "member": "body",
+     "part": "mass"
+    },
+    {
+     "id": "mass-head",
+     "kind": "ellipsoid",
+     "bone": "head",
+     "material": "abs-plastic",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.012,
+      0.012,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.02
+      ]
+     },
+     "member": "head",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the brass valve body is the drawn revolve (pipe stub, collar, hexagon-like waist and the actuator seat) standing on the pipe axis, the head a hollow actuator sleeve about the horizontal axis with the 8.5 x 11 mm index mark as texture inlay, the knob a rounded cap with a pointer mark as inlay.",
+     "de": "Körper: der Messingventilkörper ist der gezeichnete Drehkörper (Rohrstutzen, Bund, sechskantähnliche Taille und der Stellantriebssitz) auf der Rohrachse, der Kopf eine hohle Stellantriebshülse um die waagerechte Achse mit der 8,5 x 11 mm Indexmarke als Texturinlay, der Knopf eine gerundete Kappe mit Zeigermarke als Einlage."
+    },
+    {
+     "en": "Thermal: three single-layer skins reusing the three body solids; areaM2 of the three regions was kept or corrected to the exposed model surface where listed in the report.",
+     "de": "Thermik: drei einschichtige Häute, die die drei Körper wiederverwenden; areaM2 der drei Regionen blieb erhalten oder wurde auf die freie Modellfläche korrigiert, soweit im Bericht aufgeführt."
+    },
+    {
+     "en": "Structure: a thin-walled brass pipe tube as body member, the actuator seat as head member, a spindle as knob member with a rotation joint, two 26 mm joint blocks for the upper pin and lower roller of the compression joints and masses for body and head.",
+     "de": "Tragwerk: ein dünnwandiges Messingrohr als Glied des Körpers, der Stellantriebssitz als Glied des Kopfes, eine Spindel als Glied des Knopfes mit Drehgelenk, zwei 26-mm-Gelenkblöcke für Stift und Rolle der Klemmverschraubungen und Massen für Körper und Kopf."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "body",
+     "kind": "revolve",
+     "bone": "body",
+     "material": "brass",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       -0.075,
+       0.0
+      ],
+      [
+       -0.075,
+       0.0085
+      ],
+      [
+       -0.052,
+       0.0085
+      ],
+      [
+       -0.052,
+       0.012
+      ],
+      [
+       -0.042,
+       0.012
+      ],
+      [
+       -0.042,
+       0.019
+      ],
+      [
+       0,
+       0.019
+      ],
+      [
+       0.0,
+       0.017
+      ],
+      [
+       0.012,
+       0.017
+      ],
+      [
+       0.012,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "id": "head",
+     "kind": "revolve",
+     "bone": "head",
+     "material": "abs-plastic",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.019,
+       0.0
+      ],
+      [
+       0.019,
+       0.027
+      ],
+      [
+       0.0155,
+       0.03
+      ],
+      [
+       -0.0715,
+       0.03
+      ],
+      [
+       -0.0745,
+       0.0185
+      ],
+      [
+       -0.0745,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-body",
+     "of": "body",
+     "region": "body",
+     "layer": "wall"
+    },
+    {
+     "id": "th-head",
+     "of": "head",
+     "region": "head",
+     "layer": "shell"
+    },
+    {
+     "id": "th-knob",
+     "kind": "revolve",
+     "bone": "knob",
+     "material": "abs-plastic",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.052,
+       0.0
+      ],
+      [
+       -0.052,
+       0.0315
+      ],
+      [
+       -0.0745,
+       0.0315
+      ],
+      [
+       -0.0745,
+       0.0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "region": "knob",
+     "layer": "shell",
+     "sectionFaces": [
+      "+w",
+      "-w"
+     ]
+    }
+   ],
+   "structure": [
+    {
+     "id": "member-body",
+     "kind": "extrude",
+     "bone": "body",
+     "material": "brass",
+     "role": "body",
+     "tone": 0.6,
+     "profile": [
+      [
+       0.0085,
+       0.0
+      ],
+      [
+       0.008084,
+       0.002627
+      ],
+      [
+       0.006877,
+       0.004996
+      ],
+      [
+       0.004996,
+       0.006877
+      ],
+      [
+       0.002627,
+       0.008084
+      ],
+      [
+       0.0,
+       0.0085
+      ],
+      [
+       -0.002627,
+       0.008084
+      ],
+      [
+       -0.004996,
+       0.006877
+      ],
+      [
+       -0.006877,
+       0.004996
+      ],
+      [
+       -0.008084,
+       0.002627
+      ],
+      [
+       -0.0085,
+       0.0
+      ],
+      [
+       -0.008084,
+       -0.002627
+      ],
+      [
+       -0.006877,
+       -0.004996
+      ],
+      [
+       -0.004996,
+       -0.006877
+      ],
+      [
+       -0.002627,
+       -0.008084
+      ],
+      [
+       -0.0,
+       -0.0085
+      ],
+      [
+       0.002627,
+       -0.008084
+      ],
+      [
+       0.004996,
+       -0.006877
+      ],
+      [
+       0.006877,
+       -0.004996
+      ],
+      [
+       0.008084,
+       -0.002627
+      ]
+     ],
+     "plane": "zx",
+     "from": -0.075,
+     "to": 0.012,
+     "holes": [
+      [
+       [
+        0.0065,
+        0.0
+       ],
+       [
+        0.006182,
+        0.002009
+       ],
+       [
+        0.005259,
+        0.003821
+       ],
+       [
+        0.003821,
+        0.005259
+       ],
+       [
+        0.002009,
+        0.006182
+       ],
+       [
+        0.0,
+        0.0065
+       ],
+       [
+        -0.002009,
+        0.006182
+       ],
+       [
+        -0.003821,
+        0.005259
+       ],
+       [
+        -0.005259,
+        0.003821
+       ],
+       [
+        -0.006182,
+        0.002009
+       ],
+       [
+        -0.0065,
+        0.0
+       ],
+       [
+        -0.006182,
+        -0.002009
+       ],
+       [
+        -0.005259,
+        -0.003821
+       ],
+       [
+        -0.003821,
+        -0.005259
+       ],
+       [
+        -0.002009,
+        -0.006182
+       ],
+       [
+        -0.0,
+        -0.0065
+       ],
+       [
+        0.002009,
+        -0.006182
+       ],
+       [
+        0.003821,
+        -0.005259
+       ],
+       [
+        0.005259,
+        -0.003821
+       ],
+       [
+        0.006182,
+        -0.002009
+       ]
+      ]
+     ],
+     "member": "body",
+     "part": "member"
+    },
+    {
+     "id": "member-head",
+     "kind": "revolve",
+     "bone": "head",
+     "material": "abs-plastic",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       -0.05,
+       0
+      ],
+      [
+       -0.05,
+       0.012
+      ],
+      [
+       0.0,
+       0.012
+      ],
+      [
+       0.0,
+       0
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0,
+      0,
+      0
+     ],
+     "member": "head",
+     "part": "member"
+    },
+    {
+     "id": "member-knob",
+     "kind": "capsule",
+     "bone": "knob",
+     "material": "abs-plastic",
+     "role": "body",
+     "tone": 0.5,
+     "p0": [
+      0,
+      0,
+      -0.07
+     ],
+     "p1": [
+      0,
+      0,
+      -0.03
+     ],
+     "r0": 0.0155,
+     "r1": 0.0155,
+     "member": "knob",
+     "part": "member"
+    },
+    {
+     "id": "support-pipe-joint-upper",
+     "kind": "box",
+     "bone": "body",
+     "material": "brass",
+     "role": "ground",
+     "tone": 0.3,
+     "size": [
+      0.031,
+      0.0155,
+      0.031
+     ],
+     "transform": {
+      "translation": [
+       0,
+       -0.048,
+       0
+      ]
+     },
+     "member": "body",
+     "part": "support",
+     "anchor": "pipe-joint-upper"
+    },
+    {
+     "id": "support-pipe-joint-lower",
+     "kind": "box",
+     "bone": "body",
+     "material": "brass",
+     "role": "ground",
+     "tone": 0.3,
+     "size": [
+      0.031,
+      0.0155,
+      0.031
+     ],
+     "transform": {
+      "translation": [
+       0,
+       -0.07,
+       0
+      ]
+     },
+     "member": "body",
+     "part": "support",
+     "anchor": "pipe-joint-lower"
+    },
+    {
+     "id": "mass-body",
+     "kind": "ellipsoid",
+     "bone": "body",
+     "material": "brass",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.012,
+      0.03,
+      0.012
+     ],
+     "transform": {
+      "translation": [
+       0,
+       -0.02,
+       0
+      ]
+     },
+     "member": "body",
+     "part": "mass"
+    },
+    {
+     "id": "mass-head",
+     "kind": "ellipsoid",
+     "bone": "head",
+     "material": "abs-plastic",
+     "role": "detail",
+     "tone": 0.3,
+     "radii": [
+      0.012,
+      0.012,
+      0.02
+     ],
+     "transform": {
+      "translation": [
+       0,
+       0,
+       -0.02
+      ]
+     },
+     "member": "head",
+     "part": "mass"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: modelled anew with the simplified body profile and the head and knob merged into one 60 mm sleeve of the 1:100 drawing; index and pointer marks are left out.",
+     "de": "Körper: neu gebaut mit vereinfachtem Körperprofil und Kopf und Knopf in einer 60-mm-Hülse der Zeichnung 1:100 zusammengefasst; Index- und Zeigermarke entfallen."
+    },
+    {
+     "en": "Thermal: body and head reuse the 1:100 solids, the knob is a skin 1.5 mm larger than the sleeve at its end.",
+     "de": "Thermik: Körper und Kopf verwenden die Körper von 1:100, der Knopf ist eine Haut, 1,5 mm größer als die Hülse an deren Ende."
+    },
+    {
+     "en": "Structure: members with 31 mm knob spindle, 31 mm joint blocks and masses; the knob joint is merged.",
+     "de": "Tragwerk: Glieder mit 31-mm-Knopfspindel, 31-mm-Gelenkblöcken und Massen; das Knopfgelenk ist zusammengefasst."
+    }
+   ]
+  },
+  "200": {
+   "status": "unavailable",
+   "denominator": 200
+  },
+  "500": {
+   "status": "unavailable",
+   "denominator": 500
+  }
+ }
+}

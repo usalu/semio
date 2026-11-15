@@ -293,6 +293,7 @@ type En1998Foundation {
   pileMomentRdNm: Float!
   baseFrictionAngleDeg: Float!
   basePorePressurePa: Float!
+  pileAxialLoadN: Float!
 }
 type En1998RetainingWall {
   id: String!

@@ -4,7 +4,7 @@ import { typecheckAdmittedProjectV1 } from "../../../../../🧰️framework/🔨
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runVitest } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
-/** 🧍️ `@teaching/staffage` router: `repo ./📜️script.ts <test [exhaustive] | typecheck | export-models [--lang en|de] [--out dir] [--scale n] [--asset a,b] [--view v] [--force]>`. */
+/** 🧍️ `@teaching/staffage` router: `repo ./📜️script.ts <test [exhaustive] | typecheck | export-models [--lang en|de] [--out dir] [--scale 50,100] [--asset a,b] [--view v,w] [--force]>`. */
 
 /** 🧪️ `test` — every module's and the schema twin's unit suite. */
 class TestScript extends BundleScript {
@@ -41,7 +41,7 @@ class ExportModelsScript extends BundleScript {
       },
     });
     process.stdout.write(`${command.out}\n`);
-    process.stderr.write(`[done] ${summary.assets} assets, ${summary.files} files, ${summary.bytes} bytes; wrote ${summary.written}, kept ${summary.skipped}; ${((Date.now() - started) / 1000).toFixed(1)} s; [peak] ${Math.round(process.resourceUsage().maxRSS / 1024)} MB resident\n`);
+    process.stderr.write(`[done] ${summary.assets} assets, ${summary.files} files, ${summary.bytes} bytes; wrote ${summary.written}, kept ${summary.skipped}; ${summary.unauthored.length} assets without an authored scale not exported; ${((Date.now() - started) / 1000).toFixed(1)} s; [peak] ${Math.round(process.resourceUsage().maxRSS / 1024)} MB resident\n`);
   }
 }
 

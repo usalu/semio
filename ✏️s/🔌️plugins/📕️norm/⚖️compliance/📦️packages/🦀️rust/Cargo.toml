@@ -15,9 +15,13 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "unit"
+path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
 [features]
-test-support = ["dep:serde"]
-compliance-testing = ["semio-s-plugin-norm-compliance-core/compliance-testing", "dep:serde", "dep:serde_json", "dep:semio-framework-artifact-reference"]
+test-support = ["dep:serde", "semio-s-plugin-norm-compliance-core/compliance-testing"]
+compliance-testing = ["semio-s-plugin-norm-compliance-core/compliance-testing", "semio-s-plugin-norm-design-case/compliance-testing", "dep:serde", "dep:serde_json", "dep:semio-framework-artifact-reference"]
 
 [dependencies]
 pack = { workspace = true }
@@ -33,11 +37,13 @@ semio-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-plugin-norm-compliance-core = { path = "../../🧱️core/📦️packages/🦀️rust" }
+semio-s-plugin-norm-design-case = { path = "../../🧰️design-case/📦️packages/🦀️rust" }
 semio-s-plugin-norm-ndp = { path = "../../📜️annex-and-tables/🔖️ndp/📦️packages/🦀️rust" }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 
 [dev-dependencies]
+serde = { workspace = true }
 semio-s-plugin-norm-compliance-core = { path = "../../🧱️core/📦️packages/🦀️rust", features = ["compliance-testing"] }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { workspace = true }

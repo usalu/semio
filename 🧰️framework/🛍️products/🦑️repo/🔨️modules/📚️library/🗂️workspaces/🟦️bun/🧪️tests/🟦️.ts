@@ -279,3 +279,21 @@ test("generated package output names are listed by the schema and ignored by git
  const names:string[]=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")).$defs.OutputDirectories.const,root=join(import.meta.dir,"../../../../../../../../");
  for(const name of corpus.gitignoredOutputPackages.ignoredNames){expect(names).toContain(name);expect(spawnSync("git",["check-ignore","-q","--no-index",name+"/package.json"],{cwd:root}).status,name).toBe(0);}
 });
+
+test("a root symlink to a plain file (CLAUDE.md -> AGENTS.md) is no owner and no failure: the state below a file is missing",async()=>{
+ const read=ownership.withCurrentBunWorkspaceOwnershipV1,root=independentRoot("l"),row=corpus.readonly;
+ put(root,"package.json",{...scope("link-workspace",row.members,["*/package.json"]),workspaces:row.current});for(const member of row.packages)put(root,member.path+"/package.json",{name:member.name,version:"1.0.0"});
+ writeFileSync(join(root,"AGENTS.md"),"x");symlinkSync("AGENTS.md",join(root,"CLAUDE.md"));
+ try{expect(await read(root,{kind:"all"},{signal:new AbortController().signal,advance:async()=>{}},async custody=>custody.scopes.length)).toBeGreaterThan(0);}finally{rmSync(join(root,".."),{recursive:true,force:true});}
+});
+test("a root symlink to a directory that holds a package.json is still refused as an installation owner, and one to a directory without it is no owner",async()=>{
+ const read=ownership.withCurrentBunWorkspaceOwnershipV1,root=independentRoot("m"),row=corpus.readonly;
+ put(root,"package.json",{...scope("link-owner-workspace",row.members,["*/package.json"]),workspaces:row.current});for(const member of row.packages)put(root,member.path+"/package.json",{name:member.name,version:"1.0.0"});
+ mkdirSync(join(root,"elsewhere"));writeFileSync(join(root,"elsewhere","note.txt"),"x");symlinkSync("elsewhere",join(root,"plain-link"),process.platform==="win32"?"junction":"dir");
+ const run=()=>read(root,{kind:"all"},{signal:new AbortController().signal,advance:async()=>{}},async custody=>custody.scopes.length);
+ try{
+  expect(await run()).toBe(1);
+  writeFileSync(join(root,"elsewhere","package.json"),JSON.stringify({name:"owner",version:"1.0.0",semio:{workspace:{owners:["*/package.json"],members:[]}}}));
+  await expect(run()).rejects.toThrow("Bun installation owner is a symlink: plain-link");
+ }finally{rmSync(join(root,".."),{recursive:true,force:true});}
+});

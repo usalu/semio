@@ -1,0 +1,27 @@
+service log: /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-79a74804a430.log
+closure entries before: 14248
+2026-11-15T02:50:29Z no slice worker
+2026-11-15T02:50:34Z no slice worker
+2026-11-15T02:50:39Z no slice worker
+2026-11-15T02:50:44Z no slice worker
+2026-11-15T02:50:49Z no slice worker
+2026-11-15T02:50:54Z no slice worker
+2026-11-15T02:50:59Z no slice worker
+2026-11-15T02:51:04Z pid=34977 rss=319MB footprint=[bun [34977]: 64-bit    Footprint: 87 MB (16384 bytes per page)] last=[graph: plan answered, managed 119 MB, resident 417 MB (released 0 MB)]
+2026-11-15T02:51:09Z pid=34977 rss=1170MB footprint=[bun [34977]: 64-bit    Footprint: 149 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:51:14Z pid=34977 rss=1480MB footprint=[bun [34977]: 64-bit    Footprint: 161 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:51:20Z pid=34977 rss=1496MB footprint=[bun [34977]: 64-bit    Footprint: 166 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:51:25Z pid=34977 rss=1512MB footprint=[bun [34977]: 64-bit    Footprint: 169 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:51:30Z pid=34977 rss=2146MB footprint=[bun [34977]: 64-bit    Footprint: 228 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:51:35Z pid=34977 rss=2147MB footprint=[bun [34977]: 64-bit    Footprint: 229 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:51:40Z pid=34977 rss=2225MB footprint=[bun [34977]: 64-bit    Footprint: 303 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:51:45Z pid=34977 rss=2532MB footprint=[bun [34977]: 64-bit    Footprint: 352 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:51:50Z pid=34977 rss=2590MB footprint=[bun [34977]: 64-bit    Footprint: 357 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:51:55Z pid=34977 rss=2940MB footprint=[bun [34977]: 64-bit    Footprint: 684 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:52:00Z pid=34977 rss=3022MB footprint=[bun [34977]: 64-bit    Footprint: 765 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:52:05Z pid=34977 rss=3029MB footprint=[bun [34977]: 64-bit    Footprint: 416 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:52:10Z pid=34977 rss=3029MB footprint=[bun [34977]: 64-bit    Footprint: 415 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:52:15Z pid=34977 rss=3029MB footprint=[bun [34977]: 64-bit    Footprint: 415 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:52:20Z pid=34977 rss=3454MB footprint=[bun [34977]: 64-bit    Footprint: 400 MB (16384 bytes per page)] last=[graph: No verified change journal cursor is recorded for generation 215; verifying the tree once.]
+2026-11-15T02:52:26Z no slice worker
+closure entries after: 14248

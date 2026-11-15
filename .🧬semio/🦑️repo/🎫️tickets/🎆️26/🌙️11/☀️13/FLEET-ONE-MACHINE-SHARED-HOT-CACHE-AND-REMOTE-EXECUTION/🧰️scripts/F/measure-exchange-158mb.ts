@@ -1,0 +1,27 @@
+import {mkdirSync,mkdtempSync,readFileSync,readdirSync,writeFileSync,rmSync} from "node:fs";
+import {tmpdir} from "node:os";import {join} from "node:path";import {gunzipSync} from "node:zlib";import {createHash} from "node:crypto";
+import {startRemoteCacheServerV1} from "/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-cache/🖥️server/🟦️.ts";
+import {beginNxFleetV1,collectNxGraphV1,nxGraphStateV1,installNxGraphV1} from "/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🧶️nx/🟦️.ts";
+import {graphFleetClientV1,decideGraphEntryV1,publishGraphEntryV1,fetchGraphEntryV1} from "/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/🛰️exchange/🟦️.ts";
+const snap="/private/tmp/claude-501/-Users-ueli-Documents-semio/9f6d3d77-cfd2-486b-942c-2101ee51a1fb/scratchpad/F/mnt-g/snapshots",rootA="/Users/ueli/Documents/semio",rootB="/srv/other/semio-b";
+const manifest=JSON.parse(readFileSync(snap+"/b8c7b061575788dde2f8b148b94fea36305e4fbd406d15e2fd1419369dc7f672.json","utf8"));
+const parts:string[]=[];let size=0;
+for(const [name,digest] of manifest.projects){const text=gunzipSync(readFileSync(`${snap}/${digest}.gz`)).toString();parts.push(JSON.stringify(name)+":"+text);size+=text.length;if(size>158e6)break;}
+const graph="{\"nodes\":{"+parts.join(",")+"}}";
+const dir=mkdtempSync(join(tmpdir(),"m2-"));const data=join(dir,"ns");mkdirSync(data);
+writeFileSync(join(data,"project-graph.json"),graph);
+writeFileSync(join(data,"file-map.json"),readFileSync("/Users/Shared/semio/.nx/workspace-data-terminal/file-map.json"));
+writeFileSync(join(data,"source-maps.json"),readFileSync("/Users/Shared/semio/.nx/workspace-data-terminal/source-maps.json"));
+console.log("project-graph MB",Math.round(graph.length/1e6),"contains root",graph.includes(rootA));
+const server=await startRemoteCacheServerV1({directory:mkdtempSync(join(tmpdir(),"m2s-")),host:"127.0.0.1",port:0,maximumBytes:2**31,maximumEntryBytes:2**29,maximumAgeDays:30,defaultInstance:"main",tokens:{read:"r",write:"w"},validation:"off"});
+const settings={endpoint:server.url,instance:"main",token:"w",upload:true,stateDirectory:mkdtempSync(join(tmpdir(),"m2b-"))};
+const claim={graphDigest:"a".repeat(64),implementation:"b".repeat(64),tooling:"c".repeat(64),identity:"d".repeat(64)};
+const state=nxGraphStateV1(claim,"e".repeat(64));const client=graphFleetClientV1(settings);
+let t=performance.now();const docs=(await collectNxGraphV1(data,rootA))!;console.log("collect+neutralize",Math.round(performance.now()-t),"ms");
+t=performance.now();const d=await decideGraphEntryV1({client,state,owner:"a:1"});console.log("decide(miss+claim)",Math.round(performance.now()-t),"ms",d.outcome);
+t=performance.now();const ok=await publishGraphEntryV1({client,state,owner:"a:1",documents:docs,hold:(d as any).hold});console.log("publish(compress+upload)",Math.round(performance.now()-t),"ms",ok);
+const status=await (await fetch(server.url+"/status",{headers:{authorization:"Bearer w"}})).json() as any;console.log("stored bytes",status.bytes);
+t=performance.now();const hit=await decideGraphEntryV1({client:graphFleetClientV1({...settings,stateDirectory:mkdtempSync(join(tmpdir(),"m2c-"))}),state,owner:"b:2"});console.log("lookup+download+decompress",Math.round(performance.now()-t),"ms",hit.outcome);
+t=performance.now();const target=join(dir,"installed");const bytes=await installNxGraphV1(target,(hit as any).documents,rootB);console.log("expand+install",Math.round(performance.now()-t),"ms",bytes);
+console.log("installed has rootB",readFileSync(join(target,"project-graph.json"),"utf8").includes(rootB),"no rootA",!readFileSync(join(target,"project-graph.json"),"utf8").includes(rootA));
+await server.stop();rmSync(dir,{recursive:true,force:true});

@@ -1,0 +1,10 @@
+energy test .py files: 70
+registered: 65
+NOT registered: 5
+MISSING 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖼️posters/🧪️tests/🧰️synthetic/🐍️.py
+MISSING 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🧩️chapters/🐍️process.py
+MISSING 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🏗️composition/🐍️.py
+MISSING 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py
+MISSING 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🔊️speech/🐍️.py
+---- registry entries under energy with no test file match:
+EXTRA 🎓️teaching.🏛️architecture.📊️excel.🎬️clip.⚡️energy.🧪️tests.📐️result.🐍️

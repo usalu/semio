@@ -1,0 +1,332 @@
+2026-11-15T05:02:41Z LAUNCHER BEFORE TRY 1
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T05:02:41Z TRY 1 START group 66998 log /Users/ueli/native-bootstrap-round-20.log
+2026-11-15T05:02:41Z pressure_level=1 run_group_max_rss_kib=2368
+1247248 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+502128 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+465008 66960 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.re
+2026-11-15T05:03:11Z pressure_level=1 run_group_max_rss_kib=452816
+1395168 67421 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1300512 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1247520 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:03:41Z pressure_level=1 run_group_max_rss_kib=452896
+2159040 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1305152 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+555184 67685 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.re
+2026-11-15T05:04:11Z pressure_level=1 run_group_max_rss_kib=452896
+2360448 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1317920 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+502240 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:04:42Z pressure_level=1 run_group_max_rss_kib=453040
+2360480 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1803520 68090 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1317952 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:05:12Z pressure_level=1 run_group_max_rss_kib=453008
+2398304 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1322816 68370 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1318000 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:05:42Z pressure_level=1 run_group_max_rss_kib=453056
+2398832 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1318176 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+500448 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:06:12Z pressure_level=1 run_group_max_rss_kib=453024
+2527328 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1963712 68719 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1318352 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:06:43Z pressure_level=1 run_group_max_rss_kib=453072
+3616096 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1318464 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+500480 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:07:13Z pressure_level=1 run_group_max_rss_kib=452544
+4984736 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+2586688 69146 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+974464 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:07:43Z pressure_level=1 run_group_max_rss_kib=453552
+5003360 67389 67369 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1373520 69528 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1072416 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:08:13Z pressure_level=1 run_group_max_rss_kib=140160
+1418960 69984 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1127936 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+493744 69747     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T05:08:44Z pressure_level=1 run_group_max_rss_kib=140688
+1930208 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1171488 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+493840 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:09:15Z pressure_level=1 run_group_max_rss_kib=140976
+1938464 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1694752 70665 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1172704 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:09:45Z pressure_level=1 run_group_max_rss_kib=141264
+1938928 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1176064 71119 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1172720 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:10:15Z pressure_level=1 run_group_max_rss_kib=141248
+1939616 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1174480 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+494912 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:10:45Z pressure_level=1 run_group_max_rss_kib=141360
+2117584 71695 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1942464 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1174480 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:11:16Z pressure_level=1 run_group_max_rss_kib=141712
+2510032 72134 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1944400 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1174576 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:11:46Z pressure_level=1 run_group_max_rss_kib=141728
+2453312 72487 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1944576 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1174576 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:12:16Z pressure_level=1 run_group_max_rss_kib=141728
+1944832 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1885216 72949 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1210496 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:12:46Z pressure_level=1 run_group_max_rss_kib=141728
+1945200 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1211120 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+493760 69747     1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+2026-11-15T05:13:16Z pressure_level=1 run_group_max_rss_kib=142192
+1945264 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1278016 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+494432 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:13:46Z pressure_level=1 run_group_max_rss_kib=142208
+1945376 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1653952 74054 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1277984 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:14:17Z pressure_level=1 run_group_max_rss_kib=142512
+1945504 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1298176 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+1174416 74468 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+2026-11-15T05:14:47Z pressure_level=1 run_group_max_rss_kib=142560
+1945488 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1298208 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+494480 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:15:17Z pressure_level=1 run_group_max_rss_kib=142560
+1945584 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1299056 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+494528 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:15:47Z pressure_level=1 run_group_max_rss_kib=142992
+2491856 75289 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1945632 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1299888 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:16:17Z pressure_level=1 run_group_max_rss_kib=143472
+1945648 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1299904 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+766560 75931 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.re
+2026-11-15T05:16:48Z pressure_level=1 run_group_max_rss_kib=143840
+1945680 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1300208 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+494096 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:17:18Z pressure_level=1 run_group_max_rss_kib=144576
+1945680 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1825920 76547 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1300976 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:17:48Z pressure_level=1 run_group_max_rss_kib=144528
+2493536 76987 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1945744 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1301584 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:18:19Z pressure_level=1 run_group_max_rss_kib=144608
+1945904 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1658256 77321 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1309312 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:18:49Z pressure_level=1 run_group_max_rss_kib=144560
+1945904 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1322672 77768 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1309312 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:19:19Z pressure_level=1 run_group_max_rss_kib=111648
+1945904 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+1807584 78075 78025 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+897952 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:19:50Z pressure_level=1 run_group_max_rss_kib=76032
+3069264 78075 78025 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1031376 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+1024016 69870 69766 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun -- /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts
+2026-11-15T05:20:20Z pressure_level=1 run_group_max_rss_kib=76400
+3464672 78075 78025 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1666768 78980 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1178080 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:20:50Z pressure_level=1 run_group_max_rss_kib=75088
+3765168 78075 78025 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1153088 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+1102336 79455 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+2026-11-15T05:21:20Z pressure_level=1 run_group_max_rss_kib=74688
+4754640 78075 78025 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+961680 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+372496 43295 43249 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowork-artifact,cowork-file,claude-media,claude-simulator,app,claude-
+2026-11-15T05:21:51Z pressure_level=1 run_group_max_rss_kib=74736
+4754928 78075 78025 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+896208 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+384848 69766 69747 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('node
+2026-11-15T05:22:21Z pressure_level=1 run_group_max_rss_kib=74928
+4844896 78075 78025 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+2267248 80409 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+990192 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:22:51Z pressure_level=1 run_group_max_rss_kib=74864
+4850048 78075 78025 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1681184 80862 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1000544 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:23:21Z pressure_level=1 run_group_max_rss_kib=74976
+4887616 78075 78025 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node:crypto'),awaitModule=await import('nod
+1726336 81325 43310 /Library/Developer/CommandLineTools/usr/bin/git -c core.quotepath=false -c safe.directory=* -c core.fsmonitor= -c branch.autoSetupMerge=false -c core.useReplaceRefs=false -c core.hooksPath=/dev/null -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.r
+1031904 65872 65871 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run
+2026-11-15T05:23:22Z STALL last 60 lines of the graph service log /var/folders/1s/pfk8j2p90t94v1nx_gf8zq3w0000gn/T/semio-repo/501/host-791f67a6efd8.log
+[graph] closure-missing deb1f36fd3d1b6b6fad61d1cf90b3975acf301a035c6e4c2589e2263a60a5919 named by 1 projects: re-derived
+[graph] closure-missing e1d83f0e84052d2acd9e2ee8323bb4ddd2c864868283e073a3d9be7f9159aae0 named by 1 projects: refetched
+[repo] still working after 680 s; last phase started: source.served
+[repository:command] still running after 680 s
+graph: the build input closure e2ae9216a881... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing e2ae9216a8818cc89dc73b98989c14ba517da7141ae462f85a8cd04bd8d86ce9 named by 1 projects: asked of the fleet
+[repository:command] still running after 690 s
+graph: the build input closure e58d824f5276... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing e58d824f5276d2c9f04296ecfb27c4f4e43a3e154904880747b0917b83ab6a55 named by 1 projects: asked of the fleet
+[repository:command] still running after 700 s
+[repo] still working after 710 s; last phase started: source.served
+[repository:command] still running after 710 s
+graph: the build input closure eb57b7ed7b71... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing eb57b7ed7b71c56405a2f687e062e987fbea25a160831f6e5bba5ef8c81cbb14 named by 2 projects: asked of the fleet
+[repository:command] still running after 720 s
+[repository:command] still running after 730 s
+graph: the build input closure ed249e6f6041... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing ed249e6f60413d112544e9d91431656cb894fe55f3cfc19d52b51987f96d95d9 named by 1 projects: re-derived
+[repo] still working after 740 s; last phase started: source.served
+[repository:command] still running after 740 s
+graph: the build input closure ef1ccf20226e... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing ef1ccf20226e6e6230a310cca299cb3c20d3cf7647bed79828b9ce2d35f50f68 named by 1 projects: re-derived
+[repository:command] still running after 750 s
+[repository:command] still running after 760 s
+graph: the build input closure f679da6d2eb5... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f679da6d2eb584fe3ceea8a03a2c60bd6e93c1ec62051f9a09e1317e53b0fcf9 named by 1 projects: re-derived
+[repo] still working after 770 s; last phase started: source.served
+[repository:command] still running after 770 s
+[repository:command] still running after 780 s
+graph: the build input closure fa5d1c802ed7... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing fa5d1c802ed77461d4dc4708137830ec0b0f0481b16fe92f34df429f02c0e3b9 named by 1 projects: re-derived
+[repository:command] still running after 790 s
+[repo] still working after 800 s; last phase started: source.served
+[repository:command] still running after 800 s
+[repository:command] still running after 810 s
+[repository:command] still running after 820 s
+[repo] still working after 830 s; last phase started: source.served
+[repository:command] still running after 830 s
+[repository:command] still running after 840 s
+[repository:command] still running after 850 s
+graph: the build input closure fdbd7c8b8f76... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing fdbd7c8b8f7654ef5db01e14467b603b2bbd9a47a79f6cd0f3f6dc3d53f6dfa7 named by 1 projects: asked of the fleet
+graph: 3173 stale projects, 0 taken from the fleet, 9 too heavy for this machine (@semio-tech/framework-os-dev (about 23934 MB), @semio-tech/repo-lib (about 18474 MB), workspace (about 13916 MB), repo (about 13500 MB), @semio-tech/framework-plugin (about 8122 MB), @semio-tech/framework-os-kernel (about 6522 MB), and 3 more; it can give about 3512 MB per project), it can infer 88 of the others (22 
+graph: waiting for the fleet: 0 of 3173 projects arrived
+[repo] still working after 860 s; last phase started: source.served
+[repository:command] still running after 860 s
+graph: waiting for the fleet: 0 of 3173 projects arrived; the server last progressed 8 s ago, estimated time left: about 45 min
+[repository:command] still running after 870 s
+graph: waiting for the fleet: 0 of 3173 projects arrived; the server last progressed 18 s ago, estimated time left: about 45 min
+[repository:command] still running after 880 s
+graph: waiting for the fleet: 0 of 3173 projects arrived; the server last progressed 28 s ago, estimated time left: about 45 min
+[repo] still working after 890 s; last phase started: source.served
+[repository:command] still running after 890 s
+graph: waiting for the fleet: 0 of 3173 projects arrived; the server last progressed 38 s ago, estimated time left: about 45 min
+[repository:command] still running after 900 s
+graph: waiting for the fleet: 0 of 3173 projects arrived; the server last progressed 49 s ago, estimated time left: about 45 min
+[repository:command] still running after 910 s
+graph: waiting for the fleet: 0 of 3173 projects arrived; the server last progressed 59 s ago, estimated time left: about 45 min
+[repo] still working after 920 s; last phase started: source.served
+[repository:command] still running after 920 s
+2026-11-15T05:23:22Z STALL ps of the service and the run
+43295 43249 43249    01:05:56 474544   0.5 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer) --type=renderer --user-data-dir=/Users/ueli/Library/Application Support/Claude --standard-schemes=cowor
+51079     1 51061       50:27    736   0.0 /bin/zsh -c source /Users/ueli/.claude/shell-snapshots/snapshot-zsh-1794716277253-0dmq3n.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \builtin unalias -- 'which'; \built
+66985 51079 51061       20:41    800   0.0 /bin/zsh -c source /Users/ueli/.claude/shell-snapshots/snapshot-zsh-1794716277253-0dmq3n.sh 2>/dev/null || true && setopt NO_EXTENDED_GLOB NO_BARE_GLOB_QUAL 2>/dev/null || true && { \builtin unalias -- 'which'; \built
+66998 66984 66998       20:41   1168   0.0 bash /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️14/WORKERS-READY-WITH-LOW-RESOURCES/native-bootstrap.sh /Users/ueli/native-bootstrap-round-20.log
+67011 66998 66998       20:41   1216   0.0 bash /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup
+67012 66998 66998       20:41    224   0.0 tee /Users/ueli/Documents/semio/.cache/f/native-bootstrap.log
+69747     1 69747       15:24 111936   0.1 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.
+69766 69747 69766       15:22 382704   0.3 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'
+78075 78025 78075       04:19 4887664  71.5 /Users/ueli/Library/Caches/semio/runtimes/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun --eval \012const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url
+2026-11-15T05:23:22Z STOP: no new progress line for 907 s; one SIGINT to group 66998
+2026-11-15T05:23:52Z ACCESS LINES TRY 1: 0
+
+2026-11-15T05:23:58Z KEY LINES TRY 1: 58
+graph: generation 229 (5100 projects) restored from the remote cache, 5104 documents (48 MB) downloaded in 13 s, from a state 23 min old with 3173 projects stale
+[graph] closure-missing 0160357ce062320aa974ddb16dccf1c9666892d01001ee49f3c3879a50f42407 named by 1 projects: re-derived
+[graph] closure-missing 128df6cefe6051b6136e1cd3a1ea493876aaed9bf7142e8f342f9e8916c4ebb4 named by 1 projects: re-derived
+[graph] closure-missing 135d24b504cd908d498056c666c80d6175c19c9b1f932e48805a51d20f2d569e named by 3 projects: asked of the fleet
+[graph] closure-missing 22e36291644aab00d9fcc1e4a4955f804b6bd47da023f17ef269f419eb7073ae named by 1 projects: re-derived
+[graph] closure-missing 253d2d229c864ed7d11b24cb3a669c305b3a10d9d0e952c40c61752d6180f431 named by 1 projects: re-derived
+[graph] closure-missing 26df80a9c548465017026f53151639b97691712a51dd5e3f0bfb0c6245692752 named by 1 projects: re-derived
+[graph] closure-missing 28ce71e10811b116844aa75ff0f99fba0eb162e57d11a79304ef434f7cbbcaa2 named by 1 projects: re-derived
+[graph] closure-missing 2ad76ec0ced0408da0c72c8188d066caac1cfd82c89e16760ec980fe55c76388 named by 1 projects: re-derived
+[graph] closure-missing 308b5e6923d384a4c9ea60445c121c3a32fccd83163890bf13b9e57252bae61f named by 3 projects: asked of the fleet
+[graph] closure-missing 31269820cfadeb84bc4a13a1f9f04fce988f44df0f65e7eb9276a0d58d674fd9 named by 1 projects: re-derived
+[graph] closure-missing 33e3b1ca4469316c21a3579d0af8c075d7e02c7e99aa31e0d00299bbef2c5744 named by 3 projects: asked of the fleet
+[graph] closure-missing 38f170f248bb7e67b138451df8d810db63f781a4db4eff6abdf024038aefa80c named by 1 projects: asked of the fleet
+[graph] closure-missing 3eb91d8443c58dc93fa0adfaaaa0ce1ff44b1342eaad669de73cbd129b528706 named by 3119 projects: re-derived
+[graph] closure-missing 469bce090e1a5c8253fe0df2ab12175743ee115919e8e3fe0b890fb627ca4de0 named by 1 projects: re-derived
+[graph] closure-missing 4bc471a54b620563b62d0410ff8a6e407269b3fde1cd9868f6b5b3b0ec2e0b80 named by 3 projects: re-derived
+[graph] closure-missing 4efbc0a4d330a606cbca6f00ffb8ee344b7aa80fc558821ea80660fffaa247c5 named by 5 projects: re-derived
+[graph] closure-missing 4fe8bc7e5abdb9cb13484ddedfed9af8052127ef43dd0f00593db7580803ec67 named by 1 projects: re-derived
+[graph] closure-missing 5066073638fbd7abd069a731767d6601c5b74a2007fe40094c0cee54df627263 named by 4 projects: re-derived
+[graph] closure-missing 54e5f850276061125c666efada12d808c195c04e0d73033a65dbf51bf990e47b named by 1 projects: re-derived
+[graph] closure-missing 5a7f7190b3aaba8cb8a2125b8117f6bb96b7b5c6c4b2ce6518c760f14021af89 named by 1 projects: re-derived
+[graph] closure-missing 5ea0295a81e568d471dc9a1b276831f4387a3e2c4aff8b6cd1acabe20b81c186 named by 1 projects: re-derived
+[graph] closure-missing 6da73efe1c58fbe12459bb7064fca77b3bf33821540c0cd52a5f526dc601a756 named by 1 projects: re-derived
+[graph] closure-missing 7143a7deaa3ba919893aefa5354df74795ac63f70f9e90262dc144994f2965bb named by 70 projects: re-derived
+[graph] closure-missing 7170f6fea80243d3fd195176caf2f79ef6099c89e7a4179cda174926ea6299a5 named by 1 projects: re-derived
+[graph] closure-missing 7253347834123a8bcabf6cfb97dc1eec19b756149844accb38c2c61b00b40028 named by 1 projects: re-derived
+[graph] closure-missing 785a146d0ac5bdf42e284e7c62b246826ebd8bfe86745564844f32771b529fa3 named by 4 projects: re-derived
+[graph] closure-missing 7aa1502a1469d59cc0e0b4a09447f4999f28cbc800700f4d41fd412de07651f5 named by 1 projects: re-derived
+[graph] closure-missing 7b6e09b7972a98a1bdc4c9583fa10f88b29b51f2bcdfaced27686d35f7ee45e4 named by 1 projects: re-derived
+[graph] closure-missing 7ee0751a4ac8e51565a6b2bcf3cd4ed4ebeafdb2d55e634b9e1104385797f4ff named by 3119 projects: refetched
+[graph] closure-missing 8446f6c0225094fb4248e5b0eb289bbc9a888ae0dc2228f518956e1a813e61d9 named by 5 projects: asked of the fleet
+[graph] closure-missing 85b3e1345cd38e9fa24e594366df86e343fb3154ec882d86a699dc96ebbf49de named by 5 projects: re-derived
+[graph] closure-missing 91042644f5ad0db20fb6b0342f2f9adc87627e124903bb671234a5148feac2ab named by 2 projects: asked of the fleet
+[graph] closure-missing 91b8cd4ce2234c33674c428f53d3aca396e7a58f6d448f12963400a6b0012912 named by 1 projects: re-derived
+[graph] closure-missing 97c02403633bb7bac203146fd168bab87b75f64bd4b1abc18648dd4db082c1dc named by 2 projects: asked of the fleet
+[graph] closure-missing 9ccddd0636fa800115b21c853fb9d0138184047676c8a783993fd769c1117040 named by 1 projects: refetched
+[graph] closure-missing 9fe5a79b7a09147006bdcc877b9a065326671b095016f22368b5b63766098ef1 named by 1 projects: re-derived
+[graph] closure-missing aae2ed813d6b9d186c503a742bb73720282f781602bab5001ec57d078d5382d6 named by 1 projects: re-derived
+[graph] closure-missing b15ca2ac35461b48f0248517f926712b5538486607ef0c78a6dcad41ea82804a named by 1 projects: re-derived
+[graph] closure-missing b1a93762982af379659584e5232a5082cc2bd685bcdc4a710f901d780be59c94 named by 70 projects: refetched
+[graph] closure-missing d069e21ec7d53e821d3efca70905f272291829eb71dc166d0178f7948393ee49 named by 1 projects: re-derived
+[graph] closure-missing d0c8e09ee68153a0ec6c50106ddd253a9d478809eb987d477ead0d6c5ec2f71d named by 1 projects: re-derived
+[graph] closure-missing d0d5bb976b99a08e83de6ca5a765f3c24a836d1502895f7750d9208b6d6feb44 named by 27 projects: re-derived
+[graph] closure-missing d2a51006ff61f125588bc008aca1482c160b33228e5653cab3e75750291901ce named by 1 projects: re-derived
+[graph] closure-missing d4a523d4dd2eddbcd564e67fa4286c399bfea60e40af784204e1a185b0834a1f named by 1 projects: refetched
+[graph] closure-missing dbc01d4c8f2c3783d1cb974d795df8d484404ac82af94e7673697f97fae97338 named by 1 projects: re-derived
+[graph] closure-missing dbf79faefad4331d633b7e4a6a2e79080ffde4d5dadbb3f51a7c3576191b5d3c named by 1 projects: refetched
+[graph] closure-missing deb1f36fd3d1b6b6fad61d1cf90b3975acf301a035c6e4c2589e2263a60a5919 named by 1 projects: re-derived
+[graph] closure-missing e1d83f0e84052d2acd9e2ee8323bb4ddd2c864868283e073a3d9be7f9159aae0 named by 1 projects: refetched
+[graph] closure-missing e2ae9216a8818cc89dc73b98989c14ba517da7141ae462f85a8cd04bd8d86ce9 named by 1 projects: asked of the fleet
+[graph] closure-missing e58d824f5276d2c9f04296ecfb27c4f4e43a3e154904880747b0917b83ab6a55 named by 1 projects: asked of the fleet
+[graph] closure-missing eb57b7ed7b71c56405a2f687e062e987fbea25a160831f6e5bba5ef8c81cbb14 named by 2 projects: asked of the fleet
+[graph] closure-missing ed249e6f60413d112544e9d91431656cb894fe55f3cfc19d52b51987f96d95d9 named by 1 projects: re-derived
+[graph] closure-missing ef1ccf20226e6e6230a310cca299cb3c20d3cf7647bed79828b9ce2d35f50f68 named by 1 projects: re-derived
+[graph] closure-missing f679da6d2eb584fe3ceea8a03a2c60bd6e93c1ec62051f9a09e1317e53b0fcf9 named by 1 projects: re-derived
+[graph] closure-missing fa5d1c802ed77461d4dc4708137830ec0b0f0481b16fe92f34df429f02c0e3b9 named by 1 projects: re-derived
+[graph] closure-missing fdbd7c8b8f7654ef5db01e14467b603b2bbd9a47a79f6cd0f3f6dc3d53f6dfa7 named by 1 projects: asked of the fleet
+graph: 3173 stale projects, 0 taken from the fleet, 9 too heavy for this machine (@semio-tech/framework-os-dev (about 23934 MB), @semio-tech/repo-lib (about 18474 MB), workspace (about 13916 MB), repo (about 13500 MB), @semio-tech/framework-plugin (about 8122 MB), @semio-tech/framework-os-kernel (about 6522 MB), and 3 more; it can give about 3512 MB per project), it can infer 88 of the others (22 per wave); asking the fleet for 3173
+2026-11-15T05:23:58Z P12 PEAK TRY 1: 2026-11-15T05:15:44Z pid=69870 rss=1900MB footprint=[bun [69870]: 64-bit    Footprint: 91 MB (16384 bytes per page)] last=[graph: plan answered, managed 106 MB, resident 186 MB (released 0 MB)]
+2026-11-15T05:23:58Z LAUNCHER AFTER TRY 1
+3672881 -rwxr-xr-x@ 1 ueli  staff  18657778 Nov 14 21:35 /Users/ueli/.local/bin/repo
+3679487 lrwxr-xr-x@ 1 ueli  staff        30 Nov 14 22:03 /Users/ueli/.local/share/semio/launcher/bin/repo -> versions/cf25f2b751f83336/repo
+readlink launcher: versions/cf25f2b751f83336/repo
+readlink ~/.local/bin/repo: 
+launcher target inode 3679486 mtime 2026-11-14T22:03:22 size 6523360
+Identifier=tech.semio.repo
+CandidateCDHash sha256=6de7547a8b8ff384bbfbfc45e962462063ff0357
+CandidateCDHashFull sha256=6de7547a8b8ff384bbfbfc45e962462063ff03579508eb85f9a018487b76872a
+CDHash=6de7547a8b8ff384bbfbfc45e962462063ff0357
+TeamIdentifier=not set
+
+2026-11-15T05:23:58Z LAUNCHER during try 1: unchanged
+2026-11-15T05:23:58Z TRY 1 END native_rc=7 peak_rss_kib=5003360 run_peak_rss_kib=453552 stop=no new progress line for 907 s fleet_refusal=False closure_missing=True nx_task_lines=0 error_lines=0 moving=False
+2026-11-15T05:23:58Z refusal, hard stop, stall, missing closure or moving sources: next try in 3 minutes
+2026-11-15T05:26:58Z NEWER ROUND 22 before try 2: runner ends
+2026-11-15T05:26:58Z ROUND RUNNER END

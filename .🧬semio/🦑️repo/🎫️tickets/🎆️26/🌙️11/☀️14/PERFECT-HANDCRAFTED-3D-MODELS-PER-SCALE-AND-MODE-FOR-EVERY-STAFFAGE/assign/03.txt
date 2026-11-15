@@ -1,0 +1,8 @@
+🏗️machinery/concrete-mixer-truck
+🏗️machinery/diesel-generator
+🏗️machinery/evaporative-humidifier
+🏗️machinery/excavator
+🏗️machinery/expansion-valve
+🏗️machinery/finned-heat-exchanger
+🏗️machinery/forklift
+🏗️machinery/heat-pump-outdoor-unit

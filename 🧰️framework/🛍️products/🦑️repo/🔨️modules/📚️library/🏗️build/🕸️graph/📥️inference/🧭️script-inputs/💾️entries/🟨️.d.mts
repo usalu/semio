@@ -1,4 +1,6 @@
+/** 📦️ One closure entry as it travels: recipe, value, rows, shared layers inline, sidecar. */
+export type ClosureBundleV1 = Readonly<{ version: 1; recipe: unknown; value: unknown; rows: unknown[]; layers: unknown[][]; sidecar: unknown }>;
 /** 💾️ The durable store of closure entries. */
 export type StoredClosureEntryV1 = Readonly<{ recipe: unknown; value: unknown; rows: unknown[]; digests: string[]; sidecar: unknown; bytes: number }>;
-export type ClosureStoreV1 = Readonly<{ save(id: string, entry: { recipe: unknown; value: unknown; rows: unknown[]; layers: readonly unknown[][]; sidecar?: unknown }): Promise<{ bytes: number; digests: string[] | undefined }>; layerBatchesSync(digest: string, size: number): IterableIterator<unknown[]>; load(id: string): Promise<StoredClosureEntryV1 | undefined>; settled(): Promise<void> }>;
-export function createClosureStoreV1(options: { directory: string; limits?: Record<string, number>; readOnly?: boolean }): ClosureStoreV1;
+export type ClosureStoreV1 = Readonly<{ stamp(id: string): Promise<string | undefined>; bundle(id: string): Promise<ClosureBundleV1 | undefined>; adopt(id: string, bundle: unknown): Promise<{ bytes: number; digests: string[] | undefined }>; save(id: string, entry: { recipe: unknown; value: unknown; rows: unknown[]; layers: readonly unknown[][]; sidecar?: unknown }): Promise<{ bytes: number; digests: string[] | undefined }>; layerBatchesSync(digest: string, size: number): IterableIterator<unknown[]>; load(id: string): Promise<StoredClosureEntryV1 | undefined>; settled(): Promise<void> }>;
+export function createClosureStoreV1(options: { directory: string; limits?: Record<string, number>; readOnly?: boolean; write?: (path: string, bytes: Uint8Array) => Promise<void> }): ClosureStoreV1;

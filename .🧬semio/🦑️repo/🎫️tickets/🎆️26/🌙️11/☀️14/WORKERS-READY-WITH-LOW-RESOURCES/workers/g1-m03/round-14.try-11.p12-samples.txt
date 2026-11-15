@@ -1,0 +1,120 @@
+service log: /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-4a3e468900f5.log
+closure entries before: 513
+2026-11-15T07:41:00Z no slice worker
+2026-11-15T07:41:05Z no slice worker
+2026-11-15T07:41:10Z no slice worker
+2026-11-15T07:41:15Z no slice worker
+2026-11-15T07:41:21Z no slice worker
+2026-11-15T07:41:26Z no slice worker
+2026-11-15T07:41:31Z no slice worker
+2026-11-15T07:41:36Z no slice worker
+2026-11-15T07:41:41Z no slice worker
+2026-11-15T07:41:47Z no slice worker
+2026-11-15T07:41:52Z no slice worker
+2026-11-15T07:41:57Z no slice worker
+2026-11-15T07:42:02Z no slice worker
+2026-11-15T07:42:08Z no slice worker
+2026-11-15T07:42:13Z no slice worker
+2026-11-15T07:42:18Z no slice worker
+2026-11-15T07:42:23Z no slice worker
+2026-11-15T07:42:28Z no slice worker
+2026-11-15T07:42:34Z no slice worker
+2026-11-15T07:42:39Z no slice worker
+2026-11-15T07:42:44Z no slice worker
+2026-11-15T07:42:49Z no slice worker
+2026-11-15T07:42:54Z no slice worker
+2026-11-15T07:43:00Z no slice worker
+2026-11-15T07:43:05Z no slice worker
+2026-11-15T07:43:10Z no slice worker
+2026-11-15T07:43:15Z no slice worker
+2026-11-15T07:43:20Z no slice worker
+2026-11-15T07:43:26Z no slice worker
+2026-11-15T07:43:32Z no slice worker
+2026-11-15T07:43:37Z no slice worker
+2026-11-15T07:43:42Z no slice worker
+2026-11-15T07:43:47Z no slice worker
+2026-11-15T07:43:52Z no slice worker
+2026-11-15T07:43:58Z no slice worker
+2026-11-15T07:44:03Z no slice worker
+2026-11-15T07:44:08Z no slice worker
+2026-11-15T07:44:13Z no slice worker
+2026-11-15T07:44:18Z no slice worker
+2026-11-15T07:44:23Z no slice worker
+2026-11-15T07:44:29Z no slice worker
+2026-11-15T07:44:34Z no slice worker
+2026-11-15T07:44:39Z no slice worker
+2026-11-15T07:44:44Z no slice worker
+2026-11-15T07:44:50Z no slice worker
+2026-11-15T07:44:55Z no slice worker
+2026-11-15T07:45:00Z no slice worker
+2026-11-15T07:45:05Z no slice worker
+2026-11-15T07:45:10Z no slice worker
+2026-11-15T07:45:15Z no slice worker
+2026-11-15T07:45:20Z no slice worker
+2026-11-15T07:45:25Z no slice worker
+2026-11-15T07:45:31Z no slice worker
+2026-11-15T07:45:36Z no slice worker
+2026-11-15T07:45:41Z no slice worker
+2026-11-15T07:45:46Z no slice worker
+2026-11-15T07:45:51Z no slice worker
+2026-11-15T07:45:56Z no slice worker
+2026-11-15T07:46:01Z no slice worker
+2026-11-15T07:46:06Z no slice worker
+2026-11-15T07:46:12Z no slice worker
+2026-11-15T07:46:17Z no slice worker
+2026-11-15T07:46:22Z no slice worker
+2026-11-15T07:46:27Z no slice worker
+2026-11-15T07:46:32Z no slice worker
+2026-11-15T07:46:37Z no slice worker
+2026-11-15T07:46:42Z no slice worker
+2026-11-15T07:46:48Z no slice worker
+2026-11-15T07:46:53Z no slice worker
+2026-11-15T07:46:58Z no slice worker
+2026-11-15T07:47:03Z no slice worker
+2026-11-15T07:47:08Z no slice worker
+2026-11-15T07:47:13Z no slice worker
+2026-11-15T07:47:18Z no slice worker
+2026-11-15T07:47:23Z no slice worker
+2026-11-15T07:47:29Z no slice worker
+2026-11-15T07:47:34Z no slice worker
+2026-11-15T07:47:39Z no slice worker
+2026-11-15T07:47:44Z no slice worker
+2026-11-15T07:47:49Z no slice worker
+2026-11-15T07:47:54Z no slice worker
+2026-11-15T07:48:00Z no slice worker
+2026-11-15T07:48:05Z no slice worker
+2026-11-15T07:48:10Z no slice worker
+2026-11-15T07:48:15Z pid=58475 rss=316MB footprint=[bun [58475]: 64-bit    Footprint: 83 MB (16384 bytes per page)] last=[]
+2026-11-15T07:48:20Z pid=58475 rss=160MB footprint=[bun [58475]: 64-bit    Footprint: 171 MB (16384 bytes per page)] last=[graph: 1 refresh(es) go first, one of them rebuilds the whole workspace (0 s)]
+2026-11-15T07:48:25Z pid=58475 rss=163MB footprint=[bun [58475]: 64-bit    Footprint: 170 MB (16384 bytes per page)] last=[graph: 1 refresh(es) go first, one of them rebuilds the whole workspace (0 s)]
+2026-11-15T07:48:30Z pid=58475 rss=142MB footprint=[bun [58475]: 64-bit    Footprint: 166 MB (16384 bytes per page)] last=[graph: 1 refresh(es) go first, one of them rebuilds the whole workspace (0 s)]
+2026-11-15T07:48:36Z no slice worker
+2026-11-15T07:48:41Z no slice worker
+2026-11-15T07:48:46Z no slice worker
+2026-11-15T07:48:51Z pid=59346 rss=270MB footprint=[bun [59346]: 64-bit    Footprint: 92 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (20 s, generation -1 was the newest when it queued)]
+2026-11-15T07:48:56Z pid=59346 rss=309MB footprint=[bun [59346]: 64-bit    Footprint: 88 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (20 s, generation -1 was the newest when it queued)]
+2026-11-15T07:49:01Z pid=59346 rss=162MB footprint=[bun [59346]: 64-bit    Footprint: 170 MB (16384 bytes per page)] last=[graph: 1 refresh(es) go first, one of them rebuilds the whole workspace (0 s)]
+2026-11-15T07:49:06Z pid=59346 rss=129MB footprint=[bun [59346]: 64-bit    Footprint: 165 MB (16384 bytes per page)] last=[graph: 1 refresh(es) go first, one of them rebuilds the whole workspace (0 s)]
+2026-11-15T07:49:11Z pid=59346 rss=112MB footprint=[bun [59346]: 64-bit    Footprint: 165 MB (16384 bytes per page)] last=[graph: 1 refresh(es) go first, one of them rebuilds the whole workspace (0 s)]
+2026-11-15T07:49:17Z no slice worker
+2026-11-15T07:49:22Z no slice worker
+2026-11-15T07:49:27Z pid=60306 rss=251MB footprint=[bun [60306]: 64-bit    Footprint: 80 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (20 s, generation -1 was the newest when it queued)]
+2026-11-15T07:49:32Z pid=60306 rss=192MB footprint=[bun [60306]: 64-bit    Footprint: 161 MB (16384 bytes per page)] last=[graph: a peer builds the graph; this run waits as its front door alone, without a loader (20 s, generation -1 was the newest when it queued)]
+2026-11-15T07:49:37Z no slice worker
+2026-11-15T07:49:43Z no slice worker
+2026-11-15T07:49:49Z no slice worker
+2026-11-15T07:49:54Z no slice worker
+2026-11-15T07:49:59Z no slice worker
+2026-11-15T07:50:04Z no slice worker
+2026-11-15T07:50:09Z no slice worker
+2026-11-15T07:50:14Z no slice worker
+2026-11-15T07:50:19Z no slice worker
+2026-11-15T07:50:25Z no slice worker
+2026-11-15T07:50:30Z no slice worker
+2026-11-15T07:50:35Z no slice worker
+2026-11-15T07:50:40Z pid=62503 rss=248MB footprint=[bun [62503]: 64-bit    Footprint: 83 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 133 MB (released 0 MB)]
+2026-11-15T07:50:45Z pid=62503 rss=176MB footprint=[bun [62503]: 64-bit    Footprint: 162 MB (16384 bytes per page)] last=[graph: plan answered, managed 108 MB, resident 133 MB (released 0 MB)]
+2026-11-15T07:50:51Z no slice worker
+2026-11-15T07:50:56Z no slice worker
+2026-11-15T07:51:01Z no slice worker
+closure entries after: 638

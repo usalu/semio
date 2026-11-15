@@ -1,0 +1,22 @@
+import{runCapturedRepositoryKernelV1,type CapturedBuildCommandProofV1}from"../📥️entry/🟦️.ts";
+import{withRepositoryCommandEnvironmentV1,withRepositoryCommandDiagnosticsV1}from"../📥️context/🟦️.ts";
+import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{advanceScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+/** 💾️ Executes cache operations through their own captured domain without admitting unrelated command drivers. */
+export async function runCapturedBuildSourceV1(args:readonly string[],proof:CapturedBuildCommandProofV1):Promise<void>{await runCapturedRepositoryKernelV1(args,proof,import.meta.semioCapturedImplementationIdentity,import.meta.semioCapturedLoaderIdentity,async(root,args,parent,phaseControl)=>withRepositoryCommandDiagnosticsV1(root,parent,phaseControl,phaseControl=>withRepositoryCommandEnvironmentV1(root,args,parent,phaseControl,async({selected,resolved,invocation})=>{const command=resolved.args[0];if(command!=="cache"||(["status","gc"].includes(resolved.args[1]??"")&&!resolved.args.includes("--tasks")))throw Error("Cache command kernel required");const{buildOperationRequiresV1}=await import("../../⚙️operations/🟦️.ts");if(buildOperationRequiresV1(command)==="dependencies"){const{ensureBuildEnvironmentV1}=await import("../../🚀️bootstrap/🟦️.ts");await ensureBuildEnvironmentV1(root,invocation,phaseControl);}
+
+if(command==="cache"&&["serve","remote"].includes(resolved.args[1]??"")){
+      const {runRemoteCacheCommandV1}=await import("../../🌐️remote-cache/⌨️command/🟦️.ts");
+      const tool=async()=>selected.tool==="nx"?(await import("../../../⚡️caching/🚀️bootstrap/🛠️tools/🌐️remote-cache/🟦️.ts")).nxRemoteCacheToolV1():(await import("../../🔧️tools/🏗️bazel/🌐️remote-cache/🟦️.ts")).bazelRemoteCacheToolV1();
+      const result=await runRemoteCacheCommandV1(resolved.args.slice(1),{root,environment:process.env,signal:phaseControl.signal,progress:async stage=>{checkResourceLeaseControl(phaseControl);await advanceScriptInvocation(invocation,"build:cache:"+stage,"running");},write:line=>console.log(line),tool});
+      if(result!==undefined)console.log(JSON.stringify(result,null,2));
+      return;
+    }
+const{withRepositoryCacheStoreV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");await withRepositoryCacheStoreV1(root,"dependencies",parent,phaseControl,async(_dependencies,phaseControl)=>{
+
+      const {runBuildCacheOperationV1}=await import("../../⚙️operations/🟦️.ts");
+      const resolveCacheTool=async(tool:"nx"|"bazel")=>tool==="nx"?(await import("../../../⚡️caching/🚀️bootstrap/🛠️tools/⚙️operations/🟦️.ts")).nxBuildCacheToolV1():(await import("../../🔧️tools/🏗️bazel/⚙️operations/🟦️.ts")).bazelBuildCacheToolV1();
+      console.log(JSON.stringify(await runBuildCacheOperationV1(selected.tool,resolved.args.slice(1),{root,invocation,phaseControl},resolveCacheTool),null,2));
+      return;
+    
+});})));}

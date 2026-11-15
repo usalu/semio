@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Spoken lexicon of inline TeX in narration clauses",
+  "description": "How every inline TeX token is pronounced, per language, with no default language. Whole-symbol overrides win over token composition; unknown TeX fails at plan time and is never sent to the voice.",
+  "type": "object",
+  "required": ["languages", "names", "characters", "words", "powers", "indexWords", "abbreviations", "units", "symbols", "forbidden"],
+  "additionalProperties": false,
+  "$defs": {
+    "bilingual": {
+      "type": "object",
+      "required": ["de", "en"],
+      "additionalProperties": false,
+      "properties": {"de": {"type": "string", "minLength": 1}, "en": {"type": "string", "minLength": 1}}
+    },
+    "plural": {
+      "oneOf": [
+        {"type": "string", "minLength": 1},
+        {
+          "type": "object",
+          "required": ["one", "other"],
+          "additionalProperties": false,
+          "properties": {"one": {"type": "string", "minLength": 1}, "other": {"type": "string", "minLength": 1}}
+        }
+      ]
+    },
+    "bilingualPlural": {
+      "type": "object",
+      "required": ["de", "en"],
+      "additionalProperties": false,
+      "properties": {"de": {"$ref": "#/$defs/plural"}, "en": {"$ref": "#/$defs/plural"}}
+    },
+    "pronunciationMap": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/bilingual"}
+    }
+  },
+  "properties": {
+    "$schema": {"type": "string"},
+    "languages": {"const": ["de", "en"]},
+    "names": {
+      "description": "Spoken name of every TeX symbol of 🧮️tex/🔣️.json that is read as a word.",
+      "$ref": "#/$defs/pronunciationMap"
+    },
+    "characters": {
+      "description": "Spoken word of single operator characters.",
+      "$ref": "#/$defs/pronunciationMap"
+    },
+    "words": {
+      "description": "Structural phrases; {} is replaced by the spoken operand.",
+      "$ref": "#/$defs/pronunciationMap"
+    },
+    "powers": {
+      "description": "Fixed phrases of common exponents, keyed by the exponent with an ASCII minus.",
+      "$ref": "#/$defs/pronunciationMap"
+    },
+    "indexWords": {
+      "description": "Subscripts read as a word instead of spelled letter by letter.",
+      "$ref": "#/$defs/pronunciationMap"
+    },
+    "abbreviations": {
+      "description": "Upright abbreviations such as JAZ in mathrm, read as written here instead of as units.",
+      "$ref": "#/$defs/pronunciationMap"
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["de", "en"],
+        "additionalProperties": false,
+        "properties": {
+          "de": {"$ref": "#/$defs/plural"},
+          "en": {"$ref": "#/$defs/plural"},
+          "powers": {
+            "type": "object",
+            "propertyNames": {"pattern": "^[0-9]+$"},
+            "additionalProperties": {"$ref": "#/$defs/bilingualPlural"}
+          }
+        }
+      }
+    },
+    "symbols": {
+      "description": "Whole-symbol overrides keyed by canonical TeX (no spaces, no \\mathrm, scripts braced); they win over composition at any position.",
+      "$ref": "#/$defs/pronunciationMap"
+    },
+    "forbidden": {
+      "type": "object",
+      "required": ["patterns", "characters"],
+      "additionalProperties": false,
+      "properties": {
+        "patterns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "pattern", "hint"],
+            "additionalProperties": false,
+            "properties": {
+              "id": {"type": "string"},
+              "pattern": {"type": "string", "description": "Case-insensitive regular expression applied outside $…$."},
+              "hint": {"type": "string"}
+            }
+          }
+        },
+        "characters": {"type": "string", "description": "Regular-expression character class of Unicode math letters that must sit inside $…$."}
+      }
+    }
+  }
+}

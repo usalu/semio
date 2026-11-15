@@ -23,10 +23,10 @@ export type StageResultV1 = Readonly<{ hit: boolean; digest: string; files: read
 /** 📊️ Hits, misses and bytes of one cache instance. */
 export type StageCacheStatsV1 = Readonly<{ hits: number; misses: number; restoredBytes: number; storedBytes: number }>;
 
-/** 🗃️ A content-addressed store of stage outputs. */
+/** 🗃️ A content-addressed store of stage outputs. `slot` names the unit a request belongs to without its content inputs (the module a stage builds): a newer key of one slot supersedes the older ones, which a sharing cache reclaims; the local store itself ignores it. */
 export interface StageCacheV1 {
   readonly root: string;
-  run(key: StageKeyV1, output: string, produce: (directory: string) => Promise<void>, signal?: AbortSignal): Promise<StageResultV1>;
+  run(key: StageKeyV1, output: string, produce: (directory: string) => Promise<void>, signal?: AbortSignal, slot?: string): Promise<StageResultV1>;
   stats(): StageCacheStatsV1;
 }
 

@@ -49,7 +49,7 @@ pub(super) fn check_limits(
 /// 🧩 Checks the extension field bags of the file, the catalog and the products.
 pub(super) fn check_extension_fields(document: &Vdi3805Snapshot, out: &mut Vec<CheckResult>) {
     {
-        let mut bags: Vec<(String, &std::collections::BTreeMap<String, String>)> = vec![
+        let mut bags: Vec<(String, &semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, String>)> = vec![
             ("catalog.file.extensions.fields".into(), &document.catalog.file.extensions.fields),
             ("catalog.extensions.fields".into(), &document.catalog.extensions.fields),
         ];

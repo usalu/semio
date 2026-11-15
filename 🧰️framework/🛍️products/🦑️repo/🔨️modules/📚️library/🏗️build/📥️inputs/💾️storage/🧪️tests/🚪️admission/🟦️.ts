@@ -41,10 +41,15 @@ test("graph writer admission reconciles exactly once before pressure-free work",
    if(row.interrupt.startsWith("cancel"))acknowledgeScriptInvocationSignalStopV1(original);
    expect(validate({kind:"full",usedBytes:row.physicalBytes,availableBytes:row.afterCensusAvailableBytes})).toBe(true);
    const oracle=db.query("select (?1>536870912 or ?2<1073741824) due").get(row.physicalBytes,row.afterCensusAvailableBytes)as{due:number};
-   expect(Boolean(oracle.due)||row.availableBytes<quota.policy.minimumAvailableBytes).toBe(row.maintenance===1||row.interrupt==="close");
-   expect(evictions).toBeLessThanOrEqual(row.physicalBytes>quota.policy.lowWaterBytes?1:0);if(row.interrupt==="none")expect(evictions).toBe(row.physicalBytes>quota.policy.lowWaterBytes?1:0);expect(censuses).toBe(row.censuses);expect(maintenance).toBe(row.maintenance);expect(opens).toBe(row.opens);expect(storeShared).toBe(0);expect(ledgerLive).toBe(0);expect(caught).toBe(row.interrupt!=="none");
+   expect(Boolean(oracle.due)||row.availableBytes<quota.definitions.DefaultPolicy.const.minimumAvailableBytes).toBe(row.maintenance===1||row.interrupt==="close");
+   expect(evictions).toBeLessThanOrEqual(row.physicalBytes>quota.definitions.DefaultPolicy.const.lowWaterBytes?1:0);if(row.interrupt==="none")expect(evictions).toBe(row.physicalBytes>quota.definitions.DefaultPolicy.const.lowWaterBytes?1:0);expect(censuses).toBe(row.censuses);expect(maintenance).toBe(row.maintenance);expect(opens).toBe(row.opens);expect(storeShared).toBe(0);expect(ledgerLive).toBe(0);expect(caught).toBe(row.interrupt!=="none");
    if(caught)expect(failure).toBe(primary);else expect(result).toBe(row.name);
    expect(bodyEntered).toBe(!["cancel","cancel-after-census","undefined","close"].includes(row.interrupt));if(row.maintenance&&row.opens===2){expect(events.indexOf("ledger-close")).toBeLessThan(events.indexOf("maintenance"));expect(events.indexOf("store-close")).toBeLessThan(events.indexOf("maintenance"));}if(row.interrupt==="none")expect(db.query("select used,dirty from usage").get()).toEqual({used:row.maintenance?12:row.physicalBytes,dirty:0});
+   if(row.interrupt==="none"){
+    evictions=0;maintenance=0;physical=row.availableBytes;db.exec("update usage set used="+row.usedBytes+",dirty="+Number(row.dirty));
+    await (run as unknown as(...rest:unknown[])=>Promise<unknown>)(workspace,original,control,async()=>row.name,undefined,{optionalCaches:false,shared:true});
+    expect(evictions,"shared custody of the generation builders reclaims a full quota too").toBe(row.physicalBytes>quota.definitions.DefaultPolicy.const.lowWaterBytes?1:0);expect(maintenance).toBe(0);
+   }
   });
  }}finally{db.close();}
 }),60000);

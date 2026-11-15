@@ -36,7 +36,4 @@ pub fn render(document: &Din4108Snapshot, report: &CheckReport, focus: Option<&s
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

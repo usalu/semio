@@ -1,0 +1,76 @@
+{
+  "title": "Adopt Path Matches Bootstrap Settle on macOS",
+  "emoji": "🧲",
+  "status": "closed",
+  "description": "Fix the adopt path of the shared-worktree fleet so a macOS machine that adopts a tar-extracted tree ends up like one that went through bootstrap-settle: (1) join --adopt and its --dry-run rename non-NFC names to NFC before planning, reusing the bootstrap-settle code; (2) a differing executable bit of an otherwise identical file follows the normal conflict rule instead of being adopted silently; (3) --plan of the provision script no longer extracts the bootstrap archive into an empty worktree (or the next real run settles a tree the script itself extracted). Tests first, next to the replica tests; update the module README. Evidence: tickets 26/11/09/SHARED-WORKTREE-FLEET-OVER-NFS (g1-m07-join.md).",
+  "summary": "join --adopt renames non-NFC names to NFC before planning through the shared normaliseNamesV1 (bootstrap), its dry run reads them as NFC and lists them; equal bytes with a differing executable bit are no longer adopted as identical but follow the stale/edit/conflict rule; the provision scripts no longer extract on --plan with an empty worktree and mark a tree they extracted (.cache/f/bootstrap-extract) so a later run settles it instead of adopting. Tests added first (vectors, Python oracle, adoption, CLI, provision shell); 410 tests pass over the replica, adopt, bootstrap, relocate and topology files through repo tools exec bun. Not done: the graph route repo run could not get a capacity grant, the PowerShell script was not executed (no pwsh). Details in summary.md.",
+  "goal": "🎯runningrepo",
+  "sessions": [
+    "d3696a82-e5dd-4bf8-b54f-aa0ed9e9f0e2"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-13 23:30:42",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Fix the adopt path of the shared-worktree fleet so a macOS machine that adopts a tar-extracted tree ends up like one that went through bootstrap-settle: (1) join --adopt and its --dry-run rename non-NFC names to NFC before planning, reusing the bootstrap-settle code; (2) a differing executable bit of an otherwise identical file follows the normal conflict rule instead of being adopted silently; (3) --plan of the provision script no longer extracts the bootstrap archive into an empty worktree (or the next real run settles a tree the script itself extracted). Tests first, next to the replica tests; update the module README. Evidence: tickets 26/11/09/SHARED-WORKTREE-FLEET-OVER-NFS (g1-m07-join.md).",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-13 23:55:34",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "5ececaa78b9265fd72b4f7e8f411afac3c9e1df1",
+      "summary": "join --adopt renames non-NFC names to NFC before planning through the shared normaliseNamesV1 (bootstrap), its dry run reads them as NFC and lists them; equal bytes with a differing executable bit are no longer adopted as identical but follow the stale/edit/conflict rule; the provision scripts no longer extract on --plan with an empty worktree and mark a tree they extracted (.cache/f/bootstrap-extract) so a later run settles it instead of adopting. Tests added first (vectors, Python oracle, adoption, CLI, provision shell); 410 tests pass over the replica, adopt, bootstrap, relocate and topology files through repo tools exec bun. Not done: the graph route repo run could not get a capacity grant, the PowerShell script was not executed (no pwsh). Details in summary.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree📃readme"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️⌨️command💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️📍️relocate🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧲️adopt💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧲️adopt🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧲️adopt🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧲️adopt🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🗺️topology🗃️🥾️provision📜🔵️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🥾️bootstrap💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧲️adopt🗃️📖️texts⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧲️adopt🗃️🧪️tests💻⌨️command"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧲️adopt🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🗺️topology🗃️🥾️provision📜🐚️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🗺️topology🗃️🧪️tests💻🟦️"
+        }
+      ]
+    }
+  ]
+}

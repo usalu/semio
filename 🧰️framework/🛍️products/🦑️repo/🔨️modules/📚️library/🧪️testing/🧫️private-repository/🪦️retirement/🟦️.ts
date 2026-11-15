@@ -9,7 +9,7 @@ import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "..
 import {type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {openNativePlatformStorageV1,retireNativePlatformStorageV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import {nativeImageServiceEntryV1,requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {nativeStorageRetirementPortV1,observeNativeStorageStateV1,recoverNativeStorageReservationV1} from "@semio-tech/process/artifacts/native-build/storage";
+import {nativeStorageRetirementPortV1,observeNativeStorageStateV1,recoverNativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 
 /** 🪦️ Retires one private partition image with the genuine protocol: its allocations are recovered and retired, its content removed, then the backing. */
 async function retirePrivatePartitionV1(options:any):Promise<void>{

@@ -9,8 +9,8 @@ import {readTopologyV1,serverPartsV1,workerPartsV1,mountPartsV1} from "../ðŸŸ¦ï¸
 const pwsh=Bun.which("pwsh"),here=import.meta.dirname,topologyDirectory=resolve(here,".."),repository=resolve(here,"../../../../../../.."),modules=resolve(here,"../../..");
 const named=(directory:string,suffix:string):string=>join(directory,readdirSync(directory).find(name=>name.endsWith(suffix))!);
 const provisionDirectory=named(topologyDirectory,"provision"),script=named(provisionDirectory,".ps1"),harness=named(here,".ps1");
-const moduleDirectory=resolve(here,"../.."),native=named(named(named(modules,"native"),"bootstrap"),".ps1"),topologyScript=named(topologyDirectory,"script.ts"),replicaScript=named(named(moduleDirectory,"replica"),"script.ts");
-const checkoutFiles=[native,topologyScript,replicaScript].map(file=>relative(repository,file));
+const moduleDirectory=resolve(here,"../.."),native=named(named(named(modules,"native"),"bootstrap"),".ps1"),topologyScript=named(topologyDirectory,"script.ts"),replicaScript=named(named(moduleDirectory,"replica"),"script.ts"),entryProgram=named(named(named(moduleDirectory,"replica"),"entry"),".mjs");
+const checkoutFiles=[native,topologyScript,replicaScript,entryProgram].map(file=>relative(repository,file));
 const smb=structuredClone(fixture.topology) as any;
 smb.groups[1].server={platform:"linux",protocol:"nfs",network:"10.2.0.0/16"};
 smb.groups[1].nfs.export="/srv/store-b";
@@ -20,14 +20,14 @@ function plansOf(topology:unknown,group:string):Record<string,string>{
  const plans:Record<string,string>={},context={platform:"win32",topology},add=(...args:string[]):void=>{try{plans[args.join(" ")]=runTopologyCommandV1(args,context);}catch{}};
  add("facts","--group",group,"--platform","windows","--shell","powershell");
  add("env","--group",group,"--shell","powershell");
- for(const part of[undefined,"target","compact-target"])add("worker-service","--group",group,"--platform","windows",...part?["--part",part]:[]);
+ for(const part of[undefined,"target","compact-target","mount-target","mount-definition"])add("worker-service","--group",group,"--platform","windows",...part?["--part",part]:[]);
  for(const role of["worker","server"])add("worker-service","--group",group,"--platform","windows","--part","compact-definition","--role",role);
  try{for(const part of Object.keys(serverPartsV1(readTopologyV1(topology),group)))add("server-plan","--group",group,"--part",part);}catch{}
  return plans;
 }
 const hex=(bytes:ArrayBuffer):string=>[...new Uint8Array(bytes)].map(byte=>byte.toString(16).padStart(2,"0")).join("");
 
-type Setup=Readonly<{group:string;origin?:string;flags?:Record<string,unknown>;topology?:unknown;checkout?:boolean;archive?:boolean;peerArchive?:boolean;corrupt?:"sha"|"count";mounted?:boolean;identity?:{originId:string;groupId:string};tokens?:string;running?:string[];users?:string[];registry?:Record<string,number>;keys?:string[];features?:Record<string,boolean>;windowsClient?:boolean;admin?:boolean;exit?:Record<string,number>;strayFile?:boolean;origins?:boolean;incomplete?:boolean;noWinget?:boolean;noTimeService?:boolean;timeStart?:string;timeStatus?:string;smbClient?:Record<string,number>;nativeOutput?:string}>;
+type Setup=Readonly<{gitOnly?:boolean;group:string;origin?:string;flags?:Record<string,unknown>;topology?:unknown;checkout?:boolean;archive?:boolean;peerArchive?:boolean;corrupt?:"sha"|"count";mounted?:boolean;identity?:{originId:string;groupId:string};tokens?:string;running?:string[];users?:string[];registry?:Record<string,number>;keys?:string[];features?:Record<string,boolean>;windowsClient?:boolean;admin?:boolean;exit?:Record<string,number>;strayFile?:boolean;origins?:boolean;incomplete?:boolean;noWinget?:boolean;noTimeService?:boolean;timeStart?:string;timeStatus?:string;smbClient?:Record<string,number>;nativeOutput?:string}>;
 type Outcome=Readonly<{error:string|null;calls:string[];tasks:Record<string,{Xml:string|null;User:string;Exe:string|null;Arguments:string|null}>;started:string[];registry:Record<string,number>;machine:Record<string,string>;rules:string[];nfsShares:string[];smbShares:string[];features:Record<string,boolean>;bootstrapped:boolean;launcher:boolean;user:Record<string,string>;exitCode:number;marker:boolean;out:string;root:string}>;
 
 function provision(setup:Setup):Outcome{
@@ -43,14 +43,17 @@ function provision(setup:Setup):Outcome{
  if(setup.checkout)for(const file of checkoutFiles){mkdirSync(join(worktree,file,".."),{recursive:true});writeFileSync(join(worktree,file),"");}
  if(setup.checkout&&!setup.incomplete){mkdirSync(join(worktree,".cache/f"),{recursive:true});writeFileSync(join(worktree,".cache/f/native-bootstrap.done"),"2026-11-10T00:00:00Z\n");}
  if(setup.strayFile)writeFileSync(join(worktree,"stray.txt"),"x");
+ if(setup.gitOnly)mkdirSync(join(worktree,".git"),{recursive:true});
  if(setup.identity){mkdirSync(join(worktree,".cache/f"),{recursive:true});writeFileSync(join(worktree,".cache/f/machine.json"),JSON.stringify(setup.identity));}
  if(setup.origins)mkdirSync(join(root,"store/v1/origins/someone"),{recursive:true});
  if(setup.tokens!==undefined){mkdirSync(join(root,"C/ProgramData/semio"),{recursive:true});writeFileSync(join(root,"C/ProgramData/semio/remote-cache.env"),setup.tokens);}
  for(const directory of[setup.archive?"store":undefined,setup.peerArchive?"peer":undefined]){
   if(directory===undefined)continue;
-  const tar=join(root,directory,"v1/bootstrap/worktree.tar"),made=Bun.spawnSync(["tar","-cf",tar,"-C",repository,...checkoutFiles]),listing=Bun.spawnSync(["tar","-tf",tar]).stdout.toString().trim().split("\n").length;
+  const staged=join(root,directory,"v1/bootstrap/staged.tar"),made=Bun.spawnSync(["tar","-cf",staged,"-C",repository,...checkoutFiles]),listing=Bun.spawnSync(["tar","-tf",staged]).stdout.toString().trim().split("\n").length;
   expect(made.exitCode).toBe(0);
-  writeFileSync(join(root,directory,"v1/bootstrap/manifest.json"),JSON.stringify({files:listing+(setup.corrupt==="count"?1:0),sha256:setup.corrupt==="sha"?"0".repeat(64):hex(new Bun.CryptoHasher("sha256").update(readFileSync(tar)).digest().buffer as ArrayBuffer)}));
+  const digest=hex(new Bun.CryptoHasher("sha256").update(readFileSync(staged)).digest().buffer as ArrayBuffer),archive=`worktree-${digest.slice(0,16)}.tar`;
+  renameSync(staged,join(root,directory,"v1/bootstrap",archive));
+  writeFileSync(join(root,directory,"v1/bootstrap/manifest.json"),JSON.stringify({files:listing+(setup.corrupt==="count"?1:0),sha256:setup.corrupt==="sha"?"0".repeat(64):digest,archive}));
  }
  const arguments_:Record<string,unknown>={GroupId:setup.group,OriginId:setup.origin??`${setup.group}-m01`,...setup.flags};
  if(arguments_["ArchivePath"]==="peer")arguments_["ArchivePath"]=join(root,"peer/v1/bootstrap");
@@ -58,7 +61,7 @@ function provision(setup:Setup):Outcome{
  writeFileSync(caseFile,JSON.stringify({root,script:copy,arguments:arguments_,plans:plansOf(setup.topology??fixture.topology,setup.group),admin:setup.admin??true,mounted:setup.mounted??false,repo:setup.checkout??false,registry:setup.registry??{},keys:setup.keys??[],features:setup.features??{},users:setup.users??[],running:setup.running??[],windowsClient:setup.windowsClient??false,exit:setup.exit??{},noWinget:setup.noWinget??false,noTimeService:setup.noTimeService??false,timeStart:setup.timeStart,timeStatus:setup.timeStatus,smbClient:setup.smbClient,nativeOutput:setup.nativeOutput}));
  const run=Bun.spawnSync([pwsh!,"-NoProfile","-File",harness,caseFile],{env:{...process.env,PATH:`${process.env["PATH"]}`}}),out=run.stdout.toString(),marker=out.indexOf("@@RESULT@@ ");
  if(marker<0)throw Error(`harness failed\n${out}\n${run.stderr.toString()}`);
- const result=JSON.parse(out.slice(marker+11)),leaves=new Map([[topologyDirectory.split("/").at(-1)!,"topology"],[replicaScript.split("/").at(-2)!,"replica"]]);
+ const result=JSON.parse(out.slice(marker+11)),leaves=new Map([[topologyDirectory.split("/").at(-1)!,"topology"],[replicaScript.split("/").at(-2)!,"replica"],[entryProgram.split("/").at(-2)!,"entry"]]);
  return {...result,marker:existsSync(join(root,"C/semio/.cache/f/native-bootstrap.done")),calls:result.calls.map((call:string)=>call.replace(/^repo \[[^\]]*\/([^\]/]+)\]/u,(_,leaf:string)=>`repo ${leaves.get(leaf)}`)),out:out.slice(0,marker),root};
 }
 const forget=(outcome:Outcome):void=>rmSync(outcome.root,{recursive:true,force:true});
@@ -110,7 +113,7 @@ const inOrder=(outcome:Outcome,...starts:string[]):void=>{
  let last=-1;
  for(const start of starts){const index=outcome.calls.findIndex((call,position)=>position>last&&call.startsWith(start));expect(index,`${start} after ${last}\n${outcome.calls.join("\n")}`).toBeGreaterThan(last);last=index;}
 };
-const task=(read:ReturnType<typeof readTopologyV1>,id:string,part:string,server=false):string=>workerPartsV1(read,id,"windows",server)[part]!;
+const task=(read:ReturnType<typeof readTopologyV1>,id:string,part:string,server=false):string=>workerPartsV1(read,id,"windows",server)[part]!.replaceAll("__WORKER_HOME__","C:\\Users\\op");
 const refused=(setup:Setup,message:string,calls:string[]=[]):Outcome=>{const outcome=provision(setup);expect(outcome.error).toContain(message);expect(outcome.calls).toEqual(calls);return outcome;};
 const read=readTopologyV1(fixture.topology),readSmb=readTopologyV1(smb);
 const UNC_A="\\\\nfs.a1.example.test\\srv\\store-a";
@@ -122,7 +125,7 @@ const WORKER=(group:string,origin:string,cacheLines:string[],mountLines:string[]
  `icacls C:\\semio /grant ${user}:(OI)(CI)M`,...cacheLines,...mountLines,
  `repo topology facts --group ${group} --platform windows --shell powershell`,
  ...tail,
- `repo topology env --group ${group} --shell powershell`,
+ `repo entry install --worktree C:\\semio --store S:\\ --take-over`,
  `repo topology worker-service --group ${group} --platform windows --part target`,
  `repo topology worker-service --group ${group} --platform windows`,
  `Register-ScheduledTask -Force True -TaskName semio-fleet-replica -User ${user} -Xml`,
@@ -134,22 +137,23 @@ const WORKER=(group:string,origin:string,cacheLines:string[],mountLines:string[]
 run("a first machine of a Linux-served group sets long paths, mounts over Client for NFS, registers the tasks, seeds and starts the replica",()=>{
  const outcome=provision({group:"a1",flags:{FirstMachine:true},checkout:true});
  expect(outcome.error).toBeNull();
- const mount=`mount.exe -o anon,nolock,mtype=hard ${UNC_A} ${drive}`;
+ const mount=`mount.exe -o anon -o nolock -o mtype=hard ${UNC_A} ${drive}`;
  expect(outcome.calls).toEqual([
   ...WORKER("a1","a1-m01",NFS_CACHE,[
    "Enable-WindowsOptionalFeature -All True -FeatureName ServicesForNFS-ClientOnly -NoRestart True -Online True",
    "Enable-WindowsOptionalFeature -All True -FeatureName ClientForNFS-Infrastructure -NoRestart True -Online True",mount
-  ],[`Register-ScheduledTask -Force True -TaskName semio-fleet-store-mount -User ${user} -Action ${mount} -Trigger AtLogOn=True User=${user}`]),
+  ],["repo topology worker-service --group a1 --platform windows --part mount-target","repo topology worker-service --group a1 --platform windows --part mount-definition",`Register-ScheduledTask -Force True -TaskName semio-fleet-store-mount -User ${user} -Xml`]),
   "repo replica seed --group a1 --origin a1-m01 --store S:\\",
   "Start-ScheduledTask semio-fleet-store-mount","Start-ScheduledTask semio-fleet-replica"
  ]);
  expect(outcome.registry).toEqual({LongPathsEnabled:1,RemoteWriteCache:0,FileAttributeCache:0});
  expect(outcome.features).toEqual({"ServicesForNFS-ClientOnly":true,"ClientForNFS-Infrastructure":true});
- expect({...outcome.machine,Path:undefined}).toEqual({...(fixture.environments as Record<string,Record<string,string>>)["a1"],Path:undefined});
+ expect({...outcome.machine,Path:undefined}).toEqual({Path:undefined});
  expect(outcome.tasks["semio-fleet-replica"]).toMatchObject({Xml:task(read,"a1","definition"),User:user});
  expect(outcome.tasks["semio-fleet-compact"]!.Xml).toBe(task(read,"a1","compact-definition"));
  expect(outcome.tasks["semio-fleet-compact"]!.Xml).not.toContain("--collect-blobs");
- expect(outcome.tasks["semio-fleet-store-mount"]).toMatchObject({Exe:"mount.exe",Arguments:`-o anon,nolock,mtype=hard ${UNC_A} ${drive}`});
+ expect(outcome.tasks["semio-fleet-store-mount"]).toMatchObject({Xml:task(read,"a1","mount-definition"),User:user});
+ expect(outcome.tasks["semio-fleet-store-mount"]!.Xml).toContain(`<Arguments>/d /c if not exist ${drive}\\ mount.exe -o anon -o nolock -o mtype=hard ${UNC_A} ${drive}</Arguments>`);
  expect(outcome.started).toEqual(["semio-fleet-store-mount","semio-fleet-replica"]);
  expect(outcome.out).toContain("done: a1-m01 is a member of group a1");
  forget(outcome);
@@ -198,7 +202,8 @@ run("a worker of an SMB group mounts with net use, registers a net use logon tas
  expect(outcome.error).toBeNull();
  const remote="\\\\nfs.c3.example.test\\store-c";
  expect(outcome.calls).toContain(`net.exe use ${drive} ${remote} /persistent:yes`);
- expect(outcome.tasks["semio-fleet-store-mount"]).toMatchObject({Exe:"net.exe",Arguments:`use ${drive} ${remote} /persistent:yes`});
+ expect(outcome.tasks["semio-fleet-store-mount"]).toMatchObject({Xml:task(readSmb,"c3","mount-definition"),User:user});
+ expect(outcome.tasks["semio-fleet-store-mount"]!.Xml).toContain(`<Arguments>/d /c if not exist ${drive}\\ net.exe use ${drive} ${remote} /persistent:yes</Arguments>`);
  fresh(outcome,/^Enable-WindowsOptionalFeature/u,/^mount\.exe/u);
  forget(outcome);
  const failed=provision({group:"c3",topology:smb,archive:true,exit:{"net.exe":2}});
@@ -271,14 +276,24 @@ run("the server refuses a platform that differs from the topology, a missing arc
  forget(client);
 });
 
+run("the script adopts the account's own repository at C:\\semio, plans without changing anything, relocates an installed machine with its origin id, and the Windows worktree template stays the fixed short root",()=>{
+ const text=readFileSync(script,"utf8");
+ expect(read.worktree.windows).toBe("C:\\semio");
+ for(const part of["[switch]$Plan","[switch]$Force","[string]$RelocateFrom","Get-InstalledWorktree","'join', '--adopt', '--dry-run'","'relocate', '--dry-run'","'--phase', 'prepare'","'--phase', 'move'","'--phase', 'finish', '--wait', '120'","Stop-ScheduledTask","never change and are never reused"])expect(text).toContain(part);
+ const order=["step 5: standalone repo launcher","if ($Plan) {","Say 'step 6: store mount task'","} elseif ($relocate) {","} elseif ($adopt) {","--phase', 'finish'"].map(part=>text.indexOf(part));
+ expect(order.every(index=>index>=0)).toBe(true);
+ expect(order).toEqual([...order].sort((left,right)=>left-right));
+});
+
 run("the checks before the first change: elevation, the account, the group, the worktree and the first-machine rules",()=>{
  forget(refused({group:"a1",admin:false},"Run this script from an elevated PowerShell"));
  forget(refused({group:"a1",flags:{User:"DOM\\other"}},"-User must be the account of this elevated shell (DOM\\op)"));
  forget(refused({group:"zz"},"The topology has no worktree for windows or no group zz"));
  const stray=provision({group:"a1",strayFile:true,mounted:true,registry:{LongPathsEnabled:1},features:{"ServicesForNFS-ClientOnly":true,"ClientForNFS-Infrastructure":true}});
- expect(stray.error).toContain("neither empty nor a checkout");
+ expect(stray.error).toContain("holds files but no fleet module");
  fresh(stray,/^repo/u,/^Register/u);
  forget(stray);
+ expect(provision({group:"a1",gitOnly:true,archive:true,corrupt:"sha"}).error).toContain("never matched its manifest.json");
  expect(provision({group:"a1",flags:{FirstMachine:true}}).error).toContain("-FirstMachine needs a complete checkout");
  expect(provision({group:"a1",flags:{FirstMachine:true},checkout:true,origins:true}).error).toContain("The store already has origins");
  expect(provision({group:"a1"}).error).toContain("No bootstrap archive in S:\\v1\\bootstrap");

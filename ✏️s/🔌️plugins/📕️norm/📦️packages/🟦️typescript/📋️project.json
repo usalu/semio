@@ -19,6 +19,27 @@
         "command": "repo ./📜️script.ts wire-twins",
         "forwardAllArgs": true
       }
+    },
+    "test-browser-journey": {
+      "executor": "repo:script",
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts browser-journey",
+        "forwardAllArgs": true
+      }
+    },
+    "browser-acceptance": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts browser-acceptance",
+        "forwardAllArgs": true
+      },
+      "inputs": ["default", "^default", "testEnv"],
+      "metadata": { "semio": { "execution": { "version": 1, "kind": "source" } } }
     }
   }
 }

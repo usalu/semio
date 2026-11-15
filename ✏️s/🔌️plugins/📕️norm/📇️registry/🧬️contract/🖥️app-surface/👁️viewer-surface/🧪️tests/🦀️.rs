@@ -133,6 +133,7 @@ fn contains_selected(value: &serde_json::Value, label: &str) -> bool {
 
 #[test]
 fn readonly_windows_render_the_same_picked_owner_without_edit_actions() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     use semio_s_plugin_norm_structural_scene::{Appearance, Axis, AxisScale, DataColumn, DataTable, Diagram2d, EntityKind, EntityRef, Frame, Geometry, Layer, MaterialRole, PickPolicy, SceneEntity, SolidGeometry, SolidShape, TickRule};
     let report = report();
     let mut scene = scene(&report, &ViewLane::default());

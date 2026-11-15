@@ -1,0 +1,200 @@
+Reading the project graph slice (328 s): facts 196608 of 292176.
+Reading the project graph slice (330 s): facts 204800 of 292176.
+Reading the project graph slice (332 s): facts 233472 of 292176.
+Reading the project graph slice (334 s): facts 292176 of 292176.
+Reading the project graph slice (336 s): verification 2 of 1020.
+[repo] still working after 1730 s; last phase started: door.script
+Reading the project graph slice (338 s): verification 223 of 1020.
+Reading the project graph slice (340 s): parts 7679 of 14268.
+Reading the project graph slice (342 s): rederivation 256 of 256.
+Reading the project graph slice (344 s): flush 1 of 1.
+Reading the project graph slice (346 s): flush 1 of 1.
+Reading the project graph slice (348 s): flush 1 of 1.
+Reading the project graph slice (350 s): flush 1 of 1.
+Reading the project graph slice (352 s): owners 0 of 614; running (name, kind, seconds, rows): @semio-tech/framework-async-rs (language:cargo, 0, 0).
+Reading the project graph slice (354 s): owners 0 of 614; running (name, kind, seconds, rows): @semio-tech/framework-async-rs (language:cargo, 0, 0).
+Reading the project graph slice (356 s): owners 1 of 614.
+Reading the project graph slice (358 s): owners 2 of 614.
+Reading the project graph slice (360 s): owners 6 of 614.
+Reading the project graph slice (362 s): owners 11 of 614.
+Reading the project graph slice (364 s): owners 17 of 614.
+Reading the project graph slice (366 s): owners 20 of 614; running (name, kind, seconds, rows): @semio-tech/framework-artifact-reference-rs (language:cargo, 0, 0).
+[repo] still working after 1760 s; last phase started: door.script
+Reading the project graph slice (368 s): owners 24 of 614.
+Reading the project graph slice (370 s): owners 27 of 614; running (name, kind, seconds, rows): @semio-tech/framework-job-rs (language:cargo, 1, 0), @semio-tech/framework-job-fault-publication-rs (language:rust, 0, 0).
+Reading the project graph slice (372 s): owners 32 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os (project, 1, 0).
+Reading the project graph slice (374 s): owners 32 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os (project, 1, 0).
+Reading the project graph slice (376 s): owners 33 of 614.
+Reading the project graph slice (378 s): owners 33 of 614.
+Reading the project graph slice (380 s): owners 33 of 614.
+Reading the project graph slice (382 s): owners 33 of 614.
+Reading the project graph slice (384 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 6, 0); waiting for memory headroom (517 of 953 MB reserved).
+Reading the project graph slice (386 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 6, 0); waiting for memory headroom (517 of 953 MB reserved).
+Reading the project graph slice (388 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 11, 0); waiting for memory headroom (908 of 999 MB reserved).
+Reading the project graph slice (390 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 11, 0); waiting for memory headroom (908 of 999 MB reserved).
+Reading the project graph slice (392 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 11, 0); waiting for memory headroom (908 of 999 MB reserved).
+Reading the project graph slice (394 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 16, 0); waiting for memory headroom (908 of 931 MB reserved).
+Reading the project graph slice (396 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 16, 0); waiting for memory headroom (908 of 931 MB reserved).
+[repo] still working after 1790 s; last phase started: door.script
+Reading the project graph slice (398 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 21, 0); waiting for memory headroom (1698 of 1043 MB reserved).
+Reading the project graph slice (400 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 21, 0); waiting for memory headroom (1698 of 1043 MB reserved).
+Reading the project graph slice (402 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 21, 0); waiting for memory headroom (1698 of 1043 MB reserved).
+Reading the project graph slice (404 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 21, 0); waiting for memory headroom (1698 of 1043 MB reserved).
+Reading the project graph slice (406 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 29, 0); waiting for memory headroom (1698 of 1615 MB reserved).
+Reading the project graph slice (408 s): owners 33 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-kernel (language:cargo, 29, 0); waiting for memory headroom (1698 of 1615 MB reserved).
+Reading the project graph slice (410 s): owners 34 of 614.
+Reading the project graph slice (412 s): owners 37 of 614.
+Reading the project graph slice (414 s): owners 45 of 614.
+Reading the project graph slice (416 s): owners 46 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 2, 0), @semio-tech/cargo-workspaces (language:typescript, 1, 0).
+Reading the project graph slice (418 s): owners 46 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 2, 0), @semio-tech/cargo-workspaces (language:typescript, 1, 0).
+Reading the project graph slice (420 s): owners 47 of 614.
+Reading the project graph slice (422 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 7, 0).
+Reading the project graph slice (424 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 7, 0).
+Reading the project graph slice (426 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 12, 0).
+[repo] still working after 1820 s; last phase started: door.script
+Reading the project graph slice (428 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 12, 0).
+Reading the project graph slice (430 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 12, 0).
+Reading the project graph slice (432 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 17, 0).
+Reading the project graph slice (434 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 17, 0).
+Reading the project graph slice (436 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 22, 0).
+Reading the project graph slice (438 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 22, 0).
+Reading the project graph slice (440 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 22, 0).
+Reading the project graph slice (442 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 27, 0).
+Reading the project graph slice (444 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 27, 0).
+Reading the project graph slice (446 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 32, 0).
+Reading the project graph slice (448 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 32, 0).
+Reading the project graph slice (451 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 32, 0).
+Reading the project graph slice (453 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 37, 0).
+Reading the project graph slice (455 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 37, 0).
+Reading the project graph slice (457 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 42, 0).
+[repo] still working after 1850 s; last phase started: door.script
+Reading the project graph slice (459 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 42, 0).
+Reading the project graph slice (461 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 42, 0).
+Reading the project graph slice (463 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 47, 0).
+Reading the project graph slice (465 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 47, 0).
+Reading the project graph slice (467 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 52, 0).
+Reading the project graph slice (469 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 52, 0).
+Reading the project graph slice (471 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 52, 0).
+Reading the project graph slice (473 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 57, 0).
+Reading the project graph slice (475 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 57, 0).
+Reading the project graph slice (477 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 62, 0).
+Reading the project graph slice (479 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 62, 0).
+Reading the project graph slice (481 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 62, 0).
+Reading the project graph slice (483 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 67, 0).
+Reading the project graph slice (485 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 67, 0).
+Reading the project graph slice (487 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 72, 0).
+[repo] still working after 1880 s; last phase started: door.script
+Reading the project graph slice (489 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 72, 0).
+Reading the project graph slice (491 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 72, 0).
+Reading the project graph slice (493 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 77, 0).
+Reading the project graph slice (495 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 77, 0).
+Reading the project graph slice (497 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 82, 0).
+Reading the project graph slice (499 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 82, 0).
+Reading the project graph slice (501 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 82, 0).
+Reading the project graph slice (503 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 87, 0).
+Reading the project graph slice (505 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 87, 0).
+Reading the project graph slice (507 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 92, 0).
+Reading the project graph slice (509 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 92, 0).
+Reading the project graph slice (511 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 92, 0).
+Reading the project graph slice (513 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 97, 0).
+Reading the project graph slice (515 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 97, 0).
+Reading the project graph slice (517 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 102, 0).
+[repo] still working after 1910 s; last phase started: door.script
+Reading the project graph slice (519 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 102, 0).
+Reading the project graph slice (521 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 102, 0).
+Reading the project graph slice (523 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 107, 0).
+Reading the project graph slice (525 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 107, 0).
+Reading the project graph slice (527 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 112, 0).
+Reading the project graph slice (529 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 112, 0).
+Reading the project graph slice (531 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 117, 0).
+Reading the project graph slice (533 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 117, 0).
+Reading the project graph slice (535 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 117, 0).
+Reading the project graph slice (537 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 122, 19).
+Reading the project graph slice (539 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 122, 19).
+Reading the project graph slice (541 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 122, 19).
+Reading the project graph slice (543 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 127, 103).
+Reading the project graph slice (545 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 127, 103).
+[repo] still working after 1940 s; last phase started: door.script
+Reading the project graph slice (547 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 132, 351).
+Reading the project graph slice (549 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 132, 351).
+Reading the project graph slice (551 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 132, 351).
+Reading the project graph slice (553 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 137, 1080).
+Reading the project graph slice (555 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 137, 1080).
+Reading the project graph slice (557 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 142, 1647).
+Reading the project graph slice (559 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 142, 1647).
+Reading the project graph slice (561 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 142, 1647).
+Reading the project graph slice (563 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 147, 2797).
+Reading the project graph slice (565 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 147, 2797).
+Reading the project graph slice (567 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 152, 3634).
+Reading the project graph slice (569 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 152, 3634).
+Reading the project graph slice (571 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 152, 3634).
+Reading the project graph slice (573 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 157, 3634).
+Reading the project graph slice (575 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 157, 3634).
+[repo] still working after 1970 s; last phase started: door.script
+Reading the project graph slice (577 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 162, 3634).
+Reading the project graph slice (579 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 162, 3634).
+Reading the project graph slice (581 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 162, 3634).
+Reading the project graph slice (583 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 167, 3634).
+Reading the project graph slice (585 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 167, 3634).
+Reading the project graph slice (587 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 172, 3634).
+Reading the project graph slice (589 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 172, 3634).
+Reading the project graph slice (591 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 172, 3634).
+Reading the project graph slice (593 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 178, 3634).
+Reading the project graph slice (595 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 178, 3634).
+Reading the project graph slice (597 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 183, 3634).
+Reading the project graph slice (599 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 183, 3634).
+Reading the project graph slice (601 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 183, 3634).
+Reading the project graph slice (603 s): owners 47 of 614; running (name, kind, seconds, rows): @semio-tech/framework-os-dev (project, 183, 3634).
+Reading the project graph slice (605 s): owners 47 of 614; running (name, kind, seconds, rows): .
+[repo] still working after 2000 s; last phase started: door.script
+Reading the project graph slice (607 s): owners 48 of 614.
+Reading the project graph slice (609 s): owners 48 of 614.
+Reading the project graph slice (611 s): owners 48 of 614.
+Reading the project graph slice (613 s): owners 48 of 614.
+Reading the project graph slice (615 s): owners 48 of 614.
+Reading the project graph slice (617 s): owners 48 of 614.
+Reading the project graph slice (619 s): owners 48 of 614.
+Reading the project graph slice (621 s): owners 48 of 614.
+Reading the project graph slice (623 s): owners 48 of 614.
+Reading the project graph slice (625 s): owners 48 of 614.
+Reading the project graph slice (627 s): owners 48 of 614.
+Reading the project graph slice (629 s): owners 48 of 614.
+Reading the project graph slice (631 s): owners 48 of 614.
+Reading the project graph slice (633 s): owners 48 of 614.
+Reading the project graph slice (635 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 0, 0).
+[repo] still working after 2030 s; last phase started: door.script
+Reading the project graph slice (637 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 0, 0).
+Reading the project graph slice (639 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 5, 0); waiting for memory headroom (1698 of 446 MB reserved).
+Reading the project graph slice (641 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 5, 0); waiting for memory headroom (1698 of 446 MB reserved).
+Reading the project graph slice (643 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 5, 0); waiting for memory headroom (1698 of 446 MB reserved).
+Reading the project graph slice (645 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 11, 0); waiting for memory headroom (1698 of 373 MB reserved).
+Reading the project graph slice (647 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 11, 0); waiting for memory headroom (1698 of 373 MB reserved).
+Reading the project graph slice (649 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 11, 0); waiting for memory headroom (1698 of 373 MB reserved).
+Reading the project graph slice (651 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 16, 0); waiting for memory headroom (1698 of 502 MB reserved).
+Reading the project graph slice (653 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 16, 0); waiting for memory headroom (1698 of 502 MB reserved).
+Reading the project graph slice (655 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 21, 0); waiting for memory headroom (1698 of 514 MB reserved).
+Reading the project graph slice (657 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 21, 0); waiting for memory headroom (1698 of 514 MB reserved).
+Reading the project graph slice (659 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 21, 0); waiting for memory headroom (1698 of 514 MB reserved).
+Reading the project graph slice (661 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 27, 0); waiting for memory headroom (1698 of 586 MB reserved).
+Reading the project graph slice (663 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 27, 0); waiting for memory headroom (1698 of 586 MB reserved).
+Reading the project graph slice (665 s): owners 48 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 30, 0), @semio-tech/framework-pack-error-rs (language:cargo, 0, 0).
+[repo] still working after 2060 s; last phase started: door.script
+Reading the project graph slice (667 s): owners 49 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 32, 0), @semio-tech/framework-pack-record-rs (language:rust, 1, 0); waiting for memory headroom (264 of 407 MB reserved).
+Reading the project graph slice (669 s): owners 49 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 32, 0), @semio-tech/framework-pack-record-rs (language:rust, 1, 0); waiting for memory headroom (264 of 407 MB reserved).
+Reading the project graph slice (671 s): owners 50 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 37, 0), @semio-tech/framework-pack-rs (language:cargo, 5, 0); waiting for memory headroom (1698 of 349 MB reserved).
+Reading the project graph slice (673 s): owners 51 of 614.
+Reading the project graph slice (675 s): owners 51 of 614.
+Reading the project graph slice (677 s): owners 56 of 614.
+Reading the project graph slice (679 s): owners 56 of 614.
+Reading the project graph slice (681 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 47, 0), @semio-tech/framework-process (project, 4, 0); waiting for memory headroom (1508 of 481 MB reserved).
+Reading the project graph slice (683 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 47, 0), @semio-tech/framework-process (project, 4, 0); waiting for memory headroom (1508 of 481 MB reserved).
+Reading the project graph slice (685 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 8, 0).
+Reading the project graph slice (687 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 9, 0); waiting for memory headroom (3460 of -865 MB reserved).
+Reading the project graph slice (689 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 11, 0), @semio-tech/framework-replication-rs (language:cargo, 0, 0).
+Reading the project graph slice (691 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 15, 0), @semio-tech/framework-replication-rs (language:cargo, 4, 0); waiting for memory headroom (4198 of -4066 MB reserved).
+Reading the project graph slice (693 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 15, 0), @semio-tech/framework-replication-rs (language:cargo, 4, 0); waiting for memory headroom (4198 of -4066 MB reserved).
+Reading the project graph slice (695 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 15, 0), @semio-tech/framework-replication-rs (language:cargo, 4, 0); waiting for memory headroom (4198 of -4066 MB reserved).
+[repo] still working after 2090 s; last phase started: door.script
+The graph service could not answer (lost); look at `repo service host status` and try again
+end 2026-11-15T00:38:33Z
+native_rc=1

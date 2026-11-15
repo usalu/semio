@@ -21,7 +21,7 @@
   },
   "namedInputs": {
     "default": [
-      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✨️derive/**/*",
+      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🪪️graph-state/📜️script.ts\" digest-generated \"🧰️framework/🔨️modules/🧬️schema/🤖️generated\"" }, "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✨️derive/**/*",
       "sharedGlobals"
     ],
     "testEnv": [

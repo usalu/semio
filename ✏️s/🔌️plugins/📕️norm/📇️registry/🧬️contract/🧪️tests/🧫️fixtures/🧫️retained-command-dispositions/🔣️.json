@@ -192,6 +192,9 @@
   },
   "live": {
     "apps": [
+      "din4108",
+      "din16798",
+      "din18599",
       "en1990",
       "en1991",
       "en1992",
@@ -201,7 +204,9 @@
       "en1996",
       "en1997",
       "en1998",
-      "en1999"
+      "en1999",
+      "iso16757",
+      "vdi3805"
     ],
     "routes": [
       {
@@ -290,9 +295,9 @@
       }
     ],
     "expected": {
-      "apps": 10,
+      "apps": 15,
       "routesPerApp": 16,
-      "identities": 160
+      "identities": 240
     }
   }
 }

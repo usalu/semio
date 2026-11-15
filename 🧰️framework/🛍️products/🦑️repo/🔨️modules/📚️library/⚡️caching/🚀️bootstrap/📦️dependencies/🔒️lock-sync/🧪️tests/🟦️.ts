@@ -56,7 +56,7 @@ test("the preflight refuses every selected stale scope by directory and passes t
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 test("every install path asks the lock check before it queues, installs or reports a frozen failure",()=>{
- const runtime=readFileSync(join(here,"..","..","..","..","..","🏗️build","⌨️command","⚙️runtime","🟦️.ts"),"utf8"),storage=readFileSync(join(here,"..","..","💾️storage","🟦️.ts"),"utf8");
+ const runtime=readFileSync(join(here,"..","..","..","..","..","🏗️build","⌨️command","🏃️task","🤝️shared","🟦️.ts"),"utf8"),storage=readFileSync(join(here,"..","..","💾️storage","🟦️.ts"),"utf8");
  const guard=runtime.indexOf('buildOperationRequiresV1(command)==="dependencies"');
  expect(guard).toBeGreaterThan(0);
  expect(runtime.indexOf("requireJavascriptLocksInSyncV1(root,undefined,process.env)",guard)).toBeGreaterThan(guard);

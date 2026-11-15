@@ -1,0 +1,288 @@
+== try 7 stalled 2026-11-15T06:46:36Z, last progress: [semio] workspace:setup|waiting for the fleet: 0 of 1203|restored from|
+-- last 60 lines of /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b814083e21d9.log
+graph: attached to the graph build of another command on this machine (generation 232, 596 s), no second build is started
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"lease-sweep:claims","mode":"exclusive","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"lease-sweep:resources","mode":"exclusive","elapsedMs":19}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"lease-sweep:nested","mode":"exclusive","elapsedMs":58}}
+[repository:command] still running after 2820 s
+[repository:command] still running after 2830 s
+[repo] still working after 2840 s; last phase started: source.served
+[repository:command] still running after 2841 s
+[repository:command] still running after 2851 s
+graph: attached to the graph build of another command on this machine (generation 232, 635 s), no second build is started
+[repository:command] still running after 2861 s
+[repo] still working after 2870 s; last phase started: source.served
+[repository:command] still running after 2871 s
+[repository:command] still running after 2881 s
+graph: attached to the graph build of another command on this machine (generation 232, 666 s), no second build is started
+[repository:command] still running after 2891 s
+[repo] still working after 2900 s; last phase started: source.served
+[repository:command] still running after 2901 s
+[repository:command] still running after 2911 s
+[repository:command] still running after 2921 s
+graph: attached to the graph build of another command on this machine (generation 232, 704 s), no second build is started
+[repo] still working after 2930 s; last phase started: source.served
+[repository:command] still running after 2931 s
+[repository:command] still running after 2941 s
+[repository:command] still running after 2951 s
+[repo] still working after 2960 s; last phase started: source.served
+graph: attached to the graph build of another command on this machine (generation 232, 737 s), no second build is started
+[repository:command] still running after 2961 s
+[repository:command] still running after 2971 s
+[repository:command] still running after 2981 s
+[repo] still working after 2990 s; last phase started: source.served
+graph: attached to the graph build of another command on this machine (generation 232, 771 s), no second build is started
+[repository:command] still running after 2991 s
+[repository:command] still running after 3001 s
+[repository:command] still running after 3011 s
+[repo] still working after 3020 s; last phase started: source.served
+[repository:command] still running after 3021 s
+graph: attached to the graph build of another command on this machine (generation 232, 807 s), no second build is started
+[repository:command] still running after 3031 s
+[repository:command] still running after 3041 s
+[repo] still working after 3050 s; last phase started: source.served
+graph: attached to the graph build of another command on this machine (generation 232, 831 s), no second build is started
+[repository:command] still running after 3051 s
+[repository:command] still running after 3061 s
+[repository:command] still running after 3071 s
+[repo] still working after 3080 s; last phase started: source.served
+[repository:command] still running after 3081 s
+[repository:command] still running after 3091 s
+[repository:command] still running after 3101 s
+graph: attached to the graph build of another command on this machine (generation 232, 884 s), no second build is started
+[repo] still working after 3110 s; last phase started: source.served
+[repository:command] still running after 3111 s
+[repository:command] still running after 3121 s
+[repository:command] still running after 3131 s
+[repo] still working after 3140 s; last phase started: source.served
+[repository:command] still running after 3141 s
+[repository:command] still running after 3151 s
+[repository:command] still running after 3161 s
+[repo] still working after 3170 s; last phase started: source.served
+[repository:command] still running after 3171 s
+-- last 60 lines of /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-d7505b87cee1.log
+[repo] still working after 680 s; last phase started: source.served
+[repository:command] still running after 680 s
+[repository:command] still running after 690 s
+graph: the build input closure f856acaee4f8... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f856acaee4f865f329fcb72b982ccaf1852e9a3cecf24bbe4ce9625902103b9c named by 1 projects: re-derived
+[repository:command] still running after 700 s
+[repo] still working after 710 s; last phase started: source.served
+[repository:command] still running after 710 s
+graph: the build input closure f858fba30291... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f858fba302913385f972baa73e7f1c7751f8870303776c7952ba565d3c16d0e4 named by 1 projects: re-derived
+[repository:command] still running after 720 s
+[repository:command] still running after 730 s
+[repo] still working after 740 s; last phase started: source.served
+[repository:command] still running after 740 s
+[repository:command] still running after 750 s
+graph: the build input closure f85b8278342f... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f85b8278342f8a20729f1ae39687e9dd974740fffdf738cb54825b39ed9ac036 named by 1 projects: re-derived
+[repository:command] still running after 760 s
+[repo] still working after 770 s; last phase started: source.served
+[repository:command] still running after 770 s
+[repository:command] still running after 780 s
+[repository:command] still running after 790 s
+graph: the build input closure f85cb4af815e... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f85cb4af815e332d11f412611f25b1a12a702850088c196756068ecc5acd17ff named by 1 projects: re-derived
+[repo] still working after 800 s; last phase started: source.served
+[repository:command] still running after 800 s
+[repository:command] still running after 810 s
+graph: the build input closure f862cced248d... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f862cced248d04916621212e97efeefef89db4a34e01451956d9d3e0fa215fc7 named by 1 projects: re-derived
+[repository:command] still running after 820 s
+[repo] still working after 830 s; last phase started: source.served
+[repository:command] still running after 830 s
+[repository:command] still running after 840 s
+[repository:command] still running after 850 s
+graph: the build input closure f86572e9798d... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f86572e9798da0387bafdc38d495b78bb3b1f303b9778edadd6b821fd7478f14 named by 1 projects: re-derived
+[repo] still working after 860 s; last phase started: source.served
+[repository:command] still running after 860 s
+[repository:command] still running after 870 s
+[repository:command] still running after 880 s
+[repo] still working after 890 s; last phase started: source.served
+[repository:command] still running after 890 s
+graph: the build input closure f86986fc649a... is gone from this machine; 0 record(s) that named it were removed and are computed again
+[graph] closure-missing f86986fc649ac0cb57d90aca868ad20b30e0e5ef16504841e9096bee0b43539f named by 1 projects: re-derived
+[repository:command] still running after 900 s
+[repository:command] still running after 910 s
+[repo] still working after 920 s; last phase started: source.served
+[repository:command] still running after 920 s
+[repository:command] still running after 930 s
+[repository:command] still running after 940 s
+[repo] still working after 950 s; last phase started: source.served
+[repository:command] still running after 950 s
+[repository:command] still running after 960 s
+[repository:command] still running after 970 s
+[repo] still working after 980 s; last phase started: source.served
+[repository:command] still running after 980 s
+[repository:command] still running after 990 s
+[repository:command] still running after 1000 s
+[repo] still working after 1010 s; last phase started: source.served
+[repository:command] still running after 1010 s
+-- last 20 lines of the bootstrap log
+Reading the project graph slice (967 s).
+Reading the project graph slice (969 s).
+Reading the project graph slice (971 s).
+Reading the project graph slice (973 s).
+Reading the project graph slice (975 s).
+Reading the project graph slice (977 s).
+Reading the project graph slice (979 s).
+Reading the project graph slice (981 s).
+Reading the project graph slice (983 s).
+Reading the project graph slice (985 s).
+Reading the project graph slice (987 s).
+Reading the project graph slice (989 s).
+Reading the project graph slice (991 s).
+Reading the project graph slice (993 s).
+Reading the project graph slice (995 s).
+[repo] still working after 1010 s; last phase started: door.script
+Reading the project graph slice (997 s).
+Reading the project graph slice (999 s).
+Reading the project graph slice (1001 s).
+Reading the project graph slice (1003 s).
+== try 8 stalled 2026-11-15T07:06:15Z, last progress: [semio] Installing|waiting for the fleet: 0 of 1203|restored from|
+-- last 60 lines of /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-b814083e21d9.log
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:177","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:177:177","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3329:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3329 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3332:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3332 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3342:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3342 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3372:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3372 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3385:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3385 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3403:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3403 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3408:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3408 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3437:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3437 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3467:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3467 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3489:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3489 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3514:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3514 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3525:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3525 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3533:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3533 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3544:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3544 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3571:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3571 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:0:3580","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:parts:3580:3580","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:invalidation:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:0:181","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:rederivation:181:181","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:0:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:flush:1:1","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3585:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3585 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3617:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3617 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3665:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3665 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3690:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3690 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3730:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3730 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3782:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3782 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3788:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3788 of 4510 closures
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:verification:3792:4510","mode":"shared","elapsedMs":0}}
+[script] graph:slice-worker · Verifying input closures: 3792 of 4510 closures
+[repository:command] still running after 4351 s
+-- last 60 lines of /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-d7505b87cee1.log
+[repository:command] still running after 1750 s
+[repo] still working after 1761 s; last phase started: source.served
+[repository:command] still running after 1760 s
+[repository:command] still running after 1770 s
+[repository:command] still running after 1780 s
+[repo] still working after 1791 s; last phase started: source.served
+[repository:command] still running after 1790 s
+[repository:command] still running after 1800 s
+[repository:command] still running after 1810 s
+[repo] still working after 1821 s; last phase started: source.served
+[repository:command] still running after 1820 s
+[repository:command] still running after 1830 s
+[repository:command] still running after 1840 s
+[repo] still working after 1851 s; last phase started: source.served
+[repository:command] still running after 1850 s
+[repository:command] still running after 1860 s
+[repository:command] still running after 1870 s
+[repo] still working after 1881 s; last phase started: source.served
+[repository:command] still running after 1880 s
+[repository:command] still running after 1890 s
+[repository:command] still running after 1900 s
+[repo] still working after 1911 s; last phase started: source.served
+[repository:command] still running after 1910 s
+[repository:command] still running after 1920 s
+[repository:command] still running after 1930 s
+[repo] still working after 1941 s; last phase started: source.served
+[repository:command] still running after 1940 s
+[repository:command] still running after 1950 s
+[repository:command] still running after 1960 s
+[repo] still working after 1971 s; last phase started: source.served
+[repository:command] still running after 1970 s
+[repository:command] still running after 1980 s
+[repository:command] still running after 1990 s
+[repo] still working after 2001 s; last phase started: source.served
+[repository:command] still running after 2000 s
+[repository:command] still running after 2010 s
+[repository:command] still running after 2020 s
+[repo] still working after 2031 s; last phase started: source.served
+[repository:command] still running after 2030 s
+[repository:command] still running after 2040 s
+[repository:command] still running after 2050 s
+[repo] still working after 2061 s; last phase started: source.served
+[repository:command] still running after 2060 s
+[repository:command] still running after 2070 s
+[repository:command] still running after 2080 s
+[repo] still working after 2091 s; last phase started: source.served
+[repository:command] still running after 2090 s
+[repository:command] still running after 2100 s
+[repository:command] still running after 2110 s
+[repo] still working after 2121 s; last phase started: source.served
+[repository:command] still running after 2120 s
+[repository:command] still running after 2130 s
+[repository:command] still running after 2140 s
+[repo] still working after 2151 s; last phase started: source.served
+[repository:command] still running after 2150 s
+[repository:command] still running after 2160 s
+[repository:command] still running after 2170 s
+[repo] still working after 2181 s; last phase started: source.served
+[repository:command] still running after 2180 s
+[repository:command] still running after 2190 s
+-- last 20 lines of the bootstrap log
+[repo] still working after 290 s; last phase started: source.served
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:2218688 (exclusive, 263 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:2314176 (exclusive, 266 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:list:2331392 (exclusive, 267 s)
+[repository:command] still running after 290 s
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:2371072 (exclusive, 270 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:list:2373504 (exclusive, 270 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:selection:2373632 (exclusive, 270 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:state:2470080 (exclusive, 272 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:list:2507648 (exclusive, 273 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:state:2507968 (exclusive, 273 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:selection:2508608 (exclusive, 273 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:readText:2508928 (exclusive, 273 s)
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:2580096 (exclusive, 277 s)
+[repository:command] still running after 300 s
+[script] bun:dependency-storage remains active on dependencies:store-ownership:frontier:2604800 (exclusive, 278 s)
+[script] bun:dependency-storage · Checking declared package providers: 3916 edges
+[repository:command] still running after 310 s
+[repo] still working after 320 s; last phase started: source.served
+[repository:command] still running after 320 s

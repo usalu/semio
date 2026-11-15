@@ -1,0 +1,79 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-6feebb05efe3.log (lines after 1361)
+-- lines with: waiting for the fleet|taken from the fleet|inferred here|refreshing [0-9]+ projects|asking the host for|stale facts
+-- last 30 lines when the try ended
+[repository:command] still running after 1840 s
+[repo] still working after 1850 s; last phase started: source.served
+[repository:command] still running after 1850 s
+[repository:command] still running after 1860 s
+[repository:command] still running after 1870 s
+[repo] still working after 1880 s; last phase started: source.served
+[repository:command] still running after 1880 s
+[repository:command] still running after 1890 s
+[repository:command] still running after 1900 s
+[repo] still working after 1910 s; last phase started: source.served
+[repository:command] still running after 1910 s
+[repository:command] still running after 1920 s
+[repository:command] still running after 1930 s
+[repo] still working after 1940 s; last phase started: source.served
+[repository:command] still running after 1940 s
+[repository:command] still running after 1950 s
+[repository:command] still running after 1960 s
+[repo] still working after 1970 s; last phase started: source.served
+[repository:command] still running after 1970 s
+[repository:command] still running after 1980 s
+[repository:command] still running after 1990 s
+[repo] still working after 2000 s; last phase started: source.served
+[repository:command] still running after 2000 s
+[repository:command] still running after 2010 s
+[repository:command] still running after 2020 s
+[repo] still working after 2030 s; last phase started: source.served
+[repository:command] still running after 2030 s
+[repository:command] still running after 2040 s
+2026-11-14T18:31:20.656Z shutdown superseded
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-a561d8014168.log (lines after 0)
+-- lines with: waiting for the fleet|taken from the fleet|inferred here|refreshing [0-9]+ projects|asking the host for|stale facts
+graph: 703 stale projects, 221 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 482
+graph: waiting for the fleet: 0 of 482 projects arrived
+graph: waiting for the fleet: 106 of 482 projects arrived
+graph: waiting for the fleet: 154 of 482 projects arrived
+graph: waiting for the fleet: 202 of 482 projects arrived
+graph: waiting for the fleet: 250 of 482 projects arrived
+graph: waiting for the fleet: 298 of 482 projects arrived
+graph: refreshing 703 projects (generation 45)
+graph: 177 stale facts (analysis 67, file 43, field 38, readdir 27, digest 2) leave 703 projects stale
+graph: asking the host for up to 8 worker processes for 48 projects; projects are inferred in this process meanwhile
+graph: asking the host for up to 7 worker processes for 47 projects; projects are inferred in this process meanwhile
+graph: asking the host for up to 4 worker processes for 28 projects; projects are inferred in this process meanwhile
+graph: 3158 derived results asked again after 0 stale facts: 2117 unchanged, 1041 changed
+-- last 30 lines when the try ended
+[repository:command] still running after 3831 s
+[repository:command] still running after 3841 s
+[repository:command] still running after 3851 s
+[repo] still working after 3860 s; last phase started: source.served
+[repository:command] still running after 3861 s
+[repository:command] still running after 3871 s
+[repository:command] still running after 3881 s
+[repo] still working after 3890 s; last phase started: source.served
+[repository:command] still running after 3891 s
+[repository:command] still running after 3901 s
+[repository:command] still running after 3911 s
+[repo] still working after 3920 s; last phase started: source.served
+[repository:command] still running after 3921 s
+[repository:command] still running after 3931 s
+[repository:command] still running after 3941 s
+[repo] still working after 3950 s; last phase started: source.served
+[repository:command] still running after 3951 s
+[repository:command] still running after 3961 s
+[repository:command] still running after 3971 s
+[repo] still working after 3980 s; last phase started: source.served
+[repository:command] still running after 3981 s
+[repository:command] still running after 3991 s
+[repository:command] still running after 4001 s
+[repo] still working after 4010 s; last phase started: source.served
+[repository:command] still running after 4011 s
+[repository:command] still running after 4021 s
+[repository:command] still running after 4031 s
+[repo] still working after 4040 s; last phase started: source.served
+[repository:command] still running after 4041 s
+[repository:command] still running after 4051 s

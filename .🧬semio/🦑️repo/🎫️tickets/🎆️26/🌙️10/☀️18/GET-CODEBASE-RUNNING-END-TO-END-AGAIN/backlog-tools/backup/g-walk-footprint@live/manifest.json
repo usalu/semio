@@ -1,0 +1,57 @@
+{
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts": {
+  "file": "f000",
+  "before": "c341106af6f835f4814d05407df2dcd34e75d1f07190c515ab9f944617cdf586",
+  "after": "a10b8302c21b81fb6593ee9e88f7925b2d57ad3b7d1f0ddf3a04fb7278cc189d"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📐️estimates/🟦️.ts": {
+  "file": "f001",
+  "before": "48380aa6ae103f2c9f52ad39d2b87b6f8c12ddff544bd700ce9c994edb9290b7",
+  "after": "f3a6094ed5c39c4ea73338b13b38cce79a07cda6a132f47841f8be4cba93150c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts": {
+  "file": "f002",
+  "before": "399cdf51cc1b3bc2be7ecc97be5ba81c1b793f733e86dd6f2cdd7860294f7370",
+  "after": "3576168a737efbaec81ea236a4e4b834fcebc9427508ba99719141bc131030e0"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/📡️sampling/🐧️linux/🟦️.ts": {
+  "file": "f003",
+  "before": "4c4c4820debce1fda27b6c9c15aff793672eb77f4d0f3fc4ee3ad713c06c99a4",
+  "after": "64c4277439d480391d095f97ed664c41248150c57d1789deb445d5e350f8a91f"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔬️footprint/🐍️oracle/🐍️.py": {
+  "file": null,
+  "before": null,
+  "after": "45b9a12f8044d648185460ef918b6a53e01900c7352f4f2600c3d9247d2df33c"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔬️footprint/🟦️.ts": {
+  "file": null,
+  "before": null,
+  "after": "301fe7521d7dad106277419ee054eb4ca017d6fa653fd6db97b0724068560b75"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🔬️footprint/🧫️fixtures/🔣️.json": {
+  "file": null,
+  "before": null,
+  "after": "2479313efe997ee8e8124d2c9ec0fec8e0fe91009219105dc580cd3649bf97d1"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🪟️windows/🟦️.ts": {
+  "file": "f007",
+  "before": "263dde0b4122e06146c57a53a68caa740fe533220f0bc80de9d81166e7311c64",
+  "after": "175e0799dac2a226628ca5fff8e03f33fd11adddc7cee351fc691bbb8ace42a9"
+ },
+ "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧬️schema/🔣️.json": {
+  "file": "f008",
+  "before": "6654f3e91c8d65f9ef39f685e35ca31565420322395b842541bf539378c1a74e",
+  "after": "3d4aae5f245867e834540b823534bbd4f98553640a312b253a6b0f0a707b8bc0"
+ },
+ "🧰️framework/🛍️products/🦑️repo/README.md": {
+  "file": "f009",
+  "before": "4013aaa5ed147732f5d0e16d2fe2959286bf7b3b197788f1a67094c946d496de",
+  "after": "141ee591e03026da7284e88205a69011c945d3438c82440e4e3e5abfbb5ebd27"
+ },
+ "🧰️framework/🛍️products/🦑️repo/📓️build-guide.md": {
+  "file": "f010",
+  "before": "4a33ad5fa52b18d2c38d25534f5344023ea3b8b4fdf4721d5c0fb407b01e57ba",
+  "after": "24c9538050f43d9beb777f37654319faf8a6007054ef3718d5773fed9243b2bd"
+ }
+}

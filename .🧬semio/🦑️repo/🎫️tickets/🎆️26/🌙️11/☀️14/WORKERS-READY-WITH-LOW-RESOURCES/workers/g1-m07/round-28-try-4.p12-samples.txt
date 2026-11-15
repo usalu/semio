@@ -1,0 +1,28 @@
+service log: /var/folders/xq/z6t8hmcd0qj871bx0sj7pbn80000gn/T//semio-repo/501/host-4a3e468900f5.log
+closure entries before: 40686
+2026-11-15T11:53:33Z no slice worker
+2026-11-15T11:53:38Z no slice worker
+2026-11-15T11:53:43Z no slice worker
+2026-11-15T11:53:48Z no slice worker
+2026-11-15T11:53:53Z pid=88980 rss=302MB footprint=[bun [88980]: 64-bit    Footprint: 101 MB (16384 bytes per page)] last=[graph: plan answered, managed 105 MB, resident 129 MB (released 0 MB)]
+2026-11-15T11:53:58Z pid=88980 rss=597MB footprint=[bun [88980]: 64-bit    Footprint: 132 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T11:54:03Z pid=88980 rss=1280MB footprint=[bun [88980]: 64-bit    Footprint: 330 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T11:54:09Z pid=88980 rss=1310MB footprint=[bun [88980]: 64-bit    Footprint: 283 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T11:54:14Z pid=88980 rss=1510MB footprint=[bun [88980]: 64-bit    Footprint: 277 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T11:54:19Z pid=88980 rss=1918MB footprint=[bun [88980]: 64-bit    Footprint: 296 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T11:54:24Z pid=88980 rss=2507MB footprint=[bun [88980]: 64-bit    Footprint: 801 MB (16384 bytes per page)] last=[graph: the replica manifest cannot vouch for the tree (the replica daemon is not healthy); verifying the tree once.]
+2026-11-15T11:54:29Z pid=88980 rss=2581MB footprint=[bun [88980]: 64-bit    Footprint: 765 MB (16384 bytes per page)] last=[]
+2026-11-15T11:54:34Z pid=88980 rss=2633MB footprint=[bun [88980]: 64-bit    Footprint: 447 MB (16384 bytes per page)] last=[]
+2026-11-15T11:54:39Z pid=88980 rss=2633MB footprint=[bun [88980]: 64-bit    Footprint: 447 MB (16384 bytes per page)] last=[]
+2026-11-15T11:54:44Z pid=88980 rss=2633MB footprint=[bun [88980]: 64-bit    Footprint: 443 MB (16384 bytes per page)] last=[]
+2026-11-15T11:54:49Z pid=88980 rss=3122MB footprint=[bun [88980]: 64-bit    Footprint: 372 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left]
+2026-11-15T11:54:54Z pid=88980 rss=3123MB footprint=[bun [88980]: 64-bit    Footprint: 372 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 0 inferred here, 703 left]
+2026-11-15T11:54:59Z pid=88980 rss=3132MB footprint=[bun [88980]: 64-bit    Footprint: 381 MB (16384 bytes per page)] last=[graph: plan stage inference starts (managed 849 MB, resident 3124 MB)]
+2026-11-15T11:55:04Z pid=88980 rss=3179MB footprint=[bun [88980]: 64-bit    Footprint: 377 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 6 inferred here, 697 left; the server last progressed 951 s ago, estimated time left: about 11 min]
+2026-11-15T11:55:09Z pid=88980 rss=3734MB footprint=[bun [88980]: 64-bit    Footprint: 381 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 25 inferred here, 678 left; the server last progressed 955 s ago, estimated time left: about 11 min]
+2026-11-15T11:55:14Z pid=88980 rss=3735MB footprint=[bun [88980]: 64-bit    Footprint: 382 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 84 inferred here, 619 left; the server last progressed 965 s ago, estimated time left: about 11 min]
+2026-11-15T11:55:19Z pid=88980 rss=3735MB footprint=[bun [88980]: 64-bit    Footprint: 381 MB (16384 bytes per page)] last=[graph: 0 of 703 projects arrived from the fleet, 97 inferred here, 606 left; the server last progressed 968 s ago, estimated time left: about 11 min]
+2026-11-15T11:55:24Z pid=88980 rss=7648MB footprint=[bun [88980]: 64-bit    Footprint: 6960 MB (16384 bytes per page)] last=[graph: waiting for memory headroom (2151 of 1186 MB reserved, 1 projects running): repo-policy needs 2151 MB and has waited 5 s; after 60 s it runs alone if it fits the 1756 MB one project is granted, otherwise the run i]
+2026-11-15T11:55:30Z no slice worker
+service log at the end: /var/folders/xq/z6t8hmcd0qj871bx0sj7pbn80000gn/T//semio-repo/501/host-82a7a2b56cae.log
+closure entries after: 40686

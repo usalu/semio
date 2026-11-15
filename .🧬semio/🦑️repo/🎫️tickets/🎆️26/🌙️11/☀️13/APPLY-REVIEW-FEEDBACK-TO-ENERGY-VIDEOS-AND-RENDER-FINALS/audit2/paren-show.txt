@@ -1,0 +1,294 @@
+❄️co|❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:165|-|Nur der Rest geht an Zu-/Abluft mit WRG (Kapitel 5): ein offenes
+Fenster gewinnt nichts zu
+❄️co|❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:487|-|Wenn ja: natürlich lüften (Lüftung Kapitel 4) — Öffnung einstellen,
+Quer- oder Auftriebswe
+❄️co|❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:493|-|Nur was diese Schritte nicht schaffen, geht an die Zu-/Abluftanlage
+mit Wärmerückgewinnung
+❄️co|❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:305|tr|Sorption-assisted cooling (DEC)
+❄️co|❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py:305|tr|Sorptionsgestützte Kühlung (DEC)
+❄️co|❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:491|Text| (
+❄️co|❄️cooling/🎬️clip/👥️internal-gains/🐍️.py:491|Text|)
+❄️co|❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:219|-|$U$ is the thermal transmittance in $\mathrm{W/(m^2K)}$. On the design day a lower $U$ cut
+❄️co|❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:220|-|$U$ ist der Wärmedurchgangskoeffizient in $\mathrm{W/(m^2K)}$. Am Auslegungstag senkt ein 
+❄️co|❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:365|-|Die opake Hülle liefert hier rund $680\,\mathrm{W}$ ($68\,\mathrm{W/K}\cdot 10\,\mathrm{K}
+❄️co|❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:367|-|From ventilation: $220\,\mathrm{m^3/h}\cdot 0.34\,\mathrm{Wh/(m^3K)}\cdot 6\,\mathrm{K}$ a
+❄️co|❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py:368|-|Kurz zur Erinnerung aus dem Lüftungsvideo: $220\,\mathrm{m^3/h}\cdot 0{,}34\,\mathrm{Wh/(m
+❄️co|❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:310|tr|c_{p,\mathrm{a}} = 1.0\,\mathrm{kJ/(kg\,K)}
+❄️co|❄️cooling/🎬️clip/📐️system-sizing/🐍️.py:310|tr|c_{p,\mathrm{a}} = 1{,}0\,\mathrm{kJ/(kg\,K)}
+🌬️ve|🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:801|legend|(0 °C)
+🌬️ve|🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:802|legend|(20 °C)
+🌬️ve|🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:821|tr|supply air (16 °C)
+🌬️ve|🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:821|tr|Zuluft (16 °C)
+🌬️ve|🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:834|tr|(storing)
+🌬️ve|🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:834|tr|(Speichern)
+🌬️ve|🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:835|legend|(
+🌬️ve|🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py:835|legend|)
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:280|-|From $20$ to $21\,°\mathrm{C}$ it takes $1.2\,\mathrm{kg} \cdot 1005\,\mathrm{J/(kg\,K)} \
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:281|-|Von $20$ auf $21\,°\mathrm{C}$ braucht es $1{,}2\,\mathrm{kg} \cdot 1005\,\mathrm{J/(kg\,K
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:286|-|The norm calculates with the fixed value $0.34\,\mathrm{Wh/(m^3K)}$.
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:287|-|Die Norm rechnet mit dem festen Wert $0{,}34\,\mathrm{Wh/(m^3K)}$.
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:289|-|The same physics comes in two unit sets: building-related units with $\mathrm{m^3/h}$ and 
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:290|-|Dieselbe Physik gibt es in zwei Einheitensätzen: gebäudebezogene Einheiten mit $\mathrm{m^
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:464|-|And $c_{\mathrm{Luft}}$ is the heat capacity of air: $0.34\,\mathrm{Wh/(m^3K)}$.
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:465|-|Und $c_{\mathrm{Luft}}$ ist die Wärmekapazität der Luft: $0{,}34\,\mathrm{Wh/(m^3K)}$.
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:467|-|In winter: $220\,\mathrm{m^3/h} \cdot 0.34\,\mathrm{Wh/(m^3K)} \cdot 20\,\mathrm{K}$ — abo
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:468|-|Im Winter: $220\,\mathrm{m^3/h} \cdot 0{,}34\,\mathrm{Wh/(m^3K)} \cdot 20\,\mathrm{K}$ — r
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:848|tr|\,\mathrm{K}\;\text{(gain)}
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:848|tr|\,\mathrm{K}\;\text{(Gewinn)}
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:414|tr|Same physics, two unit sets (rounding: 0.335 ≈ 0.34). Unit usage varies, not only in the D
+🌬️ve|🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py:415|tr|Dieselbe Physik, zwei Einheitensätze (Rundung: 0,335 ≈ 0,34). Einheiten variieren, nicht n
+🌬️ve|🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:240|-|Every cubic metre carries heat: $c_{Luft} = \rho \cdot c_p \approx 0.34\,\mathrm{Wh/(m^3K)
+🌬️ve|🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:241|-|Jeder Kubikmeter trägt Wärme: $c_{Luft} = \rho \cdot c_p \approx 0{,}34\,\mathrm{Wh/(m^3K)
+🌬️ve|🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:212|-|\,\mathrm{Wh/(m^{3}K)}
+🌬️ve|🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:395|tr|heating load: sensible only (convention)
+🌬️ve|🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py:395|tr|Heizlast: nur fühlbar (Konvention)
+🌬️ve|🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:562|-|After five minutes the open window has exchanged all the air; the tilted one ($n \approx 1
+🌬️ve|🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:563|-|Nach fünf Minuten ist beim offenen Fenster alle Luft getauscht, beim gekippten ($n \approx
+🌬️ve|🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:565|-|Purge ventilation only reheats the air: $0.34\,\mathrm{Wh/(m^3K)} \cdot 50\,\mathrm{m^3} \
+🌬️ve|🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:566|-|Beim Stoßlüften wird nur die Luft nachgeheizt: $0{,}34\,\mathrm{Wh/(m^3K)} \cdot 50\,\math
+🌬️ve|🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:996|-|Treppenhaus oder Schacht (Kamin) führt die warme Luft zur hohen Abluftöffnung — auch an wi
+🌬️ve|🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:998|-|Why does it rise? Warm air is lighter: the density $\rho(\theta)$ falls as the temperature
+🌬️ve|🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:999|-|Warum steigt sie? Warme Luft ist leichter: die Dichte $\rho(\theta)$ sinkt mit steigender 
+🌬️ve|🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1631|tr|no heat recovery (η = 0)
+🌬️ve|🌬️ventilation/🎬️clip/🪟️natural/🐍️.py:1631|tr|keine Rückgewinnung (η = 0)
+🏗️au|🏗️authoring/🎨️visuals/🐍️.py:2382|-|@(
+🏗️au|🏗️authoring/🎨️visuals/🐍️.py:2382|-|)
+🏗️au|🏗️authoring/🎨️visuals/🐍️.py:334|-| (
+🏗️au|🏗️authoring/🎨️visuals/🐍️.py:334|-|)
+🏗️au|🏗️authoring/🎨️visuals/🐍️.py:2459|-|@(
+🏗️au|🏗️authoring/🎨️visuals/🐍️.py:2459|-|)
+🏗️au|🏗️authoring/🎨️visuals/🐍️.py:338|-| (
+🏗️au|🏗️authoring/🎨️visuals/🐍️.py:338|-|)
+🏗️au|🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:863|-|
+import hashlib, importlib, json, sys, time
+from pathlib import Path
+S = importlib.import_
+🏗️au|🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:891|-|
+import importlib, sys, time
+S = importlib.import_module(sys.argv[1])
+lock = S._lock(sys.a
+🏗️au|🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:329|-|<g id="staffage-cast" transform="matrix(-1 0 0 1 90 2)"><path d="M10 10L20 10L20 30Z" fill
+🏗️au|🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:355|-|<g id="staffage-cast" transform="translate(3 4)"><g id="staffage-fill" inkscape:groupmode=
+🏗️au|🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:358|-|<g id="staffage-cast" transform="translate(3 4)"><g id="staffage-fill" inkscape:groupmode=
+🏗️au|🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:504|-|<g id="staffage-cast" transform="matrix(-1 0 0 1 90 2)"><g id="shape-a"><path d="M10 10L20
+🏗️au|🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:1160|-|import subprocess,sys,time;c=subprocess.Popen([sys.executable,'-c','import time;time.sleep
+🏗️au|🏗️authoring/🎨️visuals/🧍️staffage/🧪️tests/🐍️.py:1221|-|import subprocess,sys,time;c=subprocess.Popen([sys.executable,'-c','import time;time.sleep
+🏗️au|🏗️authoring/🎬️clip/📁️output/🧪️tests/🐍️.py:115|-|')); assert not Path('media').exists()
+🏗️au|🏗️authoring/🎬️clip/📁️output/🧪️tests/🐍️.py:112|-|import importlib; from pathlib import Path; importlib.import_module('🎓️teaching.🏛️architec
+🏗️au|🏗️authoring/🎬️clip/📤️export/🎞️course/🐍️.py:106|-|:(ow-iw)/2:(oh-ih)/2,fps=
+🏗️au|🏗️authoring/🎬️clip/📤️export/🧪️tests/🎬️e2e/🐍️.py:28|-|import importlib
+import sys
+
+sys.path.insert(0, {workspace!r})
+from manim import BLUE, RED
+🏗️au|🏗️authoring/🎬️clip/🧪️tests/🐍️.py:712|-|raise SystemExit(
+🏗️au|🏗️authoring/🎬️clip/🧪️tests/🐍️.py:712|-|)
+🏗️au|🏗️authoring/🎬️clip/🪟️presentation/🐍️.py:224|-|:(ow-iw)/2:(oh-ih)/2:color=
+🏗️au|🏗️authoring/🎬️clip/🪟️presentation/🐍️.py:225|-|setpts=N/(
+🏗️au|🏗️authoring/🎬️clip/🪟️presentation/🐍️.py:225|-|*TB),tpad=stop_mode=clone:stop_duration=
+🏗️au|🏗️authoring/🎬️clip/🪟️presentation/🐍️.py:237|-|,format=yuv420p[body];[1:v]setpts=PTS-STARTPTS,format=yuv420p[intro];[2:v]setpts=PTS-START
+🏗️au|🏗️authoring/🎬️clip/🪟️presentation/🐍️.py:240|-|*TB),tpad=stop_mode=clone:stop_duration=
+🏗️au|🏗️authoring/📝️narration/🧮️tex/🐍️.py:344|-|)
+🏗️au|🏗️authoring/📝️narration/🧮️tex/🐍️.py:408|-|)
+🏗️au|🏗️authoring/📝️narration/🧮️tex/🐍️.py:344|-|(
+🏗️au|🏗️authoring/📝️narration/🧮️tex/🐍️.py:408|-|(
+🏗️au|🏗️authoring/📝️narration/🧮️tex/🐍️.py:400|-|)
+🏗️au|🏗️authoring/📝️narration/🧮️tex/🐍️.py:400|-|(
+🏗️au|🏗️authoring/🔊️speech/🗣️lexicon/🐍️.py:286|-|(
+🏗️au|🏗️authoring/🔊️speech/🗣️lexicon/🐍️.py:289|-|)
+🏗️au|🏗️authoring/🔊️speech/🗣️lexicon/🐍️.py:236|-|/()
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:1119|-|\,\mathrm{kWh/(m^{2}\,a)}
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:761|-|Die Jahresarbeitszahl (JAZ) ist die im Jahr abgegebene Wärme geteilt durch den dafür einge
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:983|-|$100\,\mathrm{kWh/(m^2\,a)}$ of useful energy become about $140\,\mathrm{kWh/(m^2\,a)}$ of
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:984|-|Aus $100\,\mathrm{kWh/(m^2\,a)}$ Nutzenergie werden etwa $140\,\mathrm{kWh/(m^2\,a)}$ Ende
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:992|-|But $31\,\mathrm{kWh/(m^2\,a)}$ of electricity and $140\,\mathrm{kWh/(m^2\,a)}$ of gas, bo
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:993|-|Doch $31\,\mathrm{kWh/(m^2\,a)}$ Strom und $140\,\mathrm{kWh/(m^2\,a)}$ Gas, beides Endene
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:929|tr|JAZ = seasonal performance factor (VDI 4650 Blatt 1) · dimensionless
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:929|tr|JAZ = Jahresarbeitszahl (VDI 4650 Blatt 1) · dimensionslos
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:924|tr|}{\text{electricity (final energy)}}}
+📊️de|📊️demand/🎬️clip/♨️system-losses/🐍️.py:924|tr|}{\text{Strom (Endenergie)}}}
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:115|-|\mathrm{kWh/(m^{2}\,a)}
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:907|-|The same $100\,\mathrm{kWh/(m^2\,a)}$ of useful energy $Q_{h}$ as in the last chapter.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:908|-|Dieselben $100\,\mathrm{kWh/(m^2\,a)}$ Nutzenergie $Q_{h}$ wie im letzten Kapitel.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:913|-|The gas boiler draws $140\,\mathrm{kWh/(m^2\,a)}$.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:914|-|Der Gaskessel nimmt $140\,\mathrm{kWh/(m^2\,a)}$ auf.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:916|-|The heat pump needs only $31\,\mathrm{kWh/(m^2\,a)}$ of electricity, its final energy.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:917|-|Die Wärmepumpe braucht nur $31\,\mathrm{kWh/(m^2\,a)}$ Strom als Endenergie.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:919|-|Of the useful energy, $74\,\mathrm{kWh/(m^2\,a)}$ come free from the ambient air, and only
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:920|-|Von der Nutzenergie liefert die Umweltwärme der Luft $74\,\mathrm{kWh/(m^2\,a)}$ kostenlos
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:922|-|The remaining $5\,\mathrm{kWh/(m^2\,a)}$ of electricity cover the losses of emission, dist
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:923|-|Die übrigen $5\,\mathrm{kWh/(m^2\,a)}$ Strom decken die Verluste von Übergabe, Verteilung 
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:934|-|$154\,\mathrm{kWh/(m^2\,a)}$ against $56\,\mathrm{kWh/(m^2\,a)}$ of primary energy $Q_{P}$
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:935|-|$154\,\mathrm{kWh/(m^2\,a)}$ gegen $56\,\mathrm{kWh/(m^2\,a)}$ Primärenergie $Q_{P}$.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1164|-|Its calculated primary energy $Q_{P}$ sets the benchmark: $120\,\mathrm{kWh/(m^2\,a)}$ in 
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1165|-|Dessen Primärenergiebedarf $Q_{P}$ setzt den Maßstab: im schematischen Beispiel $120\,\mat
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1167|-|A new residential building may reach at most $0.55$ of it, that is $66\,\mathrm{kWh/(m^2\,
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1168|-|Ein neues Wohngebäude darf höchstens das $0{,}55$-Fache davon erreichen, also $66\,\mathrm
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1170|-|In this example the heat pump, $56\,\mathrm{kWh/(m^2\,a)}$, clears the line.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1171|-|Im Beispiel unterschreitet die Wärmepumpe mit $56\,\mathrm{kWh/(m^2\,a)}$ die Linie.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1173|-|The gas boiler, $154\,\mathrm{kWh/(m^2\,a)}$, misses it by more than a factor of two.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1174|-|Der Gaskessel verfehlt sie mit $154\,\mathrm{kWh/(m^2\,a)}$ um mehr als das Doppelte.
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:426|tr|GEG since 29 July 2026: Gebäudemodernisierungsgesetz (GModG)
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:426|tr|GEG seit 29.07.2026: Gebäudemodernisierungsgesetz (GModG)
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:627|tr|GEG (now GModG) § 22 (1), Annex 4 no. 2, 8, 9, 12
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:627|tr|GEG (seit 7/2026 GModG) § 22 Abs. 1, Anlage 4 Nr. 2, 8, 9, 12
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:676|tr|set by law (Annex 4)
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:676|tr|gesetzlich festgelegt (Anlage 4)
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1116|tr|e_{P}=Q_{P}/Q_{h}:\;1.54\;\text{(gas)},\;0.56\;\text{(heat pump)}\;\cdot\;e_{P}\;\text{and
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1116|tr|e_{P}=Q_{P}/Q_{h}:\;1{,}54\;\text{(Gas)},\;0{,}56\;\text{(Wärmepumpe)}\;\cdot\;e_{P}\;\tex
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1238|tr|New build (residential): max. 
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1238|tr|Neubau (Wohngebäude): max. 
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1268|tr|renewable (until 2026)
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1268|tr|erneuerbar (bis 2026)
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1333|tr|\text{per envelope area in}\;\mathrm{W/(m^{2}\,K)}\;\text{at most that of the reference bu
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1333|tr|\text{je Hüllfläche in}\;\mathrm{W/(m^{2}\,K)}\;\text{höchstens wie beim Referenzgebäude (
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1344|tr|\text{renewable for new heating systems (§ 71, until 2026) — repealed on 29 July 2026}
+📊️de|📊️demand/🎬️clip/🏭️primary-energy/🐍️.py:1344|tr|\text{erneuerbar für neue Heizungen (§ 71, bis 2026) — entfallen seit 29.07.2026}
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:84|-|\mathrm{kWh/(m^{2}\,a)}
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:318|-|At least $36$ months of it are required (§ 82).
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:319|-|Es werden mindestens $36$ Monate benötigt (§ 82).
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:330|-|New buildings always need the calculated certificate (§ 80).
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:331|-|Für Neubauten ist der berechnete Ausweis Pflicht (§ 80).
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:510|-|But for residential buildings the class follows final energy only (§ 86).
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:511|-|Die Effizienzklasse richtet sich bei Wohngebäuden aber nur nach der Endenergie (§ 86).
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:513|-|Our gas-heated design needs $140\,\mathrm{kWh/(m^2\,a)}$ of final energy: gas at the meter
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:514|-|Unser gasbeheizter Entwurf braucht $140\,\mathrm{kWh/(m^2\,a)}$ Endenergie: Erdgas am Zähl
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:516|-|Of that, $100\,\mathrm{kWh/(m^2\,a)}$ arrive as useful energy $Q_{h}$ in the room; the oth
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:517|-|Davon kommen $100\,\mathrm{kWh/(m^2\,a)}$ als Nutzenergie $Q_{h}$ im Raum an; die übrigen 
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:522|-|The identical building with a heat pump needs only $31\,\mathrm{kWh/(m^2\,a)}$ of electric
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:523|-|Dasselbe Gebäude mit Wärmepumpe braucht nur $31\,\mathrm{kWh/(m^2\,a)}$ Strom, das ist die
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:528|-|Electricity is not the delivered heat: net of plant losses, ambient heat adds $69\,\mathrm
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:529|-|Strom ist nicht die gelieferte Wärme: Netto liefert die Umweltwärme $69\,\mathrm{kWh/(m^2\
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:812|tr|Year built (residential)
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:812|tr|Baujahr (Wohngebäude)
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:660|tr|Heat pump (electricity)
+📊️de|📊️demand/🎬️clip/🏷️certificate/🐍️.py:660|tr|Wärmepumpe (Strom)
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:598|-|The U-value $U$ states how many watts flow through one square metre per kelvin: here $0.24
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:599|-|Der U-Wert $U$ gibt an, wie viele Watt je Quadratmeter und Kelvin fließen: hier $0{,}24\;\
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:610|-|The exterior wall: $209\;\mathrm{m^2}\cdot 0.24\;\mathrm{W/(m^2K)}\cdot 10\;\mathrm{K}$ is
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:611|-|Die Außenwand: $209\;\mathrm{m^2}\cdot 0{,}24\;\mathrm{W/(m^2K)}\cdot 10\;\mathrm{K}$ erge
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:613|-|The roof: $89\;\mathrm{m^2}$ at $0.20\;\mathrm{W/(m^2K)}$ — well insulated, so only about 
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:614|-|Das Dach: $89\;\mathrm{m^2}$ mit $0{,}20\;\mathrm{W/(m^2K)}$ — gut gedämmt, daher nur etwa
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:616|-|The windows: only $30\;\mathrm{m^2}$, but $1.10\;\mathrm{W/(m^2K)}$ — that is about $330\;
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:617|-|Die Fenster: nur $30\;\mathrm{m^2}$, aber $1{,}10\;\mathrm{W/(m^2K)}$ — das sind etwa $330
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:619|-|The floor: $80\;\mathrm{m^2}$ at $0.30\;\mathrm{W/(m^2K)}$, and the ground stays $10\;\mat
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:620|-|Der Boden: $80\;\mathrm{m^2}$ mit $0{,}30\;\mathrm{W/(m^2K)}$, und das Erdreich bleibt das
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:628|-|That is $0.05\;\mathrm{W/(m^2K)}$ when a thermal-bridge check is available, more without o
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:629|-|Mit Wärmebrückennachweis sind es $0{,}05\;\mathrm{W/(m^2K)}$, ohne Nachweis deutlich mehr.
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:640|-|$\rho\,c_p = 0.34\;\mathrm{Wh/(m^3K)}$ is the heat capacity of air per cubic metre; it tur
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:641|-|$\rho\,c_p = 0{,}34\;\mathrm{Wh/(m^3K)}$ ist die Wärmekapazität der Luft je Kubikmeter; si
+📊️de|📊️demand/🎬️clip/🔁️recap/🐍️.py:878|tr|\rho \approx 1{,}2\;\frac{\mathrm{kg}}{\mathrm{m^{3}}}\ (20\;^{\circ}\mathrm{C})
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:106|-|\mathrm{kWh/(m^{2}\,a)}
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:698|-|Das ist eine wichtige Voraussetzung für eine gute Jahresarbeitszahl (JAZ): abgegebene Wärm
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:700|-|For a new water-based heating system in a building with at least six units the balancing i
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:701|-|Für eine neue wassergeführte Heizung in einem Gebäude mit mindestens sechs Einheiten ist d
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1037|-|We start with $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ of useful energy in the room.
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1038|-|Wir starten mit $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ Nutzenergie im Raum.
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1040|-|On the gas path the meter reads $Q_{E}=140\,\mathrm{kWh/(m^2\,a)}$, with the dimensionless
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1041|-|Auf dem Gasweg zeigt der Zähler $Q_{E}=140\,\mathrm{kWh/(m^2\,a)}$, mit dem einheitenlosen
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1043|-|At the source the primary energy is $Q_{P}=154\,\mathrm{kWh/(m^2\,a)}$, with the dimension
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1044|-|An der Quelle sind es $Q_{P}=154\,\mathrm{kWh/(m^2\,a)}$ Primärenergie, mit dem einheitenl
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1049|-|The heat pump delivers the same useful energy $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ as heat, 
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1050|-|Die Wärmepumpe liefert dieselbe Nutzenergie $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ als Wärme, 
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1052|-|At the source that is $Q_{P}=56\,\mathrm{kWh/(m^2\,a)}$, with $f_{P}=1.8$ for electricity.
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:1053|-|An der Quelle sind das $Q_{P}=56\,\mathrm{kWh/(m^2\,a)}$, mit $f_{P}=1{,}8$ für Strom.
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:422|tr|Demand (calculated)
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:422|tr|Bedarf (berechnet)
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:423|tr|Consumption (measured)
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:423|tr|Verbrauch (gemessen)
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:894|tr|SPF (JAZ, VDI 4650-1:2024-02) = delivered heat / electricity used
+📊️de|📊️demand/🎬️clip/🧪️practice/🐍️.py:894|tr|JAZ (VDI 4650-1:2024-02) = abgegebene Wärme / eingesetzter Strom
+🔥️he|🔥️heating/🎬️clip/🌬️convection/🐍️.py:154|-|A short reminder: $\dot{V} = V \cdot n = 220\,\mathrm{m^{3}/h}$, $c_{\mathrm{Luft}} = 0.34
+🔥️he|🔥️heating/🎬️clip/🌬️convection/🐍️.py:155|-|Kurz zur Erinnerung: $\dot{V} = V \cdot n = 220\,\mathrm{m^{3}/h}$, $c_{\mathrm{Luft}} = 0
+🔥️he|🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:744|tr|Specific load density (DIN V 18599-10)
+🔥️he|🔥️heating/🎬️clip/👥️internal-gains/🐍️.py:744|tr|Spezifische Lastdichte (DIN V 18599-10)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:432|-|$Q_{\mathrm{l}} = (H_{\mathrm{T}} + H_{\mathrm{V}}) \cdot F_{\mathrm{Gt}}$ with $F_{\mathr
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:433|-|$Q_{\mathrm{l}} = (H_{\mathrm{T}} + H_{\mathrm{V}}) \cdot F_{\mathrm{Gt}}$ mit $F_{\mathrm
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:824|-|So we keep only the useful share: $\eta \cdot Q_{\mathrm{g}} = \eta \cdot (Q_{\mathrm{S}} 
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:825|-|Deshalb behalten wir nur den nutzbaren Anteil: $\eta \cdot Q_{\mathrm{g}} = \eta \cdot (Q_
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:397|tr|Total heat loss rate (DIN V 4108-6)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:397|tr|Gesamtverlustleistung (DIN V 4108-6)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:680|tr|Free heat gains (DIN V 4108-6)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:680|tr|Freie Wärmegewinne (DIN V 4108-6)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:697|tr|Solar heat gain (DIN V 4108-6, 6.4)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:697|tr|Solarer Wärmegewinn (DIN V 4108-6, 6.4)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:724|tr|Internal heat gain (DIN V 4108-6, 6.3)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:724|tr|Interner Wärmegewinn (DIN V 4108-6, 6.3)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1049|tr|Gives the share of heat gains (0 to 100 %)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1049|tr|Gibt den Anteil der Wärmegewinne an (0 bis 100 %),
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1081|tr|The main equation of the heating demand (DIN V 4108-6)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1081|tr|Die Hauptgleichung des Heizwärmebedarfs (DIN V 4108-6)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1403|-|\,\mathrm{kWh/a} \cdot (1/
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1403|-| - 1) \approx 
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:641|tr|Heating-period method of DIN V 4108-6 (Annex D.2) · degree days Gt20/15 per VDI 3807 Blatt
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:642|tr|Heizperiodenverfahren nach DIN V 4108-6 (Anhang D.2) · Gradtagzahl Gt20/15 nach VDI 3807 B
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1045|tr|Utilisation factor of heat gains (DIN V 4108-6, 6.5)
+🔥️he|🔥️heating/🎬️clip/🧮️calculation/🐍️.py:1045|tr|Ausnutzungsgrad der Wärmegewinne (DIN V 4108-6, 6.5)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126|-|Ungedämmt (Ziegel 1960)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126|-|Gedämmt (12 cm)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126|-|Hochgedämmt (30 cm)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126|-|Uninsulated (1960 brick)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126|-|Insulated (12 cm)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:126|-|Highly insulated (30 cm)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:122|-|Ungedämmt (Ziegel 1960)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:123|-|Gedämmt (12 cm)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:124|-|Hochgedämmt (30 cm)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:567|-|$\lambda$ is the thermal conductivity, from DIN 4108: $0.035\,\mathrm{W/(mK)}$ for this in
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:568|-|$\lambda$ ist die Wärmeleitfähigkeit, nach DIN 4108: $0{,}035\,\mathrm{W/(mK)}$ für diese 
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:867|-|Every layer adds its resistance $\frac{d}{\lambda}$. That gives U-values of $1.43$, $0.24$
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:868|-|Jede Schicht addiert ihren Widerstand $\frac{d}{\lambda}$. Das ergibt U-Werte von $1{,}43$
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1207|-|For the calculation every wall becomes a sheet of paper without thickness — an area with i
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1208|-|Für die Rechnung wird jede Wand zu einem Blatt Papier ohne Dicke — eine Fläche mit ihrem U
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1219|-|The difference is exactly the corner: $U \cdot 2d$, so $0.19\,\mathrm{W/(mK)}$.
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1220|-|Der Unterschied ist genau die Ecke: $U \cdot 2d$, also $0{,}19\,\mathrm{W/(mK)}$.
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1222|-|Real bridges appear where material pierces the insulation: a continuous balcony slab with 
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1223|-|Echte Wärmebrücken entstehen, wo Material die Dämmung durchstößt: eine Balkonplatte mit $\
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1228|-|As a flat rate, $\Delta U_{\mathrm{WB}}$ is added on the whole envelope: $0.10\,\mathrm{W/
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:1229|-|Pauschal kommt $\Delta U_{\mathrm{WB}}$ auf die ganze Hülle: $0{,}10\,\mathrm{W/(m^{2}K)}$
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:520|tr|Insulation layer (DIN 4108)
+🔥️he|🔥️heating/🎬️clip/🧱️conduction/🐍️.py:520|tr|Dämmschicht (DIN 4108)
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:868|tr|\text{wavelength}\;\lambda\;\text{in}\;\mu\mathrm{m}\quad(\text{electromagnetic waves})
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:869|tr|\text{Wellenlänge}\;\lambda\;\text{in}\;\mu\mathrm{m}\quad(\text{elektromagnetische Wellen
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1488|-|An uninsulated solid wall from 1960 has $U = 1.43\,\mathrm{W/(m^{2}K)}$. It loses a lot of
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1489|-|Eine ungedämmte Massivwand von 1960 hat $U = 1{,}43\,\mathrm{W/(m^{2}K)}$ — sie verliert v
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1491|-|The same wall with 20 cm of insulation reaches $U = 0.16\,\mathrm{W/(m^{2}K)}$: roughly ni
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1492|-|Dieselbe Wand mit 20 cm Dämmung erreicht $U = 0{,}16\,\mathrm{W/(m^{2}K)}$ — rund neunmal 
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:880|tr|Sun (5800 K): short-wave
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:880|tr|Sonne (5800 K): kurzwellig
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:881|tr|Room surfaces (20 °C): long-wave
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:881|tr|Raumflächen (20 °C): langwellig
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1524|-|R_{\mathrm{T}} = \left(
+🔥️he|🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py:1526|-|\right)\,
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1915|tr|\text{Seasonal performance factor (JAZ)}\; \mathrm{SPF} \approx 3
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1915|tr|\text{Jahresarbeitszahl (JAZ)}\; \mathrm{JAZ} \approx 3
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1921|tr|\text{VDI 4650 part 1 · DIN EN 14825 (SCOP)}
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1921|tr|\text{VDI 4650 Blatt 1 · DIN EN 14825 (SCOP)}
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3185|-|Willems WM, Schild K, Stricker D (2024)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3188|-|Bohne D, Bohne M (2026)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:3191|-|VDI 4650 Blatt 1 (2024-02) · DIN EN 14825 · DIN EN 410
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1968|tr|Air HP
+(SPF)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1968|tr|Luft-WP
+(JAZ)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1968|tr|Ground HP
+(SPF)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1968|tr|Erd-WP
+(JAZ)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:735|tr|Shower (instantaneous heater)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:735|tr|Dusche (Durchlauferhitzer)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:856|tr|\text{Heating load}\; \dot{Q}_{\mathrm{H}} \;\text{over the year (schematic)}
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:856|tr|\text{Heizlast}\; \dot{Q}_{\mathrm{H}} \;\text{über das Jahr (schematisch)}
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1396|tr|\text{electrical}\;100\,\mathrm{J}\;(100\,\%)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1396|tr|\text{elektrisch}\;100\,\mathrm{J}\;(100\,\%)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1397|tr|\text{heat}\;95\,\mathrm{J}\;(95\,\%)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1397|tr|\text{Wärme}\;95\,\mathrm{J}\;(95\,\%)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1398|tr|\text{light}\;5\,\mathrm{J}\;(5\,\%)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1398|tr|\text{Licht}\;5\,\mathrm{J}\;(5\,\%)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1400|tr|\text{heat}\;100\,\mathrm{J}\;(100\,\%)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1400|tr|\text{Wärme}\;100\,\mathrm{J}\;(100\,\%)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2859|tr|Saturation (100 %)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:2859|tr|Sättigung (100 %)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1986|tr|Fuel (final energy)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1986|tr|Brennstoff (Endenergie)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1986|tr|Electricity (final energy)
+🧲️ph|🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py:1986|tr|Strom (Endenergie)

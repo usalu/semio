@@ -4523,7 +4523,7 @@
       "UV_CACHE_DIR": "/store/root/uv-cache",
       "UV_PYTHON_INSTALL_DIR": "/store/root/uv-python",
       "UV_PYTHON_PREFERENCE": "only-managed",
-      "UV_PYTHON_DOWNLOADS": "manual",
+      "UV_PYTHON_DOWNLOADS": "never",
       "UV_NO_CONFIG": "1",
       "UV_NO_PROGRESS": "1"
      }
@@ -4546,7 +4546,7 @@
       "UV_CACHE_DIR": "C:\\store\\uv-cache",
       "UV_PYTHON_INSTALL_DIR": "C:\\store\\uv-python",
       "UV_PYTHON_PREFERENCE": "only-managed",
-      "UV_PYTHON_DOWNLOADS": "manual",
+      "UV_PYTHON_DOWNLOADS": "never",
       "UV_NO_CONFIG": "1",
       "UV_NO_PROGRESS": "1"
      }
@@ -4573,7 +4573,7 @@
       "UV_CACHE_DIR": "/store/root/uv-cache",
       "UV_PYTHON_INSTALL_DIR": "/store/root/uv-python",
       "UV_PYTHON_PREFERENCE": "only-managed",
-      "UV_PYTHON_DOWNLOADS": "manual",
+      "UV_PYTHON_DOWNLOADS": "never",
       "UV_NO_CONFIG": "1",
       "UV_NO_PROGRESS": "1",
       "EXTRA_VARIABLE": "value"

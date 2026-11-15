@@ -1,0 +1,13 @@
+{
+ "description": "Language-agnostic cases of the slice reservation clamp: what a load may reserve in the machine-wide gate given what the host can hand out, and the share of the usual owner wave it then runs with. Megabytes and basis points; `expected` is computed independently by the Python oracle of the test.",
+ "elasticity": {"hostFloorMegabytes": 1536, "hostShareBasisPoints": 7500, "minimumReservationMegabytes": 1024},
+ "wave": 48,
+ "rows": [
+  {"name": "16 GB host, 5.6 GB available, nothing running: the 8 GB peak is clamped to what can be obtained", "requestedMegabytes": 8192, "availableMegabytes": 5660, "expected": {"megabytes": 3093, "reduced": true, "waveBasisPoints": 3775, "owners": 18}},
+  {"name": "plenty available: unchanged", "requestedMegabytes": 8192, "availableMegabytes": 20000, "expected": {"megabytes": 8192, "reduced": false, "waveBasisPoints": 10000, "owners": 48}},
+  {"name": "exactly enough: unchanged", "requestedMegabytes": 3000, "availableMegabytes": 5660, "expected": {"megabytes": 3000, "reduced": false, "waveBasisPoints": 10000, "owners": 48}},
+  {"name": "barely above the floor: the sane minimum, never zero", "requestedMegabytes": 8192, "availableMegabytes": 1700, "expected": {"megabytes": 1024, "reduced": true, "waveBasisPoints": 1250, "owners": 6}},
+  {"name": "below the floor: the sane minimum", "requestedMegabytes": 8192, "availableMegabytes": 900, "expected": {"megabytes": 1024, "reduced": true, "waveBasisPoints": 1250, "owners": 6}},
+  {"name": "availability unknown: unchanged", "requestedMegabytes": 8192, "availableMegabytes": null, "expected": {"megabytes": 8192, "reduced": false, "waveBasisPoints": 10000, "owners": 48}}
+ ]
+}

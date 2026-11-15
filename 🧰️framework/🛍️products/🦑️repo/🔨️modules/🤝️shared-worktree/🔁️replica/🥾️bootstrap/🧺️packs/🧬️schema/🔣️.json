@@ -1,0 +1,27 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/bootstrap-packs/v1",
+ "title": "Shared worktree bootstrap archive: the pack plan and the entries sidecar",
+ "definitions": {
+  "PackPlan": {
+   "description": "Which files of .git/objects/pack the bootstrap archive carries when it copies packs. keep: stems of packs that hold at least one object no larger kept pack holds (and every pack whose index cannot be read); covered: stems whose every object is in a kept pack; orphans: stems with a pack without index or an index without pack; garbage: names that never belong in an archive (tmp_*, *.lock, multi-pack-index*, unknown files).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["keep", "covered", "orphans", "garbage", "objects", "bytesKept", "bytesDropped"],
+   "properties": {
+    "keep": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "covered": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "orphans": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "garbage": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "objects": {"type": "integer", "minimum": 0, "description": "Objects in the kept packs, duplicates between kept packs included."},
+    "bytesKept": {"type": "integer", "minimum": 0},
+    "bytesDropped": {"type": "integer", "minimum": 0}
+   }
+  },
+  "EntriesSidecar": {
+   "description": "worktree-<16 hex>.entries next to worktree-<16 hex>.tar: UTF-8 text, one line per archived file outside .git/objects/pack, sorted by path: path TAB sha256 TAB bytes TAB (x or -) LF. The next build compares the store manifest with it to measure how much changed.",
+   "type": "string",
+   "pattern": "^([^\\t\\n]+\\t[0-9a-f]{64}\\t[0-9]+\\t[x-]\\n)*$"
+  }
+ }
+}

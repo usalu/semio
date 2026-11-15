@@ -262,7 +262,7 @@
    "error": "Original captured authorizer byte identity required"
   },
   {
-   "name": "five files of three and a half megabytes exceed the source maximum",
+   "name": "six files of three and a half megabytes exceed the source maximum",
    "sources": [
     {
      "path": "a.ts",
@@ -294,6 +294,13 @@
     },
     {
      "path": "e.ts",
+     "content": {
+      "repeat": "ab",
+      "times": 1750000
+     }
+    },
+    {
+     "path": "f.ts",
      "content": {
       "repeat": "ab",
       "times": 1750000

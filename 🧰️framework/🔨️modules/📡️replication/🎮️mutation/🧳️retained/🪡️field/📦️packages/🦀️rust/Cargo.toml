@@ -22,7 +22,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-replication-retained-field-preparation = { path = "../../🧳️preparation/📦️packages/🦀️rust" }
+semio-framework-replication-retained-field-prep = { path = "../../🧳️preparation/📦️packages/🦀️rust" }
 semio-framework-mutation-diff = { path = "../../../../🔺️diff/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true
 semio-framework-value-persistent.workspace = true

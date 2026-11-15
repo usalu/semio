@@ -1,0 +1,44 @@
+## last 40 lines of /home/deck/native-bootstrap-round-24-try-3.log
+[capacity] run: grown from 4 to 6 of 8 job(s) after 90s, reservation 5382 MB -> 6318 MB: memory freed up and nothing of ours waits (8223 MB available, 1981 MB floor); work that starts from now on uses the new jobs
+Reading the project graph slice (78 s): flush 1 of 1.
+Reading the project graph slice (80 s): verification 1638 of 2338.
+Reading the project graph slice (82 s): verification 1769 of 2338.
+Reading the project graph slice (84 s): verification 1841 of 2338.
+Reading the project graph slice (86 s): verification 1952 of 2338.
+Reading the project graph slice (88 s): verification 2025 of 2338.
+Reading the project graph slice (90 s): rederivation 139 of 139.
+Reading the project graph slice (92 s): verification 2072 of 2338.
+Reading the project graph slice (94 s): verification 2196 of 2338.
+[repo] still working after 110 s; last phase started: door.script
+Reading the project graph slice (96 s): verification 2196 of 2338.
+Reading the project graph slice (98 s): verification 2245 of 2338.
+Reading the project graph slice (100 s): flush 1 of 1.
+Reading the project graph slice (102 s): flush 1 of 1.
+Reading the project graph slice (104 s): flush 1 of 1.
+Reading the project graph slice (106 s): flush 1 of 1.
+Reading the project graph slice (108 s): flush 1 of 1.
+Reading the project graph slice (110 s): flush 1 of 1.
+Reading the project graph slice (112 s): flush 1 of 1.
+Reading the project graph slice (114 s): flush 1 of 1.
+Reading the project graph slice (116 s): flush 1 of 1.
+Reading the project graph slice (118 s): flush 1 of 1.
+Reading the project graph slice (120 s): flush 1 of 1.
+Reading the project graph slice (122 s): flush 1 of 1.
+Reading the project graph slice (124 s): flush 1 of 1.
+[repo] still working after 140 s; last phase started: door.script
+Reading the project graph slice (126 s): flush 1 of 1.
+Reading the project graph slice (128 s): flush 1 of 1.
+Reading the project graph slice (130 s): flush 1 of 1.
+Reading the project graph slice (132 s): flush 1 of 1.
+Reading the project graph slice (134 s): flush 1 of 1.
+Reading the project graph slice (136 s): flush 1 of 1.
+Reading the project graph slice (138 s): flush 1 of 1.
+Reading the project graph slice (140 s): flush 1 of 1.
+Reading the project graph slice (142 s): flush 1 of 1.
+Reading the project graph slice (144 s): flush 1 of 1.
+The plan cannot continue: the service holds 5340 MB of its 5340 MB memory limit (safety margin 256 MB), so it was cancelled to keep the service up; try again later or ask for a smaller selection.
+end 2026-11-15T08:52:14Z
+native_rc=1
+## service host processes
+  18676    1977       02:44 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun /home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo service host run
+  19057   18676       02:41 /home/deck/.cache/semio/runtimes/bun/c678040f14fe0440eb839d37cbd0ce4c051a32da72806ac97de6a6aab6bf728f/bun --eval  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url'),crypto=await import('node

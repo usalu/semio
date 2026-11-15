@@ -19,7 +19,7 @@ import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃�
 import plugin, { cacheInternals } from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 import { stageRepositoryArtifacts } from "../../📦️artifacts/🟦️.ts";
 import { acquireQueuedResourceLease } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import { withRepositoryTestArtifactsV1, repositoryTestArtifactEnvironmentV1, repositoryTestArtifactRootV1 } from "@semio-tech/repo-test/storage";
+import { withRepositoryTestArtifactsV1, repositoryTestArtifactEnvironmentV1, repositoryTestArtifactRootV1 } from "../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { dirname as scriptModuleDirname, resolve as scriptModuleResolve } from "node:path";
 import { pathToFileURL as scriptModulePathToFileUrl } from "node:url";

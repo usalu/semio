@@ -27,13 +27,13 @@ impl Iso16757GeometryObjectsRows {
         self.added.is_empty() && self.removed.is_empty()
     }
 
-    pub(super) fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::part_2::GeometryObject>) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::part_2::GeometryObject>, protocol::MutationApplyError> {
+    pub(super) fn apply_rows(&self, base: &semio_s_artifact_norm_iso16757_model::IdMap<semio_s_artifact_norm_iso16757_model::part_2::GeometryObject>) -> Result<semio_s_artifact_norm_iso16757_model::IdMap<semio_s_artifact_norm_iso16757_model::part_2::GeometryObject>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
-            map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
+            map.cold_remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
         }
         for entry in &self.added {
-            if map.insert(entry.key.clone(), entry.value.clone()).is_some() {
+            if map.cold_insert(entry.key.clone(), entry.value.clone()).is_some() {
                 return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
             }
         }
@@ -53,7 +53,7 @@ impl Iso16757GeometryObjectsRows {
         self.added.extend(other.added);
     }
 
-    pub(super) fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::part_2::GeometryObject>) -> Self {
+    pub(super) fn inverse_rows(&self, base: &semio_s_artifact_norm_iso16757_model::IdMap<semio_s_artifact_norm_iso16757_model::part_2::GeometryObject>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Iso16757GeometryObjectsEntry { key: key.clone(), value: value.clone() })).collect(),
@@ -208,17 +208,17 @@ impl Iso16757PartNumberInputsRows {
         self.added.is_empty() && self.removed.is_empty() && self.modified.is_empty()
     }
 
-    pub(super) fn apply_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::CatalogueValue>) -> Result<std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::CatalogueValue>, protocol::MutationApplyError> {
+    pub(super) fn apply_rows(&self, base: &semio_s_artifact_norm_iso16757_model::IdMap<semio_s_artifact_norm_iso16757_model::CatalogueValue>) -> Result<semio_s_artifact_norm_iso16757_model::IdMap<semio_s_artifact_norm_iso16757_model::CatalogueValue>, protocol::MutationApplyError> {
         let mut map = base.clone();
         for key in &self.removed {
-            map.remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
+            map.cold_remove(key).ok_or_else(|| missing_target(format!("removed entry \"{key}\"")).at([key.clone()]))?;
         }
         for entry in &self.modified {
             let value = map.get_mut(&entry.key).ok_or_else(|| missing_target(format!("modified entry \"{}\"", entry.key)).at([entry.key.clone()]))?;
             *value = entry.value.clone();
         }
         for entry in &self.added {
-            if map.insert(entry.key.clone(), entry.value.clone()).is_some() {
+            if map.cold_insert(entry.key.clone(), entry.value.clone()).is_some() {
                 return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-id", format!("entry \"{}\" already exists", entry.key)).at([entry.key.clone()]));
             }
         }
@@ -248,7 +248,7 @@ impl Iso16757PartNumberInputsRows {
         }
     }
 
-    pub(super) fn inverse_rows(&self, base: &std::collections::BTreeMap<String, semio_s_artifact_norm_iso16757_model::CatalogueValue>) -> Self {
+    pub(super) fn inverse_rows(&self, base: &semio_s_artifact_norm_iso16757_model::IdMap<semio_s_artifact_norm_iso16757_model::CatalogueValue>) -> Self {
         Self {
             removed: self.added.iter().map(|entry| entry.key.clone()).collect(),
             added: self.removed.iter().filter_map(|key| base.get(key).map(|value| Iso16757PartNumberInputsEntry { key: key.clone(), value: value.clone() })).collect(),

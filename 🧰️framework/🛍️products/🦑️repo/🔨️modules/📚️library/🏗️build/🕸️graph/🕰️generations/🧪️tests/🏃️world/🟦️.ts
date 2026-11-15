@@ -139,7 +139,7 @@ export function createMembership(dir:string,counter?:{walks:number}){
  };
 }
 
-export interface World{dir:string;store:GenerationStoreV1;log:ReturnType<typeof createLog>;holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[];refresh:(options?:{policy?:"fresh"|"current";only?:string[];signal?:AbortSignal;progress?:(event:unknown)=>void;bypassBuilder?:boolean})=>ReturnType<GenerationStoreV1["refresh"]>;refreshClosure:(roots:string[],options?:{policy?:"fresh"|"current";signal?:AbortSignal;progress?:(event:unknown)=>void})=>ReturnType<GenerationStoreV1["refreshClosure"]>;graph:(current:Awaited<ReturnType<GenerationStoreV1["refresh"]>>["current"],names?:string[])=>Promise<unknown>}
+export interface World{dir:string;store:GenerationStoreV1;log:ReturnType<typeof createLog>;holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[];refresh:(options?:{policy?:"fresh"|"current";only?:string[];signal?:AbortSignal;progress?:(event:unknown)=>void;bypassBuilder?:boolean;published?:(generation:number)=>unknown})=>ReturnType<GenerationStoreV1["refresh"]>;refreshClosure:(roots:string[],options?:{policy?:"fresh"|"current";signal?:AbortSignal;progress?:(event:unknown)=>void})=>ReturnType<GenerationStoreV1["refreshClosure"]>;graph:(current:Awaited<ReturnType<GenerationStoreV1["refresh"]>>["current"],names?:string[])=>Promise<unknown>}
 const createLog=()=>[] as Parameters<typeof createCompute>[1];
 
 export function createWorld(dir:string,options:{store?:string;identity?:string;lease?:boolean;holdsWrap?:(holds:ReturnType<typeof createHolds>)=>ReturnType<typeof createHolds>;computeWrap?:(compute:ReturnType<typeof createCompute>)=>ReturnType<typeof createCompute>;sharedHoldsLog?:World["holdsLog"];sharedLog?:World["log"];now?:()=>number;ownerDelayMs?:number}={}):World{
@@ -149,7 +149,7 @@ export function createWorld(dir:string,options:{store?:string;identity?:string;l
  const compute=options.computeWrap?options.computeWrap(createCompute(dir,log,options.ownerDelayMs)):createCompute(dir,log,options.ownerDelayMs),membership=createMembership(dir);
  return{
   dir,store,log,holdsLog,
-  refresh:(opts={})=>store.refresh({identity,implementation:IMPLEMENTATION,policy:opts.policy,only:opts.only?new Set(opts.only):undefined,membership,compute,signal:opts.signal,progress:opts.progress as never,...(opts.bypassBuilder?{builder:body=>body()}:{})}),
+  refresh:(opts={})=>store.refresh({identity,implementation:IMPLEMENTATION,policy:opts.policy,only:opts.only?new Set(opts.only):undefined,membership,compute,signal:opts.signal,progress:opts.progress as never,...(opts.published?{published:opts.published}:{}),...(opts.bypassBuilder?{builder:body=>body()}:{})}),
   refreshClosure:(roots,opts={})=>store.refreshClosure({roots,identity,implementation:IMPLEMENTATION,policy:opts.policy,membership,compute,signal:opts.signal,progress:opts.progress as never}),
   graph:async(current,names)=>{const graph=await store.assemble(current,{names});const{generation,membership:_member,...rest}=graph;return JSON.parse(canonicalJsonV1(rest));},
  };
@@ -214,12 +214,18 @@ export function createPartDiscover(dir:string,log:{full:string[];edges:string[];
  };
 }
 
+/** 📍️ The stand-in for the change cursor of the synthetic workspace: the digest of every file it holds, equal exactly when nothing changed. */
+export async function treeDigest(dir:string):Promise<string>{
+ const hash=createHash("sha256"),visit=async(path:string):Promise<void>=>{for(const entry of(await readdir(join(dir,path),{withFileTypes:true})).sort((a,b)=>a.name<b.name?-1:1)){if(entry.name.startsWith("."))continue;const next=posix.join(path,entry.name);if(entry.isDirectory())await visit(next);else hash.update(next+"\0").update(await readFile(join(dir,next)));}};
+ await visit("");return hash.digest("hex");
+}
+
 /** 🏛️ A repository host over the synthetic workspace: custodies are recorded, a builder custody is exclusive and shared readers never wait for it. */
-export function createMockHost(dir:string,options:{signal?:AbortSignal;language?:"en"|"de";gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];stamps?:StampTableV1;ownerDelayMs?:number;custody?:{tail:Promise<void>};stamp?:boolean;waitNoticeMilliseconds?:number;prefetch?:(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;implementation:string})=>Promise<void>}={}){
+export function createMockHost(dir:string,options:{signal?:AbortSignal;language?:"en"|"de";gate?:()=>Promise<void>;identity?:string;implementationFiles?:string[];stamps?:StampTableV1;ownerDelayMs?:number;custody?:{tail:Promise<void>};stamp?:boolean;waitNoticeMilliseconds?:number;prefetch?:(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;implementation:string})=>Promise<void>;passes?:{walks:number;rows:number};cursor?:boolean}={}){
  const events:string[]=[],said:{key:string;text:string}[]=[],published:string[]=[],expanded:string[][]=[],log:{full:string[];edges:string[];cold:boolean}[]=[],holdsLog:{resource:string;heldMs:number;waitedMs:number;endedAt:number}[]=[];
  const custody=options.custody??{tail:Promise.resolve()};
  const implementationRows:(GenerationRowV1&{scope?:string})[]=[...(options.implementationFiles??[]).map(path=>{const bytes=readFileSync(join(dir,path));return{kind:"file",path,fact:{sha256:sha(bytes),size:bytes.length}};}),...Object.entries(options.stamps??{}).map(([path,row])=>({kind:"stamp",path,fact:row.stamp,scope:row.scope}))];
- const lease=createFileLeasePortV1(join(dir,".leases"),{onHold:row=>holdsLog.push({...row,endedAt:Date.now()})}),membership=createMembership(dir),discover=createPartDiscover(dir,log,options.ownerDelayMs,options.stamps),holds=createHolds(dir,options.stamps);
+ const lease=createFileLeasePortV1(join(dir,".leases"),{onHold:row=>holdsLog.push({...row,endedAt:Date.now()})}),walked=createMembership(dir,options.passes),discover=createPartDiscover(dir,log,options.ownerDelayMs,options.stamps),counted=createHolds(dir,options.stamps),holds=options.passes?async(rows:readonly GenerationRowV1[],signal?:AbortSignal)=>{options.passes!.rows+=rows.length;return counted(rows,signal);}:counted,observed=new WeakMap<object,string>(),membership=options.cursor?async(previous:Parameters<typeof walked>[0])=>{const stamp=await treeDigest(dir),live=await walked(previous);observed.set(live,stamp);return live;}:walked;
  const host={
   workspaceRoot:dir,language:options.language??"en",namedInputs:{default:[]},registryDigest:sha("registry"),signal:options.signal,verbose:true,...(options.waitNoticeMilliseconds===undefined?{}:{waitNoticeMilliseconds:options.waitNoticeMilliseconds}),
   async identity(){return options.identity??IDENTITY;},
@@ -231,6 +237,7 @@ export function createMockHost(dir:string,options:{signal?:AbortSignal;language?
   },
   storeOptions:(store:{root:string})=>({root:store.root,lease,holds,durableAnswers:false,resources:{facts:"repository-graph-facts:mock"},...(options.stamp===undefined?{}:{stamp:options.stamp})}),
   membership,discoverPart:discover,
+  ...(options.cursor?{async planUnchanged(live:object){return observed.get(live)===await treeDigest(dir);}}:{}),
   ...(options.prefetch?{async prefetch(request:{generation:number;dirty:readonly string[];roots:Readonly<Record<string,string>>;implementation:string}){events.push("prefetch");await options.prefetch!(request);}}:{}),
   async expand(projects:Record<string,unknown>){expanded.push(Object.keys(projects).sort());return projects;},
   readGraph:(value:unknown)=>value,

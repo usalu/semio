@@ -67,6 +67,13 @@ test("setCaseSensitive writes the 4-byte FILE_CASE_SENSITIVE_INFORMATION flag wi
  const negative=recorder({status:-1073741637});expect(createNativeWindowsHostPortV1(negative.binding).setCaseSensitive("C:\\x").status).toBe(3221225659);
 });
 
+test("setCaseSensitive with false clears the flag, so a directory created below a case-sensitive volume root folds case again for Windows-native tools",()=>{
+ const{binding,calls}=recorder({status:0}),result=createNativeWindowsHostPortV1(binding).setCaseSensitive("C:\\cache\\b\\t\\m\\native\\msvc\\stage",false);
+ expect(result).toEqual({opened:true,error:0,status:0});
+ expect(calls[1]).toEqual(["NtSetInformationFile",5n,16,"00000000",4,71]);
+ const hex=py("import struct,sys;sys.stdout.write(struct.pack('<I',0).hex())");if(hex!==undefined)expect(calls[1]![3]).toBe(hex);
+});
+
 test("availableBytes reads the caller's free bytes through GetDiskFreeSpaceExW and openExclusive probes with share mode zero",()=>{
  const wide=(text:string)=>Buffer.from(text+"\0","utf16le").toString("hex"),free=recorder({free:123456789}),host=createNativeWindowsHostPortV1(free.binding);
  expect(host.availableBytes("C:\\cache")).toEqual({ok:true,error:0,bytes:123456789});expect(free.calls).toEqual([["GetDiskFreeSpaceExW",wide("\\\\?\\C:\\cache")]]);

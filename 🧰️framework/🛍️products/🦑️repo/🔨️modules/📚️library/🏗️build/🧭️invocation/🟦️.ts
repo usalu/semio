@@ -3,6 +3,7 @@ import {buildBackendDefaultIdV1} from "../🔌️backends/🟦️.ts";
 import {requireBuildBackendIdV1} from "../🔌️backends/🟦️.ts";
 import { canonicalBuildTargetV1 } from "../🎯️targets/🟦️.ts";
 import {buildOperationArgumentsV1} from "../⚙️operations/🔤️options/🟦️.ts";
+import {extractOffloadFlagV1} from "../🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{extractGraphPolicyV1}from"../🕸️graph/🕰️generations/🔌️load/🟨️.mjs";
 import dependencySchema from "../🧬️schema/📥️dependencies.json" with { type: "json" };
@@ -143,6 +144,7 @@ export function buildModeConflictMessageV1(values: readonly string[], pinned: re
 
 /** 🎯️ Resolves mode options before the task graph and daemon receive the environment. */
 export function resolveBuildModeV1(selection: Selection, environment: NodeJS.ProcessEnv, declarations:readonly SelectedBuildTargetModeV1[]=[]): Selection {
+  if (["run", "run-many", "affected", "cargo"].includes(selection.args[0] ?? "")) { const flagged = extractOffloadFlagV1(selection.args); if (flagged.mode !== undefined) selection = { ...selection, args: [...flagged.args], env: { ...selection.env, SEMIO_OFFLOAD: flagged.mode } }; }
   const delimiter = selection.args.indexOf("--"), head = selection.args.slice(0, delimiter < 0 ? undefined : delimiter), tail = delimiter < 0 ? [] : selection.args.slice(delimiter);
   if (!["run", "run-many", "affected", "cargo"].includes(head[0]??"")) return selection;
   const configurations: string[] = [], args: string[] = [];

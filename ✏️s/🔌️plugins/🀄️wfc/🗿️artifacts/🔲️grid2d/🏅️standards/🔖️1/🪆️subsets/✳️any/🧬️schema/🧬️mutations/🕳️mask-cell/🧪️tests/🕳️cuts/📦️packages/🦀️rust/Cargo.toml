@@ -1,10 +1,10 @@
 [package]
 workspace = "../../../../../../../../../../.."
-name = "semio-s-artifact-wfc-grid2d-tests-cuts-the-pinned-corner-out-of-the-problem"
+name = "semio-s-artifact-wfc-grid2d-tests-cuts-pinned-corner"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Component crate of semio-s-artifact-wfc-grid2d: tests-cuts-the-pinned-corner-out-of-the-problem"
+description = "Component crate of semio-s-artifact-wfc-grid2d: tests-cuts-pinned-corner"
 
 [package.metadata.semio]
 role = "library"

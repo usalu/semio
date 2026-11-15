@@ -524,6 +524,7 @@
         "📦️artifacts/🏗️native-build/📋️plan/🧪️tests/🧵️control/🟦️.ts",
         "📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/🟦️.ts",
         "📦️artifacts/🏗️native-build/📏️path-envelope/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/📏️path-envelope/📐️budget/🧪️tests/🟦️.ts",
         "📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts"
       ],
       "platforms": [

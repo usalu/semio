@@ -10,7 +10,7 @@ impl Puzzle2dFillRunJob {
         }
         if let Some(placement) = self.retiring_placement.as_mut() {
             let demand = semio_framework_value::RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() };
-            semio_framework_job::close_original_retained_step(context, demand, |grant| semio_framework_value::RetainedWorkOutcome { work: 1, result: Ok(match placement.close_step(grant) {
+            semio_framework_job::close_original_retained_step(context, demand, |grant| semio_framework_value::RetainedWorkOutcome::<_, semio_framework_value::ValueError> { work: 1, result: Ok(match placement.close_step(grant) {
                 InteractiveJobCloseStep::Complete { progress } => semio_framework_value::RetainedCloneStep::Complete(progress),
                 step => semio_framework_value::RetainedCloneStep::Progress(step.progress()),
             }) })?;
@@ -122,7 +122,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
         self.begin_close();
         if !self.outbox.terminal_is_empty() {
             let demand = self.outbox.retirement_demands()?;
-            return semio_framework_job::close_original_retained_step(cx, demand, |grant| self.outbox.close_step(grant));
+            return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(self.outbox.close_step(effect)));
         }
         if let Some(snapshot) = self.pending_snapshot.as_mut() {
             let step = snapshot.close_step(cx)?;
@@ -136,7 +136,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
         }
         if let Some(placement) = self.retiring_placement.as_mut() {
             let demand = semio_framework_value::RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() };
-            let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { work: 1, result: Ok(match placement.close_step(grant) {
+            let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome::<_, semio_framework_value::ValueError> { work: 1, result: Ok(match placement.close_step(grant) {
                 InteractiveJobCloseStep::Complete { progress } => semio_framework_value::RetainedCloneStep::Complete(progress),
                 step => semio_framework_value::RetainedCloneStep::Progress(step.progress()),
             }) })?;
@@ -154,7 +154,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
             self.owners_staged = true;
             let identity = self.writer.identity();
             self.close_owners.stage(Puzzle2dFillRunOwners {
-                document: self.document.take(), kinds: std::mem::take(&mut self.kinds),
+                document: self.document.take().map(semio_framework_value::retirement::arc_custody::ArcLease::new), kinds: std::mem::take(&mut self.kinds),
                 writer: std::mem::replace(&mut self.writer, ToolRunTickWriter::new(identity)),
                 replay: self.replay.take(), placements: std::mem::take(&mut self.placements), target_regions: std::mem::take(&mut self.target_regions),
             });

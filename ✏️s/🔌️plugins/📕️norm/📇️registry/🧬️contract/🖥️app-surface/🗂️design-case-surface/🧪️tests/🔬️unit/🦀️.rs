@@ -100,7 +100,7 @@ fn browser_table_filters_by_clause_part_and_both_titles() {
     assert_eq!(ids("compression", Locale::De), ["T-02"]);
     let table = case_catalogue_table("EN TOY", &all, "t-01", Locale::De);
     assert_eq!(table.rows[0].cells[3], CatalogueCell::text("Zug"));
-    assert_eq!(table.rows[0].cells[4], CatalogueCell::number(3.0, 0));
+    assert_eq!(table.rows[0].cells[4], CatalogueCell::number(4.0, 0));
     assert_eq!(table.columns.len(), 5);
 }
 

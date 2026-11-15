@@ -49,12 +49,6 @@ fn governing(annex: AnnexChoice, wall: &MasonryWall, default_situation: DesignSi
     Governing { n_min: if n_min.is_finite() { n_min.max(0.0) } else { 0.0 }, n_max: ns.iter().copied().fold(0.0, f64::max), w_ed, n_ed_fi }
 }
 
-/// 🧱 Adds the second leaf thickness and the cavity width of the wall to a cavity tie case when they are given (0 = not given, nothing is assumed).
-fn second_leaf(wall: &MasonryWall, c: Case) -> Case {
-    let c = if wall.second_leaf_thickness_m > 0.0 { c.with_n("t2_m", wall.second_leaf_thickness_m) } else { c };
-    if wall.cavity_width_m > 0.0 { c.with_n("cavity_m", wall.cavity_width_m) } else { c }
-}
-
 fn tie_kind_is(t: &WallTie, kind: TieKind) -> bool {
     t.kind == kind
 }
@@ -89,14 +83,14 @@ pub(super) fn member_cases(annex: AnnexChoice, default_situation: DesignSituatio
         let rd = weakest.capacity_n;
         out.push((
             "M-50",
-            second_leaf(wall, row_case(annex, wall, "ties", &weakest.id, "capacityN", ".cavity")
+            row_case(annex, wall, "ties", &weakest.id, "capacityN", ".cavity")
                 .with_path("tie_rd_n", &row_path(wall, "ties", &weakest.id, "capacityN"))
                 .with_n("face_m2", l * h)
                 .with_n("n_per_m2", cavity.len() as f64 / (l * h).max(1e-9))
                 .with_n("h_wall_m", h)
                 .with_n("w_ed_pa", g.w_ed)
                 .with_n("t1_m", t)
-                .with_n("tie_rd_n", rd)),
+                .with_n("tie_rd_n", rd),
         ));
     }
     let anchors: Vec<&WallTie> = wall.ties.iter().filter(|x| tie_kind_is(x, TieKind::Anchor)).collect();

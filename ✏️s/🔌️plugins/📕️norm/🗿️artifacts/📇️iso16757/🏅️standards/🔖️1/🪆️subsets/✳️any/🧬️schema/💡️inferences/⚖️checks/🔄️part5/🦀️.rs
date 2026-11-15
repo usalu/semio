@@ -626,7 +626,7 @@ fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                     ));
                 } else {
                     let mut numeric: HashMap<String, f64> = HashMap::new();
-                    for (k, v) in &doc.part_number_inputs {
+                    for (k, v) in doc.part_number_inputs.iter() {
                         match v {
                             CatalogueValue::Decimal { value } => { numeric.insert(k.clone(), *value); }
                             CatalogueValue::Integer { value } => { numeric.insert(k.clone(), *value as f64); }

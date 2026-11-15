@@ -22,12 +22,12 @@ path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 [dependencies]
 semio-s-artifact-norm-en1998-mutations-text-tie-beams = { workspace = true }
 semio-s-artifact-norm-en1998-mutations-text-silos-tanks = { workspace = true }
-semio-s-artifact-norm-en1998-mutations-text-seismic-slopes = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-slopes = { workspace = true }
 semio-s-artifact-norm-en1998-mutations-text-placements = { workspace = true }
 semio-s-artifact-norm-en1998-mutations-text-members = { workspace = true }
 semio-s-artifact-norm-en1998-mutations-text-foundations = { workspace = true }
 semio-s-artifact-norm-en1998-mutations-text-buildings = { workspace = true }
-semio-s-artifact-norm-en1998-mutations-text-bridges-towers = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-towers = { workspace = true }
 semio-s-artifact-norm-en1998-mutations-text-kit = { workspace = true }
 serde = { workspace = true, optional = true }
 semio-s-artifact-norm-en1998-mutations-protocol = { workspace = true }

@@ -6,8 +6,8 @@ import {chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, 
 import {tmpdir} from "node:os";
 import {delimiter, join} from "node:path";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {NATIVE_TOOLCHAINS_V1, nativeToolSpecV1, nativeToolBinaryDirectoryV1, nativeToolDirectoryV1, type NativeToolV1, type ToolchainHostV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
-import {pinnedCargoToolsEnvironmentV1, pinnedGoEnvironmentV1, pinnedUvEnvironmentV1, prepareNativeToolV1, preparedNativeToolV1, verifyExtractedTreeV1, withPinnedNativePathV1, type NativeToolPortV1} from "../🟦️.ts";
+import {NATIVE_TOOLCHAINS_V1, nativeToolSpecV1, pythonInterpreterBinaryV1, pythonInterpreterHomeV1, pythonInterpreterUrlV1, nativeToolBinaryDirectoryV1, nativeToolDirectoryV1, type NativeToolV1, type ToolchainHostV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
+import {pinnedCargoToolsEnvironmentV1, pinnedGoEnvironmentV1, pinnedUvEnvironmentV1, prepareInterpreterV1, provisionInterpretersV1, prepareNativeToolV1, preparedNativeToolV1, verifyExtractedTreeV1, withPinnedNativePathV1, type NativeToolPortV1} from "../🟦️.ts";
 
 setDefaultTimeout(120000);
 const python = testPythonV1(), sandbox = mkdtempSync(join(tmpdir(), "native-tools-")), windows = process.platform === "win32";
@@ -80,6 +80,54 @@ afterAll(() => {
   NATIVE_TOOLCHAINS_V1.python.tool.distributions.splice(0, Infinity, ...original.uv);
   for(const tool of ["cargo-nextest", "cargo-llvm-cov"] as const)NATIVE_TOOLCHAINS_V1.cargo[tool].distributions.splice(0,Infinity,...original[tool]);
   rmSync(sandbox, {recursive: true, force: true});
+});
+
+const interpreterRow = (series: string) => NATIVE_TOOLCHAINS_V1.python.cpython.series[series as "3.12"].distributions.find(row => row.host === host)!;
+const interpreterOriginal = structuredClone(interpreterRow("3.12"));
+const interpreterArchive = (series: string, version: string): Buffer => {
+  const row = interpreterRow(series), output = join(sandbox, "cpython-" + Math.random().toString(16).slice(2) + ".tar.gz");
+  const made = write({format: "tar.gz", output, members: [{path: "python/", directory: true}, {path: "python/bin/", directory: true}, {path: "python/bin/python" + series, text: shell("Python " + version), executable: true}, {path: "python/bin/python3", link: "python" + series}, {path: "python/lib/", directory: true}, {path: "python/lib/os.py", text: "# stdlib\n"}]});
+  Object.assign(row, {bytes: made.bytes.length, sha256: made.sha256});
+  return made.bytes;
+};
+
+describe.skipIf(python === null || windows)("the provisioning of a pinned CPython", () => {
+  afterAll(() => { Object.assign(interpreterRow("3.12"), interpreterOriginal); });
+
+  test("publishes the uv installation directory into an empty tools root, once, and finds it again without the network", async () => {
+    const root = fresh(), version = NATIVE_TOOLCHAINS_V1.python.cpython.series["3.12"].version, served = new Map([[pythonInterpreterUrlV1("3.12", host), interpreterArchive("3.12", version)]]), fetches: string[] = [];
+    const binary = await prepareInterpreterV1("3.12", host, root, portOf(served, "linux", {fetches}), AbortSignal.timeout(60000));
+    expect(binary).toBe(pythonInterpreterBinaryV1("3.12", host, root));
+    expect(spawnSync(binary, ["--version"], {encoding: "utf8"}).stdout).toContain(version);
+    const home = pythonInterpreterHomeV1("3.12", host, root);
+    expect(readdirSync(join(home, "..")).sort()).toEqual([home.split("/").pop()!]);
+    expect(lstatSync(join(home, "bin/python3")).isSymbolicLink()).toBe(true);
+    expect(JSON.parse(readFileSync(join(home, ".toolchain.json"), "utf8")).identity).toBe("cpython:" + version + ":" + host + ":" + interpreterRow("3.12").sha256);
+    expect(fetches).toEqual([pythonInterpreterUrlV1("3.12", host)]);
+    expect(await prepareInterpreterV1("3.12", host, root, portOf(new Map(), "linux", {offline: true, fetches}), AbortSignal.timeout(60000))).toBe(binary);
+    expect(fetches.length).toBe(1);
+  });
+
+  test("refuses an archive whose bytes differ from the pin, an offline machine without the interpreter and a binary that reports another version, and publishes nothing", async () => {
+    const version = NATIVE_TOOLCHAINS_V1.python.cpython.series["3.12"].version, good = interpreterArchive("3.12", version), url = pythonInterpreterUrlV1("3.12", host);
+    const flipped = Buffer.from(good);
+    flipped[flipped.length - 1] = flipped[flipped.length - 1]! ^ 1;
+    const corrupt = fresh();
+    await expect(prepareInterpreterV1("3.12", host, corrupt, portOf(new Map([[url, flipped]]), "linux"), AbortSignal.timeout(60000))).rejects.toThrow(/SHA-256/u);
+    const offline = fresh();
+    await expect(prepareInterpreterV1("3.12", host, offline, portOf(new Map(), "linux", {offline: true}), AbortSignal.timeout(60000))).rejects.toThrow(/offline/iu);
+    const wrong = fresh();
+    const other = interpreterArchive("3.12", "3.12.0");
+    await expect(prepareInterpreterV1("3.12", host, wrong, portOf(new Map([[url, other]]), "linux"), AbortSignal.timeout(60000))).rejects.toThrow(version);
+    for (const root of [corrupt, offline, wrong]) expect(existsSync(pythonInterpreterHomeV1("3.12", host, root))).toBe(false);
+  });
+
+  test("provisions several series in order, or reports the missing one without installing", async () => {
+    const root = fresh(), version = NATIVE_TOOLCHAINS_V1.python.cpython.series["3.12"].version, served = new Map([[pythonInterpreterUrlV1("3.12", host), interpreterArchive("3.12", version)]]);
+    await expect(provisionInterpretersV1(["3.12"], root, portOf(served, "linux"), AbortSignal.timeout(60000), false, host)).rejects.toThrow(/repo tools setup/u);
+    expect(await provisionInterpretersV1(["3.12"], root, portOf(served, "linux"), AbortSignal.timeout(60000), true, host)).toEqual({"3.12": pythonInterpreterBinaryV1("3.12", host, root)});
+    expect(await provisionInterpretersV1(["3.12"], root, portOf(new Map(), "linux", {offline: true}), AbortSignal.timeout(60000), false, host)).toEqual({"3.12": pythonInterpreterBinaryV1("3.12", host, root)});
+  });
 });
 
 describe.skipIf(python === null || windows)("the provisioning of a pinned archive tool", () => {

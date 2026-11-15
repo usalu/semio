@@ -1,0 +1,10 @@
+2026-11-14T12:37:55Z
+state = running
+program = /bin/sh
+runs = 2
+pid = 25748
+last exit code = 0
+state = active
+state = active
+Child 25755 repo
+Read-only sample of child 25755 returned 0

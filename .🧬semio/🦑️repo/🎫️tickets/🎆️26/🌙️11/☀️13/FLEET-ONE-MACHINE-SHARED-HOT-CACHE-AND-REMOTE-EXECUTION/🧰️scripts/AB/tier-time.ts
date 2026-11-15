@@ -1,0 +1,11 @@
+const B="/Users/Shared/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/";
+const m=await import(B+"🪪️graph-state/📍️cursor/🟦️.ts");
+const {readReplicaFilesV1}=await import(B+"🪪️graph-state/📥️replica/🟦️.ts");
+const root="/Users/Shared/semio";
+let t=Date.now();console.log("tier",await m.manifestTrustV1(root));
+t=Date.now();const r:any=await readReplicaFilesV1(root);console.log("read manifest ms",Date.now()-t);
+t=Date.now();const trusted=[...r.files()];console.log("trusted files",trusted.length,"ms",Date.now()-t);
+t=Date.now();const v=await m.verifiedReplicaFilesV1(root,r.entries());console.log("verified files",v.length,"ms",Date.now()-t);
+t=Date.now();const s=m.snapshotOfFilesV1(v);console.log("snapshot",s.paths.length,s.instance,"ms",Date.now()-t);
+t=Date.now();const w=m.manifestJournalPortV1({root});const c=await w.cursor();const a:any=await w.since(c!);console.log("port cursor+since ms",Date.now()-t,a.rows?.length);
+let bad=0;const a0=new Map(trusted);for(const [p,h] of v){if(a0.get(p)!==h)bad++;}console.log("verified!=manifest",bad);

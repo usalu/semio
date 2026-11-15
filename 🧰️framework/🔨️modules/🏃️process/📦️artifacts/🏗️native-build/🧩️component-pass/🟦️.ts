@@ -303,6 +303,7 @@ export type NativeBuildDriverOptionsV1 = Readonly<{
   retainCompilationBytes?:number;
   consume?: (outcome:NativeBuildOutcomeV1,control:CompilerAdmissionControl)=>Promise<void>;
   stages?: (component: LinkedComponentV1, driverScope: unknown) => readonly NativeBuildStageV1[];
+  decorateStageCache?: (cache: StageCacheV1) => StageCacheV1;
   withCapacity?: <T>(compile: (facts: CompilerCapacityFactsV1, control: CompilerAdmissionControl, driverScope: unknown) => Promise<() => Promise<T>>) => Promise<T>;
   jobEnvironment?: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => Readonly<Record<string, string>>;
   tokens?: number;
@@ -375,7 +376,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   }
   for (const job of jobs) requireMaterializedPathV1(join(planned.logs, `job-${job.id.replace(/[^A-Za-z0-9_.-]/gu, "_")}.log`));
   requireMaterializedPathV1(unitHistoryPathV1(options.cacheRoot));
-  const generation = nativeBuildGenerationV1(options.generation, options.cacheRoot, options.shared), startedMs = Date.now(), cache = stageCacheV1(generation.stages);
+  const generation = nativeBuildGenerationV1(options.generation, options.cacheRoot, options.shared), startedMs = Date.now(), cache = (options.decorateStageCache ?? ((local: StageCacheV1) => local))(stageCacheV1(generation.stages));
   const signal = options.control.signal, children = new Set<ChildProcess>(), stages: StageRecordV1[] = [], runs: BuildScriptRunV1[] = [], staged: string[] = [], failures: { pass: string; package: string }[] = [];
   let stopped=false,stopReason:unknown;
   const stop = (reason:unknown):void => {if(!stopped){stopped=true;stopReason=reason;}for(const child of children)terminateOwnedChildTree(child);};

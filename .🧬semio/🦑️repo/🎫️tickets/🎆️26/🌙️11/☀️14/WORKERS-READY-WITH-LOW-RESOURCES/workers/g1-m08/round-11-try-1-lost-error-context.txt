@@ -1,0 +1,16 @@
+Reading the project graph slice (669 s): owners 49 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 32, 0), @semio-tech/framework-pack-record-rs (language:rust, 1, 0); waiting for memory headroom (264 of 407 MB reserved).
+Reading the project graph slice (671 s): owners 50 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 37, 0), @semio-tech/framework-pack-rs (language:cargo, 5, 0); waiting for memory headroom (1698 of 349 MB reserved).
+Reading the project graph slice (673 s): owners 51 of 614.
+Reading the project graph slice (675 s): owners 51 of 614.
+Reading the project graph slice (677 s): owners 56 of 614.
+Reading the project graph slice (679 s): owners 56 of 614.
+Reading the project graph slice (681 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 47, 0), @semio-tech/framework-process (project, 4, 0); waiting for memory headroom (1508 of 481 MB reserved).
+Reading the project graph slice (683 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-rs (language:cargo, 47, 0), @semio-tech/framework-process (project, 4, 0); waiting for memory headroom (1508 of 481 MB reserved).
+Reading the project graph slice (685 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 8, 0).
+Reading the project graph slice (687 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 9, 0); waiting for memory headroom (3460 of -865 MB reserved).
+Reading the project graph slice (689 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 11, 0), @semio-tech/framework-replication-rs (language:cargo, 0, 0).
+Reading the project graph slice (691 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 15, 0), @semio-tech/framework-replication-rs (language:cargo, 4, 0); waiting for memory headroom (4198 of -4066 MB reserved).
+Reading the project graph slice (693 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 15, 0), @semio-tech/framework-replication-rs (language:cargo, 4, 0); waiting for memory headroom (4198 of -4066 MB reserved).
+Reading the project graph slice (695 s): owners 56 of 614; running (name, kind, seconds, rows): @semio-tech/framework-process (project, 15, 0), @semio-tech/framework-replication-rs (language:cargo, 4, 0); waiting for memory headroom (4198 of -4066 MB reserved).
+[repo] still working after 2090 s; last phase started: door.script
+The graph service could not answer (lost); look at `repo service host status` and try again

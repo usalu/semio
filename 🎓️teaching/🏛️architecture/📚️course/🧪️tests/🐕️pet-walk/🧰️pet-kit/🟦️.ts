@@ -51,8 +51,8 @@ export const EDGES = `${CARD_PARTS}, .course-app > footer`;
 
 /** 🕹️ What a press on a pet never takes from the learner in the quiz: the controls of the layer (links, buttons, form
  * fields, labels, ARIA widgets, focusable elements) and what the quiz adds (the grip of an item, the zones an item is
- * dropped on, the cards of the overview). A pointer over one of them is over a control, where circling is not followed. */
-export const CONTROLS = 'a[href], button, input, select, textarea, summary, label, [role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="tab"], [role="menuitem"], [role="option"], [role="slider"], [role="switch"], [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), [data-course-grip], [data-course-drop], [data-layered-card]';
+ * dropped on, the cards of the overview, not the empty space of their cells). A pointer over one of them is over a control, where circling is not followed. */
+export const CONTROLS = 'a[href], button, input, select, textarea, summary, label, [role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="tab"], [role="menuitem"], [role="option"], [role="slider"], [role="switch"], [tabindex]:not([tabindex="-1"]), [contenteditable]:not([contenteditable="false"]), [data-course-grip], [data-course-drop], [data-layered-card] [data-card]';
 
 /** 🏡️ The scene of every screen that belongs to no quiz. */
 export const HOME = "home";
@@ -336,8 +336,8 @@ export function circleRound(body: Body, cue: "circle" | "countercircle", laps: n
 
 /** 🏝️ In the page: a place on the footer line with room for a pet and a circle round it — no part of a card and no pet
  * within `reach` pixels to either side and `room` pixels above the line, no control on the line below it — the one
- * nearest the middle of the window, or `null`. */
-export function floorSpot(question: { readonly parts: string; readonly controls: string; readonly reach: number; readonly room: number }): { readonly x: number; readonly top: number } | null {
+ * nearest `near` (the middle of the window when absent), or `null`. */
+export function floorSpot(question: { readonly parts: string; readonly controls: string; readonly reach: number; readonly room: number; readonly near?: number }): { readonly x: number; readonly top: number } | null {
   const footer = document.querySelector(".course-app > footer");
   if (footer === null) return null;
   const top = footer.getBoundingClientRect().top;
@@ -350,7 +350,7 @@ export function floorSpot(question: { readonly parts: string; readonly controls:
     spots.push(x);
   }
   if (spots.length === 0) return null;
-  const middle = window.innerWidth / 2;
+  const middle = question.near ?? window.innerWidth / 2;
   return { x: spots.reduce((best, x) => (Math.abs(x - middle) < Math.abs(best - middle) ? x : best)), top };
 }
 

@@ -18,7 +18,7 @@ pub use crate::standards::v1::subsets::any::schema::diff::ShootingDiff;
 
 pub use semio_s_artifact_shooting_shooting_inferences::{SHOOTING_DOCUMENT_SCHEMA};
 
-pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::{SHOOTING_DIALECT};
+pub use semio_s_artifact_shooting_shooting_tests_dims_sun::{SHOOTING_DIALECT};
 
 pub use semio_s_artifact_shooting_shooting_shooting::{artifact_kind};
 
@@ -112,7 +112,7 @@ pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::Ar
         ("s.shooting.shooting.schema.artifact", "schema", "s.shooting.shooting", &[("schema", "s.shooting.shooting")], None),
         ("s.shooting.shooting.inference.artifact", "inference", "s.shooting.shooting.inference", &[("schema", "s.shooting.shooting.inference")], None),
         ("s.shooting.shooting.composer.native", "composer", "s.shooting.shooting@1/*", &[("dialect", "s.shooting.shooting@1/*")], None),
-        ("s.shooting.shooting.composer.format-6", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
+        ("s.shooting.shooting.composer.format-6", "composer", "s.stdio.json@rfc8259/*", &[("composition-route", "23:s.shooting.shooting@1/*22:s.stdio.json@rfc8259/*")], None),
         ("s.shooting.shooting.grammar.1", "grammar", "shooting.document", &[("grammar", "shooting.document")], None),
         ("s.shooting.shooting.grammar.2", "grammar", "shooting.op", &[("grammar", "shooting.op")], None),
         ("s.shooting.shooting.grammar.3", "grammar", "shooting.diff", &[("grammar", "shooting.diff")], None),
@@ -411,9 +411,9 @@ pub mod standards {
                 }
                 #[path = "."]
                 pub mod io {
-                    pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::standards::v1::subsets::any::io::*;
+                    pub use semio_s_artifact_shooting_shooting_tests_dims_sun::standards::v1::subsets::any::io::*;
 pub mod binary {
-    pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_shooting_shooting_tests_dims_sun::standards::v1::subsets::any::io::binary::*;
     pub use semio_s_artifact_shooting_shooting_schema::standards::v1::subsets::any::io::binary::diff;
     pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::binary::inferences;
 }
@@ -422,7 +422,7 @@ pub mod sqlite {
     pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::sqlite::snapshot;
 }
 pub mod text {
-    pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_shooting_shooting_tests_dims_sun::standards::v1::subsets::any::io::text::*;
     pub use semio_s_artifact_shooting_shooting_inferences::standards::v1::subsets::any::io::text::inferences;
 }
 
@@ -515,18 +515,18 @@ pub use semio_s_artifact_shooting_shooting_mut_family::editor::shooting::demo_se
 }
         pub use semio_s_artifact_shooting_shooting_mut_family::editor::shooting::terminology;
         pub use semio_s_artifact_shooting_shooting_tests::editor::shooting::ui_helpers_and_io;
-        pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::wasm;
+        pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::wasm;
 
         #[path = "."]
         pub mod commands {
-            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::asset;
-            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::camera;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::asset;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::camera;
             pub use semio_s_artifact_shooting_shooting_shooting::editor::shooting::commands::export;
-            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::document;
-            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::gumball;
-            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::scene;
-            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::selection;
-            pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::editor::shooting::commands::shot;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::document;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::gumball;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::scene;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::selection;
+            pub use semio_s_artifact_shooting_shooting_tests_dims_sun::editor::shooting::commands::shot;
         }
 
         #[path = "."]
@@ -582,7 +582,7 @@ pub use semio_s_artifact_shooting_shooting_mut_family::editor::shooting::demo_se
 pub mod viewer {
     #[path = "."]
     pub mod shooting {
-        pub use semio_s_artifact_shooting_shooting_tests_dims_scene_sun_to_half::viewer::shooting::*;
+        pub use semio_s_artifact_shooting_shooting_tests_dims_sun::viewer::shooting::*;
 
         pub use semio_s_artifact_shooting_shooting_mut_family::viewer::shooting::presence;
         pub use semio_s_artifact_shooting_shooting_mut_family::viewer::shooting::config;

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "language": "de",
+  "contract": "Monthly balance Q_h = Q_l - eta * Q_g and Q_c = Q_g - eta_c * Q_l of the running example (DIN V 4108-6:2003-06)",
+  "hoursPerMonth": 744,
+  "solarFactors": { "gPerp": 0.6, "fS": 0.8, "fC": 1.0, "fF": 0.7, "fW": 0.9 },
+  "cases": [
+    { "name": "transition month", "dThetaK": 10, "irradiationKWhM2": 65, "qlKWh": 1638, "qgKWh": 813, "eta": 0.859, "qhKWh": 940 },
+    { "name": "January", "dThetaK": 20, "irradiationKWhM2": 26, "qlKWh": 3097, "qgKWh": 459, "eta": 0.981, "qhKWh": 2647 }
+  ],
+  "cooling": { "name": "July", "dThetaK": 6, "irradiationKWhM2": 54, "qlKWh": 1054, "qgKWh": 713, "etaC": 0.531, "qcKWh": 153 },
+  "degreeDays": { "indoorC": 20, "heatingLimitC": 15, "expectedKdPerA": 3500, "toleranceKdPerA": 50 },
+  "oracle": "numpy re-derivation from areas, U-values, volume, n, 0.34 Wh/(m3K), and the solar factors of the running example (0.6 g, 0.8 F_S, 1 F_C, 0.7 F_F, 0.9 F_W), 5 W/m2 * 60 m2"
+}

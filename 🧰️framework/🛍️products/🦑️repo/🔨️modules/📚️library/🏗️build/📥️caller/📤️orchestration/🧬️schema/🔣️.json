@@ -55,6 +55,34 @@
     }
   },
   "definitions": {
+    "Operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "operation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "orchestration"
+        },
+        "operation": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9-]*$"
+          }
+        }
+      }
+    },
     "Task": {
       "type": "object",
       "additionalProperties": false,

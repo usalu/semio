@@ -48,8 +48,8 @@ caption_bar = _manim_module.caption_bar
 swap_caption = _manim_module.swap_caption
 hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
-set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_references = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.📚️references.🐍️")
 _morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 unit_text = _manim_module.unit_text
@@ -65,8 +65,7 @@ ripples = _manim_module.ripples
 flow_animation = _manim_module.flow_animation
 droplets = _manim_module.droplets
 
-# 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
-set_vo_language("de")
+# 🗣️ Measured clause durations live in vo_timing.json.
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -170,7 +169,7 @@ class Beat1_LastZuerstSenken(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Reduce the load first, then ventilate", "Erst die Last senken, dann lüften"))
-        din = _din_ref("DIN 4108-2")
+        din = _din_ref(_references.cite(("din-4108-2", "abschn8")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -303,7 +302,7 @@ class Beat2_SorptionsKuehlung(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Sorption-assisted cooling (DEC)", "Sorptionsgestützte Kühlung (DEC)"))
-        din = _din_ref("VDI 2078")
+        din = _din_ref(_references.cite(("vdi-6022-1", "hygiene")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -355,7 +354,7 @@ class Beat2_SorptionsKuehlung(Scene):
                        size=LABEL_FONT_SIZE, color=P_RED),
             math_label(r"24\,\mathrm{°C}", at=np.array([0.95, y_sup + 0.55, 0.0]),
                        size=LABEL_FONT_SIZE, color=P_YELLOW),
-            math_label(r"19\,\mathrm{°C}", at=np.array([3.6, y_sup + 0.55, 0.0]),
+            math_label(r"18\,\mathrm{°C}", at=np.array([3.6, y_sup + 0.55, 0.0]),
                        size=LABEL_FONT_SIZE, color=P_CYAN),
         )
         end_tags = VGroup(
@@ -445,7 +444,7 @@ class Beat2_SorptionsKuehlung(Scene):
             _microbe([-3.3 + i * 0.55, strip_y - 0.08, 0.0], P_TEAL) for i in range(4)
         ])
         survivors = (normal[2], normal[3])
-        cycle_tag = math_label(r"ΔT\!\uparrow\;\;Δx\!\uparrow", at=np.array([-4.75, strip_y - 0.08, 0.0]),
+        cycle_tag = math_label(r"\Delta\theta\!\uparrow\;\;\Delta x\!\uparrow", at=np.array([-4.75, strip_y - 0.08, 0.0]),
                                size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left")
         verdict = Text(tr("Mutation:\nthe harmful survive", "Mutation:\ndie Schädlichen überleben"),
                        font_size=LABEL_FONT_SIZE, color=P_RED, line_spacing=0.8)
@@ -500,7 +499,7 @@ class Beat3_KomfortStrategie(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Strategy: free cooling first", "Strategie: freie Kühlung zuerst"))
-        din = _din_ref("DIN EN 16798-1")
+        din = _din_ref(_references.cite(("din-en-16798-1", "kategorien")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))

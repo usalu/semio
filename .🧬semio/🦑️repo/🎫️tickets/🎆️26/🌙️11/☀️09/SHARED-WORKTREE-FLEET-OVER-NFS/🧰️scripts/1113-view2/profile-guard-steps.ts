@@ -1,0 +1,18 @@
+import {heapStats} from "bun:jsc";
+import {readFile} from "node:fs/promises";
+import {join} from "node:path";
+const [moduleRoot,worktree]=process.argv.slice(2) as [string,string];
+const git=await import(`${moduleRoot}/🌿️git/🟦️.ts`);
+const boundary=await import(`${moduleRoot}/🚧️boundary/🟦️.ts`);
+const mb=(n:number)=>(n/1048576).toFixed(0);
+const show=(label:string,ms:number)=>{(globalThis as any).Bun.gc(true);const m=process.memoryUsage(),h=heapStats();console.log(label.padEnd(24),String(ms).padStart(6),"ms rss",mb(m.rss),"heapUsed",mb(m.heapUsed),"maxRSS",mb(process.resourceUsage().maxRSS*1024));};
+show("start",0);
+let t=performance.now();
+const tracked=(await git.trackedEntriesV1(worktree))!;show("tracked",Math.round(performance.now()-t));
+const text=await readFile(join(worktree,".gitignore"),"utf8");
+t=performance.now();
+const found=await boundary.caseDependentIgnoresV1(text,tracked.map((e:any)=>e.path));show("caseDependentIgnores",Math.round(performance.now()-t));
+t=performance.now();
+const spelling=await git.spellingV1(worktree,tracked.map((e:any)=>e.path));show("spelling",Math.round(performance.now()-t));
+t=performance.now();
+const folds=new Map<string,number>();for(const e of tracked){const k=boundary.foldNameV1(e.path);folds.set(k,(folds.get(k)??0)+1);}show("folds",Math.round(performance.now()-t));

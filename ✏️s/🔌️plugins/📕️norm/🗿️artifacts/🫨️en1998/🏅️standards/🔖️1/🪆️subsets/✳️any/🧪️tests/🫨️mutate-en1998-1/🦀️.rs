@@ -209,6 +209,7 @@ const KINDS: &[&str] = &[
     "change-foundation-pile-modulus-pa",
     "change-foundation-pile-ks-nm3",
     "change-foundation-pile-head-shear-n",
+    "change-foundation-pile-axial-load-n",
     "change-foundation-pile-head-fixed",
     "change-foundation-pile-iface-m",
     "change-foundation-pile-up-vs-ms",
@@ -1553,6 +1554,12 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../🧫️fixtures/🧬️mutations/✏️change-foundation-pile-head-shear-n/✅apply/🔣️.mutation.json"),
             include_str!("../🧫️fixtures/🧬️mutations/✏️change-foundation-pile-head-shear-n/✅apply/🔣️.after.json"),
             include_str!("../🧫️fixtures/🧬️mutations/✏️change-foundation-pile-head-shear-n/✅apply/🔣️.outcome.json"),
+        ),
+        "change-foundation-pile-axial-load-n" => (
+            include_str!("../🧫️fixtures/🧬️mutations/✏️change-foundation-pile-axial-load-n/✅apply/🔣️.before.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✏️change-foundation-pile-axial-load-n/✅apply/🔣️.mutation.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✏️change-foundation-pile-axial-load-n/✅apply/🔣️.after.json"),
+            include_str!("../🧫️fixtures/🧬️mutations/✏️change-foundation-pile-axial-load-n/✅apply/🔣️.outcome.json"),
         ),
         "change-foundation-pile-head-fixed" => (
             include_str!("../🧫️fixtures/🧬️mutations/✏️change-foundation-pile-head-fixed/✅apply/🔣️.before.json"),

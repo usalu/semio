@@ -87,6 +87,13 @@ pub struct En1998Snapshot {
 }
 //#endregion 🔖️Snapshot
 
+/// 🌱 Initial subject of a live evaluation session: the worked example.
+impl Default for En1998Snapshot {
+    fn default() -> Self {
+        Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En)
+    }
+}
+
 impl En1998Snapshot {
     /// 📸️ Reference EN 1998 subject under the explicitly chosen annex; the annex is never defaulted.
     pub fn example(annex: semio_s_plugin_norm_compliance::AnnexChoice) -> Self {
@@ -384,6 +391,7 @@ impl En1998Snapshot {
             pile_moment_rd_nm: 0.0,
             base_friction_angle_deg: 0.0,
             base_pore_pressure_pa: 0.0,
+            pile_axial_load_n: 0.0,
         }];
         s.retaining_walls = vec![En1998RetainingWall {
             id: "rw-1".into(),
@@ -539,6 +547,7 @@ impl En1998Snapshot {
             pile_moment_rd_nm: 0.0,
             base_friction_angle_deg: 0.0,
             base_pore_pressure_pa: 0.0,
+            pile_axial_load_n: 0.0,
         }];
         s.retaining_walls = vec![En1998RetainingWall {
             id: "rw-weak".into(),
@@ -803,12 +812,8 @@ pub struct En1998Site {
     pub a_gr: f64,
     pub de_ground_combo: DeGroundCombo,
     /// 🏛️ EN annex ground type A–E (EN 1998-1 Table 3.1). Empty under DE annex.
-    #[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing_if = "String::is_empty"))]
-    #[value(default, skip_serializing_if = "String::is_empty")]
     pub en_ground_type: EnGroundType,
     /// 📜️ EN annex spectrum type (`type1` | `type2`). Empty under DE annex.
-    #[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing_if = "String::is_empty"))]
-    #[value(default, skip_serializing_if = "String::is_empty")]
     pub en_spectrum_type: EnSpectrumType,
     pub importance_class: ImportanceClass,
     pub v_s30_m_s: f64,
@@ -1389,6 +1394,9 @@ pub struct En1998Foundation {
     pub pile_moment_rd_nm: f64,
     pub base_friction_angle_deg: f64,
     pub base_pore_pressure_pa: f64,
+    /// ⬇️ Design axial force N_Ed [N] at the pile head; with the liquefied thickness it gives the buckling of the pile in liquefied soil (EN 1998-5 5.4.2).
+    #[dsl(unit = "N")]
+    pub pile_axial_load_n: f64,
 }
 
 /// 🧱 Retaining wall for EN 1998-5.

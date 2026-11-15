@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import schema from "../../🎭️e2e/🔒️sessions/🧬️schema/🔣️.json" with { type: "json" };
 import fixtures from "../../🎭️e2e/🔒️sessions/🧫️fixtures/🔣️.json" with { type: "json" };
-import { SHARD_TABLE, allocateWorkersV1, planStacksV1, projectMatchesV1, runTopologySessionsV1, scheduleStacksV1, splitProjectArgumentsV1, splitWorkerArgumentsV1, waveArgumentsV1, workerBudgetV1 } from "../../🎭️e2e/🔒️sessions/🟦️.ts";
+import { SHARD_TABLE, allocateWorkersV1, browserInstallOutputV1, planStacksV1, projectMatchesV1, runTopologySessionsV1, scheduleStacksV1, splitProjectArgumentsV1, splitWorkerArgumentsV1, waveArgumentsV1, workerBudgetV1 } from "../../🎭️e2e/🔒️sessions/🟦️.ts";
+import policySchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 describe("scoped topology sessions", () => {
@@ -88,5 +89,16 @@ describe("sharded end-to-end stacks", () => {
     expect(concurrent).toBe(true);
     expect(stacks.map(stack => [stack.label, stack.waves.map(wave => wave.shard)])).toEqual([["rehearsal", ["shared", "exclusive"]], ["dev-shared", ["shared"]], ["dev-exclusive", ["exclusive"]]]);
     expect(stacks.flatMap(stack => stack.waves).flatMap(wave => wave.projects).filter(project => project === "faults")).toHaveLength(2);
+  });
+
+  it("admits the browser install output under the repository command policy for any caller grant", () => {
+    const validate = new Ajv({ strict: false }).compile(policySchema);
+    for (const grant of [{ maximumBytes: 134_217_728, maximumLines: 1_000_000 }, { maximumBytes: 9_007_199_254_740_991, maximumLines: 10 }, { maximumBytes: 1, maximumLines: 1 }]) {
+      const policy = { version: 1, maximumElapsedMilliseconds: 600_000, output: browserInstallOutputV1(grant) };
+      expect(validateJsonSchemaSubset(policySchema, policy)).toEqual([]);
+      expect(validate(policy)).toBe(true);
+      expect(policy.output.maximumBytes).toBeLessThanOrEqual(grant.maximumBytes);
+      expect(policy.output.maximumLines).toBeLessThanOrEqual(grant.maximumLines);
+    }
   });
 });

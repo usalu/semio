@@ -1,7 +1,7 @@
 //! 🔺️ `change-fastened-joint-gauge` diff: patches `gauge` of the addressed fastened_joints block row.
 
 use crate::change_fastened_joint_gauge::ChangeFastenedJointGauge;
-use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993FastenedJointsDelta, En1993FastenedJointsPatch};
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993FastenedJointDelta, En1993FastenedJointPatch};
 use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &ChangeFastenedJointGauge, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
@@ -14,5 +14,5 @@ pub fn diff(payload: &ChangeFastenedJointGauge, base: &En1993Snapshot) -> protoc
     if row.gauge == payload.new_gauge {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "The fastened_joints block already has this value.");
     }
-    protocol::MutationOutcome::new(En1993Diff { fastened_joints: En1993FastenedJointsDelta::modification(payload.id.clone(), En1993FastenedJointsPatch { gauge: Some(payload.new_gauge), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1993Diff { fastened_joints: En1993FastenedJointDelta::modification(payload.id.clone(), En1993FastenedJointPatch { gauge: Some(payload.new_gauge), ..Default::default() }), ..Default::default() })
 }

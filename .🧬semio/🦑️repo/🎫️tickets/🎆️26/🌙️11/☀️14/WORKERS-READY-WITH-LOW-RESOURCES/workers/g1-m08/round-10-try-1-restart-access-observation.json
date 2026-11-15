@@ -1,0 +1,23 @@
+{
+  "at": "2026-11-14T23:35:29.270736+00:00",
+  "native_access": [],
+  "hosts": {
+    "host-ac6bfe8f337c.json": {
+      "metadata": {
+        "pid": 21242,
+        "startedAt": 1794698842200,
+        "implementation": "28e87fbf8be568a33deb5279c63bba36ecaaaf5f280e6e180d23885eed938d00"
+      },
+      "access_lines": [],
+      "human_lines": [
+        "graph: 614 stale projects, 94 taken from the fleet, 6 too heavy for this machine (@semio-tech/repo-lib (about 27770 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-dev (about 8452 MB), @semio-tech/framework-os (about 8368 MB), @semio-tech/framework-os-kernel (about 6984 MB), @semio-tech/print (about 3628 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 520",
+        "graph: project @semio-tech/framework-job-rs (language:cargo) grew by 2696 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here",
+        "repository:command failed with exit code 1",
+        "graph: 614 stale projects, 413 taken from the fleet, 1 too heavy for this machine (workspace (about 13780 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 201"
+      ],
+      "last_fleet_line": [
+        "graph: waiting for the fleet: 0 of 201 projects arrived"
+      ]
+    }
+  }
+}

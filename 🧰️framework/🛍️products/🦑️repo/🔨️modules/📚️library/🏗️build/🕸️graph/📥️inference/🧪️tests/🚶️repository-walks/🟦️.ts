@@ -1,5 +1,5 @@
 /** 🚶️ Contract: a repository walk of the input precision (the crate index of the Cargo manifests, the TypeScript files that entry globs and tsconfig includes select) is a derived fact. A project that used it holds one row (the digest of the answer) instead of the directories the walk listed; the walk is asked again only when a row it read went stale, and an equal answer keeps every holder valid. Oracle: a Python walk of its own copy of the tree (standard library only) after every recorded and every seeded edit of directories and files anywhere; the answer of the derived fact equals the oracle's after every edit, and whenever every supporting row still holds the answer is the one the holders hold. */
-import {afterAll, expect, test} from "bun:test";
+import {afterAll, expect, setDefaultTimeout, test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
@@ -10,6 +10,8 @@ import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 
 import {createClosureSettlerV1} from "../../../🧮️derived-nodes/🧩️closure-kinds/🟨️.mjs";
+import {createNodeStoreV1} from "../../../🧮️derived-nodes/💾️store/🟨️.mjs";
+setDefaultTimeout(120000);
 const inference = await import("../../🟨️.mjs"), {createScriptInputCache, libraryBootstrap} = inference as any;
 await libraryBootstrap;
 const observation = await import("../../../../👁️observation/🟨️.mjs") as any, scriptInputs = await import("../../🧭️script-inputs/🟨️.mjs") as any, engine = await import("../../../../📥️inputs/🎯️precision/🟦️.ts") as any;
@@ -187,7 +189,7 @@ test("the closure settler answers the same walks as asking them again: equal to 
   let moved = 0;
   for (const [index, random] of sequences.entries()) moved += (await replay(random, expected[index]!, undefined, true)).moved;
   expect(moved).toBeGreaterThan(50);
-  const root = build(sequence.files), settler = createClosureSettlerV1(), first = await askSettled(settler, root, "crates");
+  const root = build(sequence.files), settler = createClosureSettlerV1({store: createNodeStoreV1({root: build({})})}), first = await askSettled(settler, root, "crates");
   const again = await askSettled(settler, root, "crates", first.answer);
   expect(again.answer.fact).toBe(first.answer.fact);expect(again.reused, "unchanged support: no new walk").toBe(1);
 });

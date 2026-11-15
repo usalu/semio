@@ -4,6 +4,7 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VIEWS } from "@teaching/staffage";
+import type { AuthoredVolume } from "@teaching/staffage";
 import { StaffageClock, StaffageFigure, defineStaffageElement } from "@teaching/staffage-react";
 import { SoftwareBackend } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🖥️viewer/🟦️.ts";
 import { translator } from "../../🔨️modules/🌐️i18n/🟦️.ts";
@@ -11,7 +12,8 @@ import { ENGLISH } from "../../🔨️modules/🌐️i18n/🔠️english/🟦️
 import { GERMAN } from "../../🔨️modules/🌐️i18n/🔡️german/🟦️.ts";
 import { preparedOf, prepareModel } from "../../🔨️modules/🧊️spatial/🏭️prepare/🟦️.ts";
 import { ModelStage, type StageOptions, type StageState } from "../../🔨️modules/🧊️spatial/🖥️stage/🟦️.ts";
-import { CAMERA_PRESETS, describeModel, modelKey, qualityFor, variantOf } from "../../🔨️modules/🧊️spatial/🟦️.ts";
+import { qualityOf } from "@teaching/staffage";
+import { CAMERA_PRESETS, describeModel, modelKey, sceneOf, variantOf } from "../../🔨️modules/🧊️spatial/🟦️.ts";
 import { sampleFigure } from "../🧰️support/🧰️.ts";
 
 const pose = { kind: "pose", pose: "stand" } as const;
@@ -70,7 +72,7 @@ describe("🔀 mode switching", () => {
   });
 
   it("names the refusal of the axonometric view for an asset without volume, in both languages, and draws nothing instead", async () => {
-    const bare = { ...sampleFigure, volume: undefined } as never;
+    const bare = { ...sampleFigure, volumes: Object.fromEntries([50, 100, 200, 500].map((s) => [`${s}`, { status: "unavailable", denominator: s }])) } as never;
     for (const language of ["en", "de"] as const) {
       const { container, unmount } = render(<StaffageFigure asset={bare} view="light-solid" viewpoint="axonometric" scale={{ denominator: 100 }} language={language} query={pose} />);
       await waitFor(() => expect(container.querySelector("[data-refusal='axonometric']")).not.toBeNull(), { timeout: 60000 });
@@ -82,7 +84,7 @@ describe("🔀 mode switching", () => {
 });
 
 describe("🎭️ representations are variants of one model", () => {
-  it("builds every one of the seven views as a variant, rebuilds only for scale, pose or clip and analytic settings, never for view or camera", async () => {
+  it("builds every one of the seven views as a variant over one model with a scene per scale and mode, rebuilds only for pose or clip and analytic settings, never for scale, view or camera", async () => {
     const { host, stage } = mount();
     const scenes: { variants: ReadonlyMap<string, unknown> }[] = [];
     stage.viewer!.on("ready", ({ scene }) => scenes.push(scene));
@@ -97,9 +99,31 @@ describe("🎭️ representations are variants of one model", () => {
     stage.update({ preset: "plan" });
     expect(preparedOf(sampleFigure, { ...base })).toBe(document);
     expect(scenes).toHaveLength(1);
-    expect(modelKey(sampleFigure, { ...base, scale: 50 })).not.toBe(modelKey(sampleFigure, base));
+    expect(modelKey(sampleFigure, { ...base, scale: 50 })).toBe(modelKey(sampleFigure, base));
+    expect(sceneOf({ scale: 50, view: "thermal" })).toBe("s50-thermal");
+    expect(sceneOf({ scale: 200, view: "moments" })).toBe("s200-structure");
+    expect(sceneOf({ scale: 100, view: "dark-line" })).toBe("s100-body");
     expect(modelKey(sampleFigure, { ...base, query: clip })).not.toBe(modelKey(sampleFigure, base));
     expect(modelKey(sampleFigure, { ...base, thermalQuantity: "skin-temperature" })).not.toBe(modelKey(sampleFigure, base));
+  });
+
+  it("selects the scene of the scale and mode of the request without rebuilding the model: 1:100 light-solid is s100-body, thermal at 1:50 is s50-thermal, forces at 1:200 is s200-structure, and a scale with no model is refused by name", async () => {
+    const { host, stage } = mount();
+    await ready(host);
+    const viewer = stage.viewer!;
+    expect(viewer.activeScene).toBe("s100-body");
+    const document = preparedOf(sampleFigure, { ...base });
+    for (const [scale, view, scene] of [[50, "thermal", "s50-thermal"], [200, "forces", "s200-structure"], [500, "dark-line", "s500-body"], [100, "light-solid", "s100-body"]] as const) {
+      stage.update({ scale, view });
+      expect(viewer.activeScene, `${scale} ${view}`).toBe(scene);
+      expect(sceneOf({ scale, view })).toBe(scene);
+    }
+    expect(preparedOf(sampleFigure, { ...base })).toBe(document);
+    stage.update({ scale: 77 });
+    await waitFor(() => expect(phase(host)).toBe("unavailable"));
+    expect(host.querySelector(".semio-stage-notice")!.textContent).toContain("1:77");
+    stage.update({ scale: 100 });
+    await waitFor(() => expect(phase(host)).toBe("ready"));
   });
 
   it("paints the representations differently: solid, line, thermal, forces and moments pictures are not the same picture", async () => {
@@ -114,11 +138,11 @@ describe("🎭️ representations are variants of one model", () => {
     for (const [a, b] of [["light-solid", "dark-solid"], ["light-solid", "thermal"], ["light-solid", "forces"], ["dark-line", "light-line"]] as const) expect(pictures.get(a)).not.toBe(pictures.get(b));
   });
 
-  it("follows the level of detail of the scale: a coarser scale tessellates coarser", () => {
-    const chords = [20, 50, 100, 200, 500].map((scale) => qualityFor(sampleFigure, scale).chordM);
+  it("follows the level of detail of the scale with the one rule of the downloads: a coarser scale tessellates coarser", () => {
+    const chords = [20, 50, 100, 200, 500].map((scale) => qualityOf(sampleFigure, scale).chordM);
     expect([...chords].sort((x, y) => x - y)).toEqual(chords);
     expect(chords[0]).toBeLessThan(chords[4]!);
-    expect(qualityFor(sampleFigure, 500).maxSegments).toBeLessThan(qualityFor(sampleFigure, 20).maxSegments);
+    expect(qualityOf(sampleFigure, 500).maxSegments).toBeLessThan(qualityOf(sampleFigure, 20).maxSegments);
   });
 });
 
@@ -330,21 +354,21 @@ describe("🛟 fallbacks, progress and cancellation", () => {
 
   it("cancels a preparation the viewer is not showing yet through the abort signal and keeps nothing", async () => {
     const control = new AbortController();
-    const outcome = prepareModel(sampleFigure, { ...base, scale: 77 }, { signal: control.signal, progress: (fraction) => fraction > 0.1 && control.abort() });
+    const outcome = prepareModel(sampleFigure, { ...base, range: { mode: "span", spanK: 77 } }, { signal: control.signal, progress: (fraction) => fraction > 0.1 && control.abort() });
     await expect(outcome).rejects.toMatchObject({ name: "AbortError" });
-    expect(preparedOf(sampleFigure, { ...base, scale: 77 })).toBeUndefined();
+    expect(preparedOf(sampleFigure, { ...base, range: { mode: "span", spanK: 77 } })).toBeUndefined();
   });
 
   it("names an asset without volume in words in both languages and shows no viewer", async () => {
     for (const language of ["en", "de"] as const) {
-      const { host, root } = mount({ asset: { ...sampleFigure, volume: undefined } as never, language });
+      const { host, root } = mount({ asset: { ...sampleFigure, volumes: Object.fromEntries([50, 100, 200, 500].map((s) => [`${s}`, { status: "unavailable", denominator: s }])) } as never, language });
       await waitFor(() => expect(root().getAttribute("data-state")).toBe("unavailable"));
       expect(host.querySelector(".semio-stage-notice")!.textContent).toContain(translator(language)("model.noVolume"));
     }
   });
 
   it("explains a model that cannot be built as an alert instead of a blank box", async () => {
-    const { host, root } = mount({ asset: { ...sampleFigure, volume: { ...sampleFigure.volume!, solids: [{ ...sampleFigure.volume!.solids[0]!, bone: "no-such-bone" } as never] } } as never });
+    const { host, root } = mount({ asset: { ...sampleFigure, volumes: { ...sampleFigure.volumes, "100": { ...sampleFigure.volumes["100"], body: [{ ...(sampleFigure.volumes["100"] as AuthoredVolume).body[0]!, bone: "no-such-bone" }] } } } as never });
     await waitFor(() => expect(root().getAttribute("data-state")).toBe("error"), { timeout: 60000 });
     expect(host.querySelector("[role='alert']")!.textContent).toContain(ENGLISH["model.error"]);
   });

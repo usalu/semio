@@ -1,0 +1,3745 @@
+{
+ "volumes": {
+  "50": {
+   "status": "authored",
+   "denominator": 50,
+   "body": [
+    {
+     "id": "wall-core",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.3,
+      5.35,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.35,
+       0.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-insulation",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "mineral-wool",
+     "role": "body",
+     "tone": 0.9,
+     "profile": [
+      [
+       -2.33,
+       -0.5
+      ],
+      [
+       -2.33,
+       0.5
+      ],
+      [
+       3.02,
+       0.5
+      ],
+      [
+       3.02,
+       -0.5
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.12,
+        -0.1
+       ],
+       [
+        -0.12,
+        0.1
+       ],
+       [
+        0.12,
+        0.1
+       ],
+       [
+        0.12,
+        -0.1
+       ]
+      ],
+      [
+       [
+        2.76,
+        -0.1
+       ],
+       [
+        2.76,
+        0.1
+       ],
+       [
+        3.0,
+        0.1
+       ],
+       [
+        3.0,
+        -0.1
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.2,
+     "to": -0.02
+    },
+    {
+     "id": "wall-render",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "render",
+     "role": "body",
+     "tone": 0.55,
+     "profile": [
+      [
+       -2.33,
+       -0.5
+      ],
+      [
+       -2.33,
+       0.5
+      ],
+      [
+       3.02,
+       0.5
+      ],
+      [
+       3.02,
+       -0.5
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.12,
+        -0.1
+       ],
+       [
+        -0.12,
+        0.1
+       ],
+       [
+        0.12,
+        0.1
+       ],
+       [
+        0.12,
+        -0.1
+       ]
+      ],
+      [
+       [
+        2.76,
+        -0.1
+       ],
+       [
+        2.76,
+        0.1
+       ],
+       [
+        3.0,
+        0.1
+       ],
+       [
+        3.0,
+        -0.1
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.02,
+     "to": 0.0
+    },
+    {
+     "id": "rebar-v-inner",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0,
+       0.006
+      ],
+      [
+       4.91,
+       0.006
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      -0.45,
+      -2.03,
+      -0.45
+     ],
+     "repeat": {
+      "count": 7,
+      "translation": [
+       0,
+       0,
+       0.15
+      ]
+     }
+    },
+    {
+     "id": "rebar-h-inner",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0,
+       0.006
+      ],
+      [
+       0.9,
+       0.006
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.438,
+      -2.03,
+      -0.45
+     ],
+     "repeat": {
+      "count": 33,
+      "translation": [
+       0,
+       0.15,
+       0
+      ]
+     }
+    },
+    {
+     "id": "rebar-v-outer",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0,
+       0.006
+      ],
+      [
+       4.91,
+       0.006
+      ]
+     ],
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "origin": [
+      -0.25,
+      -2.03,
+      -0.45
+     ],
+     "repeat": {
+      "count": 7,
+      "translation": [
+       0,
+       0,
+       0.15
+      ]
+     }
+    },
+    {
+     "id": "rebar-h-outer",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.2,
+     "profile": [
+      [
+       0,
+       0.006
+      ],
+      [
+       0.9,
+       0.006
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.262,
+      -2.03,
+      -0.45
+     ],
+     "repeat": {
+      "count": 33,
+      "translation": [
+       0,
+       0.15,
+       0
+      ]
+     }
+    },
+    {
+     "id": "pad-beam",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "anchor-pad",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.18,
+      0.24,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.11,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "plate-beam",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.02,
+      0.2,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       -0.01,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "nut-beam-top",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       0.097,
+       -0.055072
+      ],
+      [
+       0.085,
+       -0.048144
+      ],
+      [
+       0.073,
+       -0.055072
+      ],
+      [
+       0.073,
+       -0.068928
+      ],
+      [
+       0.085,
+       -0.075856
+      ],
+      [
+       0.097,
+       -0.068928
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 0.013,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     }
+    },
+    {
+     "id": "nut-beam-bottom",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       -0.073,
+       -0.055072
+      ],
+      [
+       -0.085,
+       -0.048144
+      ],
+      [
+       -0.097,
+       -0.055072
+      ],
+      [
+       -0.097,
+       -0.068928
+      ],
+      [
+       -0.085,
+       -0.075856
+      ],
+      [
+       -0.073,
+       -0.068928
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 0.013,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     }
+    },
+    {
+     "id": "pad-strut",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "anchor-pad",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.18,
+      0.24,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.11,
+       2.88,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "plate-strut",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.02,
+      0.2,
+      0.16
+     ],
+     "transform": {
+      "translation": [
+       -0.01,
+       2.88,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "nut-strut-top",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       2.977,
+       -0.055072
+      ],
+      [
+       2.965,
+       -0.048144
+      ],
+      [
+       2.953,
+       -0.055072
+      ],
+      [
+       2.953,
+       -0.068928
+      ],
+      [
+       2.965,
+       -0.075856
+      ],
+      [
+       2.977,
+       -0.068928
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 0.013,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     }
+    },
+    {
+     "id": "nut-strut-bottom",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.25,
+     "profile": [
+      [
+       2.807,
+       -0.055072
+      ],
+      [
+       2.795,
+       -0.048144
+      ],
+      [
+       2.783,
+       -0.055072
+      ],
+      [
+       2.783,
+       -0.068928
+      ],
+      [
+       2.795,
+       -0.075856
+      ],
+      [
+       2.807,
+       -0.068928
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 0.013,
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     }
+    },
+    {
+     "id": "beam",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.08,
+       0.0
+      ],
+      [
+       0.08,
+       0.041
+      ],
+      [
+       0.0726,
+       0.041
+      ],
+      [
+       0.0726,
+       0.0115
+      ],
+      [
+       0.071915,
+       0.008056
+      ],
+      [
+       0.069964,
+       0.005136
+      ],
+      [
+       0.067044,
+       0.003185
+      ],
+      [
+       0.0636,
+       0.0025
+      ],
+      [
+       -0.0636,
+       0.0025
+      ],
+      [
+       -0.067044,
+       0.003185
+      ],
+      [
+       -0.069964,
+       0.005136
+      ],
+      [
+       -0.071915,
+       0.008056
+      ],
+      [
+       -0.0726,
+       0.0115
+      ],
+      [
+       -0.0726,
+       0.041
+      ],
+      [
+       -0.08,
+       0.041
+      ],
+      [
+       -0.08,
+       0.0
+      ],
+      [
+       -0.08,
+       -0.041
+      ],
+      [
+       -0.0726,
+       -0.041
+      ],
+      [
+       -0.0726,
+       -0.0115
+      ],
+      [
+       -0.071915,
+       -0.008056
+      ],
+      [
+       -0.069964,
+       -0.005136
+      ],
+      [
+       -0.067044,
+       -0.003185
+      ],
+      [
+       -0.0636,
+       -0.0025
+      ],
+      [
+       0.0636,
+       -0.0025
+      ],
+      [
+       0.067044,
+       -0.003185
+      ],
+      [
+       0.069964,
+       -0.005136
+      ],
+      [
+       0.071915,
+       -0.008056
+      ],
+      [
+       0.0726,
+       -0.0115
+      ],
+      [
+       0.0726,
+       -0.041
+      ],
+      [
+       0.08,
+       -0.041
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 5.5
+    },
+    {
+     "id": "glass-0",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      1.28,
+      0.02,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.74,
+       0.09,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass-1",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      1.28,
+      0.02,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       2.08,
+       0.09,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass-2",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "profile": [
+      [
+       -0.5,
+       2.78
+      ],
+      [
+       0.5,
+       2.78
+      ],
+      [
+       0.5,
+       4.06
+      ],
+      [
+       0.055,
+       4.06
+      ],
+      [
+       0.055,
+       3.77
+      ],
+      [
+       -0.055,
+       3.77
+      ],
+      [
+       -0.055,
+       4.06
+      ],
+      [
+       -0.5,
+       4.06
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.08,
+     "to": 0.1
+    },
+    {
+     "id": "glass-3",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      1.28,
+      0.02,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       4.76,
+       0.09,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cheek-beam-l",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       3.773347,
+       0.13439
+      ],
+      [
+       3.775305,
+       0.122029
+      ],
+      [
+       3.780986,
+       0.110879
+      ],
+      [
+       3.789836,
+       0.102029
+      ],
+      [
+       3.964733,
+       -0.048541
+      ],
+      [
+       3.981459,
+       -0.057063
+      ],
+      [
+       4.0,
+       -0.06
+      ],
+      [
+       4.018541,
+       -0.057063
+      ],
+      [
+       4.035267,
+       -0.048541
+      ],
+      [
+       4.048541,
+       -0.035267
+      ],
+      [
+       4.057063,
+       -0.018541
+      ],
+      [
+       4.06,
+       0.0
+      ],
+      [
+       4.057063,
+       0.018541
+      ],
+      [
+       4.048541,
+       0.035267
+      ],
+      [
+       4.035267,
+       0.048541
+      ],
+      [
+       3.836859,
+       0.166751
+      ],
+      [
+       3.825708,
+       0.172432
+      ],
+      [
+       3.813347,
+       0.17439
+      ],
+      [
+       3.800986,
+       0.172432
+      ],
+      [
+       3.789836,
+       0.166751
+      ],
+      [
+       3.780986,
+       0.157901
+      ],
+      [
+       3.775305,
+       0.146751
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.042,
+     "to": 0.05
+    },
+    {
+     "id": "cheek-wall-l",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       2.78
+      ],
+      [
+       0.081153,
+       2.78157
+      ],
+      [
+       0.093514,
+       2.783527
+      ],
+      [
+       0.104665,
+       2.789209
+      ],
+      [
+       0.113514,
+       2.798058
+      ],
+      [
+       0.119196,
+       2.809209
+      ],
+      [
+       0.121153,
+       2.82157
+      ],
+      [
+       0.119196,
+       2.83393
+      ],
+      [
+       0.113514,
+       2.845081
+      ],
+      [
+       0.0,
+       2.98
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.032,
+     "to": 0.04
+    },
+    {
+     "id": "cheek-beam-r",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       3.773347,
+       0.13439
+      ],
+      [
+       3.775305,
+       0.122029
+      ],
+      [
+       3.780986,
+       0.110879
+      ],
+      [
+       3.789836,
+       0.102029
+      ],
+      [
+       3.964733,
+       -0.048541
+      ],
+      [
+       3.981459,
+       -0.057063
+      ],
+      [
+       4.0,
+       -0.06
+      ],
+      [
+       4.018541,
+       -0.057063
+      ],
+      [
+       4.035267,
+       -0.048541
+      ],
+      [
+       4.048541,
+       -0.035267
+      ],
+      [
+       4.057063,
+       -0.018541
+      ],
+      [
+       4.06,
+       0.0
+      ],
+      [
+       4.057063,
+       0.018541
+      ],
+      [
+       4.048541,
+       0.035267
+      ],
+      [
+       4.035267,
+       0.048541
+      ],
+      [
+       3.836859,
+       0.166751
+      ],
+      [
+       3.825708,
+       0.172432
+      ],
+      [
+       3.813347,
+       0.17439
+      ],
+      [
+       3.800986,
+       0.172432
+      ],
+      [
+       3.789836,
+       0.166751
+      ],
+      [
+       3.780986,
+       0.157901
+      ],
+      [
+       3.775305,
+       0.146751
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.05,
+     "to": -0.042
+    },
+    {
+     "id": "cheek-wall-r",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       2.78
+      ],
+      [
+       0.081153,
+       2.78157
+      ],
+      [
+       0.093514,
+       2.783527
+      ],
+      [
+       0.104665,
+       2.789209
+      ],
+      [
+       0.113514,
+       2.798058
+      ],
+      [
+       0.119196,
+       2.809209
+      ],
+      [
+       0.121153,
+       2.82157
+      ],
+      [
+       0.119196,
+       2.83393
+      ],
+      [
+       0.113514,
+       2.845081
+      ],
+      [
+       0.0,
+       2.98
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.04,
+     "to": -0.032
+    },
+    {
+     "id": "pin-beam",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "profile": [
+      [
+       0,
+       0.012
+      ],
+      [
+       0.1,
+       0.012
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      4.0,
+      0.0,
+      -0.05
+     ]
+    },
+    {
+     "id": "pin-beam-2",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "profile": [
+      [
+       0,
+       0.01
+      ],
+      [
+       0.1,
+       0.01
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      3.813347,
+      0.13439,
+      -0.05
+     ]
+    },
+    {
+     "id": "pin-wall",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "profile": [
+      [
+       0,
+       0.01
+      ],
+      [
+       0.08,
+       0.01
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.081153,
+      2.82157,
+      -0.04
+     ]
+    },
+    {
+     "id": "strut-tube",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.03015
+      ],
+      [
+       4.678935,
+       0.03015
+      ]
+     ],
+     "axis": [
+      -0.811534,
+      0.584305,
+      0.0
+     ],
+     "origin": [
+      3.845808,
+      0.111018,
+      0.0
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-wall-concrete",
+     "of": "wall-core",
+     "region": "wall-face",
+     "layer": "wall-concrete"
+    },
+    {
+     "id": "th-wall-wool",
+     "of": "wall-insulation",
+     "region": "wall-face",
+     "layer": "wall-wool"
+    },
+    {
+     "id": "th-wall-render",
+     "of": "wall-render",
+     "region": "wall-face",
+     "layer": "wall-render",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-concrete-beam",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.3,
+      0.24,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.35,
+       0.0,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "wall-plate",
+     "layer": "plate-concrete"
+    },
+    {
+     "id": "th-pad-beam",
+     "of": "pad-beam",
+     "region": "wall-plate",
+     "layer": "plate-pad"
+    },
+    {
+     "id": "th-plate-beam",
+     "of": "plate-beam",
+     "region": "wall-plate",
+     "layer": "plate-steel"
+    },
+    {
+     "id": "th-concrete-strut",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.3,
+      0.24,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.35,
+       2.88,
+       0.0
+      ]
+     },
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ],
+     "region": "wall-plate",
+     "layer": "plate-concrete"
+    },
+    {
+     "id": "th-pad-strut",
+     "of": "pad-strut",
+     "region": "wall-plate",
+     "layer": "plate-pad"
+    },
+    {
+     "id": "th-plate-strut",
+     "of": "plate-strut",
+     "region": "wall-plate",
+     "layer": "plate-steel"
+    },
+    {
+     "id": "th-beam",
+     "of": "beam",
+     "region": "canopy-steel"
+    },
+    {
+     "id": "th-glass-0",
+     "of": "glass-0",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-glass-1",
+     "of": "glass-1",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-glass-2",
+     "of": "glass-2",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-glass-3",
+     "of": "glass-3",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-strut-tube",
+     "of": "strut-tube",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-cheek-beam-l",
+     "of": "cheek-beam-l",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-cheek-beam-r",
+     "of": "cheek-beam-r",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-cheek-wall-l",
+     "of": "cheek-wall-l",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-cheek-wall-r",
+     "of": "cheek-wall-r",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-pin-beam",
+     "of": "pin-beam",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-pin-beam-2",
+     "of": "pin-beam-2",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-pin-wall",
+     "of": "pin-wall",
+     "region": "rod-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-beam",
+     "of": "beam",
+     "member": "canopy",
+     "part": "member"
+    },
+    {
+     "id": "m-strut",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.0253
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       4.678935,
+       0.0285
+      ],
+      [
+       4.678935,
+       0.0253
+      ],
+      [
+       0.0,
+       0.0253
+      ]
+     ],
+     "axis": [
+      -0.811534,
+      0.584305,
+      0.0
+     ],
+     "origin": [
+      3.845808,
+      0.111018,
+      0.0
+     ],
+     "member": "canopy",
+     "part": "member"
+    },
+    {
+     "id": "j-cheek-beam-l",
+     "of": "cheek-beam-l",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-cheek-beam-r",
+     "of": "cheek-beam-r",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-cheek-wall-l",
+     "of": "cheek-wall-l",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-cheek-wall-r",
+     "of": "cheek-wall-r",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-pin-beam",
+     "of": "pin-beam",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-pin-beam-2",
+     "of": "pin-beam-2",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-pin-wall",
+     "of": "pin-wall",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-plate-beam",
+     "of": "plate-beam",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-plate-strut",
+     "of": "plate-strut",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-rod-beam-top",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.45,
+       0.008
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.45,
+      0.085,
+      -0.062
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     },
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-rod-beam-bottom",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.45,
+       0.008
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.45,
+      -0.085,
+      -0.062
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     },
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-rod-strut-top",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.45,
+       0.008
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.45,
+      2.965,
+      -0.062
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     },
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-rod-strut-bottom",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.45,
+       0.008
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.45,
+      2.795,
+      -0.062
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     },
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "support-wall-pin",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.015
+      ],
+      [
+       0.1,
+       0.015
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.008,
+      0.0,
+      -0.05
+     ],
+     "member": "canopy",
+     "part": "support",
+     "anchor": "wall-pin"
+    },
+    {
+     "id": "support-tie-rod",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       0.013
+      ],
+      [
+       0.0,
+       0.02
+      ],
+      [
+       0.09,
+       0.02
+      ],
+      [
+       0.09,
+       0.013
+      ],
+      [
+       0.0,
+       0.013
+      ]
+     ],
+     "axis": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "origin": [
+      4.0,
+      0.0,
+      -0.045
+     ],
+     "member": "canopy",
+     "part": "support",
+     "anchor": "tie-rod"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the tied canopy as built. Wall stub of the three layers, concrete 300 mm with two reinforcement mats (12 mm bars, 150 mm grid, cover 50 mm, hidden), mineral wool 180 mm and render 20 mm, both with a cut-out round each anchor. Two anchor blocks (separation pad 180 mm x 240 x 200 mm) with the 20 mm steel end plate and four hex nuts of the anchor bolts on its face. The IPE 160 beam is one extrusion of the true section (82 x 160 mm, flange 7.4, web 5, root radius 9 mm, 20.2 cm2) 5.5 m long, welded to the end plate; on its top flange lie four 20 mm laminated glass sheets (1.28 x 1.0 m, 60 mm joints) of which the one the strut passes through has a slot. The strut is a 60.3 mm tube; at the beam end two 8 mm cheek plates outside the flange tips carry the 24 mm node pin through the web and a 20 mm pin through the tube end, at the wall end two 8 mm cheeks on the end plate carry one pin through the tube.",
+     "de": "K\u00f6rper: das abgespannte Vordach wie gebaut. Wandausschnitt aus den drei Schichten, Beton 300 mm mit zwei Bewehrungsmatten (St\u00e4be 12 mm, Raster 150 mm, \u00dcberdeckung 50 mm, verdeckt), Mineralwolle 180 mm und Putz 20 mm, beide mit Aussparung um jeden Anker. Zwei Ankerbl\u00f6cke (Trennlage 180 mm x 240 x 200 mm) mit der 20-mm-Stahlkopfplatte und vier Sechskantmuttern der Ankerbolzen auf ihrer Fl\u00e4che. Der Tr\u00e4ger IPE 160 ist eine Extrusion des wahren Profils (82 x 160 mm, Flansch 7,4, Steg 5, Ausrundung 9 mm, 20,2 cm2) von 5,5 m, an die Kopfplatte geschwei\u00dft; auf seinem Obergurt liegen vier Verbundglasscheiben von 20 mm (1,28 x 1,0 m, Fugen 60 mm), von denen die vom Stab durchdrungene einen Schlitz hat. Der Stab ist ein Rohr 60,3 mm; am Tr\u00e4gerende halten zwei Wangenbleche 8 mm au\u00dferhalb der Flanschenden den Knotenbolzen 24 mm durch den Steg und einen Bolzen 20 mm durch das Rohrende, am Wandende zwei Wangen 8 mm auf der Kopfplatte einen Bolzen durch das Rohr."
+    },
+    {
+     "en": "Thermal: the wall region is three stacked layer slabs of their real thickness (concrete 300 / wool 180 / render 20 mm: the render slab is the exposed one and carries the cut edges as section faces); the anchor region is stacked the same way (concrete column behind the pad, pad, steel plate); beam, strut with its cheeks and pins and the four glass sheets (underside as section face, the sheet lies on the flange) reference the body.",
+     "de": "Thermik: die Wandregion besteht aus drei gestapelten Schichtplatten in ihrer wirklichen Dicke (Beton 300 / Wolle 180 / Putz 20 mm: die Putzplatte ist die freie und tr\u00e4gt die Schnittkanten als Schnittfl\u00e4chen); die Ankerregion ist gleich gestapelt (Betons\u00e4ule hinter der Trennlage, Trennlage, Stahlplatte); Tr\u00e4ger, Stab mit Wangen und Bolzen sowie die vier Glasscheiben (Unterseite als Schnittfl\u00e4che, die Scheibe liegt auf dem Flansch) verweisen auf den K\u00f6rper."
+    },
+    {
+     "en": "Structure: the IPE 160 as the member of the canopy bone, the strut as a hollow tube 60.3 x 3.2 mm (wall inside the body skin so that the exposed area stays), the cheeks, pins and end plates as joints, four 16 mm anchor bolts per plate reaching 450 mm into the concrete (hidden in the pad and the wall); supports by type: a 30 mm hinge pin through the end plate at the wall (pin), a bushing round the node pin (roller, the strut line of action).",
+     "de": "Tragwerk: der IPE 160 als Stab des Vordachknochens, der Rohrstab als Hohlrohr 60,3 x 3,2 mm (Wand innerhalb der K\u00f6rperhaut, damit die freie Fl\u00e4che bleibt), Wangen, Bolzen und Kopfplatten als Gelenke, vier Ankerbolzen 16 mm je Platte, 450 mm tief im Beton (verdeckt in Trennlage und Wand); Auflager nach Typ: ein Gelenkbolzen 30 mm durch die Kopfplatte an der Wand (Gelenk), eine Buchse um den Knotenbolzen (Rolle, die Wirkungslinie des Stabs)."
+    }
+   ]
+  },
+  "100": {
+   "status": "authored",
+   "denominator": 100,
+   "body": [
+    {
+     "id": "wall-core",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.3,
+      5.35,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.35,
+       0.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-insulation",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "mineral-wool",
+     "role": "body",
+     "tone": 0.9,
+     "profile": [
+      [
+       -2.33,
+       -0.5
+      ],
+      [
+       -2.33,
+       0.5
+      ],
+      [
+       3.02,
+       0.5
+      ],
+      [
+       3.02,
+       -0.5
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.12,
+        -0.1
+       ],
+       [
+        -0.12,
+        0.1
+       ],
+       [
+        0.12,
+        0.1
+       ],
+       [
+        0.12,
+        -0.1
+       ]
+      ],
+      [
+       [
+        2.76,
+        -0.1
+       ],
+       [
+        2.76,
+        0.1
+       ],
+       [
+        3.0,
+        0.1
+       ],
+       [
+        3.0,
+        -0.1
+       ]
+      ]
+     ],
+     "plane": "yz",
+     "from": -0.2,
+     "to": 0.0
+    },
+    {
+     "id": "plate-beam",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "anchor-pad",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.2,
+      0.24,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.1,
+       0.0,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "plate-strut",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "anchor-pad",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.2,
+      0.24,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.1,
+       2.88,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "beam",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.08,
+       0.0
+      ],
+      [
+       0.08,
+       0.041
+      ],
+      [
+       0.0726,
+       0.041
+      ],
+      [
+       0.0726,
+       0.0115
+      ],
+      [
+       0.069964,
+       0.005136
+      ],
+      [
+       0.0636,
+       0.0025
+      ],
+      [
+       -0.0636,
+       0.0025
+      ],
+      [
+       -0.069964,
+       0.005136
+      ],
+      [
+       -0.0726,
+       0.0115
+      ],
+      [
+       -0.0726,
+       0.041
+      ],
+      [
+       -0.08,
+       0.041
+      ],
+      [
+       -0.08,
+       0.0
+      ],
+      [
+       -0.08,
+       -0.041
+      ],
+      [
+       -0.0726,
+       -0.041
+      ],
+      [
+       -0.0726,
+       -0.0115
+      ],
+      [
+       -0.069964,
+       -0.005136
+      ],
+      [
+       -0.0636,
+       -0.0025
+      ],
+      [
+       0.0636,
+       -0.0025
+      ],
+      [
+       0.069964,
+       -0.005136
+      ],
+      [
+       0.0726,
+       -0.0115
+      ],
+      [
+       0.0726,
+       -0.041
+      ],
+      [
+       0.08,
+       -0.041
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 5.5
+    },
+    {
+     "id": "glass-0",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      1.28,
+      0.02,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       0.74,
+       0.09,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass-1",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      1.28,
+      0.02,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       2.08,
+       0.09,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "glass-2",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "profile": [
+      [
+       -0.5,
+       2.78
+      ],
+      [
+       0.5,
+       2.78
+      ],
+      [
+       0.5,
+       4.06
+      ],
+      [
+       0.055,
+       4.06
+      ],
+      [
+       0.055,
+       3.77
+      ],
+      [
+       -0.055,
+       3.77
+      ],
+      [
+       -0.055,
+       4.06
+      ],
+      [
+       -0.5,
+       4.06
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.08,
+     "to": 0.1
+    },
+    {
+     "id": "glass-3",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "size": [
+      1.28,
+      0.02,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       4.76,
+       0.09,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "cheek-beam-l",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       3.773347,
+       0.13439
+      ],
+      [
+       3.775305,
+       0.122029
+      ],
+      [
+       3.780986,
+       0.110879
+      ],
+      [
+       3.789836,
+       0.102029
+      ],
+      [
+       3.964733,
+       -0.048541
+      ],
+      [
+       3.981459,
+       -0.057063
+      ],
+      [
+       4.0,
+       -0.06
+      ],
+      [
+       4.018541,
+       -0.057063
+      ],
+      [
+       4.035267,
+       -0.048541
+      ],
+      [
+       4.048541,
+       -0.035267
+      ],
+      [
+       4.057063,
+       -0.018541
+      ],
+      [
+       4.06,
+       0.0
+      ],
+      [
+       4.057063,
+       0.018541
+      ],
+      [
+       4.048541,
+       0.035267
+      ],
+      [
+       4.035267,
+       0.048541
+      ],
+      [
+       3.836859,
+       0.166751
+      ],
+      [
+       3.825708,
+       0.172432
+      ],
+      [
+       3.813347,
+       0.17439
+      ],
+      [
+       3.800986,
+       0.172432
+      ],
+      [
+       3.789836,
+       0.166751
+      ],
+      [
+       3.780986,
+       0.157901
+      ],
+      [
+       3.775305,
+       0.146751
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.042,
+     "to": 0.057
+    },
+    {
+     "id": "cheek-wall-l",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       2.78
+      ],
+      [
+       0.081153,
+       2.78157
+      ],
+      [
+       0.093514,
+       2.783527
+      ],
+      [
+       0.104665,
+       2.789209
+      ],
+      [
+       0.113514,
+       2.798058
+      ],
+      [
+       0.119196,
+       2.809209
+      ],
+      [
+       0.121153,
+       2.82157
+      ],
+      [
+       0.119196,
+       2.83393
+      ],
+      [
+       0.113514,
+       2.845081
+      ],
+      [
+       0.0,
+       2.98
+      ]
+     ],
+     "plane": "xy",
+     "from": 0.032,
+     "to": 0.047
+    },
+    {
+     "id": "cheek-beam-r",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       3.773347,
+       0.13439
+      ],
+      [
+       3.775305,
+       0.122029
+      ],
+      [
+       3.780986,
+       0.110879
+      ],
+      [
+       3.789836,
+       0.102029
+      ],
+      [
+       3.964733,
+       -0.048541
+      ],
+      [
+       3.981459,
+       -0.057063
+      ],
+      [
+       4.0,
+       -0.06
+      ],
+      [
+       4.018541,
+       -0.057063
+      ],
+      [
+       4.035267,
+       -0.048541
+      ],
+      [
+       4.048541,
+       -0.035267
+      ],
+      [
+       4.057063,
+       -0.018541
+      ],
+      [
+       4.06,
+       0.0
+      ],
+      [
+       4.057063,
+       0.018541
+      ],
+      [
+       4.048541,
+       0.035267
+      ],
+      [
+       4.035267,
+       0.048541
+      ],
+      [
+       3.836859,
+       0.166751
+      ],
+      [
+       3.825708,
+       0.172432
+      ],
+      [
+       3.813347,
+       0.17439
+      ],
+      [
+       3.800986,
+       0.172432
+      ],
+      [
+       3.789836,
+       0.166751
+      ],
+      [
+       3.780986,
+       0.157901
+      ],
+      [
+       3.775305,
+       0.146751
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.057,
+     "to": -0.042
+    },
+    {
+     "id": "cheek-wall-r",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0.0,
+       2.78
+      ],
+      [
+       0.081153,
+       2.78157
+      ],
+      [
+       0.093514,
+       2.783527
+      ],
+      [
+       0.104665,
+       2.789209
+      ],
+      [
+       0.113514,
+       2.798058
+      ],
+      [
+       0.119196,
+       2.809209
+      ],
+      [
+       0.121153,
+       2.82157
+      ],
+      [
+       0.119196,
+       2.83393
+      ],
+      [
+       0.113514,
+       2.845081
+      ],
+      [
+       0.0,
+       2.98
+      ]
+     ],
+     "plane": "xy",
+     "from": -0.047,
+     "to": -0.032
+    },
+    {
+     "id": "pin-beam",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "profile": [
+      [
+       0,
+       0.012
+      ],
+      [
+       0.114,
+       0.012
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      4.0,
+      0.0,
+      -0.057
+     ]
+    },
+    {
+     "id": "pin-wall",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "detail",
+     "tone": 0.1,
+     "profile": [
+      [
+       0,
+       0.01
+      ],
+      [
+       0.094,
+       0.01
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      0.081153,
+      2.82157,
+      -0.047
+     ]
+    },
+    {
+     "id": "strut-tube",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.03015
+      ],
+      [
+       4.678935,
+       0.03015
+      ]
+     ],
+     "axis": [
+      -0.811534,
+      0.584305,
+      0.0
+     ],
+     "origin": [
+      3.845808,
+      0.111018,
+      0.0
+     ]
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-wall-core",
+     "of": "wall-core",
+     "region": "wall-face",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-wall-insulation",
+     "of": "wall-insulation",
+     "region": "wall-face",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-plate-beam",
+     "of": "plate-beam",
+     "region": "wall-plate"
+    },
+    {
+     "id": "th-plate-strut",
+     "of": "plate-strut",
+     "region": "wall-plate"
+    },
+    {
+     "id": "th-beam",
+     "of": "beam",
+     "region": "canopy-steel"
+    },
+    {
+     "id": "th-glass-0",
+     "of": "glass-0",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-glass-1",
+     "of": "glass-1",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-glass-2",
+     "of": "glass-2",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-glass-3",
+     "of": "glass-3",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-strut-tube",
+     "of": "strut-tube",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-cheek-beam-l",
+     "of": "cheek-beam-l",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-cheek-beam-r",
+     "of": "cheek-beam-r",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-cheek-wall-l",
+     "of": "cheek-wall-l",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-cheek-wall-r",
+     "of": "cheek-wall-r",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-pin-beam",
+     "of": "pin-beam",
+     "region": "rod-steel"
+    },
+    {
+     "id": "th-pin-wall",
+     "of": "pin-wall",
+     "region": "rod-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-beam",
+     "of": "beam",
+     "member": "canopy",
+     "part": "member"
+    },
+    {
+     "id": "m-strut",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.0253
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       4.678935,
+       0.0285
+      ],
+      [
+       4.678935,
+       0.0253
+      ],
+      [
+       0.0,
+       0.0253
+      ]
+     ],
+     "axis": [
+      -0.811534,
+      0.584305,
+      0.0
+     ],
+     "origin": [
+      3.845808,
+      0.111018,
+      0.0
+     ],
+     "member": "canopy",
+     "part": "member"
+    },
+    {
+     "id": "j-cheek-beam-l",
+     "of": "cheek-beam-l",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-cheek-beam-r",
+     "of": "cheek-beam-r",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-cheek-wall-l",
+     "of": "cheek-wall-l",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-cheek-wall-r",
+     "of": "cheek-wall-r",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-pin-beam",
+     "of": "pin-beam",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-pin-wall",
+     "of": "pin-wall",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-plate-beam",
+     "of": "plate-beam",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-plate-strut",
+     "of": "plate-strut",
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-rod-beam",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.45,
+       0.008
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.45,
+      0.085,
+      -0.062
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     },
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "j-rod-strut",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.35,
+     "profile": [
+      [
+       0,
+       0.008
+      ],
+      [
+       0.45,
+       0.008
+      ]
+     ],
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "origin": [
+      -0.45,
+      2.965,
+      -0.062
+     ],
+     "repeat": {
+      "count": 2,
+      "translation": [
+       0,
+       0,
+       0.124
+      ]
+     },
+     "member": "canopy",
+     "part": "joint"
+    },
+    {
+     "id": "support-wall-pin",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.02
+      ],
+      [
+       0.1,
+       0.02
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.008,
+      0.0,
+      -0.05
+     ],
+     "member": "canopy",
+     "part": "support",
+     "anchor": "wall-pin"
+    },
+    {
+     "id": "support-tie-rod",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.02
+      ],
+      [
+       0.09,
+       0.02
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      4.0,
+      0.0,
+      -0.045
+     ],
+     "member": "canopy",
+     "part": "support",
+     "anchor": "tie-rod"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the same canopy at 1:100. The wall is the concrete core and one 200 mm outer slab (wool and render merged, the 2D draws them as one) with the two anchor blocks in it (pad and end plate merged into one 200 x 240 x 200 mm block, as the 2D draws them). The IPE 160 keeps its true section with the root radius cut to two segments; the four glass sheets with the strut slot; the strut tube with the two 15 mm cheek plates at each end (they overlap the flange tips by 6 mm, the weld) and one pin per end, the 20 mm cross pin at the beam end and the anchor nuts are merged away. The reinforcement (12 mm bars) is below the 15 mm feature and left out.",
+     "de": "K\u00f6rper: dasselbe Vordach bei 1:100. Die Wand ist der Betonkern und eine \u00e4u\u00dfere Platte von 200 mm (Wolle und Putz zusammengefasst, die 2D zeichnet sie als eine) mit den beiden Ankerbl\u00f6cken darin (Trennlage und Kopfplatte zu einem Block 200 x 240 x 200 mm zusammengefasst, wie ihn die 2D zeichnet). Der IPE 160 beh\u00e4lt sein wahres Profil, die Ausrundung ist auf zwei Segmente gek\u00fcrzt; die vier Glasscheiben mit dem Schlitz f\u00fcr den Stab; das Stabrohr mit je zwei Wangenblechen von 15 mm an beiden Enden (sie \u00fcberdecken die Flanschenden um 6 mm, die Schwei\u00dfnaht) und je einem Bolzen, der Querbolzen von 20 mm am Tr\u00e4gerende und die Ankermuttern sind zusammengefasst. Die Bewehrung (St\u00e4be 12 mm) liegt unter dem Merkmal von 15 mm und fehlt."
+    },
+    {
+     "en": "Thermal: references to the body; the concrete core carries all faces as section faces and the outer slab its cut edges, so the wall region is the exposed outer face only; each glass sheet has its underside as section face. The layers of the wall and the anchor region are merged at this scale (B2 asks for the shells at 1:50 only).",
+     "de": "Thermik: Verweise auf den K\u00f6rper; der Betonkern tr\u00e4gt alle Fl\u00e4chen als Schnittfl\u00e4chen und die \u00e4u\u00dfere Platte ihre Schnittkanten, so dass die Wandregion nur die freie Au\u00dfenfl\u00e4che ist; jede Glasscheibe hat ihre Unterseite als Schnittfl\u00e4che. Die Schichten von Wand und Ankerregion sind in diesem Ma\u00dfstab zusammengefasst (B2 verlangt die Schalen nur bei 1:50)."
+    },
+    {
+     "en": "Structure: beam as member (the IPE body), the strut as a hollow tube, cheeks, pins and the two anchor blocks as joints, one pair of 16 mm anchor bolts per block, supports as a hinge pin at the wall and a 40 mm roller at the node.",
+     "de": "Tragwerk: Tr\u00e4ger als Stab (der IPE-K\u00f6rper), der Rohrstab als Hohlrohr, Wangen, Bolzen und die beiden Ankerbl\u00f6cke als Gelenke, je ein Paar Ankerbolzen 16 mm je Block, Auflager als Gelenkbolzen an der Wand und Rolle 40 mm am Knoten."
+    }
+   ]
+  },
+  "200": {
+   "status": "authored",
+   "denominator": 200,
+   "body": [
+    {
+     "id": "wall-core",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.6,
+     "size": [
+      0.3,
+      5.35,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.35,
+       0.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "wall-outer",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "mineral-wool",
+     "role": "body",
+     "tone": 0.8,
+     "size": [
+      0.2,
+      5.35,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.1,
+       0.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "beam",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.08,
+       0.0
+      ],
+      [
+       0.08,
+       0.041
+      ],
+      [
+       0.0726,
+       0.041
+      ],
+      [
+       0.0726,
+       0.0115
+      ],
+      [
+       0.0636,
+       0.0025
+      ],
+      [
+       -0.0636,
+       0.0025
+      ],
+      [
+       -0.0726,
+       0.0115
+      ],
+      [
+       -0.0726,
+       0.041
+      ],
+      [
+       -0.08,
+       0.041
+      ],
+      [
+       -0.08,
+       0.0
+      ],
+      [
+       -0.08,
+       -0.041
+      ],
+      [
+       -0.0726,
+       -0.041
+      ],
+      [
+       -0.0726,
+       -0.0115
+      ],
+      [
+       -0.0636,
+       -0.0025
+      ],
+      [
+       0.0636,
+       -0.0025
+      ],
+      [
+       0.0726,
+       -0.0115
+      ],
+      [
+       0.0726,
+       -0.041
+      ],
+      [
+       0.08,
+       -0.041
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 5.5
+    },
+    {
+     "id": "glass-roof",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "profile": [
+      [
+       -0.5,
+       0.1
+      ],
+      [
+       0.5,
+       0.1
+      ],
+      [
+       0.5,
+       5.4
+      ],
+      [
+       -0.5,
+       5.4
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.013906,
+        3.931329
+       ],
+       [
+        -0.02645,
+        3.920676
+       ],
+       [
+        -0.036406,
+        3.904084
+       ],
+       [
+        -0.042798,
+        3.883176
+       ],
+       [
+        -0.045,
+        3.86
+       ],
+       [
+        -0.042798,
+        3.836824
+       ],
+       [
+        -0.036406,
+        3.815916
+       ],
+       [
+        -0.02645,
+        3.799324
+       ],
+       [
+        -0.013906,
+        3.788671
+       ],
+       [
+        0.0,
+        3.785
+       ],
+       [
+        0.013906,
+        3.788671
+       ],
+       [
+        0.02645,
+        3.799324
+       ],
+       [
+        0.036406,
+        3.815916
+       ],
+       [
+        0.042798,
+        3.836824
+       ],
+       [
+        0.045,
+        3.86
+       ],
+       [
+        0.042798,
+        3.883176
+       ],
+       [
+        0.036406,
+        3.904084
+       ],
+       [
+        0.02645,
+        3.920676
+       ],
+       [
+        0.013906,
+        3.931329
+       ],
+       [
+        0.0,
+        3.935
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.08,
+     "to": 0.1
+    },
+    {
+     "id": "strut-tube",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.03015
+      ],
+      [
+       4.928935,
+       0.03015
+      ]
+     ],
+     "axis": [
+      -0.811534,
+      0.584305,
+      0.0
+     ],
+     "origin": [
+      4.0,
+      0.0,
+      0.0
+     ],
+     "slender": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-wall-core",
+     "of": "wall-core",
+     "region": "wall-face",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-wall-outer",
+     "of": "wall-outer",
+     "region": "wall-face",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-plate-beam",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "anchor-pad",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.2,
+      0.24,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.1,
+       0.0,
+       0.0
+      ]
+     },
+     "region": "wall-plate"
+    },
+    {
+     "id": "th-plate-strut",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "anchor-pad",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.2,
+      0.24,
+      0.2
+     ],
+     "transform": {
+      "translation": [
+       -0.1,
+       2.88,
+       0.0
+      ]
+     },
+     "region": "wall-plate"
+    },
+    {
+     "id": "th-beam",
+     "of": "beam",
+     "region": "canopy-steel"
+    },
+    {
+     "id": "th-glass-roof",
+     "of": "glass-roof",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-strut-tube",
+     "of": "strut-tube",
+     "region": "rod-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-beam",
+     "of": "beam",
+     "member": "canopy",
+     "part": "member"
+    },
+    {
+     "id": "m-strut",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.0253
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       4.928935,
+       0.0285
+      ],
+      [
+       4.928935,
+       0.0253
+      ],
+      [
+       0.0,
+       0.0253
+      ]
+     ],
+     "axis": [
+      -0.811534,
+      0.584305,
+      0.0
+     ],
+     "origin": [
+      4.0,
+      0.0,
+      0.0
+     ],
+     "slender": true,
+     "member": "canopy",
+     "part": "member"
+    },
+    {
+     "id": "support-wall-pin",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.03
+      ],
+      [
+       0.1,
+       0.03
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      -0.008,
+      0.0,
+      -0.05
+     ],
+     "member": "canopy",
+     "part": "support",
+     "anchor": "wall-pin"
+    },
+    {
+     "id": "support-tie-rod",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "profile": [
+      [
+       0,
+       0.03
+      ],
+      [
+       0.09,
+       0.03
+      ]
+     ],
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "origin": [
+      4.0,
+      0.0,
+      -0.045
+     ],
+     "member": "canopy",
+     "part": "support",
+     "anchor": "tie-rod"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: the wall is the concrete core and one 200 mm outer slab (anchor blocks inside, not drawn at this scale); the IPE 160 keeps its true section (82 x 160 mm, root radius a single chamfer); one 20 mm glass slab 5.3 x 1.0 m with the elliptical hole the strut passes through; the strut is the true 60.3 mm tube from node to node, `slender` (82 diameters long, the 2D draws it as a line); cheeks, pins, nuts, reinforcement and the glass joints are below the 30 mm feature and merged into the masses.",
+     "de": "K\u00f6rper: die Wand ist der Betonkern und eine \u00e4u\u00dfere Platte von 200 mm (Ankerbl\u00f6cke darin, in diesem Ma\u00dfstab nicht gezeichnet); der IPE 160 beh\u00e4lt sein wahres Profil (82 x 160 mm, Ausrundung als eine Fase); eine Glasplatte 20 mm, 5,3 x 1,0 m mit dem elliptischen Loch, durch das der Stab geht; der Stab ist das wahre Rohr 60,3 mm von Knoten zu Knoten, `slender` (82 Durchmesser lang, die 2D zeichnet ihn als Linie); Wangen, Bolzen, Muttern, Bewehrung und die Glasfugen liegen unter dem Merkmal von 30 mm und sind in die Massen \u00fcbergegangen."
+    },
+    {
+     "en": "Thermal: references to the body with section faces on the concrete core and the cut edges of the outer slab and the glass underside; the anchor region is two real 200 x 240 x 200 mm blocks inside the outer slab (their exposed faces add 2 % to the total, which alone is compared at this scale).",
+     "de": "Thermik: Verweise auf den K\u00f6rper mit Schnittfl\u00e4chen am Betonkern, den Schnittkanten der \u00e4u\u00dferen Platte und der Glasunterseite; die Ankerregion sind zwei wirkliche Bl\u00f6cke 200 x 240 x 200 mm in der \u00e4u\u00dferen Platte (ihre freien Fl\u00e4chen erh\u00f6hen die Summe um 2 %, die in diesem Ma\u00dfstab allein verglichen wird)."
+    },
+    {
+     "en": "Structure: beam as member, the strut as a hollow tube, the node joints are merged into the strut ends (a 40 mm ball would be a second hinge solid more than the strut ends carry), supports as a hinge pin at the wall and a roller at the node, both 60 mm thick.",
+     "de": "Tragwerk: Tr\u00e4ger als Stab, der Rohrstab als Hohlrohr, die Knotengelenke gehen in die Stabenden \u00fcber, Auflager als Gelenkbolzen an der Wand und Rolle am Knoten, beide 60 mm dick."
+    }
+   ]
+  },
+  "500": {
+   "status": "authored",
+   "denominator": 500,
+   "body": [
+    {
+     "id": "wall",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "concrete",
+     "role": "body",
+     "tone": 0.7,
+     "size": [
+      0.5,
+      5.35,
+      1.0
+     ],
+     "transform": {
+      "translation": [
+       -0.25,
+       0.345,
+       0.0
+      ]
+     }
+    },
+    {
+     "id": "beam",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.4,
+     "profile": [
+      [
+       0.08,
+       0.0
+      ],
+      [
+       0.08,
+       0.041
+      ],
+      [
+       0.0726,
+       0.041
+      ],
+      [
+       0.0726,
+       0.0115
+      ],
+      [
+       0.0636,
+       0.0025
+      ],
+      [
+       -0.0636,
+       0.0025
+      ],
+      [
+       -0.0726,
+       0.0115
+      ],
+      [
+       -0.0726,
+       0.041
+      ],
+      [
+       -0.08,
+       0.041
+      ],
+      [
+       -0.08,
+       0.0
+      ],
+      [
+       -0.08,
+       -0.041
+      ],
+      [
+       -0.0726,
+       -0.041
+      ],
+      [
+       -0.0726,
+       -0.0115
+      ],
+      [
+       -0.0636,
+       -0.0025
+      ],
+      [
+       0.0636,
+       -0.0025
+      ],
+      [
+       0.0726,
+       -0.0115
+      ],
+      [
+       0.0726,
+       -0.041
+      ],
+      [
+       0.08,
+       -0.041
+      ]
+     ],
+     "plane": "yz",
+     "from": 0.0,
+     "to": 5.5,
+     "slender": true
+    },
+    {
+     "id": "roof",
+     "kind": "extrude",
+     "bone": "canopy",
+     "material": "glass",
+     "role": "glazing",
+     "tone": 0.92,
+     "profile": [
+      [
+       -0.5,
+       0.1
+      ],
+      [
+       0.5,
+       0.1
+      ],
+      [
+       0.5,
+       5.4
+      ],
+      [
+       -0.5,
+       5.4
+      ]
+     ],
+     "holes": [
+      [
+       [
+        -0.013906,
+        3.931329
+       ],
+       [
+        -0.02645,
+        3.920676
+       ],
+       [
+        -0.036406,
+        3.904084
+       ],
+       [
+        -0.042798,
+        3.883176
+       ],
+       [
+        -0.045,
+        3.86
+       ],
+       [
+        -0.042798,
+        3.836824
+       ],
+       [
+        -0.036406,
+        3.815916
+       ],
+       [
+        -0.02645,
+        3.799324
+       ],
+       [
+        -0.013906,
+        3.788671
+       ],
+       [
+        0.0,
+        3.785
+       ],
+       [
+        0.013906,
+        3.788671
+       ],
+       [
+        0.02645,
+        3.799324
+       ],
+       [
+        0.036406,
+        3.815916
+       ],
+       [
+        0.042798,
+        3.836824
+       ],
+       [
+        0.045,
+        3.86
+       ],
+       [
+        0.042798,
+        3.883176
+       ],
+       [
+        0.036406,
+        3.904084
+       ],
+       [
+        0.02645,
+        3.920676
+       ],
+       [
+        0.013906,
+        3.931329
+       ],
+       [
+        0.0,
+        3.935
+       ]
+      ]
+     ],
+     "plane": "zx",
+     "from": 0.08,
+     "to": 0.1
+    },
+    {
+     "id": "strut-tube",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.45,
+     "profile": [
+      [
+       0.0,
+       0.03015
+      ],
+      [
+       4.928935,
+       0.03015
+      ]
+     ],
+     "axis": [
+      -0.811534,
+      0.584305,
+      0.0
+     ],
+     "origin": [
+      4.0,
+      0.0,
+      0.0
+     ],
+     "slender": true
+    }
+   ],
+   "thermal": [
+    {
+     "id": "th-wall",
+     "of": "wall",
+     "region": "wall-face",
+     "sectionFaces": [
+      "-u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-wall-anchors",
+     "of": "wall",
+     "region": "wall-plate",
+     "sectionFaces": [
+      "-u",
+      "+u",
+      "-v",
+      "+v",
+      "-w",
+      "+w"
+     ]
+    },
+    {
+     "id": "th-beam",
+     "of": "beam",
+     "region": "canopy-steel"
+    },
+    {
+     "id": "th-roof",
+     "of": "roof",
+     "region": "canopy-glass",
+     "sectionFaces": [
+      "-v"
+     ]
+    },
+    {
+     "id": "th-strut-tube",
+     "of": "strut-tube",
+     "region": "rod-steel"
+    }
+   ],
+   "structure": [
+    {
+     "id": "m-beam",
+     "of": "beam",
+     "member": "canopy",
+     "part": "member"
+    },
+    {
+     "id": "m-strut",
+     "kind": "revolve",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.5,
+     "profile": [
+      [
+       0.0,
+       0.0253
+      ],
+      [
+       0.0,
+       0.0285
+      ],
+      [
+       4.928935,
+       0.0285
+      ],
+      [
+       4.928935,
+       0.0253
+      ],
+      [
+       0.0,
+       0.0253
+      ]
+     ],
+     "axis": [
+      -0.811534,
+      0.584305,
+      0.0
+     ],
+     "origin": [
+      4.0,
+      0.0,
+      0.0
+     ],
+     "slender": true,
+     "member": "canopy",
+     "part": "member"
+    },
+    {
+     "id": "support-wall-pin",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.075,
+      0.075,
+      0.1
+     ],
+     "transform": {
+      "translation": [
+       -0.02,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "canopy",
+     "part": "support",
+     "anchor": "wall-pin"
+    },
+    {
+     "id": "support-tie-rod",
+     "kind": "box",
+     "bone": "canopy",
+     "material": "steel",
+     "role": "body",
+     "tone": 0.3,
+     "size": [
+      0.075,
+      0.075,
+      0.09
+     ],
+     "transform": {
+      "translation": [
+       4.0,
+       0.0,
+       0.0
+      ]
+     },
+     "member": "canopy",
+     "part": "support",
+     "anchor": "tie-rod"
+    }
+   ],
+   "decisions": [
+    {
+     "en": "Body: four masses. The 500 mm wall block (concrete and insulation merged), the IPE 160 beam of its true section (82 x 160 mm, the thinnest part still above the 75 mm feature), the 20 mm glass roof as a glazing slab with the strut hole, and the strut as the true 60.3 mm tube (`slender`, the 2D draws it as a line).",
+     "de": "K\u00f6rper: vier Massen. Der Wandblock 500 mm (Beton und D\u00e4mmung zusammengefasst), der Tr\u00e4ger IPE 160 in wahrem Profil (82 x 160 mm, der d\u00fcnnste Teil liegt noch \u00fcber dem Merkmal von 75 mm), das Glasdach 20 mm als Glasplatte mit dem Loch f\u00fcr den Stab und der Stab als wahres Rohr 60,3 mm (`slender`, die 2D zeichnet ihn als Linie)."
+    },
+    {
+     "en": "Thermal: references to the body; the anchor region references the wall block with all faces as section faces (the anchors lie inside it and are not drawn at this scale; the region only stays covered).",
+     "de": "Thermik: Verweise auf den K\u00f6rper; die Ankerregion verweist auf den Wandblock mit allen Fl\u00e4chen als Schnittfl\u00e4chen (die Anker liegen darin und sind in diesem Ma\u00dfstab nicht gezeichnet; die Region bleibt nur belegt)."
+    },
+    {
+     "en": "Structure: beam and strut as members, supports as 75 mm blocks (hinge pin and roller); joints and anchor bolts are merged into the masses.",
+     "de": "Tragwerk: Tr\u00e4ger und Stab als St\u00e4be, Auflager als Bl\u00f6cke 75 mm (Gelenkbolzen und Rolle); Gelenke und Ankerbolzen sind in die Massen \u00fcbergegangen."
+    }
+   ]
+  }
+ }
+}

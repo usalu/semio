@@ -1,0 +1,4220 @@
+[
+  {
+    "at": "2026-11-14T22:28:37Z",
+    "elapsed_s": 25.36,
+    "source": "host-9888631afea4.log",
+    "line": "[capacity] admitted graph-plan: 1 job(s), 2048 MB reserved (6611 MB available, 2048 MB floor)"
+  },
+  {
+    "at": "2026-11-14T22:28:37Z",
+    "elapsed_s": 25.36,
+    "source": "host-9888631afea4.log",
+    "line": "graph: No verified change journal cursor is recorded for generation 60; verifying the tree once."
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:membership:0:126988\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying workspace membership: 0 of 126988 entries"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:membership:78260:126988\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying workspace membership: 78260 of 126988 entries"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:membership:95552:126988\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying workspace membership: 95552 of 126988 entries"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:membership:98906:126988\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying workspace membership: 98906 of 126988 entries"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:membership:102520:126988\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying workspace membership: 102520 of 126988 entries"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:membership:110168:126988\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying workspace membership: 110168 of 126988 entries"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:membership:124150:126988\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying workspace membership: 124150 of 126988 entries"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:membership:126988:126988\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:42Z",
+    "elapsed_s": 30.404,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying workspace membership: 126988 of 126988 entries"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:0:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 0 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:3295\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 3295 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:3295:3295\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 3295 of 3295 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:2512\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 2512 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:2512:2512\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 2512 of 2512 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:964\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 964 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:964:964\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 964 of 964 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:1030\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 1030 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:1030:1030\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 1030 of 1030 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:16\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 16 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:16:16\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 16 of 16 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:1025\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 1025 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:1025:1025\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 1025 of 1025 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:471\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 471 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:471:471\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 471 of 471 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:40960:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 40960 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:1318\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 1318 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:1318:1318\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 1318 of 1318 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:238\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 238 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:238:238\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 238 of 238 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:1196\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 1196 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:1196:1196\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 1196 of 1196 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:178\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 178 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:178:178\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 178 of 178 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:1264\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 1264 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:1264:1264\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 1264 of 1264 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:138\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 138 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:138:138\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 138 of 138 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:1001\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 1001 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:1001:1001\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 1001 of 1001 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:310\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 310 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:310:310\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 310 of 310 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:73728:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 73728 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:2288\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 2288 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:2288:2288\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 2288 of 2288 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:741\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 741 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:741:741\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 741 of 741 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8153\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8153 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8153:8153\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8153 of 8153 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8071\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8071 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8071:8071\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8071 of 8071 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:98304:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 98304 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8123\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8123 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8123:8123\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8123 of 8123 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8150\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8150 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8150:8150\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8150 of 8150 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8115\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8115 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8115:8115\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8115 of 8115 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:7880\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 7880 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:7880:7880\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 7880 of 7880 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:131072:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 131072 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:7947\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 7947 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:7947:7947\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 7947 of 7947 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8016\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8016 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8016:8016\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8016 of 8016 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:147456:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 147456 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:7848\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 7848 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:7848:7848\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 7848 of 7848 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8157\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8157 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8157:8157\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8157 of 8157 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8168\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8168 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8168:8168\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8168 of 8168 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:172032:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 172032 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8072\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8072 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:1024:8072\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 1024 of 8072 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8072:8072\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8072 of 8072 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:180224:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 180224 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:5450\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 5450 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:5450:5450\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 5450 of 5450 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:86\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 86 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:86:86\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 86 of 86 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:700\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 700 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:700:700\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 700 of 700 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:174\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 174 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:174:174\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 174 of 174 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:4111\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 4111 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:4111:4111\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 4111 of 4111 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:246\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 246 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:246:246\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 246 of 246 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:5258\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 5258 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:5258:5258\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 5258 of 5258 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:6149\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 6149 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:6149:6149\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 6149 of 6149 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:221184:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 221184 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:5743\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 5743 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:5743:5743\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 5743 of 5743 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:3029\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 3029 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:3029:3029\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 3029 of 3029 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:641\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 641 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:641:641\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 641 of 641 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:30\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 30 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:30:30\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 30 of 30 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:9\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 9 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:9:9\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 9 of 9 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:5108\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 5108 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:5108:5108\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 5108 of 5108 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:450\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 450 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:450:450\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 450 of 450 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:201\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 201 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:201:201\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 201 of 201 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:220\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 220 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:220:220\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 220 of 220 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:286720:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 286720 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:122\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 122 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:122:122\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 122 of 122 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:6\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 6 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:6:6\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 6 of 6 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:41\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 41 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:41:41\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 41 of 41 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:0\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 0 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:136\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 136 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:136:136\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 136 of 136 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:61\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 61 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:61:61\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 61 of 61 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:6467\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 6467 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:6467:6467\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 6467 of 6467 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:344064:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 344064 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:11\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 11 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:11:11\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 11 of 11 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:5679\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 5679 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:5679:5679\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 5679 of 5679 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:197\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 197 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:197:197\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 197 of 197 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:1811\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 1811 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:1811:1811\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 1811 of 1811 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:45\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 45 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:45:45\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 45 of 45 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:820\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 820 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:820:820\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 820 of 820 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:169\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 169 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:169:169\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 169 of 169 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:1735\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 1735 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:1735:1735\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 1735 of 1735 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:73\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 73 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:73:73\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 73 of 73 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:758\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 758 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:758:758\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 758 of 758 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:385024:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 385024 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:140\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 140 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:140:140\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 140 of 140 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:1395\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 1395 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:1395:1395\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 1395 of 1395 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:5\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 5 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:5:5\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 5 of 5 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:667\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 667 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:667:667\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 667 of 667 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:82\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 82 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:82:82\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 82 of 82 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:365\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 365 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:365:365\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 365 of 365 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:5\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 5 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:5:5\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 5 of 5 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:1982\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 1982 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:1982:1982\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 1982 of 1982 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:6\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 6 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:6:6\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 6 of 6 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:8\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 8 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:8:8\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 8 of 8 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:824\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 824 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:824:824\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 824 of 824 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:0:33\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 0 of 33 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:directories:33:33\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking directory stamps: 33 of 33 directories"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:1828\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 1828 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:1828:1828\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 1828 of 1828 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:3733\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 3733 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:3733:3733\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 3733 of 3733 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:0:4\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 0 of 4 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:files:4:4\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Checking file stamps: 4 of 4 files"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:doubt:451523:451523\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Classifying graph facts: 451523 of 451523 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:0:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:47Z",
+    "elapsed_s": 35.506,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 0 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:4096:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 4096 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:16384:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 16384 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:24576:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 24576 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:32768:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 32768 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:36864:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 36864 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:49152:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 49152 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:65536:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:52Z",
+    "elapsed_s": 40.562,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 65536 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:69632:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 69632 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:86016:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 86016 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:94208:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 94208 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:98304:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 98304 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:106496:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 106496 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:110592:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 110592 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:122880:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 122880 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:147456:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 147456 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:155648:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 155648 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:176128:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 176128 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:192512:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:28:57Z",
+    "elapsed_s": 45.61,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 192512 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:204800:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 204800 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:208896:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 208896 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:221184:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 221184 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:229376:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 229376 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:233472:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 233472 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:245760:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 245760 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:253952:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 253952 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:258048:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 258048 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:facts:272102:272102\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying graph facts: 272102 of 272102 facts"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:0:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:02Z",
+    "elapsed_s": 50.647,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 0 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:1:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 1 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:2:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 2 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:12:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 12 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:30:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 30 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:102:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 102 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:134:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 134 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:148:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 148 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:192:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:07Z",
+    "elapsed_s": 55.748,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 192 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:200:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 200 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:256:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 256 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:0:14332\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:2731:14332\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:5433:14332\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:8169:14332\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:11017:14332\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:13394:14332\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:14332:14332\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:0:256\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:256:256\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:257:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 257 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:440:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 440 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:0:9900\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:9900:9900\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:0:256\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:256:256\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:513:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:12Z",
+    "elapsed_s": 60.789,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 513 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:22Z",
+    "elapsed_s": 70.969,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:554:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:22Z",
+    "elapsed_s": 70.969,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 554 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:22Z",
+    "elapsed_s": 70.969,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:700:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:22Z",
+    "elapsed_s": 70.969,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 700 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:768:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 768 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:0:11382\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:11022:11382\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:11382:11382\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:0:255\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:255:255\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:769:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 769 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:1001:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 1001 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:0:11498\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:11498:11498\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:0:256\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:256:256\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:1025:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 1025 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:verification:1083:1083\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] graph:slice-worker · Verifying input closures: 1083 of 1083 closures"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:0:7118\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:parts:7118:7118\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:invalidation:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:0:59\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:38Z",
+    "elapsed_s": 86.223,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:rederivation:59:59\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:43Z",
+    "elapsed_s": 91.267,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:0:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:43Z",
+    "elapsed_s": 91.267,
+    "source": "host-9888631afea4.log",
+    "line": "[script] {\"owner\":\"repository:build\",\"command\":\"graph:slice-worker\",\"stage\":\"running\",\"activity\":{\"resource\":\"build:graph-phase:flush:1:1\",\"mode\":\"shared\",\"elapsedMs\":0}}"
+  },
+  {
+    "at": "2026-11-14T22:29:43Z",
+    "elapsed_s": 91.267,
+    "source": "host-9888631afea4.log",
+    "line": "graph: 658 stale projects, 159 taken from the fleet, 2 too heavy for this machine (@semio-tech/repo-lib (about 27770 MB), workspace (about 6200 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 499"
+  },
+  {
+    "at": "2026-11-14T22:29:43Z",
+    "elapsed_s": 91.267,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 0 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:29:43Z",
+    "elapsed_s": 91.267,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:29:53Z",
+    "elapsed_s": 101.423,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:30:03Z",
+    "elapsed_s": 111.575,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:30:13Z",
+    "elapsed_s": 121.656,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:30:23Z",
+    "elapsed_s": 131.806,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:30:33Z",
+    "elapsed_s": 141.889,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:30:43Z",
+    "elapsed_s": 151.983,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:30:54Z",
+    "elapsed_s": 162.288,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:31:04Z",
+    "elapsed_s": 172.373,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:31:14Z",
+    "elapsed_s": 182.468,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:31:24Z",
+    "elapsed_s": 192.62,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:31:39Z",
+    "elapsed_s": 207.739,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:31:49Z",
+    "elapsed_s": 217.886,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:31:59Z",
+    "elapsed_s": 227.959,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:32:09Z",
+    "elapsed_s": 238.047,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:32:20Z",
+    "elapsed_s": 248.322,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:32:30Z",
+    "elapsed_s": 258.412,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:32:40Z",
+    "elapsed_s": 268.555,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:32:50Z",
+    "elapsed_s": 278.706,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:33:00Z",
+    "elapsed_s": 288.789,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:33:10Z",
+    "elapsed_s": 298.883,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:33:15Z",
+    "elapsed_s": 303.923,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:33:26Z",
+    "elapsed_s": 314.487,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:33:36Z",
+    "elapsed_s": 324.585,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:33:46Z",
+    "elapsed_s": 334.684,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:33:56Z",
+    "elapsed_s": 344.854,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:34:06Z",
+    "elapsed_s": 354.923,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:34:16Z",
+    "elapsed_s": 365.145,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:34:27Z",
+    "elapsed_s": 375.403,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:34:37Z",
+    "elapsed_s": 385.494,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:34:47Z",
+    "elapsed_s": 395.585,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:34:57Z",
+    "elapsed_s": 405.739,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:35:12Z",
+    "elapsed_s": 420.854,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:35:22Z",
+    "elapsed_s": 431.005,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:35:32Z",
+    "elapsed_s": 441.076,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:35:43Z",
+    "elapsed_s": 451.206,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:35:53Z",
+    "elapsed_s": 461.352,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:36:03Z",
+    "elapsed_s": 471.429,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:36:13Z",
+    "elapsed_s": 481.586,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:36:23Z",
+    "elapsed_s": 491.731,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:36:33Z",
+    "elapsed_s": 501.806,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:36:43Z",
+    "elapsed_s": 511.973,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:36:53Z",
+    "elapsed_s": 522.108,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:37:04Z",
+    "elapsed_s": 532.244,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:37:14Z",
+    "elapsed_s": 542.333,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:37:24Z",
+    "elapsed_s": 552.485,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:37:34Z",
+    "elapsed_s": 562.557,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:37:44Z",
+    "elapsed_s": 572.639,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:37:54Z",
+    "elapsed_s": 582.854,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:38:04Z",
+    "elapsed_s": 592.939,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:38:14Z",
+    "elapsed_s": 603.089,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:38:25Z",
+    "elapsed_s": 613.239,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:38:35Z",
+    "elapsed_s": 623.336,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:38:45Z",
+    "elapsed_s": 633.417,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:38:55Z",
+    "elapsed_s": 643.549,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:39:05Z",
+    "elapsed_s": 653.656,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:39:15Z",
+    "elapsed_s": 663.725,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:39:25Z",
+    "elapsed_s": 673.868,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:39:35Z",
+    "elapsed_s": 684.038,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:39:45Z",
+    "elapsed_s": 694.115,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:39:56Z",
+    "elapsed_s": 704.257,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:40:06Z",
+    "elapsed_s": 714.357,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:40:16Z",
+    "elapsed_s": 724.447,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:40:26Z",
+    "elapsed_s": 734.589,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:40:36Z",
+    "elapsed_s": 744.673,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:40:46Z",
+    "elapsed_s": 754.761,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:40:56Z",
+    "elapsed_s": 764.915,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:41:06Z",
+    "elapsed_s": 775.007,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:41:16Z",
+    "elapsed_s": 785.073,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:41:27Z",
+    "elapsed_s": 795.206,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:41:37Z",
+    "elapsed_s": 805.293,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:41:47Z",
+    "elapsed_s": 815.373,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:41:57Z",
+    "elapsed_s": 825.519,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:42:07Z",
+    "elapsed_s": 835.605,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:42:17Z",
+    "elapsed_s": 845.673,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:42:27Z",
+    "elapsed_s": 855.82,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:42:37Z",
+    "elapsed_s": 865.977,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:42:47Z",
+    "elapsed_s": 876.056,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:42:58Z",
+    "elapsed_s": 886.189,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:43:08Z",
+    "elapsed_s": 896.267,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:43:18Z",
+    "elapsed_s": 906.44,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:43:28Z",
+    "elapsed_s": 916.589,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:43:38Z",
+    "elapsed_s": 926.811,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 48 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:43:38Z",
+    "elapsed_s": 926.811,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:43:48Z",
+    "elapsed_s": 936.902,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:44:03Z",
+    "elapsed_s": 952.085,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:44:14Z",
+    "elapsed_s": 962.279,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:44:24Z",
+    "elapsed_s": 972.418,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:44:34Z",
+    "elapsed_s": 982.729,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:44:44Z",
+    "elapsed_s": 992.923,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:44:54Z",
+    "elapsed_s": 1003.004,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:45:05Z",
+    "elapsed_s": 1013.273,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:45:15Z",
+    "elapsed_s": 1023.365,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:45:25Z",
+    "elapsed_s": 1033.462,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:45:35Z",
+    "elapsed_s": 1043.618,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:45:45Z",
+    "elapsed_s": 1053.709,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:45:55Z",
+    "elapsed_s": 1063.871,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:46:05Z",
+    "elapsed_s": 1074.023,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:46:15Z",
+    "elapsed_s": 1084.14,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:46:26Z",
+    "elapsed_s": 1094.372,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:46:36Z",
+    "elapsed_s": 1104.511,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:46:46Z",
+    "elapsed_s": 1114.604,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:46:56Z",
+    "elapsed_s": 1124.689,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:47:06Z",
+    "elapsed_s": 1134.839,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:47:16Z",
+    "elapsed_s": 1144.931,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:47:26Z",
+    "elapsed_s": 1155.023,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:47:37Z",
+    "elapsed_s": 1165.174,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:47:47Z",
+    "elapsed_s": 1175.256,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:47:57Z",
+    "elapsed_s": 1185.351,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:48:07Z",
+    "elapsed_s": 1195.499,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:48:17Z",
+    "elapsed_s": 1205.573,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:48:27Z",
+    "elapsed_s": 1215.656,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:48:37Z",
+    "elapsed_s": 1225.792,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:48:47Z",
+    "elapsed_s": 1235.883,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:48:57Z",
+    "elapsed_s": 1245.967,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:49:07Z",
+    "elapsed_s": 1256.125,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:49:18Z",
+    "elapsed_s": 1266.206,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:49:28Z",
+    "elapsed_s": 1276.294,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:49:38Z",
+    "elapsed_s": 1286.439,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:49:48Z",
+    "elapsed_s": 1296.532,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:49:58Z",
+    "elapsed_s": 1306.623,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:50:08Z",
+    "elapsed_s": 1316.808,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:50:18Z",
+    "elapsed_s": 1326.952,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:50:28Z",
+    "elapsed_s": 1337.039,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:50:39Z",
+    "elapsed_s": 1347.179,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:50:49Z",
+    "elapsed_s": 1357.246,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:50:59Z",
+    "elapsed_s": 1367.332,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:51:09Z",
+    "elapsed_s": 1377.469,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:51:19Z",
+    "elapsed_s": 1387.566,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:51:29Z",
+    "elapsed_s": 1397.653,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:51:39Z",
+    "elapsed_s": 1407.789,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:51:49Z",
+    "elapsed_s": 1417.876,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:51:59Z",
+    "elapsed_s": 1427.963,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:52:09Z",
+    "elapsed_s": 1438.106,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:52:20Z",
+    "elapsed_s": 1448.189,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:52:30Z",
+    "elapsed_s": 1458.275,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:52:40Z",
+    "elapsed_s": 1468.429,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:52:50Z",
+    "elapsed_s": 1478.602,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:53:05Z",
+    "elapsed_s": 1493.975,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:53:10Z",
+    "elapsed_s": 1499.022,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:53:26Z",
+    "elapsed_s": 1514.413,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:53:36Z",
+    "elapsed_s": 1524.555,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:53:46Z",
+    "elapsed_s": 1534.651,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:53:56Z",
+    "elapsed_s": 1544.779,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:54:06Z",
+    "elapsed_s": 1554.923,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:54:16Z",
+    "elapsed_s": 1565.016,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:54:26Z",
+    "elapsed_s": 1575.101,
+    "source": "host-9888631afea4.log",
+    "line": "graph: waiting for the fleet: 96 of 499 projects arrived"
+  },
+  {
+    "at": "2026-11-14T22:54:26Z",
+    "elapsed_s": 1575.101,
+    "source": "host-9888631afea4.log",
+    "line": "graph: nothing to wait for any longer: asked the fleet for 499 stale projects and received 96 within 1486 s, 403 remain and this machine can infer only 192; try again when a machine with free memory serves the graph, or read the graph on a larger machine"
+  },
+  {
+    "at": "2026-11-14T22:54:26Z",
+    "elapsed_s": 1575.101,
+    "source": "host-9888631afea4.log",
+    "line": "2026-11-14T22:54:24.813Z graph-wanted-expired {\"wanted\":\"499\",\"arrived\":\"96\",\"seconds\":\"1486\",\"missing\":\"403\",\"local\":\"192\",\"heavy\":\"\"}"
+  }
+]

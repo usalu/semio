@@ -44,6 +44,7 @@ fn only_object_lists_are_entity_collections() {
 
 #[test]
 fn a_collection_renders_rows_with_status_selection_add_remove_and_an_optional_filter() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let items = vec![entity("b1", Some("Main beam")), entity("c2", None)];
     let mut report = CheckReport::default();
     report.push(
@@ -75,6 +76,7 @@ fn a_collection_renders_rows_with_status_selection_add_remove_and_an_optional_fi
 
 #[test]
 fn a_filtered_collection_reports_shown_over_total() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let items = vec![entity("b1", Some("Main beam")), entity("c2", None)];
     let state = OutlinerState { filter: "beam".into(), ..Default::default() };
     let windows = TreeWindows::unhosted();
@@ -87,6 +89,7 @@ fn a_filtered_collection_reports_shown_over_total() {
 
 #[test]
 fn the_document_outliner_lists_entity_kinds_first_then_supporting_tables_and_marks_the_selection() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let tree = DslValue::object([
         ("sections".into(), DslValue::Array(vec![entity("s1", Some("HEB 240"))])),
         ("members".into(), DslValue::Array(vec![entity("b1", Some("Main beam")), entity("c2", None)])),
@@ -108,6 +111,7 @@ fn the_document_outliner_lists_entity_kinds_first_then_supporting_tables_and_mar
 
 #[test]
 fn a_reorderable_collection_offers_drag_drop_and_up_down_steps_that_raise_move_entity() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let items = vec![entity("b1", None), entity("b2", None), entity("b3", None)];
     let report = CheckReport::default();
     let windows = TreeWindows::unhosted();
@@ -144,12 +148,13 @@ fn the_reorderable_collections_are_the_top_level_lists_of_the_move_rules() {
 
 #[test]
 fn unsupported_list_controls_preserve_rows_without_offering_mutating_actions() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let tree = DslValue::object([("unsupported".into(), DslValue::Array(vec![entity("row-1", Some("Visible record"))]))]);
     let report = CheckReport::default();
     let state = OutlinerState::default();
-    let windows = TreeWindows::unhosted();
     let kinds = [OutlinedCollection { path: "unsupported", label_en: "Unsupported collection", label_de: "Nicht bearbeitbare Liste" }];
     for locale in [Locale::En, Locale::De] {
+        let windows = TreeWindows::unhosted();
         let context = OutlinerContext { report: &report, locale, controller_id: "norm.mock", windows: &windows, state: &state };
         let json = project(render_outliner_document(&tree, &kinds, Some(empty_field_meta), &context).expect("read-only list"));
         assert!(json.contains("row-1") && json.contains("Visible record"), "{json}");

@@ -3,6 +3,7 @@ import {expect,test} from "bun:test";
 import {mkdtemp,mkdir,rm,readFile,writeFile,lstat,realpath} from "node:fs/promises";
 import {join,resolve} from "node:path";
 import {existsSync,readdirSync,writeFileSync} from "node:fs";
+import {spawn} from "node:child_process";
 import glob from "fast-glob";
 import Ajv from "ajv";
 import {withArtifactRelativeDirectoryV1,withArtifactReadFileSyncV1} from "../../📁️descriptor/🟦️.ts";
@@ -39,4 +40,13 @@ test("rooted preservation refuses forged expectations and preserves cancellation
   const check=()=>{if(!armed)return;if(mode==="cancelled"||mode==="undefined")throw marker;const capsule=readdirSync(source).find(value=>value.startsWith(".p"));if(capsule&&mode==="after-capsule")throw marker;if(capsule&&mode==="late-payload"&&existsSync(join(source,capsule,"r"))&&!mutated){mutated=true;writeFileSync(join(source,capsule,"p"),"external mutation");}};
   try{let failed=false,failure:unknown;try{await withArtifactRelativeDirectoryV1(source,check,async directory=>{const expected=await directory.capturePreservation(name);armed=true;return directory.publishPreserving(mode==="copied"?{...expected}:expected,{kind:"directory",path:target},mode);});}catch(error){failed=true;failure=error;}expect(failed,mode).toBe(true);if(["cancelled","undefined","after-capsule"].includes(mode))expect(failure,mode).toBe(marker);if(mode!=="late-payload")expect(await readFile(join(source,name),"utf8")).toBe("original");expect(await glob("*",{cwd:target})).toEqual([]);}finally{await rm(root,{recursive:true,force:true});}
  }
+});
+
+test.skipIf(process.platform==="win32")("entries that vanish or reappear under a live observer are concurrent edits and never an unknown errno",async()=>{
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Explicit descriptor test output required");await mkdir(output,{recursive:true});const root=await mkdtemp(join(resolve(output),"vanish-"));
+ const churn=["a","b","c"].map(name=>spawn("sh",["-c",`cd "$0"; while :; do : > ${name}; mv ${name} ${name}x; rm ${name}x; mkdir ${name}; rmdir ${name}; ln -s t ${name}; rm ${name}; done`,root],{stdio:"ignore"}));
+ const foreign:string[]=[];let observed=0;
+ try{for(const end=Date.now()+4000;Date.now()<end;)try{await withArtifactRelativeDirectoryV1(root,()=>{},async directory=>{for(const name of["a","b","c","ax","bx","cx"]){await directory.entry(name);observed++;}});}catch(error){if((error as{code?:string}).code!=="SEMIO_CONCURRENT_EDIT")foreign.push(String((error as Error).message)+" "+String((error as{code?:string}).code));}}
+ finally{for(const child of churn)child.kill("SIGKILL");await rm(root,{recursive:true,force:true});}
+ expect(foreign).toEqual([]);expect(observed).toBeGreaterThan(0);
 });

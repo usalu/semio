@@ -1,0 +1,18 @@
+graph: headroom of -932 MB is below one project (583 MB), inferring one project at a time
+[script] {"owner":"repository:build","command":"build:projects","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:command-source-imports","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:projects","stage":"running","activity":{"resource":"build:graph-phase:inference:27:48:1:0:%40semio-tech%2Fframework-job-rs|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] build:projects · Inferring projects: 27 of 48 projects · 1 running, longest 0 s: @semio-tech/framework-job-rs (language:cargo, 0 s, 0 rows)
+[script] {"owner":"repository:build","command":"graph:slice-worker","stage":"running","activity":{"resource":"build:graph-phase:owners:27:614:1:0:%40semio-tech%2Fframework-job-rs|language%3Acargo|0|0","mode":"shared","elapsedMs":0}}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: waiting for memory headroom (2265 of -267 MB reserved, 1 projects running)
+[script] {"owner":"repository:build","command":"build:closure-entry-rows","stage":"running"}
+graph: project @semio-tech/framework-job-rs (language:cargo) grew by 2696 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+[capacity] waiting 34s for exec: not enough free memory (need 1536 MB; -1475 MB spare above the 2048 MB floor, load 4.83; 3 running, 0 ahead); behind graph-farm (running, 2 job(s), 3072 MB), graph-plan (running, 1 job(s), 746 MB), workspace:setup (quiet, 1 job(s), 44 MB)
+[repository:command] still running after 610 s

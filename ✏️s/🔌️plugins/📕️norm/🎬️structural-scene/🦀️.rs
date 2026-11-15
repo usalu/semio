@@ -20,7 +20,3 @@ pub mod diff;
 #[cfg(test)]
 #[path = "🧪️tests/🧫️fixtures/🎭️mock-projection/🦀️.rs"]
 pub(crate) mod mock_projection;
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod unit;

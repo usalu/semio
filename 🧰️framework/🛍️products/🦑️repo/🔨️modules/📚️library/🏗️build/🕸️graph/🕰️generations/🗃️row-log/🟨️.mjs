@@ -89,6 +89,7 @@ export function createRowLogV1({path,policy=P}){
    return Object.freeze({
     add(rows){for(const row of rows){const id=intern(row);if(mark(id)){ids=grown(ids,count+1);ids[count++]=id;}}},
     addList(other){if(other.ids===undefined)throw Error("Row log list required");for(const id of other.ids)if(mark(id)){ids=grown(ids,count+1);ids[count++]=id;}},
+    exclude(other){if(other.ids===undefined)throw Error("Row log list required");for(const id of other.ids)mark(id);},
     finish(){const out=ids.slice(0,count);ids=new Uint32Array(0);marks=new Uint8Array(0);return list(out,[]);},
    });
   },

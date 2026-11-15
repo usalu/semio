@@ -1,0 +1,27 @@
+"""P14 payload description shared by the overlay builder and the landing script: the new files (destination relative to the worktree, source under new/) and the test files the landing runs."""
+LIB="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build"
+GS=LIB+"/🪪️graph-state"
+W=GS+"/🙋️wanted"
+PC=GS+"/🌍️platform-class"
+PR=GS+"/📦️project-records"
+PO=PR+"/🧳️portable"
+NEWFILES=[
+ (PC+"/🟦️.ts","platform-class.ts"),
+ (PC+"/🧬️schema/🔣️.json","platform-class.schema.json"),
+ (PC+"/🧪️tests/🟦️.ts","platform-class.test.ts"),
+ (PC+"/🧪️tests/🔣️.json","platform-class.fixture.json"),
+ (PC+"/🧪️tests/🐍️.py","platform-class.oracle.py"),
+ (PO+"/🟦️.ts","portable.ts"),
+ (PO+"/🧬️schema/🔣️.json","portable.schema.json"),
+ (PO+"/🧪️tests/🟦️.ts","portable.test.ts"),
+ (PO+"/🧪️tests/🔣️.json","portable.fixture.json"),
+ (PO+"/🧪️tests/🐍️.py","portable.oracle.py"),
+ (PR+"/🧪️tests/🌍️two-platforms/🟦️.ts","records-two-platforms.test.ts"),
+ (W+"/🧪️tests/🌍️two-platforms/🟦️.ts","wanted-two-platforms.test.ts"),
+ (W+"/💰️cost/🧪️tests/🌍️measured-only/🟦️.ts","cost-measured-only.test.ts"),
+ (LIB+"/🕸️graph/🧪️tests/🙋️fleet-read/🌍️small-booking/🟦️.ts","fleet-read-booking.test.ts"),
+]
+TESTS=[
+ PC+"/🧪️tests/🟦️.ts",PO+"/🧪️tests/🟦️.ts",PR+"/🧪️tests/🌍️two-platforms/🟦️.ts",W+"/🧪️tests/🌍️two-platforms/🟦️.ts",
+ LIB+"/🕸️graph/🧪️tests/🙋️fleet-read/🌍️small-booking/🟦️.ts",LIB+"/🕸️graph/🧪️tests/🙋️fleet-read/🟦️.ts",PR+"/🧪️tests/🟦️.ts",W+"/🧪️tests/🟦️.ts",W+"/🧪️tests/📖️read/🟦️.ts",W+"/🧪️tests/🛠️server/🟦️.ts",W+"/🧪️tests/🛠️server/💰️priority/🟦️.ts",W+"/💰️cost/🧪️tests/🟦️.ts",W+"/💰️cost/🧪️tests/🌍️measured-only/🟦️.ts",
+]

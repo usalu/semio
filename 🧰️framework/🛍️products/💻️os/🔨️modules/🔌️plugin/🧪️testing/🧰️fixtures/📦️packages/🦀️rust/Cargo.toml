@@ -48,5 +48,4 @@ semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/
 semio-framework-value-testing-admission = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-value-testing-admission = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-os-store-one-item = { path = "../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }

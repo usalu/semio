@@ -1,7 +1,7 @@
 /** 🖥️ The owned, dependency-free model viewer for `semio.model/v1`: scene preparation, frames, orbit camera, picking, a WebGL2 backend, a software reference rasteriser and a framework-free controller / custom element. Domain-neutral; browser platform APIs only.
  * @see ./🧬️contract/🟦️.ts */
-export { VERTEX_STRIDE, SKIN_STRIDE, MATERIAL_STRIDE } from "./🧬️contract/🟦️.ts";
-export type { Bounds, Draw, Frame, Light, RenderBackend, RenderStyle, BackendStatus, Scene, SceneMaterial, ScenePrimitive, SceneSkin, V4, FramePose } from "./🧬️contract/🟦️.ts";
+export { VERTEX_STRIDE, SKIN_STRIDE, MATERIAL_STRIDE, inScene } from "./🧬️contract/🟦️.ts";
+export type { Bounds, Draw, Frame, Light, RenderBackend, RenderStyle, BackendStatus, Scene, SceneMaterial, ScenePrimitive, SceneSkin, SceneSet, V4, FramePose } from "./🧬️contract/🟦️.ts";
 export { sceneOf, sceneOfAsync, buildScene, SceneError } from "./🧱️scene/🟦️.ts";
 export { createFrame, frameOf, posedPositions, boundsOf, type FrameInput, type Lighting } from "./🎞️frame/🟦️.ts";
 export { PRESETS, cameraOf, withPreset, basisOf, fitCamera, orbit, pan, zoom, visibleHeight, clipPlanes, viewMatrix, projectionMatrix, rayOf, type CameraState, type CameraPreset, type Projection, type Ray } from "./📷️camera/🟦️.ts";

@@ -81,7 +81,7 @@ pub(super) fn effects(document: &En1990Snapshot, columns: &[Column], focus: Opti
             let mut table = [Vec::new(), Vec::new(), Vec::new(), Vec::new()];
             let mut extent = 1.0_f64;
             for (i, effect) in rows.iter().enumerate() {
-                let characteristic = effect.influence * handles::raw_value(document, &effect.action_id);
+                let characteristic = effect.influence * kit::raw_value(document, &effect.action_id);
                 let values: Vec<f64> = columns.iter().filter_map(|c| c.factor(&effect.action_id)).map(|f| f * characteristic).collect();
                 let (low, high) = (values.iter().copied().fold(0.0, f64::min), values.iter().copied().fold(0.0, f64::max));
                 extent = extent.max(high.abs()).max(low.abs()).max(characteristic.abs());

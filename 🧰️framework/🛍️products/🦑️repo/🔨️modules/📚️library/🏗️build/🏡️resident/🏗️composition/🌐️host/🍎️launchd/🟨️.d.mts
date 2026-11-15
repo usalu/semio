@@ -1,0 +1,14 @@
+export type LaunchdAnswerV1=number|Readonly<{status:number;stdout:string}>;
+export type LaunchdRunV1=(program:string,args:readonly string[])=>LaunchdAnswerV1;
+export type LaunchdRouteV1=Readonly<{label:string;domain:string;target:string;program:string;arguments:readonly string[];workingDirectory:string;jobsDirectory:string;plistPath:string}>;
+export const SERVICE_LABEL_PREFIX_V1:string;
+export function allowedEnvironmentV1(environment:Record<string,string|undefined>):Record<string,string>;
+export function launchAgentLabelV1(runtimeDirectory:string,tag?:string):string;
+export function launchAgentPlistV1(spec:{label:string;program:string;arguments:readonly string[];workingDirectory?:string;environment:Record<string,string|undefined>;log:string}):string;
+export function launchdRouteV1(options:{command:readonly string[];environment?:Record<string,string|undefined>;cwd?:string;runtimeDirectory:string;tag?:string;platform?:string;home?:string;exists?:(path:string)=>boolean;executable?:string;uid?:number}):LaunchdRouteV1|undefined;
+export function listServiceJobsV1(run:LaunchdRunV1):{label:string;pid:number|undefined}[];
+export function cleanServiceJobsV1(route:LaunchdRouteV1,options:{run:LaunchdRunV1;files?:(directory:string)=>string[];remove?:(path:string)=>void}):string[];
+export function startViaLaunchdV1(route:LaunchdRouteV1,options:{environment:Record<string,string|undefined>;log:string;run:LaunchdRunV1;write?:(path:string,text:string)=>void;remove?:(path:string)=>void;files?:(directory:string)=>string[];wait?:(milliseconds:number)=>void;verifyMilliseconds?:number;pollMilliseconds?:number}):{started:boolean;reason:string};
+export function stopServiceJobsV1(options:{platform?:string;uid?:number;home?:string;run:LaunchdRunV1;files?:(directory:string)=>string[];remove?:(path:string)=>void}):number;
+export const PROBE_LABEL_PREFIX_V1:string;
+export function ensureLauncherConsentV1(options:{root:string;probeScript:string;platform?:string;home?:string;environment?:Record<string,string|undefined>;uid?:number;run:LaunchdRunV1;write?:(path:string,text:string)=>void;remove?:(path:string)=>void;wait?:(milliseconds:number)=>void;waitMilliseconds?:number;pollMilliseconds?:number;consented?:(root:string,options?:any)=>boolean;stateOf?:(root:string,options?:any)=>string;exists?:(path:string)=>boolean;now?:()=>number}):{state:"ready"|"waiting"|"failed"|"unneeded";reason?:string;changed?:boolean};

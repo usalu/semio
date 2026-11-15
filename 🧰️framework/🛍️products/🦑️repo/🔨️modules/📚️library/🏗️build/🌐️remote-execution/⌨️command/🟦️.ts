@@ -4,11 +4,13 @@ import {readRemoteCachePolicyV1} from "../../🌐️remote-cache/🟦️.ts";
 import {remoteCacheLanguagesV1,type RemoteCacheLanguageV1} from "../../🌐️remote-cache/⌨️command/🟦️.ts";
 import {RemoteCacheDirectoryBusyV1,startRemoteCacheServerV1,type RemoteCacheServerV1} from "../../🌐️remote-cache/🖥️server/🟦️.ts";
 import {connectGrpcV1} from "../📡️wire/🚪️grpc/🟦️.ts";
+import {fleetHeadersV1} from "../../🌐️remote-cache/🛰️fleet/🪪️identity/🟦️.ts";
 import {httpRemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
 import {startRemoteExecutionServerV1} from "../🖥️server/🟦️.ts";
-import {runRemoteExecutionWorkerV1} from "../👷️worker/🟦️.ts";
+import {runRemoteExecutionAgentV1} from "../🛰️agent/🟦️.ts";
+import {detectWorkerRustcV1} from "../🚀️offload/🧰️toolchain/🟦️.ts";
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
-import {readRemoteExecutionPolicyV1,remoteExecutionHostPropertiesV1,remoteExecutionPropertiesV1,requireRemoteExecutionShapeV1,type RemoteExecutionPropertyV1,type RemoteExecutionSandboxV1} from "../🟦️.ts";
+import {readRemoteExecutionPolicyV1,remoteExecutionPropertiesV1,requireRemoteExecutionShapeV1,type RemoteExecutionPropertyV1,type RemoteExecutionSandboxV1} from "../🟦️.ts";
 
 /** 👶️ A worker process started by `serve`; the host decides how processes are launched (the repository CLI in production, a script in tests). */
 export interface RemoteExecutionChildV1{readonly exited:Promise<number>;stop():Promise<void>}
@@ -25,7 +27,7 @@ const LANGUAGES=texts.languages as readonly RemoteCacheLanguageV1[],LOOPBACK=["1
  OPTIONS:Readonly<Record<Operation,Readonly<{valued:readonly string[];plain:readonly string[]}>>>={
   serve:{valued:["--bind","--grpc-port","--worker-port","--cache","--local-workers","--concurrency","--advertise","--tls-certificate","--tls-key","--sandbox","--work-directory","--lang"],plain:[]},
   status:{valued:["--join","--lang"],plain:[]},
-  workers:{valued:["--join","--name","--concurrency","--sandbox","--properties","--work-directory","--lang"],plain:[]},
+  workers:{valued:["--join","--name","--origin","--concurrency","--sandbox","--properties","--work-directory","--load-interval","--lang"],plain:[]},
  };
 
 /** 🧾️ The options each operation accepts, valued ones by name and plain flags; the catalogue row of the operation lists exactly their union. */
@@ -116,7 +118,7 @@ export async function serveRemoteExecutionV1(args:readonly string[],context:Remo
   service=await startRemoteExecutionServerV1({
    host,grpcPort:flags["--grpc-port"]===undefined?server.port:whole("--grpc-port",flags["--grpc-port"],0,65535),workerPort:flags["--worker-port"]===undefined?server.workerPort:whole("--worker-port",flags["--worker-port"],0,65535),
    content,cacheUrl,tokens:{read,write,worker},tls,maximumMessageBytes:server.maximumMessageBytes,maximumBatchBytes:server.maximumBatchBytes,advertise:flags["--advertise"],
-   scheduler:{unmatchedSeconds:server.unmatchedSeconds,lingerSeconds:server.lingerSeconds,leaseSeconds:server.leaseSeconds,maximumAttempts:server.maximumAttempts,defaultActionSeconds:server.defaultActionSeconds,maximumQueued:server.maximumQueued,heartbeatSeconds:policy.worker.heartbeatSeconds,pollSeconds:policy.worker.pollSeconds,language:languages.length===1?languages[0]!:"none"},
+   scheduler:{unmatchedSeconds:server.unmatchedSeconds,lingerSeconds:server.lingerSeconds,leaseSeconds:server.leaseSeconds,maximumAttempts:server.maximumAttempts,defaultActionSeconds:server.defaultActionSeconds,maximumActionSeconds:server.maximumActionSeconds,maximumQueued:server.maximumQueued,heartbeatSeconds:policy.worker.heartbeatSeconds,pollSeconds:policy.worker.pollSeconds,loadExpireSeconds:server.loadExpireSeconds,refusalCooldownSeconds:server.refusalCooldownSeconds,language:languages.length===1?languages[0]!:"none"},
    onEvent:event=>{if(event.stage==="worker-joined"||event.stage==="worker-left"||event.stage==="worker-lost"||event.stage==="unmatched")say("serve.event",{event:event.stage,detail:event.detail});},
   });
  }catch(error){await embedded?.stop();throw error;}
@@ -130,7 +132,7 @@ export async function serveRemoteExecutionV1(args:readonly string[],context:Remo
   context.write(`[remote-execution] listening ${endpoint}`);
   say("serve.listening",{grpc:endpoint,workers:workerUrl,access:token===undefined?"@serve.access.open":"@serve.access.token"});
   const count=flags["--local-workers"]===undefined?server.localWorkers:whole("--local-workers",flags["--local-workers"],0,64);
-  const childEnvironment:Record<string,string>={...(worker?{[names.workerToken]:worker}:{}),...(token?{[cachePolicy.defaults.tokenEnvironment]:token}:{})};
+  const childEnvironment:Record<string,string>={...Object.fromEntries(["SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS","SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY"].flatMap(name=>context.environment[name]===undefined?[]:[[name,context.environment[name]!]])),...(worker?{[names.workerToken]:worker}:{}),...(token?{[cachePolicy.defaults.tokenEnvironment]:token}:{})};
   for(let index=0;index<count;index++){
    const childArgs=["--join",workerUrl,"--name",`${hostname()}-local-${index+1}`,...(flags["--concurrency"]?["--concurrency",flags["--concurrency"]]:[]),...(flags["--sandbox"]?["--sandbox",flags["--sandbox"]]:[]),...(flags["--work-directory"]?["--work-directory",flags["--work-directory"]]:[]),...(flags["--lang"]?["--lang",flags["--lang"]]:[])];
    children.push(context.spawnWorker(childArgs,childEnvironment));
@@ -153,16 +155,21 @@ export async function runRemoteExecutionWorkersV1(args:readonly string[],context
  const policy=readRemoteExecutionPolicyV1(),cachePolicy=readRemoteCachePolicyV1(),names=policy.environment,scheduler=flags["--join"]??optional(context.environment,names.scheduler);
  if(scheduler===undefined)throw Error(both("error.join",{variable:names.scheduler}));
  let properties:readonly RemoteExecutionPropertyV1[];
- try{properties=[...remoteExecutionHostPropertiesV1(),...remoteExecutionPropertiesV1(flags["--properties"])];}catch{throw Error(both("error.properties",{value:flags["--properties"]??""}));}
+ try{properties=remoteExecutionPropertiesV1(flags["--properties"]);}catch{throw Error(both("error.properties",{value:flags["--properties"]??""}));}
  const concurrency=flags["--concurrency"]===undefined?(policy.worker.concurrency===0?availableParallelism():policy.worker.concurrency):whole("--concurrency",flags["--concurrency"],1,512),name=flags["--name"]??`${hostname()}-${process.pid}`;
  await context.progress("remote-execution:worker");
  say("workers.start",{name,url:scheduler,concurrency,platform:remoteExecutionPlatformIdV1()});
  const label=(event:{stage:string;detail:string}):void=>{say(`workers.${event.stage}`,event.stage==="sandbox"?{sandbox:event.detail}:{detail:event.detail});};
- await runRemoteExecutionWorkerV1({
-  scheduler,token:optional(context.environment,names.workerToken),cacheToken:optional(context.environment,cachePolicy.defaults.tokenEnvironment),name,concurrency,
+ const rustc=detectWorkerRustcV1(context.root,context.environment);
+ await runRemoteExecutionAgentV1({
+  root:context.root,environment:context.environment,scheduler,token:optional(context.environment,names.workerToken),cacheToken:optional(context.environment,cachePolicy.defaults.tokenEnvironment),name,...flags["--origin"]?{origin:flags["--origin"]}:{},concurrency,
   directory:where(context.root,flags["--work-directory"]??policy.worker.directory),sandbox:sandboxOf(flags["--sandbox"],policy.worker.sandbox),materialize:policy.worker.materialize as "clone"|"copy",maximumBlobBytes:policy.worker.maximumBlobBytes,inlineOutputBytes:policy.worker.inlineOutputBytes,
-  properties,signal:context.signal,onEvent:event=>{label(event);},
- }).catch(error=>{if(/Sandbox strategy not available/u.test((error as Error).message))throw Error(both("error.sandbox",{sandbox:flags["--sandbox"]??policy.worker.sandbox}));throw error;});
+  network:policy.worker.network,confinement:policy.worker.confinement,actions:(optional(context.environment,"SEMIO_REMOTE_EXECUTION_WORKER_ACTIONS") as "rustc"|"any"|"none"|undefined)??policy.worker.actions as "rustc"|"any"|"none",unconfinedForTests:optional(context.environment,"SEMIO_REMOTE_EXECUTION_UNCONFINED_ANY")==="I-ACCEPT-THE-RISK",loadIntervalSeconds:flags["--load-interval"]===undefined?policy.worker.loadIntervalSeconds:whole("--load-interval",flags["--load-interval"],1,300),extraProperties:[...properties,...rustc?.properties??[]],...rustc?{tools:rustc.tools}:{},signal:context.signal,onEvent:event=>{label(event);},
+ }).catch(error=>{
+  if(/Sandbox strategy not available/u.test((error as Error).message))throw Error(both("error.sandbox",{sandbox:flags["--sandbox"]??policy.worker.sandbox}));
+  if(/^Confinement required/u.test((error as Error).message))throw Error(both("error.confinement"));
+  throw error;
+ });
  return {exitCode:0};
 }
 
@@ -175,7 +182,7 @@ export async function remoteExecutionStatusV1(args:readonly string[],context:Rem
  const contract=endpoint===undefined?null:{endpoint,platform:optional(environment,names.platform)??remoteExecutionPlatformIdV1(),instance:optional(environment,names.instance)??policy.server.defaultInstance,properties:remoteExecutionPropertiesV1(optional(environment,names.properties)),jobs:Number(optional(environment,names.jobs)??128)};
  let grpc=null;
  if(endpoint!==undefined&&/^grpcs?:\/\//u.test(endpoint)){
-  const started=performance.now(),client=connectGrpcV1(endpoint);
+  const started=performance.now(),client=connectGrpcV1(endpoint,{sign:(method,content)=>token?{}:fleetHeadersV1(context.root,"submit","execution","POST",`http://x/${method}`,content)});
   try{
    const caps=await client.unary("build.bazel.remote.execution.v2.Capabilities/GetCapabilities",{},{metadata:token?{authorization:`Bearer ${token}`}:{},timeoutMilliseconds:5000,signal:context.signal});
    const version=(row:{major:number;minor:number}|undefined)=>row?`${row.major}.${row.minor}`:"";

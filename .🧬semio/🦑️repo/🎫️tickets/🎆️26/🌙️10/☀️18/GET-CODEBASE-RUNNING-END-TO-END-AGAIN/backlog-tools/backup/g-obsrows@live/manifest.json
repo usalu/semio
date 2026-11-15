@@ -1,0 +1,77 @@
+{
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": {
+  "file": "f000",
+  "before": "578ef2391d2f946c5733539c138ed780989ab87375c5eed57e9adc878b309b68",
+  "after": "381c532fa1ddff38689c3a5ff04d7be380193e09f7efcfd374b6bf54d65b1795"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📥️reuse/🟦️.ts": {
+  "file": "f001",
+  "before": "ea49e667c16815308ca836480afcf36be165e225c82c2b08f03709544458eadb",
+  "after": "8b8bd16c867616b58d6c968d102f1055f3c2dfa1d5140583c22ee804f15d492a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts": {
+  "file": "f002",
+  "before": "7ba09e83c74742814f6ea303ff2877ab5b0e92a13c5e6efe760d44ef8aebd746",
+  "after": "1b906df96fb6502fd30275e2c7bcc977f8540a82d5d4fe701381a07126489f9c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f003",
+  "before": "9af9047b0aee4ef80a7ff12114ed7ed5647260946bc9c5df33885096e2805500",
+  "after": "f0840131435c2e3802d4991bd1bfc49fb3ee0a9100156614bd59577f423b5e80"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts": {
+  "file": "f004",
+  "before": "382886a303ca6eecd1644013f2292670433dc66b044e07266b4c7a52cc3c057a",
+  "after": "382886a303ca6eecd1644013f2292670433dc66b044e07266b4c7a52cc3c057a"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts": {
+  "file": "f005",
+  "before": "67bdb9d8615523a26c3beaf8bcde2df94a09aa1873a75f8bde48eed3de11f3a4",
+  "after": "4bc94811f3413eb47e5bcfa401523099dc3287f86dc95afc33d01f23acbc22e7"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts": {
+  "file": "f006",
+  "before": "e05723988421f528fbcedeb8f539bfd21ff8f8fdbba07155079c17fd476a55d6",
+  "after": "10045e5a59d5fd46b7de4853965067f24246a1efda5aabad5d116f9ee9cce99c"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts": {
+  "file": "f007",
+  "before": "0cfb126b38e6189cc239bbc73818247a5eb90117639005c56b3907f3a6b4936b",
+  "after": "3309379227e87753ff1a512a3d2b36044780fe24f755853ba87a6909d70556cf"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json": {
+  "file": "f008",
+  "before": "7f30a47bea936ed079209a8a1a1d2adead62e8409d3b6bbe803576030f4c3909",
+  "after": "ad28dfef18e16de7dff28cc294b9804c063ef8cf3e0bbe05bd4242db48bb4bce"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🔣️.json": {
+  "file": "f009",
+  "before": "0a035ca3f3b1e9cd3c61fadaf48168dcb5b0de76ed1bb07043a17ad98d521d6e",
+  "after": "0203745bf2fecbde6494760e63ce35719409b3441c0e7d0c2085e6cc526e934b"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🟦️.ts": {
+  "file": "f010",
+  "before": "02066cdf06b339b0e68ce53cb0ae150893e2b504fb308b1a21a04d8875f2c3cc",
+  "after": "1feb0644d86b520fd68e43f0119c749ec2e48a3100733c693b01a3bb04deeb04"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🟦️.ts": {
+  "file": "f011",
+  "before": "3adbc180482ef2679ea1730fc5f4fe3d6d9c2079875d737ee5e71d89f05bc910",
+  "after": "6c205aad8112aab5e4aa2faf4319c0bf33d5b6523c478932c5832206a5711b9e"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🧫️fixtures/🔣️.json": {
+  "file": "f012",
+  "before": "5f14cd7b75eade4a1c335b527af1a4614220e576d9989a068960988b1cc09061",
+  "after": "0f915c362a2dbf9736267a8ca32d147ce1f00401dc46c5f91adfe5535ba3fa69"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧪️tests/🧫️probe/🟦️.ts": {
+  "file": "f013",
+  "before": "b4a4a575e9c88e441e333586c6c45e1e101d6bf34473c8b1609f497d89089e20",
+  "after": "71a5aec56eee2fd37e90ec0718309012b66e68b7a8c15ad0ebf43156408e3af8"
+ },
+ "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🧬️schema/🔣️.json": {
+  "file": "f014",
+  "before": "0e1c4b4c60d041f829d80a138ed411dd8bba347c5fa8022f83d054a9c5a8eafc",
+  "after": "447d8c99ffd8dbc132fd7f1f8a68845c12ff30fd2d83a4454cc16c49c5a8dfd1"
+ }
+}

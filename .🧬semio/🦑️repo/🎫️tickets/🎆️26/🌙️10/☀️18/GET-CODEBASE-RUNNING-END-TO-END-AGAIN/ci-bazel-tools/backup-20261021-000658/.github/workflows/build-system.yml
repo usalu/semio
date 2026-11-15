@@ -1,0 +1,285 @@
+# 🏗️ Build system CI: proves that a fresh checkout reaches a green, cached build with zero manual setup on Linux, macOS and
+# Windows, and that nothing depends on the build tool. Triggered by every pull request, every push to main and by hand.
+# Every step goes through the neutral entry `bun repo ...`; nothing calls `nx`, `bazel`, `sudo`, `cargo` or an installer.
+#   smoke    — fast, per operating system: pinned Bun (SHA-256 verified), `bun repo --help`, `preflight`, `tools setup all`,
+#              `dependencies sync --all`, then the cache proof for BOTH tools (nx, bazel): `cache clear`, run the target
+#              (miss, `cache status` must grow), run it again (hit: no spawned work, `cache status` unchanged).
+#   products — after smoke, per operating system: `@teaching/architecture-course:test` under nx and under bazel, with the
+#              Bazel disk cache restored from main.
+# The Bun store (`.cache/b/d/m/bun-cache`) and the Bazel disk cache (`.cache/b/p/m/bazel/actions`) live inside the owned
+# cache partitions, so they are restored only after `tools setup all` has attached those partitions. Both caches are keyed
+# by lockfiles, restored on every run and saved only by pushes to the default branch (pull requests cannot evict them).
+# Every action is pinned to a full commit SHA. No stored secrets, no write permission, no credential left in the workspace.
+# The course release workflow (architecture-course.yml) is separate and untouched.
+
+name: build system
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-system-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  BUN_VERSION: 1.4.2
+  NODE_VERSION: 24.15.0
+  PROOF_TARGET: "@teaching/architecture-course:test"
+  CI: "true"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  smoke:
+    name: smoke (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-latest
+            arch: X64
+            bun_asset: bun-linux-x64
+            bun_sha256: 36368faef7527875d5ffa52e53cd48021741f2a83eb6208a8dd64068d422a913
+          - name: macos
+            os: macos-latest
+            arch: ARM64
+            bun_asset: bun-darwin-aarch64
+            bun_sha256: 90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f
+          - name: windows
+            os: windows-latest
+            arch: X64
+            bun_asset: bun-windows-x64
+            bun_sha256: ce4c17497b2f29712a99d3d53f028de28cd42e3bacb8589599e7f000e49b6405
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Check that the workflow pins equal the repository pins
+        env:
+          MATRIX_ARCH: ${{ matrix.arch }}
+        run: |
+          node -e "const p=require('./package.json');if(p.packageManager!=='bun@'+process.env.BUN_VERSION||p.engines.node!==process.env.NODE_VERSION)throw Error('package.json pins '+p.packageManager+' and node '+p.engines.node+' differ from the workflow pins');if(process.env.RUNNER_ARCH!==process.env.MATRIX_ARCH)throw Error('runner architecture '+process.env.RUNNER_ARCH+' differs from the pinned Bun asset architecture '+process.env.MATRIX_ARCH)"
+      - name: Install the pinned Bun and verify its SHA-256 (Linux, macOS)
+        if: ${{ runner.os != 'Windows' }}
+        env:
+          BUN_ASSET: ${{ matrix.bun_asset }}
+          BUN_SHA256: ${{ matrix.bun_sha256 }}
+        run: |
+          dir="$RUNNER_TEMP/bun-install"
+          mkdir -p "$dir/bin"
+          curl --fail --silent --show-error --location --retry 3 --max-time 300 --output "$dir/bun.zip" "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/${BUN_ASSET}.zip"
+          if command -v sha256sum >/dev/null; then actual="$(sha256sum "$dir/bun.zip" | cut -d' ' -f1)"; else actual="$(shasum -a 256 "$dir/bun.zip" | cut -d' ' -f1)"; fi
+          test "$actual" = "$BUN_SHA256" || { echo "::error::SHA-256 of ${BUN_ASSET}.zip is $actual, expected $BUN_SHA256"; exit 1; }
+          unzip -p "$dir/bun.zip" "${BUN_ASSET}/bun" > "$dir/bin/bun"
+          chmod 755 "$dir/bin/bun"
+          echo "$dir/bin" >> "$GITHUB_PATH"
+      - name: Install the pinned Bun and verify its SHA-256 (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        env:
+          BUN_ASSET: ${{ matrix.bun_asset }}
+          BUN_SHA256: ${{ matrix.bun_sha256 }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'bun-install'
+          New-Item -ItemType Directory -Force -Path (Join-Path $dir 'bin') | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/oven-sh/bun/releases/download/bun-v$($env:BUN_VERSION)/$($env:BUN_ASSET).zip" -OutFile (Join-Path $dir 'bun.zip')
+          $actual = (Get-FileHash -Algorithm SHA256 -Path (Join-Path $dir 'bun.zip')).Hash.ToLowerInvariant()
+          if ($actual -ne $env:BUN_SHA256) { throw "SHA-256 of $($env:BUN_ASSET).zip is $actual, expected $($env:BUN_SHA256)" }
+          Expand-Archive -Path (Join-Path $dir 'bun.zip') -DestinationPath (Join-Path $dir 'x')
+          Copy-Item -Path (Join-Path $dir "x\$($env:BUN_ASSET)\bun.exe") -Destination (Join-Path $dir 'bin\bun.exe')
+          Add-Content -Path $env:GITHUB_PATH -Value (Join-Path $dir 'bin') -Encoding utf8
+      - name: Check the installed Bun version
+        run: test "$(bun --version)" = "$BUN_VERSION"
+      - name: Print the neutral build entry usage
+        run: bun repo --help
+      - name: Preflight
+        run: bun repo preflight
+      - name: Provision the build tools
+        run: bun repo tools setup all
+      - name: Compute the lockfile cache keys
+        id: keys
+        run: |
+          echo "bun=bun-store-${RUNNER_OS}-${RUNNER_ARCH}-${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore the Bun store
+        id: bun-store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+          restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install the authored dependency scopes
+        run: bun repo dependencies sync --all
+      - name: Prove cache hits under nx and bazel
+        env:
+          CACHE_STATUS_JS: |
+            const text = (await Bun.stdin.text()).replace(/\r\n/g, "\n");
+            const start = text.lastIndexOf('{\n  "version"');
+            const end = text.lastIndexOf("\n}") + 2;
+            if (start < 0 || end < start) { console.error("no CacheStatus in the output"); process.exit(1); }
+            const status = JSON.parse(text.slice(start, end));
+            console.log(`${status.entries} ${status.bytes}`);
+        run: |
+          logs="$RUNNER_TEMP/cache-proof"
+          mkdir -p "$logs"
+          fail() { echo "::error::$*"; exit 1; }
+          status() { bun repo --tool="$1" cache status > "$logs/status.out"; bun -e "$CACHE_STATUS_JS" < "$logs/status.out"; }
+          spawned='[0-9]+ (linux-sandbox|darwin-sandbox|processwrapper-sandbox|windows-sandbox|local|worker)'
+          is_hit() {
+            case "$1" in
+              nx) grep -Eq 'read the output from the cache|\[local cache\]|\[existing outputs match the cache\]' "$3" ;;
+              bazel) grep -Eq 'disk cache hit|remote cache hit' "$3" || { grep -Eq "$spawned" "$2" && ! grep -Eq "$spawned" "$3" && grep -q 'Build completed successfully' "$3"; } ;;
+            esac
+          }
+          for tool in nx bazel; do
+            echo "::group::cache proof under $tool"
+            bun repo --tool="$tool" cache clear
+            counts="$(status "$tool")"; read -r entries0 bytes0 <<< "$counts"
+            bun repo --tool="$tool" run "$PROOF_TARGET" 2>&1 | tee "$logs/$tool-1.log"
+            counts="$(status "$tool")"; read -r entries1 bytes1 <<< "$counts"
+            test "$entries1" -gt "$entries0" -a "$bytes1" -gt "$bytes0" || fail "$tool: the first run stored nothing (entries $entries0 -> $entries1, bytes $bytes0 -> $bytes1)"
+            bun repo --tool="$tool" run "$PROOF_TARGET" 2>&1 | tee "$logs/$tool-2.log"
+            counts="$(status "$tool")"; read -r entries2 bytes2 <<< "$counts"
+            test "$entries2" -eq "$entries1" || fail "$tool: the second run stored new entries (entries $entries1 -> $entries2)"
+            is_hit "$tool" "$logs/$tool-1.log" "$logs/$tool-2.log" || fail "$tool: the second run was not served from the cache, inspect $logs/$tool-2.log"
+            echo "$tool: cache hit proven (entries $entries0 -> $entries1 -> $entries2, bytes $bytes0 -> $bytes1 -> $bytes2)"
+            echo "::endgroup::"
+          done
+      - name: Save the Bun store (default branch)
+        if: ${{ success() && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && steps.bun-store.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+
+  products:
+    name: products (${{ matrix.name }})
+    needs: smoke
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux
+            os: ubuntu-latest
+            arch: X64
+            bun_asset: bun-linux-x64
+            bun_sha256: 36368faef7527875d5ffa52e53cd48021741f2a83eb6208a8dd64068d422a913
+          - name: macos
+            os: macos-latest
+            arch: ARM64
+            bun_asset: bun-darwin-aarch64
+            bun_sha256: 90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f
+          - name: windows
+            os: windows-latest
+            arch: X64
+            bun_asset: bun-windows-x64
+            bun_sha256: ce4c17497b2f29712a99d3d53f028de28cd42e3bacb8589599e7f000e49b6405
+    steps:
+      - name: Enable long paths before checkout (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          git config --system core.autocrlf false
+          New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force | Out-Null
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
+      - name: Check that the workflow pins equal the repository pins
+        env:
+          MATRIX_ARCH: ${{ matrix.arch }}
+        run: |
+          node -e "const p=require('./package.json');if(p.packageManager!=='bun@'+process.env.BUN_VERSION||p.engines.node!==process.env.NODE_VERSION)throw Error('package.json pins '+p.packageManager+' and node '+p.engines.node+' differ from the workflow pins');if(process.env.RUNNER_ARCH!==process.env.MATRIX_ARCH)throw Error('runner architecture '+process.env.RUNNER_ARCH+' differs from the pinned Bun asset architecture '+process.env.MATRIX_ARCH)"
+      - name: Install the pinned Bun and verify its SHA-256 (Linux, macOS)
+        if: ${{ runner.os != 'Windows' }}
+        env:
+          BUN_ASSET: ${{ matrix.bun_asset }}
+          BUN_SHA256: ${{ matrix.bun_sha256 }}
+        run: |
+          dir="$RUNNER_TEMP/bun-install"
+          mkdir -p "$dir/bin"
+          curl --fail --silent --show-error --location --retry 3 --max-time 300 --output "$dir/bun.zip" "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/${BUN_ASSET}.zip"
+          if command -v sha256sum >/dev/null; then actual="$(sha256sum "$dir/bun.zip" | cut -d' ' -f1)"; else actual="$(shasum -a 256 "$dir/bun.zip" | cut -d' ' -f1)"; fi
+          test "$actual" = "$BUN_SHA256" || { echo "::error::SHA-256 of ${BUN_ASSET}.zip is $actual, expected $BUN_SHA256"; exit 1; }
+          unzip -p "$dir/bun.zip" "${BUN_ASSET}/bun" > "$dir/bin/bun"
+          chmod 755 "$dir/bin/bun"
+          echo "$dir/bin" >> "$GITHUB_PATH"
+      - name: Install the pinned Bun and verify its SHA-256 (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        env:
+          BUN_ASSET: ${{ matrix.bun_asset }}
+          BUN_SHA256: ${{ matrix.bun_sha256 }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'bun-install'
+          New-Item -ItemType Directory -Force -Path (Join-Path $dir 'bin') | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/oven-sh/bun/releases/download/bun-v$($env:BUN_VERSION)/$($env:BUN_ASSET).zip" -OutFile (Join-Path $dir 'bun.zip')
+          $actual = (Get-FileHash -Algorithm SHA256 -Path (Join-Path $dir 'bun.zip')).Hash.ToLowerInvariant()
+          if ($actual -ne $env:BUN_SHA256) { throw "SHA-256 of $($env:BUN_ASSET).zip is $actual, expected $($env:BUN_SHA256)" }
+          Expand-Archive -Path (Join-Path $dir 'bun.zip') -DestinationPath (Join-Path $dir 'x')
+          Copy-Item -Path (Join-Path $dir "x\$($env:BUN_ASSET)\bun.exe") -Destination (Join-Path $dir 'bin\bun.exe')
+          Add-Content -Path $env:GITHUB_PATH -Value (Join-Path $dir 'bin') -Encoding utf8
+      - name: Check the installed Bun version
+        run: test "$(bun --version)" = "$BUN_VERSION"
+      - name: Preflight
+        run: bun repo preflight
+      - name: Provision the build tools
+        run: bun repo tools setup all
+      - name: Compute the lockfile cache keys
+        id: keys
+        run: |
+          echo "bun=bun-store-${RUNNER_OS}-${RUNNER_ARCH}-${{ hashFiles('bun.lock', '*/bun.lock', 'package.json') }}" >> "$GITHUB_OUTPUT"
+          echo "bazel=bazel-actions-${RUNNER_OS}-${RUNNER_ARCH}-${{ hashFiles('MODULE.bazel', '.bazelversion', '.bazelrc', 'bun.lock') }}" >> "$GITHUB_OUTPUT"
+      - name: Restore the Bun store
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/d/m/bun-cache
+          key: ${{ steps.keys.outputs.bun }}
+          restore-keys: bun-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Restore the Bazel disk cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/p/m/bazel/actions
+          key: ${{ steps.keys.outputs.bazel }}-${{ github.sha }}
+          restore-keys: ${{ steps.keys.outputs.bazel }}-
+      - name: Install the authored dependency scopes
+        run: bun repo dependencies sync --all
+      - name: Test the architecture course under nx
+        run: bun repo --tool=nx run "$PROOF_TARGET"
+      - name: Test the architecture course under bazel
+        run: bun repo --tool=bazel run "$PROOF_TARGET"
+      - name: Save the Bazel disk cache (default branch)
+        if: ${{ success() && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/b/p/m/bazel/actions
+          key: ${{ steps.keys.outputs.bazel }}-${{ github.sha }}

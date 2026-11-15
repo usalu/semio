@@ -1,0 +1,68 @@
+# host-6f286e53e68a.log
+148:2026-11-14T20:26:53.496Z request-failed e07192d7 Error: Relative filesystem fstatat failed (EPERM)
+152:2026-11-14T20:26:53.496Z shutdown access-denied
+970:graph: 656 stale projects, 48 taken from the fleet, this machine can infer 192 (48 per wave); asking the fleet for 608
+971:graph: waiting for the fleet: 0 of 608 projects arrived
+1088:graph: waiting for the fleet: 88 of 608 projects arrived
+1144:graph: waiting for the fleet: 136 of 608 projects arrived
+1299:2026-11-14T20:57:01.283Z graph-wanted-expired {"wanted":"608","arrived":"136","seconds":"1399","missing":"472","local":"192"}
+1544:2026-11-14T21:27:30.703Z shutdown idle
+# host-4bed1562d519.log
+912:graph: 656 stale projects, 0 taken from the fleet, 5 too heavy for this machine (@semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), @semio-tech/framework-os-dev (about 8452 MB), @semio-tech/framework-rs (about 6518 MB), @semio-tech/framework-plugin (about 4018 MB); it can give about 3512 MB per project), it can infer 19
+913:graph: waiting for the fleet: 0 of 656 projects arrived
+958:graph: waiting for the fleet: 158 of 656 projects arrived
+1168:graph: nothing to wait for any longer: the fleet was asked for 656 stale projects and delivered 158 within 1092 s; 498 remain, among them the too heavy project(s) @semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB), which this machine must never infer itself (it can give about 3512 MB per project); try again when a machi
+1169:2026-11-14T22:26:10.680Z graph-wanted-expired {"wanted":"656","arrived":"158","seconds":"1092","missing":"498","local":"192","heavy":", among them the too heavy project(s) @semio-tech/s-dev-composition (about 27952 MB), @semio-tech/repo-lib (about 9652 MB) (this machine can give about 3512 MB per project)"}
+1220:2026-11-14T22:32:30.329Z shutdown superseded
+# host-9888631afea4.log
+661:graph: 656 stale projects, 158 taken from the fleet, 1 too heavy for this machine (@semio-tech/repo-lib (about 27770 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 498
+662:graph: waiting for the fleet: 0 of 498 projects arrived
+686:graph: waiting for the fleet: 46 of 498 projects arrived
+823:graph: waiting for the fleet: 94 of 498 projects arrived
+919:graph: waiting for the fleet: 142 of 498 projects arrived
+1009:2026-11-14T22:56:53.038Z graph-wanted-expired {"wanted":"498","arrived":"142","seconds":"1484","missing":"356","local":"192","heavy":""}
+1558:graph: 656 stale projects, 142 taken from the fleet, 5 too heavy for this machine (@semio-tech/framework-os-dev (about 8452 MB), @semio-tech/framework-os (about 8368 MB), @semio-tech/framework-os-kernel (about 6984 MB), @semio-tech/framework-plugin (about 5392 MB), @semio-tech/print (about 3628 MB); it can give about 3512 MB per project), it can infer 1
+1559:graph: waiting for the fleet: 0 of 514 projects arrived
+1690:graph: waiting for the fleet: 361 of 514 projects arrived
+1900:graph: nothing to wait for any longer: the fleet was asked for 514 stale projects and delivered 361 within 1457 s; 153 remain, among them the too heavy project(s) @semio-tech/framework-os-dev (about 8452 MB), @semio-tech/framework-os (about 8368 MB), @semio-tech/print (about 3628 MB), which this machine must never infer itself (it can give about 3512 MB
+1901:2026-11-14T23:28:28.453Z graph-wanted-expired {"wanted":"514","arrived":"361","seconds":"1457","missing":"153","local":"192","heavy":", among them the too heavy project(s) @semio-tech/framework-os-dev (about 8452 MB), @semio-tech/framework-os (about 8368 MB), @semio-tech/print (about 3628 MB) (this machine can give about 3512 MB per project)"}
+1933:2026-11-14T23:32:25.685Z shutdown superseded
+# host-ac6bfe8f337c.log
+827:graph: 657 stale projects, 361 taken from the fleet, 5 too heavy for this machine (@semio-tech/repo-lib (about 27770 MB), @semio-tech/framework-os-dev (about 21330 MB), @semio-tech/framework-os (about 8368 MB), @semio-tech/framework-renderer-wgpu (about 6858 MB), @semio-tech/print (about 3628 MB); it can give about 3512 MB per project), it can infer 192 
+828:graph: waiting for the fleet: 0 of 296 projects arrived
+975:graph: waiting for the fleet: 237 of 296 projects arrived
+1504:graph: refreshing 657 projects (generation 62)
+1505:graph: 102 stale facts (analysis 77, file 25) leave 657 projects stale
+2150:graph: inferring projects with 1 worker processes (1536 MB each)
+3267:graph: 657 stale projects, 285 taken from the fleet, 2 too heavy for this machine (@semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 372
+3268:graph: waiting for the fleet: 0 of 372 projects arrived
+3478:graph: nothing to wait for any longer: the fleet was asked for 372 stale projects and delivered 0 within 900 s; 372 remain, among them the too heavy project(s) @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), which this machine must never infer itself (it can give about 3512 MB per project); try again when a
+3479:2026-11-15T00:09:30.802Z graph-wanted-expired {"wanted":"372","arrived":"0","seconds":"900","missing":"372","local":"192","heavy":", among them the too heavy project(s) @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB) (this machine can give about 3512 MB per project)"}
+4022:graph: 657 stale projects, 0 taken from the fleet, 12 too heavy for this machine (@semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os (about 8368 MB), @semio-tech/framework-os-kernel (about 6984 MB), and 6 more; it can give abo
+4023:graph: waiting for the fleet: 0 of 657 projects arrived
+4033:graph: waiting for the fleet: 657 of 657 projects arrived
+4531:graph: refreshing 657 projects (generation 62)
+4532:graph: 102 stale facts (analysis 77, file 25) leave 657 projects stale
+6164:2026-11-15T00:21:51.906Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+6168:2026-11-15T00:21:51.906Z shutdown access-denied
+6882:graph: 610 stale projects, 608 taken from the fleet, 1 too heavy for this machine (workspace (about 13896 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 2
+6883:graph: waiting for the fleet: 0 of 2 projects arrived
+6910:graph: waiting for the fleet: 2 of 2 projects arrived
+7460:graph: refreshing 610 projects (generation 63)
+7461:graph: 129 stale facts (analysis 103, file 25, readdir 1) leave 610 projects stale
+8482:graph: project @semio-tech/framework-os-kernel (language:cargo) grew by 1793 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+9178:graph: 610 stale projects, 2 taken from the fleet, 11 too heavy for this machine (@semio-tech/framework-os-dev (about 76010 MB), @semio-tech/repo-lib (about 19514 MB), repo (about 14264 MB), @semio-tech/framework-plugin (about 8626 MB), @semio-tech/framework-os-kernel (about 6984 MB), @semio-tech/framework-renderer-wgpu (about 6858 MB), and 5 more; it c
+9179:graph: waiting for the fleet: 0 of 608 projects arrived
+9240:graph: waiting for the fleet: 608 of 608 projects arrived
+9778:graph: refreshing 610 projects (generation 63)
+9779:graph: 129 stale facts (analysis 103, file 25, readdir 1) leave 610 projects stale
+10426:graph: inferring projects with 1 worker processes (1536 MB each)
+12141:graph: project @semio-tech/framework-replication-rs (language:cargo) grew by 2598 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+12201:graph: project @semio-tech/framework-sqlite-snapshot-rs (language:cargo) grew by 5279 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+12208:graph: project @semio-tech/framework-schema (language:cargo) grew by 4729 MB, more than the 1756 MB this machine gives one project; its inference is stopped before the host runs short of memory and the project is marked too heavy here
+12901:graph: 562 stale projects, 561 taken from the fleet, 1 too heavy for this machine (workspace (about 13896 MB); it can give about 3512 MB per project), it can infer 192 of the others (48 per wave); asking the fleet for 1
+12902:graph: waiting for the fleet: 0 of 1 projects arrived
+12986:graph: waiting for the fleet: 1 of 1 projects arrived
+12995:graph: generation 68 (5100 projects) restored from the remote cache, 5104 documents (48 MB) downloaded in 8 s
+13475:graph: refreshing 1 projects (generation 69)
+13476:graph: 12 stale facts (readdir 10, exists 1, readdirNames 1) leave 1 projects stale

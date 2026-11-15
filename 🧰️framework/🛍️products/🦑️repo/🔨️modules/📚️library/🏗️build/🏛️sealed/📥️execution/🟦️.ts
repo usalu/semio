@@ -10,6 +10,8 @@ import{relative}from"node:path";
 import{fileURLToPath}from"node:url";
 import{implementationModeV1,readSealedLoaderV1,readSealedPointerV1,readSealedReceiptV1,readSealedSnapshotV1,sealedEntryOfV1,sealedLanguagesV1,sealedPolicyV1,sealedTextV1}from"../🟦️.ts";
 import{readPartitionPinV1}from"../🔀️partition/📌️retention/🟦️.ts";
+export{implementationProcessEnvironmentV1}from"../../📥️source/🔏️closure/🚪️command/🟦️.ts";
+import{implementationProcessEnvironmentV1}from"../../📥️source/🔏️closure/🚪️command/🟦️.ts";
 
 /** 🚦️ Runs one command of the build tool from the implementation its mode selects: `live` captures the live tree for this command exactly as before (the opt-in of the agent that edits the tool), anything else runs the stored snapshot the front-door trampoline promoted (the same snapshot, digest and loader the front door itself runs from). A store without a readable snapshot says so in both languages and runs the live tree, so the sealed layer is never the reason a command does not run.
  * @see ../🚦️trampoline/🟦️.ts who promotes, ../🟦️.ts the policy and the store */
@@ -23,7 +25,7 @@ async function executeImplementationOnceV1(workspace:string,entry:string,args:re
  const argv=[...prepareRepoCpuProfileArgumentsV1(environment),"--eval",loader,"--",pointer.digest,...args],quote=(value:string)=>'"'+value.replace(/(\\*)"/gu,'$1$1\\"').replace(/(\\+)$/u,'$1$1')+'"';
  if(Buffer.byteLength(text)>closureSchema.definitions.Policy.const.maximumSnapshotBytes||[process.execPath,...argv].map(quote).join(" ").length+1>sealedPolicyV1.maximumCommandLineCharacters)throw Error(sealedTextV1(sealedLanguagesV1(environment),"commandPublicationBounded"));
  requireIssuedResourceControlInvocationV1(control,original);
- await withIssuedResourceOperationV1(control,()=>runOwnedCommand(process.execPath,argv,process.cwd(),"repository:command",scriptInvocationBudget(original,0),{control,signal:control.signal,env:{...scriptResourceProcessEnvironmentV1(control,environment),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"},auxiliaryInput:{version:1,text},outputStyle:"stream-without-prefixes",onProgress:line=>writeOwnedCommandOutputV1(process.stderr,line+"\n",control)}));
+ await withIssuedResourceOperationV1(control,()=>runOwnedCommand(process.execPath,argv,process.cwd(),"repository:command",scriptInvocationBudget(original,0),{control,signal:control.signal,env:implementationProcessEnvironmentV1(args,scriptResourceProcessEnvironmentV1(control,environment),environment),auxiliaryInput:{version:1,text},outputStyle:"stream-without-prefixes",onProgress:line=>writeOwnedCommandOutputV1(process.stderr,line+"\n",control)}));
  requireIssuedResourceControlInvocationV1(control,original);
 }
 

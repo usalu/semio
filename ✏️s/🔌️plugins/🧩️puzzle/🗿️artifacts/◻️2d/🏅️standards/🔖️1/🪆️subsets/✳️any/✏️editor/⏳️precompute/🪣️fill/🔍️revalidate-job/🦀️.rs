@@ -13,7 +13,7 @@ use super::*;
 #[derive(semio_framework_value::RetireOwned)]
 struct Puzzle2dFillRevalidateOwners {
     pub(super) writer: ToolRunTickWriter,
-    head: Arc<Puzzle2dPlaySnapshot>,
+    head: semio_framework_value::retirement::arc_custody::ArcLease<Puzzle2dPlaySnapshot>,
     pub(super) ops: Vec<Puzzle2dMutation>,
     keys: Vec<FillRunPlacementKey>,
     head_bounds: Vec<[f64; 4]>,
@@ -208,7 +208,7 @@ impl InteractiveJob for Puzzle2dFillRevalidateJob {
         let identity = self.writer.identity();
         self.close_owners.stage(Puzzle2dFillRevalidateOwners {
             writer: std::mem::replace(&mut self.writer, ToolRunTickWriter::new(identity)),
-            head: Arc::clone(&self.head),
+            head: semio_framework_value::retirement::arc_custody::ArcLease::new(Arc::clone(&self.head)),
             ops: std::mem::take(&mut self.ops),
             keys: std::mem::take(&mut self.keys),
             head_bounds: std::mem::take(&mut self.head_bounds),

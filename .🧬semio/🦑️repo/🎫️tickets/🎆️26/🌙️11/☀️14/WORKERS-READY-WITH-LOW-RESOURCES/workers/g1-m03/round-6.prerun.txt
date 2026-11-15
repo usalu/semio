@@ -1,0 +1,14 @@
+Pre-run facts, 2026-11-14T19:52:13Z
+- replica code digest (.cache/f/health.json): 28b4f47dc4d69fae3a080d0c58d3520741c02c444760d2a3cec506db943ae8ff, store ok, daemon pid 4292
+- `repo service host` processes (pid, ppid, age, rss KiB, arguments after the script path):
+  (0 process(es))
+- last 8 lines of .cache/f/sidecars/build-agent.log:
+    2026-11-14T19:41:53.682Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T19:41:54.730Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T19:41:55.828Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T19:41:57.133Z worker reconnecting: Unable to connect. Is the computer able to access the url?
+    2026-11-14T19:41:58.299Z worker registered: a9fcc7ff-57c6-4508-95a2-103a9d085f5c cache http://192.168.178.70:6094
+    2026-11-14T19:42:00.061Z load report sent: reachable again
+    2026-11-14T19:44:02.114Z graph-server: alive, 0 machines seen, 0 requests held, read none
+    2026-11-14T19:49:09.493Z graph-server: alive, 0 machines seen, 0 requests held, read none
+- memory pressure level 1, free disk 88Gi

@@ -52,7 +52,7 @@ fn a_pointer_drag_previews_snapped_values_and_the_release_commits_one_bundle() {
     assert!((preview_value(&effects[2]) - 4.25).abs() < 1e-12);
     assert!(matches!(&effects[2], DragEffect::Preview(p) if p.started_seq == 7 && p.handle == "b1/length/end"));
     assert_eq!(effects[3], DragEffect::Commit(vec![FieldWrite::number("members[id=b1].length", 4.25)]));
-    assert!(matches!(state, DragState::Hover { s, .. } if (s - 4.27).abs() < 1e-12));
+    assert!(matches!(state, DragState::Hover { s, .. } if (s - 4.25).abs() < 1e-12));
 }
 
 #[test]

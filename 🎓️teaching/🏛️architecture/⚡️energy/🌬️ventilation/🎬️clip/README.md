@@ -7,7 +7,7 @@ Presents the **Ventilation series** inside the shared virtual semio UI. The navb
 3. Kapitel 3 — Was die Luft trägt
 4. Kapitel 4 — Natürliche Lüftung
 5. Kapitel 5 — Mechanische Lüftung und Wärmerückgewinnung
-6. Kapitel 6 — Übergabe an Heizung und Kühlung
+6. Kapitel 6 — Übergabe an Heizung und Kühltechnik
 
 Entry file: [`🐍️.py`](./🐍️.py)
 
@@ -25,15 +25,16 @@ plug their own season into it:
 
 | Quantity | Defined in | Heating uses it as | Cooling uses it as |
 |----------|------------|--------------------|--------------------|
-| `V`, `n`, `V̇ = V·n` (= `q_v,R`) | Kapitel 2 | `Φ_V = V·n·c_Luft·Δθ` | `q_v,R` in `Q̇_V = ρ·c_p·Δθ·q_v,R` |
-| `c_Luft = ρ·c_p / 3600 ≈ 0,34 Wh/(m³·K)` | Kapitel 3 | winter factor | summer factor |
-| `Δθ` (signed), `Δx` | Kapitel 3 | `Δθ = 20 K`, no latent part | `Δθ = 6 K`, `Δx = 4,5 g/kg` |
-| `η_WRG = (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL)` | Kapitel 5 | `Φ_V·(1 − η_WRG)` | cold recovery |
+| `V`, `n`, `V̇ = V·n` (= `q_v,R`) | Kapitel 2 | `Q̇_V = V̇·c_Luft·Δθ` (Φ as the generic heat flow, Q̇ as the load at the room, index V = ventilation) | `q_v,R` in `Q̇_V = ρ·c_p·Δθ·q_v,R` |
+| `c_Luft = ρ·c_p / 3600 ≈ 0,34 Wh/(m³·K)` (ρ ≈ 1,2 kg/m³ at 20 °C, 1,27 kg/m³ at 5 °C; the norm uses the fixed 0,34) | Kapitel 3 | winter factor | summer factor |
+| `Δθ` (signed), `Δx` | Kapitel 3 | `Δθ = 20 K`, latent part by convention not counted | `Δθ = 6 K`, `Δx = 4,5 g/kg` |
+| `η_WRG = (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL)` | Kapitel 5 | `Q̇_V,sens·(1 − η_WRG)` | cold recovery |
 | duct `A = q_v,R / v_m`, `r = √(A/π)` | Kapitel 5 | — | sizing method for the cooling airflow |
 | night / window / cross / stack ventilation | Kapitel 4 | Stoß- vs. Kipplüftung | free cooling, night discharge |
 
-Kapitel 6 closes with the hand-over: what Heating takes (`Φ_V` sensible) and what
-Cooling takes (sensible + latent, sizing airflow, night ventilation, cold recovery).
+Kapitel 6 closes with the hand-over: what Heating takes (`Q̇_V` = sensible part by convention; the
+latent part `Q̇_V,lat = V̇·ρ·r₀·Δx` exists in winter, too, and is paid only where air is humidified) and what
+Kühltechnik takes (the sum `Q̇_V = Q̇_V,sens + Q̇_V,lat`, sizing airflow, night ventilation, cold recovery).
 
 ---
 
@@ -46,8 +47,12 @@ V_e = 580 m³ → V ≈ 440 m³ (0,76·V_e)
 n = 0,5 h⁻¹ → V̇ = 220 m³/h = 0,061 m³/s (= q_v,R)
 c_Luft ≈ 0,34 Wh/(m³·K)
 Winter: Δθ = 20 K → Q̇_V,sens ≈ 1500 W   → mit WRG (η = 0,8) ≈ 300 W
+        Δx = 4,3 g/kg → Q̇_V,lat ≈ 770 W (Plattentauscher gewinnt nichts zurück;
+                         die Heizlast zählt nach Konvention nur den fühlbaren Teil)
 Sommer: Δθ =  6 K → Q̇_V,sens ≈  450 W   → mit WRG (η = 0,8) ≈  90 W
         Δx = 4,5 g/kg → Q̇_V,lat ≈ 810 W (Plattentauscher gewinnt nichts zurück)
+Summe:  Q̇_V = Q̇_V,sens + Q̇_V,lat: Winter 2270 W, Sommer 1260 W
+        mit WRG: Winter 300 W + 770 W = 1070 W, Sommer 90 W + 810 W = 900 W
 Kanal:  v_m = 2,5 m/s → A ≈ 0,0244 m² → r ≈ 0,088 m
 ```
 
@@ -59,8 +64,9 @@ Where each number lives, so a change is made once:
 | `c_Luft`, winter/summer `Δθ`, `Δx`, `Q̇_V,sens`, `Q̇_V,lat` | `🌡️heat-flow/🐍️.py` |
 | `η_WRG`, duct `v_m`, `A`, `r` | `⚙️mechanical/🐍️.py` |
 
-Standards cited per beat via the `_din_ref()` chip: DIN EN 12831-1, DIN V 18599,
-DIN 1946-4, DIN 1946-6, DIN EN 16798-1, DIN 4108-2, VDI 2078.
+Standards cited per beat via the `_din_ref()` chip, built from the registry `🏗️authoring/📚️references`: DIN EN 12831-1:2017-09, DIN/TS 18599-1:2025-10,
+DIN 1946-4:2018-09, DIN 1946-6:2019-12, DIN EN 16798-1:2022-03, DIN EN 16798-3:2026-10, DIN EN 16798-7:2017-11, DIN EN 308:2022-04, VDI 2087:2006-12, DIN 4108-2:2026-05, VDI 2078:2015-06.
+The "Grenzwert nach Pettenkofer" (1000 ppm CO₂): Pettenkofer (1858), *Ueber den Luftwechsel in Wohngebäuden*, München: Cotta, and Bundesgesundheitsbl. 51 (2008) 1358–1369 (Ad-hoc-AG Innenraumrichtwerte, *Gesundheitliche Bewertung von Kohlendioxid in der Innenraumluft*); the DIN 1946-6:2019-12 attribution of the old corner label was dropped because only the guideline article gives the 1000 ppm value.
 
 ---
 
@@ -89,9 +95,9 @@ The movie of a preview job is `<output-root>/preview/<language>/<audience>/rende
 
 | Chapter | Beat | Idea |
 |---------|------|------|
+| 1 | `🗺️roadmap` `Beat1_Fahrplan` | der Fahrplan, erste Szene des Videos: Warum lüften → Luftmenge → Wärmestrom → natürlich → mechanisch → Übergabe (`Q̇_V` an Heizung und Kühltechnik); geteilter Baustein `🏗️authoring/🗺️roadmap` |
 | 1 | `Beat1_Lueftungsbedarf` | CO₂, Feuchte, Schadstoffe — der hygienische Bedarf, ganzjährig |
 | 1 | `Beat2_Lueftungsweg` | Luft durch die Öffnungen, Richtung kehrt mit der Jahreszeit um |
-| 1 | `Beat3_Fahrplan` | Luftmenge → Wärmestrom → natürlich → mechanisch → Übergabe |
 | 2 | `Beat1_Innenvolumen` | Brutto- zu Nettovolumen `V ≈ 0,76·V_e` |
 | 2 | `Beat2_Luftwechselrate` | `n`, `V̇ = V·n`, Richtwerte von Lager bis OP |
 | 2 | `Beat3_Volumenstrom` | ein Volumenstrom, zwei Schreibweisen (`V·n` = `q_v,R`) |
@@ -100,17 +106,17 @@ The movie of a preview job is `<output-root>/preview/<language>/<audience>/rende
 | 3 | `Beat3_LatenteLast` | `Q̇_V,lat = ρ·r·Δx·q_v,R` |
 | 3 | `Beat4_WinterUndSommer` | eine Formel, zwei Jahreszeiten |
 | 4 | `Beat1_Fensterregeln` | das Fenster als Regler |
-| 4 | `Beat2_StossOderKipp` | 340 Wh gegen ≈ 780 Wh |
+| 4 | `Beat2_StossOderKipp` | 340 Wh gegen ≈ 830 Wh; „8 %“ = 5 min / 60 min bei `n ≈ 1 h⁻¹` (Maas (1995), Diss. Univ. Kassel, Kap. 8.2, S. 74: 0,56 … 1,38 h⁻¹) |
 | 4 | `Beat3_Querlueftung` | zwei Öffnungen, `A_eff` |
-| 4 | `Beat4_Auftrieb` | `Δp = h·g·(ρ_a − ρ_i)` |
-| 4 | `Beat5_Nachtlueftung` | den Speicher entladen |
+| 4 | `Beat4_Auftrieb` | `Δρ(θ)` → `Δp = Δρ·g·h` → `v = √(2Δp/ρ)` → `V̇ = C_d·A·v`; Zuluft- und Abluftöffnung, Kamin |
+| 4 | `Beat5_Nachtlueftung` | Sonne, Verschattung, den Speicher entladen |
 | 4 | `Beat6_GrenzenDerFreienLueftung` | Wetter, Filter, Regelung, keine Rückgewinnung |
 | 5 | `Beat1_Grundtypen` | Abluft, Zuluft, Zu-/Abluft |
 | 5 | `Beat2_Waermerueckgewinnung` | `η_WRG`, Winter 1500 → 300 W, Sommer Kälterückgewinnung |
 | 5 | `Beat3_Anlagenvergleich` | Fenster, zentral, dezentral; Passivhaus |
 | 5 | `Beat4_Kanalquerschnitt` | `V̇ → A → r` aus dem hygienischen Volumenstrom |
-| 6 | `Beat1_Zusammenfassung` | die Größen `V, n, V̇, c_Luft, Δθ, Δx, η` als eine Kette |
-| 6 | `Beat2_UebergabeHeizungKuehlung` | was Heizung und Kühlung übernehmen |
+| 6 | `Beat1_Zusammenfassung` | die Größen `V, n, V̇, ρ, c_Luft, Δθ, Δx, r₀, η` als eine Kette mit Summenzeile `Q̇_V` |
+| 6 | `Beat2_UebergabeHeizungKuehlung` | was Heizung und Kühltechnik übernehmen |
 
 ## Authoring
 

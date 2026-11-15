@@ -1,6 +1,7 @@
 /** 🌊️ Contract: the shared row layers of a stored closure entry are streamed from the store, never cached parsed: a layer comes back in batches equal to the rows that were saved, a damaged or missing layer is a typed loss (never an empty layer), and reading all layers of an entry repeatedly holds one layer at a time, not all of them. */
 import{expect,test}from"bun:test";
-import{mkdtempSync,readdirSync,rmSync,writeFileSync}from"node:fs";
+import{mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+import{brotliCompressSync,brotliDecompressSync}from"node:zlib";
 import{tmpdir}from"node:os";
 import{join}from"node:path";
 import{createClosureStoreV1}from"../../🧭️script-inputs/💾️entries/🟨️.mjs";
@@ -68,5 +69,21 @@ test("entries that name equal values store that value once and share one parsed 
   writeFileSync(join(directory,"v",readdirSync(join(directory,"v"))[0]!),"damaged");
   const fresh=createClosureStoreV1({directory});
   expect(await Promise.all(["recipe0","other"].map(id=>fresh.load(id)))).toContain(undefined);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("an entry names each walk question of its sidecar once and its layers by index, so the record stays small however many layers share walks, and an entry of an earlier format is a miss",async()=>{
+ const directory=mkdtempSync(join(tmpdir(),"layer-stream-sidecar-")),store=createClosureStoreV1({directory});
+ try{
+  const LAYERS=200,WALKS=200,walks=Array.from({length:WALKS},(_,at)=>JSON.stringify({walk:1,roots:["/w/"+at+"/"+"x".repeat(600)]})),layers=Array.from({length:LAYERS},(_,at)=>[{kind:"file",path:"/w/"+at,fact:at}]);
+  const sidecar={facts:layers.map(()=>null),members:layers.map((_,at)=>walks.filter((_walk,index)=>(index+at)%2===0))};
+  const saved=await store.save("wide",{recipe:{fn:"probe"},value:[],rows:[],layers,sidecar});
+  expect(saved.bytes).toBeLessThan(1024*1024);
+  const file=join(directory,"e",readdirSync(join(directory,"e"))[0]!),text=brotliDecompressSync(readFileSync(file)).toString("utf8");
+  expect(text.length).toBeLessThan(1024*1024);expect(JSON.parse(text).version).toBe(3);
+  const loaded=await createClosureStoreV1({directory}).load("wide");
+  expect((loaded?.sidecar as {members:string[][]}).members).toEqual(sidecar.members);
+  writeFileSync(file,brotliCompressSync(Buffer.from(JSON.stringify({...JSON.parse(text),version:2}))));
+  expect(await createClosureStoreV1({directory}).load("wide")).toBeUndefined();
  }finally{rmSync(directory,{recursive:true,force:true});}
 });

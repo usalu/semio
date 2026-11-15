@@ -1,0 +1,68 @@
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-4a3e468900f5.log (lines after 5521)
+-- last 30 lines when the try ended
+[repository:command] still running after 1591 s
+[repository:command] still running after 1601 s
+[repo] still working after 1611 s; last phase started: source.served
+[repository:command] still running after 1611 s
+[repository:command] still running after 1621 s
+[repository:command] still running after 1631 s
+[repo] still working after 1641 s; last phase started: source.served
+[repository:command] still running after 1641 s
+[repository:command] still running after 1651 s
+[repository:command] still running after 1661 s
+[repo] still working after 1671 s; last phase started: source.served
+[repository:command] still running after 1671 s
+[repository:command] still running after 1681 s
+[repository:command] still running after 1691 s
+[repo] still working after 1701 s; last phase started: source.served
+[repository:command] still running after 1701 s
+[repository:command] still running after 1711 s
+[repository:command] still running after 1721 s
+[repo] still working after 1731 s; last phase started: source.served
+[repository:command] still running after 1731 s
+[repository:command] still running after 1741 s
+[repository:command] still running after 1751 s
+[repo] still working after 1761 s; last phase started: source.served
+[repository:command] still running after 1761 s
+[repository:command] still running after 1771 s
+[repository:command] still running after 1781 s
+[repo] still working after 1791 s; last phase started: source.served
+[repository:command] still running after 1791 s
+2026-11-15T07:47:33.030Z shutdown superseded
+[script] {"owner":"repository:build","command":"repo","stage":"complete"}
+== /var/folders/wg/5s85qzsj2pg6689nck2j3xbm0000gn/T/semio-repo/501/host-74145656f35a.log (lines after 0)
+2026-11-15T07:49:33.591Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=launchd pid=56873 ppid=56801
+2026-11-15T07:50:46.464Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=direct pid=60693 ppid=60647
+-- last 30 lines when the try ended
+[repo] still working after 20 s; last phase started: source.served
+[capacity] waiting 12s for graph-plan: not enough free memory (need 6553 MB; 700 MB spare above the 2048 MB floor, load 6.93; 3 running, 0 ahead); behind semio-s-artifact-shooting-shooting (running, 3 job(s), 3735 MB), projects (running, 1 job(s), 3550 MB), workspace:setup (quiet, 1 job(s), 350 MB)
+[repository:command] still running after 20 s
+[capacity] waiting 17s for graph-plan: not enough free memory (need 6553 MB; 1534 MB spare above the 2048 MB floor, load 6.78; 3 running, 0 ahead); behind semio-s-artifact-shooting-shooting (running, 3 job(s), 3735 MB), projects (running, 1 job(s), 3550 MB), workspace:setup (quiet, 1 job(s), 350 MB)
+[repository:command] still running after 30 s
+[capacity] waiting 23s for graph-plan: not enough free memory (need 6553 MB; 1393 MB spare above the 2048 MB floor, load 7.36; 3 running, 0 ahead); behind semio-s-artifact-shooting-shooting (running, 3 job(s), 3735 MB), projects (running, 1 job(s), 3550 MB), workspace:setup (quiet, 1 job(s), 280 MB)
+[capacity] waiting 30s for graph-plan: not enough free memory (need 6553 MB; 1091 MB spare above the 2048 MB floor, load 6.85; 3 running, 0 ahead); behind semio-s-artifact-shooting-shooting (running, 3 job(s), 3735 MB), projects (running, 1 job(s), 3550 MB), workspace:setup (quiet, 1 job(s), 280 MB)
+[repository:command] still running after 40 s
+[capacity] waiting 35s for graph-plan: not enough free memory (need 6553 MB; 1129 MB spare above the 2048 MB floor, load 7.1; 3 running, 0 ahead); behind semio-s-artifact-shooting-shooting (running, 3 job(s), 3735 MB), projects (running, 1 job(s), 3550 MB), workspace:setup (quiet, 1 job(s), 283 MB)
+[capacity] waiting 40s for graph-plan: not enough free memory (need 6553 MB; 1127 MB spare above the 2048 MB floor, load 6.77; 3 running, 0 ahead); behind semio-s-artifact-shooting-shooting (running, 3 job(s), 3735 MB), projects (running, 1 job(s), 3550 MB), workspace:setup (quiet, 1 job(s), 283 MB)
+[repo] still working after 50 s; last phase started: source.served
+[repository:command] still running after 50 s
+[capacity] waiting 45s for graph-plan: not enough free memory (need 6553 MB; 1215 MB spare above the 2048 MB floor, load 6.31; 3 running, 0 ahead); behind semio-s-artifact-shooting-shooting (running, 3 job(s), 3735 MB), projects (running, 1 job(s), 3550 MB), workspace:setup (quiet, 1 job(s), 283 MB)
+[capacity] waiting 51s for graph-plan: not enough free memory (need 6553 MB; 1552 MB spare above the 2048 MB floor, load 6.04; 3 running, 0 ahead); behind semio-s-artifact-shooting-shooting (running, 3 job(s), 3735 MB), projects (running, 1 job(s), 3550 MB), workspace:setup (quiet, 1 job(s), 303 MB)
+[repository:command] still running after 60 s
+[capacity] admitted graph-plan with 2129 of 6553 MB: only 2129 MB are free above the 2048 MB floor right now, and 2048 MB are enough to start
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] build:source-admission · Admitting the sources of the build
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[script] {"owner":"repository:build","command":"build:source-admission","stage":"running"}
+[repository:command] still running after 70 s
+2026-11-15T07:50:46.464Z request-failed da146983 Error: Relative filesystem fstatat failed (EPERM)
+    at failure (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:148:321)
+    at <anonymous> (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts:153:768)
+    at processTicksAndRejections (native:7:39)
+where: root=/Users/ueli/Documents/semio/.cache/b entry=.reset.json code=EPERM route=direct pid=60693 ppid=60647
+2026-11-15T07:50:46.466Z shutdown access-denied
+graph: plan answered, managed 108 MB, resident 161 MB (released 0 MB)
+repository:command failed with exit code 4

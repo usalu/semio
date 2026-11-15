@@ -1,0 +1,36 @@
+import {mkdirSync,mkdtempSync,readdirSync,readFileSync,writeFileSync,existsSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+// usage: bun 1113-mixed-version-check.ts <old-tree> <new-tree>   (two trees that each hold 🧰️framework/.../🤝️shared-worktree)
+const [oldTree,newTree]=[process.argv[2]!,process.argv[3]!];
+const at=(tree:string)=>join(tree,"🧰️framework","🛍️products","🦑️repo","🔨️modules","🤝️shared-worktree");
+const oldR=await import(join(at(oldTree),"🔁️replica","🟦️.ts")),newR=await import(join(at(newTree),"🔁️replica","🟦️.ts"));
+const temp=(label:string)=>mkdtempSync(join(tmpdir(),`mixed-${label}-`));
+const options=(name:string,store:string)=>({worktree:temp(name),storeRoot:store,originId:name,groupId:"g1",pollMilliseconds:10,scanSeconds:900,debounceMilliseconds:5,persistMilliseconds:0});
+const store=temp("store"),peer=temp("peer"),results:Record<string,unknown>={};
+const oldA=options("olda",store),newB=options("newb",store),oldC=options("oldc",store);
+writeFileSync(join(oldA.worktree,".gitignore"),"ignored\n");writeFileSync(join(oldA.worktree,"seed.txt"),"seed");
+await oldR.seedV1(oldA);await newR.joinV1(newB);await oldR.joinV1(oldC);
+const a=await oldR.openReplicaV1(oldA),b=await newR.openReplicaV1(newB),c=await oldR.openReplicaV1(oldC);
+const put=(who:{worktree:string},path:string,text:string)=>{mkdirSync(join(who.worktree,path,".."),{recursive:true});writeFileSync(join(who.worktree,path),text);};
+put(oldA,"from-old.txt","written by old code");await oldR.publishOnceV1(a);
+put(newB,"from-new.txt","written by new code");put(newB,"deep/dir/new2.txt","also new");await newR.publishOnceV1(b);
+for(let round=0;round<3;round++){await newR.followOnceV1(b);await oldR.followOnceV1(a);await oldR.followOnceV1(c);}
+const read=(who:{worktree:string},path:string)=>existsSync(join(who.worktree,path))?readFileSync(join(who.worktree,path),"utf8"):undefined;
+results.oldFollowsNew=[read(oldA,"from-new.txt"),read(oldC,"deep/dir/new2.txt")];
+results.newFollowsOld=read(newB,"from-old.txt");
+results.flatHeadsInStore=readdirSync(join(store,"v1","heads"));
+results.oldListsOrigins=await (await import(join(at(oldTree),"📒️journal","🟦️.ts"))).listOriginsV1(store);
+await oldR.relayOnceV1(peer,store,await oldR.homedOriginsV1(store,"g1"));
+results.oldRelayCopiedNewOrigin=readdirSync(join(peer,"v1","origins")).sort();
+results.peerHasNoFlatHeads=!existsSync(join(peer,"v1","heads"));
+const joined=options("late",peer);await oldR.joinV1(joined).catch(error=>{results.oldJoinFromOldRelay=String(error);});
+const compact=await oldR.compactV1(store,"olda",0);
+results.oldCompactionOk=compact.segments>=0;
+results.headsAfterOldCompaction=readdirSync(join(store,"v1","heads")).length;
+await newR.relayOnceV1(peer,store,await newR.homedOriginsV1(store,"g1"));
+results.newRelayFlatHeads=readdirSync(join(peer,"v1","heads")).map(name=>name.split("_")[0]).sort();
+const d=options("newd",peer);await newR.joinV1(d);const dd=await newR.openReplicaV1(d);await newR.followOnceV1(dd);
+results.newFollowsOldRelayedStore=read(d,"from-old.txt")==="written by old code"&&read(d,"from-new.txt")==="written by new code";
+for(const r of [a,b,c,dd])await newR.closeReplicaV1(r);
+console.log(JSON.stringify(results,null,1));

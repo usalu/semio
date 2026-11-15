@@ -152,8 +152,8 @@ fn buckling_lengths(input: &SceneInput, layout: &Layout, out: &mut Out) {
         let binding = binding(input.report, &[b.id.as_str()]);
         let (end, buckling) = (along(&f.origin, &f.x, pose.length), along(&f.origin, &f.x, k * pose.length));
         group(out, "bucklingLengths", &b.id, entity_ref(EntityKind::Member, &b.member_id, "members"), loc(&format!("Buckling length {}", b.id), &format!("Knicklänge {}", b.id)), loc(&format!("K = {k:.3}, G_A = {:.2}, G_B = {:.2}", ga.min(1.0e3), gb.min(1.0e3)), &format!("K = {k:.3}, G_A = {:.2}, G_B = {:.2}", ga.min(1.0e3), gb.min(1.0e3))), &binding, &end);
-        out.annotate(Annotation::Dimension { id: format!("{}:length", b.id), from: f.origin.clone(), to: end, offset: mul(&f.y, 0.4), value: Quantity::length_m(pose.length), binding: None }, &f.origin);
-        out.annotate(Annotation::Dimension { id: format!("{}:buckling", b.id), from: f.origin.clone(), to: buckling.clone(), offset: mul(&f.y, 0.8), value: Quantity::length_m(k * pose.length), binding: None }, &buckling);
+        out.annotate(Annotation::Dimension { id: format!("{}:length", b.id), from: f.origin.clone(), to: end, offset: mul(&f.y, 0.4), value: Quantity::new(QuantityKind::Length, pose.length), binding: None }, &f.origin);
+        out.annotate(Annotation::Dimension { id: format!("{}:buckling", b.id), from: f.origin.clone(), to: buckling.clone(), offset: mul(&f.y, 0.8), value: Quantity::new(QuantityKind::Length, k * pose.length), binding: None }, &buckling);
         let at = along(&buckling, &f.y, 0.8);
         out.annotate(Annotation::Label { id: format!("{}:k-label", b.id), anchor: at.clone(), text: loc(&format!("L_cr = {k:.3} L"), &format!("L_cr = {k:.3} L")), tone: tone_of(&binding) }, &at);
     }

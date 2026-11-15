@@ -1,4 +1,4 @@
-//! 📍️ `change-critical-region-hoop-fywd` diff: patches `hoop_design_yield_mpa` of the addressed critical_region row.
+//! 📍️ `change-critical-region-hoop-design-yield-mpa` diff: patches `hoop_design_yield_mpa` of the addressed critical_region row.
 
 use crate::change_critical_region_hoop_fywd::ChangeCriticalRegionHoopDesignYieldMpa;
 use semio_s_artifact_norm_en1998_diff::{En1998Diff, En1998CriticalRegionDelta, En1998CriticalRegionPatch};

@@ -414,6 +414,7 @@ fn scalar_inputs(document: &model::En1998Snapshot, layout: &Layout, out: &mut Ve
         scalar_grips(out, &f.id, EntityKind::Solid, "foundations", &v3(c.x - 3.0, c.y - 3.0, c.z), &[
             Scalar { field: "footingWidthM", unit: "m", value: f.footing_width_m, floor: 0.1, lo: 0.0, hi: 30.0, step: 0.05, en: "Footing width B", de: "Fundamentbreite B" },
             Scalar { field: "bearingAxialN", unit: "N", value: f.bearing_axial_n, floor: 10000.0, lo: 0.0, hi: 1.0e9, step: 1000.0, en: "Footing axial force N_Ed", de: "Normalkraft N_Ed des Fundaments" },
+            Scalar { field: "pileAxialLoadN", unit: "N", value: f.pile_axial_load_n, floor: 10000.0, lo: 0.0, hi: 1.0e9, step: 1000.0, en: "Pile axial load N_Ed", de: "Pfahlnormalkraft N_Ed" },
             Scalar { field: "bearingNMaxN", unit: "N", value: f.bearing_n_max_n, floor: 10000.0, lo: 0.0, hi: 1.0e9, step: 1000.0, en: "Ultimate bearing force N_max", de: "Grenztragkraft N_max" },
             Scalar { field: "soilFrictionAngleDeg", unit: "deg", value: f.soil_friction_angle_deg, floor: 1.0, lo: 0.0, hi: 50.0, step: 0.5, en: "Soil friction angle φ'", de: "Reibungswinkel φ' des Bodens" },
             Scalar { field: "pRdPa", unit: "Pa", value: f.p_rd_pa, floor: 10000.0, lo: 0.0, hi: 5.0e7, step: 1000.0, en: "Bearing resistance p_Rd", de: "Sohldruckwiderstand p_Rd" },
@@ -429,7 +430,6 @@ fn scalar_inputs(document: &model::En1998Snapshot, layout: &Layout, out: &mut Ve
             Scalar { field: "pileModulusPa", unit: "Pa", value: f.pile_modulus_pa, floor: 1000000000.0, lo: 0.0, hi: 1.0e11, step: 100000000.0, en: "Pile modulus E_p", de: "Pfahl-Elastizitätsmodul E_p" },
             Scalar { field: "pileSubgradeModulusNM3", unit: "N/m3", value: f.pile_subgrade_modulus_n_m3, floor: 1000000.0, lo: 0.0, hi: 1.0e9, step: 100000.0, en: "Subgrade modulus k_h", de: "Bettungsmodul k_h" },
             Scalar { field: "pileHeadShearN", unit: "N", value: f.pile_head_shear_n, floor: 10000.0, lo: 0.0, hi: 1.0e7, step: 1000.0, en: "Pile head shear", de: "Pfahlkopfquerkraft" },
-            Scalar { field: "pileAxialLoadN", unit: "N", value: f.pile_axial_load_n, floor: 10000.0, lo: 0.0, hi: 1.0e9, step: 1000.0, en: "Pile axial load N_Ed", de: "Pfahlnormalkraft N_Ed" },
             Scalar { field: "pileUpperVsMS", unit: "m/s", value: f.pile_upper_vs_m_s, floor: 10.0, lo: 0.0, hi: 1000.0, step: 5.0, en: "Upper layer shear wave velocity", de: "Scherwellengeschwindigkeit oben" },
             Scalar { field: "pileLowerVsMS", unit: "m/s", value: f.pile_lower_vs_m_s, floor: 10.0, lo: 0.0, hi: 1500.0, step: 5.0, en: "Lower layer shear wave velocity", de: "Scherwellengeschwindigkeit unten" },
             Scalar { field: "pileMomentRdNm", unit: "N*m", value: f.pile_moment_rd_nm, floor: 10000.0, lo: 0.0, hi: 1.0e8, step: 1000.0, en: "Pile moment resistance M_Rd", de: "Pfahl-Momententragfähigkeit M_Rd" },

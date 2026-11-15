@@ -39,7 +39,7 @@ pub(crate) fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
 
 /// 🕳️ The solid rectangles `(x0, x1, z0, z1, depth)` of the wall with every chase and recess cut into its face: the part under a cut keeps the thickness behind the depth, overlapping cuts keep the deeper one.
 fn pockets(rects: Vec<(f64, f64, f64, f64)>, cuts: &[(f64, f64, f64, f64, f64)]) -> Vec<(f64, f64, f64, f64, f64)> {
-    let mut pieces: Vec<_> = rects.into_iter().map(|(x0, x1, a, b)| (x0, x1, a, b, 0.0)).collect();
+    let mut pieces: Vec<(f64, f64, f64, f64, f64)> = rects.into_iter().map(|(x0, x1, a, b)| (x0, x1, a, b, 0.0)).collect();
     for &(c0, c1, d0, d1, depth) in cuts {
         pieces = pieces
             .into_iter()

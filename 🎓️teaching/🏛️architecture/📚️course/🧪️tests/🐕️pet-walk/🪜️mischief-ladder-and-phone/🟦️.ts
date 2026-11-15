@@ -3,7 +3,7 @@
  * @see ../🟦️.ts — the pets in a real browser, as the second round made them
  */
 import type { Page } from "@playwright/test";
-import { HANG_ROD } from "@semio-tech/pets";
+import { HANG_ROD, LADDER_LEAN } from "@semio-tech/pets";
 import {QUIZZES, enter, expect, pane, playQuiz, swipeTo, test, type Device, activeOverview} from "../../../🎭️e2e/🚶️learner/🟦️.ts";
 import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, castOf, choosePets, CONTROLS, enterWithPets, expectCast, expectPerched, floorSpot, HASTE, hasten, HOME, hoverOf, instrumented, type Instruments, KINDS, LANDING_MS, layer, MISCHIEF_HASTE, MISCHIEF_QUIZ, misplaced, pets, reachable, RECAST_MS, ROPE_MS, ROPE_REACH, ROPE_ROUND_MS, stagePasses, standing, TEMPO, trailOf, WALK_MS } from "../🧰️pet-kit/🟦️.ts";
 
@@ -53,6 +53,21 @@ async function lively(learner: Device): Promise<void> {
   await expect(pane(page, "prefs")).not.toHaveAttribute("data-opened", "");
 }
 
+/** 🪜️ How long, in milliseconds of the wall clock (two minutes of the pets' time at eight times the pace), a climber that was put where its way to the foot of its ladder is clear gets to raise it before the next round: whether it chooses the trip is its own business. Over 120 simulated stages of this page it raised its ladder at once or after a median of about 20 s of its time; one in five took longer than a round, one in twelve longer than two. */
+const LADDER_ROUND_MS = 15_000;
+
+/** 🔁️ How long the spec tries for a ladder in all, round after round, in milliseconds of the wall clock: sixteen rounds, since each round after the first fails about two times in five and one in a million is the most a gate may flake. The footer line is one lane no pet passes another on and the page has a single place a ladder can stand, so a climber that is not next to it waits for as long as anybody stands between: every round that sees no ladder puts a climber there again. */
+const LADDER_MS = 2 * WALK_MS;
+
+/** 🦶️ In the page: where on the footer line the foot of a ladder against the right side of the lowest visible card part stands — its side plus {@link LADDER_LEAN} of the rise to the footer line — or `null` without such a part. */
+function ladderFoot(question: { readonly parts: string; readonly lean: number }): number | null {
+  const footer = document.querySelector(".course-app > footer");
+  if (footer === null) return null;
+  const line = footer.getBoundingClientRect().top;
+  const lowest = [...document.querySelectorAll(question.parts)].filter((part) => part.closest("[inert], [hidden]") === null).map((part) => part.getBoundingClientRect()).filter((box) => box.left >= 0 && box.right <= window.innerWidth && box.bottom <= line).reduce<DOMRect | null>((best, box) => (best === null || box.bottom > best.bottom ? box : best), null);
+  return lowest === null ? null : lowest.right + question.lean * (line - lowest.top);
+}
+
 /** 🧗️ The pets that have stood on `footing` (a ladder, a rope) since the instruments were put in. */
 function carriedOn(page: Page, footing: string): Promise<readonly string[]> {
   return page.evaluate((wanted) => Object.entries((window as unknown as { petWalk: Instruments }).petWalk.trails).flatMap(([id, trail]) => (trail.some((line) => line.split("/")[1] === wanted) ? [id] : [])), footing);
@@ -70,7 +85,30 @@ test("a pet that cannot hop to a perch above raises its ladder: on a quiz's page
   await expect(pane(page, gutters!.id)).toHaveAttribute("data-opened", "");
   await expectCast(learner, gutters!.id, true);
   await instrumented(page);
-  await eventually(page, () => carriedOn(page, "ladder"), (seen) => seen.length > 0, { stageMs: WALK_MS * HASTE, message: `a pet on a ladder on the page of ${gutters!.id}` });
+  const ladderRound = async (): Promise<void> => {
+    if ((await carriedOn(page, "ladder")).length > 0) return;
+    const pet = await reachable(page, (body) => climber(body.id)).catch(() => undefined);
+    const foot = await page.evaluate(ladderFoot, { parts: CARD_PARTS, lean: LADDER_LEAN });
+    if (pet !== undefined && foot !== null) {
+      const height = pet.bottom - pet.top;
+      const hover = hoverOf(pet.id);
+      const spot = await page.evaluate(floorSpot, { parts: CARD_PARTS, controls: CONTROLS, reach: (pet.right - pet.left) / 2 + 12, room: height + hover + 12, near: foot });
+      if (spot !== null) {
+        await carry(page, pet, { x: spot.x, y: spot.top - HANG_ROD * height - hover - 8 });
+        await page.mouse.up();
+        await expectPerched(page, pet.id, LANDING_MS).catch(() => undefined);
+      }
+    }
+    await eventually(page, () => carriedOn(page, "ladder"), (seen) => seen.length > 0, { stageMs: LADDER_ROUND_MS * HASTE, message: `a pet on a ladder on the page of ${gutters!.id}` });
+  };
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await ladderRound();
+      break;
+    } catch (failure) {
+      if (attempt >= LADDER_MS / LADDER_ROUND_MS) throw failure;
+    }
+  }
   const laddered = await carriedOn(page, "ladder");
   test.info().annotations.push({ type: "gear", description: `on a ladder: ${laddered.join(", ")}` });
   expect(laddered.every((id) => KINDS[id]!.gear.some((gear) => gear !== "parachute")), `only pets with gear are on a ladder: ${laddered.join(", ")}`).toBe(true);
